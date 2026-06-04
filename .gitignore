@@ -1,0 +1,28 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Godot test harness artifacts
+.godot-test-home/
+
+# Imported translations (automatically generated from CSV files)
+*.translation
+
+.worktrees
+.DS_Store
+nul
+
+dist/
+dist_steam/
+project.godot.bak
+autotest_results/
+docs/economy/runs/
+docs/economy/matrix/
+docs/archive/
+
+
+_temp/
+
+.claude/worktrees/
+.claude/cache/
+
