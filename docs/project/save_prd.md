@@ -14,9 +14,9 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Save`]
 
 `Save` serializes a **handed** snapshot and returns it on load. It holds no live state and never writes back into live systems.
 
-**Resolves review #3 — push, not pull.** `Save` does *not* reach up to read run state. The run-flow layer (`Run manager`) gathers the snapshot and hands it to `Save`; on load `Save` returns the snapshot and the `Run manager` rehydrates. So `Save` depends on nothing — honestly foundation.
+**Resolves review #3 — push, not pull.** `Save` does *not* reach up to read run state. The `Run manager` gathers the snapshot and hands it to `Save` (write on encounter entry); on load `Save` returns the snapshot — the `Game manager` reads it and hands it to the `Run manager`, which rehydrates. So `Save` depends on nothing — honestly foundation.
 
-What it **is not**: not the run-flow (`Run manager` decides *when* to save and does rehydration); not combat state (never persisted); not meta-progression persistence (a separate dataset — deferred).
+What it **is not**: not the run-flow (the `Run manager` builds the snapshot, writes it per-encounter, and rehydrates; the `Game manager` owns load/clear *timing*); not combat state (never persisted); not meta-progression persistence (a separate dataset — deferred).
 
 ---
 
@@ -43,7 +43,7 @@ What it **is not**: not the run-flow (`Run manager` decides *when* to save and d
 
 ## Load / rehydrate
 
-On launch, if a run save exists and is readable, `Save.read()` returns the snapshot and the `Run manager` rehydrates the run (rebuilds the player `Actor` + board, relics, potions, position, RNG) and resumes at the saved encounter. `Save` itself writes into no live system.
+On launch the `Game manager` calls `Save.read()`; if a run save exists and is readable, it hands the snapshot to a new `Run manager`, which rehydrates the run (rebuilds the player `Actor` + board, relics, potions, position, RNG) and resumes at the saved encounter. `Save` itself writes into no live system.
 
 ---
 
@@ -68,7 +68,7 @@ Meta-progression (the skill tree / unlocks) persists *across* runs and survives 
 ## Prototype scope
 
 - Snapshot a minimal run-state (player HP + a board + run position) at encounter entry; write atomically to `user://`.
-- On launch, load it and resume at the saved encounter (the `Run manager` rehydrates).
+- On launch, load it and resume at the saved encounter (the `Game manager` reads it; the `Run manager` rehydrates).
 - Clear on death.
 
 **Not** in scope: relics/potions/RNG content, meta-progression, the final format.
@@ -85,4 +85,4 @@ Meta-progression (the skill tree / unlocks) persists *across* runs and survives 
 ## Dependencies
 
 - **Above:** nothing — `Save` serializes a handed snapshot and returns it on load. It calls into no live system (push in, return out).
-- **Driven by (above):** the `Run manager` — gathers the snapshot and calls `Save.write(snapshot)` on encounter entry; calls `Save.read()` on launch and rehydrates; calls `Save.clear()` on death.
+- **Driven by (above):** the `Run manager` — builds the snapshot and calls `Save.write(snapshot)` on encounter entry; rehydrates run-state from a snapshot on resume. The `Game manager` — calls `Save.read()` on launch (resume-vs-fresh) and `Save.clear()` on death/win; owns the meta-save.

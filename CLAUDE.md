@@ -13,12 +13,15 @@ filtering, motion, or scenes are already answered in `docs/`.
 If you change behaviour a doc describes, update that doc in the same change.
 
 Doc structure:
+
 - `docs/index.md` — catalog / lookup index for all docs (read this first)
 - `docs/corridors/` — the two corridor renderers (default + toggle) + shared base/host (`common.md`)
 
 ## Allowed External Directories
 
 When working on this project, you may freely read from:
+
+- `../a-machine` - Previous project, most useful (Juice, VFX, Audio, UI, save/load)
 - `../battledraft` - Sister project with shared systems (VFX, debug panels, post-processing)
 - `../dogmage` - Sister project with shared systems (VFX, debug panels, post-processing)
 
@@ -53,9 +56,9 @@ var data: Dictionary = {
 - **Surgical edits only** — Modify least code possible; ask before major refactors
 - **Theme over code** — Style UI via the theme resource (`assets/themes/a-machine-theme.tres`), not `add_theme_*_override()` in code
 - **Scenes over code** — Prefer `.tscn` scene files for UI and node trees over building them programmatically in `_ready()`
-- **No opacity/transparency** — Do not use alpha fades or semi-transparent effects; they break the pixel-art aesthetic. Ask the user before adding any opacity.
-- **Enter animations**: When adding new buildings, sprites, or visual entities, use `AnimUtils.enter(node, self)` for the standard elastic pop-in and `AnimUtils.swap(node, self, callback)` for collapse-swap-expand transitions
-- **Full names, not abbreviations**: Refer to buildings and upgrades by their full names (e.g., `Beam Tier 1`, not `BT1`; `Crystal Grove`, not `CG`; `Research Center`, not `RC`; `Nuclear Plant`, not `NP`). Applies to code, comments, docs, run reports, tuning logs, and chat replies — abbreviations make grep harder and obscure what's being discussed.
+- **Opacity/transparency** — Alpha fades or semi-transparent effects can break the pixel-art aesthetic. Be careful with these and ask the user before adding any opacity.
+- **Juicy animations**: When adding new ui or visual entities, add the ui juice node to it
+- **Full names, not abbreviations**: Refer to game entities by their full names. Applies to code, comments, docs, run reports, tuning logs, and chat replies — abbreviations make grep harder and obscure what's being discussed.
 
 ## RichTextLabel fit_content Sizing (Godot-specific)
 
@@ -75,7 +78,7 @@ Prevent leaks and invalid frees at scene changes / exit:
 
 ## Bugs
 
-- When you encounter a bug or failing test, ask the user if you should fix it — don't dismiss anything as pre-existing or unrelated
+- When you encounter a bug or failing test, always fix it or ask the user if you should fix it — don't dismiss anything as pre-existing or unrelated.
 
 ## Testing
 
@@ -126,7 +129,6 @@ godot --headless --import --exit
 - Keep all documentation concise with minimal examples so that an agent can quickly reference it to understand the subject
 - **Docs describe systems, mechanics, and design intent — not specific numbers.** Point to source files (`upgrades/*.json`, GDScript constants) for tunable values. This prevents docs from going stale when values are tuned. If a formula is important for understanding the system, include it but reference the source file for the actual constants.
 
-
 ## Localization
 
 All player-facing text must be translatable (dev/debug panels stay English). See `docs/reference/localization.md` for the full system.
@@ -136,13 +138,15 @@ All player-facing text must be translatable (dev/debug panels stay English). See
 - After adding or changing any translatable string, run `godot --headless --path . --script res://tools/extract_pot.gd` to regenerate `locale/messages.pot` and merge the `.po` files, then re-import.
 
 ## Save files
+
 Do not migrate save files, don't plan for this at all we're still in development
 
 ## Pre-existing Issues
-If you discover pre-existing issues at any time address them immediately, but inform the user as well
 
+If you discover pre-existing issues at any time address them immediately, but inform the user as well
 
 ## Never say "load bearing"
 
 ## Assumptions
+
 - Never make assumptions about how things work or how the game plays. If you find yourself generalising to other games stop and read the docs.

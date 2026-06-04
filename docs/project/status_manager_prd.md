@@ -70,7 +70,7 @@ Because the Timekeeper is per-fight, a timed status on a player `Item` (which ou
 `Actor.take_damage` delegates to `StatusManager.resolve_incoming_damage(target, raw, flags) → net`:
 
 - Iterates the target's damage-modifier statuses in a defined order — **amplifiers** (e.g. a future `vulnerable`) then **absorbers** (block). Block consumes its `count` against the remaining damage; the remainder hits HP.
-- **Block absorbs direct damage; damage-over-time bypasses it.** DoT ticks (poison / burn) carry the **`unblockable` flag** and skip the absorber stage — they hit HP (after any amplifiers) regardless of block, matching Slay the Spire / Bazaar. Direct hits (weapon damage) are blockable. The flag is per-effect content: **DoT effects set it by default**, direct hits don't.
+- **Block absorbs damage unless the effect is `unblockable`.** Per-effect flag — some DoTs set it, some don't; an `unblockable` payload skips the absorber stage and hits HP (after any amplifiers).
 - With only block defined now the order is trivial; the amplifier slot is reserved for the deferred stat-statuses.
 
 ---
@@ -110,7 +110,7 @@ Distinct icon + per-effect colour per type (the design's colour vocabulary; a st
 - **Status-definition data format** (JSON vs GDScript) — content / impl detail.
 - **Trigger delivery** — how on-apply events reach reactive items (the accrual-push backbone) is the Combat/Item PRD's.
 
-Resolved: **block** persists until consumed (pure pool, no Ticker) and absorbs **direct** damage; **damage-over-time (poison / burn) bypasses block** via the `unblockable` flag (set by default on DoT) — Spire / Bazaar-style, so DoT stays viable against a blocking opponent.
+Resolved: **block** persists until consumed (pure pool, no Ticker) and absorbs all damage except `unblockable` payloads — a per-effect flag (varies by DoT, not a blanket rule).
 
 ## Dependencies
 

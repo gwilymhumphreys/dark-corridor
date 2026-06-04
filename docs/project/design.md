@@ -375,7 +375,7 @@ Meta-tree pacing must match the death curve — early runs end fast and unlock o
 1. **Onboarding.** With status engine, enchants, potions, relics, characters, elites, choice layer, AOE/single-target distinction, color vocabulary, slow-mo, cooldowns — a player parachuted into draft 1 is overwhelmed. Tutorial? Drip-feed unlocks? Genre literacy assumed? Real design question, currently absent.
 1. **Relics as items.** Open whether to collapse mechanically. Probably same underlying type with different presentation. Resolve in prototype.
 1. **Starting state — TODO.** What does the player start a run with beyond character (portrait + starting relic + 2-3 starting items)? Starting HP value? Starting potions (probably 0)? Other resources? Not yet specified.
-1. **Block vs. damage-over-time — resolved.** DoT (poison / burn) **bypasses block**; block absorbs direct hits only (Spire / Bazaar-style, via the `unblockable` flag set by default on DoT effects). Keeps poison/burn viable as a *strategy* against blocking enemies rather than a finisher that does nothing until block is gone. Exactly which effects bypass is per-effect content.
+1. **Block vs. damage-over-time — resolved.** Whether an effect bypasses block is a **per-effect `unblockable` flag** (varies by DoT — not all DoT bypasses). Specifics are per-effect content.
 -----
 
 ## Pitfalls / self-notes

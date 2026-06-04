@@ -1,0 +1,94 @@
+# Dark Corridor — Encounter PRD
+
+Run-structure PRD. Sits under the [Architecture Map](architecture.md). An `Encounter` is the **per-beat orchestrator** — one resolved beat of the descent (a fight, a non-combat event, or an in-act rest). It is **instanced per beat** by the [Run manager](run_manager_prd.md); a fight `Encounter` creates and owns the per-fight [Combat manager](combat_manager_prd.md). It is the beat tier of **Game (session) → Run (descent) → Encounter (beat) → Combat (fight)**.
+
+**Engine:** Godot 4.
+**Date:** 2026-06-05. Pre-prototype.
+**Naming:** `class_name Encounter`, **instanced** (not an autoload) — one per beat, created/torn down by the `Run manager`.
+
+Boundaries live in the hub: [architecture.md → Interface contracts → `Encounter`](architecture.md#interface-contracts-boundary-hub). This PRD specifies the *internals*.
+
+---
+
+## Purpose
+
+An `Encounter` resolves one beat and reports its outcome up. The descent's beats — regular fights, elites, bosses, non-combat events, in-act rests — are unified as Encounters (one system, not separate fight/event/rest systems — [design](design.md)). It owns:
+
+- **Its type + content** — a fight (an enemy composition), an event (lore prose + a binary choice), or a rest (a partial heal). Data-defined (definition vs. instance, below).
+- **Its telegraph** — what it advertised as a choice-layer option (the category + an elite's demand), first-run legible.
+- **Its resolution** — spawn enemies → run the fight → win/loss; or present the event's choice → apply the outcome; or apply the rest heal.
+- **Its reward hook** — on completion it reports its outcome + reward-kind up; the `Run manager` fulfills it.
+
+What it **is not**:
+
+- **Not the choice layer's *assembly*.** The 2–3 candidate options at a choice point are drawn by the `Run manager` (a pool-draw under act constraints + the run RNG — it owns the map); UI presents them; the picked candidate becomes a live `Encounter`. The Encounter is the *resolved unit*, not the selector. *(The within-encounter tier-2 choice — an event's binary, an elite's engage-by-picking — is the Encounter's own resolution.)*
+- **Not the fight.** A fight `Encounter` creates the `Combat manager` and awaits its result; it never runs the combat tick (`Timekeeper` / `Combat manager`).
+- **Not run-state.** Event/rest outcomes and rewards mutate the player run-state, which the `Run manager` owns — the Encounter reports them; the `Run manager` applies them.
+- **Not enemy/draft content** — it *uses* enemy definitions ([Enemy PRD](enemy_prd.md)) and triggers the reward `Draft` (via the `Run manager`); it doesn't define them.
+
+---
+
+## Definition vs. instance
+
+- **Encounter definition** — content/data in the pool: type/tier, the **location frame** (one line, e.g. "A flooded antechamber"), the **telegraph** (advertised category + elite demand), the **content** (a fight's enemy composition + ordering; or an event's prose + binary options + each option's outcome; or a rest's heal), and the **reward** (by type). Format is content/impl (deferred, as with item/enemy definitions). Player-facing strings (frame, telegraph, event prose/options) are localizable (`tr()` — `CLAUDE.md`).
+- **Encounter instance** — the live per-beat orchestrator the `Run manager` instantiates from a picked definition, handed its context (the player `Actor`, run-state accessors, the run RNG, position).
+
+---
+
+## Types & resolution
+
+**Approach vs. resolution.** The `Run manager` creates the `Encounter` right after the previous reward, and the corridor advance animates it **approaching from depth** — its enemy `Actor`s are spawned at creation so they can be rendered scaling in. **Resolution** begins on **arrival** (full view); a fight `Encounter` creates its `Combat manager` then. The approach is presentation (the corridor renderer + UI); the Encounter's *logical* beat is the resolution.
+
+The `Run manager` instantiates the picked Encounter; it resolves by type, then reports outcome + reward up:
+
+- **Fight** (regular / elite / boss) — spawn the authored enemy `Actor`s from their definitions ([Enemy PRD](enemy_prd.md)), set their **left-to-right ordering** (composition: tank in front, adds before boss — design), and create the `Combat manager` with the player + enemy `Actor`s + ordering. Await win/loss. **Loss** → report **died** (the `Run manager` signals run-ended up to `Game`). **Win** → report the reward.
+- **Event** — present the prose + the **binary choice** (a UI intent — the player picks an option); apply the chosen option's **outcome** (direct effects — heal / damage / a relic / a potion / a status — applied to run-state via the `Run manager`). Events are lore + a tradeoff (design); outcomes are *direct*, not the combat path.
+- **Rest** (the in-act small rest — one guaranteed per act, design) — apply a **partial heal** to the player `Actor` (via the `Run manager`'s HP-economy surface). No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
+
+## Composition & ordering (the fight case)
+
+A fight Encounter spawns **1–4 enemies** (most 1–2; group fights authored to give AOE a reason — design) and places them in a **left-to-right order** before handing the set to the `Combat manager` (which owns runtime ordering + the leftmost-targeting rule). Spatial composition is the puzzle — "tank in front of DPS," "adds before the boss." This resolves the composition/ordering authoring the [Enemy PRD](enemy_prd.md) deferred here.
+
+## Telegraph (the option's advertisement)
+
+Each candidate advertises its **category** — combat-heavy/item-reward · safe/healing · risk/high-reward — and, for an **elite**, its **demand** (e.g. "high single-target burst," "applies poison — bring cleanse"). First-run legible (telegraph the category, not the contents — design). An **elite** is a fight candidate with a stronger telegraph + a bigger reward; **engaging** is picking it, **skipping** is picking another option — no separate skip mechanic.
+
+## Reward
+
+On completion the Encounter reports its **outcome + reward-kind** to the `Run manager`, which fulfills it (run-state is the `Run manager`'s):
+
+- **Regular fight** → a reward `Draft` (1-of-3).
+- **Elite** → a relic + a draft (richer — design).
+- **Boss** → a relic (+ the `Run manager` ends the act).
+- **Rest** → none (the heal is the reward).
+- **Event** → the chosen option's outcome (may itself grant or cost).
+
+The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mechanism is its own PRD ([Draft PRD](draft_prd.md)).
+
+---
+
+## Prototype scope
+
+- One **fight** Encounter: spawn one (or two) enemy `Actor`s in order, create the `Combat manager`, await win/loss, report the reward up.
+- One **event** (prose + a binary choice applying a direct outcome) **or** one **rest** (partial heal).
+- Instantiated by the `Run manager` from a small candidate set; reports outcome (died / won / resolved) + reward up.
+
+**Not** in scope: the ~30-encounter pool, the two-tier choice UI, elite/boss tiers + signatures, the full event-outcome catalog, reward tuning.
+
+---
+
+## Open / deferred
+
+- **Encounter-definition data format** + the **~30-encounter pool** (location frames, telegraphs, event prose) — content/impl + design.
+- **Event-outcome catalog** (the direct effects an option can apply) — content.
+- **Telegraph iconography** + the **two-tier choice UI** — a UI pass (the candidate *assembly* is the `Run manager`'s; presentation is UI).
+- **Choice-point frequency + candidate-set rules** (category spread, no-repeat, elite budget) — design/tuning, applied by the `Run manager`'s draw.
+- **Reward specifics per tier** — design/tuning + the `Draft` PRD.
+- **Resolved here:** composition/ordering authoring (Enemy PRD's deferral); the `Encounter` → `Combat manager` handoff (player + enemy `Actor`s + ordering); elite/boss reward routing (reported up, fulfilled by the `Run manager`).
+
+## Dependencies
+
+- **Above:** the `Run manager` — assembles the candidate set, instantiates the picked Encounter with context, reads its outcome, and fulfills its reward. Owns the lifetime.
+- **Creates / owns (fight):** the `Combat manager` (player + enemy `Actor`s + ordering); awaits its win/loss.
+- **Uses:** enemy definitions → spawns enemy `Actor`s ([Enemy PRD](enemy_prd.md)); the player `Actor` (read for the fight; heal/damage via the `Run manager`'s surface for rest/event).
+- **Does not:** own the map / run-state / game-state machine (`Run manager` / `Game manager`); run the combat tick (`Combat manager` / `Timekeeper`); define the `Draft` (triggered via the `Run manager`).

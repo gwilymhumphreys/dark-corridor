@@ -15,6 +15,11 @@ run/main_scene="res://src/scenes/corridor_testbed.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+SfxManager="*res://src/autoloads/sfx_manager.gd"
+MusicManager="*res://src/autoloads/music_manager.gd"
+
 [display]
 
 window/size/viewport_width=2560

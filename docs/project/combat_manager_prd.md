@@ -133,7 +133,7 @@ Checked each tick after **Land** (step 3): player `Actor` dead → loss; all ene
 - **Simultaneous death** tiebreak (→ loss, provisional).
 - **AOE-at-arrival** specifics (set resolved at spawn; dead-at-arrival fizzle) — confirm when multi-enemy fights are built.
 - **Per-fight RNG for random item-targeting** — the random draw must come from a deterministic per-fight stream (seeded from the run seed + encounter) so fights stay bit-reproducible and resume-consistent; the exact seeding settles with the Draft / Encounter / Save RNG ownership (Save PRD).
-- **Encounter handoff** — exactly what `Encounter` passes (actors + ordering) — settled with the Encounter PRD.
+- **Encounter handoff — resolved (Encounter PRD):** the `Encounter` creates the `Combat manager` with the player + spawned enemy `Actor`s + their left-to-right ordering, and awaits the win/loss result.
 - **Mid-fight roster changes (summoning)** — this spec assumes a **fixed roster** seeded at combat start. Adding / removing an `Actor` mid-fight (register/deregister its Tickers + triggers, re-order) is deferred until the boss "summons-adds" signature is built (see Enemy PRD).
 
 ## Dependencies

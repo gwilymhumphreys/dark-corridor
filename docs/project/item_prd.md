@@ -123,7 +123,7 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 - **Silenced-item cooldown** — does the Ticker hold or keep cycling while gated? = gate-status behaviour (content).
 - **Size** — whether to ship size-as-tempo and how many sizes (art doc: a leaning to test).
 - **Ally-targeting shape** — only if enemies ever buff/heal allies; the Combat manager would resolve it; not in the prototype.
-- **Item-target shapes — added (resolved 2026-06-05):** `opponent-item-random` (one random enemy item; selection **random via seeded RNG**, provisional) and `all-opponent-items`. **Still open:** a board-wide *accumulator push* (e.g. a `trigger-all-items-once` potion) is a **push, not a payload delivery**, so it routes through the event bus rather than a target-shape — and consumables (spec'd as Delivery-spawners) will need that push surface; spec it when the first such consumable is built.
+- **Item-target shapes — added (resolved 2026-06-05):** `opponent-item-random` (one random enemy item; selection **random via seeded RNG**, provisional) and `all-opponent-items`.
 
 ## Dependencies
 

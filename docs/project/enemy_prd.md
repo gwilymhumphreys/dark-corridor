@@ -79,8 +79,8 @@ Distinctness per encounter via the unit or the composition; most fights are 1–
 
 - **Mid-fight roster changes (summoning)** — the `Combat manager` must eventually support adding / removing an `Actor` mid-combat (register/deregister its Tickers + triggers, re-order). Required by the boss "summons-adds" signature; deferred until bosses are built, so the fixed-roster assumption gets revisited then.
 - **Enemy-definition data format**, the **enemy item pools'** content, **tier / signature** catalogues — content (the roster work).
-- **Composition / ordering authoring** — the Encounter PRD's.
-- **Elite / boss rewards** (relics) — the Encounter / Run PRDs'.
+- **Composition / ordering authoring — resolved (Encounter PRD):** a fight `Encounter` spawns the enemy set in left-to-right order and hands it to the `Combat manager`.
+- **Elite / boss rewards** (relics) — the `Encounter` reports the reward; the `Run manager` fulfills it (Encounter / Run PRDs).
 
 ## Dependencies
 

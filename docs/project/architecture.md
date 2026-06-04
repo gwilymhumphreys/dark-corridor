@@ -9,7 +9,7 @@
  
 ## Principles (apply across all systems)
  
-- **Autoloads hold systems and rules, never per-entity state.** `StatusManager` and `Save` are autoload singletons. Anything with per-instance lifetime — actors, items, boards, statuses, Deliveries, and the **per-combat `Timekeeper`** (created and owned by the `Combat manager`) — is instantiated, not autoloaded.
+- **Autoloads are session-or-global singletons; per-instance state is instantiated.** `StatusManager` (rules), `Save` (service), and `Draft` (the reward draw) are stateless autoloads; the **`Game manager`** is a *session-lifetime* singleton autoload (registered `Game`) holding the game-state machine + a reference to the live run. The rule it respects: anything with **shorter, instance lifetime** — actors, items, boards, statuses, Deliveries, the per-combat `Timekeeper`, and the **per-run `Run manager`** — is instantiated, not autoloaded (it must be *fresh* each fight/run). A session singleton holding session state is consistent (the lifetimes match); per-run/per-fight state never migrates up into it.
 - **No `_ready` / `_process` outside pure-visual leaf scenes.** Logic advances off explicit ticks/calls — in combat, the `Combat manager`'s fixed-step tick — not per-node process functions. Self-animation is only allowed for purely cosmetic motion that never needs to honour slow-mo (ambient/background).
 - **One clock, fixed timestep.** Combat runs in fixed steps. The `Timekeeper` (one per fight) is the combat clock — the time source + the one speed dial + the step cadence; the `Combat manager` advances every component on each step. Slow-mo / pause / fast-test / battle-speed are all *the same dial* — and the dial controls *how many fixed steps run per real second*, not a per-step delta. (Fixed steps → deterministic, reproducible, bit-identical autotest.)
 - **Output is a pure function of handed state.** The renderer / VFX / audio layer never tracks animation state or holds its own clock. Every position / frame / sound it produces is computed from data (state + elapsed time on the clock) and handed to it. It **writes no game state**; its only coupling upward is *reading* the clock (`render_time`). Player **input** is a separate inbound layer — see *Presentation & input*.
@@ -25,7 +25,7 @@ Layers depend *downward* only for **structural** ownership (who creates / holds 
 - **`Timekeeper`** (instanced — one per fight, owned by the `Combat manager`) — the combat **clock**: a stepped `sim_time` + a continuous `render_time` (for the visual wall) + the one speed dial + the fixed-step cadence (`steps_due`: real time × dial → whole steps, capped, backlog dropped). It does **not** hold the component registry or advance components — the `Combat manager` does, on the clock's step. Fixed timestep → deterministic and reproducible (the autotest runs K steps). Built at combat start, torn down at end.
 - **`StatusManager`** (autoload) — **stateless** rules for statuses: `(target, count/stacks, behaviour)`, where target is an actor *or* an item. Status *instances* live on their targets (Actor / Item), not here; the `Combat manager` advances their Tickers each step (on the `Timekeeper`'s clock). Called by items, relics, consumables, enemy abilities to apply/read. Depends on nothing — a global rulebook holding no per-fight state.
 - **`Actor`** (instanced) — HP, a board of items, a status list. Knows nothing about which side it's on.
-- **`Save`** (autoload) — persists a run snapshot it's *handed* on encounter entry, and returns it on load; the `Run manager` gathers it and rehydrates. **Push, not pull** — `Save` reads no live state and writes none back. No migration (`CLAUDE.md`).
+- **`Save`** (autoload) — persists a run snapshot it's *handed* on encounter entry, and returns it on load; the `Run manager` writes it, the `Game manager` reads it back on launch, the `Run manager` rehydrates. **Push, not pull** — `Save` reads no live state and writes none back. No migration (`CLAUDE.md`).
 ### Content → Foundation
  
 - **`Item`** → `StatusManager` (apply / read statuses); reads its owner `Actor` (self-target, board membership). It declares a target-*shape*; the `Combat manager` resolves it and lands the Delivery — no direct `Item → Actor` damage call.
@@ -35,13 +35,17 @@ Layers depend *downward* only for **structural** ownership (who creates / holds 
 - **`Enemy`** → not a class — an `Actor` built from an authored *enemy definition* (HP + an authored board of enemy-pool Items + tier + optional boss signature), spawned by `Encounter`. No enemy AI; no special arrows. See [enemy_prd.md](enemy_prd.md).
 (Item / Relic / Consumable share the **Draftable** base — see design doc.)
  
+### Session (top of the tree) → Run
+
+- **`Game manager`** (autoload, registered `Game`) — the session singleton: the **game-state machine** (title → run → death → meta), the **run lifecycle** (start fresh / resume from `Save` / end on death-win — creates & holds the `Run manager`), and the **save-lifecycle** calls (`read` on launch, `clear` on death/win, the meta-save). Reachable everywhere (`Game.*`) for scene transitions, quit-to-menu, pause. Holds session state + a reference to the live run (null between runs) — never per-run state itself (that's the `Run manager`'s).
+
 ### Run structure → Content + Foundation
  
-- **`Draft`** → produces Draftables; *pulls* from a pool. Reads run state for weighting.
-- **`Encounter`** → spawns the enemy `Actor`s for a fight and hands them to a `Combat manager`; drives non-combat events; → `Draft` on reward.
+- **`Draft`** (stateless service, autoload) → produces the 1-of-3 reward offer; *pulls* from the pool (`Meta`'s contents), **weighting by depth only** (no hidden build/archetype weighting — design), seeded by the run RNG. The `Run manager` holds the offer + applies the pick.
+- **`Encounter`** (instanced, one per beat, created by the `Run manager`) → the per-beat orchestrator: a **fight** (spawns the enemy `Actor`s in left-to-right order + creates the `Combat manager`, awaits win/loss), a **non-combat event** (prose + a binary choice), or an in-act **rest** (partial heal). Reports its outcome + reward-kind up; the `Run manager` fulfills the reward (drives `Draft` / grants a relic). It resolves a beat — it does **not** assemble the choice-layer options (`Run manager`).
 - **`Combat manager`** (instanced, one per fight) → owns the live fight: the player + enemy `Actor`s and their left-to-right ordering, the **component registry**, the in-flight Deliveries, win/loss detection, and the runtime targeting authority (answers "leftmost living enemy" for the Combat PRD's rule). Owns the `Timekeeper` (the combat clock) and the **fixed-step tick** — its `_physics_process` runs `steps_due` sim-steps; each step advances every registered component, then orchestrates fire/land/events/win-loss. Registers/deregisters components as items fire and effects resolve. Created by `Encounter`; signals its result back up. It *orchestrates* — no combat decisions (boards auto-fire on their Tickers).
-- **`Run manager`** → drives the encounter sequence, owns the game-state machine + act/boss/rest placement and run lifecycle, calls `Save`. Does **not** touch the `Timekeeper` — it hands a fight to the `Combat manager` and waits for the result.
-- **`Corridor/advance`** → driven by the `Run manager`.
+- **`Run manager`** (instanced, one per run, created/owned by the `Game manager`) → owns the **map** (act/boss/rest placement + the 1D progress track), **encounter sequencing** + the corridor advance, the **player run-state** (Actor + relics + potions + position + run RNG), and **HP-economy policy** (between-act full heal, rests, max-HP growth). **Writes** the run snapshot to `Save` on encounter entry; **rehydrates** on resume. Does **not** own the game-state machine (`Game manager`) or touch the `Timekeeper` (`Combat manager`) — it **assembles the choice-layer candidates** (a pool-draw under act constraints + RNG), instantiates the picked `Encounter`, awaits its result, and **fulfills its reward** (drives `Draft` / grants the relic).
+- **`Corridor/advance`** → driven by the `Run manager`; the advance **doubles as the next encounter's approach** — the `Encounter` is created after the reward and its enemies scale up from depth into full view, resolution beginning on arrival.
 ### Meta → Run
  
 - **`Meta-progression`** → owns the *contents* of the draft pool (unlocks). `Draft` pulls from the pool; meta does not reach into draft internals. Dependency points down.
@@ -55,6 +59,8 @@ Two layers the downward rule treats differently:
   - **hover / throw** → timescale intent → the `Combat manager` sets its `Timekeeper`'s dial (slow-mo).
   - **throw potion** → fire-consumable intent → the `Combat manager` activates the consumable.
   - **draft pick** → the `Run manager` / `Draft` adds the chosen Draftable to the board / relics / potion slots.
+  - **choice-point pick** → the `Run manager` instantiates the chosen candidate `Encounter`.
+  - **event-option pick** → the live `Encounter` applies the chosen outcome (via the `Run manager`'s run-state surface).
   - *(Test hook: an **autotest driver** emits these same intents headlessly — the input layer is the seam the harness drives. See [testing/autotest.md](../testing/autotest.md).)*
 ---
  
@@ -106,9 +112,51 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
 ### `Save` — PRD: [save_prd.md](save_prd.md)
  
 - **Exposes:** `write(snapshot)` (persist the run snapshot, atomic), `read() → snapshot?` (the saved run, or none), `clear()` (drop the run save on death/win). Stateless service — holds no live state.
-- **Inbound:** the `Run manager` → `write` on encounter entry, `read` on launch, `clear` on death.
-- **Outbound:** none — `Save` never writes back into live systems; on load it *returns* the snapshot and the `Run manager` rehydrates.
-- **Does not:** decide *when* to save (`Run manager`); read live state itself (push, not pull); persist combat state (ephemeral) or meta-progression (a separate dataset — Meta PRD); migrate saves (`CLAUDE.md` — incompatible → fresh run).
+- **Inbound:** the `Run manager` → `write` on encounter entry; the `Game manager` → `read` on launch, `clear` on death/win, and the meta-save.
+- **Outbound:** none — `Save` never writes back into live systems; on load it *returns* the snapshot, the `Game manager` reads it back, and the `Run manager` rehydrates.
+- **Does not:** decide *when* to save (the `Run manager` writes per-encounter; the `Game manager` owns load/clear timing); read live state itself (push, not pull); persist combat state (ephemeral) or meta-progression (a separate dataset — Meta PRD); migrate saves (`CLAUDE.md` — incompatible → fresh run).
+
+### `Game manager` — PRD: [game_manager_prd.md](game_manager_prd.md)
+
+- **Exposes:** the **game-state machine** (current phase/screen + transitions) and the run lifecycle — `start_run(character)`, `resume_run()` (from `Save`), `end_run(outcome)`; a session singleton reachable as `Game.*` (scene transitions, quit-to-menu, pause). Holds a reference to the live `Run manager` (null between runs).
+- **Inbound:** app launch (boot → title / resume); the `Run manager` signals **run-ended (died / won)**; `UI` → menu / title / restart intents.
+- **Outbound:** creates & tears down the `Run manager` (seeds fresh via `Characters`, or rehydrates from a snapshot); `Save.read()` on launch + `Save.clear()` on death/win + the meta-save; drives screen transitions.
+- **Does not:** own per-run state (the `Run manager` does); sequence encounters or touch the map (`Run manager`); touch the `Timekeeper` or combat (`Combat manager`).
+
+### `Run manager` — PRD: [run_manager_prd.md](run_manager_prd.md)
+
+- **Exposes:** the live **run** — the map (act/beat structure + the 1D progress track), the current position, and the **player run-state** (`{ actor, relics, potions, position, rng }`); a **run-ended (died / won)** signal up to the `Game manager`. Builds the `Save` snapshot and rehydrates from one.
+- **Inbound:** the `Game manager` creates it (fresh-seeded or rehydrated) and reads its run-ended signal; `Encounter` signals each beat's result back up; `UI` → draft-pick / advance intents.
+- **Outbound:** sequences `Encounter`s along the map (each fight `Encounter` creates a `Combat manager`); drives the corridor advance; applies HP-economy policy to the player `Actor`; `Save.write(snapshot)` on encounter entry; fulfills the `Encounter`'s reward (drives `Draft` / grants the relic); reads `Characters` for the starting board/relic.
+- **Does not:** own the game-state machine or the save-lifecycle *timing* (`Game manager`); touch the `Timekeeper` or run the combat tick (`Combat manager`); decide combat outcomes (it awaits them).
+
+### `Encounter` — PRD: [encounter_prd.md](encounter_prd.md)
+
+- **Exposes:** one resolved **beat** — its type (fight / event / rest), its telegraph, and a **result** (died / won / resolved) + reward-kind, signalled up to the `Run manager`. A fight Encounter creates and owns its `Combat manager`.
+- **Inbound:** the `Run manager` instantiates it from a picked candidate definition with context (player `Actor` + run-state accessors + RNG + position); `Combat manager` signals win/loss back up; `UI` → event-option pick intent.
+- **Outbound:** spawns enemy `Actor`s (from enemy definitions) in left-to-right order and creates the `Combat manager` (fight); applies event/rest outcomes via the `Run manager`'s run-state surface; reports outcome + reward up (the `Run manager` drives `Draft` / grants the relic).
+- **Does not:** assemble the choice-layer candidates (`Run manager`); own the map / run-state / game-state; run the combat tick (`Combat manager` / `Timekeeper`).
+
+### `Draft` — PRD: [draft_prd.md](draft_prd.md)
+
+- **Exposes:** `draw(pool, run_state, rng) → candidates` — the 1-of-3 reward offer (slot composition + depth-weighting + seeded pull). Stateless — holds no offer.
+- **Inbound:** the `Run manager` → `draw` on a reward; reads the draft **pool** (`Meta-progression`'s contents) + run-state depth + the run RNG (handed in).
+- **Outbound:** none — returns candidates. The `Run manager` holds the pending offer and applies the pick (board / potion / enchant-target / relic).
+- **Does not:** own the pool contents (`Meta-progression`); hold the offer or apply the pick (`Run manager`); weight by build/archetype (depth/rarity only — design's no-hidden-weighting); present (`UI`).
+
+### `UI` — PRD: [ui_layout_prd.md](ui_layout_prd.md)
+
+- **Exposes:** the screen — the corridor/combat scene, the item boards (player + enemy), potions, portrait + HP, and the choice / draft / 1D-map screens; emits player **intents**.
+- **Inbound:** *reads* actor / board / item / status / potion + run-state to draw (composes over the corridor renderer + the `VFX driver` wall).
+- **Outbound (intents only):** timescale + throw-potion → `Combat manager`; draft-pick + choice-point pick → `Run manager`; event-option pick → the live `Encounter`. **Never mutates game state directly.**
+- **Does not:** decide outcomes (logic interprets intents); render the combat wall (`VFX driver`); hold game state.
+
+### `VFX driver` — PRD: [vfx_driver_prd.md](vfx_driver_prd.md)
+
+- **Exposes:** nothing to logic — it's the **wall**: each frame it computes projectile / impact / number / pulse positions and fires SFX one-shots, all as pure functions of stored timestamps.
+- **Inbound:** none writes to it; it *reads* the `Combat manager`'s in-flight Delivery set (fire / impact timestamps + payload colour) + actor / item / status state, and the `Timekeeper`'s `render_time()`.
+- **Outbound:** none — **writes no game state** (renders; the renderer paints what it computes).
+- **Does not:** decide outcomes or timing (`Combat manager`); hold a clock (`Timekeeper`); cause damage (the Delivery's landing does); render the corridor (`docs/corridors/`).
  
 ---
  
