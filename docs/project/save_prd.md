@@ -1,0 +1,88 @@
+# Dark Corridor — Save PRD
+
+Foundation PRD. Sits under the [Architecture Map](architecture.md). `Save` is the run-persistence **service**: it persists a snapshot on encounter entry so a run can be quit and resumed cleanly (design — important for short/mobile sessions). Per `CLAUDE.md`, **no migration** — we're in development.
+
+**Engine:** Godot 4.
+**Date:** 2026-06-04. Pre-prototype.
+**Naming:** `class_name SaveAutoload`, registered `Save` (autoload convention).
+
+Boundaries live in the hub: [architecture.md → Interface contracts → `Save`](architecture.md#interface-contracts-boundary-hub). This PRD specifies the *internals*.
+
+---
+
+## Purpose
+
+`Save` serializes a **handed** snapshot and returns it on load. It holds no live state and never writes back into live systems.
+
+**Resolves review #3 — push, not pull.** `Save` does *not* reach up to read run state. The run-flow layer (`Run manager`) gathers the snapshot and hands it to `Save`; on load `Save` returns the snapshot and the `Run manager` rehydrates. So `Save` depends on nothing — honestly foundation.
+
+What it **is not**: not the run-flow (`Run manager` decides *when* to save and does rehydration); not combat state (never persisted); not meta-progression persistence (a separate dataset — deferred).
+
+---
+
+## When
+
+**Auto-save on encounter entry** (design) — at the start of each encounter, before it resolves; that's the resume point. **One run slot**, overwritten each time, written **atomically** (temp file → rename) so a quit mid-write can't corrupt it. On **death or final-boss win**, the run save is **cleared** (death is final per run — design). No manual saves; no mid-combat save.
+
+---
+
+## What — the run snapshot
+
+**Run-persistent state only:**
+
+- **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant + any *persistent* item-targeted statuses.
+- **Relics & potions** — the player run-state (not Actor-owned).
+- **Run position** — act + encounter index, floor-map progress, character.
+- **RNG state / seed** — so resume is **deterministic**: the upcoming draft offers and encounter beats are the same, not re-rollable by quit-and-resume (no save-scum; consistent with "death is final").
+
+**Explicitly not saved:** live combat state — the fight, the `Timekeeper`, `Delivery`s, combat-scoped statuses (block, in-fight poison). Combat is ephemeral and the save sits *between* fights, so there's nothing mid-fight to persist; resume re-enters at the saved encounter. Enemy actors aren't saved either — they're regenerated per encounter from their definitions (Enemy PRD).
+
+*(Which statuses are run-persistent vs. combat-scoped is per-effect content — `combat_prd` defers it; the snapshot includes whatever is run-persistent.)*
+
+---
+
+## Load / rehydrate
+
+On launch, if a run save exists and is readable, `Save.read()` returns the snapshot and the `Run manager` rehydrates the run (rebuilds the player `Actor` + board, relics, potions, position, RNG) and resumes at the saved encounter. `Save` itself writes into no live system.
+
+---
+
+## No migration (`CLAUDE.md`)
+
+We do **not** migrate saves. An absent, unreadable, or format-incompatible save → start a **fresh run** (discard). No version-upgrade logic, no compat shims; the format may change freely during development.
+
+---
+
+## Format / location
+
+`user://` (Godot). The serialization format (a dict via JSON / `var_to_bytes` / a Resource) is impl/content — deferred. Write atomically (temp → rename).
+
+---
+
+## Meta-progression is a separate dataset (deferred)
+
+Meta-progression (the skill tree / unlocks) persists *across* runs and survives death — a different dataset with a different lifecycle from the run save. It uses the same `Save` *service* but is the Meta PRD's content; not specified here. (Run save = cleared on death; meta save = persists.)
+
+---
+
+## Prototype scope
+
+- Snapshot a minimal run-state (player HP + a board + run position) at encounter entry; write atomically to `user://`.
+- On launch, load it and resume at the saved encounter (the `Run manager` rehydrates).
+- Clear on death.
+
+**Not** in scope: relics/potions/RNG content, meta-progression, the final format.
+
+---
+
+## Open / deferred
+
+- **Serialization format + exact snapshot schema** — impl/content.
+- **Which statuses are run-persistent** (saved) vs. combat-scoped (not) — per-effect content (`combat_prd`).
+- **RNG-state capture** specifics (seed vs. full state) — settle with the Draft / Encounter PRDs, where the RNG is used.
+- **Resolved (review #3):** push model — systems hand `Save` a snapshot; it never reads up.
+
+## Dependencies
+
+- **Above:** nothing — `Save` serializes a handed snapshot and returns it on load. It calls into no live system (push in, return out).
+- **Driven by (above):** the `Run manager` — gathers the snapshot and calls `Save.write(snapshot)` on encounter entry; calls `Save.read()` on launch and rehydrates; calls `Save.clear()` on death.

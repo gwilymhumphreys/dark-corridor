@@ -10,7 +10,7 @@ nodes. No `Camera3D`, meshes, or depth buffer.
 
 Host in `src/scenes/`; renderers in `src/scenes/corridors/`; shader in `src/shaders/`.
 ```
-main.tscn / main.gd        Host: UI (blur slider, mode switch, Back/Forward) +
+corridor_testbed.tscn/.gd  Host: UI (blur slider, mode switch, Back/Forward) +
                            a CorridorHolder node. Instances ONE renderer into the
                            holder and toggles it at runtime (M key / Mode button).
 corridor_renderer.gd       Base class CorridorRenderer. Movement, velocity ramp,
@@ -81,7 +81,7 @@ shader's nearest-reconstruction drifts slightly on heavily-scaled nodes.)
   to any 16:9 monitor with no letterbox and no blurry blit.
 - `rendering/.../default_texture_filter = 0` (Nearest).
 - **Input map**: `move_forward` = W + Up, `move_back` = S + Down (physical keys).
-- `application/run/main_scene = "res://src/scenes/main.tscn"` (the host).
+- `application/run/main_scene = "res://src/scenes/corridor_testbed.tscn"` (the host).
 
 ## Pixel-art "low-res look at high-res"
 
@@ -90,7 +90,7 @@ textures are scaled *up* (each renderer scene's root has a large `scale`). Slice
 transforms are floats (no pixel snapping) → sub-pixel-smooth motion. UI lives on
 a `CanvasLayer` and stays crisp at full resolution.
 
-## Host extras (`main.gd`)
+## Host extras (`corridor_testbed.gd`)
 
 - **Toggle**: M key or Mode button cycles the renderers in `CORRIDOR_SCENES`.
 - **Buttons**: Back/Forward use `button_down`/`button_up` → `_set_*` which forward

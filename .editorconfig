@@ -2,3 +2,18 @@ root = true
 
 [*]
 charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.gd]
+indent_size = 2
+
+[*.md]
+# keep trailing whitespace (markdown hard line breaks)
+trim_trailing_whitespace = false
+
+[*.{json,tscn,tres,godot,import}]
+indent_size = 2

@@ -2,7 +2,7 @@ class_name CorridorRenderer
 extends Node2D
 ## Base for corridor renderers. Owns everything that is the same regardless of
 ## how the walls are drawn: input, the velocity ramp, the blur/filter model, the
-## shared sharp-bilinear material, and the held/blur interface that `main.gd`
+## shared sharp-bilinear material, and the held/blur interface that `corridor_testbed.gd`
 ## drives. Subclasses implement only the geometry, via `_build()` and
 ## `_layout(frac)` (and `_wall_nodes()` so the base can toggle their filter).
 ##
@@ -112,7 +112,7 @@ func _wall_nodes() -> Array:
   return []
 
 
-# --- Shared interface (driven by main.gd) ------------------------------------
+# --- Shared interface (driven by corridor_testbed.gd) ------------------------
 
 func set_forward_held(v: bool) -> void:
   forward_held = v
