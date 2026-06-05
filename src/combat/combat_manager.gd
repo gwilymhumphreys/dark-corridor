@@ -4,7 +4,11 @@ extends Node
 ## component registry, the event bus, and the in-flight Deliveries; runs the
 ## single fixed-step tick (advance -> fire -> land -> route -> win/loss). Makes no
 ## combat decisions — boards auto-fire on their Tickers. Instanced one-per-fight.
-## Registry order is insertion order = the deterministic seq_id (decision #24).
+## Within-step order is deterministic (decision #24): each component TYPE is swept
+## in a fixed order — item cooldowns, then statuses, then Delivery travel — and
+## within a type in insertion order (board order at start, then the deterministic
+## fire order). That realizes #24's bit-reproducible sweep; the literal monotonic
+## `seq_id` field is deferred until cross-type registration order actually matters.
 
 signal resolved(player_won: bool)
 
@@ -89,6 +93,11 @@ func sim_step() -> void:
   # 5. Win/loss.
   _check_resolution()
 
+  # 6. Drop spent Deliveries (fizzled = no visual; landed = held briefly for the
+  #    impact number/flash) so the in-flight set can't grow unbounded over a long
+  #    fight — vfx_driver_prd's "keep until the visual elapses, then drop."
+  _prune_deliveries()
+
 
 func _fire_item(it: Item, arrived: Array) -> void:
   var payloads := it.fire()
@@ -101,6 +110,22 @@ func _fire_item(it: Item, arrived: Array) -> void:
       _deliveries.append(d)
       if d.travel.crossed():
         arrived.append(d)   # instant (travel 0) lands this same step
+
+
+## Retain in-flight Deliveries and recently-landed ones (for their impact visual);
+## drop fizzled ones (no visual) and landed ones whose visual hold has elapsed.
+## Keyed off sim_time — the VFX wall reads render_time, which tracks it. This is
+## what keeps `_deliveries` bounded; teardown clears whatever's left at fight end.
+func _prune_deliveries() -> void:
+  var now: float = timekeeper.sim_time
+  var kept: Array = []
+  for d in _deliveries:
+    if d.fizzled:
+      continue
+    if d.landed and now - d.impact_time >= Balance.DELIVERY_VISUAL_HOLD:
+      continue
+    kept.append(d)
+  _deliveries = kept
 
 
 func _spawn_delivery(p: Payload, target) -> Delivery:

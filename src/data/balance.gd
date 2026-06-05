@@ -54,3 +54,11 @@ const SAMPLE_DEBUFF_DURATION: float = 5.0   # a timed status, to exercise that s
 # reaction); smaller values accelerate firing without completing it.
 const TRIGGER_PUSH_FULL: float = 1.0
 const TRIGGER_PUSH_SMALL: float = 0.25
+
+
+# ── Delivery visual hold (presentation lifetime; vfx_driver_prd) ─────────────
+# Sim-seconds a LANDED Delivery is retained after impact so the VFX wall can
+# finish drawing its impact number / flash before the Combat manager drops it.
+# This bounds the in-flight Delivery set so it can't grow unbounded over a long
+# fight. Keep this >= the longest VFX visual duration (vfx_driver.gd NUM_DURATION).
+const DELIVERY_VISUAL_HOLD: float = 0.7

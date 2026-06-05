@@ -134,6 +134,22 @@ func test_simultaneous_death_is_loss() -> void:
   assert_eq(get_signal_parameters(cm, 'resolved')[0], false, 'both dead same tick = loss')
 
 
+func test_deliveries_are_pruned_not_accumulated() -> void:
+  # Two unkillable actors trading blows forever: without pruning, every fired
+  # Delivery would pile up in _deliveries. With it, only the few in-flight /
+  # still-animating at any moment survive — the set stays bounded.
+  var p := _spawn(1_000_000.0, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(1_000_000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  var peak := 0
+  for i in 2000:
+    cm.sim_step()
+    peak = maxi(peak, cm._deliveries.size())
+  assert_false(cm._resolved, 'neither actor dies in this window — the fight is still live')
+  assert_lt(peak, 6, 'in-flight + animating Deliveries stay bounded (without pruning this would be ~50+)')
+
+
 func test_teardown_clears_combat_state() -> void:
   var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.POISON_DAGGER])
   var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])

@@ -35,5 +35,10 @@ func take_damage(amount: float, flags: int = 0) -> void:
     died.emit()
 
 
+## A dead actor stays dead — heal cannot revive (death is final this fight).
+## Currently unreachable via Deliveries (a HEAL to a dead target fizzles in the
+## Combat manager) but guarded here so no future caller can resurrect a corpse.
 func heal(amount: float) -> void:
+  if not is_alive():
+    return
   hp = minf(hp + amount, max_hp)

@@ -30,6 +30,15 @@ func test_heal_caps_at_max() -> void:
   assert_eq(a.hp, 50.0, 'heal does not exceed max_hp')
 
 
+func test_heal_does_not_revive_the_dead() -> void:
+  var a := Actor.new(10.0)
+  a.take_damage(10.0)
+  assert_false(a.is_alive(), 'dead at 0 HP')
+  a.heal(5.0)
+  assert_eq(a.hp, 0.0, 'heal cannot bring a corpse back above 0')
+  assert_false(a.is_alive(), 'still dead after a heal')
+
+
 func test_death_emits_once() -> void:
   var a := Actor.new(10.0)
   watch_signals(a)
