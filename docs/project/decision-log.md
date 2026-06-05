@@ -4,7 +4,9 @@
 
 ## Where the project is
 
-Pre-prototype. The **only code** is the corridor renderer (`src/scenes/corridors/` + the `corridor_testbed` host) — that's "experimenting," and the real game will reuse the corridor as a *background*. **Everything else is paper** (design + PRDs in `docs/project/`). The **full prototype-scope spec is now written**: the foundation + combat spine (06-04), then the session/run-structure (`Game` / `Run` / `Encounter` / `Draft`), the content layer (relics/enchants/consumables), and presentation (`UI` / `VFX`) (06-05). **Next is building, not speccing.**
+Pre-prototype. The **only code** is the corridor renderer (`src/scenes/corridors/` + the `corridor_testbed` host) — that's "experimenting," and the real game will reuse the corridor as a *background*. **Everything else is paper** (design + PRDs in `docs/project/`). The **full prototype-scope spec is now written**: the foundation + combat spine (06-04), then the session/run-structure (`Game` / `Run` / `Encounter` / `Draft`), the content layer (relics/enchants/consumables), and presentation (`UI` / `VFX`) (06-05).
+
+**Build status (updated 2026-06-05):** **Phase 1 — the combat spine — is built and green.** The build-prep decisions (#23–25), then Steps 1–5 of [`phase1_plan.md`](phase1_plan.md): `Timekeeper` · `Actor` · `StatusManager` · `Item` · `CombatManager` + a minimal **opaque** VFX wall + the `combat_sandbox` host. **45 GUT tests pass headless on 4.6; the feel gate passed.** Code now lives in `src/combat/`, `src/content/`, `src/autoloads/status_manager.gd`, `src/data/balance.gd` (placeholder tuning), `src/vfx/`, `src/scenes/combat/`, `tests/`. GUT is vendored in `addons/gut/`. **Next: Phase 2 — autotest scaffolding** (`src/autotest/` — Mode/Driver/Logger around a headless fight now; extended to drive the run loop in Phase 3).
 
 ## The approach (keep doing this)
 
