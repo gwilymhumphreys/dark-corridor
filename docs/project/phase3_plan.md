@@ -155,7 +155,8 @@ Game:        start_run(seed:int)->void · resume_run()->bool · end_run(outcome:
 - **Map** = a fixed short list of beats (fights + one rest), the final beat's win →
   `run_ended(won)`. Counts are tuning, not design.
 - **Relic statuses** are re-applied each fight start (combat-scoped; `teardown`
-  clears them) — run-persistent actor statuses don't exist yet (relic-only scope).
+  clears them) — run-persistent statuses don't exist **by design** (#26):
+  persistence is the relic/enchant, the status is always combat-scoped.
 - **Player side = a party (roster of 1)** — keep run-state list-friendly (#22); don't
   hardwire one actor.
 

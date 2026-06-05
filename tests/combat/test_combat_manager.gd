@@ -45,6 +45,13 @@ func _has_status(actor: Actor, type: int) -> bool:
   return false
 
 
+func _item_has_status(item: Item, type: int) -> bool:
+  for s in item.statuses:
+    if s.type == type:
+      return true
+  return false
+
+
 func _run_basic() -> Dictionary:
   var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
   var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
@@ -148,6 +155,48 @@ func test_deliveries_are_pruned_not_accumulated() -> void:
     peak = maxi(peak, cm._deliveries.size())
   assert_false(cm._resolved, 'neither actor dies in this window — the fight is still live')
   assert_lt(peak, 6, 'in-flight + animating Deliveries stay bounded (without pruning this would be ~50+)')
+
+
+func test_actor_and_item_statuses_advance_identically() -> void:
+  # A timed status on an actor and on an item must count down + expire on the SAME
+  # step — item statuses are advanced uniformly, not skipped. High HP so the fight
+  # outlasts the status duration.
+  var p := _spawn(1000.0, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  StatusManager.apply(p, StatusDef.Type.WEAK, 1.0)            # timed status on the actor
+  StatusManager.apply(p.board[0], StatusDef.Type.WEAK, 1.0)   # timed status on one of its items
+  assert_true(_has_status(p, StatusDef.Type.WEAK), 'actor weak applied')
+  assert_true(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak applied')
+
+  var dur_steps: int = int(ceil(Balance.SAMPLE_DEBUFF_DURATION / Balance.STEP))
+  for i in dur_steps - 1:
+    cm.sim_step()
+  assert_true(_has_status(p, StatusDef.Type.WEAK), 'actor weak still ticking')
+  assert_true(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak still ticking')
+
+  cm.sim_step()   # the expiry step
+  assert_false(_has_status(p, StatusDef.Type.WEAK), 'actor weak expired')
+  assert_false(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak expired on the same step')
+
+
+func test_enemy_actor_and_items_free_after_teardown() -> void:
+  # The Actor<->Item cycle (board holds the item, item.owner holds the actor back)
+  # must be broken at teardown, or every fight leaks its enemy + board (RefCounted
+  # has no cycle collection). Player has no board here so only the enemy cycle is
+  # under test. weakref goes null only once the object is actually freed.
+  var p := Actor.new(100.0)
+  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var weak_enemy: WeakRef = weakref(e)
+  var weak_item: WeakRef = weakref(e.board[0])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  cm.teardown()
+  cm.free()
+  e = null   # drop the last external strong ref; only a cycle could keep it alive
+  assert_null(weak_enemy.get_ref(), 'the enemy actor frees after the fight')
+  assert_null(weak_item.get_ref(), 'and its board items free too')
 
 
 func test_teardown_clears_combat_state() -> void:

@@ -11,13 +11,13 @@ Boundaries (inbound / exposed surface) live in the hub: [architecture.md → Int
 
 ## Purpose
 
-Statuses are the shared modifier primitive — dots (poison/burn), block, regen, freeze, timed buffs/debuffs, item buffs, silence, and similar. A status is **`(target, count/stacks, behaviour)`**, where target is an `Actor` *or* an `Item` (the dual-targeting that's the key extension over Spire — persistent items can carry statuses too).
+Statuses are the shared modifier primitive — dots (poison/burn), block, regen, freeze, timed buffs/debuffs, item buffs, silence, and similar. A status is **`(target, count/stacks, behaviour)`**, where target is an `Actor` *or* an `Item` (the dual-targeting that's the key extension over Spire — items, which persist across fights, can carry statuses *during a fight*). All statuses are **combat-scoped** (decision #26) — see below.
 
 The `StatusManager` owns only the **behaviour rules**, keyed by status type — a global, stateless autoload anyone can call (`StatusManager.apply(…)`). Globally reachable is *correct* precisely because it's stateless (it's a rulebook, not a per-fight manager — see [the scope discussion in architecture](architecture.md)).
 
 What it **is not**:
 
-- **Not an instance store** — instances live on their targets; the Manager is rules. (This is what lets persistent item buffs outlive a fight.)
+- **Not an instance store** — instances live on their targets; the Manager is rules. (Purely to keep the autoload **stateless** — *not* a persistence mechanism: statuses are combat-scoped, never run-persistent — decision #26.)
 - **Not the ticker** — the `Combat manager` advances each instance's Ticker each step (on the `Timekeeper`'s clock).
 - **Not effect *content*** — specific per-effect numbers and decrement rules are content (the [Combat PRD](combat_prd.md) defers those); the Manager is the engine that runs them.
 
@@ -48,11 +48,11 @@ Not every status ticks. Four shapes:
 - **Persistent pool** (block) — a `count` consumed by an external event (incoming damage), not by time. **No Ticker** — block persists until consumed or combat ends (no decay). Not a time component.
 - **Static modifier** (a flat / "again" modifier read at resolve time) — no Ticker; alters a calculation when read. Not a time component.
 
-Only Ticker-bearing shapes (periodic / timed) get registered for stepping; pools and static modifiers don't tick.
+Only Ticker-bearing shapes (periodic / timed) get registered for stepping; pools and static modifiers don't tick. The Combat manager advances statuses **uniformly across both target kinds** — each actor *and* each board item is swept the same way each step (a timed status on an item counts down exactly like one on an actor). Periodic-damage shapes only sit on actors (the `take_damage` owner); timed / static work on either.
 
-### Timers pause between fights (a consequence, not a rule)
+### Statuses are combat-scoped (decision #26)
 
-Because the Timekeeper is per-fight, a timed status on a player `Item` (which outlives combat) only counts down *during* combat — its timer effectively pauses between fights. A clean fall-out of the combat-scoped clock; intended.
+Every status — actor- **or** item-targeted — lives only for the fight: created during combat, cleared at `CombatManager.teardown()`, **never saved**. A status has no coherent cross-fight meaning (a half-consumed block pool, a ticking poison), so it doesn't carry over and the run snapshot never serializes instances. Durable effects live one layer up — a **Relic** (run-level state) or an **Enchantment** (permanent item modifier) holds the magnitude and, where needed, re-applies a *fresh* combat-scoped status each fight (e.g. Stone Ward → combat-start block). So a timed status on a player `Item` doesn't "pause between fights" — it simply ends with the fight; the durable version of that effect is an Enchantment.
 
 ---
 

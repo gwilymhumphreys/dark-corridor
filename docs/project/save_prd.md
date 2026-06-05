@@ -30,14 +30,14 @@ What it **is not**: not the run-flow (the `Run manager` builds the snapshot, wri
 
 **Run-persistent state only:**
 
-- **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant + any *persistent* item-targeted statuses.
+- **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant. (No statuses — all statuses are combat-scoped, never saved; decision #26.)
 - **Relics & potions** — the player run-state (not Actor-owned).
 - **Run position** — act + encounter index, floor-map progress, character.
 - **RNG state** — the `Run manager`'s run RNG, captured as its **full state** (not just the seed), so resume is **deterministic**: reloading reproduces the same future draft offers and encounter beats *every time* — not re-rollable by quit-and-resume (no save-scum; consistent with "death is final").
 
 **Explicitly not saved:** live combat state — the fight, the `Timekeeper`, `Delivery`s, combat-scoped statuses (block, in-fight poison). Combat is ephemeral and the save sits *between* fights, so there's nothing mid-fight to persist; resume re-enters at the saved encounter. Enemy actors aren't saved either — they're regenerated per encounter from their definitions (Enemy PRD).
 
-*(Which statuses are run-persistent vs. combat-scoped is per-effect content — `combat_prd` defers it; the snapshot includes whatever is run-persistent.)*
+*(Statuses are **never** saved — all are combat-scoped (decision #26). Durable effects are **Relics / Enchantments**, which the snapshot stores by id + value; a relic re-applies any combat-start status fresh each fight.)*
 
 ---
 
@@ -78,7 +78,7 @@ Meta-progression (the skill tree / unlocks) persists *across* runs and survives 
 ## Open / deferred
 
 - **Serialization format + exact snapshot schema** — impl/content.
-- **Which statuses are run-persistent** (saved) vs. combat-scoped (not) — per-effect content (`combat_prd`).
+- **Status lifetime — resolved (#26):** all statuses are combat-scoped; **none are saved**. Run persistence is Relics / Enchantments (stored by id + value).
 - **RNG capture — resolved (#20):** the snapshot stores the `Run manager`'s **full** run-RNG state (not just the seed), so resume reproduces all future draws. The per-fight combat stream is *derived* (run seed + encounter index), not saved — combat state is ephemeral.
 - **Resolved (review #3):** push model — systems hand `Save` a snapshot; it never reads up.
 

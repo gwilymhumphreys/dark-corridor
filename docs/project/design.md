@@ -237,6 +237,8 @@ Persistent items make item-targeting natural in a way Spire's transient cards do
 - "This item's cooldown is 50% reduced for 5 seconds" (timed status on an item)
 - "This item triggers twice on its next activation" (charge-count status on an item)
 - "This item is silenced for 3 seconds" (negative status on an item)
+
+*Lifetime:* item-targeted statuses are **combat-scoped** — they last only the fight (cleared at fight end), like every status. A **permanent** item modifier (a lasting +2 damage) is an **Enchantment**, not a status; statuses are the *temporary* combat layer (decision #26).
 Bazaar-shaped — items have their own status layer parallel to actors.
 
 ### Surface design

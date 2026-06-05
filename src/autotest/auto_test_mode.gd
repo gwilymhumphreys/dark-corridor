@@ -61,6 +61,7 @@ func _ready() -> void:
   ])
   var result: Dictionary = run_once() if single_fight else run_full()
   _report(result)
+  Game.reset()   # tear the run down (frees the player + board) before we quit
   get_tree().quit(result['exit_code'])
 
 

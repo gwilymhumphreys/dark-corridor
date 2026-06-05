@@ -38,6 +38,7 @@ var _current: Encounter = null
 var _pending_offer: Array = []   # Array[ItemDef] — the held draft offer (1-of-3)
 var _ended: bool = false
 var _outcome: int = Outcome.WON
+var _torn_down: bool = false
 
 
 # --- fresh run --------------------------------------------------------------
@@ -222,8 +223,17 @@ func _teardown_current() -> void:
     _current = null
 
 
+## End the run cleanly (idempotent). The player is run-lifetime, so this is where
+## its Actor<->Item cycle is finally broken (dissolve) — never at fight end, where
+## its board must survive. Called by Game on the next start / resume / reset.
 func teardown() -> void:
+  if _torn_down:
+    return
+  _torn_down = true
   _teardown_current()
+  if player != null:
+    player.dissolve()
+    player = null
   relics.clear()
   potions.clear()
   _pending_offer.clear()

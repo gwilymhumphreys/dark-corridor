@@ -42,3 +42,16 @@ func heal(amount: float) -> void:
   if not is_alive():
     return
   hp = minf(hp + amount, max_hp)
+
+
+## Break the Actor<->Item reference cycle (the board holds each item; every item's
+## `owner` points back here) so a DISCARDED actor + its board can free — RefCounted
+## has no cycle collection. Only call when the actor is being thrown away: an enemy
+## at fight end (CombatManager.teardown), the player at run end (RunManager.teardown).
+## Never mid-run — it clears the board.
+func dissolve() -> void:
+  for it in board:
+    it.owner = null
+    it.statuses.clear()
+  board.clear()
+  statuses.clear()

@@ -123,6 +123,18 @@ func test_save_and_rehydrate_reproduces_the_continuation() -> void:
   assert_eq(run_b.outcome(), outcome_a, 'and reaches the same outcome')
 
 
+func test_player_actor_and_board_free_after_run_teardown() -> void:
+  # The run-lifetime player + its board must free at run end — the Actor<->Item
+  # cycle (board <-> owner) has to be broken and the run's own ref dropped.
+  var run := _run()
+  run.start(1)
+  var weak_player: WeakRef = weakref(run.player)
+  var weak_item: WeakRef = weakref(run.player.board[0])
+  run.teardown()
+  assert_null(weak_player.get_ref(), 'the player actor frees at run end')
+  assert_null(weak_item.get_ref(), 'and its board items free too')
+
+
 func test_advance_autosaves_the_entry_point() -> void:
   var run := _run()
   run.start(3)

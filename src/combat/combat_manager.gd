@@ -5,7 +5,8 @@ extends Node
 ## single fixed-step tick (advance -> fire -> land -> route -> win/loss). Makes no
 ## combat decisions — boards auto-fire on their Tickers. Instanced one-per-fight.
 ## Within-step order is deterministic (decision #24): each component TYPE is swept
-## in a fixed order — item cooldowns, then statuses, then Delivery travel — and
+## in a fixed order — item cooldowns, then statuses (actor- AND item-targeted,
+## advanced uniformly), then Delivery travel — and
 ## within a type in insertion order (board order at start, then the deterministic
 ## fire order). That realizes #24's bit-reproducible sweep; the literal monotonic
 ## `seq_id` field is deferred until cross-type registration order actually matters.
@@ -21,6 +22,7 @@ var _items: Array = []           # Array[Item] — cooldown Tickers, registratio
 var _deliveries: Array = []      # Array[Delivery] — in-flight + recently-resolved
 var _resolved: bool = false
 var _player_won: bool = false
+var _torn_down: bool = false
 
 
 func _init(player_actor: Actor, enemy_actors: Array) -> void:
@@ -66,14 +68,13 @@ func sim_step() -> void:
   for it in _items:
     if it.cooldown.step():
       fired_items.append(it)
-  # Statuses are advanced per owner — the actor's list IS the container/owner.
+  # Advance every status uniformly — actor-targeted AND item-targeted alike. A
+  # status lives on its target (the target is its own owner for advancement), so
+  # the same pass serves both; item statuses are not a special case.
   for actor in _all_actors():
-    var spent: Array = []
-    for st in actor.statuses:
-      if StatusManager.advance_status(st, actor):
-        spent.append(st)
-    for st in spent:
-      actor.statuses.erase(st)
+    _advance_statuses_on(actor)
+    for it in actor.board:
+      _advance_statuses_on(it)
   var arrived: Array = []
   for d in _deliveries:
     if not d.landed and not d.fizzled and d.step_travel():
@@ -97,6 +98,19 @@ func sim_step() -> void:
   #    impact number/flash) so the in-flight set can't grow unbounded over a long
   #    fight — vfx_driver_prd's "keep until the visual elapses, then drop."
   _prune_deliveries()
+
+
+## Advance one step of every status on `target` (an Actor OR an Item), dropping any
+## that expired. Periodic-damage statuses only ever sit on actors (the `take_damage`
+## owner); timed / static shapes work on either — so one pass serves both, and item
+## statuses tick on the same cadence as actor statuses.
+func _advance_statuses_on(target) -> void:
+  var spent: Array = []
+  for st in target.statuses:
+    if StatusManager.advance_status(st, target):
+      spent.append(st)
+  for st in spent:
+    target.statuses.erase(st)
 
 
 func _fire_item(it: Item, arrived: Array) -> void:
@@ -265,15 +279,23 @@ func request_slowmo(on: bool) -> void:
     timekeeper.clear_override()
 
 
-## Break the Actor<->Status / Item<->Status reference cycles at fight end so the
-## actors/items can free (CLAUDE.md runtime cleanup). Combat-scoped statuses are
-## dropped (none are run-persistent in Phase 1). Call after reading the result.
+## Break the fight's reference cycles so it can free (CLAUDE.md runtime cleanup),
+## idempotent. ALL statuses are combat-scoped and dropped here — none are ever
+## run-persistent (decision #26); run persistence is relics / enchants. The PLAYER
+## persists across the run (only its combat statuses clear — its board survives);
+## the ENEMIES are discarded, so we also break their Actor<->Item cycle (dissolve).
+## Call after reading the result.
 func teardown() -> void:
+  if _torn_down:
+    return
+  _torn_down = true
   _clear_statuses(player)
   for e in enemies:
-    _clear_statuses(e)
+    e.dissolve()
   _items.clear()
   _deliveries.clear()
+  enemies = []
+  player = null
   timekeeper = null
   bus = null
 
