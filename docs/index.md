@@ -6,7 +6,7 @@ keywords to match against.
 
 ## Project design & PRDs (`docs/project/`)
 
-> **Picking up the work?** Read [project/decision-log.md](project/decision-log.md) first — the decisions made, their rationale, the open items, and the next steps. The current build target is [project/phase1_plan.md](project/phase1_plan.md) (the combat spine, step-by-step).
+> **Picking up the work?** Read **[project/handoff.md](project/handoff.md)** first — the fresh-agent orientation (what's built, how to work, what's settled, what's next). Then [project/decision-log.md](project/decision-log.md) for the full decision record. Phases 1–3 + the content fast-follow are built; **next is Phase 4 (real UI / the run screen)**.
 
 The game-design layer — paper/pre-prototype, except the corridors which are built
 (see below). Start at the **design snapshot** for the whole game, the
@@ -18,6 +18,7 @@ information — not all up front.
 
 | Doc | Covers | Keywords |
 |-----|--------|----------|
+| [project/handoff.md](project/handoff.md) | **Handoff** (read first). Fresh-agent orientation: what the game is, what's built (Phases 1–3 + content fast-follow), the architecture in one picture, the work rhythm + run commands, settled decisions/lessons, and the Phase 4 task. Points to the canonical docs. | handoff, onboarding, orientation, start here, build status, how to run, autotest, next steps, Phase 4 |
 | [project/design.md](project/design.md) | **Design snapshot** (working doc). Whole-game pitch, core loop, combat, items/enchants/relics/consumables, status system, encounters/choice layer, characters, meta-progression, scope, open questions. | design, core loop, draft, auto-combat, items, rarity, synergy, enchantments, relics, potions, status, encounters, elites, characters, meta, roguelike, Bazaar, Slay the Spire |
 | [project/architecture.md](project/architecture.md) | **Architecture map + boundary hub.** System map (downward deps, input/output boundary), the settled combat spine, the **scene tree & node model**, prototype scope, and the **Interface contracts** every PRD links to for its edges. | architecture, system map, autoload, Timekeeper, combat manager, StatusManager, Actor, Save, tick, timescale, dependencies, boundary hub, interface contract, scene tree, node model, RefCounted, presentation tree |
 | [project/timekeeper_prd.md](project/timekeeper_prd.md) | **Timekeeper PRD** (the combat clock). Fixed-step clock owned by the Combat manager: stepped `sim_time` + continuous `render_time` (the wall) + the one speed dial + the step cadence (`steps_due`: real time × dial → whole steps, capped + backlog dropped). It does NOT hold or advance components — the Combat manager does. Fixed step → deterministic + reproducible autotest. | timekeeper, clock, fixed timestep, sim_time, render_time, timescale, dial, slow-mo, pause, steps_due, determinism, cadence, physics_process |

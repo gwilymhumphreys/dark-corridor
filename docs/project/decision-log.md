@@ -1,6 +1,6 @@
 # Dark Corridor — Decision Log & Handoff
 
-> **For the next agent (or future-me).** Read [`docs/index.md`](../index.md) first (the catalog), then this. This records *what was decided, why, the approach, what's open, and what's next* — so you don't re-litigate settled calls or contradict the model. Dates: 2026-06-04; updated 2026-06-05 (block bypass is a per-effect `unblockable` flag; enemy-item targeting; prototype redefined as a playable itch.io build); build-prep 2026-06-05 (GDScript content definitions; `seq_id` component order; the scene-tree / node model — #23–25).
+> **For the next agent (or future-me).** Read [`handoff.md`](handoff.md) first (the fresh-agent orientation), then this. This records *what was decided, why, the approach, what's open, and what's next* — so you don't re-litigate settled calls or contradict the model. Dates: 2026-06-04; updated 2026-06-05 (block bypass is a per-effect `unblockable` flag; enemy-item targeting; prototype redefined as a playable itch.io build); build-prep 2026-06-05 (GDScript content definitions; `seq_id` component order; the scene-tree / node model — #23–25).
 
 ## Where the project is
 
