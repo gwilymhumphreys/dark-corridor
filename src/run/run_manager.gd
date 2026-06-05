@@ -47,8 +47,13 @@ func start(seed_value: int) -> void:
   rng = RandomNumberGenerator.new()
   rng.seed = seed_value
   player = _make_starting_player()
+  # Starting kit (stand-in for a Characters definition): the Stone Ward relic, a
+  # Whetstone enchant on the weapon, and one Healing Draught potion — so all three
+  # content paths run end-to-end in the prototype run (drafting enchants/potions is
+  # the deferred slot-composition work).
   relics = [Relic.new(RelicCatalog.get_def(RelicCatalog.Id.STONE_WARD))]
-  potions = []
+  potions = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.Id.HEALING_DRAUGHT))]
+  apply_enchant(Enchantment.new(EnchantCatalog.get_def(EnchantCatalog.Id.WHETSTONE)), 0)
   position = 0
   _ended = false
   _pending_offer = []
@@ -131,6 +136,27 @@ func apply_draft_pick(index: int) -> void:
   _pending_offer = []
 
 
+## Attach an enchantment to a chosen board item (the enchant-target sub-choice; a
+## drafted-enchant intent, or the starting-kit grant). One enchant per item.
+func apply_enchant(enchant: Enchantment, item_index: int) -> void:
+  if item_index < 0 or item_index >= player.board.size():
+    return
+  player.board[item_index].enchant = enchant
+
+
+## Throw-potion intent: consume the potion in `index` and activate it in the live
+## fight (content_prd). Only valid mid-fight (a consumable resolves through the
+## Combat manager). Returns whether it was thrown.
+func throw_potion(index: int) -> bool:
+  var cm: CombatManager = combat_manager()
+  if cm == null or index < 0 or index >= potions.size():
+    return false
+  var consumable: Consumable = potions[index]
+  potions.remove_at(index)
+  cm.throw_consumable(consumable, player)
+  return true
+
+
 ## Advance to the next beat: tear the resolved one down, step position, create the
 ## next Encounter, and auto-save (the encounter-entry resume point).
 func advance() -> void:
@@ -177,16 +203,19 @@ func _save() -> void:
 func snapshot() -> Dictionary:
   var board: Array = []
   for it in player.board:
-    board.append({ 'id': it.def.id, 'enchant': null })
+    board.append({ 'id': it.def.id, 'enchant': it.enchant.def.id if it.enchant != null else null })
   var relic_ids: Array = []
   for relic in relics:
     relic_ids.append(relic.def.id)
+  var potion_ids: Array = []
+  for consumable in potions:
+    potion_ids.append(consumable.def.id)
   return {
     'hp': player.hp,
     'max_hp': player.max_hp,
     'board': board,
     'relics': relic_ids,
-    'potions': [],
+    'potions': potion_ids,
     'position': position,
     # RNG full state as strings — a JSON double can't hold a 64-bit value exactly.
     'rng': { 'seed': str(rng.seed), 'state': str(rng.state) },
@@ -200,11 +229,16 @@ func rehydrate(snap: Dictionary) -> void:
   player.hp = float(snap['hp'])
   player.board.clear()
   for entry in snap['board']:
-    player.board.append(Item.new(ItemCatalog.get_def(int(entry['id'])), player))
+    var item := Item.new(ItemCatalog.get_def(int(entry['id'])), player)
+    if entry['enchant'] != null:
+      item.enchant = Enchantment.new(EnchantCatalog.get_def(int(entry['enchant'])))
+    player.board.append(item)
   relics = []
   for rid in snap['relics']:
     relics.append(Relic.new(RelicCatalog.get_def(int(rid))))
   potions = []
+  for pid in snap['potions']:
+    potions.append(Consumable.new(ConsumableCatalog.get_def(int(pid))))
   position = int(snap['position'])
   rng = RandomNumberGenerator.new()
   rng.seed = int(snap['rng']['seed'])

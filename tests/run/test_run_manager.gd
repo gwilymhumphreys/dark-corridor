@@ -135,6 +135,44 @@ func test_player_actor_and_board_free_after_run_teardown() -> void:
   assert_null(weak_item.get_ref(), 'and its board items free too')
 
 
+func test_starting_kit_saves_and_rehydrates() -> void:
+  # The starting relic + enchant + potion all round-trip through the snapshot.
+  var run := _run()
+  run.start(1)
+  assert_not_null(run.player.board[0].enchant, 'Whetstone is on the starting weapon')
+  assert_eq(run.potions.size(), 1, 'a starting Healing Draught')
+  assert_eq(run.relics.size(), 1, 'the Stone Ward relic')
+
+  var snap: Dictionary = run.snapshot()
+  assert_eq(int(snap['board'][0]['enchant']), EnchantCatalog.Id.WHETSTONE, 'enchant id saved on the board entry')
+  assert_eq(snap['potions'].size(), 1, 'potion saved')
+
+  var run_b := _run()
+  run_b.rehydrate(snap)
+  assert_not_null(run_b.player.board[0].enchant, 'rehydrate rebuilds the enchant on the item')
+  assert_eq(run_b.player.board[0].enchant.def.id, EnchantCatalog.Id.WHETSTONE)
+  assert_eq(run_b.potions.size(), 1, 'rehydrate rebuilds the potion')
+
+
+func test_throw_potion_heals_and_empties_the_slot() -> void:
+  var run := _run()
+  run.start(1)
+  run.begin_current()                  # beat 0 is a fight → a live CombatManager
+  run.player.take_damage(40.0)
+  var before: float = run.player.hp
+  assert_eq(run.potions.size(), 1)
+  assert_true(run.throw_potion(0), 'thrown mid-fight')
+  assert_eq(run.potions.size(), 0, 'the potion was consumed from the slot')
+  assert_gt(run.player.hp, before, 'and it healed the player')
+
+
+func test_throw_potion_outside_a_fight_is_rejected() -> void:
+  var run := _run()
+  run.start(1)                         # beat created but not begun → no live fight
+  assert_false(run.throw_potion(0), 'a potion only resolves through a live fight')
+  assert_eq(run.potions.size(), 1, 'and stays in the slot')
+
+
 func test_advance_autosaves_the_entry_point() -> void:
   var run := _run()
   run.start(3)

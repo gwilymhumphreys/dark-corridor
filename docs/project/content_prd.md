@@ -49,11 +49,11 @@ A **manually-fired reserve** — no `Ticker` (combat_prd: the one thing that doe
 
 ## Prototype scope
 
-- One **relic** (a combat-start status applier — the simplest shape), in run-state, applied at combat start, saved.
-- One **enchant** (scale-a-value), applied to a chosen item, saved with the board.
-- One **consumable** (a heal or instant-damage potion), thrown via the intent → Delivery, in a potion slot.
+**Built (2026-06-06):** all three categories, each proving its path end-to-end and wired into the run + headless autotest (starting-kit grants stand in for drafting them — slot composition is deferred):
 
-Enough to prove each category's path end-to-end. **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.
+- One **relic** — Stone Ward (a combat-start block status applier), in run-state, applied at each fight start, saved (`src/content/relic*.gd`).
+- One **enchant** — Whetstone (scale-a-value, +50%), applied to a chosen item, saved on the board entry; the Item fire pipeline scales payload values (`src/content/enchant*.gd`, `Item._resolve_effect`).
+- One **consumable** — Healing Draught (a thrown self-heal), in a potion slot, fired via `RunManager.throw_potion` → `CombatManager.throw_consumable` → a travel-0 Delivery (`src/content/consumable*.gd`). **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.
 
 ---
 

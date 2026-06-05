@@ -65,6 +65,16 @@ func test_run_full_takes_and_logs_drafts() -> void:
   assert_eq(_draft_events(m.logger), 2, 'the two regular fights each offered a draft, picked')
 
 
+func test_run_full_throws_the_starting_potion() -> void:
+  var m := _mode(1)
+  m.run_full()
+  var thrown: int = 0
+  for ev in m.logger.events:
+    if ev['type'] == 'potion_thrown':
+      thrown += 1
+  assert_eq(thrown, 1, 'the Driver throws the starting potion once over the run')
+
+
 func test_encounters_cap_stops_early() -> void:
   var m := _mode(1)
   m.encounters = 1

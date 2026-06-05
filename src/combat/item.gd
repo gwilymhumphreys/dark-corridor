@@ -44,7 +44,9 @@ func _is_gated() -> bool:
 func _resolve_effect(effect: ItemEffect) -> Payload:
   var p := Payload.new()
   p.kind = effect.kind
-  p.value = effect.value         # item-status value-modifiers + enchant hooks: later
+  p.value = effect.value         # (item-status value-modifiers: later)
+  if enchant != null:
+    p.value *= enchant.def.value_mult   # scale-a-value enchant (content_prd / #26)
   p.shape = effect.shape
   p.travel = effect.travel
   p.status_type = effect.status_type

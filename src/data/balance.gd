@@ -62,6 +62,16 @@ const TRIGGER_PUSH_SMALL: float = 0.25
 const RELIC_STONE_WARD_BLOCK: float = 10.0
 
 
+# ── Content — Enchantments (permanent item modifiers; content_prd, #26) ──────
+# Whetstone: scales the host item's payload values (e.g. +50% weapon damage).
+const ENCHANT_WHETSTONE_MULT: float = 1.5
+
+
+# ── Content — Consumables (manually-fired potions; content_prd) ──────────────
+# Healing Draught: a thrown self-heal (no Ticker — fired on the throw intent).
+const POTION_HEAL: float = 20.0
+
+
 # ── Run loop (HP economy + map; run_manager_prd) ─────────────────────────────
 const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fraction of max HP
 

@@ -119,7 +119,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
     return   # gated (silence)
   bus.publish(EventBus.Event.ITEM_FIRED)
   for p in payloads:
-    for target in _resolve_targets(p, it):
+    for target in _resolve_targets(p, it.owner):
       var d := _spawn_delivery(p, target)
       _deliveries.append(d)
       if d.travel.crossed():
@@ -179,15 +179,17 @@ func _land(d: Delivery) -> void:
 
 # --- Target-shape resolution (the runtime targeting authority) --------------
 
-func _resolve_targets(p: Payload, it: Item) -> Array:
+## Resolve a payload's relative shape into concrete targets, relative to `owner`
+## (the firing item's owner, or a thrown consumable's thrower).
+func _resolve_targets(p: Payload, owner: Actor) -> Array:
   match p.shape:
     ItemEffect.Shape.SELF:
-      return [it.owner]
+      return [owner]
     ItemEffect.Shape.OPPONENT_LEFTMOST:
-      var t = _leftmost_living_opponent(it.owner)
+      var t = _leftmost_living_opponent(owner)
       return [t] if t != null else []
     ItemEffect.Shape.ALL_OPPONENTS:
-      return _living_opponents(it.owner)
+      return _living_opponents(owner)
     _:
       return []   # item-target shapes (random / all-items) — later
 
@@ -277,6 +279,38 @@ func request_slowmo(on: bool) -> void:
     timekeeper.set_override(Balance.TIMESCALE_SLOWMO)
   else:
     timekeeper.clear_override()
+
+
+## Throw-potion intent: activate a thrown consumable (content_prd). Build its
+## effect(s) into Deliveries resolved relative to the thrower, then land any that
+## arrive instantly — the same resolution surface as an item fire, minus the
+## Ticker. The RunManager removes the potion from its slot; this just resolves it.
+func throw_consumable(consumable, thrower: Actor) -> void:
+  if _resolved:
+    return
+  for effect in consumable.def.effects:
+    var p := _payload_from_effect(effect)
+    for target in _resolve_targets(p, thrower):
+      var d := _spawn_delivery(p, target)
+      _deliveries.append(d)
+      if d.travel.crossed():
+        _land(d)
+
+
+## Build a Payload from an ItemEffect template (shared by consumable throws; items
+## go through Item._resolve_effect, which also applies enchants). A consumable has
+## no source Item — source stays null.
+func _payload_from_effect(effect: ItemEffect) -> Payload:
+  var p := Payload.new()
+  p.kind = effect.kind
+  p.value = effect.value
+  p.shape = effect.shape
+  p.travel = effect.travel
+  p.status_type = effect.status_type
+  p.flags = effect.flags
+  p.color = effect.color
+  p.source = null
+  return p
 
 
 ## Break the fight's reference cycles so it can free (CLAUDE.md runtime cleanup),

@@ -12,6 +12,9 @@
 **Status: BUILT (2026-06-05).** All seven steps green — Save · Relic · Draft ·
 Encounter · Run · Game + the autotest run extension. The autotest drives the
 whole descent headless to a win, deterministically by seed, with quit/resume.
+**Fast-follow done (2026-06-06):** the enchant + consumable categories (Whetstone
+enchant, Healing Draught potion) are built and wired into the run + autotest — all
+three content categories now prove their path end-to-end.
 Next: Phase 4 (real UI / the run screen).
 
 ---
@@ -162,6 +165,6 @@ Game:        start_run(seed:int)->void · resume_run()->bool · end_run(outcome:
 
 ## Explicitly NOT in Phase 3
 
-Enchant + consumable (tagged fast-follow); the ~30-encounter pool, elite/boss tiers,
+~~Enchant + consumable (tagged fast-follow)~~ — **done 2026-06-06**; the ~30-encounter pool, elite/boss tiers,
 events-with-prose, the 1D-map + draft UIs, multi-act HP tuning, meta / characters.
 Real UI is Phase 4.

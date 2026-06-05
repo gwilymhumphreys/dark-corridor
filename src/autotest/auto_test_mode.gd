@@ -152,6 +152,9 @@ func run_full() -> Dictionary:
     run.begin_current()
     var cm: CombatManager = run.combat_manager()
     if cm != null:
+      if run.potions.size() > 0 and driver.should_throw_potion():
+        logger.log_event('potion_thrown', { 'beat': run.position, 'potion': run.potions[0].def.name_key })
+        run.throw_potion(0)
       var fr: Dictionary = _drive_fight(
         cm, [run.player] + enc.enemies, wall_start, wall_timeout_ms, timeout_steps)
       total_steps += fr['steps']

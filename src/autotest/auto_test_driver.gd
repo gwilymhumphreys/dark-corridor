@@ -34,6 +34,14 @@ func choose_path(candidates: Array) -> int:
   return 0 if not candidates.is_empty() else -1
 
 
-## Whether to throw a reserve consumable this fight. Stub: never (conserve).
+## Whether to throw a reserve consumable now. Minimal policy: throw the first
+## available potion once (so the throw path is exercised in a run), then conserve.
+## Real "when/which" policies arrive with the decision AI.
+var _threw_potion: bool = false
+
+
 func should_throw_potion(_run_state: Variant = null) -> bool:
-  return false
+  if _threw_potion:
+    return false
+  _threw_potion = true
+  return true
