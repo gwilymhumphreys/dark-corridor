@@ -45,6 +45,13 @@ func _build_potions(potions: Array) -> void:
     _potions.add_child(slot)
 
 
+## Stop reading the live fight before it is torn down (the run screen calls this
+## right before freeing the view + advancing, so the VFX wall never samples a
+## CombatManager that's about to free). Render resources free with the view.
+func release() -> void:
+  _vfx.combat = null
+
+
 ## The hover surface for the slow-mo intent (ui_layout_prd "one verb"): any board
 ## item (either side), any potion slot, or the enemy in the corridor. Hovering any
 ## of these asks the Combat manager to slow the clock (both sides) to inspect.

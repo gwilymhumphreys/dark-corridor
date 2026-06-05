@@ -5,32 +5,90 @@ extends Control
 ## screen calls `cm.tick(delta)` on the active fight — the same one tick the autotest
 ## runs via sim_step (combat_manager.gd).
 ##
-## STEP 2 scope: drive the FIRST beat's fight and compose the FRAMED combat view over
-## it (corridor + enemy occupant top-right, player left, boards, HP, potions). The
-## full advance-through-the-map loop arrives in Step 4.
+## STEP 4 scope: a polling state machine that drives the WHOLE descent in real time,
+## mirroring AutoTestMode.run_full — enter beat → (fight: tick to resolution | rest:
+## resolves on begin) → fulfil reward → advance → repeat, until the run ends (Game
+## then swaps to the win/death screen). The run processes each beat's outcome via its
+## own signal chain DURING the resolving tick; this screen reacts by POLLING
+## cm.is_resolved() (never from inside the signal), so it can safely tear the fight
+## down and advance. The draft pick is auto-taken here (the Step-5 overlay supplies it);
+## the corridor approach is inserted at _advance in Step 7.
 
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
+
+enum State { IDLE, FIGHTING, ENDED }
 
 var _run: RunManager
 var _cm: CombatManager
 var _view: CombatViewFramed
-var _result: Label
+var _state: int = State.IDLE
 
 
 func _ready() -> void:
-  _result = $HUD/Result
   _run = Game.run
   if _run == null:
     return
-  _begin_fight()
+  _enter_beat()
 
 
-func _begin_fight() -> void:
+# --- the run cycle (a polling FSM; mirrors AutoTestMode.run_full) ------------
+
+func _enter_beat() -> void:
+  if _run.is_ended():
+    return
   _run.begin_current()
   _cm = _run.combat_manager()
-  if _cm == null:
-    return   # a non-fight beat (rest) — the Step-4 loop handles these
-  _cm.resolved.connect(_on_resolved)
+  if _cm != null and not _cm.is_resolved():
+    _build_combat_view()
+    _state = State.FIGHTING
+  else:
+    # A non-fight beat (rest) resolved synchronously on begin().
+    _cm = null
+    _after_beat()
+
+
+# The one real-time tick: advance the active fight off real delta (steps_due ×
+# sim_step), then react to resolution OUTSIDE the resolving signal. Nothing in the
+# logic tree is mounted — this is the same tick the headless autotest runs directly.
+func _physics_process(delta: float) -> void:
+  if _state != State.FIGHTING or _cm == null:
+    return
+  if _cm.is_resolved():
+    _state = State.IDLE
+    _after_beat()
+  else:
+    _cm.tick(delta)
+
+
+# Slow-mo-on-hover intent (ui_layout_prd "one verb"): hovering any inspectable — a
+# board item (either side), a potion, or the enemy in the corridor — asks the Combat
+# manager to slow the clock (both sides) to read it.
+func _process(_delta: float) -> void:
+  if _state != State.FIGHTING or _cm == null or _view == null or _cm.is_resolved():
+    return
+  _cm.request_slowmo(_view.mouse_over_inspectable(get_global_mouse_position()))
+
+
+# Post-beat: the run already fulfilled the outcome (reward / run-end) via its signal
+# chain during the resolving tick. Here we react from OUTSIDE that emission — apply a
+# pending draft, then advance. Win/death route through run_ended → Game → screen swap.
+func _after_beat() -> void:
+  if _run.is_ended():
+    return
+  if _run.has_pending_draft():
+    _run.apply_draft_pick(0)   # TODO Step 5: the draft overlay supplies the pick
+  _advance()
+
+
+func _advance() -> void:
+  _teardown_combat_view()
+  _run.advance()
+  _enter_beat()   # TODO Step 7: the corridor approach plays here before the fight
+
+
+# --- combat view lifetime ----------------------------------------------------
+
+func _build_combat_view() -> void:
   var enemy: Actor = _run.current_encounter().enemies[0]
   _view = COMBAT_VIEW.instantiate()
   add_child(_view)
@@ -38,23 +96,8 @@ func _begin_fight() -> void:
   _view.bind(_cm, _run.player, enemy, _run.potions)
 
 
-# The one real-time tick: advance the active fight off real delta (steps_due ×
-# sim_step). Nothing in the logic tree is mounted — this is the same tick the
-# headless autotest runs directly.
-func _physics_process(delta: float) -> void:
-  if _cm != null and not _cm.is_resolved():
-    _cm.tick(delta)
-
-
-# Slow-mo-on-hover intent (ui_layout_prd "one verb"): hovering any inspectable —
-# a board item (either side), a potion, or the enemy in the corridor — asks the
-# Combat manager to slow the clock (both sides proportionally) to read it.
-func _process(_delta: float) -> void:
-  if _cm == null or _cm.is_resolved() or _view == null:
-    return
-  var mouse: Vector2 = get_global_mouse_position()
-  _cm.request_slowmo(_view.mouse_over_inspectable(mouse))
-
-
-func _on_resolved(player_won: bool) -> void:
-  _result.text = tr('Victory') if player_won else tr('Defeat')
+func _teardown_combat_view() -> void:
+  if _view != null:
+    _view.release()      # stop the VFX wall reading the CombatManager we're about to free
+    _view.queue_free()   # deferred — the view holds render resources (CLAUDE.md)
+    _view = null
