@@ -21,6 +21,7 @@ SfxManager="*res://src/autoloads/sfx_manager.gd"
 MusicManager="*res://src/autoloads/music_manager.gd"
 StatusManager="*res://src/autoloads/status_manager.gd"
 Save="*res://src/autoloads/save.gd"
+Draft="*res://src/autoloads/draft.gd"
 
 [display]
 
