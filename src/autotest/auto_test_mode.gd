@@ -72,7 +72,7 @@ func _ready() -> void:
 func run_once() -> Dictionary:
   seed(seed_value)   # plumbed; a single Phase-1 fight draws no RNG
   logger = AutoTestLogger.new()
-  driver = AutoTestDriver.new(strategy)
+  driver = AutoTestDriver.new(strategy, seed_value)
 
   var fight: Dictionary = _build_fight()
   var cm: CombatManager = fight['cm']
@@ -125,7 +125,7 @@ func run_once() -> Dictionary:
 ## `--encounters` cap; 1 only on a failure (a fight stuck / timed out / wall).
 func run_full() -> Dictionary:
   logger = AutoTestLogger.new()
-  driver = AutoTestDriver.new(strategy)
+  driver = AutoTestDriver.new(strategy, seed_value)
   Game.start_run(seed_value)
   var run: RunManager = Game.run
   logger.log_event('run_started', { 'seed': seed_value })
@@ -167,8 +167,8 @@ func run_full() -> Dictionary:
       break
     if run.has_pending_draft():
       var offer: Array = run.pending_draft()
-      var pick: int = driver.choose_draft(offer)
-      logger.log_event('draft', { 'beat': run.position, 'picked': offer[pick].name_key })
+      var pick: int = driver.choose_draft(offer, run.player.board)
+      logger.log_event('draft', { 'beat': run.position, 'picked': offer[pick].name_key, 'strategy': strategy })
       run.apply_draft_pick(pick)
     beats_cleared += 1
     run.advance()
