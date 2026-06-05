@@ -33,3 +33,17 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   assert_gt(Game.run.player.board.size(), 3, 'drafted picks landed on the board')
 
   screen.free()
+
+
+func test_fight_beat_approaches_then_fights() -> void:
+  # A fight beat opens with the corridor approach (combat frozen), then begins on
+  # arrival. The clock is not ticked until FIGHTING, so the enemy is unharmed while
+  # it walks in.
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  assert_eq(screen._state, RunScreen.State.APPROACHING, 'a fight beat starts in the approach')
+  for i in 4:   # 4s of delta walks past APPROACH_DURATION (2.5s)
+    screen._physics_process(1.0)
+  assert_eq(screen._state, RunScreen.State.FIGHTING, 'combat begins on arrival')
+  screen.free()

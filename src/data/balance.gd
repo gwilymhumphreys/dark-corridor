@@ -80,6 +80,11 @@ const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fract
 # The enemy occupant's on-screen scale when arrived (depth 0) inside the corridor
 # SubViewport; the approach scales it from depth via CorridorScaled.axis_scale.
 const ENEMY_FULL_SCALE: float = 3.0
+# The approach (phase4_plan Step 7): the enemy starts this many corridor cells deep
+# (a speck at the vanishing point) and walks to depth 0 (full size) over this many
+# seconds; the boards activate / combat begins on arrival.
+const APPROACH_DEPTH_START: float = 5.0
+const APPROACH_DURATION: float = 2.5
 
 
 # ── Delivery visual hold (presentation lifetime; vfx_driver_prd) ─────────────

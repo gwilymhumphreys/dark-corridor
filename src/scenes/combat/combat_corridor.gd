@@ -24,6 +24,12 @@ func set_enemy_visible(is_visible: bool) -> void:
   _enemy.visible = is_visible
 
 
+## Glide the corridor forward (the treadmill) for parallax during the approach, then
+## ease to a stop on arrival. Drives the shared CorridorRenderer motion interface.
+func set_gliding(on: bool) -> void:
+  _corridor.set_forward_held(on)
+
+
 ## The enemy sprite's centre in global (screen) space — the VFX wall's target for
 ## projectiles flying into the corridor. The occupant is centred on the axis (the
 ## SubViewport centre), so this is the panel's on-screen centre.

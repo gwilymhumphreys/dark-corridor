@@ -1,3 +1,4 @@
+class_name RunScreen
 extends Control
 ## The run screen (ui_layout_prd) — the real-time client of the run. It reads
 ## Game.run + the live CombatManager and emits intents (slow-mo); it never mutates
@@ -17,13 +18,14 @@ extends Control
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
 
-enum State { IDLE, FIGHTING, DRAFTING, ENDED }
+enum State { IDLE, APPROACHING, FIGHTING, DRAFTING, ENDED }
 
 var _run: RunManager
 var _cm: CombatManager
 var _view: CombatViewFramed
 var _draft: DraftOverlay
 var _state: int = State.IDLE
+var _approach_elapsed: float = 0.0
 
 @onready var _map: MapStrip = $HUD/MapStrip
 
@@ -45,24 +47,50 @@ func _enter_beat() -> void:
   _cm = _run.combat_manager()
   if _cm != null and not _cm.is_resolved():
     _build_combat_view()
-    _state = State.FIGHTING
+    _begin_approach()
   else:
     # A non-fight beat (rest) resolved synchronously on begin().
     _cm = null
     _after_beat()
 
 
-# The one real-time tick: advance the active fight off real delta (steps_due ×
-# sim_step), then react to resolution OUTSIDE the resolving signal. Nothing in the
-# logic tree is mounted — this is the same tick the headless autotest runs directly.
+# The corridor approach (phase4_plan Step 7): the enemy walks from depth into full
+# view while the corridor glides; the fight clock is NOT ticked yet, so combat is
+# frozen until arrival. Driven off _physics_process (not a Tween) so the headless
+# run-screen test advances it with the same manual ticks that drive the fights.
+func _begin_approach() -> void:
+  _state = State.APPROACHING
+  _approach_elapsed = 0.0
+  _view.set_enemy_depth(Balance.APPROACH_DEPTH_START)
+  _view.set_gliding(true)
+
+
+func _arrive() -> void:
+  _view.set_enemy_depth(0.0)
+  _view.set_gliding(false)
+  _state = State.FIGHTING   # boards activate — the clock starts ticking next frame
+
+
+# The one real-time tick: walk the approach in, then advance the active fight off
+# real delta (steps_due × sim_step) and react to resolution OUTSIDE the resolving
+# signal. Nothing in the logic tree is mounted — this is the same tick the headless
+# autotest runs directly.
 func _physics_process(delta: float) -> void:
-  if _state != State.FIGHTING or _cm == null:
-    return
-  if _cm.is_resolved():
-    _state = State.IDLE
-    _after_beat()
-  else:
-    _cm.tick(delta)
+  match _state:
+    State.APPROACHING:
+      _approach_elapsed += delta
+      var t: float = clampf(_approach_elapsed / Balance.APPROACH_DURATION, 0.0, 1.0)
+      _view.set_enemy_depth(lerpf(Balance.APPROACH_DEPTH_START, 0.0, t))
+      if t >= 1.0:
+        _arrive()
+    State.FIGHTING:
+      if _cm == null:
+        return
+      if _cm.is_resolved():
+        _state = State.IDLE
+        _after_beat()
+      else:
+        _cm.tick(delta)
 
 
 # Slow-mo-on-hover intent (ui_layout_prd "one verb"): hovering any inspectable — a

@@ -45,6 +45,16 @@ func _build_potions(potions: Array) -> void:
     _potions.add_child(slot)
 
 
+## Approach controls (phase4_plan Step 7) — the run screen tweens the enemy from
+## depth into full view, gliding the corridor for parallax, before combat begins.
+func set_enemy_depth(depth_cells: float) -> void:
+  _corridor.set_enemy_depth(depth_cells)
+
+
+func set_gliding(on: bool) -> void:
+  _corridor.set_gliding(on)
+
+
 ## Stop reading the live fight before it is torn down (the run screen calls this
 ## right before freeing the view + advancing, so the VFX wall never samples a
 ## CombatManager that's about to free). Render resources free with the view.
