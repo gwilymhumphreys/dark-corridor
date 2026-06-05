@@ -18,6 +18,9 @@ const DOT_FAMILY: String = 'Poison'
 var events: Array = []                 # Array[Dictionary] — { type, data }
 var damage_by_family: Dictionary = {}  # family name -> total damage attributed
 var total_damage: float = 0.0
+# Phase 5 (tune machinery): per-encounter breakdown + per-item fire counts.
+var encounters: Array = []             # Array[Dictionary] — one per resolved beat
+var fires_by_item: Dictionary = {}     # item name_key -> times it fired (player items)
 
 
 ## Net HP loss for ONE actor in ONE sim-step, split into damage records by family.
@@ -62,6 +65,19 @@ func record_damage(family: String, amount: float) -> void:
   total_damage += amount
 
 
+## Record one resolved beat (a fight or rest) for the per-encounter table. `rec` =
+## { beat, type, name, duration, hp_before, hp_after, outcome }.
+func record_encounter(rec: Dictionary) -> void:
+  encounters.append(rec)
+
+
+## Count one fire of a player item (by name_key) — the "did it do anything" signal a
+## trap pick fails. Block/heal items fire without dealing damage, so fires (not damage)
+## is what distinguishes a working defensive item from an idle trap.
+func record_item_fire(name: String) -> void:
+  fires_by_item[name] = int(fires_by_item.get(name, 0)) + 1
+
+
 ## Fold the handed run `result` together with the accumulated tallies into a flat
 ## summary dict. `result` carries what only AutoTestMode can read off the fight:
 ##   { outcome, won, resolved, steps, sim_seconds, wall_ms,
@@ -81,6 +97,10 @@ func summarize(result: Dictionary) -> Dictionary:
     'board_size': result.get('board_size', 0),         # run mode only
     'total_damage': total_damage,
     'damage_by_family': damage_by_family.duplicate(),
+    'encounters': encounters.duplicate(true),           # run mode only
+    'fires_by_item': fires_by_item.duplicate(),
+    'player_items': result.get('player_items', []),     # final board names (run mode)
+    'strategy': result.get('strategy', ''),
   }
 
 
@@ -144,10 +164,61 @@ func write_report(path: String, summary: Dictionary) -> void:
       lines.append('- %s: %.1f' % [family, summary['damage_by_family'][family]])
   lines.append('')
   lines.append('Total damage dealt: **%.1f**' % summary['total_damage'])
+
+  # Per-encounter breakdown (run mode) — duration vs the ~10–15s window + HP attrition.
+  if not summary['encounters'].is_empty():
+    lines.append('')
+    lines.append('## Encounters')
+    lines.append('')
+    lines.append('| Beat | Type | Name | Duration | HP before → after | Outcome |')
+    lines.append('|------|------|------|----------|-------------------|---------|')
+    for enc in summary['encounters']:
+      lines.append('| %d | %s | %s | %.1fs | %.0f → %.0f | %s |' % [
+        int(enc.get('beat', 0)), enc.get('type', '?'), enc.get('name', ''),
+        float(enc.get('duration', 0.0)), float(enc.get('hp_before', 0.0)),
+        float(enc.get('hp_after', 0.0)), enc.get('outcome', ''),
+      ])
+
+  # Per-item contribution (run mode) — fires + damage; a never-fired item is a trap pick.
+  var rows: Array = _item_contribution_rows(summary)
+  if not rows.is_empty():
+    lines.append('')
+    lines.append('## Item contribution (player board)')
+    lines.append('')
+    lines.append('| Item | Count | Fires | Damage | Trap? |')
+    lines.append('|------|-------|-------|--------|-------|')
+    for r in rows:
+      lines.append('| %s | %d | %d | %.1f | %s |' % [
+        r['name'], int(r['count']), int(r['fires']), float(r['damage']), 'yes' if r['trap'] else '',
+      ])
+
   _write_file(path, '\n'.join(lines) + '\n')
 
 
 # --- helpers ----------------------------------------------------------------
+
+## Per-item contribution rows from the final player board + the fire/damage tallies.
+## Aggregates duplicates by name (with a count); a board item that never fired is
+## flagged a trap pick (the "drafted but idle" signal `tune` reads).
+func _item_contribution_rows(summary: Dictionary) -> Array:
+  var counts: Dictionary = {}
+  var order: Array = []
+  for name in summary.get('player_items', []):
+    if not counts.has(name):
+      counts[name] = 0
+      order.append(name)
+    counts[name] = int(counts[name]) + 1
+  var rows: Array = []
+  for name in order:
+    var fires: int = int(summary['fires_by_item'].get(name, 0))
+    rows.append({
+      'name': name,
+      'count': counts[name],
+      'fires': fires,
+      'damage': float(summary['damage_by_family'].get(name, 0.0)),
+      'trap': fires == 0,
+    })
+  return rows
 
 ## Families sorted by damage descending (stable, readable ordering for reports).
 func _sorted_families(tally: Dictionary) -> Array:

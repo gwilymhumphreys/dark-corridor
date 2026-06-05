@@ -44,6 +44,10 @@ var notutorial: bool = true
 var logger: AutoTestLogger
 var driver: AutoTestDriver
 
+# Per-player-item cooldown progress across the run, for fire-count detection (a fire
+# resets the cooldown, dropping progress). Player items only — they persist the run.
+var _item_progress: Dictionary = {}
+
 
 ## sim-steps spanning `seconds` of game-time (rounds up). The one bit of timeout
 ## math: --timeout and the stuck threshold are authored in game-seconds, enforced
@@ -126,6 +130,7 @@ func run_once() -> Dictionary:
 func run_full() -> Dictionary:
   logger = AutoTestLogger.new()
   driver = AutoTestDriver.new(strategy, seed_value)
+  _item_progress.clear()
   Game.start_run(seed_value)
   var run: RunManager = Game.run
   logger.log_event('run_started', { 'seed': seed_value })
@@ -146,21 +151,36 @@ func run_full() -> Dictionary:
       outcome = 'WALL_TIMEOUT'
       break
     var enc: Encounter = run.current_encounter()
+    var hp_before: float = run.player.hp
+    var beat_name: String = _beat_name(enc)
+    var is_fight: bool = enc.is_fight()
     logger.log_event('encounter_started', {
-      'beat': run.position, 'frame': enc.def.name_key, 'fight': enc.is_fight(),
+      'beat': run.position, 'frame': enc.def.name_key, 'fight': is_fight,
     })
     run.begin_current()
     var cm: CombatManager = run.combat_manager()
+    var fight_steps: int = 0
+    var fail: String = ''
     if cm != null:
       if run.potions.size() > 0 and driver.should_throw_potion():
         logger.log_event('potion_thrown', { 'beat': run.position, 'potion': run.potions[0].def.name_key })
         run.throw_potion(0)
       var fr: Dictionary = _drive_fight(
         cm, [run.player] + enc.enemies, wall_start, wall_timeout_ms, timeout_steps)
-      total_steps += fr['steps']
-      if fr['outcome'] != '':
-        outcome = fr['outcome']
-        break
+      fight_steps = fr['steps']
+      total_steps += fight_steps
+      fail = fr['outcome']
+    var beat_outcome: String = fail
+    if beat_outcome == '':
+      beat_outcome = ('WON' if cm.player_won() else 'LOST') if cm != null else 'rest'
+    logger.record_encounter({
+      'beat': run.position, 'type': 'Fight' if is_fight else 'Rest', 'name': beat_name,
+      'duration': fight_steps * Balance.STEP, 'hp_before': hp_before, 'hp_after': run.player.hp,
+      'outcome': beat_outcome,
+    })
+    if fail != '':
+      outcome = fail
+      break
     if run.is_ended():
       if run.outcome() == RunManager.Outcome.WON:
         beats_cleared += 1   # the finale counts as cleared; a death clears nothing more
@@ -190,6 +210,8 @@ func run_full() -> Dictionary:
     'beats_cleared': beats_cleared,
     'board_size': run.player.board.size(),
     'enemies': [],
+    'player_items': _player_item_names(run.player),
+    'strategy': strategy,
   }
   logger.log_event('run_ended', { 'outcome': outcome, 'beats': beats_cleared, 'steps': total_steps })
   result['summary'] = logger.summarize(result)
@@ -218,10 +240,23 @@ func _drive_fight(
     cm.sim_step()
     steps += 1
     _observe_damage(cm, actors, before)
+    _observe_fires(actors[0])   # player fires (the contribution table is player-only)
     if stuck.note(_total_hp(actors)):
       outcome = 'STUCK'
       break
   return { 'steps': steps, 'outcome': outcome }
+
+
+## Count a player item's fire when its cooldown resets this step (progress drops). The
+## same "did it fire" read the ItemIcon uses for its recoil — handed state, no game
+## write. First sight of an item records no fire (last = current).
+func _observe_fires(player: Actor) -> void:
+  for it in player.board:
+    var progress: float = it.cooldown.progress()
+    var last: float = _item_progress.get(it, progress)
+    if progress < last - 0.2:
+      logger.record_item_fire(it.def.name_key)
+    _item_progress[it] = progress
 
 
 # --- fight construction -----------------------------------------------------
@@ -274,6 +309,22 @@ func _family_of(source: Variant) -> String:
   if source is Item and source.def != null and source.def.name_key != '':
     return source.def.name_key
   return 'Unknown'
+
+
+## A label for the per-encounter table: the (first) enemy's name for a fight, else the
+## location frame.
+func _beat_name(enc: Encounter) -> String:
+  if enc.is_fight() and not enc.def.enemy_ids.is_empty():
+    return EnemyCatalog.get_def(enc.def.enemy_ids[0]).name_key
+  return enc.def.name_key
+
+
+## The final player board's item names — the contribution table's row set.
+func _player_item_names(player: Actor) -> Array:
+  var names: Array = []
+  for it in player.board:
+    names.append(it.def.name_key)
+  return names
 
 
 func _hp_snapshot(actors: Array) -> Dictionary:

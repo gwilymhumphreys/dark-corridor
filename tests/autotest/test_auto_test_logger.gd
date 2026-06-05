@@ -108,6 +108,46 @@ func test_format_summary_and_report_write() -> void:
   DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
+# --- Phase 5: per-encounter + per-item contribution -------------------------
+
+func test_record_encounter_is_summarized() -> void:
+  var log := AutoTestLogger.new()
+  log.record_encounter({
+    'beat': 0, 'type': 'Fight', 'name': 'Corridor Grunt',
+    'duration': 5.0, 'hp_before': 100.0, 'hp_after': 80.0, 'outcome': 'WON',
+  })
+  var s := log.summarize({})
+  assert_eq(s['encounters'].size(), 1, 'the beat is recorded')
+  assert_almost_eq(s['encounters'][0]['duration'], 5.0, 0.0001, 'duration captured')
+  assert_almost_eq(s['encounters'][0]['hp_after'], 80.0, 0.0001, 'HP attrition captured')
+
+
+func test_item_contribution_flags_never_fired_as_trap() -> void:
+  var log := AutoTestLogger.new()
+  log.record_item_fire('Rusted Blade')
+  log.record_item_fire('Rusted Blade')
+  log.record_damage('Rusted Blade', 12.0)
+  log.record_item_fire('Venom Fang')   # fires, but deals no DIRECT damage (DoT channel)
+  # Iron Guard never fired.
+  var s := log.summarize({ 'player_items': ['Rusted Blade', 'Iron Guard', 'Venom Fang'] })
+  var by := {}
+  for r in log._item_contribution_rows(s):
+    by[r['name']] = r
+  assert_eq(by['Rusted Blade']['fires'], 2, 'fires counted')
+  assert_almost_eq(by['Rusted Blade']['damage'], 12.0, 0.0001, 'damage attributed')
+  assert_false(by['Rusted Blade']['trap'], 'a firing damage item is not a trap')
+  assert_false(by['Venom Fang']['trap'], 'a firing non-damage item is not a trap')
+  assert_true(by['Iron Guard']['trap'], 'a never-fired item is a trap pick')
+
+
+func test_item_contribution_aggregates_duplicates() -> void:
+  var log := AutoTestLogger.new()
+  log.record_item_fire('Spite Ward')
+  var rows := log._item_contribution_rows(log.summarize({ 'player_items': ['Spite Ward', 'Spite Ward'] }))
+  assert_eq(rows.size(), 1, 'duplicates aggregate to one row')
+  assert_eq(rows[0]['count'], 2, 'with a count')
+
+
 # --- helpers ----------------------------------------------------------------
 
 func _by_family(records: Array) -> Dictionary:
