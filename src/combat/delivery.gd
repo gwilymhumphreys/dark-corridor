@@ -8,11 +8,12 @@ extends RefCounted
 ## `target` here.
 
 enum Kind { DAMAGE, HEAL, APPLY_STATUS }
+enum Flag { NONE = 0, UNBLOCKABLE = 1 }   # bitmask; resolved by StatusManager
 
 var kind: int = Kind.DAMAGE
 var value: float = 0.0
 var status_type: int = -1     # set when kind == APPLY_STATUS
-var flags: int = 0            # payload flags (e.g. unblockable) — see StatusManager
+var flags: int = 0            # Flag bitmask (e.g. unblockable) — resolved on land
 var target                    # Actor (Phase 1); item-targeting resolved later
 var source                    # the Actor/Item that fired this
 var travel: Ticker
