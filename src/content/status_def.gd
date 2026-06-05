@@ -5,13 +5,14 @@ extends RefCounted
 ## up the def by `type` to apply / step / resolve. Specific numbers point to
 ## Balance, not baked here.
 
-enum Type { BLOCK, POISON, WEAK }
+enum Type { BLOCK, POISON, WEAK, SILENCE }
 enum Shape { PERIODIC, TIMED, POOL, STATIC }
 enum Stacking { ADD, REFRESH }
 
 var type: int
 var shape: int
 var stacking: int = Stacking.ADD
+var gates: bool = false        # if true, suppresses the host item's fire (silence)
 var color: Color = Color.WHITE
 var icon: String = ''
 var name_key: String = ''      # source English; displayed via tr() — localizable

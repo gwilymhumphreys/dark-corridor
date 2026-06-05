@@ -39,3 +39,11 @@ static func _build() -> void:
   weak.color = Color(0.6, 0.4, 0.7)
   weak.name_key = 'Weak'
   _defs[weak.type] = weak
+
+  var silence := StatusDef.new()
+  silence.type = StatusDef.Type.SILENCE
+  silence.shape = StatusDef.Shape.STATIC
+  silence.gates = true
+  silence.color = Color(0.5, 0.5, 0.5)
+  silence.name_key = 'Silence'
+  _defs[silence.type] = silence
