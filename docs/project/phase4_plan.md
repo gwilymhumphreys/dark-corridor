@@ -9,7 +9,21 @@
 
 **Engine:** Godot 4.6.
 **Date:** 2026-06-06.
-**Status: IN PROGRESS.**
+**Status: BUILT (2026-06-06).** All 8 steps green — the presentation skeleton + the
+real-time tick seam, the framed combat view (corridor + thorn-demon occupant, boards,
+HP, potions), slow-mo-on-hover, the run-screen FSM (the whole descent in real time),
+the draft overlay, the map strip, the corridor approach (the enemy scales from depth),
+and the death/win screens. **126 GUT tests green**; the headless autotest still drives
+a full run to a win. Presentation: `src/scenes/main.tscn` + `main_controller.gd`,
+`src/scenes/screens/`, `src/scenes/combat/` (combat view) — see
+[`docs/ui/run_screen.md`](../ui/run_screen.md). **Deviations from the plan below:** the
+`RunManager.advancing` signal was unnecessary (the run screen orchestrates the advance
++ approach directly, keeping RunManager presentation-free); the death/win screens are
+**one** `outcome_screen.tscn` (parameterized by outcome) rather than two. **Known gaps
+(deferred, not bugs):** the potion-throw UI isn't wired (the player can't throw the
+Healing Draught yet); the localization POT pipeline (`tools/extract_pot.gd`, `locale/`)
+isn't set up (strings are written extractable). **Next: Phase 5 — scale content +
+`tune`.**
 
 ---
 

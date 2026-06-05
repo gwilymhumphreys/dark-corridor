@@ -54,10 +54,18 @@ func end_run(outcome: int) -> void:
 
 
 ## Test / session reset (TestCleanup): free any live run, return to Title. Leaves
-## the save slot alone — a reset is not a death (death/win clears it).
+## the save slot alone — a reset is not a death (death/win clears it). Silent (no
+## phase_changed) — tests don't drive screens; the UI uses return_to_title().
 func reset() -> void:
   _clear_run()
   phase = Phase.TITLE
+
+
+## Player intent (the outcome screen's "Title" button): drop the finished run and go
+## back to Title, EMITTING the transition so the presentation swaps screens.
+func return_to_title() -> void:
+  _clear_run()
+  _set_phase(Phase.TITLE)
 
 
 func _on_run_ended(outcome: int) -> void:

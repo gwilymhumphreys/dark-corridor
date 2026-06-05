@@ -6,7 +6,7 @@ keywords to match against.
 
 ## Project design & PRDs (`docs/project/`)
 
-> **Picking up the work?** Read **[project/handoff.md](project/handoff.md)** first — the fresh-agent orientation (what's built, how to work, what's settled, what's next). Then [project/decision-log.md](project/decision-log.md) for the full decision record. Phases 1–3 + the content fast-follow are built; **next is Phase 4 (real UI / the run screen)**.
+> **Picking up the work?** Read **[project/handoff.md](project/handoff.md)** first — the fresh-agent orientation (what's built, how to work, what's settled, what's next). Then [project/decision-log.md](project/decision-log.md) for the full decision record. Phases 1–4 are built (combat spine · autotest · run loop · **real UI / the run screen**); **next is scaling content + `tune`**.
 
 The game-design layer — paper/pre-prototype, except the corridors which are built
 (see below). Start at the **design snapshot** for the whole game, the
@@ -87,6 +87,7 @@ gives interactive controls life.
 
 | Doc | Covers | Keywords |
 |-----|--------|----------|
+| [ui/run_screen.md](ui/run_screen.md) | **Run screen & presentation tree** (Phase 4). The watchable run UI: `main.tscn` → MainController → ScreenHolder (title / run / outcome). The real-time seam (the run screen drives `CombatManager.tick` each frame; the logic tree stays out of the scene tree) + the run-screen FSM (approach → fight → draft → advance). The **framed** combat view (corridor + thorn-demon occupant top-right, player left, board strips, HP, potions, VFX wall), the enemy-in-corridor `axis_scale` occupant + the approach, the draft overlay + map strip, localization. | run screen, presentation tree, framed, combat view, corridor, occupant, axis_scale, approach, tick, FSM, draft overlay, map strip, outcome screen, intents, slow-mo, localization |
 | [ui/audio.md](ui/audio.md) | **Audio.** Two autoloads + bus layout: `SfxManager` (polyphonic one-shot SFX, per-key cooldown, pitch jitter, generic `play()` + shared UI hover/click/press bank, no-op when streams missing) and `MusicManager` (shuffle + crossfade from `assets/music/`, web autoplay gating). Trimmed port of a-machine's audio. | audio, sound, sfx, music, SfxManager, MusicManager, autoload, bus, Effects, Music, polyphonic, cooldown, pitch jitter, crossfade, shuffle, one-shot |
 | [ui/ui-juice.md](ui/ui-juice.md) | **UI Juice.** `UIJuice` drop-in node: attach as a child of any Control for a centred hover bounce + press squash + hover/click sounds. Presets (BUTTON/CARD/ICON) + per-value overrides; recipe from a-machine's `HoverButton`. | juice, UIJuice, hover, press, bounce, squash, tween, pivot, preset, overshoot, settle, drop-in, button feel, interactive |
 

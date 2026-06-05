@@ -4,8 +4,8 @@
 > game is, what's built, how to work, what's settled, and what's next. It points to
 > the canonical docs rather than duplicating them — read this, then the linked docs.
 >
-> **Last updated:** 2026-06-06 — end of **Phase 3 + the enchant/consumable
-> fast-follow**. 112 GUT tests green on Godot 4.6.
+> **Last updated:** 2026-06-06 — end of **Phase 4 (real UI / the run screen)**.
+> 126 GUT tests green on Godot 4.6; the run is now watchable end-to-end.
 
 ---
 
@@ -38,8 +38,8 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
 
 ## Where things stand (what's built)
 
-**Phases 1–3 + the content fast-follow are complete, committed, 112 GUT tests
-green, feel gate passed.** See `git log` (each step is its own green commit).
+**Phases 1–4 are complete, committed, 126 GUT tests green, feel gate passed.** See
+`git log` (each step is its own green commit).
 
 - **Phase 1 — combat spine** (`src/combat/`): `Ticker` · `Timekeeper` (fixed-step
   clock) · `Actor` · `Item` (+ fire pipeline) · `Delivery`/`Payload` · `EventBus` ·
@@ -55,10 +55,20 @@ green, feel gate passed.** See `git log` (each step is its own green commit).
 - **Content** (`src/content/`): all three categories — **Relic** (Stone Ward,
   combat-start block), **Enchant** (Whetstone, scale-a-value, saved on the board),
   **Consumable** (Healing Draught, thrown self-heal). Each proves its path end-to-end.
+- **Phase 4 — real UI / the run screen** (`src/scenes/main.tscn` + `main_controller.gd`,
+  `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title → **framed
+  run** (corridor + thorn-demon occupant top-right, player left, boards/HP/potions, the
+  VFX wall) → **approach** (the enemy scales from depth) → fight (slow-mo-on-hover) →
+  **draft overlay** → advance along a **map strip** → win/death screens. The run screen
+  drives `CombatManager.tick` each frame; the logic tree stays out of the scene tree
+  (the autotest path is unchanged). Full doc: [`../ui/run_screen.md`](../ui/run_screen.md).
 
-**What does NOT exist yet:** any real UI / playable run screen (the run is
-headless-only — see Phase 4), the ~30-encounter pool, elite/boss tiers, events with
-prose, multi-act maps, meta-progression, characters, the `tune` skill.
+**What does NOT exist yet:** the ~30-encounter pool, elite/boss tiers, events with
+prose, multi-act maps, meta-progression, characters, the `tune` skill. Two
+written-but-unwired Phase-4 gaps (not bugs): the **potion-throw UI** (the player can't
+throw the Healing Draught yet) and the **localization POT pipeline**
+(`tools/extract_pot.gd`, `locale/` — strings are written extractable, but the tooling
+CLAUDE.md references isn't set up).
 
 ## The architecture in one picture
 
@@ -134,34 +144,28 @@ real-time play. The harness is currently the only client of the run.
 
 A project memory also banks the status-lifetime + cycle gotchas (auto-surfaced).
 
-## Your task: Phase 4 — real UI / the run screen
+## Your task: Phase 5 — scale content + `tune`
 
-The first phase with **watchable run gameplay** (vs headless + the sandbox). Per
-[`architecture.md` → Scene tree](architecture.md#scene-tree--node-model) and the
-**UI/Layout PRD** ([`ui_layout_prd.md`](ui_layout_prd.md)) + **VFX driver PRD**
-([`vfx_driver_prd.md`](vfx_driver_prd.md)):
+Phase 4 is built — the run is watchable end-to-end ([`phase4_plan.md`](phase4_plan.md)
+· [`../ui/run_screen.md`](../ui/run_screen.md)). The design's next step (decision-log
+*Next steps* → 2.5): **scale the item / enemy / encounter pools and stand up `tune`** —
+turn the 1-enemy, 4-beat prototype into a real run worth balancing.
 
-- **Mount the logic tree under presentation** and turn on real-time play — the
-  `CombatManager`'s `_physics_process` drives `steps_due × sim_step` (the headless
-  autotest path stays valid: it just steps directly instead).
-- **The presentation tree**: `main.tscn` → `ScreenHolder` → title / run / death
-  screens; the **run screen** composes the corridor panel (the approach-from-depth)
-  + a **swappable `CombatView`** (the framed-vs-full-screen open is isolated here) +
-  overlays (draft / choice / 1D-map). It only *reads* logic and *emits intents* —
-  the same intents the autotest Driver calls (`run.apply_draft_pick`,
-  `run.throw_potion`, `cm.request_slowmo`).
-- **Boards / portrait / HP / potions** (extend `src/scenes/combat/board_view.gd`),
-  the **corridor approach** (enemies scale from depth into view; resolution begins on
-  arrival), and the **draft + 1D-map** overlays.
-- **Localization threaded throughout** — every player-facing string `tr()` /
-  POT-extractable from the first one (see `docs/reference/localization.md`); flip
-  `project.godot`'s `main_scene` to `main.tscn` when the spine is mounted (keep
-  `corridor_testbed` runnable).
+- **Content** (`src/content/`): more items (the draft pool is 4), enemies, and beats
+  (the map is a fixed 4); the elite/boss tiers + events-with-prose the PRDs sketch.
+  Author in GDScript catalogs (decision #23); keep every name/tooltip `tr()`-able.
+- **`tune`**: bring the combat/draft tuning loop up on the autotest (the `tune` skill +
+  `tune-run` agent scaffolding exist) — so picks/enemies/encounters are balanced by
+  data, not feel.
+- **Two small Phase-4 follow-ups worth closing first:** wire the **potion-throw UI**
+  (clickable potion → `run.throw_potion`) and set up the **localization POT pipeline**
+  (the tooling CLAUDE.md assumes — `tools/extract_pot.gd`, `locale/`; strings are
+  already written extractable).
 
-**Suggested approach:** write a `phase4_plan.md` (ordered, test-first steps, like the
-others) before building; surface the genuine forks (framed-vs-fullscreen, how much
-of the map UI) to the user; build incrementally, committing each green step. The
-headless autotest remains your regression backstop the whole way.
+Build incrementally, test-first, committing each green step; the headless autotest is
+the regression backstop, and the framed run screen is now watchable for feel
+(`<exe> --path . res://src/scenes/main.tscn` → Start Run; `--autostart --shot
+[--shot-delay s]` to capture a frame).
 
 ## Quick file map
 

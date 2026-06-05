@@ -24,14 +24,3 @@ color = Color(0.03, 0.03, 0.04, 1)
 [node name="HUD" type="CanvasLayer" parent="."]
 
 [node name="MapStrip" parent="HUD" instance=ExtResource("2")]
-
-[node name="Result" type="Label" parent="HUD"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -260.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 90
-horizontal_alignment = 1
-vertical_alignment = 1

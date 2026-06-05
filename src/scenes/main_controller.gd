@@ -9,6 +9,7 @@ extends Node
 
 const TITLE_SCREEN: PackedScene = preload('res://src/scenes/screens/title_screen.tscn')
 const RUN_SCREEN: PackedScene = preload('res://src/scenes/screens/run_screen.tscn')
+const OUTCOME_SCREEN: PackedScene = preload('res://src/scenes/screens/outcome_screen.tscn')
 
 @onready var _holder: Control = $ScreenHolder
 
@@ -35,7 +36,9 @@ func _show_for_phase(phase: int) -> void:
     GameManagerAutoload.Phase.RUN:
       _swap(RUN_SCREEN.instantiate())
     GameManagerAutoload.Phase.DEATH, GameManagerAutoload.Phase.WIN:
-      _swap(_outcome_placeholder(phase))   # Step 8 replaces these with real screens
+      var outcome: OutcomeScreen = OUTCOME_SCREEN.instantiate()
+      _swap(outcome)   # add to the tree first, so its node refs resolve
+      outcome.setup(phase == GameManagerAutoload.Phase.WIN)
     _:
       pass
 
@@ -71,14 +74,3 @@ func _auto_shot() -> void:
   image.save_png(path)
   print('SHOT_SAVED:', ProjectSettings.globalize_path(path))
   get_tree().quit()
-
-
-## Temporary win/death readout until Step 8 builds the real screens.
-func _outcome_placeholder(phase: int) -> Control:
-  var label := Label.new()
-  label.set_anchors_preset(Control.PRESET_FULL_RECT)
-  label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-  label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-  label.add_theme_font_size_override('font_size', 80)
-  label.text = tr('Victory') if phase == GameManagerAutoload.Phase.WIN else tr('Defeat')
-  return label
