@@ -77,6 +77,8 @@ func summarize(result: Dictionary) -> Dictionary:
     'player_hp': result.get('player_hp', 0.0),
     'player_max_hp': result.get('player_max_hp', 0.0),
     'enemies': result.get('enemies', []),
+    'beats_cleared': result.get('beats_cleared', 0),   # run mode only
+    'board_size': result.get('board_size', 0),         # run mode only
     'total_damage': total_damage,
     'damage_by_family': damage_by_family.duplicate(),
   }
@@ -92,6 +94,8 @@ func format_summary(summary: Dictionary) -> PackedStringArray:
   lines.append('Duration: %d sim-steps (%.2fs game-time), %d ms wall' % [
     summary['steps'], summary['sim_seconds'], summary['wall_ms'],
   ])
+  if summary['board_size'] > 0:
+    lines.append('Beats cleared: %d   Final board: %d items' % [summary['beats_cleared'], summary['board_size']])
   lines.append('Player HP: %.1f / %.1f' % [summary['player_hp'], summary['player_max_hp']])
   for e in summary['enemies']:
     lines.append('Enemy "%s" HP: %.1f / %.1f' % [e['name'], e['hp'], e['max_hp']])
@@ -121,6 +125,9 @@ func write_report(path: String, summary: Dictionary) -> void:
   ])
   lines.append('- Duration: %d sim-steps (%.2fs game-time)' % [summary['steps'], summary['sim_seconds']])
   lines.append('- Wall time: %d ms' % summary['wall_ms'])
+  if summary['board_size'] > 0:
+    lines.append('- Beats cleared: %d' % summary['beats_cleared'])
+    lines.append('- Final board: %d items' % summary['board_size'])
   lines.append('')
   lines.append('## Final HP')
   lines.append('')

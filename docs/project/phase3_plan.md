@@ -9,6 +9,10 @@
 
 **Engine:** Godot 4.6.
 **Date:** 2026-06-05.
+**Status: BUILT (2026-06-05).** All seven steps green — Save · Relic · Draft ·
+Encounter · Run · Game + the autotest run extension. The autotest drives the
+whole descent headless to a win, deterministically by seed, with quit/resume.
+Next: Phase 4 (real UI / the run screen).
 
 ---
 

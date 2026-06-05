@@ -28,8 +28,10 @@ var seed_value: int = 0
 var speed: float = Balance.TIMESCALE_FAST_TEST
 var timeout_seconds: float = 120.0          # max game-seconds before fail
 var wall_timeout_seconds: float = 30.0      # max real-seconds (hang watchdog)
-var stuck_threshold_seconds: float = 10.0   # flat total-HP this long = stuck
+var stuck_threshold_seconds: float = 10.0   # flat total-HP this long = stuck (per fight)
 var strategy: String = 'first-viable'
+var single_fight: bool = false              # --single-fight: the Phase-2 one-fight path
+var encounters: int = 0                     # --encounters N: cap beats (0 = play the whole map)
 # Run artifacts default into a project-local, git-ignored dir (autotest_results/)
 # so they're easy to find but never committed; --log / --report override.
 var log_path: String = OUTPUT_DIR + '/autotest_log.txt'
@@ -54,20 +56,20 @@ func _ready() -> void:
   if Engine.is_editor_hint():
     return
   _parse_args()
-  print('[AutoTest] start — seed=%d speed=%.1fx timeout=%.0fs wall=%.0fs strategy=%s (nosave+notutorial forced)' % [
-    seed_value, speed, timeout_seconds, wall_timeout_seconds, strategy,
+  print('[AutoTest] start — mode=%s seed=%d speed=%.1fx timeout=%.0fs wall=%.0fs strategy=%s (nosave+notutorial forced)' % [
+    'single-fight' if single_fight else 'run', seed_value, speed, timeout_seconds, wall_timeout_seconds, strategy,
   ])
-  var result: Dictionary = run_once()
+  var result: Dictionary = run_once() if single_fight else run_full()
   _report(result)
   get_tree().quit(result['exit_code'])
 
 
 # --- the run (testable core; no tree, no quit, no I/O) ----------------------
 
-## Build and drive one fight to a verdict; return the result + summary. Pure of
-## the scene tree and process exit so GUT can call it directly.
+## Build and drive ONE fight to a verdict (the Phase-2 path; `--single-fight`).
+## Pure of the scene tree and process exit so GUT can call it directly.
 func run_once() -> Dictionary:
-  seed(seed_value)   # plumbed; Phase 1 combat draws no RNG (inert until Phase 3)
+  seed(seed_value)   # plumbed; a single Phase-1 fight draws no RNG
   logger = AutoTestLogger.new()
   driver = AutoTestDriver.new(strategy)
 
@@ -86,18 +88,121 @@ func run_once() -> Dictionary:
     'enemy_count': enemies.size(),
   })
 
-  var timeout_steps: int = seconds_to_steps(timeout_seconds)
-  var stuck := AutoTestStuckDetector.new(seconds_to_steps(stuck_threshold_seconds))
-  var wall_timeout_ms: int = int(wall_timeout_seconds * 1000.0)
   var wall_start: int = Time.get_ticks_msec()
-  stuck.note(_total_hp(actors))   # baseline
+  var fr: Dictionary = _drive_fight(
+    cm, actors, wall_start, int(wall_timeout_seconds * 1000.0), seconds_to_steps(timeout_seconds))
 
-  var alive: Dictionary = {}
-  for a in actors:
-    alive[a] = true
+  var resolved: bool = cm.is_resolved()
+  var outcome: String = fr['outcome']
+  if outcome == '':
+    outcome = 'WIN' if cm.player_won() else 'LOSS'
+
+  var result: Dictionary = {
+    'outcome': outcome,
+    'resolved': resolved,
+    'won': resolved and cm.player_won(),
+    'steps': fr['steps'],
+    'sim_seconds': cm.timekeeper.sim_time,
+    'wall_ms': Time.get_ticks_msec() - wall_start,
+    'player_hp': player.hp,
+    'player_max_hp': player.max_hp,
+    'enemies': _enemy_states(enemies, names),
+  }
+  logger.log_event('fight_ended', { 'outcome': outcome, 'steps': fr['steps'] })
+  result['summary'] = logger.summarize(result)
+  result['exit_code'] = 0 if resolved else 1
+
+  cm.teardown()
+  cm.free()
+  return result
+
+
+## Drive a full headless run (Game → Run → Encounter → Combat): start a seeded run,
+## resolve each beat (step fights with per-step damage observation, take draft
+## picks via the Driver, advance), and report the verdict. `--seed` is LIVE here
+## (it seeds the run RNG). Exit 0 if the run ended cleanly (won OR died) or hit the
+## `--encounters` cap; 1 only on a failure (a fight stuck / timed out / wall).
+func run_full() -> Dictionary:
+  logger = AutoTestLogger.new()
+  driver = AutoTestDriver.new(strategy)
+  Game.start_run(seed_value)
+  var run: RunManager = Game.run
+  logger.log_event('run_started', { 'seed': seed_value })
+
+  var wall_start: int = Time.get_ticks_msec()
+  var wall_timeout_ms: int = int(wall_timeout_seconds * 1000.0)
+  var timeout_steps: int = seconds_to_steps(timeout_seconds)   # per-fight game-time cap
+  var cap: int = encounters if encounters > 0 else 1000
 
   var outcome: String = ''
+  var total_steps: int = 0
+  var beats_cleared: int = 0
+  while not run.is_ended():
+    if beats_cleared >= cap:
+      outcome = 'CAP'
+      break
+    if Time.get_ticks_msec() - wall_start >= wall_timeout_ms:
+      outcome = 'WALL_TIMEOUT'
+      break
+    var enc: Encounter = run.current_encounter()
+    logger.log_event('encounter_started', {
+      'beat': run.position, 'frame': enc.def.name_key, 'fight': enc.is_fight(),
+    })
+    run.begin_current()
+    var cm: CombatManager = run.combat_manager()
+    if cm != null:
+      var fr: Dictionary = _drive_fight(
+        cm, [run.player] + enc.enemies, wall_start, wall_timeout_ms, timeout_steps)
+      total_steps += fr['steps']
+      if fr['outcome'] != '':
+        outcome = fr['outcome']
+        break
+    if run.is_ended():
+      if run.outcome() == RunManager.Outcome.WON:
+        beats_cleared += 1   # the finale counts as cleared; a death clears nothing more
+      break
+    if run.has_pending_draft():
+      var offer: Array = run.pending_draft()
+      var pick: int = driver.choose_draft(offer)
+      logger.log_event('draft', { 'beat': run.position, 'picked': offer[pick].name_key })
+      run.apply_draft_pick(pick)
+    beats_cleared += 1
+    run.advance()
+
+  var ended: bool = run.is_ended()
+  if outcome == '':
+    outcome = 'WON' if run.outcome() == RunManager.Outcome.WON else 'DIED'
+  var failed: bool = outcome == 'STUCK' or outcome == 'TIMEOUT' or outcome == 'WALL_TIMEOUT'
+
+  var result: Dictionary = {
+    'outcome': outcome,
+    'resolved': ended,
+    'won': ended and run.outcome() == RunManager.Outcome.WON,
+    'steps': total_steps,
+    'sim_seconds': total_steps * Balance.STEP,
+    'wall_ms': Time.get_ticks_msec() - wall_start,
+    'player_hp': run.player.hp,
+    'player_max_hp': run.player.max_hp,
+    'beats_cleared': beats_cleared,
+    'board_size': run.player.board.size(),
+    'enemies': [],
+  }
+  logger.log_event('run_ended', { 'outcome': outcome, 'beats': beats_cleared, 'steps': total_steps })
+  result['summary'] = logger.summarize(result)
+  result['exit_code'] = 1 if failed else 0
+  return result
+
+
+## Step a single fight's CombatManager to a verdict — per-step damage observation,
+## a per-fight game-time cap, a per-fight stuck guard, and the shared wall-clock
+## watchdog. Returns { steps, outcome }; outcome is '' when it resolved normally,
+## else 'STUCK' / 'TIMEOUT' / 'WALL_TIMEOUT'. Shared by run_once + run_full.
+func _drive_fight(
+    cm: CombatManager, actors: Array, wall_start: int, wall_timeout_ms: int, timeout_steps: int) -> Dictionary:
+  var stuck := AutoTestStuckDetector.new(seconds_to_steps(stuck_threshold_seconds))
+  stuck.note(_total_hp(actors))   # baseline
   var steps: int = 0
+  var outcome: String = ''
   while not cm.is_resolved():
     if Time.get_ticks_msec() - wall_start >= wall_timeout_ms:
       outcome = 'WALL_TIMEOUT'
@@ -109,33 +214,10 @@ func run_once() -> Dictionary:
     cm.sim_step()
     steps += 1
     _observe_damage(cm, actors, before)
-    _log_deaths(actors, alive, names, steps)
     if stuck.note(_total_hp(actors)):
       outcome = 'STUCK'
       break
-
-  var resolved: bool = cm.is_resolved()
-  if resolved:
-    outcome = 'WIN' if cm.player_won() else 'LOSS'
-
-  var result: Dictionary = {
-    'outcome': outcome,
-    'resolved': resolved,
-    'won': resolved and cm.player_won(),
-    'steps': steps,
-    'sim_seconds': cm.timekeeper.sim_time,
-    'wall_ms': Time.get_ticks_msec() - wall_start,
-    'player_hp': player.hp,
-    'player_max_hp': player.max_hp,
-    'enemies': _enemy_states(enemies, names),
-  }
-  logger.log_event('fight_ended', { 'outcome': outcome, 'steps': steps })
-  result['summary'] = logger.summarize(result)
-  result['exit_code'] = 0 if resolved else 1
-
-  cm.teardown()
-  cm.free()
-  return result
+  return { 'steps': steps, 'outcome': outcome }
 
 
 # --- fight construction -----------------------------------------------------
@@ -182,13 +264,6 @@ func _observe_damage(cm: CombatManager, actors: Array, before: Dictionary) -> vo
     var direct: Array = direct_by_target.get(a, [])
     for rec in AutoTestLogger.attribute_damage(loss, direct):
       logger.record_damage(rec['family'], rec['amount'])
-
-
-func _log_deaths(actors: Array, alive: Dictionary, names: Dictionary, step: int) -> void:
-  for a in actors:
-    if alive[a] and not a.is_alive():
-      alive[a] = false
-      logger.log_event('actor_died', { 'who': names.get(a, 'Player'), 'step': step })
 
 
 func _family_of(source: Variant) -> String:
@@ -261,6 +336,11 @@ func _parse_args() -> void:
     elif arg == '--report':
       report_path = _value(args, i)
       i += 1
+    elif arg == '--encounters':
+      encounters = int(_value(args, i))
+      i += 1
+    elif arg == '--single-fight':
+      single_fight = true
     i += 1
 
 
