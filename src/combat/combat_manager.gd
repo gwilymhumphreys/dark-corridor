@@ -50,6 +50,16 @@ func _register_actor(actor: Actor) -> void:
 # --- The tick ---------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
+  tick(delta)
+
+
+## Advance the fight by real `delta` (steps_due × sim_step). THE one tick, exposed
+## so a real-time client can drive it WITHOUT mounting the logic tree: a directly
+## added CombatManager (the sandbox) self-drives via `_physics_process`; the Phase-4
+## run screen calls `tick(delta)` each physics frame on the active fight; the headless
+## autotest calls `sim_step()` directly (no real time → bit-reproducible). All three
+## are the same tick — none mounts the Encounter / Run manager.
+func tick(delta: float) -> void:
   if _resolved or timekeeper == null:
     return
   for i in timekeeper.steps_due(delta):

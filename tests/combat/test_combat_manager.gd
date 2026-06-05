@@ -209,3 +209,40 @@ func test_teardown_clears_combat_state() -> void:
   assert_true(p.statuses.is_empty(), 'player combat statuses cleared')
   assert_true(e.statuses.is_empty(), 'enemy combat statuses cleared')
   assert_true(cm._deliveries.is_empty(), 'in-flight deliveries dropped')
+
+
+# --- Phase 4: the real-time tick seam ---------------------------------------
+
+func test_tick_drives_fight_to_resolution() -> void:
+  # tick(delta) is the run screen's real-time driver: it turns real delta into
+  # whole sim-steps (steps_due) and runs them. Same verdict as run_headless, just
+  # off a clock instead of a raw loop.
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  var guard := 0
+  while not cm.is_resolved() and guard < 2000:
+    cm.tick(0.1)   # ~6 sim-steps per call at base scale x1
+    guard += 1
+  assert_true(cm.is_resolved(), 'tick(delta) drives the fight to a verdict')
+  assert_true(cm.player_won(), 'player (100 HP) beats the grunt (40 HP)')
+
+
+func test_physics_process_drives_tick_when_mounted() -> void:
+  # A directly-mounted CombatManager (the sandbox) must still self-drive: its
+  # _physics_process delegates to tick(). Mount it, run a couple of physics frames,
+  # and confirm the clock advanced. Not via _manager — we own its lifetime here.
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  cm.timekeeper.set_base_scale(20.0)   # many sim-steps per physics frame
+  add_child(cm)
+  var before: float = cm.timekeeper.sim_time
+  await get_tree().physics_frame
+  await get_tree().physics_frame
+  assert_gt(cm.timekeeper.sim_time, before, 'mounted _physics_process advanced the clock via tick()')
+  remove_child(cm)
+  cm.teardown()
+  cm.free()
