@@ -4,8 +4,13 @@
 > game is, what's built, how to work, what's settled, and what's next. It points to
 > the canonical docs rather than duplicating them — read this, then the linked docs.
 >
-> **Last updated:** 2026-06-06 — end of **Phase 4 (real UI / the run screen)**.
-> 126 GUT tests green on Godot 4.6; the run is now watchable end-to-end.
+> **Last updated:** 2026-06-06 — end of **Phase 5's tune-machinery bite** (draft
+> strategies + the per-encounter/per-item report). 139 GUT tests green on Godot 4.6;
+> the run is watchable end-to-end and the autotest can play + report different builds.
+>
+> **Content (items / enemies / encounters) is the project owner's domain — do NOT
+> author content unless asked.** This handoff is for the *non-content* engineering
+> backlog (see "Your task" below).
 
 ---
 
@@ -30,16 +35,18 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
    status" + "Next steps" first.**
 3. **[`architecture.md`](architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
-4. The **phase plans**: [`phase1_plan.md`](phase1_plan.md) (combat spine),
-   [`phase3_plan.md`](phase3_plan.md) (run loop). Both BUILT.
+4. The **phase plans** (all BUILT): [`phase1_plan.md`](phase1_plan.md) (combat spine),
+   [`phase3_plan.md`](phase3_plan.md) (run loop), [`phase4_plan.md`](phase4_plan.md)
+   (real UI / the run screen — read [`../ui/run_screen.md`](../ui/run_screen.md) with
+   it), [`phase5_plan.md`](phase5_plan.md) (the `tune` machinery).
 5. The per-system **PRDs** as needed (each system has one in `docs/project/`).
-6. **[`../testing/autotest.md`](../testing/autotest.md)** — the headless harness you'll
-   use to drive + test everything.
+6. **[`../testing/autotest.md`](../testing/autotest.md)** — the headless harness +
+   draft strategies + the report `tune` reads; you'll use it to drive + test everything.
 
 ## Where things stand (what's built)
 
-**Phases 1–4 are complete, committed, 126 GUT tests green, feel gate passed.** See
-`git log` (each step is its own green commit).
+**Phases 1–4 + Phase 5's tune-machinery bite are complete, committed, 139 GUT tests
+green, feel gate passed.** See `git log` (each step is its own green commit).
 
 - **Phase 1 — combat spine** (`src/combat/`): `Ticker` · `Timekeeper` (fixed-step
   clock) · `Actor` · `Item` (+ fire pipeline) · `Delivery`/`Payload` · `EventBus` ·
@@ -58,15 +65,23 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
 - **Phase 4 — real UI / the run screen** (`src/scenes/main.tscn` + `main_controller.gd`,
   `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title → **framed
   run** (corridor + thorn-demon occupant top-right, player left, boards/HP/potions, the
-  VFX wall) → **approach** (the enemy scales from depth) → fight (slow-mo-on-hover) →
-  **draft overlay** → advance along a **map strip** → win/death screens. The run screen
-  drives `CombatManager.tick` each frame; the logic tree stays out of the scene tree
-  (the autotest path is unchanged). Full doc: [`../ui/run_screen.md`](../ui/run_screen.md).
+  VFX wall) → **approach** (the enemy scales from depth) → fight (slow-mo-on-hover, the
+  **potion-throw UI**) → **draft overlay** → advance along a **map strip** → win/death
+  screens. The run screen drives `CombatManager.tick` each frame; the logic tree stays
+  out of the scene tree (the autotest path is unchanged). Full doc:
+  [`../ui/run_screen.md`](../ui/run_screen.md). Plus the **localization POT pipeline**
+  (`tools/extract_pot.gd` → `locale/`; [`../reference/localization.md`](../reference/localization.md)).
+- **Phase 5 (machinery bite) — the `tune` harness** (`src/autotest/`): seeded,
+  board-aware **draft strategies** (`--strategy` live) + a **per-encounter / per-item
+  report** (durations vs window, HP attrition, item fires + damage + trap-pick flags).
+  The autotest can now *play different builds* and *report what each item did* — the two
+  things `tune` needed. Doc: [`../testing/autotest.md`](../testing/autotest.md).
 
-**What does NOT exist yet:** the ~30-encounter pool, elite/boss tiers, events with
-prose, multi-act maps, meta-progression, characters, the `tune` skill. (The two
-Phase-4 follow-ups — the **potion-throw UI** and the **localization POT pipeline**
-`tools/extract_pot.gd` — are now done.)
+**What does NOT exist yet** (most of it is content — the project owner's domain): the
+item/enemy/encounter pools beyond the seed (5 items, 1 enemy, a 4-beat map), elite/boss
+tiers + signature mechanics, events-with-prose, multi-act maps, characters,
+meta-progression, and a real **`tune` pass** (the machinery is ready; it waits on
+content). The **non-content** gaps are the backlog in "Your task".
 
 ## The architecture in one picture
 
@@ -79,12 +94,12 @@ Lifetime tiers: **`Game` (session) → `Run` (descent) → `Encounter` (beat) �
 (stateless rules), `Save` (JSON snapshot service), `Draft` (stateless reward draw),
 `Game` (session singleton — phase machine + run lifecycle).
 
-**The driving seam — important.** In Phase 3 the run-logic Nodes are kept **out of
-the scene tree** and driven by explicit calls: the autotest steps
-`CombatManager.sim_step()` directly (no `_physics_process`, no real time → bit-
-reproducible), supplies draft picks via the Driver, and calls `run.advance()`. This
-is the **same intent seam the UI will drive** — Phase 4 mounts the tree and turns on
-real-time play. The harness is currently the only client of the run.
+**The driving seam — important.** The run-logic Nodes stay **out of the scene tree**
+(a Phase-3 invariant Phase 4 preserved — it did *not* mount them). Two clients drive
+the same intent seam: the **autotest** steps `CombatManager.sim_step()` directly (no
+real time → bit-reproducible), and the **run screen** calls `CombatManager.tick(delta)`
+each physics frame (real-time play). Both supply draft picks (the Driver / the draft
+overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
 
 ## How to work (the rhythm)
 
@@ -98,9 +113,10 @@ real-time play. The harness is currently the only client of the run.
   → prints a summary, writes a log + markdown report to `autotest_results/`
   (git-ignored), exit `0` = resolved / `1` = stuck-or-timeout. `--single-fight` runs
   one fight; `--encounters N` caps; flags in [`autotest.md`](../testing/autotest.md).
-- **Watch combat visually** (the only watchable thing pre-Phase-4 — a fixed sandbox
-  fight, not the run): `<exe> --path . res://src/scenes/combat_sandbox.tscn`
-  (hover an item to slow-mo, R to restart; `--shot` screenshots).
+- **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn` → Start Run
+  (append `-- --autostart` to skip the menu; `--shot [--shot-delay s]` screenshots).
+  The fixed **combat sandbox** (one fight, not the run) is still there:
+  `<exe> --path . res://src/scenes/combat_sandbox.tscn` (hover to slow-mo, R restarts).
 - **Discipline:** test-first; drive logic via `sim_step()` / intents in GUT (no
   `_physics_process` in tests). **Each step green headless before the next. Commit
   each green step; NO self-attribution / Co-Authored-By** (CLAUDE.md overrides).
@@ -142,31 +158,57 @@ real-time play. The harness is currently the only client of the run.
 
 A project memory also banks the status-lifetime + cycle gotchas (auto-surfaced).
 
-## Your task: Phase 5 — scale content + `tune`
+## Your task: the non-content engineering backlog
 
-Phase 4 is built — the run is watchable end-to-end ([`phase4_plan.md`](phase4_plan.md)
-· [`../ui/run_screen.md`](../ui/run_screen.md)). The design's next step (decision-log
-*Next steps* → 2.5): **scale the item / enemy / encounter pools and stand up `tune`** —
-turn the 1-enemy, 4-beat prototype into a real run worth balancing.
+**Content (items / enemies / encounters) is the project owner's job — do NOT author
+content unless explicitly asked.** The prototype loop is feature-complete; what's left
+for engineering is below, roughly highest-value first. Pick *with the owner*; each is
+test-first + its own green commit, with the headless autotest as the regression backstop.
 
-- **Content** (`src/content/`): more items (the draft pool is 4), enemies, and beats
-  (the map is a fixed 4); the elite/boss tiers + events-with-prose the PRDs sketch.
-  Author in GDScript catalogs (decision #23); keep every name/tooltip `tr()`-able.
-- **`tune`**: bring the combat/draft tuning loop up on the autotest (the `tune` skill +
-  `tune-run` agent scaffolding exist) — so picks/enemies/encounters are balanced by
-  data, not feel.
-- *(The two Phase-4 follow-ups — the potion-throw UI + the localization POT pipeline
-  `tools/extract_pot.gd` — are done; start straight on content + `tune`.)*
+1. **Run structure — multi-act + HP economy + the choice layer.** The run is a fixed
+   4-beat list (`RunManager.MAP`). The real structure (design.md): 3 acts, a full rest
+   + full-HP + max-HP growth between acts, boss-at-end / relic-at-midpoint, and the
+   **choice layer** (2–3 options per beat, two-tier pick → the choice-point intent the
+   architecture sketches). The *mechanism* is engineering; the encounters that fill it
+   are content (coordinate). PRDs: [run_manager](run_manager_prd.md) · [encounter](encounter_prd.md).
+2. **Reward routing — relics + elites.** `RunManager._on_encounter_resolved` stubs the
+   `RELIC` reward ("pass"). Wire relic grants (the guaranteed midpoint relic) + elite
+   engage/skip + reward asymmetry. [content](content_prd.md) · [encounter](encounter_prd.md).
+3. **Settings / pause + battle-speed.** `Game` is Title→Run→Death/Win only — no pause,
+   quit-to-menu mid-run, or the player **battle-speed** dial (×1/×2/×3:
+   `Balance.BATTLE_SPEEDS` exists, no UI; it's a Timekeeper base-scale intent).
+   [game_manager](game_manager_prd.md) · [ui_layout](ui_layout_prd.md).
+4. **Full-screen `CombatView` + the framed-vs-fullscreen feel compare** — the UI PRD's
+   central open question, isolated to the swappable `CombatView` (Phase 4 built the
+   framed one). Mock the full-screen variant, compare on feel. [ui_layout](ui_layout_prd.md).
+5. **Tune-report fidelity — DoT per-applier attribution.** Poison damage is lumped as
+   "Poison", not credited to the applier (Venom Fang reads 0 damage in the contribution
+   table). A pre-step status snapshot would attribute per-applier — sharpening the
+   report the owner's tuning reads. Small, in `src/autotest/`. [autotest](../testing/autotest.md).
+6. **Stat-statuses design** (strength / weak / vulnerable) — the deferred problem
+   (design.md): a flat +N modifier applied every trigger makes fast items strictly
+   dominant in the cascade. Resolve the rule (percentage / slowest-item / charge-budget
+   / none) before scaling/buff content lands. [status_manager](status_manager_prd.md).
 
-Build incrementally, test-first, committing each green step; the headless autotest is
-the regression backstop, and the framed run screen is now watchable for feel
-(`<exe> --path . res://src/scenes/main.tscn` → Start Run; `--autostart --shot
-[--shot-delay s]` to capture a frame).
+**Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
+**HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a
+bar); the **timescale override replace-vs-multiply** open (Timekeeper). Decision-AI: the
+Driver's **potion / choice / event** policies stay stubs until those beats exist.
+
+**Run / watch:** `<exe> --path . res://src/scenes/main.tscn` → Start Run; append
+`-- --autostart --shot [--shot-delay s]` to capture a frame. **Autotest:** `<exe>
+--headless --path . res://src/autotest/autotest.tscn -- --autotest --seed 1 --strategy
+greedy-synergy --report autotest_results/r.md`. **Suite:** `<exe> --headless --path .
+-s addons/gut/gut_cmdln.gd -gdir=res://tests/ -gexit`.
 
 ## Quick file map
 
 `src/combat/` (spine) · `src/run/` (run_manager · encounter) · `src/content/` (all
 defs + catalogs) · `src/autoloads/` (status_manager · save · draft · game_manager ·
-sfx · music) · `src/autotest/` (the harness) · `src/vfx/` · `src/scenes/` (sandbox +
-corridors) · `src/data/balance.gd` (tunables) · `tests/` (combat · content · run ·
-autotest · smoke · utils) · `addons/gut/` (vendored).
+sfx · music) · `src/autotest/` (the harness + strategies + report) · `src/vfx/` ·
+`src/scenes/main.tscn` + `main_controller.gd` (presentation root) · `src/scenes/screens/`
+(title · run · outcome · draft_overlay · draft_card · map_strip) · `src/scenes/combat/`
+(combat_view_framed · combat_corridor · board_strip · item_cell · potion_slot) ·
+`src/scenes/` (sandbox + corridors) · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
++ `locale/` (i18n) · `tests/` (combat · content · run · autotest · ui · smoke · utils) ·
+`addons/gut/` (vendored).
