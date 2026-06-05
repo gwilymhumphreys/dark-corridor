@@ -132,9 +132,9 @@ Checked each tick after **Land** (step 3): player `Actor` dead → loss; all ene
 - **Within-step component order** — the deterministic order the manager advances its registry — settle when there are real boards (board position? insertion?).
 - **Simultaneous death** tiebreak (→ loss, provisional).
 - **AOE-at-arrival** specifics (set resolved at spawn; dead-at-arrival fizzle) — confirm when multi-enemy fights are built.
-- **Per-fight RNG for random item-targeting** — the random draw must come from a deterministic per-fight stream (seeded from the run seed + encounter) so fights stay bit-reproducible and resume-consistent; the exact seeding settles with the Draft / Encounter / Save RNG ownership (Save PRD).
+- **Per-fight RNG for random item-targeting — resolved (#20):** the draw comes from a per-fight stream derived from the run seed + encounter index (the `Run manager` owns the run RNG), so fights stay bit-reproducible and a re-entered fight replays identically; it doesn't perturb the saved run stream.
 - **Encounter handoff — resolved (Encounter PRD):** the `Encounter` creates the `Combat manager` with the player + spawned enemy `Actor`s + their left-to-right ordering, and awaits the win/loss result.
-- **Mid-fight roster changes (summoning)** — this spec assumes a **fixed roster** seeded at combat start. Adding / removing an `Actor` mid-fight (register/deregister its Tickers + triggers, re-order) is deferred until the boss "summons-adds" signature is built (see Enemy PRD).
+- **Mid-fight roster changes (summoning)** — this spec assumes a **fixed roster** seeded at combat start. Adding / removing an `Actor` mid-fight (register/deregister its Tickers + triggers, re-order) is deferred until the boss "summons-adds" signature is built (see Enemy PRD). *(A **static** multi-Actor player side — drafting allies, #22 — needs no new combat code: sides are already lists + targeting is side-relative; only the **mid-fight** change is deferred.)*
 
 ## Dependencies
 

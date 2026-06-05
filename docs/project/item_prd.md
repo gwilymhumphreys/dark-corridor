@@ -11,7 +11,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Item`]
 
 ## Purpose
 
-Items are the engine the player builds; the cascade is many small items firing. An item shares the **Draftable** base with Relic/Consumable (drafting, slow-mo-hover inspection, tooltips — see [design](design.md)); this PRD covers the **combat-participant** side. Item power is many-small-not-few-big and roughly flat across rarity (design) — rarity buys complexity, not numbers.
+Items are the engine the player builds; the cascade is many small items firing. An item shares the **Draftable** base with Relic / Enchantment / Consumable (drafting, slow-mo-hover inspection, tooltips — see [design](design.md)); this PRD covers the **combat-participant** side. Item power is many-small-not-few-big and roughly flat across rarity (design) — rarity buys complexity, not numbers.
 
 What it **is not**:
 
@@ -73,9 +73,9 @@ Items hold their own statuses (`StatusManager` rules; instances on the item): va
 
 ---
 
-## Enchantments (one slot; details → Enchantment PRD)
+## Enchantments (one slot; details → Content PRD)
 
-An item has **one enchant slot**. An enchant hooks the item's fire/resolve: scale a value (+50%), add a secondary effect, change a target-shape, or add an on-resolve trigger ("when this deals damage, apply poison"). Enchants also absorb pure-numerical upgrades — numeric scaling lives in the enchant layer, not in rarity (design). Enchant content is the Enchantment PRD's.
+An item has **one enchant slot**. An enchant hooks the item's fire/resolve: scale a value (+50%), add a secondary effect, change a target-shape, or add an on-resolve trigger ("when this deals damage, apply poison"). Enchants also absorb pure-numerical upgrades — numeric scaling lives in the enchant layer, not in rarity (design). Enchant content is the [Content PRD](content_prd.md)'s.
 
 ---
 
@@ -118,7 +118,7 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 
 - **Item-definition data format** — content/impl.
 - **Effect-kind catalog + values / cooldowns / sizes** — content (the design's pool work).
-- **Enchantment specifics** — Enchantment PRD.
+- **Enchantment specifics** — [Content PRD](content_prd.md).
 - **Trigger event catalog + the event bus mechanism** — Combat manager PRD (the item declares/emits; the bus routes).
 - **Silenced-item cooldown** — does the Ticker hold or keep cycling while gated? = gate-status behaviour (content).
 - **Size** — whether to ship size-as-tempo and how many sizes (art doc: a leaning to test).
@@ -131,4 +131,4 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 - **Owns** a `Ticker` (combat_prd) — advanced by the `Combat manager` each step (on the `Timekeeper`'s clock); the item doesn't call up.
 - **Driven by (above):** the `Combat manager` — registers the item's Ticker, collects fired payloads (resolves shape → target → spawns the Delivery), routes events to push trigger items. The item returns / emits; it never calls up.
 - Effect resolution (travel / landing / fizzle) is `combat_prd`'s, executed by the `Combat manager`, which then hits `Actor.take_damage` / `StatusManager.apply`.
-- Shares the **Draftable** base with `Relic` / `Consumable`.
+- Shares the **Draftable** base with `Relic` / `Enchantment` / `Consumable`.

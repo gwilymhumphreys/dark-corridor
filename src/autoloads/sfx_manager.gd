@@ -35,6 +35,8 @@ var _ui_press_stream: AudioStream
 func _ready() -> void:
   _create_player()
   _load_ui_bank()
+  # Only process while cooldowns are pending; re-enabled in play_guarded().
+  set_process(false)
 
 
 func _process(delta: float) -> void:
@@ -86,6 +88,7 @@ func play_guarded(key: String, stream: AudioStream, pitch: float = -1.0, volume_
   if _cooldowns.has(key):
     return
   _cooldowns[key] = COOLDOWN_TIME
+  set_process(true)
   play(stream, pitch, volume_db)
 
 
@@ -118,8 +121,6 @@ func _notification(what: int) -> void:
 
 
 func _update_cooldowns(delta: float) -> void:
-  if _cooldowns.is_empty():
-    return
   var to_remove: Array[String] = []
   for key: String in _cooldowns:
     _cooldowns[key] -= delta
@@ -127,6 +128,8 @@ func _update_cooldowns(delta: float) -> void:
       to_remove.append(key)
   for key: String in to_remove:
     _cooldowns.erase(key)
+  if _cooldowns.is_empty():
+    set_process(false)
 
 
 func _exit_tree() -> void:

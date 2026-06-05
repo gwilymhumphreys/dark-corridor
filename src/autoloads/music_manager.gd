@@ -12,7 +12,6 @@ const BUS_MUSIC: String = 'Music'
 const CROSSFADE_TIME: float = 2.0
 
 var _tracks: Array[AudioStream] = []
-var _track_names: Array[String] = []
 var _shuffle_order: Array[int] = []
 var _shuffle_index: int = -1
 
@@ -64,7 +63,6 @@ func _load_tracks() -> void:
       var stream: AudioStream = load(MUSIC_DIR + file_name)
       if stream:
         _tracks.append(stream)
-        _track_names.append(file_name.get_basename())
     file_name = dir.get_next()
   dir.list_dir_end()
 
@@ -94,14 +92,20 @@ func _reshuffle() -> void:
   _shuffle_index = -1
 
 
-func _play_next() -> void:
-  if _tracks.is_empty():
-    return
+## Advance the shuffle cursor to the next track index, reshuffling when the
+## playlist is exhausted. Shared by _play_next and _start_crossfade.
+func _advance_index() -> int:
   _shuffle_index += 1
   if _shuffle_index >= _shuffle_order.size():
     _reshuffle()
     _shuffle_index = 0
-  var idx: int = _shuffle_order[_shuffle_index]
+  return _shuffle_order[_shuffle_index]
+
+
+func _play_next() -> void:
+  if _tracks.is_empty():
+    return
+  var idx: int = _advance_index()
   _active_player.stream = _tracks[idx]
   _active_player.volume_db = 0.0
   _active_player.play()
@@ -110,11 +114,7 @@ func _play_next() -> void:
 func _start_crossfade() -> void:
   if _tracks.is_empty() or _crossfading:
     return
-  _shuffle_index += 1
-  if _shuffle_index >= _shuffle_order.size():
-    _reshuffle()
-    _shuffle_index = 0
-  var idx: int = _shuffle_order[_shuffle_index]
+  var idx: int = _advance_index()
 
   var tmp: AudioStreamPlayer = _active_player
   _active_player = _inactive_player
@@ -137,8 +137,11 @@ func _notification(what: int) -> void:
 func _process(delta: float) -> void:
   if not _crossfading:
     if _active_player.playing and _active_player.stream:
-      var remaining: float = _active_player.stream.get_length() - _active_player.get_playback_position()
-      if remaining <= CROSSFADE_TIME:
+      var position: float = _active_player.get_playback_position()
+      var remaining: float = _active_player.stream.get_length() - position
+      # Only crossfade once we're actually near the end — guarding on `position`
+      # stops tracks shorter than CROSSFADE_TIME from crossfading on frame one.
+      if position >= CROSSFADE_TIME and remaining <= CROSSFADE_TIME:
         _start_crossfade()
     elif not _active_player.playing:
       _play_next()
@@ -164,5 +167,4 @@ func _exit_tree() -> void:
     _player_b.stop()
     _player_b.stream = null
   _tracks.clear()
-  _track_names.clear()
   _shuffle_order.clear()

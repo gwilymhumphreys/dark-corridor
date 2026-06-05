@@ -36,7 +36,7 @@ What it does **not** hold: **relics and potions** — both live in the **player 
 
 ## Interface (surface others act through)
 
-- `take_damage(amount, …)` — runs the raw amount through the target's incoming-damage-modifier statuses via the `StatusManager` (block absorbs first, then HP; later e.g. `vulnerable` amplifies), applies the remainder to HP; at 0 HP → `died`. `heal(amount)` is straightforward. Called by Deliveries / items on arrival, and by potions/relics.
+- `take_damage(amount, …)` — runs the raw amount through the target's incoming-damage-modifier statuses via the `StatusManager` (absorbers like block consume before HP; the precise amplifier/absorber order is settled when `vulnerable`-type statuses exist — StatusManager PRD), applies the remainder to HP; at 0 HP → `died`. `heal(amount)` is straightforward. Called by Deliveries / items on arrival, and by potions/relics.
 - `is_alive()` + a **`died` signal** — the `Combat manager` reads these for win/loss. No Actor decides the fight is over.
 - **Board access** — read the item list (for the Combat manager's registry and UI); add/remove an item (draft adds to the player board between fights).
 - **Status access** — add/remove/read actor-targeted statuses (the StatusManager operates here).
@@ -48,6 +48,7 @@ The Actor calls *up* to nothing; its one sideways call is `take_damage` asking t
 ## Symmetry & lifetime
 
 - **Same type, both sides; no side-specific fields.** "We should be able to put characters-with-items on either side" is a constraint on the abstraction, not a feature.
+- **Forward-compat: each side is a *party*.** Treat a side as a roster of `Actor`s — length 1 on the player side today, but don't hardwire "exactly one player `Actor`" (keeps drafting-allies / summoning additive — decision #22).
 - **Lifetime differs by role, not by type:**
   - **Player Actor → run-lifetime.** HP carries across encounters; the board grows via draft; relics/events modify it. Owned by the run (seeded by `Characters`, held across the run).
   - **Enemy Actors → fight-lifetime.** Spawned by `Encounter` per fight from an authored board, discarded after.

@@ -15,7 +15,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Run ma
 The `Run manager` is the descent — it walks the player through one run and holds everything that lives exactly that long. It owns:
 
 - **The map** — the linear act/beat structure and the 1D progress track (boss at each act end, midpoint relic, rests, elites offered, events, basic fights). Forward-visible, single, no branching ([design](design.md)). Counts/placements are design/tuning, not here.
-- **Encounter sequencing + the corridor advance** — for each beat it creates an `Encounter` (a fight `Encounter` creates a `Combat manager`; an event runs the choice layer), awaits the result, then drives the corridor forward to the next beat.
+- **Encounter sequencing + the corridor advance** — at a choice point it assembles the 2–3 candidate `Encounter`s and instantiates the picked one; the next beat is **created after the current reward and approaches from depth** (the advance is its approach), resolving on arrival (a fight `Encounter` creates a `Combat manager`). The cycle is detailed below.
 - **The player run-state** — `{ actor, relics, potions, position, run RNG }`. The player `Actor` is **run-lifetime** and owned here; relics and potions live here too (not on the Actor — [Actor PRD](actor_prd.md)).
 - **HP-economy policy** — applies the design's rules *to* the Actor: HP persists between encounters, between-act full heal, rest partial-heals, max-HP growth (relics / events). The Actor just holds the values; the policy is decided here.
 - **The run snapshot** — it **builds** the snapshot and calls `Save.write()` on encounter entry, and **rehydrates** run-state from a snapshot on resume.
@@ -44,7 +44,7 @@ Beat placement (boss telegraph, midpoint relic, elite offers, rests) is the map'
 
 ## Player run-state & RNG
 
-The run-state `{ actor, relics, potions, position, rng }` is what the snapshot persists. The **run RNG** is seeded once per run (deterministic offers/beats, not re-rollable by quit-resume — [Save PRD](save_prd.md)); per-fight random draws (e.g. random enemy-item targeting) come from a per-fight stream derived from it, so fights stay bit-reproducible. (The exact seeding split settles with the Draft / Encounter / Save RNG ownership.)
+The run-state `{ actor, relics, potions, position, rng }` is what the snapshot persists. The `Run manager` **owns the run RNG** — a single seeded PRNG driving all run-level randomness (draft offers, encounter assembly). Its **full state** (not just the seed) goes in the snapshot, so **reloading a save reproduces the same future outcomes every time** — deterministic resume, and no save-scumming a bad draft by quit-reload ([Save PRD](save_prd.md)). Per-fight combat randomness (e.g. random item-targeting — #14) draws from a **derived per-fight stream** (seeded from the run seed + encounter index), so combat doesn't perturb the run stream and a re-entered fight replays identically.
 
 ## Save (snapshot, not timing)
 
@@ -66,7 +66,8 @@ The `Run manager` knows the run-state schema, so it **builds** the snapshot and 
 
 - **Act / beat placement + the 1D progress-map UI** — design/tuning + the `Encounter` PRD (composition) and a UI pass.
 - **Elite offer count + reward asymmetry** — design / `Encounter` PRD.
-- **RNG seeding split** (run stream vs. per-fight stream) — settles with the Draft / Encounter / Save PRDs.
+- **RNG — resolved (#20):** the `Run manager` owns the run RNG; its **full state** is saved (deterministic resume, no save-scum); the per-fight combat stream is derived from the run seed + encounter index.
+- **Multi-Actor player side (drafting allies) — deferred (#22):** run-state's `actor` is the player *party* (a roster of 1 today); keep it list-friendly so allies / summoning stay additive — don't hardwire one player actor.
 - **Encounter handoff — resolved ([Encounter PRD](encounter_prd.md)):** the `Run manager` instantiates the picked `Encounter` with context (player `Actor` + run-state accessors + RNG + position); a fight `Encounter` spawns its own enemies + ordering and creates the `Combat manager`.
 - **Resolved (#15):** the game-state machine is the `Game manager`'s, not here.
 

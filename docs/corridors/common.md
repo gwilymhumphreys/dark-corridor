@@ -35,6 +35,17 @@ like any Control — the SubViewport matches it, `auto_view_size` fills it, and 
 container **clips** the overflow. (Keyboard input still reaches the renderer; wire
 `set_forward_held/back_held/blur` from the game for programmatic control.)
 
+**Worked example: `corridor_panel_example.tscn` / `.gd`.** A standalone scene
+showing the panel embedded in a themed `PanelFramed` frame, driven by themed
+Buttons (Back / Forward hold to glide, Blur toggles the filter) that each carry a
+`UIJuice` child. The script reaches the renderer via
+`$Frame/CorridorPanel/SubViewport/CorridorScaled` and calls the interface only —
+it never touches the geometry. Run it directly (it's not the main scene):
+```powershell
+& "...Godot...console.exe" --path "C:\projects\dark-corridor" res://src/scenes/corridor_panel_example.tscn
+```
+(`--shot` captures a mid-glide frame, same as the host.)
+
 ## `CorridorRenderer` base — what it owns
 
 - **`view_size: Vector2`** — the W×H rectangle (local px) the corridor fills; the

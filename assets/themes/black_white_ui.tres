@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=17 format=3 uid="uid://dcbwuitheme01"]
+[gd_resource type="Theme" format=3 uid="uid://dcbwuitheme01"]
 
 [ext_resource type="Texture2D" uid="uid://cjn4qyow2r4lk" path="res://assets/ui/btn-large-0.png" id="1_btn"]
 [ext_resource type="Texture2D" uid="uid://b6d6u76kflo4b" path="res://assets/ui/panel-1-0.png" id="2_panel1"]
@@ -23,29 +23,8 @@ texture_margin_top = 5.0
 texture_margin_right = 5.0
 texture_margin_bottom = 5.0
 
-[sub_resource type="StyleBoxTexture" id="sb_btn_wide"]
-texture = ExtResource("1_btn")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
-
 [sub_resource type="StyleBoxTexture" id="sb_panel1"]
 texture = ExtResource("2_panel1")
-texture_margin_left = 8.0
-texture_margin_top = 8.0
-texture_margin_right = 8.0
-texture_margin_bottom = 8.0
-
-[sub_resource type="StyleBoxTexture" id="sb_panel2"]
-texture = ExtResource("3_panel2")
-texture_margin_left = 10.0
-texture_margin_top = 10.0
-texture_margin_right = 10.0
-texture_margin_bottom = 10.0
-
-[sub_resource type="StyleBoxTexture" id="sb_panel3"]
-texture = ExtResource("4_panel3")
 texture_margin_left = 8.0
 texture_margin_top = 8.0
 texture_margin_right = 8.0
@@ -58,6 +37,13 @@ texture_margin_top = 12.0
 texture_margin_right = 12.0
 texture_margin_bottom = 12.0
 
+[sub_resource type="StyleBoxTexture" id="sb_panel2"]
+texture = ExtResource("3_panel2")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
 [sub_resource type="StyleBoxTexture" id="sb_item"]
 texture = ExtResource("6_item")
 texture_margin_left = 5.0
@@ -65,31 +51,45 @@ texture_margin_top = 5.0
 texture_margin_right = 5.0
 texture_margin_bottom = 5.0
 
+[sub_resource type="StyleBoxTexture" id="sb_panel3"]
+texture = ExtResource("4_panel3")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="sb_btn_wide"]
+texture = ExtResource("1_btn")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
 [resource]
-Button/styles/normal = SubResource("sb_btn_normal")
-Button/styles/hover = SubResource("sb_btn_normal")
-Button/styles/pressed = SubResource("sb_btn_pressed")
 Button/styles/disabled = SubResource("sb_btn_normal")
 Button/styles/focus = SubResource("sb_btn_normal")
-WideButton/base_type = "Button"
-WideButton/styles/normal = SubResource("sb_btn_wide")
-WideButton/styles/hover = SubResource("sb_btn_wide")
-WideButton/styles/pressed = SubResource("sb_btn_wide")
-WideButton/styles/disabled = SubResource("sb_btn_wide")
-WideButton/styles/focus = SubResource("sb_btn_wide")
+Button/styles/hover = SubResource("sb_btn_normal")
+Button/styles/normal = SubResource("sb_btn_normal")
+Button/styles/pressed = SubResource("sb_btn_pressed")
+CheckBox/icons/checked = ExtResource("8_checked")
+CheckBox/icons/radio_checked = ExtResource("8_checked")
+CheckBox/icons/radio_unchecked = ExtResource("7_unchecked")
+CheckBox/icons/unchecked = ExtResource("7_unchecked")
 Panel/styles/panel = SubResource("sb_panel1")
 PanelContainer/styles/panel = SubResource("sb_panel1")
-PanelFlat/base_type = "PanelContainer"
-PanelFlat/styles/panel = SubResource("sb_panel1")
-PanelFramed/base_type = "PanelContainer"
-PanelFramed/styles/panel = SubResource("sb_panel2")
-PanelSmall/base_type = "PanelContainer"
-PanelSmall/styles/panel = SubResource("sb_panel3")
-PanelDetail/base_type = "PanelContainer"
+PanelDetail/base_type = &"PanelContainer"
 PanelDetail/styles/panel = SubResource("sb_panel4")
-PanelSlot/base_type = "PanelContainer"
+PanelFlat/base_type = &"PanelContainer"
+PanelFlat/styles/panel = SubResource("sb_panel1")
+PanelFramed/base_type = &"PanelContainer"
+PanelFramed/styles/panel = SubResource("sb_panel2")
+PanelSlot/base_type = &"PanelContainer"
 PanelSlot/styles/panel = SubResource("sb_item")
-CheckBox/icons/unchecked = ExtResource("7_unchecked")
-CheckBox/icons/checked = ExtResource("8_checked")
-CheckBox/icons/radio_unchecked = ExtResource("7_unchecked")
-CheckBox/icons/radio_checked = ExtResource("8_checked")
+PanelSmall/base_type = &"PanelContainer"
+PanelSmall/styles/panel = SubResource("sb_panel3")
+WideButton/base_type = &"Button"
+WideButton/styles/disabled = SubResource("sb_btn_wide")
+WideButton/styles/focus = SubResource("sb_btn_wide")
+WideButton/styles/hover = SubResource("sb_btn_wide")
+WideButton/styles/normal = SubResource("sb_btn_wide")
+WideButton/styles/pressed = SubResource("sb_btn_wide")

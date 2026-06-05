@@ -33,7 +33,7 @@ What it **is not**: not the run-flow (the `Run manager` builds the snapshot, wri
 - **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant + any *persistent* item-targeted statuses.
 - **Relics & potions** — the player run-state (not Actor-owned).
 - **Run position** — act + encounter index, floor-map progress, character.
-- **RNG state / seed** — so resume is **deterministic**: the upcoming draft offers and encounter beats are the same, not re-rollable by quit-and-resume (no save-scum; consistent with "death is final").
+- **RNG state** — the `Run manager`'s run RNG, captured as its **full state** (not just the seed), so resume is **deterministic**: reloading reproduces the same future draft offers and encounter beats *every time* — not re-rollable by quit-and-resume (no save-scum; consistent with "death is final").
 
 **Explicitly not saved:** live combat state — the fight, the `Timekeeper`, `Delivery`s, combat-scoped statuses (block, in-fight poison). Combat is ephemeral and the save sits *between* fights, so there's nothing mid-fight to persist; resume re-enters at the saved encounter. Enemy actors aren't saved either — they're regenerated per encounter from their definitions (Enemy PRD).
 
@@ -79,7 +79,7 @@ Meta-progression (the skill tree / unlocks) persists *across* runs and survives 
 
 - **Serialization format + exact snapshot schema** — impl/content.
 - **Which statuses are run-persistent** (saved) vs. combat-scoped (not) — per-effect content (`combat_prd`).
-- **RNG-state capture** specifics (seed vs. full state) — settle with the Draft / Encounter PRDs, where the RNG is used.
+- **RNG capture — resolved (#20):** the snapshot stores the `Run manager`'s **full** run-RNG state (not just the seed), so resume reproduces all future draws. The per-fight combat stream is *derived* (run seed + encounter index), not saved — combat state is ephemeral.
 - **Resolved (review #3):** push model — systems hand `Save` a snapshot; it never reads up.
 
 ## Dependencies

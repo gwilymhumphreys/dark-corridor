@@ -132,6 +132,9 @@ func _on_mouse_entered() -> void:
   if _is_button and (_target as BaseButton).disabled:
     return
   _hovered = true
+  # Re-centre in case the first interaction happens before a layout pass has
+  # given the Control its real size (size is (0,0) in _ready inside a container).
+  _center_pivot()
   if play_sounds:
     _play_hover()
   _bounce_to(_hover_scale, true)
@@ -145,6 +148,7 @@ func _on_mouse_exited() -> void:
 func _on_button_down() -> void:
   if (_target as BaseButton).disabled:
     return
+  _center_pivot()
   _scale_to(_press_scale, _press_time, Tween.TRANS_QUAD, Tween.EASE_OUT)
 
 

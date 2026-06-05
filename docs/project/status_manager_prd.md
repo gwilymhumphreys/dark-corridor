@@ -60,7 +60,7 @@ Because the Timekeeper is per-fight, a timed status on a player `Item` (which ou
 
 1. **Resolve source-side application modifiers** — e.g. a relic's "your poison is applied twice" scales `count`. (Read from `source`; the specific modifiers are content.)
 2. **Create or update** the instance on the target per the type's **stacking policy** — default **additive stacks**; some types refresh duration or stay independent. The policy is per-type; the *specific* policies are content (Combat PRD defers decrement/stacking).
-3. **Return the instance**, so the `Combat manager` can register its Ticker (if any) in its registry. Content never reaches *up* — `apply` hands the instance back; the in-combat caller registers it (matches the Timekeeper's pull-based registration).
+3. **Return the instance**, so the `Combat manager` can register its Ticker (if any) in its registry. Content never reaches *up* — `apply` hands the instance back; the in-combat caller registers it (matches the Combat manager's pull-based registration).
 4. **Emit an on-apply event** so reactive items can trigger ("when you apply poison, gain 1 block"). The trigger *mechanism* (accrual pushes) is the Combat/Item PRD's; the Manager only makes application observable.
 
 ---

@@ -2,8 +2,8 @@
 
 First per-system PRD. Sits under the Architecture Map. This specifies how effects resolve during the combat state; it assumes the foundation spine (central fixed-step tick, symmetric Actor, renderer wall) from the architecture doc and doesn't re-state it.
 
-Engine: Godot 4.
-Date: 2026-06-04. Pre-prototype.
+**Engine:** Godot 4.
+**Date:** 2026-06-04. Pre-prototype.
 
 ## Resolution model (settled)
 

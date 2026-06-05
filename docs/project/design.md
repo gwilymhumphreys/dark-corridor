@@ -129,11 +129,12 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 
 ### Shared base — Draftables
 
-Relics, items, and consumables share one base type (**Draftable**): drafted, inspected via slow-mo-hover, surface tooltips. The categories are subclasses differing in behaviour and presentation:
+Relics, items, consumables, and enchantments share the **Draftable** contract — drafted, inspected via slow-mo-hover, surface tooltips, rarity — by **composition** (a shared definition-face + a `category` tag), *not* a parent class (see architecture's *Draftable contract*). They are distinct types differing in behaviour and presentation:
 
 - **Item** — participates in the combat cascade. Lives on the board.
 - **Relic** — persistent background modifier, outside the cascade. Distinct UI region.
 - **Consumable** — limited slots, consumed on use, manually activated. Potions are the canonical type; category open to others.
+- **Enchantment** — drafted and inspected like the rest, but **applied to a chosen item** rather than held in its own slot (one per item; details under *Enchantments*).
 Code-sharing decision first (drafting, tooltips, inspection are common); categories stay distinct in design treatment.
 
 ### Structural note — what "no size limit" costs
@@ -175,6 +176,8 @@ Cross-item interactions are the core decision mechanism. Example: *when you appl
 This makes the draft decision "does this connect to what I have" rather than "is this strong" — the decision density carrier.
 
 ### Enchantments
+
+*(A subclass of Draftable — see Items: drafted + inspected like the rest, but applied to a chosen item rather than held in its own slot.)*
 
 - Modifiers attached to items (e.g. "when this item deals damage, apply poison").
 - **Rarity tiers (common/uncommon/rare)**, same as items. Higher tiers offer more dramatic modifiers.

@@ -3,7 +3,7 @@
 > **Companion to the design and art docs.** This is the high-level system map plus a settled spec for the foundation layer. It is *not* per-system implementation detail — those are separate PRDs, written one at a time as systems get built. This pass exists to nail the interfaces and dependencies before any single system is spec'd in depth.
  
 **Engine:** Godot 4.
-**Date:** 2026-06-03 (revised 2026-06-04). Pre-prototype.
+**Date:** 2026-06-03 (revised 2026-06-05). Pre-prototype.
  
 ---
  
@@ -29,11 +29,11 @@ Layers depend *downward* only for **structural** ownership (who creates / holds 
 ### Content → Foundation
  
 - **`Item`** → `StatusManager` (apply / read statuses); reads its owner `Actor` (self-target, board membership). It declares a target-*shape*; the `Combat manager` resolves it and lands the Delivery — no direct `Item → Actor` damage call.
-- **`Enchantment`** → modifies its host `Item`.
+- **`Enchantment`** (a `Draftable`) → modifies its host `Item`; drafted/inspected like the others, but applied to a chosen item on pick (no slot of its own).
 - **`Relic`** → `StatusManager` and/or direct `Actor` modification. A relic rides the shared accrual engine like everything else — a *triggered* relic owns an event-push Ticker (Combat PRD), a *timed* effect can be applied as a status — so it needs no special `Timekeeper` handling.
 - **`Consumable`** → shares Item's *resolution* surface (spawns a Delivery) but carries no Ticker — manually activated.
 - **`Enemy`** → not a class — an `Actor` built from an authored *enemy definition* (HP + an authored board of enemy-pool Items + tier + optional boss signature), spawned by `Encounter`. No enemy AI; no special arrows. See [enemy_prd.md](enemy_prd.md).
-(Item / Relic / Consumable share the **Draftable** base — see design doc.)
+(Item / Relic / Enchantment / Consumable share the **Draftable** base — see design doc; Relic / Enchantment / Consumable internals: [content_prd.md](content_prd.md).)
  
 ### Session (top of the tree) → Run
 
@@ -64,6 +64,17 @@ Two layers the downward rule treats differently:
   - *(Test hook: an **autotest driver** emits these same intents headlessly — the input layer is the seam the harness drives. See [testing/autotest.md](../testing/autotest.md).)*
 ---
  
+## The Draftable contract
+
+`Draftable` is **what a draft can offer** — expressed as **composition, not a parent class** (same instinct as the Ticker and Status: share the engine, keep identities distinct). It is a **definition-level contract**, not a runtime supertype:
+
+- **Shared definition-face.** Every content definition (item / relic / consumable / enchant) carries a common header — `id`, `name`, `icon`, `rarity`, `category`, `tooltip` — by composition (the def *has* it; it doesn't *inherit* it). The `category` set is **open** — a new kind is additive.
+- **`Draft` + inspection are category-blind.** They read only that header to offer, rarity/depth-weight, and tooltip — never branching on category to draw or show.
+- **Application dispatches on `category`** — the one category switch, owned by the `Run manager`: item → board, relic → relics, consumable → potion slot, enchant → a chosen item.
+- **Runtime entities stay distinct types.** `Item` owns a Ticker + board membership; `Relic` is run-state; `Enchantment` lives on an item; `Consumable` is hand-fired. None inherits a `Draftable` runtime class — they share the draft-time *face*, not a runtime base.
+
+---
+
 ## Interface contracts (boundary hub)
  
 The canonical reference for cross-system **edges**. Per-system PRDs link here for their boundaries instead of re-declaring them — the system map above is the narrative version; this is the concrete public surface each system exposes and the edges it sits on. Entries are added as each system gets PRD'd. **Absence here means "not yet specced," not "no boundary."**
@@ -107,7 +118,7 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
 - **Exposes:** a data-configured board participant owning a `Ticker` (combat_prd). On fire it produces **payload(s)** — `(kind, value)` — each with a *relative* target-shape (self / opponent-leftmost / all-opponents / opponent-item-random / all-opponent-items), **not** a resolved target; the `Combat manager` turns each into a **Delivery**. Declares trigger conditions + emits events (on-fire, …). One enchant slot; holds item-targeted statuses. Every item is active (its accumulator fills as the clock steps); triggers are an additional event-push input on the *same* accumulator (it still ticks), not a separate type — and there is no passive item type (passive effects are statuses).
 - **Calls down to:** `StatusManager` (apply statuses on resolve; read its own gate/value statuses). **Reads** its owner `Actor` (self-target, board membership).
 - **Driven by (above):** the `Combat manager` — registers the item's Ticker in its registry, collects fired payloads (resolves shape → target, spawns the Delivery), routes events to push trigger items. The item returns / emits; it never calls up.
-- **Does not:** resolve its own target or Deliveries (`Combat manager` + combat_prd); tick itself (`Timekeeper`); own status rules (`StatusManager`); draw (presentation reads its panel/cooldown). Shares the `Draftable` base with `Relic` / `Consumable`.
+- **Does not:** resolve its own target or Deliveries (`Combat manager` + combat_prd); tick itself (`Timekeeper`); own status rules (`StatusManager`); draw (presentation reads its panel/cooldown). Shares the `Draftable` base with `Relic` / `Enchantment` / `Consumable`.
  
 ### `Save` — PRD: [save_prd.md](save_prd.md)
  
@@ -157,6 +168,13 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
 - **Inbound:** none writes to it; it *reads* the `Combat manager`'s in-flight Delivery set (fire / impact timestamps + payload colour) + actor / item / status state, and the `Timekeeper`'s `render_time()`.
 - **Outbound:** none — **writes no game state** (renders; the renderer paints what it computes).
 - **Does not:** decide outcomes or timing (`Combat manager`); hold a clock (`Timekeeper`); cause damage (the Delivery's landing does); render the corridor (`docs/corridors/`).
+
+### `Content` (Relic · Enchantment · Consumable) — PRD: [content_prd.md](content_prd.md)
+
+- **Exposes:** three run-level categories, data-defined and thin: a **`Relic`** (persistent modifier — combat-start status / triggered Ticker / direct mod), an **`Enchantment`** (one-per-item modifier hooking the host `Item`'s fire/resolve), a **`Consumable`** (manually-fired reserve — a Delivery on throw, no Ticker).
+- **Inbound:** the `Run manager` holds them in run-state, applies a drafted pick (relic → relics, enchant → chosen item, potion → slot) and grants relics on reward; `Draft` offers them; `Save` persists them; the `Combat manager` activates a thrown consumable (throw-potion intent).
+- **Outbound:** `StatusManager.apply` (relic/enchant statuses); the `Combat manager`'s event bus (a triggered relic's Ticker; a consumable's Delivery); the host `Item`'s pipeline (enchant hooks); direct `Actor` mods (relics).
+- **Does not:** introduce new combat mechanics (all route through existing systems); act as a board `Item`; own the draft draw or the reward grant (`Draft` / `Run manager`). Relic, Enchantment + Consumable share the `Draftable` base with `Item` (Enchantment differs only in application — it attaches to a chosen item).
  
 ---
  
@@ -201,4 +219,4 @@ The renderer draws only handed state and holds no clock of its own.
  
 ## What this pass deliberately leaves to per-system PRDs
  
-Timescale override replace-vs-multiply; the full draft/encounter/relic/meta/character internals; VFX content and palette. PRD the foundation (this doc's spine), build, then PRD the next layer up with real information from the prototype. Don't write all the PRDs up front.
+Timescale override replace-vs-multiply; the full meta/character internals; VFX content and palette. PRD the foundation (this doc's spine), build, then PRD the next layer up with real information from the prototype. Don't write all the PRDs up front.
