@@ -66,7 +66,7 @@ The player picks one candidate (a `draft pick` intent — architecture); the **`
 - **Slot chances** (item vs enchant vs potion per slot) + **rarity-by-depth odds** — tuning (design's pool work).
 - **Relic offers** — whether relics are ever a draw (1-of-N relic offer) or only direct grants (midpoint / elite / boss). Design leans direct grants; confirm when relic acquisition is built.
 - **Enchant-target / potion-drop sub-choices** — the UI interactions when a picked enchant needs a target or a potion needs a slot — a UI pass (the choices are intents the `Run manager` applies).
-- **Pool data + the Draftable definition format** — content/impl (shared with the item / enchant / consumable formats).
+- **Draftable definition format — resolved (#23):** typed GDScript def objects + catalogs. **Pool data** (what's unlocked into it) — `Meta-progression` / content.
 - **RNG — resolved (#20):** the draw uses the `Run manager`'s run RNG (full state saved for deterministic resume), handed in by the `Run manager`.
 - **Autoload vs. plain helper** — `Draft` is stateless either way; autoloaded here for consistency with `StatusManager` / `Save`.
 

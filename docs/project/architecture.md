@@ -210,6 +210,47 @@ The renderer draws only handed state and holds no clock of its own.
  
 ---
  
+## Scene tree & node model
+
+The structural rule that makes the input/output split concrete: **combat logic is plain `RefCounted`; only orchestrators are `Node`s.** That's what lets a headless autotest run the whole sim without instantiating any presentation.
+
+**Logic tree** — under the `Game` autoload; renders nothing; runs headless:
+
+```
+Game  (autoload Node, "Game")          session state machine + run lifecycle
+└─ Run manager (Node)                   per run: map, sequencing, run-state, run RNG
+   └─ Encounter (Node)                  per beat: fight / event / rest
+      └─ Combat manager (Node)          per fight: the ONE _physics_process tick + registry
+         ├─ Timekeeper          (RefCounted)   the clock (owned, not a child)
+         ├─ Actor ×N            (RefCounted)   HP · board · statuses
+         ├─ Item / Status / Delivery (RefCounted)  the registry (seq_id-ordered)
+         └─ event bus           (RefCounted)
+```
+
+`Run manager` / `Encounter` are Nodes but don't `_process` (they advance by explicit call / signal); **only the `Combat manager` runs `_physics_process`** (the one tick). A fight exists only while a `Combat manager` does. Within-step iteration is ascending `seq_id` — a monotonic id stamped at registration (deterministic order).
+
+**Presentation tree** — the main scene; `Game` swaps screens:
+
+```
+main.tscn  (Main, Node)                 boots → Game.boot()
+└─ ScreenHolder
+   ├─ title_screen.tscn
+   ├─ run_screen.tscn      reads Game.run (+ the live Combat manager); emits intents
+   │   ├─ CorridorLayer     corridor_panel.tscn (mood + the approach-from-depth)
+   │   ├─ CombatView         SWAPPABLE: combat_view_framed.tscn | _fullscreen.tscn
+   │   │     ├─ VfxDriver        reads the Delivery set + render_time()
+   │   │     ├─ Player/EnemyBoardView
+   │   │     └─ Portrait · HP · PotionSlots
+   │   └─ OverlayLayer       draft / choice / 1D-map
+   └─ death_screen.tscn
+```
+
+- The presentation tree only **reads** the logic and **emits intents** (view → logic: `Combat manager.request_*`, `Run manager.pick_*`); the autotest driver calls the same methods with no presentation mounted.
+- **Corridor advance** stays logic-clean: `Run manager` changes position + emits `advancing(next)`; `run_screen` animates the corridor panel and times board-activation to arrival.
+- The **framed-vs-full-screen** open (UI PRD) is isolated to the single swappable `CombatView` sub-scene — nothing else moves when it's decided.
+
+**Directory layout:** `src/combat/` (timekeeper · combat_manager · actor · item · status · delivery · ticker · event_bus), `src/run/` (run_manager · encounter), `src/content/` (def objects + catalogs), `src/vfx/`, `src/scenes/screens/` + `src/scenes/combat/`, alongside the existing `src/autoloads/`, `src/data/` (`balance.gd`), `src/scenes/corridors/`, `src/ui/`. `project.godot`'s `main_scene` flips to `main.tscn` when the spine is built (the corridor testbed stays runnable).
+
 ## Prototype scope for this layer
  
 - **Full VFX *path*, minimal VFX *content*.** Build the driver and the wall (the clock's `render_time` → driver computes positions → renderer draws handed state) and prove them on a few effects: one projectile type, one fire-emote, travelling damage numbers, a screen pulse. This validates the cleanest architectural decision on the map at the cheapest moment.

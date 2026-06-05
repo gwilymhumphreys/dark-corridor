@@ -116,7 +116,7 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 
 ## Open / deferred
 
-- **Item-definition data format** — content/impl.
+- **Item-definition data format — resolved:** typed GDScript `ItemDef` objects in a static catalog keyed by int id (decision-log #23) — not JSON / `.tres`.
 - **Effect-kind catalog + values / cooldowns / sizes** — content (the design's pool work).
 - **Enchantment specifics** — [Content PRD](content_prd.md).
 - **Trigger event catalog + the event bus mechanism** — Combat manager PRD (the item declares/emits; the bus routes).

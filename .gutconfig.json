@@ -1,0 +1,6 @@
+{
+  "dirs": ["res://tests/"],
+  "include_subdirs": true,
+  "log_level": 1,
+  "should_print_to_console": true
+}

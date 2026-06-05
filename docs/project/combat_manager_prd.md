@@ -129,7 +129,7 @@ Checked each tick after **Land** (step 3): player `Actor` dead → loss; all ene
 ## Open / deferred
 
 - **Timestep — resolved:** fixed-step, driven by `_physics_process`; the dial sets step cadence (`steps_due`) with a `MAX_STEPS` cap + backlog-drop on hangs; visuals read the continuous `render_time()`; autotest drives `sim_step()` directly.
-- **Within-step component order** — the deterministic order the manager advances its registry — settle when there are real boards (board position? insertion?).
+- **Within-step component order — resolved (#24):** ascending `seq_id` — a monotonic id stamped at registration; registration order is itself deterministic (board order at start, then deterministic fire order), so the sweep is reproducible.
 - **Simultaneous death** tiebreak (→ loss, provisional).
 - **AOE-at-arrival** specifics (set resolved at spawn; dead-at-arrival fizzle) — confirm when multi-enemy fights are built.
 - **Per-fight RNG for random item-targeting — resolved (#20):** the draw comes from a per-fight stream derived from the run seed + encounter index (the `Run manager` owns the run RNG), so fights stay bit-reproducible and a re-entered fight replays identically; it doesn't perturb the saved run stream.

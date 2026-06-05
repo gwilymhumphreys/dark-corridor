@@ -107,7 +107,7 @@ Distinct icon + per-effect colour per type (the design's colour vocabulary; a st
 - **Stat-statuses (strength / weak / vulnerable equivalents)** — deliberately deferred ([design](design.md)). Constraint to honour when designed: a flat damage modifier must not make fast items strictly dominant over slow ones in the high-trigger cascade (percentage / charge-budgeted / slowest-item-targeted are candidate forms). The engine reserves the amplifier slot; no flat stat-status ships until this is solved in prototype.
 - **Per-effect stack / decrement semantics** (how poison decrements, whether regen counts down) — content, settled as effects are authored (Combat PRD defers these).
 - **Damage-modifier ordering** — precise amplifier/absorber order, settled when the first amplifier (vulnerable-type) is designed.
-- **Status-definition data format** (JSON vs GDScript) — content / impl detail.
+- **Status-definition data format — resolved:** typed GDScript `StatusDef` objects in a static catalog (decision-log #23), not JSON.
 - **Trigger delivery** — how on-apply events reach reactive items (the accrual-push backbone) is the Combat/Item PRD's.
 
 Resolved: **block** persists until consumed (pure pool, no Ticker) and absorbs all damage except `unblockable` payloads — a per-effect flag (varies by DoT, not a blanket rule).

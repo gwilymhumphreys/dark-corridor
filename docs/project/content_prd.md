@@ -60,7 +60,7 @@ Enough to prove each category's path end-to-end. **Not** in scope: the relic/pot
 ## Open / deferred
 
 - **The pools' content** (relic / potion / enchant catalogues) + rarity tuning — content/design (the pool work).
-- **Definition data formats** — content/impl (shared with the item/enemy/status formats; player-facing strings localizable — `CLAUDE.md`).
+- **Definition data formats — resolved (#23):** typed GDScript def objects + catalogs, not data files (player-facing strings stay localizable via `tr(def.name)` — `CLAUDE.md`).
 - **Relics-as-items** — whether `Relic` and `Item` collapse to one type with different presentation (design open question) — resolve in prototype.
 - **Re-enchant + the potion-drop / enchant-target sub-choice UIs** — a UI pass.
 - **Character starting-relic passive trait** — the Characters PRD's (deferred).

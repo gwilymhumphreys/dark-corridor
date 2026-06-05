@@ -79,7 +79,7 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 
 ## Open / deferred
 
-- **Encounter-definition data format** + the **~30-encounter pool** (location frames, telegraphs, event prose) — content/impl + design.
+- **Encounter-definition data format — resolved (#23):** typed GDScript `EncounterDef` + catalog. The **~30-encounter pool** (location frames, telegraphs, event prose) — content/impl + design.
 - **Event-outcome catalog** (the direct effects an option can apply) — content.
 - **Telegraph iconography** + the **two-tier choice UI** — a UI pass (the candidate *assembly* is the `Run manager`'s; presentation is UI).
 - **Choice-point frequency + candidate-set rules** (category spread, no-repeat, elite budget) — design/tuning, applied by the `Run manager`'s draw.
