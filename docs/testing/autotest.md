@@ -40,11 +40,10 @@ The Mode/Driver/Logger trio in `src/autotest/`, scoped to one fight (no run loop
 
 ```
 <godot> --headless --path . res://src/autotest/autotest.tscn -- \
-        --autotest --seed 1 --speed 5 --timeout 120 --wall-timeout 30 \
-        --report user://autotest_report.md
+        --autotest --seed 1 --speed 5 --timeout 120 --wall-timeout 30
 ```
 
-A **dedicated scene** (not an autoload), so nothing presentational mounts and the corridor testbed stays the normal `main_scene`. Exit `0` = the fight **resolved** (win or loss); exit `1` = it didn't (stuck / game-timeout / wall-timeout) — the harness asserts the sim runs to a clean conclusion, not who wins (that becomes `tune`'s job). `--seed` and `--speed` are **plumbed-but-inert** in Phase 2: a single Phase 1 fight draws no RNG, and the direct `sim_step` loop advances one STEP per call regardless of the dial — both go live with the run RNG + real-time paths in Phase 3.
+Each run writes a raw log + a markdown report to **`autotest_results/`** (project-local, git-ignored) — `--log <path>` / `--report <path>` override the locations. A **dedicated scene** (not an autoload), so nothing presentational mounts and the corridor testbed stays the normal `main_scene`. Exit `0` = the fight **resolved** (win or loss); exit `1` = it didn't (stuck / game-timeout / wall-timeout) — the harness asserts the sim runs to a clean conclusion, not who wins (that becomes `tune`'s job). `--seed` and `--speed` are **plumbed-but-inert** in Phase 2: a single Phase 1 fight draws no RNG, and the direct `sim_step` loop advances one STEP per call regardless of the dial — both go live with the run RNG + real-time paths in Phase 3.
 
 ## Flags (adapted from a-machine)
 

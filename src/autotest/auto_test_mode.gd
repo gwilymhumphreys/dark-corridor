@@ -20,6 +20,9 @@ extends Node
 ## plumbed-but-inert here (a single Phase 1 fight has no RNG and the direct
 ## sim_step loop advances one STEP per call regardless of the dial).
 
+# Project-local, git-ignored output dir for run artifacts (log + report).
+const OUTPUT_DIR: String = 'res://autotest_results'
+
 # --- config (defaults; overridden by _parse_args) ---------------------------
 var seed_value: int = 0
 var speed: float = Balance.TIMESCALE_FAST_TEST
@@ -27,8 +30,10 @@ var timeout_seconds: float = 120.0          # max game-seconds before fail
 var wall_timeout_seconds: float = 30.0      # max real-seconds (hang watchdog)
 var stuck_threshold_seconds: float = 10.0   # flat total-HP this long = stuck
 var strategy: String = 'first-viable'
-var log_path: String = ''
-var report_path: String = ''
+# Run artifacts default into a project-local, git-ignored dir (autotest_results/)
+# so they're easy to find but never committed; --log / --report override.
+var log_path: String = OUTPUT_DIR + '/autotest_log.txt'
+var report_path: String = OUTPUT_DIR + '/autotest_report.md'
 # Forced for every autotest run — a fresh user, no persisted state. (No Save /
 # tutorial systems exist yet; these are honoured for parity + Phase 3.)
 var nosave: bool = true

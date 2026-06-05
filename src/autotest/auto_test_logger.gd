@@ -150,6 +150,9 @@ func _sorted_families(tally: Dictionary) -> Array:
 
 
 func _write_file(path: String, content: String) -> void:
+  var dir: String = path.get_base_dir()
+  if dir != '' and not DirAccess.dir_exists_absolute(dir):
+    DirAccess.make_dir_recursive_absolute(dir)
   var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
   if file == null:
     push_warning('[AutoTest] could not write %s (error %d)' % [path, FileAccess.get_open_error()])
