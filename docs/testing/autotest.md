@@ -1,6 +1,6 @@
 # AutoTest Mode — design & scaffolding
 
-> **Status: design / scaffolding (pre-prototype).** The harness isn't built yet — the systems it drives are still PRDs. This doc specs it so it's *designed in*, not bolted on. Modeled on `../a-machine`'s AutoTest (`a-machine/docs/testing/autotest.md`) + its `tune` workflow, adapted to this game. **The decision-making AI and the `tune` skill come later — scaffolding first.**
+> **Status: Phase 2 built (2026-06-05) — a single headless fight.** The Mode/Driver/Logger trio lives in `src/autotest/` and drives one deterministic fight to a verdict (see *What's built* + *How to run* below). The decision AI (draft strategies) and the `tune` skill are still deferred; the Driver is a no-op stub until the run loop (Phase 3) gives it choices to make. Modeled on `../a-machine`'s AutoTest (`a-machine/docs/testing/autotest.md`) + its `tune` workflow, adapted to this game.
 
 AI-controlled E2E testing that plays the game **headlessly** (draft → fight → advance) for deterministic regression + balance testing.
 
@@ -27,15 +27,24 @@ Combat is automatic — the driver does **not** play fights. It makes the opt-in
 
 (Walk/advance is automatic.) Initially the driver is a **stub** (e.g. "pick the first viable draft, never throw potions"); real strategies come later.
 
-## Scaffolding to build (the structure, not the AI)
+## What's built (Phase 2 — the structure)
 
-Mirrors a-machine's `src/autotest/` trio:
+The Mode/Driver/Logger trio in `src/autotest/`, scoped to one fight (no run loop yet):
 
-- **`AutoTestMode`** — entry: parse flags, seed RNG, set the dial, force `--nosave --notutorial`, **drive the `Game manager`'s run lifecycle** (start a run, watch for run-ended) + own the game-time / wall-time timeouts + exit code.
-- **`AutoTestDriver`** — the decision source: on each draft / choice / potion opportunity, emit the matching input-intent. **Stub now**; pluggable strategies later.
-- **`AutoTestLogger`** — structured events (encounter start/end, draft offered/picked, fight win/loss + duration + HP + damage-by-family, run end) + a summary + a markdown report. Reads handed state; writes none.
+- **`AutoTestMode`** (`auto_test_mode.gd`, root of `autotest.tscn`) — entry: parse flags, force a fresh-user run (nosave / notutorial), seed the RNG, set the Timekeeper dial from `--speed`, build a player-vs-grunt fight from the catalogs, and drive `CombatManager.sim_step()` directly (no `_physics_process`, no real time → bit-reproducible). Enforces the game-time `--timeout`, the `--wall-timeout` hang watchdog, and stuck detection; sets the exit code and quits. Its `run_once()` is tree-free + I/O-free, so a GUT test drives a full headless fight in-process.
+- **`AutoTestDriver`** (`auto_test_driver.gd`) — the decision seam, a **no-op stub**: a single fight has no draft / choice / event / potion decisions. Real seeded strategies arrive with the run loop (Phase 3).
+- **`AutoTestStuckDetector`** (`stuck_detector.gd`) — trips when combined actor HP is flat for a step threshold (the "fight that never resolves" guard).
+- **`AutoTestLogger`** (`auto_test_logger.gd`) — structured events + a damage-by-family tally + a summary + a markdown report. Reads handed state, writes no game state. Damage-by-family is built per step from net HP loss + the Deliveries that landed that step (direct hits → the source item's family; the unexplained remainder → the DoT/poison channel, which lands no Delivery yet).
 
-Lives in `src/autotest/` when built.
+### How to run
+
+```
+<godot> --headless --path . res://src/autotest/autotest.tscn -- \
+        --autotest --seed 1 --speed 5 --timeout 120 --wall-timeout 30 \
+        --report user://autotest_report.md
+```
+
+A **dedicated scene** (not an autoload), so nothing presentational mounts and the corridor testbed stays the normal `main_scene`. Exit `0` = the fight **resolved** (win or loss); exit `1` = it didn't (stuck / game-timeout / wall-timeout) — the harness asserts the sim runs to a clean conclusion, not who wins (that becomes `tune`'s job). `--seed` and `--speed` are **plumbed-but-inert** in Phase 2: a single Phase 1 fight draws no RNG, and the direct `sim_step` loop advances one STEP per call regardless of the dial — both go live with the run RNG + real-time paths in Phase 3.
 
 ## Flags (adapted from a-machine)
 
@@ -53,6 +62,8 @@ Lives in `src/autotest/` when built.
 | `--nosave --notutorial` | always (fresh-user run) |
 | `--headless` | Godot flag (before `--`) |
 
+**Live in Phase 2:** `--autotest --seed --speed --timeout --wall-timeout --strategy --log --report` (+ forced nosave / notutorial). `--seed` / `--speed` are accepted but inert (see above); `--strategy` is stored on the stub Driver but unused until it has decisions. `--encounters / --acts / --character` arrive with the run loop (Phase 3).
+
 ## What it tests (real design risks)
 
 - **Fights resolve** — stuck detection catches a combat that never ends (the design's "mutual engine never resolves" worry).
@@ -69,9 +80,9 @@ A run is stuck if no progress within `STUCK_THRESHOLD` game-seconds: no damage d
 
 Modeled on a-machine's `tune` command + `tune-run` subagent: run the harness, read the report, adjust balance numbers (item / enemy / encounter JSON), repeat — **one milestone at a time**, with **cost (when) and value (how much) kept as separate levers**, documented in a tuning log. **Deferred** until there's tunable content and a working harness; the logger / report is designed now to feed it. (Model: `../a-machine/.claude/commands/tune.md`.)
 
-## Prototype scope (build when the combat loop exists)
+## Prototype scope
 
-`AutoTestMode` + a **stub** `AutoTestDriver` (first-viable draft, no potions) + `AutoTestLogger` (win/loss + duration + HP) + `--seed --speed --encounters --timeout --wall-timeout --nosave --notutorial` + stuck detection + exit code. Enough to run "draft → fight → advance × N" headless, deterministically, and assert it completes.
+**Phase 2 delivered the single-fight subset:** `AutoTestMode` + stub `AutoTestDriver` + `AutoTestStuckDetector` + `AutoTestLogger` (win/loss + duration + HP + damage-by-family) + `--seed --speed --timeout --wall-timeout` (nosave / notutorial forced) + stuck detection + exit code — enough to run one fight headless, deterministically, and assert it resolves. **Phase 3 extends it** to "draft → fight → advance × N" over the run loop: `--encounters / --acts`, the seeded run RNG that makes `--seed` live, and real draft strategies in the Driver.
 
 ## Open / deferred
 

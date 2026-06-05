@@ -1,0 +1,117 @@
+extends GutTest
+## AutoTestLogger — the pure damage-attribution helper, the family/total tally,
+## and the summary it folds together for the report.
+
+
+func before_each() -> void:
+  TestCleanup.reset_all_managers()
+
+
+func after_each() -> void:
+  TestCleanup.reset_all_managers()
+
+
+# --- attribute_damage (pure) ------------------------------------------------
+
+func test_single_direct_hit_attributes_fully() -> void:
+  var recs := AutoTestLogger.attribute_damage(10.0, [{ 'family': 'Blade', 'raw': 10.0 }])
+  assert_eq(recs.size(), 1)
+  assert_eq(recs[0]['family'], 'Blade')
+  assert_almost_eq(recs[0]['amount'], 10.0, 0.0001)
+
+
+func test_loss_with_no_direct_is_dot() -> void:
+  var recs := AutoTestLogger.attribute_damage(4.0, [])
+  assert_eq(recs.size(), 1)
+  assert_eq(recs[0]['family'], AutoTestLogger.DOT_FAMILY, 'unexplained loss is the DoT channel')
+  assert_almost_eq(recs[0]['amount'], 4.0, 0.0001)
+
+
+func test_direct_plus_dot_remainder_splits() -> void:
+  # 9 lost: 6 from a direct hit, the other 3 unexplained -> DoT.
+  var recs := AutoTestLogger.attribute_damage(9.0, [{ 'family': 'Blade', 'raw': 6.0 }])
+  var by := _by_family(recs)
+  assert_almost_eq(by['Blade'], 6.0, 0.0001)
+  assert_almost_eq(by[AutoTestLogger.DOT_FAMILY], 3.0, 0.0001)
+
+
+func test_block_reduces_the_direct_share() -> void:
+  # 6 raw direct but only 4 net lost (block absorbed 2): all 4 to the direct
+  # family, no DoT remainder invented.
+  var recs := AutoTestLogger.attribute_damage(4.0, [{ 'family': 'Blade', 'raw': 6.0 }])
+  assert_eq(recs.size(), 1)
+  assert_eq(recs[0]['family'], 'Blade')
+  assert_almost_eq(recs[0]['amount'], 4.0, 0.0001)
+
+
+func test_two_direct_hits_split_proportionally() -> void:
+  var recs := AutoTestLogger.attribute_damage(10.0, [
+    { 'family': 'A', 'raw': 6.0 },
+    { 'family': 'B', 'raw': 4.0 },
+  ])
+  var by := _by_family(recs)
+  assert_almost_eq(by['A'], 6.0, 0.0001)
+  assert_almost_eq(by['B'], 4.0, 0.0001)
+
+
+func test_zero_loss_yields_no_records() -> void:
+  assert_eq(AutoTestLogger.attribute_damage(0.0, [{ 'family': 'A', 'raw': 3.0 }]).size(), 0)
+
+
+# --- accumulation + summary -------------------------------------------------
+
+func test_record_damage_accumulates_family_and_total() -> void:
+  var log := AutoTestLogger.new()
+  log.record_damage('A', 3.0)
+  log.record_damage('A', 2.0)
+  log.record_damage('B', 4.0)
+  log.record_damage('B', 0.0)   # ignored
+  assert_almost_eq(log.total_damage, 9.0, 0.0001)
+  assert_almost_eq(log.damage_by_family['A'], 5.0, 0.0001)
+  assert_almost_eq(log.damage_by_family['B'], 4.0, 0.0001)
+
+
+func test_summarize_merges_result_with_tally() -> void:
+  var log := AutoTestLogger.new()
+  log.record_damage('Blade', 12.0)
+  var s := log.summarize({
+    'outcome': 'WIN', 'resolved': true, 'won': true, 'steps': 120,
+    'sim_seconds': 2.0, 'wall_ms': 5,
+    'player_hp': 80.0, 'player_max_hp': 100.0,
+    'enemies': [{ 'name': 'Corridor Grunt', 'hp': 0.0, 'max_hp': 40.0 }],
+  })
+  assert_eq(s['outcome'], 'WIN')
+  assert_eq(s['steps'], 120)
+  assert_true(s['won'])
+  assert_almost_eq(s['total_damage'], 12.0, 0.0001)
+  assert_almost_eq(s['damage_by_family']['Blade'], 12.0, 0.0001)
+  assert_eq(s['enemies'][0]['name'], 'Corridor Grunt')
+
+
+func test_format_summary_and_report_write() -> void:
+  var log := AutoTestLogger.new()
+  log.record_damage('Blade', 12.0)
+  log.record_damage('Poison', 3.0)
+  var s := log.summarize({
+    'outcome': 'WIN', 'resolved': true, 'won': true, 'steps': 90,
+    'sim_seconds': 1.5, 'wall_ms': 4,
+    'player_hp': 88.0, 'player_max_hp': 100.0,
+    'enemies': [{ 'name': 'Corridor Grunt', 'hp': 0.0, 'max_hp': 40.0 }],
+  })
+  assert_gt(log.format_summary(s).size(), 0, 'summary renders some lines')
+
+  var path := 'user://autotest_report_test.md'
+  log.write_report(path, s)
+  var text := FileAccess.get_file_as_string(path)
+  assert_string_contains(text, '# AutoTest report')
+  assert_string_contains(text, 'Blade')
+  DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+# --- helpers ----------------------------------------------------------------
+
+func _by_family(records: Array) -> Dictionary:
+  var by := {}
+  for r in records:
+    by[r['family']] = r['amount']
+  return by

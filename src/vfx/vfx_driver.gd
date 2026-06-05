@@ -27,7 +27,7 @@ func _draw() -> void:
   if combat == null or combat.timekeeper == null:
     return
   var now: float = combat.timekeeper.render_time()
-  for d in combat._deliveries:
+  for d in combat.deliveries():
     if d.fizzled:
       continue
     var travel_dur: float = d.travel.threshold * Timekeeper.STEP

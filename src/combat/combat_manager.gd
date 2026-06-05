@@ -227,6 +227,23 @@ func _finish(player_won: bool) -> void:
   resolved.emit(player_won)
 
 
+## The fight result surface (the `resolved` signal is the push form; these are
+## the pull form the headless autotest polls after each sim_step).
+func is_resolved() -> bool:
+  return _resolved
+
+
+func player_won() -> bool:
+  return _player_won
+
+
+## The in-flight + recently-landed Delivery set — the read-only "wall" the VFX
+## driver and the autotest logger sample (vfx_driver_prd / autotest.md). Pruned
+## each step, so it stays bounded; never mutate it from outside.
+func deliveries() -> Array:
+  return _deliveries
+
+
 ## Drive the fight to resolution headlessly (no real time). Returns the step
 ## count. The cap is a stuck-fight backstop.
 func run_headless(max_steps: int = 100000) -> int:
