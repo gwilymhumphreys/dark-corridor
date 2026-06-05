@@ -64,11 +64,9 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
   (the autotest path is unchanged). Full doc: [`../ui/run_screen.md`](../ui/run_screen.md).
 
 **What does NOT exist yet:** the ~30-encounter pool, elite/boss tiers, events with
-prose, multi-act maps, meta-progression, characters, the `tune` skill. Two
-written-but-unwired Phase-4 gaps (not bugs): the **potion-throw UI** (the player can't
-throw the Healing Draught yet) and the **localization POT pipeline**
-(`tools/extract_pot.gd`, `locale/` — strings are written extractable, but the tooling
-CLAUDE.md references isn't set up).
+prose, multi-act maps, meta-progression, characters, the `tune` skill. (The two
+Phase-4 follow-ups — the **potion-throw UI** and the **localization POT pipeline**
+`tools/extract_pot.gd` — are now done.)
 
 ## The architecture in one picture
 
@@ -157,10 +155,8 @@ turn the 1-enemy, 4-beat prototype into a real run worth balancing.
 - **`tune`**: bring the combat/draft tuning loop up on the autotest (the `tune` skill +
   `tune-run` agent scaffolding exist) — so picks/enemies/encounters are balanced by
   data, not feel.
-- **Two small Phase-4 follow-ups worth closing first:** wire the **potion-throw UI**
-  (clickable potion → `run.throw_potion`) and set up the **localization POT pipeline**
-  (the tooling CLAUDE.md assumes — `tools/extract_pot.gd`, `locale/`; strings are
-  already written extractable).
+- *(The two Phase-4 follow-ups — the potion-throw UI + the localization POT pipeline
+  `tools/extract_pot.gd` — are done; start straight on content + `tune`.)*
 
 Build incrementally, test-first, committing each green step; the headless autotest is
 the regression backstop, and the framed run screen is now watchable for feel

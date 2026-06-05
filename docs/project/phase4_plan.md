@@ -19,11 +19,12 @@ a full run to a win. Presentation: `src/scenes/main.tscn` + `main_controller.gd`
 [`docs/ui/run_screen.md`](../ui/run_screen.md). **Deviations from the plan below:** the
 `RunManager.advancing` signal was unnecessary (the run screen orchestrates the advance
 + approach directly, keeping RunManager presentation-free); the death/win screens are
-**one** `outcome_screen.tscn` (parameterized by outcome) rather than two. **Known gaps
-(deferred, not bugs):** the potion-throw UI isn't wired (the player can't throw the
-Healing Draught yet); the localization POT pipeline (`tools/extract_pot.gd`, `locale/`)
-isn't set up (strings are written extractable). **Next: Phase 5 — scale content +
-`tune`.**
+**one** `outcome_screen.tscn` (parameterized by outcome) rather than two. **Two follow-ups
+done (2026-06-06):** the **potion-throw UI** (clickable potion slots →
+`RunManager.throw_potion`) and the **localization POT pipeline**
+(`tools/extract_pot.gd` → `locale/messages.pot` + `en.po`, registered in
+`project.godot` — see [`../reference/localization.md`](../reference/localization.md)).
+**Next: Phase 5 — scale content + `tune`.**
 
 ---
 
