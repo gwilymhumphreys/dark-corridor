@@ -1,0 +1,67 @@
+class_name ItemCell
+extends Control
+## One board item in the framed combat view (ui_layout_prd): an opaque effect-family
+## colour panel + its value, a Bazaar-style radial cooldown ring, and a scale-punch
+## recoil when it fires. Structure is authored in item_cell.tscn; this binds the data
+## and draws the ring + recoil. Reads the live Item; writes nothing. No alpha.
+
+const CELL_SIZE := Vector2(120, 120)
+
+var item: Item
+
+@onready var _panel: ColorRect = $Panel
+@onready var _value: Label = $Value
+
+var _last_progress: float = 1.0
+var _scale_tween: Tween
+
+
+func _ready() -> void:
+  pivot_offset = CELL_SIZE * 0.5   # recoil / hover scale from the centre
+
+
+## Bind to an item. Call after the cell is in the tree (so the node refs exist).
+func setup(target_item: Item) -> void:
+  item = target_item
+  _panel.color = item.def.panel_color
+  _value.text = _value_text()
+  queue_redraw()
+
+
+func _value_text() -> String:
+  if item == null or item.def.effects.is_empty():
+    return ''
+  return str(int(item.def.effects[0].value))
+
+
+func _process(_delta: float) -> void:
+  if item == null:
+    return
+  var progress: float = item.cooldown.progress()
+  if progress < _last_progress - 0.2:   # cooldown reset -> it just fired
+    _recoil()
+  _last_progress = progress
+  queue_redraw()
+
+
+func _draw() -> void:
+  draw_rect(Rect2(Vector2.ZERO, CELL_SIZE), Color.BLACK, false, 3.0)
+  if item == null:
+    return
+  var progress: float = item.cooldown.progress()
+  if progress < 1.0:
+    var centre: Vector2 = CELL_SIZE * 0.5
+    draw_arc(centre, CELL_SIZE.x * 0.5 + 8.0, -PI * 0.5, -PI * 0.5 + progress * TAU, 48, Color(0.95, 0.95, 0.95), 5.0)
+
+
+func _recoil() -> void:
+  if _scale_tween != null and _scale_tween.is_valid():
+    _scale_tween.kill()
+  scale = Vector2(1.3, 1.3)
+  _scale_tween = create_tween()
+  _scale_tween.tween_property(self, 'scale', Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Centre of the cell in global (screen) space — the VFX wall reads it.
+func cell_centre() -> Vector2:
+  return global_position + CELL_SIZE * 0.5 * scale

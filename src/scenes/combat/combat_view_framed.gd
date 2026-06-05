@@ -1,0 +1,68 @@
+class_name CombatViewFramed
+extends Control
+## The framed combat view (ui_layout_prd; phase4_plan locked layout): the corridor +
+## enemy occupant top-right, the player portrait on the left, both boards, HP and
+## potion slots — composed in combat_view_framed.tscn. It binds the live fight (the
+## player + enemy Actors + the CombatManager) into the scene and hosts the VFX wall;
+## it READS logic and writes nothing. The framed-vs-fullscreen open is isolated HERE
+## (a swappable CombatView) — nothing else moves when it is decided.
+
+const POTION_SLOT_SIZE := Vector2(96, 96)
+const POTION_COLOR := Color(0.3, 0.7, 0.45, 1)
+
+var _cm: CombatManager
+var _player: Actor
+var _enemy: Actor
+
+@onready var _corridor: CombatCorridor = $CorridorPanel
+@onready var _player_strip: BoardStrip = $PlayerSide/PlayerBoard
+@onready var _enemy_strip: BoardStrip = $EnemySide/EnemyBoard
+@onready var _portrait: Control = $PlayerSide/Portrait
+@onready var _potions: HBoxContainer = $PlayerSide/Potions
+@onready var _vfx: VfxDriver = $VfxWall
+
+
+## Bind the live fight: build both boards, the potion slots, place the enemy at full
+## scale (the approach lands in Step 7), and point the VFX wall at this layout.
+func bind(cm: CombatManager, player: Actor, enemy: Actor, potions: Array) -> void:
+  _cm = cm
+  _player = player
+  _enemy = enemy
+  _player_strip.setup(player)
+  _enemy_strip.setup(enemy)
+  _build_potions(potions)
+  _corridor.set_enemy_depth(0.0)
+  _vfx.setup(_cm, self)
+
+
+func _build_potions(potions: Array) -> void:
+  for child in _potions.get_children():
+    child.queue_free()
+  for _consumable in potions:
+    var slot := ColorRect.new()
+    slot.custom_minimum_size = POTION_SLOT_SIZE
+    slot.color = POTION_COLOR
+    _potions.add_child(slot)
+
+
+## Hover surface for the slow-mo intent (Step 3 widens this to potions + the enemy).
+func mouse_over_board(point: Vector2) -> bool:
+  return _player_strip.mouse_over(point) or _enemy_strip.mouse_over(point)
+
+
+# --- layout lookups the VFX wall reads (global / screen space) ---------------
+
+func item_pos(item: Item) -> Vector2:
+  var centre: Vector2 = _player_strip.cell_centre(item)
+  if centre != Vector2.INF:
+    return centre
+  centre = _enemy_strip.cell_centre(item)
+  if centre != Vector2.INF:
+    return centre
+  return actor_pos(item.owner)
+
+
+func actor_pos(actor: Actor) -> Vector2:
+  if actor == _enemy:
+    return _corridor.enemy_screen_centre()
+  return _portrait.global_position + _portrait.size * 0.5

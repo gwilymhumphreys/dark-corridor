@@ -76,6 +76,12 @@ const POTION_HEAL: float = 20.0
 const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fraction of max HP
 
 
+# ── Presentation — the framed combat view (ui_layout_prd; phase4_plan) ───────
+# The enemy occupant's on-screen scale when arrived (depth 0) inside the corridor
+# SubViewport; the approach scales it from depth via CorridorScaled.axis_scale.
+const ENEMY_FULL_SCALE: float = 3.0
+
+
 # ── Delivery visual hold (presentation lifetime; vfx_driver_prd) ─────────────
 # Sim-seconds a LANDED Delivery is retained after impact so the VFX wall can
 # finish drawing its impact number / flash before the Combat manager drops it.

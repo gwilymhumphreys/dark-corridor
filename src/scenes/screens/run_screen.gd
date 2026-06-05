@@ -5,19 +5,15 @@ extends Control
 ## screen calls `cm.tick(delta)` on the active fight — the same one tick the autotest
 ## runs via sim_step (combat_manager.gd).
 ##
-## STEP 1 scope: drive the FIRST beat's fight to a verdict and compose the existing
-## placeholder BoardView / VfxDriver over it (the framed scene replaces these in
-## Step 2; the full advance-through-the-map loop arrives in Step 4).
+## STEP 2 scope: drive the FIRST beat's fight and compose the FRAMED combat view over
+## it (corridor + enemy occupant top-right, player left, boards, HP, potions). The
+## full advance-through-the-map loop arrives in Step 4.
 
-# Stopgap board anchors (viewport px); the framed layout (Step 2) supersedes them.
-const PLAYER_ANCHOR := Vector2(640, 880)
-const ENEMY_ANCHOR := Vector2(1920, 880)
+const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 
 var _run: RunManager
 var _cm: CombatManager
-var _player_board: BoardView
-var _enemy_board: BoardView
-var _vfx: VfxDriver
+var _view: CombatViewFramed
 var _result: Label
 
 
@@ -36,18 +32,10 @@ func _begin_fight() -> void:
     return   # a non-fight beat (rest) — the Step-4 loop handles these
   _cm.resolved.connect(_on_resolved)
   var enemy: Actor = _run.current_encounter().enemies[0]
-
-  _player_board = BoardView.new()
-  add_child(_player_board)
-  _player_board.setup(_run.player, PLAYER_ANCHOR, true)
-
-  _enemy_board = BoardView.new()
-  add_child(_enemy_board)
-  _enemy_board.setup(enemy, ENEMY_ANCHOR, false)
-
-  _vfx = VfxDriver.new()
-  add_child(_vfx)
-  _vfx.setup(_cm, self)
+  _view = COMBAT_VIEW.instantiate()
+  add_child(_view)
+  move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
+  _view.bind(_cm, _run.player, enemy, _run.potions)
 
 
 # The one real-time tick: advance the active fight off real delta (steps_due ×
@@ -61,28 +49,11 @@ func _physics_process(delta: float) -> void:
 # Slow-mo-on-hover intent: hovering a board item asks the Combat manager to slow the
 # clock (both sides). The full hover surface (potions, enemy) lands in Step 3.
 func _process(_delta: float) -> void:
-  if _cm == null or _cm.is_resolved():
+  if _cm == null or _cm.is_resolved() or _view == null:
     return
   var mouse: Vector2 = get_global_mouse_position()
-  var over: bool = _player_board.mouse_over(mouse) or _enemy_board.mouse_over(mouse)
-  _cm.request_slowmo(over)
+  _cm.request_slowmo(_view.mouse_over_board(mouse))
 
 
 func _on_resolved(player_won: bool) -> void:
   _result.text = tr('Victory') if player_won else tr('Defeat')
-
-
-# --- layout lookups the VFX wall reads (the same surface the sandbox exposes) ----
-
-func item_pos(item: Item) -> Vector2:
-  var pos: Vector2 = _player_board.icon_center(item)
-  if pos != Vector2.INF:
-    return pos
-  pos = _enemy_board.icon_center(item)
-  if pos != Vector2.INF:
-    return pos
-  return actor_pos(item.owner)
-
-
-func actor_pos(actor: Actor) -> Vector2:
-  return PLAYER_ANCHOR if actor == _run.player else ENEMY_ANCHOR
