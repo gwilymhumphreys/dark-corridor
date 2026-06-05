@@ -8,7 +8,14 @@
 
 **Engine:** Godot 4.6.
 **Date:** 2026-06-06.
-**Status: IN PROGRESS.**
+**Status: BUILT (the machinery bite, 2026-06-06).** All 3 steps green — seeded
+board-aware **draft strategies** (`--strategy` live: `first-viable` / `random` /
+`damage` / `block` / `poison` / `greedy-synergy`, + `scaling`/`burn` aliases), the
+**per-encounter + per-item report** (durations vs window · HP attrition · item fires
++ damage + trap-pick flags), and the wire-up + docs. **139 GUT tests green**; the
+autotest runs clean across strategies and the report renders both tables. See
+[`../testing/autotest.md`](../testing/autotest.md). **Next: the deferred content push**
+— scale the item/enemy/encounter pools (raw damage + scaling), then a real `tune` pass.
 
 ## Scope (resolved with the user 2026-06-06)
 

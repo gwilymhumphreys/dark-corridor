@@ -84,6 +84,27 @@ func test_encounters_cap_stops_early() -> void:
   assert_eq(r['exit_code'], 0, 'a deliberate cap is not a failure')
 
 
+func test_run_full_works_across_strategies() -> void:
+  # --strategy is live: each seeded strategy plays its own build to a clean verdict.
+  for strat in ['greedy-synergy', 'damage', 'random']:
+    var m := _mode(3)
+    m.strategy = strat
+    var r := m.run_full()
+    assert_eq(r['exit_code'], 0, '%s reaches a clean verdict' % strat)
+    assert_true(r['resolved'], '%s resolved' % strat)
+
+
+func test_run_full_report_has_per_encounter_and_contribution() -> void:
+  var m := _mode(1)
+  var r := m.run_full()
+  var s: Dictionary = r['summary']
+  assert_gt(s['encounters'].size(), 0, 'per-encounter records captured')
+  assert_eq(s['encounters'][0]['type'], 'Fight', 'the first beat is a fight')
+  assert_gt(float(s['encounters'][0]['duration']), 0.0, 'fight duration recorded')
+  assert_false(s['fires_by_item'].is_empty(), 'player item fires tallied')
+  assert_eq(s['strategy'], 'first-viable', 'the strategy is recorded')
+
+
 func test_resume_mid_run_finishes_the_descent() -> void:
   # Resume smoke: play part of a run, reload from the autosave, and finish it.
   Game.start_run(3)
