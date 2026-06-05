@@ -56,6 +56,16 @@ const TRIGGER_PUSH_FULL: float = 1.0
 const TRIGGER_PUSH_SMALL: float = 0.25
 
 
+# ── Content — Relics (run-level modifiers; content_prd) ──────────────────────
+# Phase 3's single relic: a combat-start status applier (start each fight with
+# this much block on the player).
+const RELIC_STONE_WARD_BLOCK: float = 10.0
+
+
+# ── Run loop (HP economy + map; run_manager_prd) ─────────────────────────────
+const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fraction of max HP
+
+
 # ── Delivery visual hold (presentation lifetime; vfx_driver_prd) ─────────────
 # Sim-seconds a LANDED Delivery is retained after impact so the VFX wall can
 # finish drawing its impact number / flash before the Combat manager drops it.
