@@ -7,8 +7,11 @@ extends Control
 ## it READS logic and writes nothing. The framed-vs-fullscreen open is isolated HERE
 ## (a swappable CombatView) — nothing else moves when it is decided.
 
-const POTION_SLOT_SIZE := Vector2(96, 96)
-const POTION_COLOR := Color(0.3, 0.7, 0.45, 1)
+## Emitted when a potion slot is clicked — a throw-potion intent the run screen
+## forwards to RunManager.throw_potion (which activates it through the Combat manager).
+signal potion_thrown(index: int)
+
+const POTION_SLOT: PackedScene = preload('res://src/scenes/combat/potion_slot.tscn')
 
 var _cm: CombatManager
 var _player: Actor
@@ -35,14 +38,24 @@ func bind(cm: CombatManager, player: Actor, enemy: Actor, potions: Array) -> voi
   _vfx.setup(_cm, self)
 
 
+## (Re)build the potion slots from the reserve. Each slot is a clickable button that
+## emits potion_thrown(index). Call refresh_potions after a throw consumes one.
 func _build_potions(potions: Array) -> void:
   for child in _potions.get_children():
+    _potions.remove_child(child)   # drop now so the new slots lay out at once
     child.queue_free()
-  for _consumable in potions:
-    var slot := ColorRect.new()
-    slot.custom_minimum_size = POTION_SLOT_SIZE
-    slot.color = POTION_COLOR
+  for i in potions.size():
+    var slot: Button = POTION_SLOT.instantiate()
     _potions.add_child(slot)
+    slot.pressed.connect(_on_potion_pressed.bind(i))
+
+
+func _on_potion_pressed(index: int) -> void:
+  potion_thrown.emit(index)
+
+
+func refresh_potions(potions: Array) -> void:
+  _build_potions(potions)
 
 
 ## Approach controls (phase4_plan Step 7) — the run screen tweens the enemy from

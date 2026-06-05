@@ -147,6 +147,16 @@ func _build_combat_view() -> void:
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
   _view.bind(_cm, _run.player, enemy, _run.potions)
+  _view.potion_thrown.connect(_on_potion_thrown)
+
+
+# Throw-potion intent: only valid in a live fight (the consumable resolves through the
+# Combat manager). On success the reserve shrank, so refresh the slots.
+func _on_potion_thrown(index: int) -> void:
+  if _state != State.FIGHTING:
+    return
+  if _run.throw_potion(index):
+    _view.refresh_potions(_run.potions)
 
 
 func _teardown_combat_view() -> void:

@@ -47,3 +47,17 @@ func test_fight_beat_approaches_then_fights() -> void:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'combat begins on arrival')
   screen.free()
+
+
+func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  for i in 4:   # walk the approach into the fight
+    screen._physics_process(1.0)
+  assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
+  var before: int = Game.run.potions.size()
+  assert_gt(before, 0, 'a starting Healing Draught is held')
+  screen._on_potion_thrown(0)
+  assert_eq(Game.run.potions.size(), before - 1, 'the thrown potion is consumed')
+  screen.free()

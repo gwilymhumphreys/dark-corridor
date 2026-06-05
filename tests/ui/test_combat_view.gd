@@ -78,6 +78,23 @@ func test_board_strip_mouse_over_detects_a_cell() -> void:
   assert_false(strip.mouse_over(centre + Vector2(10000, 10000)), 'a far point is not')
 
 
+func test_view_potion_slots_emit_the_throw_intent() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.Id.HEALING_DRAUGHT))]
+  view.bind(cm, p, e, potions)
+  assert_eq(view.get_node('PlayerSide/Potions').get_child_count(), 1, 'one slot per potion')
+  watch_signals(view)
+  var slot: Button = view.get_node('PlayerSide/Potions').get_child(0)
+  slot.pressed.emit()
+  assert_signal_emitted_with_parameters(view, 'potion_thrown', [0], 'clicking a potion emits the throw intent')
+  cm.free()
+
+
 func test_framed_view_binds_a_fight_without_error() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
