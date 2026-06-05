@@ -24,7 +24,6 @@ func apply(target, type: int, count: float, source = null) -> Status:
   s.type = type
   s.count = count
   s.source = source
-  s.target = target
   match def.shape:
     StatusDef.Shape.PERIODIC:
       s.ticker = Ticker.from_seconds(def.tick_interval)
@@ -54,12 +53,12 @@ func resolve_incoming_damage(target, raw: float, flags: int = 0) -> float:
 ## true when it has expired (the caller removes it). Periodic fires its payload —
 ## Step 4 will route this through a travel-0 Delivery for the VFX wall; the net
 ## effect (take_damage) is identical.
-func advance_status(status: Status) -> bool:
+func advance_status(status: Status, owner) -> bool:
   var def: StatusDef = StatusCatalog.get_def(status.type)
   match def.shape:
     StatusDef.Shape.PERIODIC:
       if status.ticker.step():
-        status.target.take_damage(status.count * def.damage_per_tick)
+        owner.take_damage(status.count * def.damage_per_tick)
         status.count -= 1.0
         status.ticker.reset()
         return status.count <= 0.0

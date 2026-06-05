@@ -41,11 +41,11 @@ func test_poison_dot_decrements_and_expires() -> void:
   var a := Actor.new(50.0)
   var p := StatusManager.apply(a, StatusDef.Type.POISON, 3.0)
   var interval := int(p.ticker.threshold)
-  _advance(p, interval)
+  _advance(a, p, interval)
   assert_eq(a.hp, 47.0, 'tick 1 deals count=3')
-  _advance(p, interval)
+  _advance(a, p, interval)
   assert_eq(a.hp, 45.0, 'tick 2 deals count=2')
-  var expired := _advance(p, interval)
+  var expired := _advance(a, p, interval)
   assert_eq(a.hp, 44.0, 'tick 3 deals count=1')
   assert_true(expired, 'poison expires once its stacks are spent')
 
@@ -56,18 +56,18 @@ func test_timed_status_expires_at_duration() -> void:
   var dur := int(w.ticker.threshold)
   var expired := false
   for i in dur - 1:
-    expired = StatusManager.advance_status(w)
+    expired = StatusManager.advance_status(w, a)
   assert_false(expired, 'not expired before its duration elapses')
-  expired = StatusManager.advance_status(w)
+  expired = StatusManager.advance_status(w, a)
   assert_true(expired, 'expires exactly at duration')
 
 
 # --- helpers (not test_*; GUT ignores them) ---
 
-func _advance(status, steps: int) -> bool:
+func _advance(owner: Actor, status, steps: int) -> bool:
   var expired := false
   for i in steps:
-    expired = StatusManager.advance_status(status)
+    expired = StatusManager.advance_status(status, owner)
   return expired
 
 
