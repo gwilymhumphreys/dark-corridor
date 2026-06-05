@@ -13,19 +13,22 @@ extends Button
 
 func setup(def: ItemDef) -> void:
   var value: int = int(def.effects[0].value) if not def.effects.is_empty() else 0
+  var rarity: String = _rarity_name(def.rarity)
   _color.color = def.panel_color
   _value.text = str(value)
   _name.text = tr(def.name_key)
-  _rarity.text = tr(_rarity_name(def.rarity))
+  _rarity.text = rarity
   tooltip_text = tr('{0} — {1}\nvalue {2} · every {3}s').format(
-    [tr(def.name_key), tr(_rarity_name(def.rarity)), value, def.cooldown])
+    [tr(def.name_key), rarity, value, def.cooldown])
 
 
+## The localized rarity label. tr() wraps the literals here (not the call sites) so
+## they are POT-extractable — see docs/reference/localization.md.
 func _rarity_name(rarity: int) -> String:
   match rarity:
     ItemDef.Rarity.UNCOMMON:
-      return 'Uncommon'
+      return tr('Uncommon')
     ItemDef.Rarity.RARE:
-      return 'Rare'
+      return tr('Rare')
     _:
-      return 'Common'
+      return tr('Common')

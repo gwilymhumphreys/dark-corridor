@@ -1,0 +1,132 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Dark Corridor\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/content/consumable_catalog.gd
+msgid "Healing Draught"
+msgstr "Healing Draught"
+
+#: src/content/enchant_catalog.gd
+msgid "Whetstone"
+msgstr "Whetstone"
+
+#: src/content/encounter_catalog.gd
+msgid "A dim corridor"
+msgstr "A dim corridor"
+
+#: src/content/encounter_catalog.gd
+msgid "A quiet alcove"
+msgstr "A quiet alcove"
+
+#: src/content/enemy_catalog.gd
+msgid "Corridor Grunt"
+msgstr "Corridor Grunt"
+
+#: src/content/item_catalog.gd
+msgid "Rusted Blade"
+msgstr "Rusted Blade"
+
+#: src/content/item_catalog.gd
+msgid "Iron Guard"
+msgstr "Iron Guard"
+
+#: src/content/item_catalog.gd
+msgid "Venom Fang"
+msgstr "Venom Fang"
+
+#: src/content/item_catalog.gd
+msgid "Spite Ward"
+msgstr "Spite Ward"
+
+#: src/content/item_catalog.gd
+msgid "Claw"
+msgstr "Claw"
+
+#: src/content/relic_catalog.gd
+msgid "Stone Ward"
+msgstr "Stone Ward"
+
+#: src/content/status_catalog.gd
+msgid "Block"
+msgstr "Block"
+
+#: src/content/status_catalog.gd
+msgid "Poison"
+msgstr "Poison"
+
+#: src/content/status_catalog.gd
+msgid "Weak"
+msgstr "Weak"
+
+#: src/content/status_catalog.gd
+msgid "Silence"
+msgstr "Silence"
+
+#: src/scenes/combat/combat_view_framed.tscn
+msgid "You"
+msgstr "You"
+
+#: src/scenes/screens/draft_card.gd
+msgid "{0} — {1}\nvalue {2} · every {3}s"
+msgstr "{0} — {1}\nvalue {2} · every {3}s"
+
+#: src/scenes/screens/draft_card.gd
+msgid "Uncommon"
+msgstr "Uncommon"
+
+#: src/scenes/screens/draft_card.gd
+msgid "Rare"
+msgstr "Rare"
+
+#: src/scenes/screens/draft_card.gd
+msgid "Common"
+msgstr "Common"
+
+#: src/scenes/screens/draft_overlay.tscn
+msgid "Choose a reward"
+msgstr "Choose a reward"
+
+#: src/scenes/screens/map_strip.gd
+msgid "Boss"
+msgstr "Boss"
+
+#: src/scenes/screens/map_strip.gd
+msgid "Rest"
+msgstr "Rest"
+
+#: src/scenes/screens/map_strip.gd
+msgid "Fight"
+msgstr "Fight"
+
+#: src/scenes/screens/outcome_screen.gd
+msgid "Victory"
+msgstr "Victory"
+
+#: src/scenes/screens/outcome_screen.gd
+msgid "You Died"
+msgstr "You Died"
+
+#: src/scenes/screens/outcome_screen.tscn
+msgid "New Run"
+msgstr "New Run"
+
+#: src/scenes/screens/outcome_screen.tscn
+msgid "Return to Title"
+msgstr "Return to Title"
+
+#: src/scenes/screens/title_screen.tscn
+msgid "Dark Corridor"
+msgstr "Dark Corridor"
+
+#: src/scenes/screens/title_screen.tscn
+msgid "Start Run"
+msgstr "Start Run"
+
+#: src/scenes/screens/title_screen.tscn
+msgid "Resume"
+msgstr "Resume"

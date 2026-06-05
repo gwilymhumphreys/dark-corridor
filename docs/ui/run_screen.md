@@ -85,9 +85,8 @@ the demon walks into full view. Constants in `src/data/balance.gd`.
 Player-facing text is localizable: **static UI text lives in the `.tscn`s**
 (auto-translated — titles, buttons, "Choose a reward", the "You" portrait); **dynamic
 text uses `tr()`** (item names/rarity/tooltips, the map labels, the outcome title).
-The POT-extraction tooling CLAUDE.md references (`tools/extract_pot.gd`, `locale/`)
-is **not yet set up** — strings are written extractable, but the pipeline is a
-pending infrastructure task.
+The POT pipeline is built (`tools/extract_pot.gd` → `locale/messages.pot` + `en.po`,
+registered in `project.godot`) — see [localization](../reference/localization.md).
 
 ## File map
 
