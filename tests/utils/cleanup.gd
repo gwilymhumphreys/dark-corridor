@@ -7,6 +7,6 @@ extends RefCounted
 
 
 static func reset_all_managers() -> void:
-  # No stateful managers to reset yet. As foundation autoloads land
-  # (StatusManager is stateless; Save / Game gain state), reset them here.
-  pass
+  # StatusManager / Save / Draft are stateless. Game (the session singleton) holds
+  # the live run — free it between tests so a leftover run can't bleed across.
+  Game.reset()
