@@ -21,12 +21,15 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
 
   var guard: int = 0
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 8000:
-    screen._physics_process(1.0)   # ~8 sim-steps/call; drives fights + advances beats
+    if screen._draft != null:
+      screen._on_draft_picked(0)   # stand in for the player picking the first card
+    else:
+      screen._physics_process(1.0)   # ~8 sim-steps/call; drives fights + advances beats
     guard += 1
 
   assert_eq(Game.phase, GameManagerAutoload.Phase.WIN, 'the run screen drove the descent to a win')
   assert_lt(guard, 8000, 'the run resolved well within the guard')
-  # Two fight beats granted drafts (auto-picked), so the board grew past the start of 3.
-  assert_gt(Game.run.player.board.size(), 3, 'auto-picked drafts landed on the board')
+  # Two fight beats granted drafts (picked via the overlay), so the board grew past 3.
+  assert_gt(Game.run.player.board.size(), 3, 'drafted picks landed on the board')
 
   screen.free()

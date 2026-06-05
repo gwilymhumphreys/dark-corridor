@@ -15,12 +15,14 @@ extends Control
 ## the corridor approach is inserted at _advance in Step 7.
 
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
+const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
 
-enum State { IDLE, FIGHTING, ENDED }
+enum State { IDLE, FIGHTING, DRAFTING, ENDED }
 
 var _run: RunManager
 var _cm: CombatManager
 var _view: CombatViewFramed
+var _draft: DraftOverlay
 var _state: int = State.IDLE
 
 
@@ -70,13 +72,32 @@ func _process(_delta: float) -> void:
 
 
 # Post-beat: the run already fulfilled the outcome (reward / run-end) via its signal
-# chain during the resolving tick. Here we react from OUTSIDE that emission — apply a
-# pending draft, then advance. Win/death route through run_ended → Game → screen swap.
+# chain during the resolving tick. Here we react from OUTSIDE that emission — a pending
+# draft raises the overlay (the player picks; the loop pauses), otherwise we advance.
+# Win/death route through run_ended → Game → screen swap.
 func _after_beat() -> void:
   if _run.is_ended():
     return
   if _run.has_pending_draft():
-    _run.apply_draft_pick(0)   # TODO Step 5: the draft overlay supplies the pick
+    _show_draft()
+  else:
+    _advance()
+
+
+# The draft is a player choice (a draft-pick intent): raise the 1-of-3 overlay and
+# wait. The loop is paused in DRAFTING until a card is picked.
+func _show_draft() -> void:
+  _state = State.DRAFTING
+  _draft = DRAFT_OVERLAY.instantiate()
+  add_child(_draft)   # on top of the combat view
+  _draft.picked.connect(_on_draft_picked)
+  _draft.setup(_run.pending_draft())
+
+
+func _on_draft_picked(index: int) -> void:
+  _draft.queue_free()
+  _draft = null
+  _run.apply_draft_pick(index)
   _advance()
 
 
