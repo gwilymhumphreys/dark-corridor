@@ -51,3 +51,12 @@ func test_hang_caps_then_drops_backlog() -> void:
   var n := tk.steps_due(Timekeeper.STEP * 1000.0)
   assert_eq(n, Timekeeper.MAX_STEPS, 'a hang runs at most MAX_STEPS')
   assert_almost_eq(tk._acc, 0.0, 0.00001, 'leftover backlog dropped — game-time slips, never spirals')
+
+
+func test_render_time_is_sim_plus_accumulator_only() -> void:
+  var tk := Timekeeper.new()
+  tk.set_base_scale(0.25)
+  tk.steps_due(Timekeeper.STEP)   # a sub-step of accrual, no whole step yet
+  assert_almost_eq(tk.render_time(), tk.sim_time + tk._acc, 0.000001, 'render_time = sim_time + accumulator only (no frame-varying term)')
+  assert_gt(tk.render_time(), tk.sim_time, 'the sub-step accumulator glides render_time between steps')
+  assert_eq(tk.render_time(), tk.render_time(), 'render_time is stable when the sim is frozen — no oscillation when paused')

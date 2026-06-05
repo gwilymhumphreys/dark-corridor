@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://dcsandbox01"]
+[gd_scene format=3 uid="uid://dcsandbox01"]
 
 [ext_resource type="Script" path="res://src/scenes/combat_sandbox.gd" id="1"]
 

@@ -54,7 +54,10 @@ func advance() -> void:
   sim_time += STEP
 
 
-## Continuous time for the VFX/audio wall — smooth between sim-steps so slow-mo
-## glides rather than stuttering. Only discrete events snap to `sim_time`.
+## Continuous time for the VFX/audio wall — `sim_time` plus the sub-step
+## accumulator. Motion glides between sim-steps (slow-mo especially) AND freezes
+## the instant the sim stops (resolved / paused). We deliberately omit a
+## physics-interpolation term: it keeps cycling while the sim is frozen, which
+## makes paused projectiles oscillate between two positions.
 func render_time() -> float:
-  return sim_time + _acc + Engine.get_physics_interpolation_fraction() * STEP * effective_scale()
+  return sim_time + _acc
