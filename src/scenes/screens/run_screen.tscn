@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/run_screen.gd" id="1"]
+[ext_resource type="PackedScene" path="res://src/scenes/screens/map_strip.tscn" id="2"]
 
 [node name="RunScreen" type="Control"]
 layout_mode = 3
@@ -21,6 +22,8 @@ grow_vertical = 2
 color = Color(0.03, 0.03, 0.04, 1)
 
 [node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="MapStrip" parent="HUD" instance=ExtResource("2")]
 
 [node name="Result" type="Label" parent="HUD"]
 anchors_preset = 15

@@ -25,11 +25,14 @@ var _view: CombatViewFramed
 var _draft: DraftOverlay
 var _state: int = State.IDLE
 
+@onready var _map: MapStrip = $HUD/MapStrip
+
 
 func _ready() -> void:
   _run = Game.run
   if _run == null:
     return
+  _map.setup(RunManager.MAP, _run.position)
   _enter_beat()
 
 
@@ -104,6 +107,7 @@ func _on_draft_picked(index: int) -> void:
 func _advance() -> void:
   _teardown_combat_view()
   _run.advance()
+  _map.mark_position(_run.position)
   _enter_beat()   # TODO Step 7: the corridor approach plays here before the fight
 
 
