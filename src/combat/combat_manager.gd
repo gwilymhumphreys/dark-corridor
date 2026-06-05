@@ -212,6 +212,17 @@ func run_headless(max_steps: int = 100000) -> int:
   return steps
 
 
+## UI timescale intent (hover slow-mo). The UI never writes the dial directly —
+## it asks; the manager sets its Timekeeper's override.
+func request_slowmo(on: bool) -> void:
+  if timekeeper == null:
+    return
+  if on:
+    timekeeper.set_override(Balance.TIMESCALE_SLOWMO)
+  else:
+    timekeeper.clear_override()
+
+
 ## Break the Actor<->Status / Item<->Status reference cycles at fight end so the
 ## actors/items can free (CLAUDE.md runtime cleanup). Combat-scoped statuses are
 ## dropped (none are run-persistent in Phase 1). Call after reading the result.
