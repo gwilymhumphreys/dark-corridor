@@ -66,6 +66,18 @@ func test_board_strip_hp_text_tracks_actor() -> void:
   assert_eq(strip.get_node('HP/Label').text, '60 / 100', 'HP text tracks the actor')
 
 
+func test_board_strip_mouse_over_detects_a_cell() -> void:
+  # The hover hit-test (the slow-mo intent's surface) uses each cell's global rect.
+  var strip: BoardStrip = preload('res://src/scenes/combat/board_strip.tscn').instantiate()
+  _host(strip)
+  strip.setup(_spawn(100.0, [ItemCatalog.Id.WEAPON]))
+  await get_tree().process_frame   # let the container lay the cell out
+  var cell: Control = strip.get_node('Row').get_child(0)
+  var centre: Vector2 = cell.global_position + cell.size * 0.5
+  assert_true(strip.mouse_over(centre), 'a point over a cell is detected')
+  assert_false(strip.mouse_over(centre + Vector2(10000, 10000)), 'a far point is not')
+
+
 func test_framed_view_binds_a_fight_without_error() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)

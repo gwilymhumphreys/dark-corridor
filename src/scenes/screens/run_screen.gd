@@ -46,13 +46,14 @@ func _physics_process(delta: float) -> void:
     _cm.tick(delta)
 
 
-# Slow-mo-on-hover intent: hovering a board item asks the Combat manager to slow the
-# clock (both sides). The full hover surface (potions, enemy) lands in Step 3.
+# Slow-mo-on-hover intent (ui_layout_prd "one verb"): hovering any inspectable —
+# a board item (either side), a potion, or the enemy in the corridor — asks the
+# Combat manager to slow the clock (both sides proportionally) to read it.
 func _process(_delta: float) -> void:
   if _cm == null or _cm.is_resolved() or _view == null:
     return
   var mouse: Vector2 = get_global_mouse_position()
-  _cm.request_slowmo(_view.mouse_over_board(mouse))
+  _cm.request_slowmo(_view.mouse_over_inspectable(mouse))
 
 
 func _on_resolved(player_won: bool) -> void:

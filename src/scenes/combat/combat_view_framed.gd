@@ -45,9 +45,18 @@ func _build_potions(potions: Array) -> void:
     _potions.add_child(slot)
 
 
-## Hover surface for the slow-mo intent (Step 3 widens this to potions + the enemy).
-func mouse_over_board(point: Vector2) -> bool:
-  return _player_strip.mouse_over(point) or _enemy_strip.mouse_over(point)
+## The hover surface for the slow-mo intent (ui_layout_prd "one verb"): any board
+## item (either side), any potion slot, or the enemy in the corridor. Hovering any
+## of these asks the Combat manager to slow the clock (both sides) to inspect.
+func mouse_over_inspectable(point: Vector2) -> bool:
+  if _player_strip.mouse_over(point) or _enemy_strip.mouse_over(point):
+    return true
+  if _corridor.get_global_rect().has_point(point):   # the enemy, in the corridor
+    return true
+  for slot in _potions.get_children():
+    if (slot as Control).get_global_rect().has_point(point):
+      return true
+  return false
 
 
 # --- layout lookups the VFX wall reads (global / screen space) ---------------

@@ -229,6 +229,19 @@ func test_tick_drives_fight_to_resolution() -> void:
   assert_true(cm.player_won(), 'player (100 HP) beats the grunt (40 HP)')
 
 
+func test_request_slowmo_sets_and_clears_the_dial() -> void:
+  # The slow-mo-on-hover intent: the view never writes the dial — it asks, and the
+  # manager sets / clears its Timekeeper's momentary override (back to base, not x1).
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  cm.request_slowmo(true)
+  assert_almost_eq(cm.timekeeper.effective_scale(), Balance.TIMESCALE_SLOWMO, 0.0001, 'hover slows the clock')
+  cm.request_slowmo(false)
+  assert_almost_eq(cm.timekeeper.effective_scale(), Balance.TIMESCALE_BASE, 0.0001, 'exit returns to base')
+
+
 func test_physics_process_drives_tick_when_mounted() -> void:
   # A directly-mounted CombatManager (the sandbox) must still self-drive: its
   # _physics_process delegates to tick(). Mount it, run a couple of physics frames,
