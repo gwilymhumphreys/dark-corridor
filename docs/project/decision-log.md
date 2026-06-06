@@ -57,7 +57,7 @@ Pre-prototype. The **only code** is the corridor renderer (`src/scenes/corridors
 
 - Timescale override **replace-vs-multiply — resolved → replace** (absolute slow-mo, independent of the ×1/×2/×3 battle-speed dial; the dial is a `Game` session preference applied to each fight's Timekeeper base scale). timekeeper_prd / combat_prd.
 - **Within-step component order — resolved (#24):** deterministic registration order; built in Phase 1 as fixed type-ordered passes (item cooldowns → statuses → Deliveries), with a literal `seq_id` counter deferred until cross-type interleaving is needed.
-- **Stat-statuses** (strength/weak/vulnerable) → design defers to prototype; constraint: a flat modifier must not make fast items strictly dominant.
+- **Stat-statuses** (strength/weak/vulnerable) → **content, authored later** as GD `StatusDef`s (not one global rule). The engine already covers what they need (flat **or** % magnitude, the TIMED shape, per-stack add-magnitude / extend-duration); the damage-modifier seams (outgoing-at-fire-time + the reserved incoming amplifier slot) wire in when the first is authored. Authoring guidance: a flat *per-fire* damage modifier makes fast items strictly dominant, so per-fire damage scaling should be % / charge-limited ([design](design.md)).
 - **Per-effect stack/decrement** + block tuning → content.
 - **Mid-fight roster changes (summoning)** → the Combat manager assumes a fixed roster; revisit when boss "summons-adds" is built.
 - **Drafting allies / multi-Actor player side** (#22) → additive on the current symmetry; keep the player side a *party* (roster of 1 today), don't hardwire one actor. Shares the "side = roster" need with summoning.

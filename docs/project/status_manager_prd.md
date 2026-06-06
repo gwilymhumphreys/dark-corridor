@@ -104,7 +104,7 @@ Distinct icon + per-effect colour per type (the design's colour vocabulary; a st
 
 ## Open / deferred
 
-- **Stat-statuses (strength / weak / vulnerable equivalents)** — deliberately deferred ([design](design.md)). Constraint to honour when designed: a flat damage modifier must not make fast items strictly dominant over slow ones in the high-trigger cascade (percentage / charge-budgeted / slowest-item-targeted are candidate forms). The engine reserves the amplifier slot; no flat stat-status ships until this is solved in prototype.
+- **Stat-statuses (strength / weak / vulnerable)** — **content, authored later** as GD `StatusDef`s (decision #23), not one hardcoded rule. The engine model already covers the variants they need — flat **or** percentage magnitude, the TIMED shape, and per-stack growth (add magnitude **or** extend duration, via the stacking policy). The two damage-modifier seams — an **outgoing** scale read at item fire time (`Item._resolve_effect`, beside the enchant mult) and the reserved **incoming amplifier** slot here — get wired when the first such status is authored. **Authoring guidance** (not a global rule): a *flat per-fire* damage modifier makes fast items strictly dominant in the cascade, so per-fire damage scaling should be percentage or charge-limited ([design](design.md)).
 - **Per-effect stack / decrement semantics** (how poison decrements, whether regen counts down) — content, settled as effects are authored (Combat PRD defers these).
 - **Damage-modifier ordering** — precise amplifier/absorber order, settled when the first amplifier (vulnerable-type) is designed.
 - **Status-definition data format — resolved:** typed GDScript `StatusDef` objects in a static catalog (decision-log #23), not JSON.

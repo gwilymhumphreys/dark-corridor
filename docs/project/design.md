@@ -256,9 +256,11 @@ Players should feel that poison and strength and freeze are different kinds of t
 
 Wanting a status "enemies get often, players rarely" (e.g. strength) is a design choice about acquisition rates — same mechanic, different exposure tuning by source. No special-case code; tune at source.
 
-### Stats deliberately deferred
+### Stat-statuses — data-driven content, authored later
 
-Specific stat-like statuses (strength/weak/vulnerable equivalents) are not designed yet. Open problem to resolve in prototype: any "flat damage modifier" status interacts badly with this game's high-trigger-count cascade — a +N status that hits every trigger from a fast item gets applied 15x per fight, from a slow item 3x, making fast items dominant. Constraint for stat design: damage-scaling statuses must not make fast items strictly dominant over slow items. Percentage-based, slowest-item-targeted, charge-budgeted, or no-flat-modifiers-at-all are all candidate answers. Resolve in prototype.
+Specific stat-statuses (strength / weak / vulnerable and kin) are **content**, authored later as GD `StatusDef`s (decision #23) alongside items and enemies — *not* one hardcoded global rule. Each declares its own behaviour: **flat or percentage** magnitude, **instant or timed**, and per-stack growth that either **adds magnitude** or **extends duration**. The engine provides the shapes + the two damage-modifier seams (an outgoing scale read at item fire time, the reserved incoming amplifier slot); the specific statuses + numbers come with the content, and the seams get wired when the first one is authored.
+
+The standing constraint is **authoring guidance**, not a global rule: a *flat* damage modifier applied **per fire** interacts badly with the high-trigger cascade — a +N that hits every trigger from a fast item applies ~15×/fight, from a slow item ~3×, making fast items strictly dominant. So **per-fire damage scaling should be percentage (or charge-limited)**; flat is fine for effects not applied per-fire (timed states, block-like pools, one-shot amplifiers). The author picks per status with this in mind.
 
 -----
 
