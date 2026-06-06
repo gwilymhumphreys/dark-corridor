@@ -111,9 +111,14 @@ The engine hardcodes **no spore** — it gains verbs, flags, and one capability;
 > run); **win is the whole enemy side dead** — so player tokens body-block but don't change
 > win/loss. Fixed a latent bug surfaced here: a **dead actor's items kept firing** (invisible
 > in 1-enemy fights, live for the 2-grunt elite). Combat-scoped tokens dissolve at teardown;
-> the run-scoped player side survives. Placeholder token `EnemyDef` (Spore Thrall). **Stage B**
-> layers **run-scoped (persistent) allies** (run-state roster + snapshot) on this core; *what*
-> summons + the token content stay the owner's. (Original deferral note below, for context.)
+> the run-scoped player side survives. Placeholder token `EnemyDef` (Spore Thrall).
+>
+> **Stage B — BUILT:** run-scoped (persistent) **allies** live in the `RunManager` (`allies`
+> roster, saved in the snapshot + rehydrated, full-healed between acts, dissolved at run end);
+> the `Encounter` seeds each fight's CombatManager with them, and they persist HP across fights.
+> So an ally can be **either scope** — combat-scoped (a summon) or run-scoped (persistent) — the
+> shared combat roster serves both. The **acquisition** (a draftable `ally` category / a
+> character-start ally) + the token/ally content stay the owner's. (Original deferral note below.)
 
 
 **Driver:** Pillar 2 (**Summon**) tokens; the **lethal** spore's "spawn a token on kill" rider (the design decouples that spawn onto a relic/enchant — [`../design/mushroom_druid.md`](../design/mushroom_druid.md)).

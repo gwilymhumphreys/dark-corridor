@@ -229,6 +229,42 @@ func test_resumed_run_derives_the_same_per_fight_seed() -> void:
   assert_eq(run_b._combat_seed_for(run_b.position), seed_a, 'and derives the identical per-fight seed')
 
 
+# --- run-scoped allies (spore_engine_prd Cap 3, Stage B) ---------------------
+
+func test_ally_persists_through_save_and_resume() -> void:
+  var run := _run()
+  run.start(1)
+  run.add_ally(EnemyCatalog.Id.SPORE_THRALL)
+  run.allies[0].take_damage(5.0)   # so its HP isn't full
+  var hp: float = run.allies[0].hp
+  var run_b := _run()
+  run_b.rehydrate(run.snapshot())
+  assert_eq(run_b.allies.size(), 1, 'the ally is restored on resume')
+  assert_almost_eq(run_b.allies[0].hp, hp, 0.0001, 'with its persisted HP')
+  assert_eq(run_b.allies[0].board.size(), 1, 'and its board (rebuilt from the def)')
+
+
+func test_between_act_full_heal_revives_allies() -> void:
+  var run := _run()
+  run.start(1)
+  run.add_ally(EnemyCatalog.Id.SPORE_THRALL)
+  run.allies[0].take_damage(10.0)
+  run.position = RunMap.BEATS_PER_ACT - 1
+  run.advance()                    # cross into the next act
+  assert_almost_eq(run.allies[0].hp, run.allies[0].max_hp, 0.0001, 'the between-act restore heals allies too')
+
+
+func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
+  var run := _run()
+  run.start(1)
+  run.add_ally(EnemyCatalog.Id.SPORE_THRALL)
+  var weak_ally: WeakRef = weakref(run.allies[0])
+  var weak_item: WeakRef = weakref(run.allies[0].board[0])
+  run.teardown()
+  assert_null(weak_ally.get_ref(), 'a run-scoped ally frees at run end (its cycle is broken)')
+  assert_null(weak_item.get_ref(), 'and its board items free')
+
+
 # --- multi-act structure + HP economy + the choice layer (#1) ----------------
 
 func test_opening_beat_is_a_choice_and_pick_creates_the_encounter() -> void:

@@ -16,7 +16,7 @@ The `Run manager` is the descent — it walks the player through one run and hol
 
 - **The map** — the linear act/beat structure and the 1D progress track (boss at each act end, midpoint relic, rests, elites offered, events, basic fights). Forward-visible, single, no branching ([design](design.md)). Counts/placements are design/tuning, not here.
 - **Encounter sequencing + the corridor advance** — at a choice point it assembles the 2–3 candidate `Encounter`s and instantiates the picked one; the next beat is **created after the current reward and approaches from depth** (the advance is its approach), resolving on arrival (a fight `Encounter` creates a `Combat manager`). The cycle is detailed below.
-- **The player run-state** — `{ actor, relics, potions, position, run RNG }`. The player `Actor` is **run-lifetime** and owned here; relics and potions live here too (not on the Actor — [Actor PRD](actor_prd.md)).
+- **The player run-state** — `{ actor, allies, relics, potions, position, run RNG }`. The player `Actor` + any run-scoped **`allies`** (persistent player-side bodies — spore_engine Cap 3) are **run-lifetime**, owned here, saved + rehydrated, full-healed between acts, and seeded into each fight; relics and potions live here too (not on the Actor — [Actor PRD](actor_prd.md)).
 - **HP-economy policy** — applies the design's rules *to* the Actor: HP persists between encounters, between-act full heal, rest partial-heals, max-HP growth (relics / events). The Actor just holds the values; the policy is decided here.
 - **The run snapshot** — it **builds** the snapshot and calls `Save.write()` on encounter entry, and **rehydrates** run-state from a snapshot on resume.
 

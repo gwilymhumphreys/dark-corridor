@@ -23,10 +23,13 @@ const COMBAT_SEED_STRIDE: int = 1000003
 # Run-state (the snapshot persists exactly this). `position` is the global beat index
 # (0 .. RunMap.TOTAL_BEATS-1); the act/beat-within-act are derived (RunMap).
 var player: Actor
+var allies: Array = []        # Array[Actor] — run-scoped (persistent) player-side allies
 var relics: Array = []        # Array[Relic]
 var potions: Array = []       # Array[Consumable]
 var position: int = 0
 var rng: RandomNumberGenerator
+
+var _ally_def_ids: Array = []  # parallel to `allies` — each ally's EnemyCatalog def id (snapshot)
 
 var _current: Encounter = null
 var _current_def_id: int = -1    # the resolved EncounterDef id for the current beat (resume)
@@ -55,6 +58,8 @@ func start(seed_value: int) -> void:
   _pending_offer = []
   _current_def_id = -1
   _pending_choice = []
+  allies = []                  # no starting allies by default (the owner wires acquisition)
+  _ally_def_ids = []
   _enter_beat(position)
   _save()
 
@@ -192,6 +197,24 @@ func apply_draft_pick(index: int) -> void:
   _pending_offer = []
 
 
+## Acquire a run-scoped (persistent) ally (spore_engine_prd Cap 3, Stage B): build an Actor
+## from an EnemyDef and add it to the player-side roster. It persists across fights, is saved
+## in the snapshot, and joins every fight (the Encounter seeds the CombatManager with it).
+## The acquisition path (a draftable `ally` category / a character-start ally) is the owner's;
+## this is the run-state surface it calls.
+func add_ally(def_id: int) -> void:
+  allies.append(_make_ally(def_id))
+  _ally_def_ids.append(def_id)
+
+
+func _make_ally(def_id: int) -> Actor:
+  var def: EnemyDef = EnemyCatalog.get_def(def_id)
+  var actor := Actor.new(def.max_hp)
+  for item_id in def.item_ids:
+    actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
+  return actor
+
+
 ## Attach an enchantment to a chosen board item (the enchant-target sub-choice; a
 ## drafted-enchant intent, or the starting-kit grant). One enchant per item.
 func apply_enchant(enchant: Enchantment, item_index: int) -> void:
@@ -232,6 +255,8 @@ func advance() -> void:
 func _full_heal() -> void:
   if player != null:
     player.hp = player.max_hp
+  for a in allies:   # the between-act restore covers the whole run-scoped player side
+    a.hp = a.max_hp
 
 
 func is_ended() -> bool:
@@ -259,7 +284,7 @@ func _enter_beat(pos: int) -> void:
 
 
 func _create_current_encounter() -> void:
-  _current = Encounter.new(EncounterCatalog.get_def(_current_def_id), player, _combat_seed_for(position))
+  _current = Encounter.new(EncounterCatalog.get_def(_current_def_id), player, _combat_seed_for(position), allies)
 
 
 ## Draw RunMap.CHOICE_COUNT distinct candidates from the act pool on the run RNG
@@ -306,10 +331,14 @@ func snapshot() -> Dictionary:
   var potion_ids: Array = []
   for consumable in potions:
     potion_ids.append(consumable.def.id)
+  var ally_snaps: Array = []
+  for i in allies.size():
+    ally_snaps.append({ 'id': _ally_def_ids[i], 'hp': allies[i].hp })
   return {
     'hp': player.hp,
     'max_hp': player.max_hp,
     'board': board,
+    'allies': ally_snaps,   # run-scoped allies persist (def id + current HP; board is the def's)
     'relics': relic_ids,
     'potions': potion_ids,
     'position': position,
@@ -333,6 +362,14 @@ func rehydrate(snap: Dictionary) -> void:
     if entry['enchant'] != null:
       item.enchant = Enchantment.new(EnchantCatalog.get_def(int(entry['enchant'])))
     player.board.append(item)
+  allies = []
+  _ally_def_ids = []
+  for entry in snap.get('allies', []):
+    var aid: int = int(entry['id'])
+    var ally := _make_ally(aid)
+    ally.hp = float(entry['hp'])
+    allies.append(ally)
+    _ally_def_ids.append(aid)
   relics = []
   for rid in snap['relics']:
     relics.append(Relic.new(RelicCatalog.get_def(int(rid))))
@@ -376,6 +413,10 @@ func teardown() -> void:
   if player != null:
     player.dissolve()
     player = null
+  for a in allies:   # run-scoped allies are run-lifetime too — break their cycle at run end
+    a.dissolve()
+  allies.clear()
+  _ally_def_ids.clear()
   relics.clear()
   potions.clear()
   _pending_offer.clear()

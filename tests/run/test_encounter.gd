@@ -87,6 +87,20 @@ func test_event_awaits_its_choice_then_resolves_on_pick() -> void:
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
 
 
+func test_fight_seeds_run_scoped_allies_onto_the_player_side() -> void:
+  # Cap 3 Stage B: the Encounter hands the CombatManager the run-scoped allies, which fight
+  # on the player side (and are NOT dissolved at fight end — they're run-lifetime).
+  var player := _default_player(100.0)
+  var ally := Actor.new(15.0)
+  ally.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.Id.ENEMY_CLAW), ally))
+  var enc := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.Id.FIGHT_GRUNT), player, 0, [ally])
+  _encs.append(enc)
+  enc.begin()
+  assert_true(ally in enc.combat_manager().allies, 'the run-scoped ally fights on the player side')
+  enc.teardown()
+  assert_eq(ally.board.size(), 1, 'the ally keeps its board after the fight (run-scoped, not dissolved)')
+
+
 func test_event_max_hp_option_grows_max_hp() -> void:
   var player := Actor.new(100.0)
   var enc := _encounter(EncounterCatalog.Id.EVENT_SHRINE, player)
