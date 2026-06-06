@@ -15,7 +15,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `UI`](a
 Items are the game; the UI is how the player parses a 30-item cascade and makes the draft decision off it (design). Two jobs:
 
 - **Screen composition** — lay out the corridor/combat scene, the item boards (player + enemy), potions, the portrait + HP, and the out-of-combat screens (choice layer, draft, the 1D progress map).
-- **Input (intents)** — capture player commands and emit **intents**; logic interprets them. The UI **never mutates game state directly** (architecture). The intents: timescale (hover slow-mo / throw), throw-potion, draft-pick, choice-point pick, event-option pick.
+- **Input (intents)** — capture player commands and emit **intents**; logic interprets them. The UI **never mutates game state directly** (architecture). The intents: timescale (hover slow-mo), **battle-speed** (×1/×2/×3 dial — a `Game` session preference applied to the fight's `Timekeeper` base scale), throw-potion, draft-pick, choice-point pick, event-option pick, and **pause** (a run-screen gate, not a `Game` phase).
 
 What it **is not**: not game logic (it emits intents — the `Combat manager` / `Run manager` / `Encounter` interpret them); not the combat wall (`VFX driver`); not the corridor renderer (`docs/corridors/`) — it composes *with* it.
 
@@ -54,6 +54,11 @@ The enemy board mirrors the player's (loadouts visible — "watch the cascades c
 ## Slow-mo-on-hover (one verb)
 
 Hover anything important (own items, enemy items, potions, enemies) → time slows (~×0.05) → read. One consistent verb. It is a **timescale intent** the `Combat manager` interprets (sets the `Timekeeper` dial) — slow-mo slows **both sides** proportionally (can't dodge by inspecting). Out of combat (draft / choice) there's no clock — inspection is just tooltips.
+
+## Battle-speed dial + pause (built)
+
+- **Battle-speed** — an always-visible ×1/×2/×3 HUD toggle (`speed_button.tscn`, bottom-right). A **session preference on `Game`** (`battle_speed`, never saved); the run screen applies it to each fight's `Timekeeper` **base** scale. The hover slow-mo override **replaces** the base absolutely (resolved — same readable speed at any dial), returning to it on release.
+- **Pause** — `ui_cancel` (Escape) raises `pause_menu.tscn` (Resume / Quit-to-menu) and freezes the run-screen tick (approach + fight). A **run-screen gate, not a `Game` phase**. Opaque centered panel, **no translucent scrim** (the pixel-art opacity rule). Quit-to-menu keeps the save (Title's Resume re-enters the beat). See [run_screen](../ui/run_screen.md).
 
 ## The out-of-combat screens
 

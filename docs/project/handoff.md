@@ -4,9 +4,10 @@
 > game is, what's built, how to work, what's settled, and what's next. It points to
 > the canonical docs rather than duplicating them — read this, then the linked docs.
 >
-> **Last updated:** 2026-06-06 — end of **Phase 5's tune-machinery bite** (draft
-> strategies + the per-encounter/per-item report). 139 GUT tests green on Godot 4.6;
-> the run is watchable end-to-end and the autotest can play + report different builds.
+> **Last updated:** 2026-06-06 — Phase 5's tune-machinery bite, **plus the first
+> non-content backlog item: settings/pause + the ×1/×2/×3 battle-speed dial** (and the
+> timescale replace-vs-multiply open resolved → replace). **153 GUT tests green** on
+> Godot 4.6; the run is watchable end-to-end and the autotest can play + report builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
 > author content unless asked.** This handoff is for the *non-content* engineering
@@ -45,8 +46,10 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
 
 ## Where things stand (what's built)
 
-**Phases 1–4 + Phase 5's tune-machinery bite are complete, committed, 139 GUT tests
-green, feel gate passed.** See `git log` (each step is its own green commit).
+**Phases 1–4 + Phase 5's tune-machinery bite are complete, committed, 153 GUT tests
+green, feel gate passed.** See `git log` (each step is its own green commit). The
+first **non-content backlog item is also done — settings/pause + battle-speed** (see
+the bottom of this section).
 
 - **Phase 1 — combat spine** (`src/combat/`): `Ticker` · `Timekeeper` (fixed-step
   clock) · `Actor` · `Item` (+ fire pipeline) · `Delivery`/`Payload` · `EventBus` ·
@@ -76,6 +79,12 @@ green, feel gate passed.** See `git log` (each step is its own green commit).
   report** (durations vs window, HP attrition, item fires + damage + trap-pick flags).
   The autotest can now *play different builds* and *report what each item did* — the two
   things `tune` needed. Doc: [`../testing/autotest.md`](../testing/autotest.md).
+- **Settings/pause + battle-speed (non-content backlog #3)** — the **×1/×2/×3 battle-speed
+  dial** (a `Game` session preference + an always-visible HUD `speed_button`, applied to
+  each fight's `Timekeeper` base scale) + in-run **pause** (`ui_cancel` → `pause_menu`:
+  Resume / Quit-to-menu — a run-screen gate, *not* a `Game` phase; the save is preserved
+  so Title's Resume re-enters the beat). Resolved the **timescale replace-vs-multiply**
+  open → **replace** (absolute slow-mo). Doc: [`../ui/run_screen.md`](../ui/run_screen.md).
 
 **What does NOT exist yet** (most of it is content — the project owner's domain): the
 item/enemy/encounter pools beyond the seed (5 items, 1 enemy, a 4-beat map), elite/boss
@@ -174,10 +183,12 @@ test-first + its own green commit, with the headless autotest as the regression 
 2. **Reward routing — relics + elites.** `RunManager._on_encounter_resolved` stubs the
    `RELIC` reward ("pass"). Wire relic grants (the guaranteed midpoint relic) + elite
    engage/skip + reward asymmetry. [content](content_prd.md) · [encounter](encounter_prd.md).
-3. **Settings / pause + battle-speed.** `Game` is Title→Run→Death/Win only — no pause,
-   quit-to-menu mid-run, or the player **battle-speed** dial (×1/×2/×3:
-   `Balance.BATTLE_SPEEDS` exists, no UI; it's a Timekeeper base-scale intent).
-   [game_manager](game_manager_prd.md) · [ui_layout](ui_layout_prd.md).
+3. **Settings / pause + battle-speed — DONE (2026-06-06).** The ×1/×2/×3 **battle-speed
+   dial** (a `Game` session preference + an always-visible HUD toggle) + in-run **pause**
+   (a run-screen gate with a Resume / Quit-to-menu menu) are built. Still open *here*: a
+   full **settings screen** (audio sliders, persisting preferences to disk) — a larger,
+   more content-flavoured pass left for later. [game_manager](game_manager_prd.md) ·
+   [ui_layout](ui_layout_prd.md) · [run_screen](../ui/run_screen.md).
 4. **Full-screen `CombatView` + the framed-vs-fullscreen feel compare** — the UI PRD's
    central open question, isolated to the swappable `CombatView` (Phase 4 built the
    framed one). Mock the full-screen variant, compare on feel. [ui_layout](ui_layout_prd.md).
@@ -192,8 +203,9 @@ test-first + its own green commit, with the headless autotest as the regression 
 
 **Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
 **HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a
-bar); the **timescale override replace-vs-multiply** open (Timekeeper). Decision-AI: the
-Driver's **potion / choice / event** policies stay stubs until those beats exist.
+bar). *(The **timescale replace-vs-multiply** open is now resolved → replace, with the
+battle-speed dial — item 3 above.)* Decision-AI: the Driver's **potion / choice / event**
+policies stay stubs until those beats exist.
 
 **Run / watch:** `<exe> --path . res://src/scenes/main.tscn` → Start Run; append
 `-- --autostart --shot [--shot-delay s]` to capture a frame. **Autotest:** `<exe>

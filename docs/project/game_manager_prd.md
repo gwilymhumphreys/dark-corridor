@@ -72,10 +72,10 @@ So `Game` decides *whether to resume*; the `Run manager` decides *what the run-s
 
 ## Open / deferred
 
-- **Exact phase list + screen content** (title, death, meta, pause) — settle as screens are built.
+- **Exact phase list + screen content** (title, death, meta) — settle as screens are built. **Pause is not a phase** (resolved below).
 - **Meta-save schema + the meta screen** — Meta PRD (a separate cross-run dataset; uses the same `Save` service).
-- **Settings / options ownership** — likely `Game`-level; confirm when settings exist.
-- **Pause semantics** — global pause vs. the combat dial's ×0 ([Timekeeper](timekeeper_prd.md)); reconcile when pause UI is built.
+- **Settings / options ownership — partly resolved:** the **battle-speed** preference (×1/×2/×3) lives on `Game` as a session-level setting (`battle_speed` + `cycle_battle_speed`, never saved) — confirming `Game`-level ownership. A full settings *screen* + persisting preferences to disk is still deferred.
+- **Pause semantics — resolved:** pause is a **run-screen presentation gate** (it freezes the screen's tick), **not** a `Game` phase and **not** the combat dial's ×0. Quit-to-menu from pause routes through `Game.return_to_title()` (keeps the save). See [run_screen](../ui/run_screen.md).
 
 ## Dependencies
 

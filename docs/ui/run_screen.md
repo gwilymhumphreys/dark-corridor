@@ -43,6 +43,20 @@ fight is torn down + advanced safely — the run fulfils the outcome (reward / r
 via its own signal chain *during* the resolving tick. Slow-mo-on-hover is a
 `cm.request_slowmo` intent, only while FIGHTING.
 
+**Battle-speed + pause (the player's clock controls).** Both are presentation-only —
+the headless autotest mounts none of this:
+
+- **Battle-speed dial** — a session preference on `Game` (`battle_speed`, cycled ×1/×2/×3
+  by `Game.cycle_battle_speed`, never saved). The run screen applies it to each fight's
+  `Timekeeper` **base scale** on entry and live on `Game.battle_speed_changed`. The hover
+  slow-mo override still **replaces** this base absolutely while inspecting, returning to
+  it on release (resolved: absolute slow-mo — [timekeeper_prd](../project/timekeeper_prd.md)).
+- **Pause** — a run-screen gate (`_paused`), **not** a `Game` phase. `ui_cancel` (Escape)
+  toggles it during APPROACHING / FIGHTING; while paused, `_physics_process` (the approach
+  walk *and* the fight clock) and the hover `_process` are short-circuited. It raises the
+  pause menu; quit-to-menu routes through `Game.return_to_title()` (which **keeps** the
+  save, so Title's Resume re-enters the beat).
+
 ## The framed combat view
 
 `combat_view_framed.tscn` (the swappable `CombatView` — the framed-vs-fullscreen
@@ -79,6 +93,11 @@ the demon walks into full view. Constants in `src/data/balance.gd`.
   emits `picked(index)` → `RunManager.apply_draft_pick`. No skip.
 - **Map** — `map_strip.tscn` draws the run's beats as a labelled line (Fight / Rest /
   Boss) with the position haloed; `mark_position` on each advance.
+- **Speed button** — `speed_button.tscn` on the HUD (bottom-right): an always-visible
+  ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
+- **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque
+  centered panel (no translucent scrim — the pixel-art opacity rule) + Resume / Quit-to-menu;
+  its full-rect Catcher swallows input so the paused board can't be clicked through.
 
 ## Localization
 
@@ -91,7 +110,7 @@ registered in `project.godot`) — see [localization](../reference/localization.
 ## File map
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
-(title · run · outcome · draft_overlay · draft_card · map_strip); `src/scenes/combat/`
+(title · run · outcome · draft_overlay · draft_card · map_strip · speed_button · pause_menu); `src/scenes/combat/`
 (combat_view_framed · combat_corridor · board_strip · item_cell); `src/vfx/vfx_driver.gd`;
 the occupant law on `src/scenes/corridors/corridor_scaled.gd` (`axis_scale`). Tests in
 `tests/ui/`.
