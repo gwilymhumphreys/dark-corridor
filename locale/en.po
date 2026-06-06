@@ -23,6 +23,14 @@ msgstr "A dim corridor"
 msgid "A quiet alcove"
 msgstr "A quiet alcove"
 
+#: src/content/encounter_catalog.gd
+msgid "An elite ambush"
+msgstr "An elite ambush"
+
+#: src/content/encounter_catalog.gd
+msgid "A warded vault"
+msgstr "A warded vault"
+
 #: src/content/enemy_catalog.gd
 msgid "Corridor Grunt"
 msgstr "Corridor Grunt"
@@ -58,6 +66,14 @@ msgstr "Claw"
 #: src/content/relic_catalog.gd
 msgid "Stone Ward"
 msgstr "Stone Ward"
+
+#: src/content/relic_catalog.gd
+msgid "Vital Charm"
+msgstr "Vital Charm"
+
+#: src/content/relic_catalog.gd
+msgid "Iron Idol"
+msgstr "Iron Idol"
 
 #: src/content/status_catalog.gd
 msgid "Block"

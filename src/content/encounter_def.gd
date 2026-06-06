@@ -7,7 +7,10 @@ extends RefCounted
 ## fight + rest only (events with prose, elite/boss tiers, telegraph demands later).
 
 enum Type { FIGHT, REST }
-enum Reward { NONE, DRAFT, RELIC }
+# What a WIN reports up for the RunManager to fulfil. ELITE = a relic AND a draft (the
+# reward asymmetry — an elite is richer than a regular fight; #2). RELIC = a relic only
+# (a mid-boss / guaranteed-relic beat). DRAFT = a 1-of-3 item offer. NONE = rest.
+enum Reward { NONE, DRAFT, RELIC, ELITE }
 
 var id: int = -1
 var type: int = Type.FIGHT

@@ -23,6 +23,14 @@ msgstr ""
 msgid "A quiet alcove"
 msgstr ""
 
+#: src/content/encounter_catalog.gd
+msgid "An elite ambush"
+msgstr ""
+
+#: src/content/encounter_catalog.gd
+msgid "A warded vault"
+msgstr ""
+
 #: src/content/enemy_catalog.gd
 msgid "Corridor Grunt"
 msgstr ""
@@ -57,6 +65,14 @@ msgstr ""
 
 #: src/content/relic_catalog.gd
 msgid "Stone Ward"
+msgstr ""
+
+#: src/content/relic_catalog.gd
+msgid "Vital Charm"
+msgstr ""
+
+#: src/content/relic_catalog.gd
+msgid "Iron Idol"
 msgstr ""
 
 #: src/content/status_catalog.gd

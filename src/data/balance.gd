@@ -73,9 +73,13 @@ const TRIGGER_PUSH_SMALL: float = 0.25
 
 
 # ── Content — Relics (run-level modifiers; content_prd) ──────────────────────
-# Phase 3's single relic: a combat-start status applier (start each fight with
+# Stone Ward (starting relic): a combat-start status applier (start each fight with
 # this much block on the player).
 const RELIC_STONE_WARD_BLOCK: float = 10.0
+# Placeholder REWARD relics (granted by the reward routing; #2) — values are the owner's
+# to tune. Vital Charm: a direct max-HP mod on grant. Iron Idol: more combat-start block.
+const RELIC_VITAL_CHARM_MAX_HP: float = 20.0
+const RELIC_IRON_IDOL_BLOCK: float = 6.0
 
 
 # ── Content — Enchantments (permanent item modifiers; content_prd, #26) ──────

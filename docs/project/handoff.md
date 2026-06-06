@@ -182,9 +182,14 @@ test-first + its own green commit, with the headless autotest as the regression 
    **choice layer** (2–3 options per beat, two-tier pick → the choice-point intent the
    architecture sketches). The *mechanism* is engineering; the encounters that fill it
    are content (coordinate). PRDs: [run_manager](run_manager_prd.md) · [encounter](encounter_prd.md).
-2. **Reward routing — relics + elites.** `RunManager._on_encounter_resolved` stubs the
-   `RELIC` reward ("pass"). Wire relic grants (the guaranteed midpoint relic) + elite
-   engage/skip + reward asymmetry. [content](content_prd.md) · [encounter](encounter_prd.md).
+2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**
+   `RunManager._on_encounter_resolved` now grants a relic on the **RELIC** reward (drawn from
+   `RelicCatalog.REWARD_POOL` on the run RNG — deterministic + resume-stable) and a **relic +
+   draft** on the new **ELITE** reward (the reward asymmetry). Relics gained a **MAX_HP_BONUS**
+   direct-mod shape (applied once on grant, baked into the snapshot). Placeholder reward relics
+   (Vital Charm / Iron Idol) + placeholder elite/relic `EncounterDef`s (catalog-only). **Still
+   the owner's:** which relics/elites exist, and **elite engage/skip** (that's the choice layer —
+   item 1). [content](content_prd.md) · [encounter](encounter_prd.md).
 3. **Settings / pause + battle-speed — DONE (2026-06-06).** The ×1/×2/×3 **battle-speed
    dial** (a `Game` session preference + an always-visible HUD toggle) + in-run **pause**
    (a run-screen gate with a Resume / Quit-to-menu menu) are built. Still open *here*: a

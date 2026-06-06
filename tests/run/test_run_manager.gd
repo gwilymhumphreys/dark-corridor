@@ -123,6 +123,66 @@ func test_save_and_rehydrate_reproduces_the_continuation() -> void:
   assert_eq(run_b.outcome(), outcome_a, 'and reaches the same outcome')
 
 
+func test_relic_reward_grants_a_relic_from_the_pool() -> void:
+  # The RELIC reward (a mid-boss / guaranteed-relic beat) grants a relic — it was a stub.
+  var run := _run()
+  run.start(1)
+  var before: int = run.relics.size()
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
+  assert_eq(run.relics.size(), before + 1, 'a relic was granted')
+  assert_true(run.relics[-1].def.id in RelicCatalog.REWARD_POOL, 'and it came from the reward pool')
+  assert_false(run.has_pending_draft(), 'a relic-only beat offers no draft')
+
+
+func test_elite_reward_grants_a_relic_and_a_draft() -> void:
+  # An elite is richer than a regular fight: a relic AND a draft (reward asymmetry, #2).
+  var run := _run()
+  run.start(1)
+  var before: int = run.relics.size()
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.ELITE)
+  assert_eq(run.relics.size(), before + 1, 'an elite grants a relic')
+  assert_true(run.has_pending_draft(), 'AND offers a draft')
+
+
+func test_max_hp_relic_grant_raises_max_and_current_hp() -> void:
+  var run := _run()
+  run.start(1)
+  var before_max: float = run.player.max_hp
+  var before_hp: float = run.player.hp
+  var charm := Relic.new(RelicCatalog.get_def(RelicCatalog.Id.VITAL_CHARM))
+  run.relics.append(charm)
+  run._apply_relic_grant(charm)
+  assert_almost_eq(run.player.max_hp, before_max + Balance.RELIC_VITAL_CHARM_MAX_HP, 0.0001, 'max HP grew')
+  assert_almost_eq(run.player.hp, before_hp + Balance.RELIC_VITAL_CHARM_MAX_HP, 0.0001, 'and current HP too')
+
+
+func test_relic_grant_is_deterministic_by_seed() -> void:
+  var run_a := _run()
+  run_a.start(99)
+  run_a._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
+  var run_b := _run()
+  run_b.start(99)
+  run_b._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
+  assert_eq(run_a.relics[-1].def.id, run_b.relics[-1].def.id, 'same seed grants the same relic (no save-scum)')
+
+
+func test_granted_relic_survives_save_and_resume() -> void:
+  var run := _run()
+  run.start(1)
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
+  var granted_id: int = run.relics[-1].def.id
+  var max_after: float = run.player.max_hp
+  var snap: Dictionary = run.snapshot()
+
+  var run_b := _run()
+  run_b.rehydrate(snap)
+  var ids: Array = []
+  for r in run_b.relics:
+    ids.append(r.def.id)
+  assert_true(granted_id in ids, 'the granted relic is restored on resume')
+  assert_almost_eq(run_b.player.max_hp, max_after, 0.0001, 'a max-HP grant is baked into the snapshot, not re-applied')
+
+
 func test_per_fight_seed_is_seed_based_not_stream_based() -> void:
   # The per-fight combat seed derives from the run SEED (constant, saved), not the
   # evolving run stream — so it is resume-stable and doesn't shift as draft draws consume

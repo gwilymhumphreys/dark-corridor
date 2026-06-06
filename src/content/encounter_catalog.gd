@@ -1,9 +1,11 @@
 class_name EncounterCatalog
-## The encounter definitions (decision #23 — GDScript, keyed by Id). Phase 3 pool:
-## one regular fight (a grunt, rewards a draft) and one rest (a partial heal). The
-## Run manager composes these into a short linear map. Lazily built once.
+## The encounter definitions (decision #23 — GDScript, keyed by Id). A regular fight
+## (a grunt, rewards a draft) and a rest (a partial heal) compose the prototype map.
+## FIGHT_ELITE (relic + draft) and FIGHT_RELIC (a mid-boss, relic only) are placeholder
+## reward-routing beats (#2) — catalog-only, not in the map; the owner slots them into the
+## real act structure / choice layer. Lazily built once.
 
-enum Id { FIGHT_GRUNT, REST }
+enum Id { FIGHT_GRUNT, REST, FIGHT_ELITE, FIGHT_RELIC }
 
 static var _defs: Dictionary = {}
 
@@ -17,6 +19,8 @@ static func get_def(id: int) -> EncounterDef:
 static func _build() -> void:
   _defs[Id.FIGHT_GRUNT] = _fight_grunt()
   _defs[Id.REST] = _rest()
+  _defs[Id.FIGHT_ELITE] = _fight_elite()
+  _defs[Id.FIGHT_RELIC] = _fight_relic()
 
 
 static func _fight_grunt() -> EncounterDef:
@@ -36,4 +40,26 @@ static func _rest() -> EncounterDef:
   d.name_key = 'A quiet alcove'
   d.heal_fraction = Balance.REST_HEAL_FRACTION
   d.reward = EncounterDef.Reward.NONE
+  return d
+
+
+## Placeholder elite (#2): a tougher fight (two grunts) rewarding a relic AND a draft.
+static func _fight_elite() -> EncounterDef:
+  var d := EncounterDef.new()
+  d.id = Id.FIGHT_ELITE
+  d.type = EncounterDef.Type.FIGHT
+  d.name_key = 'An elite ambush'
+  d.enemy_ids = [EnemyCatalog.Id.GRUNT, EnemyCatalog.Id.GRUNT]
+  d.reward = EncounterDef.Reward.ELITE
+  return d
+
+
+## Placeholder mid-boss-style relic beat (#2): a fight rewarding a relic only.
+static func _fight_relic() -> EncounterDef:
+  var d := EncounterDef.new()
+  d.id = Id.FIGHT_RELIC
+  d.type = EncounterDef.Type.FIGHT
+  d.name_key = 'A warded vault'
+  d.enemy_ids = [EnemyCatalog.Id.GRUNT]
+  d.reward = EncounterDef.Reward.RELIC
   return d

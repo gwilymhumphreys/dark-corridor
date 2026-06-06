@@ -116,9 +116,33 @@ func _on_encounter_resolved(outcome: int, reward: int) -> void:
     EncounterDef.Reward.DRAFT:
       _pending_offer = Draft.draw(DraftPool.ITEMS, position, rng)
     EncounterDef.Reward.RELIC:
-      pass   # direct relic grants aren't in the prototype map (Encounter reward routing later)
+      _grant_relic()                                          # a mid-boss / guaranteed-relic beat
+    EncounterDef.Reward.ELITE:
+      _grant_relic()                                          # an elite is richer: a relic AND
+      _pending_offer = Draft.draw(DraftPool.ITEMS, position, rng)   # a draft (reward asymmetry, #2)
     _:
       pass
+
+
+## Grant a relic reward (#2): draw one from the reward pool on the run RNG (so it's
+## deterministic + resume-stable), add it to run-state, and apply any one-time direct mod.
+func _grant_relic() -> void:
+  var pool: Array = RelicCatalog.REWARD_POOL
+  if pool.is_empty():
+    return
+  var id: int = pool[rng.randi_range(0, pool.size() - 1)]
+  var relic := Relic.new(RelicCatalog.get_def(id))
+  relics.append(relic)
+  _apply_relic_grant(relic)
+
+
+## Apply a granted relic's ONE-TIME direct run-state mod (MAX_HP_BONUS raises max + current
+## HP). Baked into the saved snapshot's hp/max_hp — NOT re-applied on rehydrate. A
+## COMBAT_START_STATUS relic has no grant-time effect (it applies per fight, below).
+func _apply_relic_grant(relic: Relic) -> void:
+  if relic.def.kind == RelicDef.Kind.MAX_HP_BONUS:
+    player.max_hp += relic.def.max_hp_bonus
+    player.hp += relic.def.max_hp_bonus
 
 
 func has_pending_draft() -> bool:
