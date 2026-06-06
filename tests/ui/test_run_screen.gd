@@ -91,3 +91,58 @@ func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
   screen._on_potion_thrown(0)
   assert_eq(Game.run.potions.size(), before - 1, 'the thrown potion is consumed')
   screen.free()
+
+
+# --- pause + quit-to-menu ----------------------------------------------------
+
+func test_escape_toggles_pause_during_a_fight() -> void:
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  for i in 4:   # walk the approach into the fight
+    screen._physics_process(1.0)
+  assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
+  screen._unhandled_input(_escape())
+  assert_true(screen._paused, 'Escape pauses')
+  assert_not_null(screen._pause_menu, 'the pause menu is up')
+  screen._unhandled_input(_escape())
+  assert_false(screen._paused, 'Escape again resumes')
+  assert_null(screen._pause_menu, 'the pause menu is gone')
+  screen.free()
+
+
+func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  for i in 4:
+    screen._physics_process(1.0)
+  screen._toggle_pause()
+  var frozen: float = screen._cm.timekeeper.sim_time
+  for i in 3:
+    screen._physics_process(1.0)   # ignored while paused
+  assert_almost_eq(screen._cm.timekeeper.sim_time, frozen, 0.00001, 'paused: the fight clock does not advance')
+  screen._toggle_pause()           # resume
+  screen._physics_process(1.0)
+  assert_gt(screen._cm.timekeeper.sim_time, frozen, 'resumed: the clock advances again')
+  screen.free()
+
+
+func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  for i in 4:
+    screen._physics_process(1.0)
+  screen._toggle_pause()
+  screen._quit_to_menu()
+  assert_eq(Game.phase, GameManagerAutoload.Phase.TITLE, 'quit-to-menu lands on Title')
+  assert_true(Save.has_save(), 'the run save persists so Title can resume it')
+  screen.free()
+
+
+func _escape() -> InputEventAction:
+  var ev := InputEventAction.new()
+  ev.action = 'ui_cancel'
+  ev.pressed = true
+  return ev

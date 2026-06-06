@@ -17,6 +17,7 @@ extends Control
 
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
+const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 
 enum State { IDLE, APPROACHING, FIGHTING, DRAFTING, ENDED }
 
@@ -26,6 +27,8 @@ var _view: CombatViewFramed
 var _draft: DraftOverlay
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
+var _paused: bool = false
+var _pause_menu: PauseMenu = null
 
 @onready var _map: MapStrip = $HUD/MapStrip
 
@@ -85,6 +88,8 @@ func _arrive() -> void:
 # signal. Nothing in the logic tree is mounted — this is the same tick the headless
 # autotest runs directly.
 func _physics_process(delta: float) -> void:
+  if _paused:
+    return   # pause freezes BOTH the approach walk and the fight clock
   match _state:
     State.APPROACHING:
       _approach_elapsed += delta
@@ -119,9 +124,53 @@ func _on_battle_speed_changed(scale: float) -> void:
 # board item (either side), a potion, or the enemy in the corridor — asks the Combat
 # manager to slow the clock (both sides) to read it.
 func _process(_delta: float) -> void:
-  if _state != State.FIGHTING or _cm == null or _view == null or _cm.is_resolved():
+  if _paused or _state != State.FIGHTING or _cm == null or _view == null or _cm.is_resolved():
     return
   _cm.request_slowmo(_view.mouse_over_inspectable(get_global_mouse_position()))
+
+
+# Pause is a run-screen presentation gate (NOT a Game phase): Escape (ui_cancel) toggles
+# it during a beat, freezing the screen's tick and raising the pause menu. The autotest
+# never mounts this screen, so pause is invisible to the headless path.
+func _unhandled_input(event: InputEvent) -> void:
+  if event.is_action_pressed('ui_cancel') and _can_pause():
+    _toggle_pause()
+    get_viewport().set_input_as_handled()
+
+
+func _can_pause() -> bool:
+  return _state == State.APPROACHING or _state == State.FIGHTING
+
+
+func _toggle_pause() -> void:
+  if _paused:
+    _resume()
+  else:
+    _pause()
+
+
+func _pause() -> void:
+  _paused = true
+  _pause_menu = PAUSE_MENU.instantiate()
+  add_child(_pause_menu)
+  _pause_menu.resume_pressed.connect(_resume)
+  _pause_menu.quit_pressed.connect(_quit_to_menu)
+
+
+func _resume() -> void:
+  _paused = false
+  if _pause_menu != null:
+    _pause_menu.queue_free()
+    _pause_menu = null
+
+
+# Quit-to-menu: release the combat view BEFORE the run (and its CombatManager) is freed,
+# then return to Title. The save persists (Game.return_to_title does NOT clear it), so the
+# Title's Resume re-enters this beat. Game swaps the screen; our _exit_tree disconnects.
+func _quit_to_menu() -> void:
+  _resume()
+  _teardown_combat_view()
+  Game.return_to_title()
 
 
 # Post-beat: the run already fulfilled the outcome (reward / run-end) via its signal
