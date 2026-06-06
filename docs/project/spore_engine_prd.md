@@ -100,7 +100,21 @@ The engine hardcodes **no spore** — it gains verbs, flags, and one capability;
 
 ---
 
-## Capability 3 — Player-side mid-fight roster add (summon) — already deferred; new consumer
+## Capability 3 — Mid-fight roster add (summon) — BUILT, both sides (2026-06-07)
+
+> **Realized (combat-side core):** the Combat manager is now two **side-rosters** (player
+> side = the run-state actor + run-scoped `allies` + combat-scoped `_player_tokens`; enemy
+> side = `enemies`). `add_actor(actor, on_player_side, in_front)` registers a body mid-fight
+> (its Tickers + triggers) and front-inserts it (body-block / adds-in-front). A
+> `Delivery.Kind.SUMMON` (shape SELF → the summoner) spawns a token from an `EnemyDef` and
+> adds it to the summoner's side. **Loss stays the player dying** (a token doesn't save the
+> run); **win is the whole enemy side dead** — so player tokens body-block but don't change
+> win/loss. Fixed a latent bug surfaced here: a **dead actor's items kept firing** (invisible
+> in 1-enemy fights, live for the 2-grunt elite). Combat-scoped tokens dissolve at teardown;
+> the run-scoped player side survives. Placeholder token `EnemyDef` (Spore Thrall). **Stage B**
+> layers **run-scoped (persistent) allies** (run-state roster + snapshot) on this core; *what*
+> summons + the token content stay the owner's. (Original deferral note below, for context.)
+
 
 **Driver:** Pillar 2 (**Summon**) tokens; the **lethal** spore's "spawn a token on kill" rider (the design decouples that spawn onto a relic/enchant — [`../design/mushroom_druid.md`](../design/mushroom_druid.md)).
 

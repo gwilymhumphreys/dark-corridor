@@ -55,6 +55,10 @@ msgstr "Corridor Brute"
 msgid "Corridor Warden"
 msgstr "Corridor Warden"
 
+#: src/content/enemy_catalog.gd
+msgid "Spore Thrall"
+msgstr "Spore Thrall"
+
 #: src/content/item_catalog.gd
 msgid "Rusted Blade"
 msgstr "Rusted Blade"

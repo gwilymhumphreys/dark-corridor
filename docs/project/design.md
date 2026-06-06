@@ -196,7 +196,7 @@ Stack independently. Two of the same item = effect fires twice. Reinforces the c
 - Item power philosophy: many small > few big. Individual items modest, the cascade is the power.
 ### Item count targets
 
-- Launch pool goal: ~100 items. Starting target, refine via prototype.
+- Launch pool goal: ~100 items was the *single-shared-pool* figure; under **per-character item pools** (decision #27) the target is a small, coherent pool **per character** — smaller individually, with the total across the roster as the content multiplier to watch. Refine via prototype.
 - Run end-state: ~20-25 items in inventory by final boss. (Capped by draft count — with no skip, you take at most one item per draft, and not every encounter is a draft.)
 ### Progression arc — damage, block, scaling
 
@@ -343,12 +343,13 @@ The corridor stays single and linear. What the choice changes is the reward/enco
 
 Minimum viable character system: portrait + signature starting relic + small starting item set. Optional passive trait only as a property of the starting relic; no separate system.
 
-- One shared item pool across all characters. Character defines flavor of start, not different game.
-- Starting items: 2-3 items from the regular pool, chosen to anchor an archetype. (E.g. "starts with Burning Coal + Slow Drip" teaches a fire/dot build from turn 1.) Drawn from the regular pool — no per-character bespoke items. Battledraft scope trap.
+- **Per-character item pools** (decision #27 — [per_character_pools](../design/per_character_pools.md)). Each character draws from its **own** item pool, *not* one shared pool. (Departs from the original single-shared-pool plan: a no-hidden-weighting 1-of-3 draft can't be both wide *and* connective from one pool, so focus lives per-run and range per-game.) Each pool is small and coherent (a few directions); the character's identity goes deep. A character is a meaningfully different run, not just flavor of start.
+- Starting items: 2-3 items from the **character's own pool**, chosen to anchor an archetype (e.g. the Mushroom Druid starts pointed at spores) — teaching its build from turn 1.
+- **Hold the line on what gets split (the Battledraft scope trap, refined):** per-character *item pools* — yes; **enemies stay a shared pool** and the **reward-relic pool stays shared**; per-character *everything* (relic/enemy pools, bespoke commons) is the trap to avoid. The unique build-defining starting relic per character is unchanged — that's one bespoke relic, not a split pool.
 - Default character has the least-twisted starting relic + most generic starting items — teaches the loop.
 - Unlockables get progressively weirder starting relics + more archetype-specific starting items.
 - Starting relics should be the most build-defining relics in the game. Take more time on these than regular relics.
-- **No hidden draft weighting toward character archetypes.** Character bias is expressed visibly through starting items and relic. Hidden weighting on future drafts is rejected: it collapses the synergy decision (drafts pre-filter to your archetype = no real choice), punishes early experimentation, hides mechanics, reduces variance. If guided drafts are wanted later, do it via explicit milestone commitment moments (player picks an archetype at an act break), never hidden bias.
+- **No hidden draft weighting toward character archetypes.** Character bias is expressed visibly through its **item pool** (#27), starting items, and relic. Hidden weighting on future drafts is rejected: it collapses the synergy decision (drafts pre-filter to your archetype = no real choice), punishes early experimentation, hides mechanics, reduces variance. If guided drafts are wanted later, do it via explicit milestone commitment moments (player picks an archetype at an act break), never hidden bias.
 - Asset reality check: verify candidate monster pack includes matching front-facing portraits, or budget for a separate portrait pack.
 -----
 
@@ -378,7 +379,7 @@ Meta-tree pacing must match the death curve — early runs end fast and unlock o
 1. **Setting / theme — resolved.** Dark fantasy or classic dungeon. Dungeon synth soundtrack, super dark and moody, desaturated palette but juicy mechanics. Asset pack survey now scoped to medieval/gothic/horror packs that match the aesthetic.
 1. **Walk pacing.** Walk can't be dead time. Footsteps, atmosphere noises, environmental cues, occasional telegraph. Design once setting is locked. (Open: whether to keep camera bob — coherent now that movement is a walk rather than a glide.)
 1. **Terminal-failure stance — resolved (Spire stance).** Drafts and play matter for survival; a bad draft chain can kill a run. The game is *beatable from run 1* on a fresh save with skill and luck. Meta-progression makes the game easier and adds variety/replayability but is not required for completion. Difficulty tunes to "achievable but punishing on a clean save." Death feels like "I drafted/played that wrong," not "I haven't unlocked enough yet."
-1. **Item pool composition.** ~100 items is a starting target. Real number derives from "how many archetypes are we committing to, how many items does each archetype need to feel real." First design question to answer once prototype work starts — drives every item-design decision downstream. Test in prototype: does the last draft of a run feel like a decision or a treadmill?
+1. **Item pool composition — pool structure resolved (#27): per-character item pools.** Still open *within* that: **directions-per-character** (a starting peg, not a number — too few forces drafts, too many re-dilutes inside one character) and pool size per character. ~100 was the old shared-pool figure. First prototype test: does a character's small, coherent pool make the last draft of a run feel like a decision, not a treadmill?
 1. **Onboarding.** With status engine, enchants, potions, relics, characters, elites, choice layer, AOE/single-target distinction, color vocabulary, slow-mo, cooldowns — a player parachuted into draft 1 is overwhelmed. Tutorial? Drip-feed unlocks? Genre literacy assumed? Real design question, currently absent.
 1. **Relics as items.** Open whether to collapse mechanically. Probably same underlying type with different presentation. Resolve in prototype.
 1. **Starting state — TODO.** What does the player start a run with beyond character (portrait + starting relic + 2-3 starting items)? Starting HP value? Starting potions (probably 0)? Other resources? Not yet specified.

@@ -21,3 +21,6 @@ var consume_type: int = -1
 var consume_amount: float = 0.0
 var consume_from_target: bool = false
 var consume_scale: float = 0.0
+# Summon (spore_engine_prd Cap 3): the token def + position, resolved by the Combat manager.
+var summon_def_id: int = -1
+var summon_in_front: bool = true

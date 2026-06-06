@@ -13,11 +13,19 @@ extends Node
 
 signal resolved(player_won: bool)
 
+# Two side-rosters (spore_engine_prd Cap 3). The PLAYER side is the run-state actor +
+# run-scoped `allies` (persistent, passed in) + `_player_tokens` (combat-scoped summons);
+# the ENEMY side is `enemies` (+ enemy summons append here). Targeting + win/loss work over
+# the rosters. `player` stays the run-state ref — loss is the PLAYER dying (a token doesn't
+# save the run); win is the whole enemy side dead.
 var player: Actor
-var enemies: Array = []          # Array[Actor], left-to-right
+var enemies: Array = []          # Array[Actor] — the enemy side, left-to-right
+var allies: Array = []           # Array[Actor] — run-scoped player-side allies (passed in)
 var timekeeper: Timekeeper
 var bus: EventBus
 var rng: RandomNumberGenerator   # the per-fight stream — random item-targeting (#14/#20)
+
+var _player_tokens: Array = []   # Array[Actor] — combat-scoped player-side summons (dissolved)
 
 var _items: Array = []           # Array[Item] — cooldown Tickers, registration order
 var _deliveries: Array = []      # Array[Delivery] — in-flight + recently-resolved
@@ -30,22 +38,54 @@ var _combat_seed: int = 0
 ## `combat_seed` seeds the per-fight RNG (decision #20: a derived per-fight stream so
 ## random targeting is reproducible AND a re-entered fight replays identically). The
 ## RunManager derives it from the run seed + beat index; tests / sandbox may leave it 0.
-func _init(player_actor: Actor, enemy_actors: Array, combat_seed: int = 0) -> void:
+func _init(player_actor: Actor, enemy_actors: Array, combat_seed: int = 0, ally_actors: Array = []) -> void:
   player = player_actor
   enemies = enemy_actors
+  allies = ally_actors
   _combat_seed = combat_seed
 
 
-## Create the clock + bus + per-fight RNG, register the boards' cooldown Tickers, and
-## subscribe each item's declared triggers. Call once before the fight runs.
+## Create the clock + bus + per-fight RNG, register every starting actor's cooldown Tickers,
+## and subscribe each item's declared triggers. Call once before the fight runs.
 func start() -> void:
   timekeeper = Timekeeper.new()
   bus = EventBus.new()
   rng = RandomNumberGenerator.new()
   rng.seed = _combat_seed
   _register_actor(player)
+  for a in allies:
+    _register_actor(a)
   for e in enemies:
     _register_actor(e)
+
+
+## Add an Actor to a side mid-fight (spore_engine_prd Cap 3) — a summon / boss add. Registers
+## its item Tickers + triggers and inserts it into the side; `in_front` puts it leftmost
+## (body-block / adds-in-front). Combat-scoped — dissolved at teardown (it is NOT in `allies`).
+func add_actor(actor: Actor, on_player_side: bool, in_front: bool = true) -> void:
+  if actor == null or _resolved:
+    return
+  _register_actor(actor)
+  if on_player_side:
+    if in_front:
+      _player_tokens.push_front(actor)
+    else:
+      _player_tokens.push_back(actor)
+  else:
+    if in_front:
+      enemies.push_front(actor)
+    else:
+      enemies.push_back(actor)
+
+
+## Build a token Actor from an authored EnemyDef (its HP + board) — the same way Encounter
+## spawns enemies. The token def is content (the owner authors saprolings / boss adds).
+func _spawn_token(def_id: int) -> Actor:
+  var def: EnemyDef = EnemyCatalog.get_def(def_id)
+  var actor := Actor.new(def.max_hp)
+  for item_id in def.item_ids:
+    actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
+  return actor
 
 
 func _register_actor(actor: Actor) -> void:
@@ -91,6 +131,11 @@ func sim_step() -> void:
   # 1. Advance every component one step; collect crossings.
   var fired_items: Array = []
   for it in _items:
+    # A dead actor's items neither tick nor fire (Cap 3 — matters once a side has >1 body:
+    # in a multi-enemy fight a slain body must stop swinging). Its statuses still resolve
+    # on their own targets; only this owner's own item firing is suppressed.
+    if it.owner != null and not it.owner.is_alive():
+      continue
     if it.cooldown.step():
       fired_items.append(it)
   # Advance every status uniformly — actor-targeted AND item-targeted alike. A
@@ -211,6 +256,8 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   d.kind = p.kind
   d.value = p.value
   d.status_type = p.status_type
+  d.summon_def_id = p.summon_def_id
+  d.summon_in_front = p.summon_in_front
   d.flags = p.flags
   d.color = p.color
   d.source = p.source
@@ -248,6 +295,9 @@ func _land(d: Delivery) -> void:
     Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
       StatusManager.apply(d.target, d.status_type, d.value, d.source, d.flags)
       bus.publish(EventBus.Event.STATUS_APPLIED, d.status_type)
+    Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)
+      if d.summon_def_id >= 0 and d.target is Actor:
+        add_actor(_spawn_token(d.summon_def_id), _on_player_side(d.target), d.summon_in_front)
 
 
 # --- Target-shape resolution (the runtime targeting authority) --------------
@@ -296,12 +346,22 @@ func _target_alive(target) -> bool:
   return false
 
 
+## The ordered player side: combat-scoped summons (front, body-block) then the run-state
+## actor then run-scoped allies. Leftmost-living targeting walks this in order.
+func _player_side() -> Array:
+  return _player_tokens + [player] + allies
+
+
+func _on_player_side(actor) -> bool:
+  return actor == player or actor in allies or actor in _player_tokens
+
+
 func _all_actors() -> Array:
-  return [player] + enemies
+  return _player_side() + enemies
 
 
 func _opponents_of(actor: Actor) -> Array:
-  return enemies if actor == player else [player]
+  return enemies if _on_player_side(actor) else _player_side()
 
 
 func _living_opponents(actor: Actor) -> Array:
@@ -434,21 +494,27 @@ func _payload_from_effect(effect: ItemEffect) -> Payload:
 
 
 ## Break the fight's reference cycles so it can free (CLAUDE.md runtime cleanup),
-## idempotent. ALL statuses are combat-scoped and dropped here — none are ever
-## run-persistent (decision #26); run persistence is relics / enchants. The PLAYER
-## persists across the run (only its combat statuses clear — its board survives);
-## the ENEMIES are discarded, so we also break their Actor<->Item cycle (dissolve).
+## idempotent. ALL statuses are combat-scoped and dropped here (#26). The RUN-SCOPED
+## player side (the run-state actor + persistent `allies`) PERSISTS — only its combat
+## statuses clear, its board survives. COMBAT-SCOPED actors (enemies, enemy summons,
+## player-side tokens) are discarded, so we break their Actor<->Item cycle (dissolve).
 ## Call after reading the result.
 func teardown() -> void:
   if _torn_down:
     return
   _torn_down = true
   _clear_statuses(player)
+  for a in allies:
+    _clear_statuses(a)
   for e in enemies:
     e.dissolve()
+  for t in _player_tokens:
+    t.dissolve()
   _items.clear()
   _deliveries.clear()
   enemies = []
+  allies = []
+  _player_tokens = []
   player = null
   timekeeper = null
   bus = null

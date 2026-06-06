@@ -16,7 +16,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Draft`
 
 What it **is not**:
 
-- **Not the pool's *contents*.** `Meta-progression` owns what's unlocked into the pool; `Draft` pulls from it and never reaches into meta internals (architecture). It reads the pool, doesn't define it.
+- **Not the pool's *contents*.** `Meta-progression` owns what's unlocked into the pool; `Draft` pulls from it and never reaches into meta internals (architecture). It reads the pool, doesn't define it. The pool handed in is **character-scoped** (decision #27 — per-character item pools); `Draft` stays **pool-agnostic** — it draws from whatever pool the `Run manager` hands it.
 - **Not run-state.** It produces candidates; the **`Run manager` holds the pending offer and applies the pick** to run-state (board / potion slots / enchant target / relics). `Draft` writes nothing.
 - **Not the relic/elite/boss grants.** Those relics are granted directly by the `Run manager` (Encounter reward) — see *open*; `Draft` is the 1-of-3 reward draw.
 - **Not presentation.** The offer is presented + inspected by `UI` (tooltips on hover — the draft is a paused, between-fights decision, no combat clock).
@@ -36,7 +36,7 @@ The offer is `Draftable`-generic — it draws item / enchant / potion definition
 ## No skip, no hidden weighting (two design constraints)
 
 - **No skip.** The player must take one of the three — no cap and no penalty for taking more, so taking one is always correct; the decision is *which*, judged on synergy (design). The draft always resolves to a pick.
-- **No hidden weighting toward the build/archetype.** Weighting is **depth/rarity only** — never the player's current board or a character archetype. Hidden pool-reweighting toward "what you already have" is rejected (design: it collapses the synergy decision, hides mechanics, punishes experimentation). Guided drafting, if ever wanted, is a *visible* milestone choice — never an opaque reweight.
+- **No hidden weighting toward the build/archetype.** Weighting is **depth/rarity only** — never the player's current board or a character archetype. Hidden pool-reweighting toward "what you already have" is rejected (design: it collapses the synergy decision, hides mechanics, punishes experimentation). Guided drafting, if ever wanted, is a *visible* milestone choice — never an opaque reweight. *(Note: the **pool itself** being character-scoped — #27 — is the pool's **contents**, not weighting. Per-character pools are the chosen alternative to hidden archetype weighting — focus comes from which pool you draw, not from biasing the draw — so they're consistent with this constraint, not an exception to it.)*
 
 ## The pick & its application
 

@@ -270,6 +270,105 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   assert_true(_has_status(e, StatusDef.Type.POISON), 'the blinded actor still applies its status')
 
 
+# --- mid-fight roster: summons + both-side rosters (spore_engine_prd Cap 3) --
+
+func _summon_item(owner: Actor, token_id: int, in_front: bool = true) -> Item:
+  var def := ItemDef.new()
+  var s := ItemEffect.new()
+  s.kind = Delivery.Kind.SUMMON
+  s.summon_def_id = token_id
+  s.summon_in_front = in_front
+  s.shape = ItemEffect.Shape.SELF
+  s.travel = 0.0
+  def.effects = [s]
+  return Item.new(def, owner)
+
+
+func test_summon_adds_a_token_to_the_players_side() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var before: int = cm._player_side().size()
+  var arrived: Array = []
+  cm._fire_item(_summon_item(p, EnemyCatalog.Id.SPORE_THRALL), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_eq(cm._player_side().size(), before + 1, 'a token joined the player side')
+  assert_eq(cm._leftmost_living_opponent(e), cm._player_side()[0], 'and is the enemy\'s leftmost target (body-block)')
+
+
+func test_enemy_summon_adds_to_the_enemy_side() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var arrived: Array = []
+  cm._fire_item(_summon_item(e, EnemyCatalog.Id.SPORE_THRALL), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_eq(cm.enemies.size(), 2, 'the enemy summoned an add onto its own side')
+
+
+func test_dead_actor_items_stop_ticking_and_firing() -> void:
+  # The bug a single-enemy fight hid: in a multi-body fight a slain body must stop swinging.
+  var p := Actor.new(1000.0)
+  var e1 := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var e2 := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := _manager(p, [e1, e2])
+  cm.start()
+  e1.take_damage(40.0)
+  assert_false(e1.is_alive(), 'e1 is down')
+  for i in 10:
+    cm.sim_step()
+  assert_eq(e1.board[0].cooldown.accum, 0.0, 'a dead body\'s items neither tick nor fire')
+  assert_gt(e2.board[0].cooldown.accum, 0.0, 'a living body\'s items still tick')
+
+
+func test_player_token_body_blocks_then_exposes_the_player() -> void:
+  var p := Actor.new(100.0)
+  var e := Actor.new(100.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var token := Actor.new(15.0)
+  cm.add_actor(token, true, true)   # player side, in front
+  assert_eq(cm._leftmost_living_opponent(e), token, 'the token body-blocks the player')
+  token.take_damage(15.0)
+  assert_eq(cm._leftmost_living_opponent(e), p, 'once it falls, the player is exposed')
+
+
+func test_player_death_loses_even_with_a_living_token() -> void:
+  var p := Actor.new(5.0)
+  var e := Actor.new(100.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  cm.add_actor(Actor.new(15.0), true, true)
+  watch_signals(cm)
+  p.take_damage(5.0)
+  cm._check_resolution()
+  assert_signal_emitted(cm, 'resolved')
+  assert_eq(get_signal_parameters(cm, 'resolved')[0], false, 'the player dying loses — a surviving token does not save the run')
+
+
+func test_summoned_token_is_dissolved_but_run_scoped_side_survives() -> void:
+  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
+  var ally := _spawn(50.0, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e], 0, [ally])   # ally is run-scoped (passed in)
+  cm.start()
+  var token := _spawn(15.0, [ItemCatalog.Id.ENEMY_CLAW])
+  cm.add_actor(token, true, true)                  # token is combat-scoped (summoned)
+  var weak_token: WeakRef = weakref(token)
+  var weak_token_item: WeakRef = weakref(token.board[0])
+  cm.teardown()
+  cm.free()
+  token = null
+  assert_null(weak_token.get_ref(), 'a combat-scoped token frees at fight end')
+  assert_null(weak_token_item.get_ref(), 'and its board items free')
+  assert_eq(p.board.size(), 1, 'the run-scoped player keeps its board')
+  assert_eq(ally.board.size(), 1, 'a run-scoped ally is NOT dissolved')
+
+
 func test_random_item_target_is_reproducible_by_seed() -> void:
   # OPPONENT_ITEM_RANDOM (Hex Bolt → silence a random enemy item) picks on the seeded
   # per-fight RNG, so the same combat seed silences the same item (#14/#20: random

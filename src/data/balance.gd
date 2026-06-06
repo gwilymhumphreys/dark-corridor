@@ -31,6 +31,9 @@ const ENEMY_PLACEHOLDER_HP: float = 40.0
 # with two items.
 const ENEMY_BRUTE_HP: float = 70.0
 const ENEMY_BOSS_HP: float = 140.0
+# A summon/token actor (spore_engine_prd Cap 3) — low HP, disposable. Placeholder; the
+# owner authors the real saprolings / boss adds (and uses it as a draftable ally too).
+const ENEMY_SPORE_THRALL_HP: float = 15.0
 
 
 # ── Items (placeholder defs — cooldowns in SECONDS) ──────────────────────────

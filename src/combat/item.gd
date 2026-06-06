@@ -60,6 +60,8 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   p.consume_scale = effect.consume_scale
   if effect.consume_type >= 0 and not effect.consume_from_target and owner != null:
     p.value += StatusManager.consume(owner, effect.consume_type, effect.consume_amount) * effect.consume_scale
+  p.summon_def_id = effect.summon_def_id
+  p.summon_in_front = effect.summon_in_front
   p.shape = effect.shape
   p.travel = effect.travel
   p.status_type = effect.status_type

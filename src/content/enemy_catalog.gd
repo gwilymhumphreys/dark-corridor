@@ -3,7 +3,7 @@ class_name EnemyCatalog
 ## grunt with a one-item authored board (its own attack item, separate from the
 ## player pool — design). Lazily built once.
 
-enum Id { GRUNT, BRUTE, BOSS }
+enum Id { GRUNT, BRUTE, BOSS, SPORE_THRALL }
 
 static var _defs: Dictionary = {}
 
@@ -38,3 +38,12 @@ static func _build() -> void:
   boss.max_hp = Balance.ENEMY_BOSS_HP
   boss.item_ids = [ItemCatalog.Id.ENEMY_CLAW, ItemCatalog.Id.ENEMY_CLAW]
   _defs[boss.id] = boss
+
+  # A summon/token actor (spore_engine_prd Cap 3): low HP, one weak attack. Usable as a
+  # boss add, a player-side summon, OR (Stage B) a draftable persistent ally. Placeholder.
+  var thrall := EnemyDef.new()
+  thrall.id = Id.SPORE_THRALL
+  thrall.name_key = 'Spore Thrall'
+  thrall.max_hp = Balance.ENEMY_SPORE_THRALL_HP
+  thrall.item_ids = [ItemCatalog.Id.ENEMY_CLAW]
+  _defs[thrall.id] = thrall
