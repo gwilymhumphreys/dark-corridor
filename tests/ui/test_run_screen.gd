@@ -91,6 +91,10 @@ func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
   screen._on_potion_thrown(0)
   assert_eq(Game.run.potions.size(), before - 1, 'the thrown potion is consumed')
   screen.free()
+  # The throw rebuilds the potion row: the old slot is detached + queue_free'd (deferred
+  # — its own `pressed` signal is still unwinding, so an immediate free would lock-error).
+  # This test is otherwise synchronous; flush one frame so that deferred free runs (no orphan).
+  await get_tree().process_frame
 
 
 # --- pause + quit-to-menu ----------------------------------------------------
