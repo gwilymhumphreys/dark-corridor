@@ -118,7 +118,7 @@ Checked each tick after **Land** (step 3): player `Actor` dead → loss; all ene
 ## Prototype scope
 
 - One `Combat manager` driving one player `Actor` + one enemy `Actor`: the central tick (advance → fire → land → events → win/loss).
-- Target-shape resolution (self + opponent-leftmost; AOE once a second enemy exists).
+- Target-shape resolution: self, opponent-leftmost, all-opponents, **and the item-target shapes** (opponent-item-random / all-opponent-items) — the random pick drawn from the per-fight RNG (below). Example item: **Hex Bolt** (silences a random enemy item).
 - The event bus with one trigger ("on poison applied → push the block item").
 - `Timekeeper` lifecycle (create / tear down); pull-based registration into its own registry; the UI timescale intent (hover slow-mo).
 
@@ -132,7 +132,7 @@ Checked each tick after **Land** (step 3): player `Actor` dead → loss; all ene
 - **Within-step component order — resolved (#24):** ascending `seq_id` — a monotonic id stamped at registration; registration order is itself deterministic (board order at start, then deterministic fire order), so the sweep is reproducible.
 - **Simultaneous death** tiebreak (→ loss, provisional).
 - **AOE-at-arrival** specifics (set resolved at spawn; dead-at-arrival fizzle) — confirm when multi-enemy fights are built.
-- **Per-fight RNG for random item-targeting — resolved (#20):** the draw comes from a per-fight stream derived from the run seed + encounter index (the `Run manager` owns the run RNG), so fights stay bit-reproducible and a re-entered fight replays identically; it doesn't perturb the saved run stream.
+- **Per-fight RNG for random item-targeting — resolved + BUILT (#20):** the `Combat manager` owns a `RandomNumberGenerator` seeded in `start()` from a `combat_seed`. The `Run manager` derives that seed from its run **seed** (constant, saved) + the beat index (`_combat_seed_for(pos)`) and threads it through the `Encounter` — so fights stay bit-reproducible, a re-entered fight replays identically (resume isn't save-scummable), and deriving it never consumes the run stream the draft draws from. Item-target shapes draw their random pick from this stream. Item-targeted Deliveries land on the `Item` (its owning actor must be alive, else fizzle); the status applies to the item (e.g. silence gates it).
 - **Encounter handoff — resolved (Encounter PRD):** the `Encounter` creates the `Combat manager` with the player + spawned enemy `Actor`s + their left-to-right ordering, and awaits the win/loss result.
 - **Mid-fight roster changes (summoning)** — this spec assumes a **fixed roster** seeded at combat start. Adding / removing an `Actor` mid-fight (register/deregister its Tickers + triggers, re-order) is deferred until the boss "summons-adds" signature is built (see Enemy PRD). *(A **static** multi-Actor player side — drafting allies, #22 — needs no new combat code: sides are already lists + targeting is side-relative; only the **mid-fight** change is deferred.)*
 

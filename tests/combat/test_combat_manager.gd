@@ -181,6 +181,43 @@ func test_actor_and_item_statuses_advance_identically() -> void:
   assert_false(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak expired on the same step')
 
 
+func test_random_item_target_is_reproducible_by_seed() -> void:
+  # OPPONENT_ITEM_RANDOM (Hex Bolt → silence a random enemy item) picks on the seeded
+  # per-fight RNG, so the same combat seed silences the same item (#14/#20: random
+  # targeting that's still bit-reproducible / resume-safe).
+  var a: int = _hex_silence_index(777)
+  var b: int = _hex_silence_index(777)
+  assert_ne(a, -1, 'the hex silenced one of the enemy items')
+  assert_eq(a, b, 'the same combat seed silences the same item')
+
+
+func test_random_item_target_varies_across_seeds() -> void:
+  # Genuinely seed-driven, not secretly fixed: a spread of seeds hits more than one item.
+  var seen: Dictionary = {}
+  for s in 25:
+    seen[_hex_silence_index(s * 13 + 1)] = true
+  assert_gt(seen.size(), 1, 'different combat seeds silence different items')
+
+
+# Run Hex Bolt (player) vs a 4-item enemy under `combat_seed`; return the board index of
+# the first item it silences (the random pick), or -1 if none within the guard.
+func _hex_silence_index(combat_seed: int) -> int:
+  var p := Actor.new(5000.0)
+  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.Id.HEX_BOLT), p))
+  var e := Actor.new(5000.0)
+  for i in 4:
+    e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.Id.ENEMY_CLAW), e))
+  var cm := CombatManager.new(p, [e], combat_seed)
+  _made.append(cm)
+  cm.start()
+  for _i in 1000:
+    cm.sim_step()
+    for idx in e.board.size():
+      if _item_has_status(e.board[idx], StatusDef.Type.SILENCE):
+        return idx
+  return -1
+
+
 func test_unresolved_item_target_shape_yields_no_targets() -> void:
   # The item-target shapes aren't resolved yet (they need the per-fight RNG, #14/#20).
   # An item authored with one must visibly fire nothing (and warn once) — not crash.

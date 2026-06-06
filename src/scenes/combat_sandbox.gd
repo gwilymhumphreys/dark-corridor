@@ -101,6 +101,13 @@ func actor_pos(actor: Actor) -> Vector2:
   return PLAYER_ANCHOR if actor == _player else ENEMY_ANCHOR
 
 
+## A Delivery's landing point — an Actor anchor OR an Item's icon (item-target effects).
+func target_pos(target) -> Vector2:
+  if target is Item:
+    return item_pos(target)
+  return actor_pos(target)
+
+
 func _auto_shot() -> void:
   await get_tree().create_timer(2.0).timeout
   await RenderingServer.frame_post_draw

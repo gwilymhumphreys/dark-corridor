@@ -123,6 +123,47 @@ func test_save_and_rehydrate_reproduces_the_continuation() -> void:
   assert_eq(run_b.outcome(), outcome_a, 'and reaches the same outcome')
 
 
+func test_per_fight_seed_is_seed_based_not_stream_based() -> void:
+  # The per-fight combat seed derives from the run SEED (constant, saved), not the
+  # evolving run stream — so it is resume-stable and doesn't shift as draft draws consume
+  # the stream (decision #20).
+  var run := _run()
+  run.start(42)
+  var s0: int = run._combat_seed_for(2)
+  run.rng.randi()
+  run.rng.randi()                     # advance the run stream
+  assert_eq(run._combat_seed_for(2), s0, 'deriving the per-fight seed ignores the run stream state')
+
+
+func test_per_fight_seeds_differ_by_beat() -> void:
+  var run := _run()
+  run.start(42)
+  assert_ne(run._combat_seed_for(0), run._combat_seed_for(1), 'each beat gets its own combat stream')
+
+
+func test_fight_rng_is_seeded_from_the_beat_seed() -> void:
+  var run := _run()
+  run.start(5)
+  run.begin_current()                 # beat 0 is a fight → a live, seeded CombatManager
+  assert_eq(run.combat_manager().rng.seed, run._combat_seed_for(0),
+    'the fight RNG is seeded from the derived per-beat seed')
+
+
+func test_resumed_run_derives_the_same_per_fight_seed() -> void:
+  # End to end: a fight re-entered from a save uses the identical combat seed, so its
+  # random targeting replays exactly (no save-scumming a bad random outcome).
+  var run := _run()
+  run.start(7)
+  _play_one_beat(run, 0)              # advance to beat 1
+  var seed_a: int = run._combat_seed_for(run.position)
+  var snap: Dictionary = run.snapshot()
+
+  var run_b := _run()
+  run_b.rehydrate(snap)
+  assert_eq(run_b.position, run.position, 'resumed at the same beat')
+  assert_eq(run_b._combat_seed_for(run_b.position), seed_a, 'and derives the identical per-fight seed')
+
+
 func test_player_actor_and_board_free_after_run_teardown() -> void:
   # The run-lifetime player + its board must free at run end — the Actor<->Item
   # cycle (board <-> owner) has to be broken and the run's own ref dropped.

@@ -33,11 +33,11 @@ func _draw() -> void:
     var travel_dur: float = d.travel.threshold * Timekeeper.STEP
     if not d.landed and travel_dur > 0.0:
       var src: Vector2 = layout.item_pos(d.source)
-      var dst: Vector2 = layout.actor_pos(d.target)
+      var dst: Vector2 = layout.target_pos(d.target)   # Actor OR Item target
       var t: float = clampf((now - d.fire_time) / travel_dur, 0.0, 1.0)
       draw_circle(src.lerp(dst, t), PROJ_RADIUS, d.color)
     elif d.landed and d.kind == Delivery.Kind.DAMAGE:
       var age: float = now - d.impact_time
       if age >= 0.0 and age < NUM_DURATION:
-        var pos: Vector2 = layout.actor_pos(d.target) + Vector2(-24.0, -190.0 - age * 120.0)
+        var pos: Vector2 = layout.target_pos(d.target) + Vector2(-24.0, -190.0 - age * 120.0)
         draw_string(_font, pos, str(int(d.value)), HORIZONTAL_ALIGNMENT_LEFT, -1, 52, d.color)

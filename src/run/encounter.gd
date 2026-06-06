@@ -22,11 +22,13 @@ var enemies: Array = []          # spawned enemy Actors (fight), left-to-right
 
 var _cm: CombatManager = null
 var _resolved: bool = false
+var _combat_seed: int = 0
 
 
-func _init(encounter_def: EncounterDef, player_actor: Actor) -> void:
+func _init(encounter_def: EncounterDef, player_actor: Actor, combat_seed: int = 0) -> void:
   def = encounter_def
   player = player_actor
+  _combat_seed = combat_seed   # the per-fight RNG seed, handed to the CombatManager on begin()
   # Enemies are spawned at creation so the corridor can render them approaching
   # from depth (presentation; the logical beat resolves on arrival via begin()).
   if def.type == EncounterDef.Type.FIGHT:
@@ -57,7 +59,7 @@ func begin() -> void:
   if _resolved or _cm != null:
     return
   if is_fight():
-    _cm = CombatManager.new(player, enemies)
+    _cm = CombatManager.new(player, enemies, _combat_seed)
     _cm.resolved.connect(_on_fight_resolved)
     _cm.start()
   else:

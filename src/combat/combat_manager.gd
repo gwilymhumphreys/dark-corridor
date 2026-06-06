@@ -17,24 +17,32 @@ var player: Actor
 var enemies: Array = []          # Array[Actor], left-to-right
 var timekeeper: Timekeeper
 var bus: EventBus
+var rng: RandomNumberGenerator   # the per-fight stream — random item-targeting (#14/#20)
 
 var _items: Array = []           # Array[Item] — cooldown Tickers, registration order
 var _deliveries: Array = []      # Array[Delivery] — in-flight + recently-resolved
 var _resolved: bool = false
 var _player_won: bool = false
 var _torn_down: bool = false
+var _combat_seed: int = 0
 
 
-func _init(player_actor: Actor, enemy_actors: Array) -> void:
+## `combat_seed` seeds the per-fight RNG (decision #20: a derived per-fight stream so
+## random targeting is reproducible AND a re-entered fight replays identically). The
+## RunManager derives it from the run seed + beat index; tests / sandbox may leave it 0.
+func _init(player_actor: Actor, enemy_actors: Array, combat_seed: int = 0) -> void:
   player = player_actor
   enemies = enemy_actors
+  _combat_seed = combat_seed
 
 
-## Create the clock + bus, register the boards' cooldown Tickers, and subscribe
-## each item's declared triggers. Call once before the fight runs.
+## Create the clock + bus + per-fight RNG, register the boards' cooldown Tickers, and
+## subscribe each item's declared triggers. Call once before the fight runs.
 func start() -> void:
   timekeeper = Timekeeper.new()
   bus = EventBus.new()
+  rng = RandomNumberGenerator.new()
+  rng.seed = _combat_seed
   _register_actor(player)
   for e in enemies:
     _register_actor(e)
@@ -206,20 +214,24 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
 func _land(d: Delivery) -> void:
   if d.landed or d.fizzled:
     return
-  # A single target that died mid-flight fizzles — no retarget (combat_prd).
-  if d.target is Actor and not d.target.is_alive():
+  # A single target that died/left mid-flight fizzles — no retarget (combat_prd). For an
+  # item target, "alive" means its owning actor is still alive (you can't silence a
+  # dead enemy's item).
+  if not _target_alive(d.target):
     d.fizzled = true
     return
   d.impact_time = timekeeper.sim_time
   d.landed = true
   match d.kind:
     Delivery.Kind.DAMAGE:
-      d.target.take_damage(d.value, d.flags)
-      bus.publish(EventBus.Event.DAMAGE_DEALT)
+      if d.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
+        d.target.take_damage(d.value, d.flags)
+        bus.publish(EventBus.Event.DAMAGE_DEALT)
     Delivery.Kind.HEAL:
-      d.target.heal(d.value)
-      bus.publish(EventBus.Event.HEALED)
-    Delivery.Kind.APPLY_STATUS:
+      if d.target is Actor:
+        d.target.heal(d.value)
+        bus.publish(EventBus.Event.HEALED)
+    Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
       StatusManager.apply(d.target, d.status_type, d.value, d.source, d.flags)
       bus.publish(EventBus.Event.STATUS_APPLIED, d.status_type)
 
@@ -237,10 +249,13 @@ func _resolve_targets(p: Payload, owner: Actor) -> Array:
       return [t] if t != null else []
     ItemEffect.Shape.ALL_OPPONENTS:
       return _living_opponents(owner)
+    ItemEffect.Shape.OPPONENT_ITEM_RANDOM:
+      return _random_opponent_item(owner)
+    ItemEffect.Shape.ALL_OPPONENT_ITEMS:
+      return _all_opponent_items(owner)
     _:
-      # Item-target shapes (OPPONENT_ITEM_RANDOM / ALL_OPPONENT_ITEMS) aren't resolved
-      # yet — they need the per-fight RNG (#14/#20). Warn ONCE per shape so an authored
-      # item using one isn't a silent no-op (it would fire nothing with no clue why).
+      # A future shape with no resolver — warn ONCE so an authored item using it isn't a
+      # silent no-op (it would fire nothing with no clue why).
       _warn_unhandled_shape(p.shape)
       return []
 
@@ -255,6 +270,16 @@ func _warn_unhandled_shape(shape: int) -> void:
     return
   _warned_shapes[shape] = true
   push_warning('[CombatManager] target shape %d is not resolved yet (item-target shapes need the per-fight RNG, #14/#20); the effect fires nothing.' % shape)
+
+
+## Is a Delivery's target still a valid landing site? An Actor must be alive; an Item's
+## owning actor must be alive (an item-targeted status applies to the Item itself).
+func _target_alive(target) -> bool:
+  if target is Actor:
+    return target.is_alive()
+  if target is Item:
+    return target.owner != null and target.owner.is_alive()
+  return false
 
 
 func _all_actors() -> Array:
@@ -278,6 +303,24 @@ func _leftmost_living_opponent(actor: Actor):
     if o.is_alive():
       return o
   return null
+
+
+## Every Item on a living opponent's board — the pool item-target shapes draw from.
+func _all_opponent_items(actor: Actor) -> Array:
+  var out: Array = []
+  for o in _living_opponents(actor):
+    out.append_array(o.board)
+  return out
+
+
+## One random Item from that pool, chosen on the seeded per-fight RNG (decision #14:
+## item-target selection is random, unlike the deterministic leftmost actor rule; the
+## seed keeps the fight bit-reproducible). [] when no opponent has a board item.
+func _random_opponent_item(actor: Actor) -> Array:
+  var pool: Array = _all_opponent_items(actor)
+  if pool.is_empty():
+    return []
+  return [pool[rng.randi_range(0, pool.size() - 1)]]
 
 
 # --- Resolution + lifecycle -------------------------------------------------
@@ -395,6 +438,7 @@ func teardown() -> void:
   player = null
   timekeeper = null
   bus = null
+  rng = null
 
 
 func _clear_statuses(actor: Actor) -> void:

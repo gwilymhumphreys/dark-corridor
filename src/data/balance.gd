@@ -40,6 +40,11 @@ const ARMOR_BLOCK: float = 8.0              # self-target, travel 0
 const POISON_APPLIER_COOLDOWN: float = 1.6
 const POISON_APPLIER_STACKS: float = 3.0    # stacks applied per fire
 
+# Hex Bolt — the example item-targeting item: a bolt that silences a RANDOM enemy item
+# (OPPONENT_ITEM_RANDOM, chosen on the seeded per-fight RNG; #14/#20). Proves the
+# random-item-target path end-to-end; not pooled by default (the grunt has one item).
+const HEX_BOLT_COOLDOWN: float = 2.5
+
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks

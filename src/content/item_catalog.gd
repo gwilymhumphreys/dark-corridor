@@ -3,9 +3,10 @@ class_name ItemCatalog
 ## Phase 1 pool: a weapon (single-target damage, travels), an armor (self block),
 ## a poison dagger (applies poison), an avenger (ticks self-block AND triggers on
 ## poison-applied), plus an enemy claw (the enemy pool stays separate by design —
-## one catalog here for Phase 1). Lazily built once.
+## one catalog here for Phase 1). HEX_BOLT is the example item-targeting item (silences
+## a RANDOM enemy item; #14/#20) — catalog-only, not pooled by default. Lazily built once.
 
-enum Id { WEAPON, ARMOR, POISON_DAGGER, AVENGER, ENEMY_CLAW }
+enum Id { WEAPON, ARMOR, POISON_DAGGER, AVENGER, ENEMY_CLAW, HEX_BOLT }
 
 static var _defs: Dictionary = {}
 
@@ -22,6 +23,7 @@ static func _build() -> void:
   _defs[Id.POISON_DAGGER] = _poison_dagger()
   _defs[Id.AVENGER] = _avenger()
   _defs[Id.ENEMY_CLAW] = _enemy_claw()
+  _defs[Id.HEX_BOLT] = _hex_bolt()
 
 
 static func _weapon() -> ItemDef:
@@ -92,6 +94,27 @@ static func _avenger() -> ItemDef:
     'filter': StatusDef.Type.POISON,
   }]
   d.panel_color = blk.color
+  return d
+
+
+## The example item-targeting item (#14/#20): a bolt that applies SILENCE to a RANDOM
+## enemy item, chosen on the seeded per-fight RNG. Demonstrates OPPONENT_ITEM_RANDOM end
+## to end. Not in DraftPool by default — the owner can pool it once enemies carry several
+## items (against the single-item grunt a silence is a guaranteed disable).
+static func _hex_bolt() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = Id.HEX_BOLT
+  d.name_key = 'Hex Bolt'
+  d.cooldown = Balance.HEX_BOLT_COOLDOWN
+  var hex := ItemEffect.new()
+  hex.kind = Delivery.Kind.APPLY_STATUS
+  hex.status_type = StatusDef.Type.SILENCE
+  hex.value = 1.0
+  hex.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  hex.travel = Balance.WEAPON_TRAVEL
+  hex.color = Color(0.5, 0.2, 0.7)
+  d.effects = [hex]
+  d.panel_color = hex.color
   return d
 
 

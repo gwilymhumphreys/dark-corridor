@@ -27,6 +27,9 @@ const MAP: Array = [
   EncounterCatalog.Id.FIGHT_GRUNT,
 ]
 
+# Spreads the run seed into a distinct per-beat combat stream (a prime stride).
+const COMBAT_SEED_STRIDE: int = 1000003
+
 # Run-state (the snapshot persists exactly this).
 var player: Actor
 var relics: Array = []        # Array[Relic]
@@ -179,7 +182,15 @@ func outcome() -> int:
 # --- map + run-end ----------------------------------------------------------
 
 func _enter_beat(pos: int) -> void:
-  _current = Encounter.new(EncounterCatalog.get_def(MAP[pos]), player)
+  _current = Encounter.new(EncounterCatalog.get_def(MAP[pos]), player, _combat_seed_for(pos))
+
+
+## The per-fight RNG seed for beat `pos` (decision #20): derived from the run SEED (a
+## constant, saved) + the beat index — NOT the evolving run stream. So combat randomness
+## is reproducible, a re-entered fight replays identically (resume isn't save-scummable),
+## and deriving it never perturbs the run stream that draft offers draw from.
+func _combat_seed_for(pos: int) -> int:
+  return rng.seed + (pos + 1) * COMBAT_SEED_STRIDE
 
 
 func _is_final_beat() -> bool:

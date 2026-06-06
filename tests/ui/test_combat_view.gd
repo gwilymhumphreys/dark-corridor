@@ -112,6 +112,23 @@ func test_item_pos_handles_a_source_less_delivery() -> void:
   cm.free()
 
 
+func test_target_pos_resolves_an_item_target_to_its_cell() -> void:
+  # Item-targeting effects (e.g. a random silence) land on an Item; the VFX wall asks the
+  # layout for the target position. It must route an Item to its board cell, not crash on
+  # a non-Actor (the wall calls target_pos, not actor_pos, for the destination).
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, e, [])
+  var enemy_item: Item = e.board[0]
+  assert_eq(view.target_pos(enemy_item), view.item_pos(enemy_item), 'an Item target routes to its cell')
+  assert_eq(view.target_pos(e), view.actor_pos(e), 'an Actor target still routes to the actor')
+  cm.free()
+
+
 func test_framed_view_binds_a_fight_without_error() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)

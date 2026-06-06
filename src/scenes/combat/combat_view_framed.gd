@@ -117,3 +117,12 @@ func actor_pos(actor: Actor) -> Vector2:
   if actor == _enemy:
     return _corridor.enemy_screen_centre()
   return _portrait.global_position + _portrait.size * 0.5
+
+
+## A Delivery's landing point — an Actor (portrait / corridor occupant) OR an Item (its
+## board cell, for item-targeting effects like a random silence). Used by the VFX wall so
+## an item-target projectile flies to the cell instead of dereferencing a non-Actor.
+func target_pos(target) -> Vector2:
+  if target is Item:
+    return item_pos(target)
+  return actor_pos(target)
