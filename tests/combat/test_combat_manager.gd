@@ -181,6 +181,47 @@ func test_actor_and_item_statuses_advance_identically() -> void:
   assert_false(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak expired on the same step')
 
 
+func test_dot_tick_through_block_does_not_skip_a_later_status() -> void:
+  # A poison tick calls take_damage, which can erase a depleted block from the SAME
+  # status list the step-pass is walking. A naive in-place loop would then skip the
+  # status after block. Set up [block, poison, weak] with poison about to tick and
+  # block small enough to be fully consumed — weak must still advance this pass.
+  var p := Actor.new(100.0)
+  var a := Actor.new(100.0)
+  var cm := _manager(p, [a])
+  cm.start()
+  StatusManager.apply(a, StatusDef.Type.BLOCK, 1.0)          # one poison tick empties it
+  var pois: Status = StatusManager.apply(a, StatusDef.Type.POISON, 3.0)
+  pois.ticker.accum = pois.ticker.threshold - 1.0            # fire on the next advance
+  var weak: Status = StatusManager.apply(a, StatusDef.Type.WEAK, 1.0)   # after poison in the list
+
+  cm._advance_statuses_on(a)
+
+  assert_eq(weak.ticker.accum, 1.0, 'the status after block still advanced (no skip)')
+  assert_false(_has_status(a, StatusDef.Type.BLOCK), 'block was consumed and erased mid-pass')
+  assert_eq(a.hp, 98.0, 'poison dealt 3, block absorbed 1, 2 leaked to HP')
+
+
+func test_dot_tick_shows_a_visual_on_the_wall() -> void:
+  # A DoT tick applies damage inside the status pass (no Delivery lands), so the wall
+  # would show nothing. We spawn a visual-only Delivery carrying the tick's number.
+  var p := Actor.new(100.0)
+  var a := Actor.new(100.0)
+  var cm := _manager(p, [a])
+  cm.start()
+  var pois: Status = StatusManager.apply(a, StatusDef.Type.POISON, 3.0)
+  pois.ticker.accum = pois.ticker.threshold - 1.0
+  cm._advance_statuses_on(a)
+  var visuals: Array = []
+  for d in cm.deliveries():
+    if d.visual_only:
+      visuals.append(d)
+  assert_eq(visuals.size(), 1, 'a poison tick spawns exactly one visual-only Delivery')
+  assert_eq(visuals[0].target, a, 'the number pops on the poisoned actor')
+  assert_almost_eq(visuals[0].value, 3.0, 0.001, 'it shows the damage the tick dealt')
+  assert_true(visuals[0].landed, 'it is pre-landed — _land never runs on it')
+
+
 func test_enemy_actor_and_items_free_after_teardown() -> void:
   # The Actor<->Item cycle (board holds the item, item.owner holds the actor back)
   # must be broken at teardown, or every fight leaks its enemy + board (RefCounted
@@ -197,6 +238,26 @@ func test_enemy_actor_and_items_free_after_teardown() -> void:
   e = null   # drop the last external strong ref; only a cycle could keep it alive
   assert_null(weak_enemy.get_ref(), 'the enemy actor frees after the fight')
   assert_null(weak_item.get_ref(), 'and its board items free too')
+
+
+func test_item_cooldowns_reset_each_fight() -> void:
+  # The player's board persists across the run, but a cooldown is combat-scoped (like
+  # a status): it must NOT carry over. Else fight N+1 opens mid-charge, and a resumed
+  # save (items rebuilt fresh at accum 0) diverges from continuous play (decision #20).
+  var p := _spawn(1000.0, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  for i in 20:
+    cm.sim_step()
+  assert_gt(p.board[0].cooldown.accum, 0.0, 'the weapon charged partway through fight 1')
+  cm.teardown()   # the player survives teardown (only its statuses clear); its board persists
+
+  # A new fight with the SAME persistent player board must start the item fresh.
+  var e2 := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm2 := _manager(p, [e2])
+  cm2.start()
+  assert_eq(p.board[0].cooldown.accum, 0.0, 'fight 2 starts every board item at a fresh cooldown')
 
 
 func test_teardown_clears_combat_state() -> void:

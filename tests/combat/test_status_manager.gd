@@ -30,6 +30,17 @@ func test_unblockable_skips_block() -> void:
   assert_eq(a.hp, 45.0, 'an unblockable payload bypasses block')
 
 
+func test_unblockable_dot_bypasses_block() -> void:
+  # Decision #5: an unblockable payload bypasses block — and a DoT is per-effect, so
+  # the flag must survive to each tick (the applying Delivery is long gone by then).
+  var a := Actor.new(50.0)
+  StatusManager.apply(a, StatusDef.Type.BLOCK, 8.0)
+  var p := StatusManager.apply(a, StatusDef.Type.POISON, 3.0, null, Delivery.Flag.UNBLOCKABLE)
+  _advance(a, p, int(p.ticker.threshold))   # one tick
+  assert_eq(a.hp, 47.0, 'the unblockable poison tick goes straight to HP (3 damage)')
+  assert_eq(_find(a, StatusDef.Type.BLOCK).count, 8.0, 'block is untouched by an unblockable DoT')
+
+
 func test_block_stacks_additively() -> void:
   var a := Actor.new(50.0)
   StatusManager.apply(a, StatusDef.Type.BLOCK, 5.0)

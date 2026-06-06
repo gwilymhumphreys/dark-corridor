@@ -49,7 +49,7 @@ Per the architecture's "full VFX *path*, minimal *content*" — build the driver
 
 - one **projectile** type (position from `render_time − fire_time`),
 - one **fire-emote** (item recoil / flash),
-- **travelling damage numbers**,
+- **travelling damage numbers** — including DoT ticks, which carry no landing Delivery of their own, so the Combat manager hands the wall a **visual-only** Delivery (pre-landed, payload-less) per tick to pop the number,
 - a **screen pulse**.
 
 This validates the cleanest boundary on the map at the cheapest moment.

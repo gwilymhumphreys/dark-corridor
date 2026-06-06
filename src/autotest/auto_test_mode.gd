@@ -294,6 +294,9 @@ func _observe_damage(cm: CombatManager, actors: Array, before: Dictionary, dot_b
   var now: float = cm.timekeeper.sim_time
   var direct_by_target: Dictionary = {}
   for d in cm.deliveries():
+    # Skip visual_only DoT-tick Deliveries — that damage is attributed via dot_before.
+    if d.visual_only:
+      continue
     if d.landed and d.kind == Delivery.Kind.DAMAGE and is_equal_approx(d.impact_time, now):
       if not direct_by_target.has(d.target):
         direct_by_target[d.target] = []

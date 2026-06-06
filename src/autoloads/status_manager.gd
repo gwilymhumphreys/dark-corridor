@@ -8,7 +8,7 @@ extends Node
 
 ## Apply / stack a status on a target; returns the instance (the Combat manager
 ## registers its Ticker, if any, and publishes the on-apply event — Step 4).
-func apply(target, type: int, count: float, source = null) -> Status:
+func apply(target, type: int, count: float, source = null, flags: int = 0) -> Status:
   var def: StatusDef = StatusCatalog.get_def(type)
   # (source-side application modifiers — e.g. "your poison applies twice" — deferred)
   var existing: Status = _find(target, type)
@@ -24,6 +24,7 @@ func apply(target, type: int, count: float, source = null) -> Status:
   s.type = type
   s.count = count
   s.source = source
+  s.flags = flags
   match def.shape:
     StatusDef.Shape.PERIODIC:
       s.ticker = Ticker.from_seconds(def.tick_interval)
@@ -58,7 +59,10 @@ func advance_status(status: Status, owner) -> bool:
   match def.shape:
     StatusDef.Shape.PERIODIC:
       if status.ticker.step():
-        owner.take_damage(status.count * def.damage_per_tick)
+        # Carry the applying effect's flags (e.g. UNBLOCKABLE) into the tick, so an
+        # unblockable DoT bypasses block per decision #5 (the flag is otherwise lost
+        # between application and the tick — the Delivery is long gone).
+        owner.take_damage(status.count * def.damage_per_tick, status.flags)
         status.count -= 1.0
         status.ticker.reset()
         return status.count <= 0.0

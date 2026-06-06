@@ -42,6 +42,13 @@ func start() -> void:
 
 func _register_actor(actor: Actor) -> void:
   for it in actor.board:
+    # Cooldowns are combat-scoped, like statuses (decision #26): the player's board
+    # persists across the run, so reset each item's accumulator at fight start. Else
+    # fight N+1 opens mid-charge from where fight N happened to stop, AND a resumed
+    # save (which rebuilds items fresh at accum 0) would diverge from continuous play
+    # — breaking decision #20's "a re-entered fight replays identically." Enemy items
+    # are fresh instances each fight, so this only matters for the player.
+    it.cooldown.accum = 0.0
     _items.append(it)
     for sub in it.def.trigger_subs:
       bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', -1))
@@ -116,11 +123,41 @@ func sim_step() -> void:
 ## statuses tick on the same cadence as actor statuses.
 func _advance_statuses_on(target) -> void:
   var spent: Array = []
-  for st in target.statuses:
+  # Iterate a COPY: a PERIODIC tick calls take_damage, which can erase a spent block
+  # status from `target.statuses` mid-pass (StatusManager.resolve_incoming_damage).
+  # Mutating the list being iterated would skip the status after it — so walk a
+  # snapshot, apply, and erase expiries afterward.
+  for st in target.statuses.duplicate():
+    var hp_before: float = target.hp if target is Actor else 0.0
     if StatusManager.advance_status(st, target):
       spent.append(st)
+    # Surface a DoT tick on the VFX wall (the damage was already applied above): a
+    # pre-landed, payload-less Delivery the wall draws as a number. Periodic statuses
+    # only ever sit on actors, so this never runs for item statuses.
+    if target is Actor:
+      var dealt: float = hp_before - target.hp
+      if dealt > 0.0:
+        _deliveries.append(_dot_visual(st, target, dealt))
   for st in spent:
     target.statuses.erase(st)
+
+
+## A visual-only Delivery for a DoT tick so the wall shows the number — the damage
+## itself was already applied inside StatusManager.advance_status. Pre-landed, never
+## passed to _land, and flagged so the autotest's direct-hit attribution skips it.
+func _dot_visual(status: Status, target, dealt: float) -> Delivery:
+  var d := Delivery.new()
+  d.kind = Delivery.Kind.DAMAGE
+  d.value = dealt
+  d.target = target
+  d.source = status.source
+  d.color = StatusCatalog.get_def(status.type).color
+  d.travel = Ticker.new(0)
+  d.fire_time = timekeeper.sim_time
+  d.impact_time = timekeeper.sim_time
+  d.landed = true
+  d.visual_only = true
+  return d
 
 
 func _fire_item(it: Item, arrived: Array) -> void:
@@ -183,7 +220,7 @@ func _land(d: Delivery) -> void:
       d.target.heal(d.value)
       bus.publish(EventBus.Event.HEALED)
     Delivery.Kind.APPLY_STATUS:
-      StatusManager.apply(d.target, d.status_type, d.value, d.source)
+      StatusManager.apply(d.target, d.status_type, d.value, d.source, d.flags)
       bus.publish(EventBus.Event.STATUS_APPLIED, d.status_type)
 
 

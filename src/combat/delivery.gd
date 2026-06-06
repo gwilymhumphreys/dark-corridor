@@ -23,6 +23,10 @@ var fire_time: float = 0.0    # sim timestamp; the wall reads render_time - fire
 var impact_time: float = -1.0 # set on landing; the wall reads render_time - impact_time
 var landed: bool = false
 var fizzled: bool = false
+# A pre-landed, payload-less Delivery the wall draws but combat ignores: a DoT tick's
+# damage number (the tick already applied the damage inside StatusManager). `_land` is
+# never run on it, and the autotest skips it in direct-hit attribution (no double count).
+var visual_only: bool = false
 
 
 ## Advance the travel Ticker one sim-step; returns true the step it arrives.

@@ -43,7 +43,7 @@ The **behaviour** (how a type acts) lives in the `StatusManager`, keyed by `type
 
 Not every status ticks. Four shapes:
 
-- **Periodic** (poison / burn / regen) — a Ticker fires its payload each interval; per the Combat PRD a tick *is* a fire (→ a Delivery, `travel_time` 0 for the instant case), so DoT damage lands through the same path as item hits. Has a Ticker → **registered for stepping** (in the Combat manager's registry).
+- **Periodic** (poison / burn / regen) — a Ticker fires its payload each interval. *Realized:* the tick applies its damage in-place through `take_damage` (carrying the instance's `flags`, so an `unblockable` DoT bypasses block — the applying Delivery is long gone by tick time), and the Combat manager spawns a **visual-only** Delivery so the wall still shows the number (no double damage, no on-`DAMAGE_DEALT` event). Has a Ticker → **registered for stepping** (in the Combat manager's registry).
 - **Timed** (a 5s debuff) — a Ticker counts the duration down, then `on_expire`. Has a Ticker → registered.
 - **Persistent pool** (block) — a `count` consumed by an external event (incoming damage), not by time. **No Ticker** — block persists until consumed or combat ends (no decay). Not a time component.
 - **Static modifier** (a flat / "again" modifier read at resolve time) — no Ticker; alters a calculation when read. Not a time component.
@@ -70,7 +70,7 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 `Actor.take_damage` delegates to `StatusManager.resolve_incoming_damage(target, raw, flags) → net`:
 
 - Iterates the target's damage-modifier statuses in a defined order — **amplifiers** (e.g. a future `vulnerable`) then **absorbers** (block). Block consumes its `count` against the remaining damage; the remainder hits HP.
-- **Block absorbs damage unless the effect is `unblockable`.** Per-effect flag — some DoTs set it, some don't; an `unblockable` payload skips the absorber stage and hits HP (after any amplifiers).
+- **Block absorbs damage unless the effect is `unblockable`.** Per-effect flag — some DoTs set it, some don't; an `unblockable` payload skips the absorber stage and hits HP (after any amplifiers). For a DoT the flag is stored on the `Status` instance at apply time and re-passed into `take_damage` on every tick (the originating Delivery no longer exists).
 - With only block defined now the order is trivial; the amplifier slot is reserved for the deferred stat-statuses.
 
 ---

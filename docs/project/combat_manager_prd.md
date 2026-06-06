@@ -27,7 +27,7 @@ What it **is not**:
 ## Lifecycle
 
 - **Created by `Encounter`** with the player `Actor` + the spawned enemy `Actor`s + their left-to-right ordering.
-- **At start:** create the `Timekeeper`; register the boards' item cooldown Tickers in its own registry; subscribe each item's declared triggers to the event bus.
+- **At start:** create the `Timekeeper`; register the boards' item cooldown Tickers in its own registry (**resetting each to zero** — a cooldown is combat-scoped like a status, so the player's persistent board never carries charge between fights, and a resumed save matches continuous play, decisions #20/#26); subscribe each item's declared triggers to the event bus.
 - **Runs** the central tick until win/loss.
 - **At end:** stop and tear down the `Timekeeper`; drop in-flight effects; signal the **result (win/loss)** up to `Encounter` / `Run manager`; itself torn down.
 
