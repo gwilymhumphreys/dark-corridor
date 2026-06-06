@@ -47,6 +47,10 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   p.value = effect.value         # (item-status value-modifiers: later)
   if enchant != null:
     p.value *= enchant.def.value_mult   # scale-a-value enchant (content_prd / #26)
+  # Outgoing-damage stat-status seam (#6): scale DAMAGE by the owner's modifiers AT FIRE
+  # TIME (e.g. Weak). A % multiplier, so it's locked into the payload here, cascade-safe.
+  if effect.kind == Delivery.Kind.DAMAGE and owner != null:
+    p.value *= StatusManager.outgoing_damage_mult(owner)
   p.shape = effect.shape
   p.travel = effect.travel
   p.status_type = effect.status_type

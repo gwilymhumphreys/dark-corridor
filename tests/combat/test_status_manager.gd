@@ -48,6 +48,31 @@ func test_block_stacks_additively() -> void:
   assert_eq(_find(a, StatusDef.Type.BLOCK).count, 8.0, 'block adds to the pool')
 
 
+func test_vulnerable_amplifies_incoming_before_block() -> void:
+  # #6 incoming seam: Vulnerable scales damage UP in the amplifier stage, before block
+  # soaks the (amplified) remainder.
+  var a := Actor.new(100.0)
+  StatusManager.apply(a, StatusDef.Type.VULNERABLE, 1.0)
+  a.take_damage(10.0)
+  var expected: float = 10.0 * Balance.STATUS_VULNERABLE_DAMAGE_MULT
+  assert_almost_eq(a.hp, 100.0 - expected, 0.0001, 'Vulnerable amplifies the raw damage')
+
+  var b := Actor.new(100.0)
+  StatusManager.apply(b, StatusDef.Type.VULNERABLE, 1.0)
+  StatusManager.apply(b, StatusDef.Type.BLOCK, 5.0)
+  b.take_damage(10.0)   # 10 → x1.5 = 15 amplified; block soaks 5; 10 to HP
+  assert_almost_eq(b.hp, 90.0, 0.0001, 'block absorbs the amplified amount (amplifier before absorber)')
+
+
+func test_outgoing_damage_mult_reads_weak() -> void:
+  # #6 outgoing seam (the StatusManager half): Weak lowers the holder's outgoing multiplier.
+  var a := Actor.new(100.0)
+  assert_almost_eq(StatusManager.outgoing_damage_mult(a), 1.0, 0.0001, 'no statuses → no change')
+  StatusManager.apply(a, StatusDef.Type.WEAK, 1.0)
+  assert_almost_eq(StatusManager.outgoing_damage_mult(a), Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
+    'Weak scales outgoing damage down')
+
+
 func test_poison_dot_decrements_and_expires() -> void:
   var a := Actor.new(50.0)
   var p := StatusManager.apply(a, StatusDef.Type.POISON, 3.0)

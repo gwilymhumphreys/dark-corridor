@@ -69,9 +69,9 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 `Actor.take_damage` delegates to `StatusManager.resolve_incoming_damage(target, raw, flags) → net`:
 
-- Iterates the target's damage-modifier statuses in a defined order — **amplifiers** (e.g. a future `vulnerable`) then **absorbers** (block). Block consumes its `count` against the remaining damage; the remainder hits HP.
+- Iterates the target's damage-modifier statuses in a defined order — **amplifiers** (`Vulnerable`) then **absorbers** (block). Block consumes its `count` against the remaining (amplified) damage; the remainder hits HP.
 - **Block absorbs damage unless the effect is `unblockable`.** Per-effect flag — some DoTs set it, some don't; an `unblockable` payload skips the absorber stage and hits HP (after any amplifiers). For a DoT the flag is stored on the `Status` instance at apply time and re-passed into `take_damage` on every tick (the originating Delivery no longer exists).
-- With only block defined now the order is trivial; the amplifier slot is reserved for the deferred stat-statuses.
+- **Stat-statuses — BUILT (#6).** A status carries `incoming_damage_mult` (amplifier — `Vulnerable` > 1.0) and `outgoing_damage_mult` (read by `outgoing_damage_mult(actor)`; applied to the holder's DAMAGE payloads **at fire time** in `Item._resolve_effect` — `Weak` < 1.0). Both are **% multipliers**, not flat-per-fire (a flat per-fire modifier makes fast items strictly dominant — the authoring guidance). Placeholder statuses `Weak` / `Vulnerable` (+ a `Sundering Bolt` applier) prove both seams; the real stat-status content (numbers, per-stack variants) is the owner's.
 
 ---
 

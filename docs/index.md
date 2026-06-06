@@ -39,6 +39,18 @@ information — not all up front.
 | [project/combat_prd.md](project/combat_prd.md) | **Combat PRD.** Effect resolution: the `Ticker` accrual primitive, accrual-only triggers (the Bazaar lesson), fire/Delivery split, travel_time, targeting/fizzle. | combat, Ticker, accrual, trigger, charges, fire, Delivery, travel_time, projectile, cooldown, fizzle |
 | [project/art_audio.md](project/art_audio.md) | **Art Direction & Audio** (vibes doc). Rendering/corridor look, dark-fantasy tone, pixel-art resolution debate, VFX, cascade readability, inventory presentation, UI layout, dungeon-synth audio. | art, audio, pixel art, palette, VFX, cascade, readability, dungeon synth, lighting, tone, dread, UI layout, projectiles |
 
+## Content & character design (`docs/design/`)
+
+Creative-direction + content-authoring working docs (paper layer, distinct from
+the system PRDs in `docs/project/`). Tone/bestiary principle, the first
+character's card working file, and the card-pool breadth targets.
+
+| Doc | Covers | Keywords |
+|-----|--------|----------|
+| [design/influence_dcc.md](design/influence_dcc.md) | **Tone & Concept — Recombination** (touchstone: Dungeon Crawler Carl). Whole-game creative-direction principle (not a system): fuse two recognisable ideas from different domains so the seam shows; humour is a byproduct, delivery stays grim/oppressive. Must read through concept + loadout + how a thing fights — almost no narration bandwidth — so the fused premise *is* the signature mechanic. | tone, concept, recombination, Dungeon Crawler Carl, bestiary, enemies, bosses, NPCs, fusion, dread, grim humour, signature mechanic, creative direction, atmosphere |
+| [design/mushroom_druid.md](design/mushroom_druid.md) | **Mushroom Druid — Working File** (first character). Status-identity character (the StS Silent analog): spores = signature engine. Two pillars — Spores (Mass / Self ways to play, with deliberate target-shape anti-synergy) + Summon (candidate). Spread is a cross-cutting mechanism, not an archetype. Stacked vs timed spore accumulation, spore list, fungal idea bank, commons table. | mushroom druid, character, spores, status, Mass, Self, Spread, summon, thallid, archetype, blinding, poison, burn, lethal, commons, card list, applier, target shape |
+| [design/card_pool_targets.md](design/card_pool_targets.md) | **Card Pool Targets** (per character, loose). Translated from Slay the Spire — build big, cull to a pool. Breadth signals (not quotas) by combat role: attacks (~10–12 ST/AoE) + skills (~8–10 block/resource/utility). Default skew slightly attack-heavy, inverts for status-identity characters. Archetypes are tagged, never quota'd. | card pool, targets, breadth, commons, attack, skill, block, resource, utility, role, quota, Slay the Spire, skew, archetype tag |
+
 ## Corridors (first-person renderer)
 
 The game renders a first-person "dark corridor" from 2D pixel-art using a

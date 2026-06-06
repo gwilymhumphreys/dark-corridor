@@ -38,7 +38,9 @@ func apply(target, type: int, count: float, source = null, flags: int = 0) -> St
 ## Block consumes its pool unless the payload is `unblockable`. Returns net to HP.
 func resolve_incoming_damage(target, raw: float, flags: int = 0) -> float:
   var net: float = raw
-  # amplifiers (vulnerable, …) — reserved slot, deferred with stat-statuses.
+  # Amplifiers (Vulnerable, …) — scale up BEFORE absorbers, so block soaks the
+  # amplified amount (#6 incoming seam). A product of the target's modifier statuses.
+  net *= _incoming_damage_mult(target)
   if (flags & Delivery.Flag.UNBLOCKABLE) == 0:
     var block: Status = _find(target, StatusDef.Type.BLOCK)
     if block != null:
@@ -83,3 +85,21 @@ func _find(target, type: int) -> Status:
     if s.type == type:
       return s
   return null
+
+
+## The product of `actor`'s outgoing damage modifiers (#6) — applied to its items' DAMAGE
+## payloads at fire time (Item._resolve_effect). 1.0 when unaffected (Weak → 0.75).
+func outgoing_damage_mult(actor) -> float:
+  var mult: float = 1.0
+  for s in actor.statuses:
+    mult *= StatusCatalog.get_def(s.type).outgoing_damage_mult
+  return mult
+
+
+## The product of `target`'s incoming damage amplifiers (#6) — applied before block in
+## resolve_incoming_damage. 1.0 when unaffected (Vulnerable → 1.5).
+func _incoming_damage_mult(target) -> float:
+  var mult: float = 1.0
+  for s in target.statuses:
+    mult *= StatusCatalog.get_def(s.type).incoming_damage_mult
+  return mult

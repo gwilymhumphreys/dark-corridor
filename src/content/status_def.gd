@@ -5,7 +5,7 @@ extends RefCounted
 ## up the def by `type` to apply / step / resolve. Specific numbers point to
 ## Balance, not baked here.
 
-enum Type { BLOCK, POISON, WEAK, SILENCE }
+enum Type { BLOCK, POISON, WEAK, SILENCE, VULNERABLE }
 enum Shape { PERIODIC, TIMED, POOL, STATIC }
 enum Stacking { ADD, REFRESH }
 
@@ -21,3 +21,13 @@ var name_key: String = ''      # source English; displayed via tr() — localiza
 var tick_interval: float = 0.0   # PERIODIC
 var damage_per_tick: float = 0.0 # PERIODIC — per-stack multiplier
 var duration: float = 0.0        # TIMED
+
+# Damage-modifier seams (stat-statuses; #6). Both are MULTIPLIERS (% magnitude, not
+# flat-per-fire — a flat per-fire modifier makes fast items strictly dominant; the
+# authoring guidance). 1.0 = no effect.
+#   outgoing_damage_mult — scales the HOLDER's outgoing DAMAGE payloads at fire time
+#     (Weak < 1.0 weakens; a Strength-style status > 1.0 would amplify).
+#   incoming_damage_mult — scales damage INCOMING to the holder, in the amplifier stage
+#     before block (Vulnerable > 1.0 takes more).
+var outgoing_damage_mult: float = 1.0
+var incoming_damage_mult: float = 1.0

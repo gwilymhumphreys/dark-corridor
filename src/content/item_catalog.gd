@@ -6,7 +6,7 @@ class_name ItemCatalog
 ## one catalog here for Phase 1). HEX_BOLT is the example item-targeting item (silences
 ## a RANDOM enemy item; #14/#20) — catalog-only, not pooled by default. Lazily built once.
 
-enum Id { WEAPON, ARMOR, POISON_DAGGER, AVENGER, ENEMY_CLAW, HEX_BOLT }
+enum Id { WEAPON, ARMOR, POISON_DAGGER, AVENGER, ENEMY_CLAW, HEX_BOLT, SUNDER }
 
 static var _defs: Dictionary = {}
 
@@ -24,6 +24,7 @@ static func _build() -> void:
   _defs[Id.AVENGER] = _avenger()
   _defs[Id.ENEMY_CLAW] = _enemy_claw()
   _defs[Id.HEX_BOLT] = _hex_bolt()
+  _defs[Id.SUNDER] = _sunder()
 
 
 static func _weapon() -> ItemDef:
@@ -115,6 +116,26 @@ static func _hex_bolt() -> ItemDef:
   hex.color = Color(0.5, 0.2, 0.7)
   d.effects = [hex]
   d.panel_color = hex.color
+  return d
+
+
+## The example stat-status applier (#6): a bolt that makes the leftmost enemy Vulnerable
+## (its incoming damage amplified). Demonstrates the incoming damage seam end to end.
+## Catalog-only, not pooled by default — the owner authors the real stat-status content.
+static func _sunder() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = Id.SUNDER
+  d.name_key = 'Sundering Bolt'
+  d.cooldown = Balance.SUNDER_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.APPLY_STATUS
+  hit.status_type = StatusDef.Type.VULNERABLE
+  hit.value = 1.0
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Color(0.85, 0.5, 0.2)
+  d.effects = [hit]
+  d.panel_color = hit.color
   return d
 
 

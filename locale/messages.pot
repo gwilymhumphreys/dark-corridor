@@ -44,6 +44,14 @@ msgid "Spite Ward"
 msgstr ""
 
 #: src/content/item_catalog.gd
+msgid "Hex Bolt"
+msgstr ""
+
+#: src/content/item_catalog.gd
+msgid "Sundering Bolt"
+msgstr ""
+
+#: src/content/item_catalog.gd
 msgid "Claw"
 msgstr ""
 
@@ -61,6 +69,10 @@ msgstr ""
 
 #: src/content/status_catalog.gd
 msgid "Weak"
+msgstr ""
+
+#: src/content/status_catalog.gd
+msgid "Vulnerable"
 msgstr ""
 
 #: src/content/status_catalog.gd
@@ -119,14 +131,26 @@ msgstr ""
 msgid "Return to Title"
 msgstr ""
 
+#: src/scenes/screens/pause_menu.tscn
+msgid "Paused"
+msgstr ""
+
+#: src/scenes/screens/pause_menu.tscn
+msgid "Resume"
+msgstr ""
+
+#: src/scenes/screens/pause_menu.tscn
+msgid "Quit to Menu"
+msgstr ""
+
+#: src/scenes/screens/speed_button.tscn
+msgid "1x"
+msgstr ""
+
 #: src/scenes/screens/title_screen.tscn
 msgid "Dark Corridor"
 msgstr ""
 
 #: src/scenes/screens/title_screen.tscn
 msgid "Start Run"
-msgstr ""
-
-#: src/scenes/screens/title_screen.tscn
-msgid "Resume"
 msgstr ""

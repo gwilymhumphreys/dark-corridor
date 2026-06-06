@@ -31,14 +31,29 @@ static func _build() -> void:
   poison.name_key = 'Poison'
   _defs[poison.type] = poison
 
+  # Weak — the outgoing-damage stat-status (#6): while it sits on an actor, that actor's
+  # outgoing DAMAGE payloads are scaled at fire time. A timed % debuff (cascade-safe).
   var weak := StatusDef.new()
   weak.type = StatusDef.Type.WEAK
   weak.shape = StatusDef.Shape.TIMED
   weak.stacking = StatusDef.Stacking.REFRESH
-  weak.duration = Balance.SAMPLE_DEBUFF_DURATION
+  weak.duration = Balance.STATUS_WEAK_DURATION
+  weak.outgoing_damage_mult = Balance.STATUS_WEAK_DAMAGE_MULT
   weak.color = Color(0.6, 0.4, 0.7)
   weak.name_key = 'Weak'
   _defs[weak.type] = weak
+
+  # Vulnerable — the incoming-damage stat-status (#6): damage to its holder is amplified
+  # in the absorber pipeline's amplifier stage (before block). A timed % debuff.
+  var vulnerable := StatusDef.new()
+  vulnerable.type = StatusDef.Type.VULNERABLE
+  vulnerable.shape = StatusDef.Shape.TIMED
+  vulnerable.stacking = StatusDef.Stacking.REFRESH
+  vulnerable.duration = Balance.STATUS_VULNERABLE_DURATION
+  vulnerable.incoming_damage_mult = Balance.STATUS_VULNERABLE_DAMAGE_MULT
+  vulnerable.color = Color(0.85, 0.5, 0.2)
+  vulnerable.name_key = 'Vulnerable'
+  _defs[vulnerable.type] = vulnerable
 
   var silence := StatusDef.new()
   silence.type = StatusDef.Type.SILENCE

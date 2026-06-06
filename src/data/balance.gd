@@ -45,6 +45,11 @@ const POISON_APPLIER_STACKS: float = 3.0    # stacks applied per fire
 # random-item-target path end-to-end; not pooled by default (the grunt has one item).
 const HEX_BOLT_COOLDOWN: float = 2.5
 
+# Sundering Bolt — the example stat-status applier (#6): applies Vulnerable to the
+# leftmost enemy (so the next hits land amplified). Demonstrates the incoming seam end
+# to end; catalog-only, not pooled by default.
+const SUNDER_COOLDOWN: float = 3.0
+
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks
@@ -52,6 +57,12 @@ const POISON_DAMAGE_PER_TICK: float = 1.0   # per-tick damage (per-stack rule is
 # Block is a pure pool (persists until consumed, no decay) — no constants beyond
 # the ARMOR_BLOCK that feeds it.
 const SAMPLE_DEBUFF_DURATION: float = 5.0   # a timed status, to exercise that shape
+# Stat-statuses (#6) — % damage modifiers (timed). Placeholder values; the owner tunes
+# them (and may author per-stack variants — the engine supports it).
+const STATUS_WEAK_DAMAGE_MULT: float = 0.75       # Weak: holder deals 25% less damage
+const STATUS_WEAK_DURATION: float = 5.0
+const STATUS_VULNERABLE_DAMAGE_MULT: float = 1.5  # Vulnerable: holder takes 50% more
+const STATUS_VULNERABLE_DURATION: float = 5.0
 
 
 # ── Triggers (charges model — push as a fraction of the bar; combat_prd) ─────

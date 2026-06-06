@@ -27,6 +27,26 @@ func test_weapon_fires_damage_payload() -> void:
   assert_eq(p.source, it, 'payload is sourced from the firing item')
 
 
+func test_weak_owner_fires_reduced_damage() -> void:
+  # #6 outgoing seam (the Item half): a Weak owner's DAMAGE payload is scaled DOWN at
+  # fire time (locked into the payload — a % multiplier, cascade-safe).
+  var owner := Actor.new()
+  var it := Item.new(ItemCatalog.get_def(ItemCatalog.Id.WEAPON), owner)
+  assert_almost_eq(it.fire()[0].value, Balance.WEAPON_DAMAGE, 0.0001, 'unweakened: full damage')
+  it.cooldown.reset()
+  StatusManager.apply(owner, StatusDef.Type.WEAK, 1.0)
+  var weak_value: float = it.fire()[0].value
+  assert_almost_eq(weak_value, Balance.WEAPON_DAMAGE * Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
+    'a Weak owner fires reduced damage')
+
+
+func test_sunder_applies_vulnerable_to_opponent() -> void:
+  var p: Payload = _make(ItemCatalog.Id.SUNDER).fire()[0]
+  assert_eq(p.kind, Delivery.Kind.APPLY_STATUS)
+  assert_eq(p.status_type, StatusDef.Type.VULNERABLE)
+  assert_eq(p.shape, ItemEffect.Shape.OPPONENT_LEFTMOST)
+
+
 func test_armor_applies_block_to_self() -> void:
   var p: Payload = _make(ItemCatalog.Id.ARMOR).fire()[0]
   assert_eq(p.kind, Delivery.Kind.APPLY_STATUS)

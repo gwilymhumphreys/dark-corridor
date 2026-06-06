@@ -200,14 +200,13 @@ test-first + its own green commit, with the headless autotest as the regression 
    (`Status.source`) — Venom Fang reads its real poison damage; a multi-applier remainder
    splits by weight; a source-less DoT keeps the generic channel. In `src/autotest/`
    (logger `attribute_damage` + the mode's per-step observation). [autotest](../testing/autotest.md).
-6. **Stat-statuses — resolved as a design decision (2026-06-06), no code.** Stat-statuses
-   (strength / weak / vulnerable) are **content**, authored later as GD `StatusDef`s — not
-   one hardcoded rule. The engine already covers what they need (flat **or** % magnitude,
-   the TIMED shape, per-stack add-magnitude / extend-duration); the two damage-modifier
-   seams (outgoing-at-fire-time + the reserved incoming amplifier slot) get wired when the
-   first such status is authored. The cascade constraint (a flat *per-fire* damage modifier
-   makes fast items dominant) is **authoring guidance** — per-fire damage scaling should be
-   % or charge-limited. [status_manager](status_manager_prd.md) · [design](design.md).
+6. **Stat-statuses — SEAMS WIRED (placeholder content).** Both damage-modifier seams are
+   built: `outgoing_damage_mult` (applied at fire time in `Item._resolve_effect`) and the
+   incoming **amplifier** stage in `resolve_incoming_damage` (before block). `StatusDef`
+   carries both as **% multipliers** (cascade-safe — not flat-per-fire). Placeholder statuses
+   **Weak** (outgoing −25%) / **Vulnerable** (incoming +50%) + a **Sundering Bolt** applier
+   prove the path; the real stat-status content (numbers, per-stack variants, which damage
+   types amplify) is the **owner's**. [status_manager](status_manager_prd.md) · [design](design.md).
 
 **Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
 **HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a
