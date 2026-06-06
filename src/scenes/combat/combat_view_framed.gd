@@ -92,13 +92,17 @@ func mouse_over_inspectable(point: Vector2) -> bool:
 # --- layout lookups the VFX wall reads (global / screen space) ---------------
 
 func item_pos(item: Item) -> Vector2:
+  # A source-less Delivery (a thrown consumable: Delivery.source is null) flies from
+  # the player who threw it — and never deref a null item/owner.
+  if item == null:
+    return actor_pos(_player)
   var centre: Vector2 = _player_strip.cell_centre(item)
   if centre != Vector2.INF:
     return centre
   centre = _enemy_strip.cell_centre(item)
   if centre != Vector2.INF:
     return centre
-  return actor_pos(item.owner)
+  return actor_pos(item.owner) if item.owner != null else actor_pos(_player)
 
 
 func actor_pos(actor: Actor) -> Vector2:

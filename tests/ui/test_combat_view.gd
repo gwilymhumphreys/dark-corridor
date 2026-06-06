@@ -62,7 +62,7 @@ func test_board_strip_hp_text_tracks_actor() -> void:
   var a := _spawn(100.0, [ItemCatalog.Id.WEAPON])
   strip.setup(a)
   a.take_damage(40.0)
-  await get_tree().process_frame   # let _process refresh the label
+  strip._refresh_hp()   # the per-frame refresh, called directly — deterministic, no _process race
   assert_eq(strip.get_node('HP/Label').text, '60 / 100', 'HP text tracks the actor')
 
 
@@ -92,6 +92,23 @@ func test_view_potion_slots_emit_the_throw_intent() -> void:
   var slot: Button = view.get_node('PlayerSide/Potions').get_child(0)
   slot.pressed.emit()
   assert_signal_emitted_with_parameters(view, 'potion_thrown', [0], 'clicking a potion emits the throw intent')
+  cm.free()
+
+
+func test_item_pos_handles_a_source_less_delivery() -> void:
+  # A thrown consumable's Delivery has source == null. The VFX wall calls item_pos
+  # with it; without a guard that dereferences null.owner and crashes mid-fight the
+  # moment a content author adds a travel>0 potion. It must resolve to the thrower.
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, e, [])
+  var pos: Vector2 = view.item_pos(null)
+  assert_ne(pos, Vector2.INF, 'a null source resolves to a real position (the player), not a crash')
+  assert_eq(pos, view.actor_pos(p), 'the source-less projectile flies from the thrower (player)')
   cm.free()
 
 
