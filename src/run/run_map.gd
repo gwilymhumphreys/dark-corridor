@@ -70,4 +70,5 @@ static func act_pool(_act: int) -> Array:
     EncounterCatalog.Id.FIGHT_GRUNT,
     EncounterCatalog.Id.FIGHT_TOUGH,
     EncounterCatalog.Id.FIGHT_ELITE,
+    EncounterCatalog.Id.EVENT_SHRINE,
   ]

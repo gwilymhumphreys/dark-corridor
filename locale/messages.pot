@@ -39,6 +39,10 @@ msgstr ""
 msgid "The warden\\"
 msgstr ""
 
+#: src/content/encounter_catalog.gd
+msgid "A dripping shrine"
+msgstr ""
+
 #: src/content/enemy_catalog.gd
 msgid "Corridor Grunt"
 msgstr ""
@@ -117,6 +121,10 @@ msgstr ""
 
 #: src/scenes/screens/choice_card.gd
 msgid "Rest"
+msgstr ""
+
+#: src/scenes/screens/choice_card.gd
+msgid "Event"
 msgstr ""
 
 #: src/scenes/screens/choice_card.gd

@@ -176,12 +176,17 @@ content unless explicitly asked.** The prototype loop is feature-complete; what'
 for engineering is below, roughly highest-value first. Pick *with the owner*; each is
 test-first + its own green commit, with the headless autotest as the regression backstop.
 
-1. **Run structure — multi-act + HP economy + the choice layer.** The run is a fixed
-   4-beat list (`RunManager.MAP`). The real structure (design.md): 3 acts, a full rest
-   + full-HP + max-HP growth between acts, boss-at-end / relic-at-midpoint, and the
-   **choice layer** (2–3 options per beat, two-tier pick → the choice-point intent the
-   architecture sketches). The *mechanism* is engineering; the encounters that fill it
-   are content (coordinate). PRDs: [run_manager](run_manager_prd.md) · [encounter](encounter_prd.md).
+1. **Run structure — multi-act + HP economy + the choice layer — DONE (mechanism;
+   placeholder content).** `RunMap` = 3 acts × 15 beats (tunable): boss at each act end
+   (final-act boss wins), guaranteed midpoint relic + a per-act rest fixed, the rest are
+   **CHOICE** beats. The **choice layer** assembles 2-3 seeded candidates (`has_pending_choice`
+   / `pending_choice` / `pick_path`); the **two-tier choice UI** (`choice_overlay` telegraphs
+   the candidates) + the **event** type (`event_overlay`, prose + binary outcome, `pick_event_option`)
+   are built; the run-screen FSM gained CHOOSING / EVENTING states. **HP economy:** between-act
+   full heal, per-act rest, max-HP via relics. Snapshot/resume carry the picked/pending beat.
+   **Still the owner's:** the real encounter/enemy/event content + boss **signature mechanics**;
+   choice-set tuning (category spread, elite budget). PRDs: [run_manager](run_manager_prd.md) ·
+   [encounter](encounter_prd.md).
 2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**
    `RunManager._on_encounter_resolved` now grants a relic on the **RELIC** reward (drawn from
    `RelicCatalog.REWARD_POOL` on the run RNG — deterministic + resume-stable) and a **relic +
@@ -212,6 +217,8 @@ test-first + its own green commit, with the headless autotest as the regression 
    **Weak** (outgoing −25%) / **Vulnerable** (incoming +50%) + a **Sundering Bolt** applier
    prove the path; the real stat-status content (numbers, per-stack variants, which damage
    types amplify) is the **owner's**. [status_manager](status_manager_prd.md) · [design](design.md).
+
+7. **Spore-engine seams (the first status-identity character) — NEW, spec'd; build with the content.** The Mushroom Druid ([`../design/mushroom_druid.md`](../design/mushroom_druid.md)) needs three engine seams beyond apply/tick/resolve: (1) **status-stack consumption** — `StatusManager.consume(target, type, amount)` to spend spores as fuel (self-fuel resolves in the Item fire pipeline; opponent-fuel in the Combat manager's per-target spawn path); (2) **evasion** — the "acts but misses" fizzle seam for blinding (a blinded source's damage Deliveries fizzle *with a reason*, so VFX shows a whiff — distinct from silence/`gate`, which = inert); (3) the **player-side** consumer of the **mid-fight roster add** (summon tokens + lethal's spawn-on-kill rider) — **deferred with the boss "summons-adds"** work (see "What does NOT exist yet" + [enemy](enemy_prd.md) / #22). Caps 1+2 are contained + buildable when the content calls for them; the spore **appliers (poison / blinding-status / burn / self-regen / self-block) need nothing new** — they're the built apply-status subtype + existing status shapes. Full spec, build order, and open decisions: [spore_engine](spore_engine_prd.md). **This is engineering — yours, not content.**
 
 **Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
 **HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a

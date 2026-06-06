@@ -123,9 +123,13 @@ func _status_applied_by(def: ItemDef) -> int:
   return -1
 
 
-## Binary choice inside a non-combat event. Stub: the first option.
+## The binary choice inside a non-combat event (the tier-2 pick). Seeded so a run takes a
+## deterministic option (different seeds explore both). Real value-aware policies (heal at
+## low HP, growth when safe) arrive with richer run state.
 func choose_event_option(options: Array) -> int:
-  return 0 if not options.is_empty() else -1
+  if options.is_empty():
+    return -1
+  return _rng.randi_range(0, options.size() - 1)
 
 
 ## Which choice-layer path to take at a fork (fight / elite / event). A seeded pick so a

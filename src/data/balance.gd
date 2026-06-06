@@ -99,6 +99,9 @@ const POTION_HEAL: float = 20.0
 
 # ── Run loop (HP economy + map; run_manager_prd) ─────────────────────────────
 const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fraction of max HP
+# Placeholder event outcomes (#1) — the owner tunes/authors real event content.
+const EVENT_SHRINE_HEAL_FRACTION: float = 0.4
+const EVENT_SHRINE_MAX_HP: float = 15.0
 
 
 # ── Presentation — the framed combat view (ui_layout_prd; phase4_plan) ───────

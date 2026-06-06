@@ -18,15 +18,17 @@ extends Control
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
 const CHOICE_OVERLAY: PackedScene = preload('res://src/scenes/screens/choice_overlay.tscn')
+const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 
-enum State { IDLE, CHOOSING, APPROACHING, FIGHTING, DRAFTING, ENDED }
+enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, ENDED }
 
 var _run: RunManager
 var _cm: CombatManager
 var _view: CombatViewFramed
 var _draft: DraftOverlay
 var _choice: ChoiceOverlay
+var _event: EventOverlay
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
@@ -82,9 +84,13 @@ func _on_choice_picked(index: int) -> void:
 
 
 # Begin resolving the (now-chosen or fixed) beat: a fight readies its CombatManager + the
-# approach; a rest resolved synchronously on begin().
+# approach; an event raises its prose + choice; a rest resolved synchronously on begin().
 func _begin_beat() -> void:
   _run.begin_current()
+  var enc: Encounter = _run.current_encounter()
+  if enc != null and enc.is_event():
+    _show_event(enc)
+    return
   _cm = _run.combat_manager()
   if _cm != null and not _cm.is_resolved():
     _apply_battle_speed()   # this fight inherits the current dial setting
@@ -93,6 +99,23 @@ func _begin_beat() -> void:
   else:
     _cm = null
     _after_beat()
+
+
+# An EVENT beat (the tier-2 binary choice): raise the prose + options and wait. The pick
+# applies the chosen outcome to run-state and resolves the beat; then advance as usual.
+func _show_event(enc: Encounter) -> void:
+  _state = State.EVENTING
+  _event = EVENT_OVERLAY.instantiate()
+  add_child(_event)
+  _event.option_picked.connect(_on_event_picked)
+  _event.setup(enc)
+
+
+func _on_event_picked(index: int) -> void:
+  _event.queue_free()
+  _event = null
+  _run.current_encounter().pick_event_option(index)
+  _after_beat()
 
 
 # The corridor approach (phase4_plan Step 7): the enemy walks from depth into full

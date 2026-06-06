@@ -67,13 +67,14 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 
 ---
 
-## Prototype scope
+## Prototype scope — BUILT
 
-- One **fight** Encounter: spawn one (or two) enemy `Actor`s in order, create the `Combat manager`, await win/loss, report the reward up.
-- One **event** (prose + a binary choice applying a direct outcome) **or** one **rest** (partial heal).
-- Instantiated by the `Run manager` from a small candidate set; reports outcome (died / won / resolved) + reward up.
+- **Fight** Encounter (regular / elite / boss): spawns its enemy `Actor`s in order, creates the `Combat manager` on begin, awaits win/loss, reports the reward up (DRAFT / RELIC / ELITE = relic+draft).
+- **Event** Encounter: `begin()` **awaits** the tier-2 binary choice; `pick_event_option(index)` applies the chosen `EventOptionDef`'s direct outcome to the player run-state (placeholder effects: heal / max-HP / damage) and resolves (reward NONE — the outcome is the reward). Prose + options are localized.
+- **Rest** Encounter: a partial heal on begin, resolves immediately.
+- Instantiated by the `Run manager` from the act pool (a fixed beat) or a CHOICE candidate; reports outcome (died / won / resolved) + reward up. The two-tier choice **UI** (choice overlay + event overlay) is built (run_screen).
 
-**Not** in scope: the ~30-encounter pool, the two-tier choice UI, elite/boss tiers + signatures, the full event-outcome catalog, reward tuning.
+**Not** in scope: the real ~30-encounter pool + event prose (the owner's content), boss **signature mechanics**, relic/potion event outcomes (route through the `Run manager`'s run-state surface — added with real content), reward tuning.
 
 ---
 

@@ -166,6 +166,12 @@ func run_full() -> Dictionary:
       'beat': run.position, 'frame': enc.def.name_key, 'fight': is_fight,
     })
     run.begin_current()
+    # EVENT beat: the Driver makes the binary choice (the tier-2 pick), which applies the
+    # outcome + resolves it. A FIXED/CHOICE fight has a CombatManager; a rest resolved on begin.
+    if enc.is_event():
+      var ev: int = driver.choose_event_option(enc.event_options())
+      logger.log_event('event', { 'beat': run.position, 'options': enc.event_options().size(), 'picked': ev })
+      enc.pick_event_option(ev)
     var cm: CombatManager = run.combat_manager()
     var fight_steps: int = 0
     var fail: String = ''
@@ -180,9 +186,9 @@ func run_full() -> Dictionary:
       fail = fr['outcome']
     var beat_outcome: String = fail
     if beat_outcome == '':
-      beat_outcome = ('WON' if cm.player_won() else 'LOST') if cm != null else 'rest'
+      beat_outcome = ('WON' if cm.player_won() else 'LOST') if cm != null else ('event' if enc.is_event() else 'rest')
     logger.record_encounter({
-      'beat': run.position, 'type': 'Fight' if is_fight else 'Rest', 'name': beat_name,
+      'beat': run.position, 'type': _beat_type(enc), 'name': beat_name,
       'duration': fight_steps * Balance.STEP, 'hp_before': hp_before, 'hp_after': run.player.hp,
       'outcome': beat_outcome,
     })
@@ -364,6 +370,14 @@ func _beat_name(enc: Encounter) -> String:
   if enc.is_fight() and not enc.def.enemy_ids.is_empty():
     return EnemyCatalog.get_def(enc.def.enemy_ids[0]).name_key
   return enc.def.name_key
+
+
+func _beat_type(enc: Encounter) -> String:
+  if enc.is_fight():
+    return 'Fight'
+  if enc.is_event():
+    return 'Event'
+  return 'Rest'
 
 
 ## The final player board's item names — the contribution table's row set.

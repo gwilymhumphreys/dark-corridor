@@ -69,3 +69,28 @@ func test_rest_heals_and_resolves_immediately() -> void:
   enc.begin()
   assert_almost_eq(player.hp, 90.0, 0.0001, 'a 30% rest heals 30 of 100 max')
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
+
+
+func test_event_awaits_its_choice_then_resolves_on_pick() -> void:
+  var player := Actor.new(100.0)
+  player.take_damage(60.0)   # 40 HP
+  var enc := _encounter(EncounterCatalog.Id.EVENT_SHRINE, player)
+  assert_true(enc.is_event())
+  watch_signals(enc)
+  enc.begin()
+  assert_almost_eq(player.hp, 40.0, 0.0001, 'an event does NOT resolve/apply on begin — it awaits the pick')
+  assert_signal_not_emitted(enc, 'resolved', 'no resolution until an option is picked')
+  assert_gt(enc.event_options().size(), 1, 'a binary choice is offered')
+
+  enc.pick_event_option(0)   # 'Kneel and drink' → heal a fraction of max HP
+  assert_gt(player.hp, 40.0, 'the chosen outcome (heal) was applied')
+  assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
+
+
+func test_event_max_hp_option_grows_max_hp() -> void:
+  var player := Actor.new(100.0)
+  var enc := _encounter(EncounterCatalog.Id.EVENT_SHRINE, player)
+  enc.begin()
+  enc.pick_event_option(1)   # 'Pry the shard loose' → +max HP
+  assert_almost_eq(player.max_hp, 100.0 + Balance.EVENT_SHRINE_MAX_HP, 0.0001, 'max HP grew')
+  assert_almost_eq(player.hp, 100.0 + Balance.EVENT_SHRINE_MAX_HP, 0.0001, 'and current HP too')

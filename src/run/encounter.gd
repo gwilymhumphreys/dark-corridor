@@ -48,6 +48,10 @@ func is_fight() -> bool:
   return def.type == EncounterDef.Type.FIGHT
 
 
+func is_event() -> bool:
+  return def.type == EncounterDef.Type.EVENT
+
+
 func combat_manager() -> CombatManager:
   return _cm
 
@@ -62,9 +66,37 @@ func begin() -> void:
     _cm = CombatManager.new(player, enemies, _combat_seed)
     _cm.resolved.connect(_on_fight_resolved)
     _cm.start()
+  elif is_event():
+    pass   # await the tier-2 binary choice (pick_event_option) — the event's resolution
   else:
     player.heal(def.heal_fraction * player.max_hp)
     _resolve(Outcome.RESOLVED)
+
+
+## The event's binary choice (a tier-2, within-encounter pick — encounter_prd). The
+## options are presented by the UI; this applies the chosen option's direct outcome to the
+## player run-state, then resolves the beat (events report no reward — the outcome is it).
+func event_options() -> Array:
+  return def.event_options
+
+
+func pick_event_option(index: int) -> void:
+  if not is_event() or _resolved or def.event_options.is_empty():
+    return
+  var opt: EventOptionDef = def.event_options[clampi(index, 0, def.event_options.size() - 1)]
+  _apply_event_outcome(opt)
+  _resolve(Outcome.RESOLVED)
+
+
+func _apply_event_outcome(opt: EventOptionDef) -> void:
+  match opt.effect:
+    EventOptionDef.Effect.HEAL_FRACTION:
+      player.heal(opt.amount * player.max_hp)
+    EventOptionDef.Effect.MAX_HP_BONUS:
+      player.max_hp += opt.amount
+      player.hp += opt.amount
+    EventOptionDef.Effect.DAMAGE:
+      player.take_damage(opt.amount)
 
 
 func _on_fight_resolved(player_won: bool) -> void:

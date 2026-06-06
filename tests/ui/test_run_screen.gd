@@ -23,6 +23,8 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
     if screen._choice != null:
       screen._on_choice_picked(0)   # stand in for the player picking a path
+    elif screen._event != null:
+      screen._on_event_picked(0)    # the event's binary choice
     elif screen._draft != null:
       screen._on_draft_picked(0)    # stand in for the player picking the first card
     else:
@@ -146,16 +148,53 @@ func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
   screen.free()
 
 
-# Mount the run screen and resolve the opening choice beat into its fight (most tests
-# below exercise the live fight, not the choice). `seed >= 0` starts a fresh run first.
+# Mount the run screen and resolve the opening choice beat into a FIGHT (most tests below
+# exercise the live fight). The act pool also holds an event, so pick the first fight
+# candidate, not blindly index 0. `seed >= 0` starts a fresh run first.
 func _mount_into_fight(seed_value: int) -> RunScreen:
   if seed_value >= 0:
     Game.start_run(seed_value)
   var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
   add_child(screen)
   if screen._choice != null:
-    screen._on_choice_picked(0)
+    screen._on_choice_picked(_first_candidate_of_type(EncounterDef.Type.FIGHT))
   return screen
+
+
+func _first_candidate_of_type(type: int) -> int:
+  var candidates: Array = Game.run.pending_choice()
+  for i in candidates.size():
+    if EncounterCatalog.get_def(candidates[i]).type == type:
+      return i
+  return 0
+
+
+func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:
+  # Find a seed whose opening choice offers the event, pick it → the event overlay; an
+  # option pick applies its outcome (heal) and dismisses the overlay, then advances.
+  var seed_value: int = _seed_with_opening_event()
+  assert_true(seed_value >= 0, 'a seed offering the event at the opening choice exists')
+  if seed_value < 0:
+    return
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  Game.run.player.hp = 1.0   # so the heal outcome is observable
+  screen._on_choice_picked(_first_candidate_of_type(EncounterDef.Type.EVENT))
+  assert_eq(screen._state, RunScreen.State.EVENTING, 'the event raises its overlay')
+  assert_not_null(screen._event, 'the event overlay is up')
+  screen._on_event_picked(0)   # 'Kneel and drink' → heal a fraction of max HP
+  assert_null(screen._event, 'the pick dismisses the overlay')
+  assert_gt(Game.run.player.hp, 1.0, 'the chosen outcome was applied (healed)')
+  screen.free()
+
+
+func _seed_with_opening_event() -> int:
+  for s in 50:
+    Game.start_run(s)
+    if EncounterCatalog.Id.EVENT_SHRINE in Game.run.pending_choice():
+      return s
+    Game.reset()
+  return -1
 
 
 func _escape() -> InputEventAction:

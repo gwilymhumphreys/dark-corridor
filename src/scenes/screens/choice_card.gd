@@ -23,6 +23,8 @@ func setup(def: EncounterDef) -> void:
 func _category_name(def: EncounterDef) -> String:
   if def.type == EncounterDef.Type.REST:
     return tr('Rest')
+  if def.type == EncounterDef.Type.EVENT:
+    return tr('Event')
   match def.reward:
     EncounterDef.Reward.ELITE:
       return tr('Elite')
@@ -47,6 +49,8 @@ func _reward_hint(def: EncounterDef) -> String:
 func _category_color(def: EncounterDef) -> Color:
   if def.type == EncounterDef.Type.REST:
     return Color(0.4, 0.75, 0.45)
+  if def.type == EncounterDef.Type.EVENT:
+    return Color(0.45, 0.55, 0.8)
   match def.reward:
     EncounterDef.Reward.ELITE:
       return Color(0.7, 0.4, 0.9)

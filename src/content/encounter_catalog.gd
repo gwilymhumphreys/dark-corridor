@@ -5,7 +5,7 @@ class_name EncounterCatalog
 ## reward-routing beats (#2) — catalog-only, not in the map; the owner slots them into the
 ## real act structure / choice layer. Lazily built once.
 
-enum Id { FIGHT_GRUNT, REST, FIGHT_ELITE, FIGHT_RELIC, FIGHT_TOUGH, FIGHT_BOSS }
+enum Id { FIGHT_GRUNT, REST, FIGHT_ELITE, FIGHT_RELIC, FIGHT_TOUGH, FIGHT_BOSS, EVENT_SHRINE }
 
 static var _defs: Dictionary = {}
 
@@ -23,6 +23,7 @@ static func _build() -> void:
   _defs[Id.FIGHT_RELIC] = _fight_relic()
   _defs[Id.FIGHT_TOUGH] = _fight_tough()
   _defs[Id.FIGHT_BOSS] = _fight_boss()
+  _defs[Id.EVENT_SHRINE] = _event_shrine()
 
 
 static func _fight_grunt() -> EncounterDef:
@@ -87,4 +88,26 @@ static func _fight_boss() -> EncounterDef:
   d.name_key = 'The warden\'s gate'
   d.enemy_ids = [EnemyCatalog.Id.BOSS]
   d.reward = EncounterDef.Reward.RELIC
+  return d
+
+
+## Placeholder non-combat EVENT (#1): prose + a binary choice with direct player-Actor
+## outcomes. The owner authors real event prose + relic/potion outcomes; this proves the
+## event path (resolution, the option-pick intent, the outcome) end to end.
+static func _event_shrine() -> EncounterDef:
+  var d := EncounterDef.new()
+  d.id = Id.EVENT_SHRINE
+  d.type = EncounterDef.Type.EVENT
+  d.name_key = 'A dripping shrine'
+  d.event_prose_key = 'A black idol slumps in an alcove, weeping cold water. ' \
+    + 'You could kneel and drink, or pry the shard from its brow.'
+  var pray := EventOptionDef.new()
+  pray.label_key = 'Kneel and drink'
+  pray.effect = EventOptionDef.Effect.HEAL_FRACTION
+  pray.amount = Balance.EVENT_SHRINE_HEAL_FRACTION
+  var pry := EventOptionDef.new()
+  pry.label_key = 'Pry the shard loose'
+  pry.effect = EventOptionDef.Effect.MAX_HP_BONUS
+  pry.amount = Balance.EVENT_SHRINE_MAX_HP
+  d.event_options = [pray, pry]
   return d

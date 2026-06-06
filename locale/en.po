@@ -39,6 +39,10 @@ msgstr "A blocked passage"
 msgid "The warden\\"
 msgstr "The warden\\"
 
+#: src/content/encounter_catalog.gd
+msgid "A dripping shrine"
+msgstr "A dripping shrine"
+
 #: src/content/enemy_catalog.gd
 msgid "Corridor Grunt"
 msgstr "Corridor Grunt"
@@ -118,6 +122,10 @@ msgstr "You"
 #: src/scenes/screens/choice_card.gd
 msgid "Rest"
 msgstr "Rest"
+
+#: src/scenes/screens/choice_card.gd
+msgid "Event"
+msgstr "Event"
 
 #: src/scenes/screens/choice_card.gd
 msgid "Elite"
