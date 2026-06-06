@@ -20,28 +20,40 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   add_child(screen)   # _ready enters the first beat + builds the first fight
 
   var guard: int = 0
-  while Game.phase == GameManagerAutoload.Phase.RUN and guard < 8000:
-    if screen._draft != null:
-      screen._on_draft_picked(0)   # stand in for the player picking the first card
+  while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
+    if screen._choice != null:
+      screen._on_choice_picked(0)   # stand in for the player picking a path
+    elif screen._draft != null:
+      screen._on_draft_picked(0)    # stand in for the player picking the first card
     else:
       screen._physics_process(1.0)   # ~8 sim-steps/call; drives fights + advances beats
     guard += 1
 
   assert_eq(Game.phase, GameManagerAutoload.Phase.WIN, 'the run screen drove the descent to a win')
-  assert_lt(guard, 8000, 'the run resolved well within the guard')
-  # Two fight beats granted drafts (picked via the overlay), so the board grew past 3.
+  assert_lt(guard, 12000, 'the run resolved well within the guard')
+  # Fight beats granted drafts (picked via the overlay), so the board grew past 3.
   assert_gt(Game.run.player.board.size(), 3, 'drafted picks landed on the board')
 
+  screen.free()
+
+
+func test_choice_beat_raises_the_choice_overlay() -> void:
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  assert_eq(screen._state, RunScreen.State.CHOOSING, 'the opening (choice) beat parks in CHOOSING')
+  assert_not_null(screen._choice, 'the choice overlay is up')
+  screen._on_choice_picked(0)
+  assert_null(screen._choice, 'picking dismisses the overlay')
+  assert_eq(screen._state, RunScreen.State.APPROACHING, 'the chosen encounter begins approaching')
   screen.free()
 
 
 func test_fight_beat_approaches_then_fights() -> void:
   # A fight beat opens with the corridor approach (combat frozen), then begins on
   # arrival. The clock is not ticked until FIGHTING, so the enemy is unharmed while
-  # it walks in.
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  # it walks in. (The opening beat is a choice — pick a path to reach the fight.)
+  var screen := _mount_into_fight(1)
   assert_eq(screen._state, RunScreen.State.APPROACHING, 'a fight beat starts in the approach')
   for i in 4:   # 4s of delta walks past APPROACH_DURATION (2.5s)
     screen._physics_process(1.0)
@@ -54,8 +66,7 @@ func test_a_fight_opens_at_the_current_battle_speed() -> void:
   # it as the Timekeeper's base scale.
   Game.start_run(1)
   Game.set_battle_speed_index(2)   # ×3 before the screen mounts
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  var screen := _mount_into_fight(-1)   # -1: run already started above
   for i in 4:   # walk the approach into the fight
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
@@ -65,9 +76,7 @@ func test_a_fight_opens_at_the_current_battle_speed() -> void:
 
 
 func test_battle_speed_dial_retimes_the_live_fight() -> void:
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  var screen := _mount_into_fight(1)
   for i in 4:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
@@ -80,9 +89,7 @@ func test_battle_speed_dial_retimes_the_live_fight() -> void:
 
 
 func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  var screen := _mount_into_fight(1)
   for i in 4:   # walk the approach into the fight
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
@@ -100,9 +107,7 @@ func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
 # --- pause + quit-to-menu ----------------------------------------------------
 
 func test_escape_toggles_pause_during_a_fight() -> void:
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  var screen := _mount_into_fight(1)
   for i in 4:   # walk the approach into the fight
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
@@ -116,9 +121,7 @@ func test_escape_toggles_pause_during_a_fight() -> void:
 
 
 func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  var screen := _mount_into_fight(1)
   for i in 4:
     screen._physics_process(1.0)
   screen._toggle_pause()
@@ -133,9 +136,7 @@ func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
 
 
 func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  var screen := _mount_into_fight(1)
   for i in 4:
     screen._physics_process(1.0)
   screen._toggle_pause()
@@ -143,6 +144,18 @@ func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
   assert_eq(Game.phase, GameManagerAutoload.Phase.TITLE, 'quit-to-menu lands on Title')
   assert_true(Save.has_save(), 'the run save persists so Title can resume it')
   screen.free()
+
+
+# Mount the run screen and resolve the opening choice beat into its fight (most tests
+# below exercise the live fight, not the choice). `seed >= 0` starts a fresh run first.
+func _mount_into_fight(seed_value: int) -> RunScreen:
+  if seed_value >= 0:
+    Game.start_run(seed_value)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  if screen._choice != null:
+    screen._on_choice_picked(0)
+  return screen
 
 
 func _escape() -> InputEventAction:

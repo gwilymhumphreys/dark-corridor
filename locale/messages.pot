@@ -115,6 +115,38 @@ msgstr ""
 msgid "You"
 msgstr ""
 
+#: src/scenes/screens/choice_card.gd
+msgid "Rest"
+msgstr ""
+
+#: src/scenes/screens/choice_card.gd
+msgid "Elite"
+msgstr ""
+
+#: src/scenes/screens/choice_card.gd
+msgid "Boss"
+msgstr ""
+
+#: src/scenes/screens/choice_card.gd
+msgid "Fight"
+msgstr ""
+
+#: src/scenes/screens/choice_card.gd
+msgid "Relic + item"
+msgstr ""
+
+#: src/scenes/screens/choice_card.gd
+msgid "Relic"
+msgstr ""
+
+#: src/scenes/screens/choice_card.gd
+msgid "Item"
+msgstr ""
+
+#: src/scenes/screens/choice_overlay.tscn
+msgid "Choose your path"
+msgstr ""
+
 #: src/scenes/screens/draft_card.gd
 msgid "{0} — {1}\nvalue {2} · every {3}s"
 msgstr ""

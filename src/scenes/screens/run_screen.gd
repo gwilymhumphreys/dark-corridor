@@ -17,14 +17,16 @@ extends Control
 
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
+const CHOICE_OVERLAY: PackedScene = preload('res://src/scenes/screens/choice_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 
-enum State { IDLE, APPROACHING, FIGHTING, DRAFTING, ENDED }
+enum State { IDLE, CHOOSING, APPROACHING, FIGHTING, DRAFTING, ENDED }
 
 var _run: RunManager
 var _cm: CombatManager
 var _view: CombatViewFramed
 var _draft: DraftOverlay
+var _choice: ChoiceOverlay
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
@@ -54,10 +56,34 @@ func _exit_tree() -> void:
 func _enter_beat() -> void:
   if _run.is_ended():
     return
-  # A CHOICE beat has no encounter until a path is picked. Stage 1: auto-pick the first
-  # candidate (Stage 2 raises the choice overlay here and waits for the player's pick).
+  # A CHOICE beat has no encounter until a path is picked: raise the choice overlay and
+  # wait. A FIXED beat (boss / midpoint relic / rest) already has a live encounter.
   if _run.has_pending_choice():
-    _run.pick_path(0)
+    _show_choice()
+    return
+  _begin_beat()
+
+
+# The two-tier choice (a choice-point intent): raise the telegraphed 2-3 candidates and
+# wait. The loop is parked in CHOOSING until a card is picked (pick_path creates the beat).
+func _show_choice() -> void:
+  _state = State.CHOOSING
+  _choice = CHOICE_OVERLAY.instantiate()
+  add_child(_choice)
+  _choice.picked.connect(_on_choice_picked)
+  _choice.setup(_run.pending_choice())
+
+
+func _on_choice_picked(index: int) -> void:
+  _choice.queue_free()
+  _choice = null
+  _run.pick_path(index)
+  _begin_beat()
+
+
+# Begin resolving the (now-chosen or fixed) beat: a fight readies its CombatManager + the
+# approach; a rest resolved synchronously on begin().
+func _begin_beat() -> void:
   _run.begin_current()
   _cm = _run.combat_manager()
   if _cm != null and not _cm.is_resolved():
@@ -65,7 +91,6 @@ func _enter_beat() -> void:
     _build_combat_view()
     _begin_approach()
   else:
-    # A non-fight beat (rest) resolved synchronously on begin().
     _cm = null
     _after_beat()
 
