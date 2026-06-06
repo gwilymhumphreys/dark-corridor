@@ -101,6 +101,7 @@ func _physics_process(delta: float) -> void:
       if _cm == null:
         return
       if _cm.is_resolved():
+        _cm.request_slowmo(false)   # drop any hover slow-mo left set when the fight resolved
         _state = State.IDLE
         _after_beat()
       else:

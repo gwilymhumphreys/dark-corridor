@@ -20,6 +20,14 @@ func _ready() -> void:
   pivot_offset = CELL_SIZE * 0.5   # recoil / hover scale from the centre
 
 
+func _exit_tree() -> void:
+  # CLAUDE.md runtime cleanup: stop the recoil tween + drop the live-item ref on free.
+  if _scale_tween != null and _scale_tween.is_valid():
+    _scale_tween.kill()
+  _scale_tween = null
+  item = null
+
+
 ## Bind to an item. Call after the cell is in the tree (so the node refs exist).
 func setup(target_item: Item) -> void:
   item = target_item

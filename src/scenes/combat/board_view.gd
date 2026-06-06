@@ -63,6 +63,12 @@ func _build() -> void:
     _icons[item] = icon
 
 
+func _exit_tree() -> void:
+  # CLAUDE.md runtime cleanup: drop the Item->icon map + the live-actor ref on free.
+  _icons.clear()
+  actor = null
+
+
 func _process(_delta: float) -> void:
   var ratio: float = clampf(actor.hp / actor.max_hp, 0.0, 1.0)
   _hp_fill.size.x = BAR.x * ratio

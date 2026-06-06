@@ -12,6 +12,14 @@ var _last_progress: float = 0.0
 var _scale_tween: Tween
 
 
+func _exit_tree() -> void:
+  # CLAUDE.md runtime cleanup: stop the recoil tween + drop the live-item ref on free.
+  if _scale_tween != null and _scale_tween.is_valid():
+    _scale_tween.kill()
+  _scale_tween = null
+  item = null
+
+
 func setup(target_item: Item) -> void:
   item = target_item
   _value = Label.new()

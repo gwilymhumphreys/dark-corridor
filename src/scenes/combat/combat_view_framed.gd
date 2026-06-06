@@ -75,6 +75,14 @@ func release() -> void:
   _vfx.combat = null
 
 
+func _exit_tree() -> void:
+  # CLAUDE.md runtime cleanup: drop the live-fight refs on free (the VFX wall is already
+  # detached by release(); child strips / corridor clean themselves up).
+  _cm = null
+  _player = null
+  _enemy = null
+
+
 ## The hover surface for the slow-mo intent (ui_layout_prd "one verb"): any board
 ## item (either side), any potion slot, or the enemy in the corridor. Hovering any
 ## of these asks the Combat manager to slow the clock (both sides) to inspect.

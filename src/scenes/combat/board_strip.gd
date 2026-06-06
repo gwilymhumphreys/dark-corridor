@@ -26,6 +26,12 @@ func setup(target: Actor) -> void:
   _refresh_hp()
 
 
+func _exit_tree() -> void:
+  # CLAUDE.md runtime cleanup: drop the Item->cell map + the live-actor ref on free.
+  _cells.clear()
+  actor = null
+
+
 func _process(_delta: float) -> void:
   _refresh_hp()
 

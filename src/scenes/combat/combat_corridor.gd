@@ -13,6 +13,13 @@ extends SubViewportContainer
 var enemy_full_scale: float = Balance.ENEMY_FULL_SCALE
 
 
+func _exit_tree() -> void:
+  # CLAUDE.md runtime cleanup: release the occupant sprite's texture before free (the
+  # CorridorScaled renderer handles its own wall textures).
+  if _enemy != null:
+    _enemy.texture = null
+
+
 ## Place the enemy at `depth_cells` deep on the central axis (0 = arrived / full
 ## size, larger = deeper / smaller). Scale follows the wall perspective.
 func set_enemy_depth(depth_cells: float) -> void:
