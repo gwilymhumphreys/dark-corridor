@@ -53,6 +53,17 @@ func test_clear_removes_the_save() -> void:
   assert_true(Save.read().is_empty(), 'read returns {} when there is no save')
 
 
+func test_disabled_write_is_a_noop() -> void:
+  # The autotest's nosave: while disabled, write() does nothing — a headless run can
+  # never clobber the real slot. TestCleanup resets the flag between tests.
+  Save.disabled = true
+  Save.write(_sample())
+  assert_false(Save.has_save(), 'a disabled write persists nothing')
+  Save.disabled = false
+  Save.write(_sample())
+  assert_true(Save.has_save(), 're-enabling write restores normal saving')
+
+
 func test_absent_save_reads_empty() -> void:
   assert_true(Save.read().is_empty(), 'no save → {} (start fresh)')
 

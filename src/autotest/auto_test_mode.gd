@@ -36,8 +36,9 @@ var encounters: int = 0                     # --encounters N: cap beats (0 = pla
 # so they're easy to find but never committed; --log / --report override.
 var log_path: String = OUTPUT_DIR + '/autotest_log.txt'
 var report_path: String = OUTPUT_DIR + '/autotest_report.md'
-# Forced for every autotest run — a fresh user, no persisted state. (No Save /
-# tutorial systems exist yet; these are honoured for parity + Phase 3.)
+# Forced for every autotest run — a fresh user, no persisted state. `nosave` is
+# honoured in run_full (Save.disabled) so a headless run never clobbers the real
+# run slot; `notutorial` is parity for a tutorial system that doesn't exist yet.
 var nosave: bool = true
 var notutorial: bool = true
 
@@ -128,6 +129,7 @@ func run_once() -> Dictionary:
 ## (it seeds the run RNG). Exit 0 if the run ended cleanly (won OR died) or hit the
 ## `--encounters` cap; 1 only on a failure (a fight stuck / timed out / wall).
 func run_full() -> Dictionary:
+  Save.disabled = nosave   # honour the forced nosave: never clobber the real run slot
   logger = AutoTestLogger.new()
   driver = AutoTestDriver.new(strategy, seed_value)
   _item_progress.clear()
@@ -290,6 +292,10 @@ func _build_fight() -> Dictionary:
 ## the logger. Direct hits come from the Deliveries that landed this step; the
 ## unexplained remainder is DoT, credited to the item that applied it via the
 ## pre-step `dot_before` snapshot (else the generic channel). See AutoTestLogger.
+## Known limitation: attribution is net-HP-based, so a heal landing the SAME step
+## masks part of the damage (the report under-counts that step). Not corrected by
+## adding the heal back — the potion is thrown at full HP, where the heal is wasted
+## and the net is already exact; only per-application tracking would fix the edge.
 func _observe_damage(cm: CombatManager, actors: Array, before: Dictionary, dot_before: Dictionary) -> void:
   var now: float = cm.timekeeper.sim_time
   var direct_by_target: Dictionary = {}
@@ -321,6 +327,9 @@ func _family_of(source: Variant) -> String:
 ## tick removed the status. `label` = the applier item's name (else the status name,
 ## e.g. 'Poison', for a source-less DoT); `weight` = its potential tick damage
 ## (count × damage_per_tick), used to split a remainder between multiple appliers.
+## Note: two appliers of the SAME type merge into one Status (keeping the first
+## source — StatusManager.apply), so the split only separates DIFFERENT DoT types;
+## same-type poison from two items is all credited to the first applier.
 func _dot_snapshot(actors: Array) -> Dictionary:
   var snap: Dictionary = {}
   for a in actors:

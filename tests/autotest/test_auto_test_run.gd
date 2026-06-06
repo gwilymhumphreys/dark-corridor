@@ -119,6 +119,26 @@ func test_run_full_credits_poison_to_its_applier_in_the_contribution_table() -> 
   assert_false(venom['trap'], 'so a working poison item is never mis-flagged a trap')
 
 
+func test_run_full_honors_nosave_writes_nothing() -> void:
+  # The headless autotest forces nosave, so it must NOT touch the real run slot.
+  # Cap at one beat so the run is left CAPPED (not won) — a win would end-clear the
+  # save and hide whether anything was written. nosave defaults true.
+  Save.clear()
+  var m := _mode(1)
+  m.encounters = 1
+  m.run_full()
+  assert_false(Save.has_save(), 'a nosave autotest run writes no save, even mid-run')
+
+
+func test_run_full_with_saving_on_autosaves() -> void:
+  Save.clear()
+  var m := _mode(1)
+  m.encounters = 1
+  m.nosave = false
+  m.run_full()
+  assert_true(Save.has_save(), 'with saving on, the autotest autosaves at encounter entry')
+
+
 func test_resume_mid_run_finishes_the_descent() -> void:
   # Resume smoke: play part of a run, reload from the autosave, and finish it.
   Game.start_run(3)

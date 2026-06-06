@@ -63,7 +63,7 @@ Each run writes a raw log + a markdown report to **`autotest_results/`** (projec
 | `--wall-timeout N` | max real-seconds (hang watchdog) |
 | `--character C` | starting character |
 | `--log PATH` / `--report PATH` | raw events / markdown analysis |
-| `--nosave --notutorial` | always (fresh-user run) |
+| `--nosave --notutorial` | always (fresh-user run); `nosave` disables `Save.write` so a headless run never clobbers the real run slot |
 | `--headless` | Godot flag (before `--`) |
 
 **Live now:** `--autotest --seed --speed --timeout --wall-timeout --encounters --single-fight --strategy --log --report` (+ forced nosave / notutorial). `--seed` is live in run mode (seeds the run RNG + the Driver's strategy RNG); `--strategy` is live (real seeded draft strategies); `--speed` stays inert (the direct `sim_step` loop ignores the dial). `--acts / --character` arrive with multi-act maps + characters (later).

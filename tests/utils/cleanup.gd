@@ -10,3 +10,4 @@ static func reset_all_managers() -> void:
   # StatusManager / Save / Draft are stateless. Game (the session singleton) holds
   # the live run — free it between tests so a leftover run can't bleed across.
   Game.reset()
+  Save.disabled = false   # an autotest run may have set it (nosave); clear for the next test

@@ -14,12 +14,19 @@ const PATH: String = 'user://dark_corridor_run.save'
 const TMP_PATH: String = 'user://dark_corridor_run.save.tmp'
 const VERSION: int = 0
 
+## When true, write() is a no-op — the headless autotest sets this (its forced
+## `nosave`) so a dev run can't clobber the real run slot. The game never sets it;
+## TestCleanup resets it to false between tests.
+var disabled: bool = false
+
 
 ## Persist a handed snapshot. Stamps the format version, serializes to JSON, and
 ## swaps it in atomically. Note: snapshot numbers that must stay exact past 2^53
 ## (the run RNG state) are the Run manager's job to encode as strings — JSON
-## numbers are doubles.
+## numbers are doubles. A no-op while `disabled` (the autotest's nosave).
 func write(snapshot: Dictionary) -> void:
+  if disabled:
+    return
   var payload: Dictionary = snapshot.duplicate(true)
   payload['version'] = VERSION
   var tmp: FileAccess = FileAccess.open(TMP_PATH, FileAccess.WRITE)
