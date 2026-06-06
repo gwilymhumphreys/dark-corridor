@@ -238,7 +238,23 @@ func _resolve_targets(p: Payload, owner: Actor) -> Array:
     ItemEffect.Shape.ALL_OPPONENTS:
       return _living_opponents(owner)
     _:
-      return []   # item-target shapes (random / all-items) — later
+      # Item-target shapes (OPPONENT_ITEM_RANDOM / ALL_OPPONENT_ITEMS) aren't resolved
+      # yet — they need the per-fight RNG (#14/#20). Warn ONCE per shape so an authored
+      # item using one isn't a silent no-op (it would fire nothing with no clue why).
+      _warn_unhandled_shape(p.shape)
+      return []
+
+
+var _warned_shapes: Dictionary = {}   # shapes we've already warned about (no log spam)
+
+
+## Warn once per unhandled target shape — a content-authoring aid (the tick loop would
+## otherwise call this every step the offending item fires).
+func _warn_unhandled_shape(shape: int) -> void:
+  if _warned_shapes.has(shape):
+    return
+  _warned_shapes[shape] = true
+  push_warning('[CombatManager] target shape %d is not resolved yet (item-target shapes need the per-fight RNG, #14/#20); the effect fires nothing.' % shape)
 
 
 func _all_actors() -> Array:

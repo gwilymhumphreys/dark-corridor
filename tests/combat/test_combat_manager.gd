@@ -181,6 +181,18 @@ func test_actor_and_item_statuses_advance_identically() -> void:
   assert_false(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak expired on the same step')
 
 
+func test_unresolved_item_target_shape_yields_no_targets() -> void:
+  # The item-target shapes aren't resolved yet (they need the per-fight RNG, #14/#20).
+  # An item authored with one must visibly fire nothing (and warn once) — not crash.
+  var p := Actor.new(100.0)
+  var e := Actor.new(100.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var payload := Payload.new()
+  payload.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  assert_eq(cm._resolve_targets(payload, p).size(), 0, 'an unresolved item-target shape resolves to no targets')
+
+
 func test_dot_tick_through_block_does_not_skip_a_later_status() -> void:
   # A poison tick calls take_damage, which can erase a depleted block from the SAME
   # status list the step-pass is walking. A naive in-place loop would then skip the
