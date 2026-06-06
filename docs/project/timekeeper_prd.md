@@ -38,7 +38,7 @@ One `timescale`, set via input-intent (the `Combat manager` sets it from a UI in
 | Player battle-speed | ×1 / ×2 / ×3 |
 | Fast-test / dev | ×5+ |
 
-**Base vs. momentary override:** a base speed (the battle-speed setting) and a momentary override (hover slow-mo) that returns *to the base*, not ×1. Slow-mo slows both sides proportionally (can't dodge by inspecting). *Open: override replace-vs-multiply.*
+**Base vs. momentary override:** a base speed (the battle-speed setting) and a momentary override (hover slow-mo) that returns *to the base*, not ×1. Slow-mo slows both sides proportionally (can't dodge by inspecting). **Resolved — replace:** the override is an absolute, consistently-readable slow-mo regardless of the player's battle-speed dial (the base ×1/×2/×3 only sets what it returns to). The dial lives on `Game` (a session preference); the run screen applies it to each fight's Timekeeper base scale.
 
 ## `steps_due()` — real time → fixed steps
 
@@ -79,9 +79,8 @@ Created by the `Combat manager` at combat start (`sim_time` 0); the manager call
 
 ## Open / deferred
 
-- Timescale override **replace vs. multiply** (shared with Combat PRD).
 - **`STEP` and `MAX_STEPS` values** — tuning (`STEP` likely = the physics period, so ×1 = one step per physics tick).
-- **Resolved:** fixed timestep (was the timestep/determinism open); slim-to-clock (the registry + advance moved to the `Combat manager`); instanced-per-fight.
+- **Resolved:** fixed timestep (was the timestep/determinism open); slim-to-clock (the registry + advance moved to the `Combat manager`); instanced-per-fight; **override replace-vs-multiply → replace** (absolute slow-mo; see *Base vs. momentary override*).
 
 ## Dependencies
 

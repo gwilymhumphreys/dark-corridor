@@ -82,3 +82,33 @@ func test_starting_a_run_replaces_the_previous() -> void:
   Game.start_run(2)
   assert_false(is_instance_valid(first), 'the previous run was torn down')
   assert_eq(Game.run.position, 0, 'the new run is fresh')
+
+
+# --- battle-speed dial (a session preference) --------------------------------
+
+func test_battle_speed_defaults_to_x1() -> void:
+  assert_eq(Game.battle_speed_index, 0, 'the dial starts at the first notch')
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[0], 0.00001, 'and at ×1')
+
+
+func test_cycle_battle_speed_walks_the_dial_and_wraps() -> void:
+  Game.cycle_battle_speed()
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[1], 0.00001, '×1 → ×2')
+  Game.cycle_battle_speed()
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[2], 0.00001, '×2 → ×3')
+  Game.cycle_battle_speed()
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[0], 0.00001, '×3 wraps back to ×1')
+
+
+func test_cycle_battle_speed_emits_the_new_scale() -> void:
+  watch_signals(Game)
+  Game.cycle_battle_speed()
+  assert_signal_emitted_with_parameters(Game, 'battle_speed_changed', [Balance.BATTLE_SPEEDS[1]])
+
+
+func test_reset_restores_the_default_battle_speed() -> void:
+  Game.cycle_battle_speed()   # leave the dial off the default
+  assert_eq(Game.battle_speed_index, 1, 'dial moved')
+  Game.reset()
+  assert_eq(Game.battle_speed_index, 0, 'a session reset drops the dial to ×1')
+  assert_almost_eq(Game.battle_speed, Balance.TIMESCALE_BASE, 0.00001, 'and back to base scale')

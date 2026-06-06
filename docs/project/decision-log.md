@@ -55,7 +55,7 @@ Pre-prototype. The **only code** is the corridor renderer (`src/scenes/corridors
 
 ## Open / deferred (each has a home)
 
-- Timescale override **replace-vs-multiply** → combat_prd / when hover-slow-mo is built.
+- Timescale override **replace-vs-multiply — resolved → replace** (absolute slow-mo, independent of the ×1/×2/×3 battle-speed dial; the dial is a `Game` session preference applied to each fight's Timekeeper base scale). timekeeper_prd / combat_prd.
 - **Within-step component order — resolved (#24):** deterministic registration order; built in Phase 1 as fixed type-ordered passes (item cooldowns → statuses → Deliveries), with a literal `seq_id` counter deferred until cross-type interleaving is needed.
 - **Stat-statuses** (strength/weak/vulnerable) → design defers to prototype; constraint: a flat modifier must not make fast items strictly dominant.
 - **Per-effect stack/decrement** + block tuning → content.

@@ -18,8 +18,10 @@ var _acc: float = 0.0
 
 
 ## The active dial: a momentary override (hover slow-mo) replaces the base while
-## set, then returns TO the base — not to x1 (timekeeper_prd; replace-vs-multiply
-## stays open, Phase 1 uses replace).
+## set, then returns TO the base — not to x1 (timekeeper_prd). Replace-vs-multiply is
+## RESOLVED to replace: hover slow-mo is an absolute, consistently-readable speed
+## regardless of the player's battle-speed dial (base ×1/×2/×3 just sets what it
+## returns to). Proven by test_timekeeper's override-replaces-base case at base ×2.
 func effective_scale() -> float:
   return override_scale if override_scale >= 0.0 else base_scale
 

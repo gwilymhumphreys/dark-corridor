@@ -39,6 +39,6 @@ Target dies mid-flight → the Delivery fizzles. No retarget. (Consistent with "
 
 ## Open / deferred
 
-Timescale override return logic — hover slow-mo overrides the player's base battle-speed and returns to base, not ×1. Replace-vs-multiply when stacking the override on base: TBD.
+Timescale override return logic — hover slow-mo overrides the player's base battle-speed and returns to base, not ×1. Replace-vs-multiply when stacking the override on base: **resolved — replace** (absolute slow-mo, independent of the ×1/×2/×3 dial; see Timekeeper PRD).
 Stack/decrement semantics per effect type — how poison stacks decrement, whether regen counts down, etc. — is per-effect content, settled as effects get authored, not here.
 Anything requiring a deferred-resolve queue: explicitly not built until a real case forces it (see above).
