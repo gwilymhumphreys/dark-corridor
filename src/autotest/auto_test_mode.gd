@@ -152,6 +152,12 @@ func run_full() -> Dictionary:
     if Time.get_ticks_msec() - wall_start >= wall_timeout_ms:
       outcome = 'WALL_TIMEOUT'
       break
+    # CHOICE beat: pick a path first (the Driver stands in for the player) — that creates
+    # the live encounter. A FIXED beat (boss / relic / rest) already has one.
+    if run.has_pending_choice():
+      var path: int = driver.choose_path(run.pending_choice())
+      logger.log_event('choice', { 'beat': run.position, 'options': run.pending_choice().size(), 'picked': path })
+      run.pick_path(path)
     var enc: Encounter = run.current_encounter()
     var hp_before: float = run.player.hp
     var beat_name: String = _beat_name(enc)

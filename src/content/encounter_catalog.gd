@@ -5,7 +5,7 @@ class_name EncounterCatalog
 ## reward-routing beats (#2) — catalog-only, not in the map; the owner slots them into the
 ## real act structure / choice layer. Lazily built once.
 
-enum Id { FIGHT_GRUNT, REST, FIGHT_ELITE, FIGHT_RELIC }
+enum Id { FIGHT_GRUNT, REST, FIGHT_ELITE, FIGHT_RELIC, FIGHT_TOUGH, FIGHT_BOSS }
 
 static var _defs: Dictionary = {}
 
@@ -21,6 +21,8 @@ static func _build() -> void:
   _defs[Id.REST] = _rest()
   _defs[Id.FIGHT_ELITE] = _fight_elite()
   _defs[Id.FIGHT_RELIC] = _fight_relic()
+  _defs[Id.FIGHT_TOUGH] = _fight_tough()
+  _defs[Id.FIGHT_BOSS] = _fight_boss()
 
 
 static func _fight_grunt() -> EncounterDef:
@@ -61,5 +63,28 @@ static func _fight_relic() -> EncounterDef:
   d.type = EncounterDef.Type.FIGHT
   d.name_key = 'A warded vault'
   d.enemy_ids = [EnemyCatalog.Id.GRUNT]
+  d.reward = EncounterDef.Reward.RELIC
+  return d
+
+
+## Placeholder tougher regular fight (#1): a brute, still a draft reward — choice-pool fare.
+static func _fight_tough() -> EncounterDef:
+  var d := EncounterDef.new()
+  d.id = Id.FIGHT_TOUGH
+  d.type = EncounterDef.Type.FIGHT
+  d.name_key = 'A blocked passage'
+  d.enemy_ids = [EnemyCatalog.Id.BRUTE]
+  d.reward = EncounterDef.Reward.DRAFT
+  return d
+
+
+## Placeholder boss (#1): the act-end fight. Rewards a relic (the RunManager ends the run
+## on the FINAL act's boss instead — that's the descent's ending).
+static func _fight_boss() -> EncounterDef:
+  var d := EncounterDef.new()
+  d.id = Id.FIGHT_BOSS
+  d.type = EncounterDef.Type.FIGHT
+  d.name_key = 'The warden\'s gate'
+  d.enemy_ids = [EnemyCatalog.Id.BOSS]
   d.reward = EncounterDef.Reward.RELIC
   return d

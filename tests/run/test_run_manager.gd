@@ -45,9 +45,12 @@ func _block_count(actor: Actor) -> float:
   return 0.0
 
 
-## Resolve one beat: begin it, step a fight's CombatManager to a verdict, take the
-## draft pick if offered, advance. (Mirrors what the autotest run loop will do.)
+## Resolve one beat: pick a path if it's a choice beat, begin it, step a fight's
+## CombatManager to a verdict, take the draft pick if offered, advance. (Mirrors what the
+## autotest run loop does.) `pick` indexes both the choice candidate and the draft card.
 func _play_one_beat(run: RunManager, pick: int) -> void:
+  if run.has_pending_choice():
+    run.pick_path(pick)
   run.begin_current()
   var cm: CombatManager = run.combat_manager()
   if cm != null:
@@ -74,8 +77,8 @@ func test_full_run_reaches_won_and_grows_the_board() -> void:
   assert_eq(run.player.board.size(), 3, 'starting board: weapon, armor, poison dagger')
   _play_to_end(run, 0)
   assert_true(run.is_ended(), 'the run resolved')
-  assert_eq(run.outcome(), RunManager.Outcome.WON, 'the build clears the short map')
-  assert_eq(run.player.board.size(), 5, 'two fights granted drafts (+2 items); rest + finale grant none')
+  assert_eq(run.outcome(), RunManager.Outcome.WON, 'the compounding build clears the multi-act map')
+  assert_gt(run.player.board.size(), 3, 'fight drafts grew the board across the run')
 
 
 func test_draft_pick_lands_on_the_board() -> void:
@@ -89,7 +92,8 @@ func test_draft_pick_lands_on_the_board() -> void:
 func test_starting_relic_grants_combat_start_block() -> void:
   var run := _run()
   run.start(1)
-  run.begin_current()      # beat 0 is a fight — relics apply at start, before any step
+  run.pick_path(0)         # resolve the opening choice → a live fight
+  run.begin_current()      # relics apply at fight start, before any step
   assert_almost_eq(_block_count(run.player), Balance.RELIC_STONE_WARD_BLOCK, 0.0001,
     'Stone Ward applies its block when the fight begins')
 
@@ -204,7 +208,8 @@ func test_per_fight_seeds_differ_by_beat() -> void:
 func test_fight_rng_is_seeded_from_the_beat_seed() -> void:
   var run := _run()
   run.start(5)
-  run.begin_current()                 # beat 0 is a fight → a live, seeded CombatManager
+  run.pick_path(0)                    # resolve the opening choice → a live, seeded fight
+  run.begin_current()
   assert_eq(run.combat_manager().rng.seed, run._combat_seed_for(0),
     'the fight RNG is seeded from the derived per-beat seed')
 
@@ -222,6 +227,56 @@ func test_resumed_run_derives_the_same_per_fight_seed() -> void:
   run_b.rehydrate(snap)
   assert_eq(run_b.position, run.position, 'resumed at the same beat')
   assert_eq(run_b._combat_seed_for(run_b.position), seed_a, 'and derives the identical per-fight seed')
+
+
+# --- multi-act structure + HP economy + the choice layer (#1) ----------------
+
+func test_opening_beat_is_a_choice_and_pick_creates_the_encounter() -> void:
+  var run := _run()
+  run.start(1)
+  assert_true(run.has_pending_choice(), 'the opening beat offers a choice')
+  assert_eq(run.pending_choice().size(), RunMap.CHOICE_COUNT, 'CHOICE_COUNT candidates')
+  for id in run.pending_choice():
+    assert_true(id in RunMap.act_pool(0), 'each candidate is from the act pool')
+  assert_null(run.current_encounter(), 'no live encounter until a path is picked')
+  run.pick_path(0)
+  assert_false(run.has_pending_choice(), 'the pick clears the choice')
+  assert_not_null(run.current_encounter(), 'and creates the live encounter')
+
+
+func test_choice_candidates_survive_resume() -> void:
+  var run := _run()
+  run.start(1)
+  var candidates: Array = run.pending_choice().duplicate()
+  var run_b := _run()
+  run_b.rehydrate(run.snapshot())
+  assert_eq(run_b.pending_choice(), candidates, 'a resumed choice re-presents the same candidates (no re-roll)')
+
+
+func test_fixed_beats_are_boss_relic_and_rest() -> void:
+  assert_eq(int(RunMap.beat_spec(RunMap.BOSS_BEAT)['id']), EncounterCatalog.Id.FIGHT_BOSS, 'act end = boss')
+  assert_eq(int(RunMap.beat_spec(RunMap.RELIC_BEAT)['id']), EncounterCatalog.Id.FIGHT_RELIC, 'midpoint = relic')
+  assert_eq(int(RunMap.beat_spec(RunMap.REST_BEAT)['id']), EncounterCatalog.Id.REST, 'a per-act rest')
+  assert_eq(int(RunMap.beat_spec(0)['kind']), RunMap.BeatKind.CHOICE, 'other beats are choices')
+  assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
+
+
+func test_crossing_into_a_new_act_full_heals() -> void:
+  var run := _run()
+  run.start(1)
+  run.position = RunMap.BEATS_PER_ACT - 1   # the act-0 boss beat
+  run.player.hp = 10.0
+  run.advance()                              # cross into act 1
+  assert_almost_eq(run.player.hp, run.player.max_hp, 0.0001, 'entering a new act restores full HP')
+  assert_eq(run.act(), 1, 'and the run is in the next act')
+
+
+func test_no_full_heal_within_an_act() -> void:
+  var run := _run()
+  run.start(1)
+  run.player.hp = 10.0
+  run.advance()                              # beat 0 → 1, same act
+  assert_almost_eq(run.player.hp, 10.0, 0.0001, 'HP persists between beats inside an act')
 
 
 func test_player_actor_and_board_free_after_run_teardown() -> void:
@@ -258,7 +313,8 @@ func test_starting_kit_saves_and_rehydrates() -> void:
 func test_throw_potion_heals_and_empties_the_slot() -> void:
   var run := _run()
   run.start(1)
-  run.begin_current()                  # beat 0 is a fight → a live CombatManager
+  run.pick_path(0)                     # resolve the opening choice → a live fight
+  run.begin_current()
   run.player.take_damage(40.0)
   var before: float = run.player.hp
   assert_eq(run.potions.size(), 1)

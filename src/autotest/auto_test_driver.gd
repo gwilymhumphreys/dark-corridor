@@ -128,10 +128,14 @@ func choose_event_option(options: Array) -> int:
   return 0 if not options.is_empty() else -1
 
 
-## Which choice-layer path to take at a fork (fight / elite / event / rest).
-## Stub: the first offered.
+## Which choice-layer path to take at a fork (fight / elite / event). A seeded pick so a
+## run explores a deterministic path (different seeds take different routes). Real
+## category-aware policies (prefer elites for reward, avoid risk at low HP) arrive with
+## telegraphs + richer run state.
 func choose_path(candidates: Array) -> int:
-  return 0 if not candidates.is_empty() else -1
+  if candidates.is_empty():
+    return -1
+  return _rng.randi_range(0, candidates.size() - 1)
 
 
 ## Whether to throw a reserve consumable now. Minimal policy: throw the first available

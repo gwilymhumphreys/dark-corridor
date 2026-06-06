@@ -31,9 +31,25 @@ msgstr "An elite ambush"
 msgid "A warded vault"
 msgstr "A warded vault"
 
+#: src/content/encounter_catalog.gd
+msgid "A blocked passage"
+msgstr "A blocked passage"
+
+#: src/content/encounter_catalog.gd
+msgid "The warden\\"
+msgstr "The warden\\"
+
 #: src/content/enemy_catalog.gd
 msgid "Corridor Grunt"
 msgstr "Corridor Grunt"
+
+#: src/content/enemy_catalog.gd
+msgid "Corridor Brute"
+msgstr "Corridor Brute"
+
+#: src/content/enemy_catalog.gd
+msgid "Corridor Warden"
+msgstr "Corridor Warden"
 
 #: src/content/item_catalog.gd
 msgid "Rusted Blade"
@@ -120,16 +136,8 @@ msgid "Choose a reward"
 msgstr "Choose a reward"
 
 #: src/scenes/screens/map_strip.gd
-msgid "Boss"
-msgstr "Boss"
-
-#: src/scenes/screens/map_strip.gd
-msgid "Rest"
-msgstr "Rest"
-
-#: src/scenes/screens/map_strip.gd
-msgid "Fight"
-msgstr "Fight"
+msgid "Act {0}"
+msgstr "Act {0}"
 
 #: src/scenes/screens/outcome_screen.gd
 msgid "Victory"

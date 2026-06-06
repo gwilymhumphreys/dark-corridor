@@ -31,8 +31,24 @@ msgstr ""
 msgid "A warded vault"
 msgstr ""
 
+#: src/content/encounter_catalog.gd
+msgid "A blocked passage"
+msgstr ""
+
+#: src/content/encounter_catalog.gd
+msgid "The warden\\"
+msgstr ""
+
 #: src/content/enemy_catalog.gd
 msgid "Corridor Grunt"
+msgstr ""
+
+#: src/content/enemy_catalog.gd
+msgid "Corridor Brute"
+msgstr ""
+
+#: src/content/enemy_catalog.gd
+msgid "Corridor Warden"
 msgstr ""
 
 #: src/content/item_catalog.gd
@@ -120,15 +136,7 @@ msgid "Choose a reward"
 msgstr ""
 
 #: src/scenes/screens/map_strip.gd
-msgid "Boss"
-msgstr ""
-
-#: src/scenes/screens/map_strip.gd
-msgid "Rest"
-msgstr ""
-
-#: src/scenes/screens/map_strip.gd
-msgid "Fight"
+msgid "Act {0}"
 msgstr ""
 
 #: src/scenes/screens/outcome_screen.gd

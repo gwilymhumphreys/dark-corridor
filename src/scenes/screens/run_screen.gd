@@ -40,7 +40,7 @@ func _ready() -> void:
   # The player battle-speed dial (a Game session preference): retime the live fight
   # the instant the HUD button changes it. Each new fight also picks it up on entry.
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
-  _map.setup(RunManager.MAP, _run.position)
+  _map.setup(RunMap.TOTAL_BEATS, _run.position)
   _enter_beat()
 
 
@@ -54,6 +54,10 @@ func _exit_tree() -> void:
 func _enter_beat() -> void:
   if _run.is_ended():
     return
+  # A CHOICE beat has no encounter until a path is picked. Stage 1: auto-pick the first
+  # candidate (Stage 2 raises the choice overlay here and waits for the player's pick).
+  if _run.has_pending_choice():
+    _run.pick_path(0)
   _run.begin_current()
   _cm = _run.combat_manager()
   if _cm != null and not _cm.is_resolved():

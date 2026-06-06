@@ -17,6 +17,8 @@ func after_each() -> void:
 # --- helpers (drive Game.run, mirroring the autotest run loop) ---------------
 
 func _play_one_beat(run: RunManager, pick: int) -> void:
+  if run.has_pending_choice():
+    run.pick_path(pick)
   run.begin_current()
   var cm: CombatManager = run.combat_manager()
   if cm != null:

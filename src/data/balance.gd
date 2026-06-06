@@ -26,6 +26,11 @@ const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3
 # ── Actor ────────────────────────────────────────────────────────────────────
 const PLAYER_START_HP: float = 100.0
 const ENEMY_PLACEHOLDER_HP: float = 40.0
+# Placeholder enemy tiers for the multi-act map (#1) — HP only; the owner authors real
+# enemies + boss signature mechanics. A brute is a beefier regular; a boss is tankier
+# with two items.
+const ENEMY_BRUTE_HP: float = 70.0
+const ENEMY_BOSS_HP: float = 140.0
 
 
 # ── Items (placeholder defs — cooldowns in SECONDS) ──────────────────────────

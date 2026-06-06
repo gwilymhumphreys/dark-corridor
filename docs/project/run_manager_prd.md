@@ -54,18 +54,20 @@ The `Run manager` knows the run-state schema, so it **builds** the snapshot and 
 
 ## Prototype scope
 
-- A **minimal linear track** of a few beats; sequence `Encounter`s (one fight + optionally one event/rest), advance between them.
-- The **player run-state** (Actor + a couple of relic/potion slots + position + RNG); auto-save on encounter entry; rehydrate on resume.
+- **BUILT — the multi-act structure (`RunMap`).** A single linear track of `ACTS` × `BEATS_PER_ACT` beats (global `position`; act/beat-within-act derived). Each act ends in a **boss** (the final act's boss wins the run); a guaranteed **midpoint relic** beat and one **rest** beat are fixed; the rest are **CHOICE** beats. PLACEHOLDER numbers + a tiny pool drawn repeatedly — the owner re-contents.
+- **BUILT — the choice layer (logic).** A CHOICE beat assembles `CHOICE_COUNT` distinct candidates from the act pool (seeded by the run RNG → deterministic + resume-stable; the drawn set is **saved**, never re-rolled). `has_pending_choice()` / `pending_choice()` / `pick_path(index)` is the choice-point intent — the pick creates the live `Encounter`. The two-tier choice **UI** + **events** are the next stages; the headless autotest drives the pick (`choose_path`).
+- **BUILT — HP economy.** Between-act **full heal** on crossing into a new act; the per-act REST partial heal; max-HP growth via the granted relics (`MAX_HP_BONUS`).
+- The **player run-state** (Actor + relics/potions + position + RNG); auto-save on encounter entry (and on a choice pick); rehydrate on resume — including the current beat's resolution (the picked/fixed encounter id, or the pending choice candidates).
 - Report **run-ended (died / won)** up to the `Game manager`.
 
-**Not** in scope: full act/boss/elite/rest placement, the 1D map UI, the reward-draft economy, multi-act HP-economy tuning.
+**Not** in scope yet: the choice/telegraph **UI** + the act-aware map polish (stage 2), the **event** encounter type (stage 3), boss **signature mechanics** + the real encounter/enemy content (the owner's).
 
 ---
 
 ## Open / deferred
 
-- **Act / beat placement + the 1D progress-map UI** — design/tuning + the `Encounter` PRD (composition) and a UI pass.
-- **Elite offer count + reward asymmetry** — design / `Encounter` PRD.
+- **Act / beat placement — BUILT** (`RunMap`, placeholder); the **1D progress-map UI** is extended for acts (the choice-screen UI is stage 2). Real placement/pools are the owner's content.
+- **Elite offer count + reward asymmetry — reward asymmetry BUILT** (elite = relic + draft, #2); the **engage/skip** is the choice layer (pick the elite candidate vs another); offer counts are design/tuning.
 - **RNG — resolved (#20):** the `Run manager` owns the run RNG; its **full state** is saved (deterministic resume, no save-scum); the per-fight combat stream is derived from the run seed + encounter index.
 - **Multi-Actor player side (drafting allies) — deferred (#22):** run-state's `actor` is the player *party* (a roster of 1 today); keep it list-friendly so allies / summoning stay additive — don't hardwire one player actor.
 - **Encounter handoff — resolved ([Encounter PRD](encounter_prd.md)):** the `Run manager` instantiates the picked `Encounter` with context (player `Actor` + run-state accessors + RNG + position); a fight `Encounter` spawns its own enemies + ordering and creates the `Combat manager`.

@@ -17,27 +17,20 @@ signal run_ended(outcome: int)
 
 enum Outcome { WON, DIED }
 
-# A short linear map (counts are tuning, not design). The final beat is a fight;
-# winning it ends the run (won). Two fights grant drafts; a rest sits before the
-# finale.
-const MAP: Array = [
-  EncounterCatalog.Id.FIGHT_GRUNT,
-  EncounterCatalog.Id.FIGHT_GRUNT,
-  EncounterCatalog.Id.REST,
-  EncounterCatalog.Id.FIGHT_GRUNT,
-]
-
 # Spreads the run seed into a distinct per-beat combat stream (a prime stride).
 const COMBAT_SEED_STRIDE: int = 1000003
 
-# Run-state (the snapshot persists exactly this).
+# Run-state (the snapshot persists exactly this). `position` is the global beat index
+# (0 .. RunMap.TOTAL_BEATS-1); the act/beat-within-act are derived (RunMap).
 var player: Actor
 var relics: Array = []        # Array[Relic]
-var potions: Array = []       # Array[Consumable] — empty in the relic-only scope
+var potions: Array = []       # Array[Consumable]
 var position: int = 0
 var rng: RandomNumberGenerator
 
 var _current: Encounter = null
+var _current_def_id: int = -1    # the resolved EncounterDef id for the current beat (resume)
+var _pending_choice: Array = []  # Array[EncounterCatalog.Id] — choice candidates awaiting a pick
 var _pending_offer: Array = []   # Array[ItemDef] — the held draft offer (1-of-3)
 var _ended: bool = false
 var _outcome: int = Outcome.WON
@@ -60,6 +53,8 @@ func start(seed_value: int) -> void:
   position = 0
   _ended = false
   _pending_offer = []
+  _current_def_id = -1
+  _pending_choice = []
   _enter_beat(position)
   _save()
 
@@ -81,6 +76,40 @@ func current_encounter() -> Encounter:
 
 func combat_manager() -> CombatManager:
   return _current.combat_manager() if _current != null else null
+
+
+func act() -> int:
+  return RunMap.act_of(position)
+
+
+func beat_in_act() -> int:
+  return RunMap.beat_in_act(position)
+
+
+# --- the choice layer (a choice-point intent) -------------------------------
+
+## At a CHOICE beat the RunManager has assembled 2-3 candidate encounters and is waiting
+## for the player to pick one (no encounter exists yet — the pick creates it). A FIXED
+## beat (boss / midpoint relic / rest) skips straight to a live encounter, so this is false.
+func has_pending_choice() -> bool:
+  return not _pending_choice.is_empty()
+
+
+## The candidate EncounterDef ids on offer (the UI telegraphs them; the autotest picks one).
+func pending_choice() -> Array:
+  return _pending_choice
+
+
+## Apply the player's choice-point pick: the chosen candidate becomes the live `Encounter`
+## (created here, then it approaches + resolves). Re-saves so resume re-enters the PICKED
+## encounter, not the choice. No skip — a pick always resolves.
+func pick_path(index: int) -> void:
+  if _pending_choice.is_empty():
+    return
+  _current_def_id = _pending_choice[clampi(index, 0, _pending_choice.size() - 1)]
+  _pending_choice = []
+  _create_current_encounter()
+  _save()
 
 
 ## Begin resolving the current beat. Applies relic combat-start statuses (fights),
@@ -109,7 +138,7 @@ func _on_encounter_resolved(outcome: int, reward: int) -> void:
   if outcome == Encounter.Outcome.LOST:
     _end_run(Outcome.DIED)
     return
-  if _is_final_beat():
+  if RunMap.is_final_beat(position):   # the final act's boss — beating it ends the descent
     _end_run(Outcome.WON)
     return
   match reward:
@@ -184,15 +213,25 @@ func throw_potion(index: int) -> bool:
   return true
 
 
-## Advance to the next beat: tear the resolved one down, step position, create the
-## next Encounter, and auto-save (the encounter-entry resume point).
+## Advance to the next beat: tear the resolved one down, apply the between-act full heal
+## when crossing into a new act (HP-economy, design), step position, enter the next beat
+## (a fixed encounter OR a fresh choice), and auto-save (the encounter-entry resume point).
 func advance() -> void:
   if _ended:
     return
   _teardown_current()
+  if RunMap.crosses_act(position):   # the act boss was just cleared → enter the next act full
+    _full_heal()
   position += 1
   _enter_beat(position)
   _save()
+
+
+## HP-economy: the automatic between-act full restore (design — players enter each act at
+## full HP). The in-act partial rest is the REST encounter; max-HP growth comes from relics.
+func _full_heal() -> void:
+  if player != null:
+    player.hp = player.max_hp
 
 
 func is_ended() -> bool:
@@ -205,8 +244,34 @@ func outcome() -> int:
 
 # --- map + run-end ----------------------------------------------------------
 
+## Set up the beat at `pos`: a FIXED beat (boss / midpoint relic / rest) creates its live
+## encounter immediately; a CHOICE beat assembles candidates and waits for a pick (no
+## encounter yet — pick_path creates it). Clears any prior beat's transient state.
 func _enter_beat(pos: int) -> void:
-  _current = Encounter.new(EncounterCatalog.get_def(MAP[pos]), player, _combat_seed_for(pos))
+  _current_def_id = -1
+  _pending_choice = []
+  var spec: Dictionary = RunMap.beat_spec(pos)
+  if spec['kind'] == RunMap.BeatKind.CHOICE:
+    _pending_choice = _assemble_choice(spec['pool'])
+  else:
+    _current_def_id = spec['id']
+    _create_current_encounter()
+
+
+func _create_current_encounter() -> void:
+  _current = Encounter.new(EncounterCatalog.get_def(_current_def_id), player, _combat_seed_for(position))
+
+
+## Draw RunMap.CHOICE_COUNT distinct candidates from the act pool on the run RNG
+## (deterministic + resume-stable — the snapshot saves the drawn set, never re-rolled).
+func _assemble_choice(pool: Array) -> Array:
+  var bag: Array = pool.duplicate()
+  var out: Array = []
+  for i in mini(RunMap.CHOICE_COUNT, bag.size()):
+    var idx: int = rng.randi_range(0, bag.size() - 1)
+    out.append(bag[idx])
+    bag.remove_at(idx)
+  return out
 
 
 ## The per-fight RNG seed for beat `pos` (decision #20): derived from the run SEED (a
@@ -215,10 +280,6 @@ func _enter_beat(pos: int) -> void:
 ## and deriving it never perturbs the run stream that draft offers draw from.
 func _combat_seed_for(pos: int) -> int:
   return rng.seed + (pos + 1) * COMBAT_SEED_STRIDE
-
-
-func _is_final_beat() -> bool:
-  return position >= MAP.size() - 1
 
 
 func _end_run(outcome_value: int) -> void:
@@ -252,6 +313,10 @@ func snapshot() -> Dictionary:
     'relics': relic_ids,
     'potions': potion_ids,
     'position': position,
+    # The current beat's resolution: a picked/fixed encounter id (resume re-enters it), or
+    # the pending choice candidates (resume re-presents them) — never re-drawn.
+    'current_def_id': _current_def_id,
+    'pending_choice': _pending_choice.duplicate(),
     # RNG full state as strings — a JSON double can't hold a 64-bit value exactly.
     'rng': { 'seed': str(rng.seed), 'state': str(rng.state) },
   }
@@ -280,7 +345,15 @@ func rehydrate(snap: Dictionary) -> void:
   rng.state = int(snap['rng']['state'])
   _ended = false
   _pending_offer = []
-  _enter_beat(position)
+  # Restore the current beat's resolution exactly — never re-draw a choice (no save-scum).
+  _current_def_id = int(snap.get('current_def_id', -1))
+  _pending_choice = []
+  for v in snap.get('pending_choice', []):
+    _pending_choice.append(int(v))
+  if _current_def_id >= 0:
+    _create_current_encounter()
+  elif _pending_choice.is_empty():
+    _enter_beat(position)   # fallback for an older/edgeless snapshot
 
 
 # --- teardown ---------------------------------------------------------------
@@ -306,3 +379,4 @@ func teardown() -> void:
   relics.clear()
   potions.clear()
   _pending_offer.clear()
+  _pending_choice.clear()

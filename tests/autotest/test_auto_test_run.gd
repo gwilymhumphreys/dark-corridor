@@ -41,11 +41,11 @@ func _draft_events(logger: AutoTestLogger) -> int:
 
 func test_run_full_clears_the_map_as_a_win() -> void:
   var r := _mode(1).run_full()
-  assert_eq(r['outcome'], 'WON', 'the default build clears the short map')
+  assert_eq(r['outcome'], 'WON', 'the compounding build clears the multi-act map')
   assert_true(r['resolved'])
   assert_eq(r['exit_code'], 0)
-  assert_eq(r['beats_cleared'], 4, 'all four beats cleared (two fights, a rest, the finale)')
-  assert_eq(r['board_size'], 5, 'two drafts grew the board from 3 to 5')
+  assert_eq(r['beats_cleared'], RunMap.TOTAL_BEATS, 'every beat of the descent cleared')
+  assert_gt(r['board_size'], 3, 'fight drafts grew the board across the run')
   assert_gt(r['summary']['total_damage'], 0.0, 'damage was tallied across the run')
 
 
@@ -62,7 +62,7 @@ func test_run_full_is_deterministic() -> void:
 func test_run_full_takes_and_logs_drafts() -> void:
   var m := _mode(1)
   m.run_full()
-  assert_eq(_draft_events(m.logger), 2, 'the two regular fights each offered a draft, picked')
+  assert_gt(_draft_events(m.logger), 5, 'the run\'s many fight beats each offered a draft, picked')
 
 
 func test_run_full_throws_the_starting_potion() -> void:
@@ -153,6 +153,8 @@ func test_resume_mid_run_finishes_the_descent() -> void:
 # --- helpers (drive Game.run as the autotest loop does) ---------------------
 
 func _play_one_beat(run: RunManager, pick: int) -> void:
+  if run.has_pending_choice():
+    run.pick_path(pick)
   run.begin_current()
   var cm: CombatManager = run.combat_manager()
   if cm != null:
