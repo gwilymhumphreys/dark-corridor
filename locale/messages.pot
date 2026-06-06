@@ -115,6 +115,10 @@ msgstr ""
 msgid "Silence"
 msgstr ""
 
+#: src/content/status_catalog.gd
+msgid "Blind"
+msgstr ""
+
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "You"
 msgstr ""

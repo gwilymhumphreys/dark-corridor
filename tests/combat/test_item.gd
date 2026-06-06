@@ -85,6 +85,32 @@ func test_duplicates_tick_independently() -> void:
   assert_almost_eq(b.cooldown.accum, 0.0, 0.0001, 'duplicate has its own Ticker')
 
 
+func test_self_fuel_consume_scales_the_payload_at_fire() -> void:
+  # Cap 1 (Self / masochist): an item spends the OWNER's own stacked spore for bonus value,
+  # resolved at fire (the owner is known). Spends 3 of 4 poison, +2 damage per stack.
+  var owner := Actor.new(100.0)
+  StatusManager.apply(owner, StatusDef.Type.POISON, 4.0)
+  var def := ItemDef.new()
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = 5.0
+  hit.consume_type = StatusDef.Type.POISON
+  hit.consume_amount = 3.0
+  hit.consume_from_target = false   # self-fuel
+  hit.consume_scale = 2.0
+  def.effects = [hit]
+  var p: Payload = Item.new(def, owner).fire()[0]
+  assert_almost_eq(p.value, 5.0 + 3.0 * 2.0, 0.0001, 'base 5 + 3 stacks consumed × 2')
+  assert_almost_eq(_status_count(owner, StatusDef.Type.POISON), 1.0, 0.0001, 'the owner spent 3 of 4 stacks')
+
+
+func _status_count(actor: Actor, type: int) -> float:
+  for s in actor.statuses:
+    if s.type == type:
+      return s.count
+  return 0.0
+
+
 func test_trigger_item_declares_its_subscription() -> void:
   var d := ItemCatalog.get_def(ItemCatalog.Id.AVENGER)
   assert_eq(d.trigger_subs.size(), 1, 'avenger declares one trigger')

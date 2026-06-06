@@ -181,6 +181,95 @@ func test_actor_and_item_statuses_advance_identically() -> void:
   assert_false(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak expired on the same step')
 
 
+# --- spore engine seams (spore_engine_prd) -----------------------------------
+
+func _instant_damage_item(owner: Actor, value: float) -> Item:
+  var def := ItemDef.new()
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = value
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = 0.0
+  def.effects = [hit]
+  return Item.new(def, owner)
+
+
+func _status_count(actor: Actor, type: int) -> float:
+  for s in actor.statuses:
+    if s.type == type:
+      return s.count
+  return 0.0
+
+
+func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
+  # Cap 1 (Mass): an item spends the TARGET's stacked spore for bonus damage. The target
+  # isn't known at fire, so the Combat manager consumes it at Delivery spawn.
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  StatusManager.apply(e, StatusDef.Type.POISON, 5.0)
+  var def := ItemDef.new()
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = 10.0
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = 0.0
+  hit.consume_type = StatusDef.Type.POISON
+  hit.consume_amount = 4.0
+  hit.consume_from_target = true   # opponent-fuel (Mass)
+  hit.consume_scale = 3.0
+  def.effects = [hit]
+
+  var before: float = e.hp
+  var arrived: Array = []
+  cm._fire_item(Item.new(def, p), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(before - e.hp, 10.0 + 4.0 * 3.0, 0.0001, 'Mass damage = base 10 + 4 poison consumed × 3')
+  assert_almost_eq(_status_count(e, StatusDef.Type.POISON), 1.0, 0.0001, 'the target spent 4 of 5 poison stacks')
+
+
+func test_blinded_attacker_damage_whiffs() -> void:
+  # Cap 2: a blinded actor still FIRES, but its DAMAGE Delivery is marked evaded at fire and
+  # whiffs on land (no damage) — distinct from silence's "doesn't fire".
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  StatusManager.apply(p, StatusDef.Type.BLIND, 1.0)
+  var arrived: Array = []
+  cm._fire_item(_instant_damage_item(p, 8.0), arrived)
+  assert_eq(arrived.size(), 1, 'the attack still fired (a delivery spawned)')
+  assert_true(arrived[0].evaded, 'a blinded attacker marks its damage evaded')
+  var before: float = e.hp
+  cm._land(arrived[0])
+  assert_true(arrived[0].fizzled, 'the evaded swing whiffs on land')
+  assert_almost_eq(e.hp, before, 0.0001, 'and deals no damage')
+
+
+func test_blinded_attacker_nondamage_still_lands() -> void:
+  # Evasion is damage-only (default): a blinded actor's status appliers still resolve.
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  StatusManager.apply(p, StatusDef.Type.BLIND, 1.0)
+  var def := ItemDef.new()
+  var ap := ItemEffect.new()
+  ap.kind = Delivery.Kind.APPLY_STATUS
+  ap.status_type = StatusDef.Type.POISON
+  ap.value = 3.0
+  ap.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  ap.travel = 0.0
+  def.effects = [ap]
+  var arrived: Array = []
+  cm._fire_item(Item.new(def, p), arrived)
+  assert_false(arrived[0].evaded, 'a non-damage delivery is not evaded')
+  cm._land(arrived[0])
+  assert_true(_has_status(e, StatusDef.Type.POISON), 'the blinded actor still applies its status')
+
+
 func test_random_item_target_is_reproducible_by_seed() -> void:
   # OPPONENT_ITEM_RANDOM (Hex Bolt → silence a random enemy item) picks on the seeded
   # per-fight RNG, so the same combat seed silences the same item (#14/#20: random

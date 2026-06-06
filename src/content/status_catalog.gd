@@ -62,3 +62,16 @@ static func _build() -> void:
   silence.color = Color(0.5, 0.5, 0.5)
   silence.name_key = 'Silence'
   _defs[silence.type] = silence
+
+  # Blind — the evasion stat-status (spore_engine_prd Cap 2): the holder's attacks WHIFF
+  # while it's active (distinct from silence's "doesn't fire"). Placeholder for the owner's
+  # blinding spore. Timed; re-application refreshes the duration (design's "extend").
+  var blind := StatusDef.new()
+  blind.type = StatusDef.Type.BLIND
+  blind.shape = StatusDef.Shape.TIMED
+  blind.stacking = StatusDef.Stacking.REFRESH
+  blind.duration = Balance.STATUS_BLIND_DURATION
+  blind.causes_evasion = true
+  blind.color = Color(0.9, 0.9, 0.55)
+  blind.name_key = 'Blind'
+  _defs[blind.type] = blind

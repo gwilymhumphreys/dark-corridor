@@ -173,9 +173,18 @@ func _fire_item(it: Item, arrived: Array) -> void:
   if payloads.is_empty():
     return   # gated (silence)
   bus.publish(EventBus.Event.ITEM_FIRED)
+  # The item still fires (cooldown reset, fire-emote) even when blinded — but its DAMAGE
+  # whiffs (spore_engine_prd Cap 2). Locked at fire so a swing launched while blinded misses.
+  var blinded: bool = StatusManager.has_evasion(it.owner)
   for p in payloads:
     for target in _resolve_targets(p, it.owner):
       var d := _spawn_delivery(p, target)
+      # Opponent-fuel consume (Mass, Cap 1): spend the resolved TARGET's stacks here (it's
+      # only known now), scaling the Delivery — the Item stayed downward-clean (it declared).
+      if p.consume_type >= 0 and p.consume_from_target:
+        d.value += StatusManager.consume(target, p.consume_type, p.consume_amount) * p.consume_scale
+      if blinded and d.kind == Delivery.Kind.DAMAGE:
+        d.evaded = true
       _deliveries.append(d)
       if d.travel.crossed():
         arrived.append(d)   # instant (travel 0) lands this same step
@@ -213,6 +222,11 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
 
 func _land(d: Delivery) -> void:
   if d.landed or d.fizzled:
+    return
+  # A blinded attacker's swing whiffs (Cap 2): it travelled, then misses — no land, no
+  # damage. `evaded` (set at fire) is the fizzle reason the VFX wall reads for the tell.
+  if d.evaded:
+    d.fizzled = true
     return
   # A single target that died/left mid-flight fizzles — no retarget (combat_prd). For an
   # item target, "alive" means its owning actor is still alive (you can't silence a

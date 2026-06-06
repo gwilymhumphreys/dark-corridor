@@ -5,7 +5,7 @@ extends RefCounted
 ## up the def by `type` to apply / step / resolve. Specific numbers point to
 ## Balance, not baked here.
 
-enum Type { BLOCK, POISON, WEAK, SILENCE, VULNERABLE }
+enum Type { BLOCK, POISON, WEAK, SILENCE, VULNERABLE, BLIND }
 enum Shape { PERIODIC, TIMED, POOL, STATIC }
 enum Stacking { ADD, REFRESH }
 
@@ -31,3 +31,8 @@ var duration: float = 0.0        # TIMED
 #     before block (Vulnerable > 1.0 takes more).
 var outgoing_damage_mult: float = 1.0
 var incoming_damage_mult: float = 1.0
+
+# Evasion seam (spore_engine_prd Cap 2). While a status with this flag sits on an actor,
+# that actor's outgoing DAMAGE Deliveries whiff (fizzle, no land) — the "acts but misses"
+# of blinding, distinct from `gates` (which suppresses the fire entirely). Content-tuned.
+var causes_evasion: bool = false

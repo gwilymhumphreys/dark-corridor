@@ -27,6 +27,10 @@ var fizzled: bool = false
 # damage number (the tick already applied the damage inside StatusManager). `_land` is
 # never run on it, and the autotest skips it in direct-hit attribution (no double count).
 var visual_only: bool = false
+# Evasion (spore_engine_prd Cap 2): set at fire when the SOURCE actor is blinded — the
+# attack swung but whiffs. It travels, then fizzles on land (no damage). The flag is the
+# fizzle REASON (evaded vs. target-died) so the VFX wall can play a distinct miss tell.
+var evaded: bool = false
 
 
 ## Advance the travel Ticker one sim-step; returns true the step it arrives.

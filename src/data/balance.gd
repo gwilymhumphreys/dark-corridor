@@ -68,6 +68,9 @@ const STATUS_WEAK_DAMAGE_MULT: float = 0.75       # Weak: holder deals 25% less 
 const STATUS_WEAK_DURATION: float = 5.0
 const STATUS_VULNERABLE_DAMAGE_MULT: float = 1.5  # Vulnerable: holder takes 50% more
 const STATUS_VULNERABLE_DURATION: float = 5.0
+# Blind (spore_engine_prd Cap 2) — a timed evasion status; the holder's attacks whiff for
+# this long. Placeholder; the owner authors the real blinding spore (duration, enemy-only).
+const STATUS_BLIND_DURATION: float = 3.0
 
 
 # ── Triggers (charges model — push as a fraction of the bar; combat_prd) ─────

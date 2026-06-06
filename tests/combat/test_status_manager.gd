@@ -98,6 +98,42 @@ func test_timed_status_expires_at_duration() -> void:
   assert_true(expired, 'expires exactly at duration')
 
 
+func test_consume_spends_stacks_and_reports_what_it_removed() -> void:
+  # Cap 1: consume spends up to `amount` stacks and returns how many were there (so the
+  # consuming effect scales by what it found).
+  var a := Actor.new(50.0)
+  StatusManager.apply(a, StatusDef.Type.POISON, 5.0)
+  assert_almost_eq(StatusManager.consume(a, StatusDef.Type.POISON, 3.0), 3.0, 0.0001, 'removed the requested 3')
+  assert_almost_eq(_find(a, StatusDef.Type.POISON).count, 2.0, 0.0001, 'the remainder stays')
+
+
+func test_consume_caps_at_available_and_drops_a_drained_stack() -> void:
+  var a := Actor.new(50.0)
+  StatusManager.apply(a, StatusDef.Type.POISON, 2.0)
+  assert_almost_eq(StatusManager.consume(a, StatusDef.Type.POISON, 5.0), 2.0, 0.0001, 'only what was present')
+  assert_null(_find(a, StatusDef.Type.POISON), 'a fully-drained status is removed')
+
+
+func test_consume_is_a_noop_for_non_stacked_statuses() -> void:
+  # The design's stacked-only Mass rule: pool / timed / static return 0 and are untouched.
+  var a := Actor.new(50.0)
+  StatusManager.apply(a, StatusDef.Type.BLOCK, 8.0)
+  assert_almost_eq(StatusManager.consume(a, StatusDef.Type.BLOCK, 5.0), 0.0, 0.0001, 'block is not Mass fuel')
+  assert_almost_eq(_find(a, StatusDef.Type.BLOCK).count, 8.0, 0.0001, 'and is untouched')
+
+
+func test_consume_of_an_absent_status_returns_zero() -> void:
+  assert_almost_eq(StatusManager.consume(Actor.new(50.0), StatusDef.Type.POISON, 3.0), 0.0, 0.0001, 'nothing to spend')
+
+
+func test_has_evasion_reads_the_flag() -> void:
+  # Cap 2: has_evasion checks the StatusDef flag, never a status name.
+  var a := Actor.new(50.0)
+  assert_false(StatusManager.has_evasion(a), 'no statuses → no evasion')
+  StatusManager.apply(a, StatusDef.Type.BLIND, 1.0)
+  assert_true(StatusManager.has_evasion(a), 'a blind status causes evasion')
+
+
 # --- helpers (not test_*; GUT ignores them) ---
 
 func _advance(owner: Actor, status, steps: int) -> bool:

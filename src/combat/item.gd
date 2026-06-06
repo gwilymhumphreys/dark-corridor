@@ -51,6 +51,15 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   # TIME (e.g. Weak). A % multiplier, so it's locked into the payload here, cascade-safe.
   if effect.kind == Delivery.Kind.DAMAGE and owner != null:
     p.value *= StatusManager.outgoing_damage_mult(owner)
+  # Status-stack consume (spore_engine_prd Cap 1). Carry the declaration on the payload;
+  # SELF-fuel resolves now (the owner is known) by spending its stacks + scaling. OPPONENT-
+  # fuel (Mass) is left for the Combat manager, which knows the resolved target.
+  p.consume_type = effect.consume_type
+  p.consume_amount = effect.consume_amount
+  p.consume_from_target = effect.consume_from_target
+  p.consume_scale = effect.consume_scale
+  if effect.consume_type >= 0 and not effect.consume_from_target and owner != null:
+    p.value += StatusManager.consume(owner, effect.consume_type, effect.consume_amount) * effect.consume_scale
   p.shape = effect.shape
   p.travel = effect.travel
   p.status_type = effect.status_type

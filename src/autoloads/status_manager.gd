@@ -87,6 +87,34 @@ func _find(target, type: int) -> Status:
   return null
 
 
+## Spend up to `amount` stacks of `type` from `target` as fuel (spore_engine_prd Cap 1),
+## returning how many were actually present-and-removed (so the consuming effect scales by
+## what it found). Only **stacked** (PERIODIC) statuses are spendable — the design's
+## stacked-only Mass rule; timed / pool / static return 0 (a Mass effect naming one was
+## authored wrong, per #23 — no special-case). A drained instance is removed.
+func consume(target, type: int, amount: float) -> float:
+  var def: StatusDef = StatusCatalog.get_def(type)
+  if def.shape != StatusDef.Shape.PERIODIC:
+    return 0.0
+  var s: Status = _find(target, type)
+  if s == null:
+    return 0.0
+  var removed: float = minf(amount, s.count)
+  s.count -= removed
+  if s.count <= 0.0:
+    target.statuses.erase(s)
+  return removed
+
+
+## True if `actor` carries any status whose def marks it evasion-causing (spore_engine_prd
+## Cap 2 — e.g. blinding). The engine checks the flag, never a status name (#23).
+func has_evasion(actor) -> bool:
+  for s in actor.statuses:
+    if StatusCatalog.get_def(s.type).causes_evasion:
+      return true
+  return false
+
+
 ## The product of `actor`'s outgoing damage modifiers (#6) — applied to its items' DAMAGE
 ## payloads at fire time (Item._resolve_effect). 1.0 when unaffected (Weak → 0.75).
 func outgoing_damage_mult(actor) -> float:

@@ -108,7 +108,7 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
  
 ### `StatusManager` — PRD: [status_manager_prd.md](status_manager_prd.md)
  
-- **Exposes:** `apply(target, type, count, source?) → instance` (resolves source-side application modifiers, applies the stacking policy, returns the instance for the `Combat manager` to register, emits an on-apply event); `resolve_incoming_damage(target, raw, flags) → net` (amplifiers then absorbers — block); read helpers (`type → icon/colour/name`, query a target's statuses). **Stateless** — holds no instances.
+- **Exposes:** `apply(target, type, count, source?, flags?) → instance` (resolves source-side application modifiers, applies the stacking policy, returns the instance for the `Combat manager` to register, emits an on-apply event); `resolve_incoming_damage(target, raw, flags) → net` (amplifiers — Vulnerable — then absorbers — block); `outgoing_damage_mult(actor)` (Weak, at fire); `consume(target, type, amount) → stacks-removed` (spend stacked spores as fuel — spore_engine Cap 1); `has_evasion(actor)` (a blinding-class status is active — spore_engine Cap 2); read helpers (`type → icon/colour/name`, query a target's statuses). **Stateless** — holds no instances.
 - **Inbound:** `Item` / `Relic` / `Consumable` / `Enemy` abilities → `apply` / read; `Actor.take_damage` → `resolve_incoming_damage`.
 - **Outbound:** none — a rulebook. Status *instances* live on targets; their Tickers are advanced by the `Combat manager` each step (registered from `apply`'s return).
 - **Does not:** hold instances or per-fight state; advance components (the `Combat manager` does, on the `Timekeeper`'s clock); author effect content; deliver triggers (the Combat/Item PRD's accrual-push).
