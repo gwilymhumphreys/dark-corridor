@@ -49,6 +49,36 @@ func test_fight_beat_approaches_then_fights() -> void:
   screen.free()
 
 
+func test_a_fight_opens_at_the_current_battle_speed() -> void:
+  # The dial is a Game session preference; a fight beginning after it was set inherits
+  # it as the Timekeeper's base scale.
+  Game.start_run(1)
+  Game.set_battle_speed_index(2)   # ×3 before the screen mounts
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  for i in 4:   # walk the approach into the fight
+    screen._physics_process(1.0)
+  assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
+  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[2], 0.00001,
+    'the fight inherits the dial set before it began')
+  screen.free()
+
+
+func test_battle_speed_dial_retimes_the_live_fight() -> void:
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  for i in 4:
+    screen._physics_process(1.0)
+  assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
+  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[0], 0.00001,
+    'opens at ×1 by default')
+  Game.set_battle_speed_index(2)   # ×3 mid-fight
+  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[2], 0.00001,
+    'changing the dial retimes the live fight at once')
+  screen.free()
+
+
 func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
   Game.start_run(1)
   var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()

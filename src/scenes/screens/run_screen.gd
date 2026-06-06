@@ -34,8 +34,16 @@ func _ready() -> void:
   _run = Game.run
   if _run == null:
     return
+  # The player battle-speed dial (a Game session preference): retime the live fight
+  # the instant the HUD button changes it. Each new fight also picks it up on entry.
+  Game.battle_speed_changed.connect(_on_battle_speed_changed)
   _map.setup(RunManager.MAP, _run.position)
   _enter_beat()
+
+
+func _exit_tree() -> void:
+  if Game.battle_speed_changed.is_connected(_on_battle_speed_changed):
+    Game.battle_speed_changed.disconnect(_on_battle_speed_changed)
 
 
 # --- the run cycle (a polling FSM; mirrors AutoTestMode.run_full) ------------
@@ -46,6 +54,7 @@ func _enter_beat() -> void:
   _run.begin_current()
   _cm = _run.combat_manager()
   if _cm != null and not _cm.is_resolved():
+    _apply_battle_speed()   # this fight inherits the current dial setting
     _build_combat_view()
     _begin_approach()
   else:
@@ -91,6 +100,19 @@ func _physics_process(delta: float) -> void:
         _after_beat()
       else:
         _cm.tick(delta)
+
+
+# Battle-speed (a Game session preference) sets the fight clock's BASE scale; the
+# hover slow-mo override still replaces it absolutely while inspecting, returning to
+# this base on release (resolved: absolute slow-mo — timekeeper.gd). Applied on fight
+# entry and live on the dial signal.
+func _apply_battle_speed() -> void:
+  _on_battle_speed_changed(Game.battle_speed)
+
+
+func _on_battle_speed_changed(scale: float) -> void:
+  if _cm != null and _cm.timekeeper != null:
+    _cm.timekeeper.set_base_scale(scale)
 
 
 # Slow-mo-on-hover intent (ui_layout_prd "one verb"): hovering any inspectable — a
