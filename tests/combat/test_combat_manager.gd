@@ -218,16 +218,16 @@ func _hex_silence_index(combat_seed: int) -> int:
   return -1
 
 
-func test_unresolved_item_target_shape_yields_no_targets() -> void:
-  # The item-target shapes aren't resolved yet (they need the per-fight RNG, #14/#20).
-  # An item authored with one must visibly fire nothing (and warn once) — not crash.
+func test_item_target_with_no_enemy_items_yields_no_targets() -> void:
+  # An item-target shape against an opponent with an empty board resolves to no targets
+  # (the firing item just lands nothing — no crash, no phantom target).
   var p := Actor.new(100.0)
-  var e := Actor.new(100.0)
+  var e := Actor.new(100.0)   # no board items
   var cm := _manager(p, [e])
   cm.start()
   var payload := Payload.new()
   payload.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
-  assert_eq(cm._resolve_targets(payload, p).size(), 0, 'an unresolved item-target shape resolves to no targets')
+  assert_eq(cm._resolve_targets(payload, p).size(), 0, 'no enemy items → no item targets')
 
 
 func test_dot_tick_through_block_does_not_skip_a_later_status() -> void:
