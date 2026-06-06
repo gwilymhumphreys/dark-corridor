@@ -4,10 +4,12 @@
 > game is, what's built, how to work, what's settled, and what's next. It points to
 > the canonical docs rather than duplicating them — read this, then the linked docs.
 >
-> **Last updated:** 2026-06-06 — Phase 5's tune-machinery bite, **plus the first
-> non-content backlog item: settings/pause + the ×1/×2/×3 battle-speed dial** (and the
-> timescale replace-vs-multiply open resolved → replace). **153 GUT tests green** on
-> Godot 4.6; the run is watchable end-to-end and the autotest can play + report builds.
+> **Last updated:** 2026-06-06 — Phase 5's tune-machinery bite, **plus two non-content
+> backlog items: settings/pause + the ×1/×2/×3 battle-speed dial** (timescale
+> replace-vs-multiply resolved → replace) **and DoT per-applier attribution in the tune
+> report** (poison now credited to its applier, e.g. Venom Fang, not a generic lump).
+> **158 GUT tests green** on Godot 4.6; the run is watchable end-to-end and the autotest
+> can play + report builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
 > author content unless asked.** This handoff is for the *non-content* engineering
@@ -46,10 +48,10 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
 
 ## Where things stand (what's built)
 
-**Phases 1–4 + Phase 5's tune-machinery bite are complete, committed, 153 GUT tests
-green, feel gate passed.** See `git log` (each step is its own green commit). The
-first **non-content backlog item is also done — settings/pause + battle-speed** (see
-the bottom of this section).
+**Phases 1–4 + Phase 5's tune-machinery bite are complete, committed, 158 GUT tests
+green, feel gate passed.** See `git log` (each step is its own green commit). Two
+**non-content backlog items are also done — settings/pause + battle-speed, and DoT
+per-applier attribution in the tune report** (see the bottom of this section).
 
 - **Phase 1 — combat spine** (`src/combat/`): `Ticker` · `Timekeeper` (fixed-step
   clock) · `Actor` · `Item` (+ fire pipeline) · `Delivery`/`Payload` · `EventBus` ·
@@ -192,10 +194,12 @@ test-first + its own green commit, with the headless autotest as the regression 
 4. **Full-screen `CombatView` + the framed-vs-fullscreen feel compare** — the UI PRD's
    central open question, isolated to the swappable `CombatView` (Phase 4 built the
    framed one). Mock the full-screen variant, compare on feel. [ui_layout](ui_layout_prd.md).
-5. **Tune-report fidelity — DoT per-applier attribution.** Poison damage is lumped as
-   "Poison", not credited to the applier (Venom Fang reads 0 damage in the contribution
-   table). A pre-step status snapshot would attribute per-applier — sharpening the
-   report the owner's tuning reads. Small, in `src/autotest/`. [autotest](../testing/autotest.md).
+5. **Tune-report fidelity — DoT per-applier attribution — DONE (2026-06-06).** Poison
+   damage was lumped as "Poison" (Venom Fang read 0 in the contribution table). Now a
+   **pre-step status snapshot** credits the DoT remainder to the item that applied it
+   (`Status.source`) — Venom Fang reads its real poison damage; a multi-applier remainder
+   splits by weight; a source-less DoT keeps the generic channel. In `src/autotest/`
+   (logger `attribute_damage` + the mode's per-step observation). [autotest](../testing/autotest.md).
 6. **Stat-statuses design** (strength / weak / vulnerable) — the deferred problem
    (design.md): a flat +N modifier applied every trigger makes fast items strictly
    dominant in the cascade. Resolve the rule (percentage / slowest-item / charge-budget

@@ -56,7 +56,8 @@ func test_run_once_attributes_damage_by_family() -> void:
   var r := _mode().run_once()
   var fam: Dictionary = r['summary']['damage_by_family']
   assert_true(fam.has('Rusted Blade'), 'weapon damage attributed to its family')
-  assert_true(fam.has('Poison'), 'poison DoT attributed to its own channel')
+  assert_true(fam.has('Venom Fang'), 'poison DoT credited to its applier item, not a generic channel')
+  assert_false(fam.has('Poison'), 'no generic Poison lump once the applier is known')
   assert_true(fam.has('Claw'), 'the grunt claw damage attributed')
   assert_gt(r['summary']['total_damage'], 0.0, 'some damage was dealt')
 

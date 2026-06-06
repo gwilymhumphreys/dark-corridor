@@ -58,6 +58,41 @@ func test_zero_loss_yields_no_records() -> void:
   assert_eq(AutoTestLogger.attribute_damage(0.0, [{ 'family': 'A', 'raw': 3.0 }]).size(), 0)
 
 
+func test_dot_remainder_credits_the_single_applier() -> void:
+  # 5 lost, no direct hit, one known poison source -> all 5 to that applier item.
+  var recs := AutoTestLogger.attribute_damage(5.0, [], [{ 'label': 'Venom Fang', 'weight': 3.0 }])
+  assert_eq(recs.size(), 1)
+  assert_eq(recs[0]['family'], 'Venom Fang', 'poison credited to its applier, not the generic channel')
+  assert_almost_eq(recs[0]['amount'], 5.0, 0.0001)
+
+
+func test_dot_remainder_splits_between_appliers_by_weight() -> void:
+  var recs := AutoTestLogger.attribute_damage(9.0, [], [
+    { 'label': 'Venom Fang', 'weight': 6.0 },
+    { 'label': 'Ember Brand', 'weight': 3.0 },
+  ])
+  var by := _by_family(recs)
+  assert_almost_eq(by['Venom Fang'], 6.0, 0.0001, 'split proportional to potential tick damage')
+  assert_almost_eq(by['Ember Brand'], 3.0, 0.0001)
+
+
+func test_dot_remainder_with_no_known_source_is_the_generic_channel() -> void:
+  # Empty snapshot (a source-less DoT) keeps the old behaviour.
+  var recs := AutoTestLogger.attribute_damage(4.0, [], [])
+  assert_eq(recs[0]['family'], AutoTestLogger.DOT_FAMILY, 'source-less DoT stays the generic channel')
+  assert_almost_eq(recs[0]['amount'], 4.0, 0.0001)
+
+
+func test_direct_plus_dot_credits_both_the_hit_and_the_applier() -> void:
+  # 9 lost: 6 from a blade, 3 from poison -> blade + its applier, no generic lump.
+  var recs := AutoTestLogger.attribute_damage(
+    9.0, [{ 'family': 'Rusted Blade', 'raw': 6.0 }], [{ 'label': 'Venom Fang', 'weight': 3.0 }])
+  var by := _by_family(recs)
+  assert_almost_eq(by['Rusted Blade'], 6.0, 0.0001)
+  assert_almost_eq(by['Venom Fang'], 3.0, 0.0001)
+  assert_false(by.has(AutoTestLogger.DOT_FAMILY), 'no generic Poison lump when the applier is known')
+
+
 # --- accumulation + summary -------------------------------------------------
 
 func test_record_damage_accumulates_family_and_total() -> void:

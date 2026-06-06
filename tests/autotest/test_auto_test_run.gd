@@ -105,6 +105,20 @@ func test_run_full_report_has_per_encounter_and_contribution() -> void:
   assert_eq(s['strategy'], 'first-viable', 'the strategy is recorded')
 
 
+func test_run_full_credits_poison_to_its_applier_in_the_contribution_table() -> void:
+  # The starting board holds Venom Fang; its poison ticks must show as ITS damage in
+  # the contribution table — not lumped under a generic Poison channel (it read 0 before).
+  var m := _mode(1)
+  var r := m.run_full()
+  var venom: Dictionary = {}
+  for row in m.logger._item_contribution_rows(r['summary']):
+    if row['name'] == 'Venom Fang':
+      venom = row
+  assert_false(venom.is_empty(), 'Venom Fang is on the board')
+  assert_gt(float(venom['damage']), 0.0, 'its poison damage is credited to it')
+  assert_false(venom['trap'], 'so a working poison item is never mis-flagged a trap')
+
+
 func test_resume_mid_run_finishes_the_descent() -> void:
   # Resume smoke: play part of a run, reload from the autosave, and finish it.
   Game.start_run(3)

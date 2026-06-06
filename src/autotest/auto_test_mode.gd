@@ -237,9 +237,10 @@ func _drive_fight(
       outcome = 'TIMEOUT'
       break
     var before: Dictionary = _hp_snapshot(actors)
+    var dot_before: Dictionary = _dot_snapshot(actors)   # applier sources, pre-tick
     cm.sim_step()
     steps += 1
-    _observe_damage(cm, actors, before)
+    _observe_damage(cm, actors, before, dot_before)
     _observe_fires(actors[0])   # player fires (the contribution table is player-only)
     if stuck.note(_total_hp(actors)):
       outcome = 'STUCK'
@@ -287,8 +288,9 @@ func _build_fight() -> Dictionary:
 
 ## Attribute each actor's net HP loss this step to a damage family and feed it to
 ## the logger. Direct hits come from the Deliveries that landed this step; the
-## unexplained remainder is the DoT channel (poison). See AutoTestLogger.
-func _observe_damage(cm: CombatManager, actors: Array, before: Dictionary) -> void:
+## unexplained remainder is DoT, credited to the item that applied it via the
+## pre-step `dot_before` snapshot (else the generic channel). See AutoTestLogger.
+func _observe_damage(cm: CombatManager, actors: Array, before: Dictionary, dot_before: Dictionary) -> void:
   var now: float = cm.timekeeper.sim_time
   var direct_by_target: Dictionary = {}
   for d in cm.deliveries():
@@ -301,7 +303,7 @@ func _observe_damage(cm: CombatManager, actors: Array, before: Dictionary) -> vo
     if loss <= 0.0:
       continue
     var direct: Array = direct_by_target.get(a, [])
-    for rec in AutoTestLogger.attribute_damage(loss, direct):
+    for rec in AutoTestLogger.attribute_damage(loss, direct, dot_before.get(a, [])):
       logger.record_damage(rec['family'], rec['amount'])
 
 
@@ -309,6 +311,33 @@ func _family_of(source: Variant) -> String:
   if source is Item and source.def != null and source.def.name_key != '':
     return source.def.name_key
   return 'Unknown'
+
+
+## Snapshot each actor's DoT-applying statuses BEFORE a step, so the post-step
+## remainder can be credited to the item that applied the poison — even if its last
+## tick removed the status. `label` = the applier item's name (else the status name,
+## e.g. 'Poison', for a source-less DoT); `weight` = its potential tick damage
+## (count × damage_per_tick), used to split a remainder between multiple appliers.
+func _dot_snapshot(actors: Array) -> Dictionary:
+  var snap: Dictionary = {}
+  for a in actors:
+    snap[a] = _dot_sources_of(a)
+  return snap
+
+
+func _dot_sources_of(actor) -> Array:
+  var out: Array = []
+  for st in actor.statuses:
+    var def: StatusDef = StatusCatalog.get_def(st.type)
+    if def.shape == StatusDef.Shape.PERIODIC and def.damage_per_tick > 0.0:
+      out.append({ 'label': _dot_label(st, def), 'weight': maxf(st.count, 0.0) * def.damage_per_tick })
+  return out
+
+
+func _dot_label(st: Status, def: StatusDef) -> String:
+  if st.source is Item and st.source.def != null and st.source.def.name_key != '':
+    return st.source.def.name_key
+  return def.name_key   # source-less DoT keeps the status-name channel (e.g. 'Poison')
 
 
 ## A label for the per-encounter table: the (first) enemy's name for a fight, else the

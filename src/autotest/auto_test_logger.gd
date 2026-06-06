@@ -7,12 +7,13 @@ extends RefCounted
 ##
 ## Damage-by-family is built per sim-step from net HP loss + the Deliveries that
 ## landed that step (see `attribute_damage`): direct hits attribute to their
-## source item's family; the unexplained remainder is the DoT channel (poison,
-## the one damaging status in Phase 1, which lands no Delivery yet).
+## source item's family; the unexplained remainder is DoT (poison ticks land no
+## Delivery), credited to the item that applied it via a pre-step status snapshot
+## (`dot_sources`) — so Venom Fang's poison shows under "Venom Fang", not a lump.
 
-## The family label for HP loss not explained by a landed Delivery this step.
-## Phase 1 has exactly one damaging status (poison); when more exist this needs a
-## pre-step status snapshot to disambiguate which DoT dealt the remainder.
+## The fallback channel for DoT HP-loss whose applier is unknown (a source-less or
+## enemy-supplied DoT). When the applier IS known, its item name is used instead —
+## that's the per-applier attribution the snapshot provides.
 const DOT_FAMILY: String = 'Poison'
 
 var events: Array = []                 # Array[Dictionary] — { type, data }
@@ -28,12 +29,15 @@ var fires_by_item: Dictionary = {}     # item name_key -> times it fired (player
 ##   loss   — net HP the actor lost this step (>= 0; healing is not damage)
 ##   direct — Array of { 'family': String, 'raw': float }, one per DAMAGE Delivery
 ##            that landed on this actor this step
-##   dot_family — label for the unexplained remainder (the DoT channel)
+##   dot_sources — the actor's DoT-applying statuses snapshotted BEFORE the step:
+##            Array of { 'label': String, 'weight': float } (label = the applier
+##            item's name; weight = its potential tick damage). The DoT remainder is
+##            split among them by weight; empty / zero-weight → the DOT_FAMILY channel.
 ## Returns Array of { 'family': String, 'amount': float }. Direct hits take their
 ## proportional share of the net loss (so block-absorbed damage is excluded);
-## anything left over is the DoT remainder. With no block and a single source the
-## split is exact — the common Phase 1 case.
-static func attribute_damage(loss: float, direct: Array, dot_family: String = DOT_FAMILY) -> Array:
+## anything left over is the DoT remainder, credited to its applier(s). With no block
+## and a single source the split is exact — the common case.
+static func attribute_damage(loss: float, direct: Array, dot_sources: Array = []) -> Array:
   var out: Array = []
   if loss <= 0.0:
     return out
@@ -49,7 +53,22 @@ static func attribute_damage(loss: float, direct: Array, dot_family: String = DO
       })
   var remainder: float = loss - to_direct
   if remainder > 0.0001:
-    out.append({ 'family': dot_family, 'amount': remainder })
+    out.append_array(_split_remainder(remainder, dot_sources))
+  return out
+
+
+## Split the DoT remainder among the snapshotted applier sources by weight. No known
+## source (empty list or zero total weight) → the generic DOT_FAMILY channel (the old
+## behaviour, for a source-less or enemy-supplied DoT).
+static func _split_remainder(remainder: float, dot_sources: Array) -> Array:
+  var total_weight: float = 0.0
+  for s in dot_sources:
+    total_weight += s['weight']
+  if dot_sources.is_empty() or total_weight <= 0.0:
+    return [{ 'family': DOT_FAMILY, 'amount': remainder }]
+  var out: Array = []
+  for s in dot_sources:
+    out.append({ 'family': s['label'], 'amount': s['weight'] / total_weight * remainder })
   return out
 
 
