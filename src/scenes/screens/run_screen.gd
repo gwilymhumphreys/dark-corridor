@@ -192,7 +192,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _can_pause() -> bool:
-  return _state == State.APPROACHING or _state == State.FIGHTING
+  # Pause is available at ANY point in a live run — including while a choice / event / draft
+  # overlay is up. The pause menu's full-rect Catcher (layer 100) blocks input to whatever is
+  # underneath, and quit-to-menu resumes from the beat's entry save (a clean re-do).
+  return _run != null
 
 
 func _toggle_pause() -> void:

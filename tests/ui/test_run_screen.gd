@@ -197,6 +197,33 @@ func _seed_with_opening_event() -> int:
   return -1
 
 
+func test_pause_available_during_a_choice() -> void:
+  Game.start_run(1)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  assert_eq(screen._state, RunScreen.State.CHOOSING, 'the opening beat is a choice')
+  screen._unhandled_input(_escape())
+  assert_true(screen._paused, 'Escape pauses during a choice')
+  assert_not_null(screen._pause_menu, 'the pause menu is up over the choice overlay')
+  screen._unhandled_input(_escape())
+  assert_false(screen._paused, 'and Escape resumes')
+  screen.free()
+
+
+func test_pause_available_during_an_event() -> void:
+  var seed_value: int = _seed_with_opening_event()
+  assert_true(seed_value >= 0, 'a seed offering the event at the opening choice exists')
+  if seed_value < 0:
+    return
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  screen._on_choice_picked(_first_candidate_of_type(EncounterDef.Type.EVENT))
+  assert_eq(screen._state, RunScreen.State.EVENTING, 'at the event')
+  screen._unhandled_input(_escape())
+  assert_true(screen._paused, 'Escape pauses during an event')
+  screen.free()
+
+
 func _escape() -> InputEventAction:
   var ev := InputEventAction.new()
   ev.action = 'ui_cancel'
