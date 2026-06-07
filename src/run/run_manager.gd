@@ -32,7 +32,7 @@ var rng: RandomNumberGenerator
 var _ally_def_ids: Array = []  # parallel to `allies` — each ally's EnemyCatalog def id (snapshot)
 
 var _current: Encounter = null
-var _current_def_id: int = -1    # the resolved EncounterDef id for the current beat (resume)
+var _current_def_id: String = ''    # the resolved EncounterDef id for the current beat (resume)
 var _pending_choice: Array = []  # Array[EncounterCatalog.Id] — choice candidates awaiting a pick
 var _pending_offer: Array = []   # Array[ItemDef] — the held draft offer (1-of-3)
 var _ended: bool = false
@@ -50,13 +50,13 @@ func start(seed_value: int) -> void:
   # Whetstone enchant on the weapon, and one Healing Draught potion — so all three
   # content paths run end-to-end in the prototype run (drafting enchants/potions is
   # the deferred slot-composition work).
-  relics = [Relic.new(RelicCatalog.get_def(RelicCatalog.Id.STONE_WARD))]
-  potions = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.Id.HEALING_DRAUGHT))]
-  apply_enchant(Enchantment.new(EnchantCatalog.get_def(EnchantCatalog.Id.WHETSTONE)), 0)
+  relics = [Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD))]
+  potions = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
+  apply_enchant(Enchantment.new(EnchantCatalog.get_def(EnchantCatalog.WHETSTONE)), 0)
   position = 0
   _ended = false
   _pending_offer = []
-  _current_def_id = -1
+  _current_def_id = ''
   _pending_choice = []
   allies = []                  # no starting allies by default (the owner wires acquisition)
   _ally_def_ids = []
@@ -68,7 +68,7 @@ func start(seed_value: int) -> void:
 ## Stone Ward starting relic. The player Actor is run-lifetime, owned here.
 func _make_starting_player() -> Actor:
   var actor := Actor.new(Balance.PLAYER_START_HP)
-  for id in [ItemCatalog.Id.WEAPON, ItemCatalog.Id.ARMOR, ItemCatalog.Id.POISON_DAGGER]:
+  for id in [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]:
     actor.board.append(Item.new(ItemCatalog.get_def(id), actor))
   return actor
 
@@ -164,7 +164,7 @@ func _grant_relic() -> void:
   var pool: Array = RelicCatalog.REWARD_POOL
   if pool.is_empty():
     return
-  var id: int = pool[rng.randi_range(0, pool.size() - 1)]
+  var id: String = pool[rng.randi_range(0, pool.size() - 1)]
   var relic := Relic.new(RelicCatalog.get_def(id))
   relics.append(relic)
   _apply_relic_grant(relic)
@@ -202,12 +202,12 @@ func apply_draft_pick(index: int) -> void:
 ## in the snapshot, and joins every fight (the Encounter seeds the CombatManager with it).
 ## The acquisition path (a draftable `ally` category / a character-start ally) is the owner's;
 ## this is the run-state surface it calls.
-func add_ally(def_id: int) -> void:
+func add_ally(def_id: String) -> void:
   allies.append(_make_ally(def_id))
   _ally_def_ids.append(def_id)
 
 
-func _make_ally(def_id: int) -> Actor:
+func _make_ally(def_id: String) -> Actor:
   var def: EnemyDef = EnemyCatalog.get_def(def_id)
   var actor := Actor.new(def.max_hp)
   for item_id in def.item_ids:
@@ -273,7 +273,7 @@ func outcome() -> int:
 ## encounter immediately; a CHOICE beat assembles candidates and waits for a pick (no
 ## encounter yet — pick_path creates it). Clears any prior beat's transient state.
 func _enter_beat(pos: int) -> void:
-  _current_def_id = -1
+  _current_def_id = ''
   _pending_choice = []
   var spec: Dictionary = RunMap.beat_spec(pos)
   if spec['kind'] == RunMap.BeatKind.CHOICE:
@@ -358,24 +358,24 @@ func rehydrate(snap: Dictionary) -> void:
   player.hp = float(snap['hp'])
   player.board.clear()
   for entry in snap['board']:
-    var item := Item.new(ItemCatalog.get_def(int(entry['id'])), player)
+    var item := Item.new(ItemCatalog.get_def(str(entry['id'])), player)
     if entry['enchant'] != null:
-      item.enchant = Enchantment.new(EnchantCatalog.get_def(int(entry['enchant'])))
+      item.enchant = Enchantment.new(EnchantCatalog.get_def(str(entry['enchant'])))
     player.board.append(item)
   allies = []
   _ally_def_ids = []
   for entry in snap.get('allies', []):
-    var aid: int = int(entry['id'])
+    var aid: String = str(entry['id'])
     var ally := _make_ally(aid)
     ally.hp = float(entry['hp'])
     allies.append(ally)
     _ally_def_ids.append(aid)
   relics = []
   for rid in snap['relics']:
-    relics.append(Relic.new(RelicCatalog.get_def(int(rid))))
+    relics.append(Relic.new(RelicCatalog.get_def(str(rid))))
   potions = []
   for pid in snap['potions']:
-    potions.append(Consumable.new(ConsumableCatalog.get_def(int(pid))))
+    potions.append(Consumable.new(ConsumableCatalog.get_def(str(pid))))
   position = int(snap['position'])
   rng = RandomNumberGenerator.new()
   rng.seed = int(snap['rng']['seed'])
@@ -383,11 +383,11 @@ func rehydrate(snap: Dictionary) -> void:
   _ended = false
   _pending_offer = []
   # Restore the current beat's resolution exactly — never re-draw a choice (no save-scum).
-  _current_def_id = int(snap.get('current_def_id', -1))
+  _current_def_id = str(snap.get('current_def_id', ''))
   _pending_choice = []
   for v in snap.get('pending_choice', []):
-    _pending_choice.append(int(v))
-  if _current_def_id >= 0:
+    _pending_choice.append(str(v))
+  if _current_def_id != '':
     _create_current_encounter()
   elif _pending_choice.is_empty():
     _enter_beat(position)   # fallback for an older/edgeless snapshot

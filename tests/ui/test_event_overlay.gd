@@ -19,7 +19,7 @@ func after_each() -> void:
 
 
 func _event() -> Encounter:
-  var e := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.Id.EVENT_SHRINE), Actor.new(100.0))
+  var e := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.EVENT_SHRINE), Actor.new(100.0))
   _encs.append(e)
   return e
 
@@ -32,5 +32,5 @@ func test_overlay_shows_options_and_emits_the_pick() -> void:
   watch_signals(overlay)
   var btn: Button = overlay.get_node('Panel/Options').get_child(1)
   btn.pressed.emit()
-  assert_signal_emitted_with_parameters(overlay, 'option_picked', [1], 'clicking an option emits its index')
+  assert_signal_emitted_with_parameters(overlay, 'option_picked', [1])
   overlay.free()

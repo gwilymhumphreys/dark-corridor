@@ -5,8 +5,8 @@ class_name DraftPool
 ## prototype stand-in the Run manager hands to Draft.draw().
 
 const ITEMS: Array = [
-  ItemCatalog.Id.WEAPON,
-  ItemCatalog.Id.ARMOR,
-  ItemCatalog.Id.POISON_DAGGER,
-  ItemCatalog.Id.AVENGER,
+  ItemCatalog.WEAPON,
+  ItemCatalog.ARMOR,
+  ItemCatalog.POISON_DAGGER,
+  ItemCatalog.AVENGER,
 ]

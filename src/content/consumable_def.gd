@@ -9,7 +9,7 @@ extends RefCounted
 
 enum Rarity { COMMON, UNCOMMON, RARE }
 
-var id: int = -1
+var id: String = ''
 var name_key: String = ''        # source English; displayed via tr() — localizable
 var rarity: int = Rarity.COMMON
 var effects: Array = []          # Array[ItemEffect]

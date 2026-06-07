@@ -12,7 +12,7 @@ extends RefCounted
 enum Kind { COMBAT_START_STATUS, MAX_HP_BONUS }
 enum Rarity { COMMON, UNCOMMON, RARE }
 
-var id: int = -1
+var id: String = ''
 var name_key: String = ''           # source English; displayed via tr() — localizable
 var rarity: int = Rarity.COMMON     # feel-based for relics (content_prd), not a power ladder
 var kind: int = Kind.COMBAT_START_STATUS

@@ -153,7 +153,7 @@ func test_max_hp_relic_grant_raises_max_and_current_hp() -> void:
   run.start(1)
   var before_max: float = run.player.max_hp
   var before_hp: float = run.player.hp
-  var charm := Relic.new(RelicCatalog.get_def(RelicCatalog.Id.VITAL_CHARM))
+  var charm := Relic.new(RelicCatalog.get_def(RelicCatalog.VITAL_CHARM))
   run.relics.append(charm)
   run._apply_relic_grant(charm)
   assert_almost_eq(run.player.max_hp, before_max + Balance.RELIC_VITAL_CHARM_MAX_HP, 0.0001, 'max HP grew')
@@ -174,7 +174,7 @@ func test_granted_relic_survives_save_and_resume() -> void:
   var run := _run()
   run.start(1)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
-  var granted_id: int = run.relics[-1].def.id
+  var granted_id: String = run.relics[-1].def.id
   var max_after: float = run.player.max_hp
   var snap: Dictionary = run.snapshot()
 
@@ -234,7 +234,7 @@ func test_resumed_run_derives_the_same_per_fight_seed() -> void:
 func test_ally_persists_through_save_and_resume() -> void:
   var run := _run()
   run.start(1)
-  run.add_ally(EnemyCatalog.Id.SPORE_THRALL)
+  run.add_ally(EnemyCatalog.SPORE_THRALL)
   run.allies[0].take_damage(5.0)   # so its HP isn't full
   var hp: float = run.allies[0].hp
   var run_b := _run()
@@ -247,7 +247,7 @@ func test_ally_persists_through_save_and_resume() -> void:
 func test_between_act_full_heal_revives_allies() -> void:
   var run := _run()
   run.start(1)
-  run.add_ally(EnemyCatalog.Id.SPORE_THRALL)
+  run.add_ally(EnemyCatalog.SPORE_THRALL)
   run.allies[0].take_damage(10.0)
   run.position = RunMap.BEATS_PER_ACT - 1
   run.advance()                    # cross into the next act
@@ -257,7 +257,7 @@ func test_between_act_full_heal_revives_allies() -> void:
 func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
   var run := _run()
   run.start(1)
-  run.add_ally(EnemyCatalog.Id.SPORE_THRALL)
+  run.add_ally(EnemyCatalog.SPORE_THRALL)
   var weak_ally: WeakRef = weakref(run.allies[0])
   var weak_item: WeakRef = weakref(run.allies[0].board[0])
   run.teardown()
@@ -290,9 +290,9 @@ func test_choice_candidates_survive_resume() -> void:
 
 
 func test_fixed_beats_are_boss_relic_and_rest() -> void:
-  assert_eq(int(RunMap.beat_spec(RunMap.BOSS_BEAT)['id']), EncounterCatalog.Id.FIGHT_BOSS, 'act end = boss')
-  assert_eq(int(RunMap.beat_spec(RunMap.RELIC_BEAT)['id']), EncounterCatalog.Id.FIGHT_RELIC, 'midpoint = relic')
-  assert_eq(int(RunMap.beat_spec(RunMap.REST_BEAT)['id']), EncounterCatalog.Id.REST, 'a per-act rest')
+  assert_eq(RunMap.beat_spec(RunMap.BOSS_BEAT)['id'], EncounterCatalog.FIGHT_BOSS, 'act end = boss')
+  assert_eq(RunMap.beat_spec(RunMap.RELIC_BEAT)['id'], EncounterCatalog.FIGHT_RELIC, 'midpoint = relic')
+  assert_eq(RunMap.beat_spec(RunMap.REST_BEAT)['id'], EncounterCatalog.REST, 'a per-act rest')
   assert_eq(int(RunMap.beat_spec(0)['kind']), RunMap.BeatKind.CHOICE, 'other beats are choices')
   assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
 
@@ -336,13 +336,13 @@ func test_starting_kit_saves_and_rehydrates() -> void:
   assert_eq(run.relics.size(), 1, 'the Stone Ward relic')
 
   var snap: Dictionary = run.snapshot()
-  assert_eq(int(snap['board'][0]['enchant']), EnchantCatalog.Id.WHETSTONE, 'enchant id saved on the board entry')
+  assert_eq(snap['board'][0]['enchant'], EnchantCatalog.WHETSTONE, 'enchant id saved on the board entry')
   assert_eq(snap['potions'].size(), 1, 'potion saved')
 
   var run_b := _run()
   run_b.rehydrate(snap)
   assert_not_null(run_b.player.board[0].enchant, 'rehydrate rebuilds the enchant on the item')
-  assert_eq(run_b.player.board[0].enchant.def.id, EnchantCatalog.Id.WHETSTONE)
+  assert_eq(run_b.player.board[0].enchant.def.id, EnchantCatalog.WHETSTONE)
   assert_eq(run_b.potions.size(), 1, 'rehydrate rebuilds the potion')
 
 

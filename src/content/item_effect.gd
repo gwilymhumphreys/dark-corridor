@@ -27,5 +27,5 @@ var consume_scale: float = 0.0   # value added to the payload per stack consumed
 # Summon (spore_engine_prd Cap 3): a kind == SUMMON effect spawns a token Actor from an
 # EnemyCatalog def onto the summoner's OWN side (shape SELF). `summon_in_front` puts it
 # leftmost (body-block / adds-in-front). The token def + the trigger are content.
-var summon_def_id: int = -1
+var summon_def_id: String = ''
 var summon_in_front: bool = true

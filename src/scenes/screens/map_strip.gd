@@ -52,10 +52,10 @@ func _beat_color(i: int) -> Color:
   var spec: Dictionary = RunMap.beat_spec(i)
   if spec['kind'] == RunMap.BeatKind.FIXED:
     match spec['id']:
-      EncounterCatalog.Id.FIGHT_BOSS:
+      EncounterCatalog.FIGHT_BOSS:
         return Color(0.7, 0.4, 0.9)     # boss
-      EncounterCatalog.Id.REST:
+      EncounterCatalog.REST:
         return Color(0.4, 0.75, 0.45)   # rest
-      EncounterCatalog.Id.FIGHT_RELIC:
+      EncounterCatalog.FIGHT_RELIC:
         return Color(0.85, 0.7, 0.3)    # guaranteed relic
   return Color(0.65, 0.4, 0.4)          # a choice beat

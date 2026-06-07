@@ -14,7 +14,7 @@ func after_each() -> void:
 
 
 func test_catalog_builds_the_combat_start_relic() -> void:
-  var d := RelicCatalog.get_def(RelicCatalog.Id.STONE_WARD)
+  var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
   assert_eq(d.kind, RelicDef.Kind.COMBAT_START_STATUS)
   assert_eq(d.status_type, StatusDef.Type.BLOCK, 'Stone Ward grants block')
   assert_gt(d.status_count, 0.0, 'with a positive amount')
@@ -22,7 +22,7 @@ func test_catalog_builds_the_combat_start_relic() -> void:
 
 
 func test_instance_carries_its_def() -> void:
-  var d := RelicCatalog.get_def(RelicCatalog.Id.STONE_WARD)
+  var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
   var r := Relic.new(d)
   assert_eq(r.def, d, 'the instance holds its definition')
 
@@ -30,7 +30,7 @@ func test_instance_carries_its_def() -> void:
 func test_applying_a_combat_start_relic_grants_the_status() -> void:
   # The shape the Run manager uses: at fight start, apply each relic's status to
   # the player Actor via StatusManager.
-  var d := RelicCatalog.get_def(RelicCatalog.Id.STONE_WARD)
+  var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
   var player := Actor.new(100.0)
   StatusManager.apply(player, d.status_type, d.status_count)
   # Block absorbs incoming damage before HP — so the relic block is live.

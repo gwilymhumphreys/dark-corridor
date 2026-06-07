@@ -3,24 +3,24 @@ class_name EnchantCatalog
 ## Phase 3 pool: one scale-a-value enchant (Whetstone → +50% to the host item's
 ## payload values). Lazily built once, like the other catalogs.
 
-enum Id { WHETSTONE }
+const WHETSTONE := 'whetstone'
 
 static var _defs: Dictionary = {}
 
 
-static func get_def(id: int) -> EnchantDef:
+static func get_def(id: String) -> EnchantDef:
   if _defs.is_empty():
     _build()
   return _defs[id]
 
 
 static func _build() -> void:
-  _defs[Id.WHETSTONE] = _whetstone()
+  _defs[WHETSTONE] = _whetstone()
 
 
 static func _whetstone() -> EnchantDef:
   var d := EnchantDef.new()
-  d.id = Id.WHETSTONE
+  d.id = WHETSTONE
   d.name_key = 'Whetstone'
   d.value_mult = Balance.ENCHANT_WHETSTONE_MULT
   return d

@@ -3,24 +3,24 @@ class_name ConsumableCatalog
 ## one heal potion (Healing Draught → heal the thrower; a travel-0 self-target
 ## effect). Lazily built once.
 
-enum Id { HEALING_DRAUGHT }
+const HEALING_DRAUGHT := 'healing_draught'
 
 static var _defs: Dictionary = {}
 
 
-static func get_def(id: int) -> ConsumableDef:
+static func get_def(id: String) -> ConsumableDef:
   if _defs.is_empty():
     _build()
   return _defs[id]
 
 
 static func _build() -> void:
-  _defs[Id.HEALING_DRAUGHT] = _healing_draught()
+  _defs[HEALING_DRAUGHT] = _healing_draught()
 
 
 static func _healing_draught() -> ConsumableDef:
   var d := ConsumableDef.new()
-  d.id = Id.HEALING_DRAUGHT
+  d.id = HEALING_DRAUGHT
   d.name_key = 'Healing Draught'
   var heal := ItemEffect.new()
   heal.kind = Delivery.Kind.HEAL

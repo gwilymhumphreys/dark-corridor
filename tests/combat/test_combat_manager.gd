@@ -53,8 +53,8 @@ func _item_has_status(item: Item, type: int) -> bool:
 
 
 func _run_basic() -> Dictionary:
-  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
   var steps := cm.run_headless()
@@ -95,9 +95,9 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
   }]
 
   var p := Actor.new(500.0)
-  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.Id.POISON_DAGGER), p))
+  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), p))
   p.board.append(Item.new(avenger, p))
-  var e := _spawn(500.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var e := _spawn(500.0, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
 
@@ -145,8 +145,8 @@ func test_deliveries_are_pruned_not_accumulated() -> void:
   # Two unkillable actors trading blows forever: without pruning, every fired
   # Delivery would pile up in _deliveries. With it, only the few in-flight /
   # still-animating at any moment survive — the set stays bounded.
-  var p := _spawn(1_000_000.0, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(1_000_000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(1_000_000.0, [ItemCatalog.WEAPON])
+  var e := _spawn(1_000_000.0, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
   var peak := 0
@@ -161,8 +161,8 @@ func test_actor_and_item_statuses_advance_identically() -> void:
   # A timed status on an actor and on an item must count down + expire on the SAME
   # step — item statuses are advanced uniformly, not skipped. High HP so the fight
   # outlasts the status duration.
-  var p := _spawn(1000.0, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(1000.0, [ItemCatalog.WEAPON])
+  var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
   StatusManager.apply(p, StatusDef.Type.WEAK, 1.0)            # timed status on the actor
@@ -272,7 +272,7 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
 
 # --- mid-fight roster: summons + both-side rosters (spore_engine_prd Cap 3) --
 
-func _summon_item(owner: Actor, token_id: int, in_front: bool = true) -> Item:
+func _summon_item(owner: Actor, token_id: String, in_front: bool = true) -> Item:
   var def := ItemDef.new()
   var s := ItemEffect.new()
   s.kind = Delivery.Kind.SUMMON
@@ -291,7 +291,7 @@ func test_summon_adds_a_token_to_the_players_side() -> void:
   cm.start()
   var before: int = cm._player_side().size()
   var arrived: Array = []
-  cm._fire_item(_summon_item(p, EnemyCatalog.Id.SPORE_THRALL), arrived)
+  cm._fire_item(_summon_item(p, EnemyCatalog.SPORE_THRALL), arrived)
   for d in arrived:
     cm._land(d)
   assert_eq(cm._player_side().size(), before + 1, 'a token joined the player side')
@@ -304,7 +304,7 @@ func test_enemy_summon_adds_to_the_enemy_side() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var arrived: Array = []
-  cm._fire_item(_summon_item(e, EnemyCatalog.Id.SPORE_THRALL), arrived)
+  cm._fire_item(_summon_item(e, EnemyCatalog.SPORE_THRALL), arrived)
   for d in arrived:
     cm._land(d)
   assert_eq(cm.enemies.size(), 2, 'the enemy summoned an add onto its own side')
@@ -313,8 +313,8 @@ func test_enemy_summon_adds_to_the_enemy_side() -> void:
 func test_dead_actor_items_stop_ticking_and_firing() -> void:
   # The bug a single-enemy fight hid: in a multi-body fight a slain body must stop swinging.
   var p := Actor.new(1000.0)
-  var e1 := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
-  var e2 := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var e1 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var e2 := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e1, e2])
   cm.start()
   e1.take_damage(40.0)
@@ -351,12 +351,12 @@ func test_player_death_loses_even_with_a_living_token() -> void:
 
 
 func test_summoned_token_is_dissolved_but_run_scoped_side_survives() -> void:
-  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
-  var ally := _spawn(50.0, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var ally := _spawn(50.0, [ItemCatalog.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e], 0, [ally])   # ally is run-scoped (passed in)
   cm.start()
-  var token := _spawn(15.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var token := _spawn(15.0, [ItemCatalog.ENEMY_CLAW])
   cm.add_actor(token, true, true)                  # token is combat-scoped (summoned)
   var weak_token: WeakRef = weakref(token)
   var weak_token_item: WeakRef = weakref(token.board[0])
@@ -391,10 +391,10 @@ func test_random_item_target_varies_across_seeds() -> void:
 # the first item it silences (the random pick), or -1 if none within the guard.
 func _hex_silence_index(combat_seed: int) -> int:
   var p := Actor.new(5000.0)
-  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.Id.HEX_BOLT), p))
+  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.HEX_BOLT), p))
   var e := Actor.new(5000.0)
   for i in 4:
-    e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.Id.ENEMY_CLAW), e))
+    e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.ENEMY_CLAW), e))
   var cm := CombatManager.new(p, [e], combat_seed)
   _made.append(cm)
   cm.start()
@@ -465,7 +465,7 @@ func test_enemy_actor_and_items_free_after_teardown() -> void:
   # has no cycle collection). Player has no board here so only the enemy cycle is
   # under test. weakref goes null only once the object is actually freed.
   var p := Actor.new(100.0)
-  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var weak_enemy: WeakRef = weakref(e)
   var weak_item: WeakRef = weakref(e.board[0])
   var cm := CombatManager.new(p, [e])
@@ -481,8 +481,8 @@ func test_item_cooldowns_reset_each_fight() -> void:
   # The player's board persists across the run, but a cooldown is combat-scoped (like
   # a status): it must NOT carry over. Else fight N+1 opens mid-charge, and a resumed
   # save (items rebuilt fresh at accum 0) diverges from continuous play (decision #20).
-  var p := _spawn(1000.0, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(1000.0, [ItemCatalog.WEAPON])
+  var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
   for i in 20:
@@ -491,15 +491,15 @@ func test_item_cooldowns_reset_each_fight() -> void:
   cm.teardown()   # the player survives teardown (only its statuses clear); its board persists
 
   # A new fight with the SAME persistent player board must start the item fresh.
-  var e2 := _spawn(1000.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var e2 := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
   var cm2 := _manager(p, [e2])
   cm2.start()
   assert_eq(p.board[0].cooldown.accum, 0.0, 'fight 2 starts every board item at a fresh cooldown')
 
 
 func test_teardown_clears_combat_state() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.POISON_DAGGER])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.POISON_DAGGER])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
   cm.run_headless()
@@ -515,8 +515,8 @@ func test_tick_drives_fight_to_resolution() -> void:
   # tick(delta) is the run screen's real-time driver: it turns real delta into
   # whole sim-steps (steps_due) and runs them. Same verdict as run_headless, just
   # off a clock instead of a raw loop.
-  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
   var guard := 0
@@ -530,8 +530,8 @@ func test_tick_drives_fight_to_resolution() -> void:
 func test_request_slowmo_sets_and_clears_the_dial() -> void:
   # The slow-mo-on-hover intent: the view never writes the dial — it asks, and the
   # manager sets / clears its Timekeeper's momentary override (back to base, not x1).
-  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
   cm.request_slowmo(true)
@@ -544,8 +544,8 @@ func test_physics_process_drives_tick_when_mounted() -> void:
   # A directly-mounted CombatManager (the sandbox) must still self-drive: its
   # _physics_process delegates to tick(). Mount it, run a couple of physics frames,
   # and confirm the clock advanced. Not via _manager — we own its lifetime here.
-  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON])
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
   cm.timekeeper.set_base_scale(20.0)   # many sim-steps per physics frame

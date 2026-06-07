@@ -5,40 +5,46 @@ class_name EncounterCatalog
 ## reward-routing beats (#2) — catalog-only, not in the map; the owner slots them into the
 ## real act structure / choice layer. Lazily built once.
 
-enum Id { FIGHT_GRUNT, REST, FIGHT_ELITE, FIGHT_RELIC, FIGHT_TOUGH, FIGHT_BOSS, EVENT_SHRINE }
+const FIGHT_GRUNT := 'fight_grunt'
+const REST := 'rest'
+const FIGHT_ELITE := 'fight_elite'
+const FIGHT_RELIC := 'fight_relic'
+const FIGHT_TOUGH := 'fight_tough'
+const FIGHT_BOSS := 'fight_boss'
+const EVENT_SHRINE := 'event_shrine'
 
 static var _defs: Dictionary = {}
 
 
-static func get_def(id: int) -> EncounterDef:
+static func get_def(id: String) -> EncounterDef:
   if _defs.is_empty():
     _build()
   return _defs[id]
 
 
 static func _build() -> void:
-  _defs[Id.FIGHT_GRUNT] = _fight_grunt()
-  _defs[Id.REST] = _rest()
-  _defs[Id.FIGHT_ELITE] = _fight_elite()
-  _defs[Id.FIGHT_RELIC] = _fight_relic()
-  _defs[Id.FIGHT_TOUGH] = _fight_tough()
-  _defs[Id.FIGHT_BOSS] = _fight_boss()
-  _defs[Id.EVENT_SHRINE] = _event_shrine()
+  _defs[FIGHT_GRUNT] = _fight_grunt()
+  _defs[REST] = _rest()
+  _defs[FIGHT_ELITE] = _fight_elite()
+  _defs[FIGHT_RELIC] = _fight_relic()
+  _defs[FIGHT_TOUGH] = _fight_tough()
+  _defs[FIGHT_BOSS] = _fight_boss()
+  _defs[EVENT_SHRINE] = _event_shrine()
 
 
 static func _fight_grunt() -> EncounterDef:
   var d := EncounterDef.new()
-  d.id = Id.FIGHT_GRUNT
+  d.id = FIGHT_GRUNT
   d.type = EncounterDef.Type.FIGHT
   d.name_key = 'A dim corridor'
-  d.enemy_ids = [EnemyCatalog.Id.GRUNT]
+  d.enemy_ids = [EnemyCatalog.GRUNT]
   d.reward = EncounterDef.Reward.DRAFT
   return d
 
 
 static func _rest() -> EncounterDef:
   var d := EncounterDef.new()
-  d.id = Id.REST
+  d.id = REST
   d.type = EncounterDef.Type.REST
   d.name_key = 'A quiet alcove'
   d.heal_fraction = Balance.REST_HEAL_FRACTION
@@ -49,10 +55,10 @@ static func _rest() -> EncounterDef:
 ## Placeholder elite (#2): a tougher fight (two grunts) rewarding a relic AND a draft.
 static func _fight_elite() -> EncounterDef:
   var d := EncounterDef.new()
-  d.id = Id.FIGHT_ELITE
+  d.id = FIGHT_ELITE
   d.type = EncounterDef.Type.FIGHT
   d.name_key = 'An elite ambush'
-  d.enemy_ids = [EnemyCatalog.Id.GRUNT, EnemyCatalog.Id.GRUNT]
+  d.enemy_ids = [EnemyCatalog.GRUNT, EnemyCatalog.GRUNT]
   d.reward = EncounterDef.Reward.ELITE
   return d
 
@@ -60,10 +66,10 @@ static func _fight_elite() -> EncounterDef:
 ## Placeholder mid-boss-style relic beat (#2): a fight rewarding a relic only.
 static func _fight_relic() -> EncounterDef:
   var d := EncounterDef.new()
-  d.id = Id.FIGHT_RELIC
+  d.id = FIGHT_RELIC
   d.type = EncounterDef.Type.FIGHT
   d.name_key = 'A warded vault'
-  d.enemy_ids = [EnemyCatalog.Id.GRUNT]
+  d.enemy_ids = [EnemyCatalog.GRUNT]
   d.reward = EncounterDef.Reward.RELIC
   return d
 
@@ -71,10 +77,10 @@ static func _fight_relic() -> EncounterDef:
 ## Placeholder tougher regular fight (#1): a brute, still a draft reward — choice-pool fare.
 static func _fight_tough() -> EncounterDef:
   var d := EncounterDef.new()
-  d.id = Id.FIGHT_TOUGH
+  d.id = FIGHT_TOUGH
   d.type = EncounterDef.Type.FIGHT
   d.name_key = 'A blocked passage'
-  d.enemy_ids = [EnemyCatalog.Id.BRUTE]
+  d.enemy_ids = [EnemyCatalog.BRUTE]
   d.reward = EncounterDef.Reward.DRAFT
   return d
 
@@ -83,10 +89,10 @@ static func _fight_tough() -> EncounterDef:
 ## on the FINAL act's boss instead — that's the descent's ending).
 static func _fight_boss() -> EncounterDef:
   var d := EncounterDef.new()
-  d.id = Id.FIGHT_BOSS
+  d.id = FIGHT_BOSS
   d.type = EncounterDef.Type.FIGHT
   d.name_key = 'The warden\'s gate'
-  d.enemy_ids = [EnemyCatalog.Id.BOSS]
+  d.enemy_ids = [EnemyCatalog.BOSS]
   d.reward = EncounterDef.Reward.RELIC
   return d
 
@@ -96,7 +102,7 @@ static func _fight_boss() -> EncounterDef:
 ## event path (resolution, the option-pick intent, the outcome) end to end.
 static func _event_shrine() -> EncounterDef:
   var d := EncounterDef.new()
-  d.id = Id.EVENT_SHRINE
+  d.id = EVENT_SHRINE
   d.type = EncounterDef.Type.EVENT
   d.name_key = 'A dripping shrine'
   d.event_prose_key = 'A black idol slumps in an alcove, weeping cold water. ' \

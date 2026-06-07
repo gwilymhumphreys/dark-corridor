@@ -13,10 +13,10 @@ enum Type { FIGHT, REST, EVENT }
 # (the event's outcome is its own reward).
 enum Reward { NONE, DRAFT, RELIC, ELITE }
 
-var id: int = -1
+var id: String = ''
 var type: int = Type.FIGHT
 var name_key: String = ''         # the location frame, e.g. 'A flooded antechamber'
-var enemy_ids: Array = []         # FIGHT: EnemyCatalog ids, left-to-right order
+var enemy_ids: Array = []         # FIGHT: EnemyCatalog ids (String), left-to-right order
 var reward: int = Reward.NONE     # what a WIN reports up for the Run manager to fulfil
 var heal_fraction: float = 0.0    # REST: fraction of max HP restored
 var event_prose_key: String = ''  # EVENT: the body prose (localized via tr())

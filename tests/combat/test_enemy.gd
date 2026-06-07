@@ -4,7 +4,7 @@ extends GutTest
 
 
 func test_grunt_has_authored_board() -> void:
-  var ed := EnemyCatalog.get_def(EnemyCatalog.Id.GRUNT)
+  var ed := EnemyCatalog.get_def(EnemyCatalog.GRUNT)
   assert_gt(ed.max_hp, 0.0, 'grunt has HP')
   assert_eq(ed.item_ids.size(), 1, 'grunt has a one-item authored board')
-  assert_eq(ed.item_ids[0], ItemCatalog.Id.ENEMY_CLAW, 'its attack item is from the enemy pool')
+  assert_eq(ed.item_ids[0], ItemCatalog.ENEMY_CLAW, 'its attack item is from the enemy pool')

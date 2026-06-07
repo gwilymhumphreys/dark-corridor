@@ -80,7 +80,7 @@ func add_actor(actor: Actor, on_player_side: bool, in_front: bool = true) -> voi
 
 ## Build a token Actor from an authored EnemyDef (its HP + board) — the same way Encounter
 ## spawns enemies. The token def is content (the owner authors saprolings / boss adds).
-func _spawn_token(def_id: int) -> Actor:
+func _spawn_token(def_id: String) -> Actor:
   var def: EnemyDef = EnemyCatalog.get_def(def_id)
   var actor := Actor.new(def.max_hp)
   for item_id in def.item_ids:
@@ -296,7 +296,7 @@ func _land(d: Delivery) -> void:
       StatusManager.apply(d.target, d.status_type, d.value, d.source, d.flags)
       bus.publish(EventBus.Event.STATUS_APPLIED, d.status_type)
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)
-      if d.summon_def_id >= 0 and d.target is Actor:
+      if d.summon_def_id != '' and d.target is Actor:
         add_actor(_spawn_token(d.summon_def_id), _on_player_side(d.target), d.summon_in_front)
 
 

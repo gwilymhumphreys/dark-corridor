@@ -280,10 +280,10 @@ func _observe_fires(player: Actor) -> void:
 ## are kept beside the actors for the log/report (the Actor itself is name-blind).
 func _build_fight() -> Dictionary:
   var player := Actor.new(Balance.PLAYER_START_HP)
-  for id in [ItemCatalog.Id.WEAPON, ItemCatalog.Id.ARMOR, ItemCatalog.Id.POISON_DAGGER]:
+  for id in [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]:
     player.board.append(Item.new(ItemCatalog.get_def(id), player))
 
-  var grunt: EnemyDef = EnemyCatalog.get_def(EnemyCatalog.Id.GRUNT)
+  var grunt: EnemyDef = EnemyCatalog.get_def(EnemyCatalog.GRUNT)
   var enemy := Actor.new(grunt.max_hp)
   for id in grunt.item_ids:
     enemy.board.append(Item.new(ItemCatalog.get_def(id), enemy))

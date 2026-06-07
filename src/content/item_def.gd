@@ -6,7 +6,7 @@ extends RefCounted
 
 enum Rarity { COMMON, UNCOMMON, RARE }
 
-var id: int = -1
+var id: String = ''
 var name_key: String = ''         # source English; displayed via tr()
 var rarity: int = Rarity.COMMON
 var cooldown: float = 1.0          # seconds -> Ticker threshold

@@ -27,9 +27,9 @@ func _ready() -> void:
 
 func _build_fight() -> void:
   _player = _spawn(Balance.PLAYER_START_HP, [
-    ItemCatalog.Id.WEAPON, ItemCatalog.Id.ARMOR, ItemCatalog.Id.POISON_DAGGER,
+    ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER,
   ])
-  _enemy = _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.Id.ENEMY_CLAW])
+  _enemy = _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
 
   _cm = CombatManager.new(_player, [_enemy])
   add_child(_cm)

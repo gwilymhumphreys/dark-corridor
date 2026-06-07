@@ -191,7 +191,7 @@ func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:
 func _seed_with_opening_event() -> int:
   for s in 50:
     Game.start_run(s)
-    if EncounterCatalog.Id.EVENT_SHRINE in Game.run.pending_choice():
+    if EncounterCatalog.EVENT_SHRINE in Game.run.pending_choice():
       return s
     Game.reset()
   return -1

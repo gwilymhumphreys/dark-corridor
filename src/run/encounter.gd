@@ -38,7 +38,7 @@ func _init(encounter_def: EncounterDef, player_actor: Actor, combat_seed: int = 
       enemies.append(_spawn_enemy(enemy_id))
 
 
-func _spawn_enemy(enemy_id: int) -> Actor:
+func _spawn_enemy(enemy_id: String) -> Actor:
   var enemy_def: EnemyDef = EnemyCatalog.get_def(enemy_id)
   var actor := Actor.new(enemy_def.max_hp)
   for item_id in enemy_def.item_ids:

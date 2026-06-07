@@ -5,7 +5,7 @@ extends RefCounted
 ## instantiates an Actor from this and gives it Items from the ids. Tier /
 ## signature come later.
 
-var id: int = -1
+var id: String = ''
 var name_key: String = ''
 var max_hp: float = Balance.ENEMY_PLACEHOLDER_HP
-var item_ids: Array = []     # Array[int] -> ItemCatalog ids, in board order
+var item_ids: Array = []     # Array[String] -> ItemCatalog ids, in board order

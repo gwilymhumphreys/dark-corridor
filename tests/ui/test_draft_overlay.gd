@@ -22,9 +22,9 @@ func test_overlay_lists_the_offer_and_emits_the_pick() -> void:
   add_child(overlay)
   _nodes.append(overlay)
   var offer: Array = [
-    ItemCatalog.get_def(ItemCatalog.Id.WEAPON),
-    ItemCatalog.get_def(ItemCatalog.Id.ARMOR),
-    ItemCatalog.get_def(ItemCatalog.Id.POISON_DAGGER),
+    ItemCatalog.get_def(ItemCatalog.WEAPON),
+    ItemCatalog.get_def(ItemCatalog.ARMOR),
+    ItemCatalog.get_def(ItemCatalog.POISON_DAGGER),
   ]
   overlay.setup(offer)
   assert_eq(overlay.get_node('Panel/Cards').get_child_count(), 3, 'one card per candidate')
@@ -32,4 +32,4 @@ func test_overlay_lists_the_offer_and_emits_the_pick() -> void:
   watch_signals(overlay)
   var card: Button = overlay.get_node('Panel/Cards').get_child(1)
   card.pressed.emit()   # the player picks the 2nd card
-  assert_signal_emitted_with_parameters(overlay, 'picked', [1], 'picking card i emits index i')
+  assert_signal_emitted_with_parameters(overlay, 'picked', [1])

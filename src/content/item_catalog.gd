@@ -6,30 +6,36 @@ class_name ItemCatalog
 ## one catalog here for Phase 1). HEX_BOLT is the example item-targeting item (silences
 ## a RANDOM enemy item; #14/#20) — catalog-only, not pooled by default. Lazily built once.
 
-enum Id { WEAPON, ARMOR, POISON_DAGGER, AVENGER, ENEMY_CLAW, HEX_BOLT, SUNDER }
+const WEAPON := 'weapon'
+const ARMOR := 'armor'
+const POISON_DAGGER := 'poison_dagger'
+const AVENGER := 'avenger'
+const ENEMY_CLAW := 'enemy_claw'
+const HEX_BOLT := 'hex_bolt'
+const SUNDER := 'sunder'
 
 static var _defs: Dictionary = {}
 
 
-static func get_def(id: int) -> ItemDef:
+static func get_def(id: String) -> ItemDef:
   if _defs.is_empty():
     _build()
   return _defs[id]
 
 
 static func _build() -> void:
-  _defs[Id.WEAPON] = _weapon()
-  _defs[Id.ARMOR] = _armor()
-  _defs[Id.POISON_DAGGER] = _poison_dagger()
-  _defs[Id.AVENGER] = _avenger()
-  _defs[Id.ENEMY_CLAW] = _enemy_claw()
-  _defs[Id.HEX_BOLT] = _hex_bolt()
-  _defs[Id.SUNDER] = _sunder()
+  _defs[WEAPON] = _weapon()
+  _defs[ARMOR] = _armor()
+  _defs[POISON_DAGGER] = _poison_dagger()
+  _defs[AVENGER] = _avenger()
+  _defs[ENEMY_CLAW] = _enemy_claw()
+  _defs[HEX_BOLT] = _hex_bolt()
+  _defs[SUNDER] = _sunder()
 
 
 static func _weapon() -> ItemDef:
   var d := ItemDef.new()
-  d.id = Id.WEAPON
+  d.id = WEAPON
   d.name_key = 'Rusted Blade'
   d.cooldown = Balance.WEAPON_COOLDOWN
   var hit := ItemEffect.new()
@@ -45,7 +51,7 @@ static func _weapon() -> ItemDef:
 
 static func _armor() -> ItemDef:
   var d := ItemDef.new()
-  d.id = Id.ARMOR
+  d.id = ARMOR
   d.name_key = 'Iron Guard'
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
@@ -61,7 +67,7 @@ static func _armor() -> ItemDef:
 
 static func _poison_dagger() -> ItemDef:
   var d := ItemDef.new()
-  d.id = Id.POISON_DAGGER
+  d.id = POISON_DAGGER
   d.name_key = 'Venom Fang'
   d.cooldown = Balance.POISON_APPLIER_COOLDOWN
   var pois := ItemEffect.new()
@@ -78,7 +84,7 @@ static func _poison_dagger() -> ItemDef:
 
 static func _avenger() -> ItemDef:
   var d := ItemDef.new()
-  d.id = Id.AVENGER
+  d.id = AVENGER
   d.name_key = 'Spite Ward'
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
@@ -104,7 +110,7 @@ static func _avenger() -> ItemDef:
 ## items (against the single-item grunt a silence is a guaranteed disable).
 static func _hex_bolt() -> ItemDef:
   var d := ItemDef.new()
-  d.id = Id.HEX_BOLT
+  d.id = HEX_BOLT
   d.name_key = 'Hex Bolt'
   d.cooldown = Balance.HEX_BOLT_COOLDOWN
   var hex := ItemEffect.new()
@@ -124,7 +130,7 @@ static func _hex_bolt() -> ItemDef:
 ## Catalog-only, not pooled by default — the owner authors the real stat-status content.
 static func _sunder() -> ItemDef:
   var d := ItemDef.new()
-  d.id = Id.SUNDER
+  d.id = SUNDER
   d.name_key = 'Sundering Bolt'
   d.cooldown = Balance.SUNDER_COOLDOWN
   var hit := ItemEffect.new()
@@ -141,7 +147,7 @@ static func _sunder() -> ItemDef:
 
 static func _enemy_claw() -> ItemDef:
   var d := ItemDef.new()
-  d.id = Id.ENEMY_CLAW
+  d.id = ENEMY_CLAW
   d.name_key = 'Claw'
   d.cooldown = Balance.WEAPON_COOLDOWN
   var hit := ItemEffect.new()

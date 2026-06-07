@@ -4,30 +4,32 @@ class_name RelicCatalog
 ## REWARD relics (granted by the reward routing — RELIC / ELITE / boss beats; #2): they
 ## prove both relic shapes (a direct max-HP mod + a combat-start status). Lazily built.
 
-enum Id { STONE_WARD, VITAL_CHARM, IRON_IDOL }
+const STONE_WARD := 'stone_ward'
+const VITAL_CHARM := 'vital_charm'
+const IRON_IDOL := 'iron_idol'
 
 # What a relic reward draws from (the RunManager's grant). Stone Ward is starting-only —
 # not a reward. The owner curates this pool with the real relic content.
-const REWARD_POOL: Array = [Id.VITAL_CHARM, Id.IRON_IDOL]
+const REWARD_POOL: Array = [VITAL_CHARM, IRON_IDOL]
 
 static var _defs: Dictionary = {}
 
 
-static func get_def(id: int) -> RelicDef:
+static func get_def(id: String) -> RelicDef:
   if _defs.is_empty():
     _build()
   return _defs[id]
 
 
 static func _build() -> void:
-  _defs[Id.STONE_WARD] = _stone_ward()
-  _defs[Id.VITAL_CHARM] = _vital_charm()
-  _defs[Id.IRON_IDOL] = _iron_idol()
+  _defs[STONE_WARD] = _stone_ward()
+  _defs[VITAL_CHARM] = _vital_charm()
+  _defs[IRON_IDOL] = _iron_idol()
 
 
 static func _stone_ward() -> RelicDef:
   var d := RelicDef.new()
-  d.id = Id.STONE_WARD
+  d.id = STONE_WARD
   d.name_key = 'Stone Ward'
   d.kind = RelicDef.Kind.COMBAT_START_STATUS
   d.status_type = StatusDef.Type.BLOCK
@@ -39,7 +41,7 @@ static func _stone_ward() -> RelicDef:
 ## Placeholder reward relic — a direct run-state mod (max-HP growth, applied once on grant).
 static func _vital_charm() -> RelicDef:
   var d := RelicDef.new()
-  d.id = Id.VITAL_CHARM
+  d.id = VITAL_CHARM
   d.name_key = 'Vital Charm'
   d.kind = RelicDef.Kind.MAX_HP_BONUS
   d.max_hp_bonus = Balance.RELIC_VITAL_CHARM_MAX_HP
@@ -50,7 +52,7 @@ static func _vital_charm() -> RelicDef:
 ## Placeholder reward relic — a second combat-start-block relic (stacks with Stone Ward).
 static func _iron_idol() -> RelicDef:
   var d := RelicDef.new()
-  d.id = Id.IRON_IDOL
+  d.id = IRON_IDOL
   d.name_key = 'Iron Idol'
   d.kind = RelicDef.Kind.COMBAT_START_STATUS
   d.status_type = StatusDef.Type.BLOCK

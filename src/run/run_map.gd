@@ -50,16 +50,16 @@ static func beat_spec(position: int) -> Dictionary:
   if beat == BOSS_BEAT:
     return { 'kind': BeatKind.FIXED, 'id': boss_for(act) }
   if beat == RELIC_BEAT:
-    return { 'kind': BeatKind.FIXED, 'id': EncounterCatalog.Id.FIGHT_RELIC }
+    return { 'kind': BeatKind.FIXED, 'id': EncounterCatalog.FIGHT_RELIC }
   if beat == REST_BEAT:
-    return { 'kind': BeatKind.FIXED, 'id': EncounterCatalog.Id.REST }
+    return { 'kind': BeatKind.FIXED, 'id': EncounterCatalog.REST }
   return { 'kind': BeatKind.CHOICE, 'pool': act_pool(act) }
 
 
 ## The act's boss encounter (placeholder: one boss def reused per act — the FINAL-act boss
 ## is the run's ending, decided by position, not a distinct def).
-static func boss_for(_act: int) -> int:
-  return EncounterCatalog.Id.FIGHT_BOSS
+static func boss_for(_act: int) -> String:
+  return EncounterCatalog.FIGHT_BOSS
 
 
 ## The candidate pool a choice beat draws from (placeholder: a small fixed set; the owner
@@ -67,8 +67,8 @@ static func boss_for(_act: int) -> int:
 ## UI telegraphs without the map owning instances.
 static func act_pool(_act: int) -> Array:
   return [
-    EncounterCatalog.Id.FIGHT_GRUNT,
-    EncounterCatalog.Id.FIGHT_TOUGH,
-    EncounterCatalog.Id.FIGHT_ELITE,
-    EncounterCatalog.Id.EVENT_SHRINE,
+    EncounterCatalog.FIGHT_GRUNT,
+    EncounterCatalog.FIGHT_TOUGH,
+    EncounterCatalog.FIGHT_ELITE,
+    EncounterCatalog.EVENT_SHRINE,
   ]

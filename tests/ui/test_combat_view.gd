@@ -52,14 +52,14 @@ func test_axis_scale_matches_the_wall_perspective() -> void:
 func test_board_strip_builds_one_cell_per_item() -> void:
   var strip: BoardStrip = preload('res://src/scenes/combat/board_strip.tscn').instantiate()
   _host(strip)
-  strip.setup(_spawn(100.0, [ItemCatalog.Id.WEAPON, ItemCatalog.Id.ARMOR, ItemCatalog.Id.POISON_DAGGER]))
+  strip.setup(_spawn(100.0, [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]))
   assert_eq(strip.get_node('Row').get_child_count(), 3, 'one cell per board item')
 
 
 func test_board_strip_hp_text_tracks_actor() -> void:
   var strip: BoardStrip = preload('res://src/scenes/combat/board_strip.tscn').instantiate()
   _host(strip)
-  var a := _spawn(100.0, [ItemCatalog.Id.WEAPON])
+  var a := _spawn(100.0, [ItemCatalog.WEAPON])
   strip.setup(a)
   a.take_damage(40.0)
   strip._refresh_hp()   # the per-frame refresh, called directly — deterministic, no _process race
@@ -70,7 +70,7 @@ func test_board_strip_mouse_over_detects_a_cell() -> void:
   # The hover hit-test (the slow-mo intent's surface) uses each cell's global rect.
   var strip: BoardStrip = preload('res://src/scenes/combat/board_strip.tscn').instantiate()
   _host(strip)
-  strip.setup(_spawn(100.0, [ItemCatalog.Id.WEAPON]))
+  strip.setup(_spawn(100.0, [ItemCatalog.WEAPON]))
   await get_tree().process_frame   # let the container lay the cell out
   var cell: Control = strip.get_node('Row').get_child(0)
   var centre: Vector2 = cell.global_position + cell.size * 0.5
@@ -81,17 +81,17 @@ func test_board_strip_mouse_over_detects_a_cell() -> void:
 func test_view_potion_slots_emit_the_throw_intent() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
-  var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.Id.HEALING_DRAUGHT))]
+  var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
   view.bind(cm, p, e, potions)
   assert_eq(view.get_node('PlayerSide/Potions').get_child_count(), 1, 'one slot per potion')
   watch_signals(view)
   var slot: Button = view.get_node('PlayerSide/Potions').get_child(0)
   slot.pressed.emit()
-  assert_signal_emitted_with_parameters(view, 'potion_thrown', [0], 'clicking a potion emits the throw intent')
+  assert_signal_emitted_with_parameters(view, 'potion_thrown', [0])
   cm.free()
 
 
@@ -101,8 +101,8 @@ func test_item_pos_handles_a_source_less_delivery() -> void:
   # moment a content author adds a travel>0 potion. It must resolve to the thrower.
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, e, [])
@@ -118,8 +118,8 @@ func test_target_pos_resolves_an_item_target_to_its_cell() -> void:
   # a non-Actor (the wall calls target_pos, not actor_pos, for the destination).
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, e, [])
@@ -132,8 +132,8 @@ func test_target_pos_resolves_an_item_target_to_its_cell() -> void:
 func test_framed_view_binds_a_fight_without_error() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.Id.WEAPON, ItemCatalog.Id.ARMOR, ItemCatalog.Id.POISON_DAGGER])
-  var e := _spawn(40.0, [ItemCatalog.Id.ENEMY_CLAW])
+  var p := _spawn(100.0, [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, e, [])
