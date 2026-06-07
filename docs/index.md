@@ -44,8 +44,8 @@ information — not all up front.
 
 Creative-direction + content-authoring working docs (paper layer, distinct from
 the system PRDs in `docs/project/`). Tone/bestiary principle, the first
-character's card working file, the card-pool breadth targets, and the
-per-character-pools decision rationale.
+character's card working file, the card-pool breadth targets, the
+per-character-pools decision rationale, and the **authoring how-to** (the file mechanics).
 
 | Doc | Covers | Keywords |
 |-----|--------|----------|
@@ -53,6 +53,7 @@ per-character-pools decision rationale.
 | [design/mushroom_druid.md](design/mushroom_druid.md) | **Mushroom Druid — Working File** (first character). Status-identity character (the StS Silent analog): spores = signature engine. Two pillars — Spores (Mass / Self ways to play, with deliberate target-shape anti-synergy) + Summon (candidate). Spread is a cross-cutting mechanism, not an archetype. Stacked vs timed spore accumulation, spore list, fungal idea bank, commons table. | mushroom druid, character, spores, status, Mass, Self, Spread, summon, thallid, archetype, blinding, poison, burn, lethal, commons, card list, applier, target shape |
 | [design/card_pool_targets.md](design/card_pool_targets.md) | **Card Pool Targets** (per character, loose). Translated from Slay the Spire — build big, cull to a pool. Breadth signals (not quotas) by combat role: attacks (~10–12 ST/AoE) + skills (~8–10 block/resource/utility). Default skew slightly attack-heavy, inverts for status-identity characters. Archetypes are tagged, never quota'd. | card pool, targets, breadth, commons, attack, skill, block, resource, utility, role, quota, Slay the Spire, skew, archetype tag |
 | [design/per_character_pools.md](design/per_character_pools.md) | **Per-Character Item Pools** (decision rationale — see decision-log #27). Departs from the single-shared-pool plan: a no-hidden-weighting 1-of-3 draft can't be both wide and connective from one pool, so item pools split **per character** (focus per-run, range per-game); pools get smaller + deeper. The colorless *layer* (Slay-the-Spire hybrid) is rejected as a structural device (our commons aren't thematically null), though individual colorless items aren't banned (the exception that earns it, not a default tier). Splits **only item pools** — enemies + the reward-relic pool stay shared (the Battledraft scope trap). No systems change — `Draft` is already pool-agnostic. | per-character pools, shared pool, draft, no hidden weighting, focus vs range, colorless layer rejected, colorless items allowed, scope trap, Battledraft, item pool, character identity, decision #27 |
+| [design/authoring.md](design/authoring.md) | **Content Authoring Guide** (the file mechanics — how to *add* content; companion to the `/content` skill). The bridge design → implementation: content = string-id GDScript def objects in static catalogs under `src/content/<kind>/`; the def + catalog pattern; **active/disabled = pool membership** (a def in no pool is authored-but-not-drafted); the per-character `item_pool` + shared `colorless_pool` wiring (#27); the `--import`-after-new-`class_name` + POT gotchas. The spore pillar is fully authorable now. | authoring, how to add content, content guide, def, catalog, string id, src/content, make it live, pool membership, active disabled, item_pool, colorless, character, import, POT, content skill |
 
 ## Corridors (first-person renderer)
 

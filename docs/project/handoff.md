@@ -13,7 +13,8 @@
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
 > author content unless asked.** This handoff is for the *non-content* engineering
-> backlog (see "Your task" below).
+> backlog (see "Your task" below). *Authoring content (owner, or when asked)? The how-to is
+> the [content authoring guide](../design/authoring.md) — or run the `/content` skill.*
 
 ---
 
