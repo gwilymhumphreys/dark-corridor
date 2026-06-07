@@ -153,14 +153,21 @@ func _on_encounter_resolved(outcome: int, reward: int) -> void:
     return
   match reward:
     EncounterDef.Reward.DRAFT:
-      _pending_offer = Draft.draw(character.item_pool, position, rng)
+      _pending_offer = Draft.draw(_draft_pool(), position, rng)
     EncounterDef.Reward.RELIC:
       _grant_relic()                                          # a mid-boss / guaranteed-relic beat
     EncounterDef.Reward.ELITE:
       _grant_relic()                                          # an elite is richer: a relic AND
-      _pending_offer = Draft.draw(character.item_pool, position, rng)   # a draft (reward asymmetry, #2)
+      _pending_offer = Draft.draw(_draft_pool(), position, rng)   # a draft (reward asymmetry, #2)
     _:
       pass
+
+
+## The draft pool handed to Draft (#27): the chosen character's pool plus the shared
+## colorless items (the exception-that-earns-it). Draft stays pool-agnostic — it draws
+## from whatever this composes.
+func _draft_pool() -> Array:
+  return character.item_pool + ColorlessPool.ITEMS
 
 
 ## Grant a relic reward (#2): draw one from the reward pool on the run RNG (so it's

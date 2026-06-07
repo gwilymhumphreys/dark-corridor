@@ -373,7 +373,19 @@ func test_drafts_draw_from_the_characters_pool() -> void:
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   assert_true(run.has_pending_draft(), 'a fight win offers a draft')
   for d in run.pending_draft():
-    assert_true(run.character.item_pool.has(d.id), 'every offered item is from the character pool (#27)')
+    assert_true(run._draft_pool().has(d.id), 'every offered item is from the character pool + colorless (#27)')
+
+
+func test_draft_pool_is_character_plus_colorless() -> void:
+  # The shared colorless pool is appended to the character's own pool at draft time (#27).
+  var run := _run()
+  run.start(1)
+  var pool: Array = run._draft_pool()
+  for id in run.character.item_pool:
+    assert_true(pool.has(id), 'the draft pool includes the character pool')
+  for id in ColorlessPool.ITEMS:
+    assert_true(pool.has(id), 'and the shared colorless items')
+  assert_eq(pool.size(), run.character.item_pool.size() + ColorlessPool.ITEMS.size(), 'pool = character + colorless')
 
 
 func test_character_round_trips_through_the_snapshot() -> void:
