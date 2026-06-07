@@ -31,13 +31,14 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="EnemyBoard" parent="EnemySide" instance=ExtResource("3")]
+[node name="EnemyStrips" type="VBoxContainer" parent="EnemySide"]
 layout_mode = 1
 anchors_preset = 0
-offset_left = 1560.0
-offset_top = 930.0
-offset_right = 2380.0
-offset_bottom = 1180.0
+offset_left = 1500.0
+offset_top = 200.0
+offset_right = 2440.0
+offset_bottom = 1380.0
+theme_override_constants/separation = 36
 
 [node name="PlayerSide" type="Control" parent="."]
 layout_mode = 1
@@ -87,6 +88,15 @@ offset_left = 140.0
 offset_top = 1040.0
 offset_right = 1340.0
 offset_bottom = 1320.0
+
+[node name="AllyStrips" type="VBoxContainer" parent="PlayerSide"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 760.0
+offset_top = 320.0
+offset_right = 1400.0
+offset_bottom = 1000.0
+theme_override_constants/separation = 30
 
 [node name="VfxWall" type="Node2D" parent="."]
 script = ExtResource("4")

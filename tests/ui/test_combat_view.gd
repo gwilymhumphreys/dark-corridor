@@ -86,7 +86,7 @@ func test_view_potion_slots_emit_the_throw_intent() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
-  view.bind(cm, p, e, potions)
+  view.bind(cm, p, potions)
   assert_eq(view.get_node('PlayerSide/Potions').get_child_count(), 1, 'one slot per potion')
   watch_signals(view)
   var slot: Button = view.get_node('PlayerSide/Potions').get_child(0)
@@ -105,7 +105,7 @@ func test_item_pos_handles_a_source_less_delivery() -> void:
   var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
-  view.bind(cm, p, e, [])
+  view.bind(cm, p, [])
   var pos: Vector2 = view.item_pos(null)
   assert_ne(pos, Vector2.INF, 'a null source resolves to a real position (the player), not a crash')
   assert_eq(pos, view.actor_pos(p), 'the source-less projectile flies from the thrower (player)')
@@ -122,7 +122,7 @@ func test_target_pos_resolves_an_item_target_to_its_cell() -> void:
   var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
-  view.bind(cm, p, e, [])
+  view.bind(cm, p, [])
   var enemy_item: Item = e.board[0]
   assert_eq(view.target_pos(enemy_item), view.item_pos(enemy_item), 'an Item target routes to its cell')
   assert_eq(view.target_pos(e), view.actor_pos(e), 'an Actor target still routes to the actor')
@@ -136,7 +136,28 @@ func test_framed_view_binds_a_fight_without_error() -> void:
   var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
   var cm := CombatManager.new(p, [e])
   cm.start()
-  view.bind(cm, p, e, [])
+  view.bind(cm, p, [])
   assert_eq(view.get_node('PlayerSide/PlayerBoard/Row').get_child_count(), 3, 'player board built')
-  assert_eq(view.get_node('EnemySide/EnemyBoard/Row').get_child_count(), 1, 'enemy board built')
+  assert_eq(view.get_node('EnemySide/EnemyStrips').get_child_count(), 1, 'one strip for the one enemy')
   cm.free()   # after_each dissolves the actors (breaks the Actor<->Item cycles)
+
+
+func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
+  # The reachable case (the 2-grunt elite) + allies: a strip per enemy on the enemy side,
+  # a strip per ally beside the player, and actor_pos resolves each to a distinct point.
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var e1 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var e2 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var ally := _spawn(15.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e1, e2], 0, [ally])
+  cm.start()
+  view.bind(cm, p, [])
+  assert_eq(view.get_node('EnemySide/EnemyStrips').get_child_count(), 2, 'a strip per enemy (the elite)')
+  assert_eq(view.get_node('PlayerSide/AllyStrips').get_child_count(), 1, 'a strip for the ally')
+  await wait_frames(2)   # let the containers lay the strips out so strip_centre is real
+  # each enemy resolves to its own strip — the second grunt no longer collapses to the player
+  assert_ne(view.actor_pos(e2), view.actor_pos(p), 'the second enemy is NOT at the player portrait')
+  assert_ne(view.actor_pos(e1), view.actor_pos(e2), 'the two enemies are at distinct positions')
+  cm.free()

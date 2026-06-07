@@ -72,15 +72,20 @@ open is isolated here; full-screen is an additive later compare). Composition:
 - **Corridor top-right** — `combat_corridor.tscn` (`SubViewportContainer` →
   `SubViewport` → `CorridorScaled` → the **thorn-demon as a central-axis occupant**).
   Resizeable; the SubViewportContainer clips it. See *Enemy-in-corridor* below.
-- **Player portrait left** (outside the corridor); **both board strips**
+- **Player portrait left** (outside the corridor); **a board strip per actor**
   (`board_strip.tscn` → `item_cell.tscn` per item: family-colour panel + value +
-  cooldown ring + fire recoil); **HP bars**; **potion slots**.
-- **VFX wall** (`vfx_driver.gd`) over it — projectiles fly in screen space from a
-  board cell to the target (the enemy target = the corridor's on-screen centre).
+  cooldown ring + fire recoil) — **MULTI-ACTOR**: every enemy gets a strip in the
+  right column, the player its prominent board bottom-left, and each run-scoped ally /
+  combat-scoped summon token a strip in the column beside it. The view reads the
+  CombatManager's rosters (`enemies` + `player_side()`) each frame, so mid-fight
+  summons (a boss add, a player token) appear as they spawn; **HP bars**; **potion slots**.
+- **VFX wall** (`vfx_driver.gd`) over it — projectiles fly in screen space between board
+  strips; `actor_pos` resolves the player to its portrait and every other actor to its
+  strip centre. The corridor occupant is now the mood backdrop + the approach figure.
 
-The view `bind(cm, player, enemy, potions)`s the live fight and exposes
-`item_pos` / `actor_pos` to the wall; `release()` nulls the wall's `cm` ref before
-teardown.
+The view `bind(cm, player, potions)`s the live fight (it reads the rosters off the CM)
+and exposes `item_pos` / `actor_pos` / `target_pos` to the wall; `release()` nulls the
+wall's `cm` ref before teardown.
 
 ### Enemy-in-corridor occupant (the approach)
 

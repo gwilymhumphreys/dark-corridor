@@ -45,6 +45,12 @@ func _refresh_hp() -> void:
   _hp_label.text = '%d / %d' % [int(round(actor.hp)), int(round(actor.max_hp))]
 
 
+## Centre of this strip in global (screen) space — the VFX wall's actor position for the
+## actor this strip represents (projectiles fly to/from here).
+func strip_centre() -> Vector2:
+  return global_position + size * 0.5
+
+
 ## Centre of `item`'s cell in global (screen) space, or Vector2.INF if not on this
 ## board — the VFX wall reads it.
 func cell_centre(item: Item) -> Vector2:

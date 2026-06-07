@@ -269,11 +269,10 @@ func _advance() -> void:
 # --- combat view lifetime ----------------------------------------------------
 
 func _build_combat_view() -> void:
-  var enemy: Actor = _run.current_encounter().enemies[0]
   _view = COMBAT_VIEW.instantiate()
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
-  _view.bind(_cm, _run.player, enemy, _run.potions)
+  _view.bind(_cm, _run.player, _run.potions)   # the view reads the full rosters off the CM
   _view.potion_thrown.connect(_on_potion_thrown)
 
 

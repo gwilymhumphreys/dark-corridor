@@ -289,13 +289,13 @@ func test_summon_adds_a_token_to_the_players_side() -> void:
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  var before: int = cm._player_side().size()
+  var before: int = cm.player_side().size()
   var arrived: Array = []
   cm._fire_item(_summon_item(p, EnemyCatalog.SPORE_THRALL), arrived)
   for d in arrived:
     cm._land(d)
-  assert_eq(cm._player_side().size(), before + 1, 'a token joined the player side')
-  assert_eq(cm._leftmost_living_opponent(e), cm._player_side()[0], 'and is the enemy\'s leftmost target (body-block)')
+  assert_eq(cm.player_side().size(), before + 1, 'a token joined the player side')
+  assert_eq(cm._leftmost_living_opponent(e), cm.player_side()[0], 'and is the enemy\'s leftmost target (body-block)')
 
 
 func test_enemy_summon_adds_to_the_enemy_side() -> void:
@@ -360,7 +360,7 @@ func test_register_ally_joins_a_live_fight_and_survives_teardown() -> void:
   cm.start()
   cm.allies.append(ally)        # mirror RunManager.add_ally (shared array)
   cm.register_ally(ally)
-  assert_true(ally in cm._player_side(), 'the mid-fight ally is on the player side')
+  assert_true(ally in cm.player_side(), 'the mid-fight ally is on the player side')
   for i in 5:
     cm.sim_step()
   assert_gt(ally.board[0].cooldown.accum, 0.0, 'its items tick (registered into the live fight)')

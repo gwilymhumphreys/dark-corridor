@@ -358,8 +358,9 @@ func _target_alive(target) -> bool:
 
 
 ## The ordered player side: combat-scoped summons (front, body-block) then the run-state
-## actor then run-scoped allies. Leftmost-living targeting walks this in order.
-func _player_side() -> Array:
+## actor then run-scoped allies. Leftmost-living targeting walks this in order; the
+## multi-actor view reads it to render every player-side body. A fresh array each call.
+func player_side() -> Array:
   return _player_tokens + [player] + allies
 
 
@@ -368,13 +369,13 @@ func _on_player_side(actor) -> bool:
 
 
 func _all_actors() -> Array:
-  return _player_side() + enemies
+  return player_side() + enemies
 
 
 func _opponents_of(actor: Actor) -> Array:
   # A fresh array either way (never the live `enemies` ref) — callers may resolve targets
   # while the roster mutates (a summon lands mid-resolution).
-  return enemies.duplicate() if _on_player_side(actor) else _player_side()
+  return enemies.duplicate() if _on_player_side(actor) else player_side()
 
 
 func _living_opponents(actor: Actor) -> Array:
