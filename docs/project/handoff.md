@@ -34,7 +34,7 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
    `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
    self-attribution in git messages**). These OVERRIDE defaults.
 2. **[`decision-log.md`](decision-log.md)** — the canonical record: every decision
-   (numbered #1–#26), the build status, and the next steps. **Read the "Build
+   (numbered #1–#27), the build status, and the next steps. **Read the "Build
    status" + "Next steps" first.**
 3. **[`architecture.md`](architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
