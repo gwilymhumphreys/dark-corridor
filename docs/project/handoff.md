@@ -157,8 +157,9 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
 - **Save = JSON, atomic, no migration** (decision #11): RNG `seed`/`state` stored as
   **strings** (JSON doubles can't hold a 64-bit value). Absent/corrupt/old → `{}` →
   fresh run.
-- **Content = GDScript def objects + static catalogs** (decision #23), keyed by int
-  id; localized via `tr(def.name_key)`.
+- **Content = GDScript def objects + static catalogs** (decision #23), keyed by a
+  **string id** (amended from int), in kind-grouped `src/content/<kind>/` subdirs;
+  localized via `tr(def.name_key)`. Drafts pull from the **character's pool + colorless** (#27).
 - **Exit codes** (autotest): `0` = the sim reached a clean conclusion (win OR die OR
   cap), `1` = it didn't (stuck / timeout) — not who wins (that's `tune`'s job later).
 - **VFX = opaque placeholders only** (no alpha — ask before adding opacity; user
@@ -234,8 +235,9 @@ greedy-synergy --report autotest_results/r.md`. **Suite:** `<exe> --headless --p
 
 ## Quick file map
 
-`src/combat/` (spine) · `src/run/` (run_manager · encounter) · `src/content/` (all
-defs + catalogs) · `src/autoloads/` (status_manager · save · draft · game_manager ·
+`src/combat/` (spine) · `src/run/` (run_manager · encounter) · `src/content/`
+(kind-grouped: items/enemies/relics/consumables/enchants/encounters/statuses/characters
+— def + catalog per kind) · `src/autoloads/` (status_manager · save · draft · game_manager ·
 sfx · music) · `src/autotest/` (the harness + strategies + report) · `src/vfx/` ·
 `src/scenes/main.tscn` + `main_controller.gd` (presentation root) · `src/scenes/screens/`
 (title · run · outcome · draft_overlay · draft_card · map_strip) · `src/scenes/combat/`

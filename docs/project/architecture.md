@@ -249,7 +249,7 @@ main.tscn  (Main, Node)                 boots → Game.boot()
 - **Corridor advance** stays logic-clean: `Run manager` changes position + emits `advancing(next)`; `run_screen` animates the corridor panel and times board-activation to arrival.
 - The **framed-vs-full-screen** open (UI PRD) is isolated to the single swappable `CombatView` sub-scene — nothing else moves when it's decided.
 
-**Directory layout:** `src/combat/` (timekeeper · combat_manager · actor · item · status · delivery · ticker · event_bus), `src/run/` (run_manager · encounter), `src/content/` (def objects + catalogs), `src/vfx/`, `src/scenes/screens/` + `src/scenes/combat/`, alongside the existing `src/autoloads/`, `src/data/` (`balance.gd`), `src/scenes/corridors/`, `src/ui/`. `project.godot`'s `main_scene` flips to `main.tscn` when the spine is built (the corridor testbed stays runnable).
+**Directory layout:** `src/combat/` (timekeeper · combat_manager · actor · item · status · delivery · ticker · event_bus), `src/run/` (run_manager · encounter), `src/content/` (kind-grouped subdirs — items/enemies/relics/consumables/enchants/encounters/statuses/characters, each a def + catalog; string ids #23), `src/vfx/`, `src/scenes/screens/` + `src/scenes/combat/`, alongside the existing `src/autoloads/`, `src/data/` (`balance.gd`), `src/scenes/corridors/`, `src/ui/`. `project.godot`'s `main_scene` flips to `main.tscn` when the spine is built (the corridor testbed stays runnable).
 
 ## Prototype scope for this layer
  

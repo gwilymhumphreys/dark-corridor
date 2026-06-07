@@ -51,9 +51,9 @@ A **manually-fired reserve** — no `Ticker` (combat_prd: the one thing that doe
 
 **Built (2026-06-06):** all three categories, each proving its path end-to-end and wired into the run + headless autotest (starting-kit grants stand in for drafting them — slot composition is deferred):
 
-- One **relic** — Stone Ward (a combat-start block status applier), in run-state, applied at each fight start, saved (`src/content/relic*.gd`).
-- One **enchant** — Whetstone (scale-a-value, +50%), applied to a chosen item, saved on the board entry; the Item fire pipeline scales payload values (`src/content/enchant*.gd`, `Item._resolve_effect`).
-- One **consumable** — Healing Draught (a thrown self-heal), in a potion slot, fired via `RunManager.throw_potion` → `CombatManager.throw_consumable` → a travel-0 Delivery (`src/content/consumable*.gd`). **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.
+- One **relic** — Stone Ward (a combat-start block status applier), in run-state, applied at each fight start, saved (`src/content/relics/relic*.gd`).
+- One **enchant** — Whetstone (scale-a-value, +50%), applied to a chosen item, saved on the board entry; the Item fire pipeline scales payload values (`src/content/enchants/enchant*.gd`, `Item._resolve_effect`).
+- One **consumable** — Healing Draught (a thrown self-heal), in a potion slot, fired via `RunManager.throw_potion` → `CombatManager.throw_consumable` → a travel-0 Delivery (`src/content/consumables/consumable*.gd`). **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.
 
 ---
 
