@@ -254,6 +254,23 @@ func test_between_act_full_heal_revives_allies() -> void:
   assert_almost_eq(run.allies[0].hp, run.allies[0].max_hp, 0.0001, 'the between-act restore heals allies too')
 
 
+func test_add_ally_mid_fight_joins_the_live_combat() -> void:
+  var run := _run()
+  run.start(5)
+  for i in run.pending_choice().size():   # reach a fight (the opening beat is a choice)
+    if EncounterCatalog.get_def(run.pending_choice()[i]).type == EncounterDef.Type.FIGHT:
+      run.pick_path(i)
+      break
+  run.begin_current()
+  var cm: CombatManager = run.combat_manager()
+  assert_not_null(cm, 'a live fight is running')
+  run.add_ally(EnemyCatalog.SPORE_THRALL)
+  assert_true(run.allies[0] in cm.allies, 'the ally joined the live fight (shared roster)')
+  for i in 3:
+    cm.sim_step()
+  assert_gt(run.allies[0].board[0].cooldown.accum, 0.0, 'and its items fight (registered mid-fight)')
+
+
 func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
   var run := _run()
   run.start(1)

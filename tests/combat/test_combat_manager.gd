@@ -350,6 +350,25 @@ func test_player_death_loses_even_with_a_living_token() -> void:
   assert_eq(get_signal_parameters(cm, 'resolved')[0], false, 'the player dying loses — a surviving token does not save the run')
 
 
+func test_register_ally_joins_a_live_fight_and_survives_teardown() -> void:
+  # A run-scoped ally acquired mid-fight: register_ally registers its items (it fights), it's
+  # on the player side, and it is NOT dissolved at teardown (run-scoped, unlike a token).
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var ally := _spawn(50.0, [ItemCatalog.WEAPON])
+  var cm := CombatManager.new(p, [e], 0, [])   # no starting allies
+  cm.start()
+  cm.allies.append(ally)        # mirror RunManager.add_ally (shared array)
+  cm.register_ally(ally)
+  assert_true(ally in cm._player_side(), 'the mid-fight ally is on the player side')
+  for i in 5:
+    cm.sim_step()
+  assert_gt(ally.board[0].cooldown.accum, 0.0, 'its items tick (registered into the live fight)')
+  cm.teardown()
+  cm.free()
+  assert_eq(ally.board.size(), 1, 'a run-scoped ally is not dissolved at fight end')
+
+
 func test_summoned_token_is_dissolved_but_run_scoped_side_survives() -> void:
   var p := _spawn(100.0, [ItemCatalog.WEAPON])
   var ally := _spawn(50.0, [ItemCatalog.WEAPON])

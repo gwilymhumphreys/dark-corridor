@@ -78,6 +78,17 @@ func add_actor(actor: Actor, on_player_side: bool, in_front: bool = true) -> voi
       enemies.push_back(actor)
 
 
+## Register a RUN-scoped ally acquired MID-FIGHT (Cap 3 Stage B). It is already on the
+## player side — `allies` is the SAME array the RunManager appended to (shared by reference)
+## — so it only needs its Tickers/triggers registered to start fighting. NOT add_actor:
+## that files a body as a combat-scoped token (dissolved at teardown); a run-scoped ally
+## must survive. The RunManager calls this from add_ally when a fight is live.
+func register_ally(actor: Actor) -> void:
+  if actor == null or _resolved:
+    return
+  _register_actor(actor)
+
+
 ## Build a token Actor from an authored EnemyDef (its HP + board) — the same way Encounter
 ## spawns enemies. The token def is content (the owner authors saprolings / boss adds).
 func _spawn_token(def_id: String) -> Actor:

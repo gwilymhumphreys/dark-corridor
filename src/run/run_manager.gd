@@ -216,8 +216,12 @@ func apply_draft_pick(index: int) -> void:
 ## The acquisition path (a draftable `ally` category / a character-start ally) is the owner's;
 ## this is the run-state surface it calls.
 func add_ally(def_id: String) -> void:
-  allies.append(_make_ally(def_id))
+  var ally := _make_ally(def_id)
+  allies.append(ally)   # the live CombatManager shares this array by reference, so it sees it
   _ally_def_ids.append(def_id)
+  var cm: CombatManager = combat_manager()
+  if cm != null and not cm.is_resolved():
+    cm.register_ally(ally)   # acquired mid-fight → register its Tickers so it joins the fight
 
 
 func _make_ally(def_id: String) -> Actor:
