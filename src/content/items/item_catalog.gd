@@ -20,6 +20,8 @@ static var _defs: Dictionary = {}
 static func get_def(id: String) -> ItemDef:
   if _defs.is_empty():
     _build()
+  if not _defs.has(id):
+    push_error('ItemCatalog: unknown item id "%s"' % id)
   return _defs[id]
 
 

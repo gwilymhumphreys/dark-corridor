@@ -13,6 +13,8 @@ static var _defs: Dictionary = {}
 static func get_def(id: String) -> CharacterDef:
   if _defs.is_empty():
     _build()
+  if not _defs.has(id):
+    push_error('CharacterCatalog: unknown character id "%s"' % id)
   return _defs[id]
 
 

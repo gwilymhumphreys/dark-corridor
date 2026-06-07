@@ -63,8 +63,11 @@ func advance_status(status: Status, owner) -> bool:
       if status.ticker.step():
         # Carry the applying effect's flags (e.g. UNBLOCKABLE) into the tick, so an
         # unblockable DoT bypasses block per decision #5 (the flag is otherwise lost
-        # between application and the tick — the Delivery is long gone).
-        owner.take_damage(status.count * def.damage_per_tick, status.flags)
+        # between application and the tick — the Delivery is long gone). Periodic damage
+        # only applies to ACTORS (items have no HP) — a periodic status authored onto an
+        # item-target just ticks down harmlessly instead of crashing on take_damage.
+        if owner is Actor:
+          owner.take_damage(status.count * def.damage_per_tick, status.flags)
         status.count -= 1.0
         status.ticker.reset()
         return status.count <= 0.0

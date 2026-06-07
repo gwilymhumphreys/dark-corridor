@@ -361,7 +361,9 @@ func _all_actors() -> Array:
 
 
 func _opponents_of(actor: Actor) -> Array:
-  return enemies if _on_player_side(actor) else _player_side()
+  # A fresh array either way (never the live `enemies` ref) — callers may resolve targets
+  # while the roster mutates (a summon lands mid-resolution).
+  return enemies.duplicate() if _on_player_side(actor) else _player_side()
 
 
 func _living_opponents(actor: Actor) -> Array:
@@ -470,8 +472,13 @@ func throw_consumable(consumable, thrower: Actor) -> void:
     return
   for effect in consumable.def.effects:
     var p := _payload_from_effect(effect)
+    # Self-fuel consume (Cap 1) — the thrower is known here, so resolve it like an item fire.
+    if p.consume_type >= 0 and not p.consume_from_target:
+      p.value += StatusManager.consume(thrower, p.consume_type, p.consume_amount) * p.consume_scale
     for target in _resolve_targets(p, thrower):
       var d := _spawn_delivery(p, target)
+      if p.consume_type >= 0 and p.consume_from_target:   # opponent-fuel: spend the target's stacks
+        d.value += StatusManager.consume(target, p.consume_type, p.consume_amount) * p.consume_scale
       _deliveries.append(d)
       if d.travel.crossed():
         _land(d)
@@ -487,6 +494,12 @@ func _payload_from_effect(effect: ItemEffect) -> Payload:
   p.shape = effect.shape
   p.travel = effect.travel
   p.status_type = effect.status_type
+  p.summon_def_id = effect.summon_def_id   # a thrown consumable can summon / consume too
+  p.summon_in_front = effect.summon_in_front
+  p.consume_type = effect.consume_type
+  p.consume_amount = effect.consume_amount
+  p.consume_from_target = effect.consume_from_target
+  p.consume_scale = effect.consume_scale
   p.flags = effect.flags
   p.color = effect.color
   p.source = null

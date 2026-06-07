@@ -18,6 +18,8 @@ static var _defs: Dictionary = {}
 static func get_def(id: String) -> RelicDef:
   if _defs.is_empty():
     _build()
+  if not _defs.has(id):
+    push_error('RelicCatalog: unknown relic id "%s"' % id)
   return _defs[id]
 
 

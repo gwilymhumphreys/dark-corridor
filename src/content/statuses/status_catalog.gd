@@ -9,6 +9,8 @@ static var _defs: Dictionary = {}
 static func get_def(type: int) -> StatusDef:
   if _defs.is_empty():
     _build()
+  if not _defs.has(type):
+    push_error('StatusCatalog: unknown status type %d' % type)
   return _defs[type]
 
 

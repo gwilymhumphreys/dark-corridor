@@ -32,12 +32,13 @@ func _ready() -> void:
   _set_phase(Phase.TITLE)
 
 
-## Start a fresh, seeded run, replacing any existing one.
-func start_run(seed_value: int) -> void:
+## Start a fresh, seeded run, replacing any existing one. `character_id` selects the
+## character (#27); defaults to the placeholder until a character-select screen supplies it.
+func start_run(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> void:
   _clear_run()
   run = RunManager.new()
   run.run_ended.connect(_on_run_ended)
-  run.start(seed_value)
+  run.start(seed_value, character_id)
   _set_phase(Phase.RUN)
 
 

@@ -126,6 +126,17 @@ func test_consume_of_an_absent_status_returns_zero() -> void:
   assert_almost_eq(StatusManager.consume(Actor.new(50.0), StatusDef.Type.POISON, 3.0), 0.0, 0.0001, 'nothing to spend')
 
 
+func test_periodic_status_on_an_item_does_not_crash() -> void:
+  # The item-target shapes can deliver an APPLY_STATUS to an Item, and status_type is
+  # authored content. A PERIODIC (poison) status on an item must NOT crash (Item has no
+  # take_damage) — it ticks down harmlessly with no damage.
+  var item := Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), Actor.new())
+  var p := StatusManager.apply(item, StatusDef.Type.POISON, 2.0)
+  p.ticker.accum = p.ticker.threshold - 1.0   # one step from firing
+  StatusManager.advance_status(p, item)        # crosses → take_damage(item) would crash, guarded
+  assert_almost_eq(p.count, 1.0, 0.0001, 'the periodic status ticked down on the item without crashing')
+
+
 func test_has_evasion_reads_the_flag() -> void:
   # Cap 2: has_evasion checks the StatusDef flag, never a status name.
   var a := Actor.new(50.0)

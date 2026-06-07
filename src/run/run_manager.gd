@@ -175,6 +175,7 @@ func _draft_pool() -> Array:
 func _grant_relic() -> void:
   var pool: Array = RelicCatalog.REWARD_POOL
   if pool.is_empty():
+    push_warning('RunManager: a relic reward fired but RelicCatalog.REWARD_POOL is empty — nothing granted')
     return
   var id: String = pool[rng.randi_range(0, pool.size() - 1)]
   var relic := Relic.new(RelicCatalog.get_def(id))

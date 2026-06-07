@@ -11,6 +11,8 @@ static var _defs: Dictionary = {}
 static func get_def(id: String) -> EnchantDef:
   if _defs.is_empty():
     _build()
+  if not _defs.has(id):
+    push_error('EnchantCatalog: unknown enchant id "%s"' % id)
   return _defs[id]
 
 
