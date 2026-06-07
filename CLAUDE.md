@@ -59,6 +59,7 @@ var data: Dictionary = {
 - **Opacity/transparency** — Alpha fades or semi-transparent effects can break the pixel-art aesthetic. Be careful with these and ask the user before adding any opacity.
 - **Juicy animations**: When adding new ui or visual entities, add the ui juice node to it
 - **Full names, not abbreviations**: Refer to game entities by their full names. Applies to code, comments, docs, run reports, tuning logs, and chat replies — abbreviations make grep harder and obscure what's being discussed.
+- **Don't add jargon**: No invented terms or vague, high-level, obtuse shorthand. Use plain, concrete language; if a term is genuinely needed, define it where it's introduced, and don't reuse a word that already means something specific in the game. Applies to code, comments, docs, run reports, tuning logs, and chat replies.
 
 ## RichTextLabel fit_content Sizing (Godot-specific)
 
