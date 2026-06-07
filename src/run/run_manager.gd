@@ -28,6 +28,7 @@ var relics: Array = []        # Array[Relic]
 var potions: Array = []       # Array[Consumable]
 var position: int = 0
 var rng: RandomNumberGenerator
+var character: CharacterDef    # the chosen character (#27) — its item pool feeds the draft
 
 var _ally_def_ids: Array = []  # parallel to `allies` — each ally's EnemyCatalog def id (snapshot)
 
@@ -42,17 +43,21 @@ var _torn_down: bool = false
 
 # --- fresh run --------------------------------------------------------------
 
-func start(seed_value: int) -> void:
+func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> void:
   rng = RandomNumberGenerator.new()
   rng.seed = seed_value
+  character = CharacterCatalog.get_def(character_id)
   player = _make_starting_player()
-  # Starting kit (stand-in for a Characters definition): the Stone Ward relic, a
-  # Whetstone enchant on the weapon, and one Healing Draught potion — so all three
-  # content paths run end-to-end in the prototype run (drafting enchants/potions is
-  # the deferred slot-composition work).
-  relics = [Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD))]
-  potions = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
-  apply_enchant(Enchantment.new(EnchantCatalog.get_def(EnchantCatalog.WHETSTONE)), 0)
+  # Starting kit from the character (#27): its signature relic, any starting enchants on
+  # the board, and its starting potions — the run opens in the character's identity.
+  relics = []
+  if character.starting_relic_id != '':
+    relics.append(Relic.new(RelicCatalog.get_def(character.starting_relic_id)))
+  potions = []
+  for pid in character.starting_potion_ids:
+    potions.append(Consumable.new(ConsumableCatalog.get_def(pid)))
+  for e in character.starting_enchants:
+    apply_enchant(Enchantment.new(EnchantCatalog.get_def(e['enchant_id'])), e['item_index'])
   position = 0
   _ended = false
   _pending_offer = []
@@ -64,11 +69,11 @@ func start(seed_value: int) -> void:
   _save()
 
 
-## The stand-in for a Characters definition (deferred): a default board + the
-## Stone Ward starting relic. The player Actor is run-lifetime, owned here.
+## Build the run-start player Actor from the character's starting board (#27). Run-lifetime,
+## owned here. Max HP is the global default for now (a per-character start-HP comes later).
 func _make_starting_player() -> Actor:
   var actor := Actor.new(Balance.PLAYER_START_HP)
-  for id in [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]:
+  for id in character.starting_item_ids:
     actor.board.append(Item.new(ItemCatalog.get_def(id), actor))
   return actor
 
@@ -148,12 +153,12 @@ func _on_encounter_resolved(outcome: int, reward: int) -> void:
     return
   match reward:
     EncounterDef.Reward.DRAFT:
-      _pending_offer = Draft.draw(DraftPool.ITEMS, position, rng)
+      _pending_offer = Draft.draw(character.item_pool, position, rng)
     EncounterDef.Reward.RELIC:
       _grant_relic()                                          # a mid-boss / guaranteed-relic beat
     EncounterDef.Reward.ELITE:
       _grant_relic()                                          # an elite is richer: a relic AND
-      _pending_offer = Draft.draw(DraftPool.ITEMS, position, rng)   # a draft (reward asymmetry, #2)
+      _pending_offer = Draft.draw(character.item_pool, position, rng)   # a draft (reward asymmetry, #2)
     _:
       pass
 
@@ -335,6 +340,7 @@ func snapshot() -> Dictionary:
   for i in allies.size():
     ally_snaps.append({ 'id': _ally_def_ids[i], 'hp': allies[i].hp })
   return {
+    'character': character.id,
     'hp': player.hp,
     'max_hp': player.max_hp,
     'board': board,
@@ -354,6 +360,7 @@ func snapshot() -> Dictionary:
 ## Rebuild run-state from a snapshot and re-enter the saved beat (the resume point).
 ## Does not re-save (this is a load, not an encounter entry).
 func rehydrate(snap: Dictionary) -> void:
+  character = CharacterCatalog.get_def(snap.get('character', CharacterCatalog.DEFAULT))
   player = Actor.new(float(snap['max_hp']))
   player.hp = float(snap['hp'])
   player.board.clear()

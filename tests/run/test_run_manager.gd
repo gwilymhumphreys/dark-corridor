@@ -366,6 +366,27 @@ func test_throw_potion_outside_a_fight_is_rejected() -> void:
   assert_eq(run.potions.size(), 1, 'and stays in the slot')
 
 
+func test_drafts_draw_from_the_characters_pool() -> void:
+  # #27: a reward draft pulls from the chosen character's item pool, not one global pool.
+  var run := _run()
+  run.start(1)
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  assert_true(run.has_pending_draft(), 'a fight win offers a draft')
+  for d in run.pending_draft():
+    assert_true(run.character.item_pool.has(d.id), 'every offered item is from the character pool (#27)')
+
+
+func test_character_round_trips_through_the_snapshot() -> void:
+  var run := _run()
+  run.start(1)
+  assert_eq(run.character.id, CharacterCatalog.DEFAULT, 'the run starts on the chosen character')
+  var snap: Dictionary = run.snapshot()
+  assert_eq(snap['character'], CharacterCatalog.DEFAULT, 'the character id is saved')
+  var run_b := _run()
+  run_b.rehydrate(snap)
+  assert_eq(run_b.character.id, CharacterCatalog.DEFAULT, 'and restored on resume (its pool feeds future drafts)')
+
+
 func test_advance_autosaves_the_entry_point() -> void:
   var run := _run()
   run.start(3)
