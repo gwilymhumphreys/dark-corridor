@@ -6,7 +6,7 @@ keywords to match against.
 
 ## Project design & PRDs (`docs/project/`)
 
-> **Picking up the work?** Read **[project/handoff.md](project/handoff.md)** first — the fresh-agent orientation (what's built, how to work, what's settled, what's next). Then [project/decision-log.md](project/decision-log.md) for the full decision record. Phases 1–4 are built (combat spine · autotest · run loop · **real UI / the run screen**); **next is scaling content + `tune`**.
+> **Picking up the work?** Read **[project/handoff.md](project/handoff.md)** first — the fresh-agent orientation (what's built, how to work, what's settled, what's next). Then [project/decision-log.md](project/decision-log.md) for the full decision record. Phases 1–5 are built (combat spine · autotest · run loop · **real UI / the run screen** · `tune` machinery), plus the **multi-act run + choice layer + Event type**, **reward routing**, the **spore-engine seams** + **mid-fight roster changes / allies**, the **multi-actor combat view**, and the **content scaffolding** (string ids · character system · per-character pools) — all mechanism with placeholder content. **Next is the content push (real pools + boss/character content) + a `tune` pass.**
 
 The game-design layer — paper/pre-prototype, except the corridors which are built
 (see below). Start at the **design snapshot** for the whole game, the

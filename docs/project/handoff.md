@@ -4,12 +4,14 @@
 > game is, what's built, how to work, what's settled, and what's next. It points to
 > the canonical docs rather than duplicating them — read this, then the linked docs.
 >
-> **Last updated:** 2026-06-06 — Phase 5's tune-machinery bite, **plus two non-content
-> backlog items: settings/pause + the ×1/×2/×3 battle-speed dial** (timescale
-> replace-vs-multiply resolved → replace) **and DoT per-applier attribution in the tune
-> report** (poison now credited to its applier, e.g. Venom Fang, not a generic lump).
-> **158 GUT tests green** on Godot 4.6; the run is watchable end-to-end and the autotest
-> can play + report builds.
+> **Last updated:** 2026-06-08 — the **multi-act run** + **choice layer** + placeholder
+> **Event** type (#1), **reward routing** (relics + elites, #2), the **spore-engine seams**
+> (Cap 1+2: status-stack `consume` + evasion), **mid-fight roster changes** (Cap 3: summons
+> + run/combat-scoped **allies**, #22), the **multi-actor combat view** (a board strip per
+> enemy / ally / token, #4), **pause at any point** (#8), and the **content scaffolding**
+> (string ids, kind-grouped `src/content/`, a minimal **character system** + per-character
+> draft pool, #23/#27). **223 GUT tests green** on Godot 4.6; the run is watchable
+> end-to-end and the autotest can play + report builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
 > author content unless asked.** This handoff is for the *non-content* engineering
@@ -49,10 +51,14 @@ Whole-game pitch + core loop: [`design.md`](design.md). The system map + the
 
 ## Where things stand (what's built)
 
-**Phases 1–4 + Phase 5's tune-machinery bite are complete, committed, 158 GUT tests
-green, feel gate passed.** See `git log` (each step is its own green commit). Two
-**non-content backlog items are also done — settings/pause + battle-speed, and DoT
-per-applier attribution in the tune report** (see the bottom of this section).
+**Phases 1–4 + Phase 5's tune-machinery bite are complete, committed, 223 GUT tests
+green, feel gate passed.** See `git log` (each step is its own green commit). Most of
+the **non-content engineering backlog is now also done** (mechanism + placeholder content):
+the multi-act run + choice layer + Event type (#1), reward routing (#2), the spore-engine
+seams Cap 1+2 + mid-fight roster changes Cap 3 (run/combat-scoped allies, #22), the
+multi-actor combat view (#4), pause-anytime (#8), settings/pause + battle-speed, DoT
+per-applier attribution, and the content scaffolding (string ids, kind-grouped content,
+the character system #23/#27). See the per-item status in "Your task" below.
 
 - **Phase 1 — combat spine** (`src/combat/`): `Ticker` · `Timekeeper` (fixed-step
   clock) · `Actor` · `Item` (+ fire pipeline) · `Delivery`/`Payload` · `EventBus` ·
@@ -90,10 +96,15 @@ per-applier attribution in the tune report** (see the bottom of this section).
   open → **replace** (absolute slow-mo). Doc: [`../ui/run_screen.md`](../ui/run_screen.md).
 
 **What does NOT exist yet** (most of it is content — the project owner's domain): the
-item/enemy/encounter pools beyond the seed (5 items, 1 enemy, a 4-beat map), elite/boss
-tiers + signature mechanics, events-with-prose, multi-act maps, characters,
-meta-progression, and a real **`tune` pass** (the machinery is ready; it waits on
-content). The **non-content** gaps are the backlog in "Your task".
+real item/enemy/encounter pools beyond the placeholders, boss **signature mechanics**,
+real event prose, the Mushroom Druid (and other) **character** content + the
+spore-engine's player-side lethal/summon riders (Cap 3 *mechanism* is built), the
+lethal-spore execute, meta-progression, and a real **`tune` pass** (the machinery is
+ready; it waits on content). The multi-act map, choice layer, Event type, reward
+routing, allies, and characters now exist as **mechanism with placeholder content** —
+the systems are wired; the pools are the owner's. The remaining **non-content** gaps are
+the backlog in "Your task" (mostly the full-screen feel compare + the character-select /
+ally-acquisition UI seams).
 
 ## The architecture in one picture
 
@@ -203,9 +214,14 @@ test-first + its own green commit, with the headless autotest as the regression 
    full **settings screen** (audio sliders, persisting preferences to disk) — a larger,
    more content-flavoured pass left for later. [game_manager](game_manager_prd.md) ·
    [ui_layout](ui_layout_prd.md) · [run_screen](../ui/run_screen.md).
-4. **Full-screen `CombatView` + the framed-vs-fullscreen feel compare** — the UI PRD's
-   central open question, isolated to the swappable `CombatView` (Phase 4 built the
-   framed one). Mock the full-screen variant, compare on feel. [ui_layout](ui_layout_prd.md).
+4. **Multi-actor combat view — DONE (2026-06-08).** The framed `CombatView` now renders a
+   **board strip per actor** — every enemy in the right column, the player's prominent board
+   bottom-left, each run-scoped ally / combat-scoped summon token in a column beside it —
+   reading the CM rosters each frame so mid-fight summons appear as they spawn (`actor_pos`
+   resolves each to its own strip). Pairs with **mid-fight ally wiring (#6, DONE)** and
+   **pause-anytime (#8, DONE)**. **Still open here:** the **full-screen `CombatView` variant +
+   the framed-vs-fullscreen feel compare** (the UI PRD's central open question) — the owner
+   deferred it ("the corridor scene scales, I can test it any time"). [ui_layout](ui_layout_prd.md).
 5. **Tune-report fidelity — DoT per-applier attribution — DONE (2026-06-06).** Poison
    damage was lumped as "Poison" (Venom Fang read 0 in the contribution table). Now a
    **pre-step status snapshot** credits the DoT remainder to the item that applied it
@@ -220,7 +236,19 @@ test-first + its own green commit, with the headless autotest as the regression 
    prove the path; the real stat-status content (numbers, per-stack variants, which damage
    types amplify) is the **owner's**. [status_manager](status_manager_prd.md) · [design](design.md).
 
-7. **Spore-engine seams (the first status-identity character) — NEW, spec'd; build with the content.** The Mushroom Druid ([`../design/mushroom_druid.md`](../design/mushroom_druid.md)) needs three engine seams beyond apply/tick/resolve: (1) **status-stack consumption** — `StatusManager.consume(target, type, amount)` to spend spores as fuel (self-fuel resolves in the Item fire pipeline; opponent-fuel in the Combat manager's per-target spawn path); (2) **evasion** — the "acts but misses" fizzle seam for blinding (a blinded source's damage Deliveries fizzle *with a reason*, so VFX shows a whiff — distinct from silence/`gate`, which = inert); (3) the **player-side** consumer of the **mid-fight roster add** (summon tokens + lethal's spawn-on-kill rider) — **deferred with the boss "summons-adds"** work (see "What does NOT exist yet" + [enemy](enemy_prd.md) / #22). Caps 1+2 are contained + buildable when the content calls for them; the spore **appliers (poison / blinding-status / burn / self-regen / self-block) need nothing new** — they're the built apply-status subtype + existing status shapes. Full spec, build order, and open decisions: [spore_engine](spore_engine_prd.md). **This is engineering — yours, not content.**
+7. **Spore-engine seams (the first status-identity character) — Caps 1+2+3 DONE (mechanism;
+   2026-06-07/08).** All three engine seams are built: (1) **status-stack consumption** —
+   `StatusManager.consume(target, type, amount)` spends spores as fuel (self-fuel in the Item
+   fire pipeline; opponent-fuel in the Combat manager's per-target spawn path); (2) **evasion** —
+   the "acts but misses" fizzle seam (`causes_evasion` → `Delivery.evaded`, a whiff *with a
+   reason*, distinct from silence/`gate` = inert); (3) the **mid-fight roster add** — the
+   `CombatManager` two-roster model (`add_actor` combat-scoped summon · `register_ally`
+   run-scoped ally · `Delivery.Kind.SUMMON` · scope-aware teardown), so **allies support both
+   run and combat scope** (#22), wired into the live fight + the multi-actor view (#4/#6).
+   **Still the owner's:** the Mushroom Druid content itself, the spore **appliers** (poison /
+   blinding-status / burn / self-regen / self-block — they need nothing new, just authoring),
+   and the **lethal-spore execute / spawn-on-kill rider** content. Full spec:
+   [spore_engine](spore_engine_prd.md). **The seams are engineering (done); the spores are content.**
 
 **Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
 **HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a
