@@ -4,8 +4,8 @@ extends Node
 ## (that stores run-state only, and is cleared on death/win). A thin ConfigFile wrapper at
 ## user://: audio bus volumes today (Master / Music / Effects), each a 0..1 linear level.
 ## set_volume() applies to the AudioServer bus AND writes through immediately; load + apply
-## happen at boot. `disabled` (mirrors Save.disabled — the tests / a nosave run) skips the
-## disk write. The owner extends this with video / accessibility keys as settings grow.
+## happen at boot. `disabled` skips the disk write — TestCleanup sets it so tests never touch
+## user://. The owner extends this with video / accessibility keys as settings grow.
 
 const PATH: String = 'user://dark_corridor_prefs.cfg'
 const SECTION_AUDIO: String = 'audio'
@@ -22,8 +22,8 @@ const AUDIO_DEFAULTS: Dictionary = {
   'effects': 0.9,
 }
 
-# Mirrors Save.disabled: when true (tests / a nosave run) the disk write is skipped. The game
-# never sets it; TestCleanup clears it between tests.
+# When true the disk write is skipped. The game leaves it false; TestCleanup sets it so tests
+# stay hermetic (in-memory + bus only, never writing user://). Like Save.disabled in spirit.
 var disabled: bool = false
 
 var _config: ConfigFile = ConfigFile.new()

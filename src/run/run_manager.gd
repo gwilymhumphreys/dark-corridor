@@ -21,8 +21,9 @@ enum Outcome { WON, DIED }
 const COMBAT_SEED_STRIDE: int = 1000003
 
 # The player side holds at most this many run-scoped allies (the 4 ally slots flanking the
-# player — UI/Layout). add_ally past the cap is a no-op; an acquisition source should gate on
-# can_add_ally() so it never offers a slot that can't be filled.
+# player — UI/Layout). The cap is the safety net: add_ally past it is a no-op. The placeholder
+# recruit event relies on that; richer acquisition content can gate on can_add_ally() first to
+# avoid offering a "join me" choice that can't be filled.
 const MAX_ALLIES: int = 4
 
 # Run-state (the snapshot persists exactly this). `position` is the global beat index
@@ -215,8 +216,9 @@ func apply_draft_pick(index: int) -> void:
   _pending_offer = []
 
 
-## Whether the player side has a free ally slot (cap = MAX_ALLIES). An acquisition source
-## (the recruit event today; a draftable `ally` category later) gates on this.
+## Whether the player side has a free ally slot (cap = MAX_ALLIES). The gating surface for
+## acquisition content (a draftable `ally` category, or a recruit event that wants to hide its
+## offer when full) — the cap in add_ally enforces it regardless.
 func can_add_ally() -> bool:
   return allies.size() < MAX_ALLIES
 

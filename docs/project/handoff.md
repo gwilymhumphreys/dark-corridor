@@ -4,14 +4,17 @@
 > game is, what's built, how to work, what's settled, and what's next. It points to
 > the canonical docs rather than duplicating them — read this, then the linked docs.
 >
-> **Last updated:** 2026-06-08 — the **multi-act run** + **choice layer** + placeholder
-> **Event** type (#1), **reward routing** (relics + elites, #2), the **spore-engine seams**
-> (Cap 1+2: status-stack `consume` + evasion), **mid-fight roster changes** (Cap 3: summons
-> + run/combat-scoped **allies**, #22), the **multi-actor combat view** (a board strip per
-> enemy / ally / token, #4), **pause at any point** (#8), and the **content scaffolding**
-> (string ids, kind-grouped `src/content/`, a minimal **character system** + per-character
-> draft pool, #23/#27). **223 GUT tests green** on Godot 4.6; the run is watchable
-> end-to-end and the autotest can play + report builds.
+> **Last updated:** 2026-06-09 — **ally acquisition** (a recruit Event grants a run-scoped ally,
+> 4-slot cap), a **character-select** screen + a **settings** screen (audio-volume `Prefs`
+> persisted to `user://`), and a **combat-view relayout** (corridor-forward: the corridor large
+> top-left with an `enemy_hud` pinned above each occupant sprite, the player portrait + HP
+> centre-bottom, its board a column down the right edge, allies in flanking slots) + a **compact
+> windowed map**. Earlier 2026-06-08: the **multi-act run** + **choice layer** + **Event** type
+> (#1), **reward routing** (#2), the **spore-engine seams** (Cap 1+2) + **mid-fight roster
+> changes** (Cap 3, #22), **pause at any point** (#8), and the **content scaffolding** (string
+> ids, kind-grouped `src/content/`, a **character system** + per-character pools, #23/#27).
+> **241 GUT tests green** on Godot 4.6; the run is watchable end-to-end and the autotest plays +
+> reports builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
 > author content unless asked.** This handoff is for the *non-content* engineering
@@ -75,10 +78,12 @@ the character system #23/#27). See the per-item status in "Your task" below.
   combat-start block), **Enchant** (Whetstone, scale-a-value, saved on the board),
   **Consumable** (Healing Draught, thrown self-heal). Each proves its path end-to-end.
 - **Phase 4 — real UI / the run screen** (`src/scenes/main.tscn` + `main_controller.gd`,
-  `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title → **framed
-  run** (corridor + thorn-demon occupant top-right, player left, boards/HP/potions, the
-  VFX wall) → **approach** (the enemy scales from depth) → fight (slow-mo-on-hover, the
-  **potion-throw UI**) → **draft overlay** → advance along a **map strip** → win/death
+  `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title (→ **character
+  select**) → **framed run** (corridor large top-left with an `enemy_hud` above each occupant
+  sprite, the player portrait + HP centre-bottom, its items down the right edge, allies in
+  flanking slots, the VFX wall) → **approach** (the enemy scales from depth) → fight
+  (slow-mo-on-hover, the **potion-throw UI**) → **draft overlay** → advance along a **map
+  strip** → win/death
   screens. The run screen drives `CombatManager.tick` each frame; the logic tree stays
   out of the scene tree (the autotest path is unchanged). Full doc:
   [`../ui/run_screen.md`](../ui/run_screen.md). Plus the **localization POT pipeline**
@@ -208,20 +213,22 @@ test-first + its own green commit, with the headless autotest as the regression 
    (Vital Charm / Iron Idol) + placeholder elite/relic `EncounterDef`s (catalog-only). **Still
    the owner's:** which relics/elites exist, and **elite engage/skip** (that's the choice layer —
    item 1). [content](content_prd.md) · [encounter](encounter_prd.md).
-3. **Settings / pause + battle-speed — DONE (2026-06-06).** The ×1/×2/×3 **battle-speed
-   dial** (a `Game` session preference + an always-visible HUD toggle) + in-run **pause**
-   (a run-screen gate with a Resume / Quit-to-menu menu) are built. Still open *here*: a
-   full **settings screen** (audio sliders, persisting preferences to disk) — a larger,
-   more content-flavoured pass left for later. [game_manager](game_manager_prd.md) ·
+3. **Settings / pause + battle-speed — DONE.** The ×1/×2/×3 **battle-speed dial** + in-run
+   **pause** (2026-06-06), and now (2026-06-09) the **settings screen** itself — audio volume
+   sliders (Master / Music / Effects) bound to a new **`Prefs`** autoload (a `ConfigFile` at
+   `user://`, separate from the run `Save`), opened from the title and the pause menu. Still
+   open *here*: video / accessibility settings as they're wanted. [game_manager](game_manager_prd.md) ·
    [ui_layout](ui_layout_prd.md) · [run_screen](../ui/run_screen.md).
-4. **Multi-actor combat view — DONE (2026-06-08).** The framed `CombatView` now renders a
-   **board strip per actor** — every enemy in the right column, the player's prominent board
-   bottom-left, each run-scoped ally / combat-scoped summon token in a column beside it —
-   reading the CM rosters each frame so mid-fight summons appear as they spawn (`actor_pos`
-   resolves each to its own strip). Pairs with **mid-fight ally wiring (#6, DONE)** and
-   **pause-anytime (#8, DONE)**. **Still open here:** the **full-screen `CombatView` variant +
-   the framed-vs-fullscreen feel compare** (the UI PRD's central open question) — the owner
-   deferred it ("the corridor scene scales, I can test it any time"). [ui_layout](ui_layout_prd.md).
+4. **Combat view — DONE; relaid out to the corridor-forward mockup (2026-06-09).** The framed
+   `CombatView` renders a per-actor widget: the **corridor large top-left** with **one occupant
+   sprite per enemy** (side by side, shrunk by count) and an **`enemy_hud` pinned above each**
+   (name + status + HP + items); the **player portrait + HP centre-bottom** with its board a
+   **column down the right edge** (potions above it); run-scoped allies / combat-scoped tokens in
+   the **4 flanking `ally_slot`s** (2 left, 2 right). Reads the CM rosters each frame, so mid-fight
+   summons appear as they spawn. Pairs with **mid-fight ally wiring (#6)**, **ally acquisition
+   (the recruit Event)**, **character-select**, and **pause-anytime (#8)** — all DONE. **Still
+   open here:** the **full-screen `CombatView` variant + the framed-vs-fullscreen feel compare**
+   (the owner deferred it). [ui_layout](ui_layout_prd.md) · [run_screen](../ui/run_screen.md).
 5. **Tune-report fidelity — DoT per-applier attribution — DONE (2026-06-06).** Poison
    damage was lumped as "Poison" (Venom Fang read 0 in the contribution table). Now a
    **pre-step status snapshot** credits the DoT remainder to the item that applied it
@@ -266,11 +273,12 @@ greedy-synergy --report autotest_results/r.md`. **Suite:** `<exe> --headless --p
 
 `src/combat/` (spine) · `src/run/` (run_manager · encounter) · `src/content/`
 (kind-grouped: items/enemies/relics/consumables/enchants/encounters/statuses/characters
-— def + catalog per kind) · `src/autoloads/` (status_manager · save · draft · game_manager ·
-sfx · music) · `src/autotest/` (the harness + strategies + report) · `src/vfx/` ·
+— def + catalog per kind) · `src/autoloads/` (status_manager · save · prefs · draft ·
+game_manager · sfx · music) · `src/autotest/` (the harness + strategies + report) · `src/vfx/` ·
 `src/scenes/main.tscn` + `main_controller.gd` (presentation root) · `src/scenes/screens/`
-(title · run · outcome · draft_overlay · draft_card · map_strip) · `src/scenes/combat/`
-(combat_view_framed · combat_corridor · board_strip · item_cell · potion_slot) ·
+(title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
+draft_card · map_strip · speed_button · pause_menu) · `src/scenes/combat/`
+(combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell · potion_slot) ·
 `src/scenes/` (sandbox + corridors) · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
 + `locale/` (i18n) · `tests/` (combat · content · run · autotest · ui · smoke · utils) ·
 `addons/gut/` (vendored).

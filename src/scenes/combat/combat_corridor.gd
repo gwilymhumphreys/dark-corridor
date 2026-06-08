@@ -56,11 +56,6 @@ func set_enemy_depth(depth_cells: float) -> void:
   _arrange()
 
 
-func set_enemy_visible(is_visible: bool) -> void:
-  for s in _enemies:
-    s.visible = is_visible
-
-
 ## Glide the corridor forward (the treadmill) for parallax during the approach.
 func set_gliding(on: bool) -> void:
   _corridor.set_forward_held(on)
@@ -77,11 +72,6 @@ func enemy_anchor(index: int) -> Vector2:
   var half_h: float = float(ENEMY_SPRITE.get_height()) * _base_scale(n) * 0.5
   var centre: Vector2 = global_position + size * 0.5 + Vector2(_offset_x(index, n), 0.0)
   return centre - Vector2(0.0, half_h + HUD_GAP)
-
-
-## The lead occupant's centre in global (screen) space — the VFX wall's fallback target.
-func enemy_screen_centre() -> Vector2:
-  return global_position + size * 0.5
 
 
 func _arrange() -> void:
