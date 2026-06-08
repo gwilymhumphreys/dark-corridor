@@ -24,6 +24,7 @@ func setup(target: Actor) -> void:
   for item in actor.board:
     var cell: ItemCell = ITEM_CELL.instantiate()
     _items.add_child(cell)
+    cell.set_cell_size(90.0)   # smaller than the player's prominent board
     cell.setup(item)
     _cells[item] = cell
   _refresh_hp()

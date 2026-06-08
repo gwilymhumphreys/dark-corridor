@@ -23,7 +23,7 @@ var _cm: CombatManager
 var _player: Actor
 
 @onready var _corridor: CombatCorridor = $CorridorPanel
-@onready var _enemy_huds_box: VBoxContainer = $EnemyArea/EnemyHuds
+@onready var _enemy_huds_box: HBoxContainer = $EnemyArea/EnemyHuds
 @onready var _player_items: GridContainer = $RightPanel/PlayerItems
 @onready var _potions: HBoxContainer = $RightPanel/Potions
 @onready var _portrait: Control = $BottomBar/PlayerPortrait/Portrait
@@ -90,7 +90,7 @@ func _sync_rosters() -> void:
   for e in enemies:
     if not _enemy_huds.has(e):
       var hud: EnemyHud = ENEMY_HUD.instantiate()
-      hud.size_flags_horizontal = Control.SIZE_SHRINK_CENTER   # centre each HUD over the corridor
+      hud.size_flags_vertical = Control.SIZE_SHRINK_BEGIN   # top-align each HUD over the corridor
       _enemy_huds_box.add_child(hud)
       hud.setup(e)
       _enemy_huds[e] = hud

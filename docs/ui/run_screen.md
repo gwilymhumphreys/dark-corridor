@@ -90,7 +90,8 @@ layout (the layout mockup), composition:
   Resizeable; the SubViewportContainer clips it. See *Enemy-in-corridor* below.
 - **An `enemy_hud` floating over the corridor per enemy** — its **item cells** (top),
   a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
-  Multiple enemies stack in `EnemyArea/EnemyHuds`.
+  Multiple enemies sit **side-by-side** across the top (`EnemyArea/EnemyHuds`, an HBox).
+  The HUD / ally-slot item cells are smaller than the player's board (`ItemCell.set_cell_size`).
 - **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
   "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
   a grid of `item_cell.tscn`: family-colour panel + value + cooldown ring + fire recoil),

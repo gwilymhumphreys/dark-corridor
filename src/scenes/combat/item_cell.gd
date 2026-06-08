@@ -5,9 +5,10 @@ extends Control
 ## recoil when it fires. Structure is authored in item_cell.tscn; this binds the data
 ## and draws the ring + recoil. Reads the live Item; writes nothing. No alpha.
 
-const CELL_SIZE := Vector2(120, 120)
+const CELL_SIZE := Vector2(120, 120)   # the default (the player's prominent board); HUDs shrink it
 
 var item: Item
+var cell_size: Vector2 = CELL_SIZE
 
 @onready var _panel: ColorRect = $Panel
 @onready var _value: Label = $Value
@@ -17,7 +18,17 @@ var _scale_tween: Tween
 
 
 func _ready() -> void:
-  pivot_offset = CELL_SIZE * 0.5   # recoil / hover scale from the centre
+  pivot_offset = cell_size * 0.5   # recoil / hover scale from the centre
+
+
+## Shrink the cell (the enemy HUDs / ally slots use smaller cells than the player's board).
+## Call after the cell is in the tree, before setup(). Scales the value font to match.
+func set_cell_size(px: float) -> void:
+  cell_size = Vector2(px, px)
+  custom_minimum_size = cell_size
+  size = cell_size
+  pivot_offset = cell_size * 0.5
+  _value.add_theme_font_size_override('font_size', int(round(44.0 * px / CELL_SIZE.x)))
 
 
 func _exit_tree() -> void:
@@ -53,13 +64,13 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-  draw_rect(Rect2(Vector2.ZERO, CELL_SIZE), Color.BLACK, false, 3.0)
+  draw_rect(Rect2(Vector2.ZERO, cell_size), Color.BLACK, false, 3.0)
   if item == null:
     return
   var progress: float = item.cooldown.progress()
   if progress < 1.0:
-    var centre: Vector2 = CELL_SIZE * 0.5
-    draw_arc(centre, CELL_SIZE.x * 0.5 + 8.0, -PI * 0.5, -PI * 0.5 + progress * TAU, 48, Color(0.95, 0.95, 0.95), 5.0)
+    var centre: Vector2 = cell_size * 0.5
+    draw_arc(centre, cell_size.x * 0.5 + 8.0, -PI * 0.5, -PI * 0.5 + progress * TAU, 48, Color(0.95, 0.95, 0.95), 5.0)
 
 
 func _recoil() -> void:
@@ -72,4 +83,4 @@ func _recoil() -> void:
 
 ## Centre of the cell in global (screen) space — the VFX wall reads it.
 func cell_centre() -> Vector2:
-  return global_position + CELL_SIZE * 0.5 * scale
+  return global_position + cell_size * 0.5 * scale

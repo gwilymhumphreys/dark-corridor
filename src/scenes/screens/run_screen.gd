@@ -46,8 +46,22 @@ func _ready() -> void:
   # The player battle-speed dial (a Game session preference): retime the live fight
   # the instant the HUD button changes it. Each new fight also picks it up on entry.
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
+  _seed_demo_allies()   # dev hook (`--allies N`): populate the ally slots for inspection
   _map.setup(RunMap.TOTAL_BEATS, _run.position)
   _enter_beat()
+
+
+# Dev hook (`--allies N`, pairs with `--autofight --shot`): recruit N placeholder allies so the
+# flanking ally slots can be inspected. Inert without the flag. Presentation/screenshot only.
+func _seed_demo_allies() -> void:
+  var args: Array = []
+  args.append_array(OS.get_cmdline_args())
+  args.append_array(OS.get_cmdline_user_args())
+  var i: int = args.find('--allies')
+  if i < 0 or i + 1 >= args.size():
+    return
+  for _n in int(args[i + 1]):
+    _run.add_ally(EnemyCatalog.SPORE_THRALL)
 
 
 func _exit_tree() -> void:
