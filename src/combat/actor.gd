@@ -12,6 +12,7 @@ var hp: float
 var max_hp: float
 var board: Array = []        # Item instances (Step 3); ordered, not a grid
 var statuses: Array = []     # actor-targeted Status instances
+var display_name: String = ''  # presentation label (the def's name_key, tr()'d by the view); combat ignores it
 
 
 func _init(starting_max_hp: float = Balance.PLAYER_START_HP) -> void:

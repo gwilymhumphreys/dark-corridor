@@ -256,6 +256,7 @@ func pick_event_option(index: int) -> void:
 func _make_ally(def_id: String) -> Actor:
   var def: EnemyDef = EnemyCatalog.get_def(def_id)
   var actor := Actor.new(def.max_hp)
+  actor.display_name = def.name_key
   for item_id in def.item_ids:
     actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
   return actor

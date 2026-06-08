@@ -82,21 +82,27 @@ title and the pause menu; Close emits `closed` and the opener frees it. See
 ## The framed combat view
 
 `combat_view_framed.tscn` (the swappable `CombatView` — the framed-vs-fullscreen
-open is isolated here; full-screen is an additive later compare). Composition:
+open is isolated here; full-screen is an additive later compare). The **corridor-forward**
+layout (the layout mockup), composition:
 
-- **Corridor top-right** — `combat_corridor.tscn` (`SubViewportContainer` →
-  `SubViewport` → `CorridorScaled` → the **thorn-demon as a central-axis occupant**).
+- **Corridor large, top-left** — `combat_corridor.tscn` (`SubViewportContainer` →
+  `SubViewport` → `CorridorScaled` → the **enemy sprite as a central-axis occupant**).
   Resizeable; the SubViewportContainer clips it. See *Enemy-in-corridor* below.
-- **Player portrait left** (outside the corridor); **a board strip per actor**
-  (`board_strip.tscn` → `item_cell.tscn` per item: family-colour panel + value +
-  cooldown ring + fire recoil) — **MULTI-ACTOR**: every enemy gets a strip in the
-  right column, the player its prominent board bottom-left, and each run-scoped ally /
-  combat-scoped summon token a strip in the column beside it. The view reads the
-  CombatManager's rosters (`enemies` + `player_side()`) each frame, so mid-fight
-  summons (a boss add, a player token) appear as they spawn; **HP bars**; **potion slots**.
-- **VFX wall** (`vfx_driver.gd`) over it — projectiles fly in screen space between board
-  strips; `actor_pos` resolves the player to its portrait and every other actor to its
-  strip centre. The corridor occupant is now the mood backdrop + the approach figure.
+- **An `enemy_hud` floating over the corridor per enemy** — its **item cells** (top),
+  a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
+  Multiple enemies stack in `EnemyArea/EnemyHuds`.
+- **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
+  "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
+  a grid of `item_cell.tscn`: family-colour panel + value + cooldown ring + fire recoil),
+  with the **potion slots** above it.
+- **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
+  + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right;
+  `AllyLeft` / `AllyRight`). The view reads the CombatManager's rosters (`enemies` +
+  `player_side()`) each frame, so mid-fight summons (a boss add, a player token) appear as
+  they spawn.
+- **VFX wall** (`vfx_driver.gd`) over it — projectiles fly in screen space; `actor_pos`
+  resolves the player to its portrait, each enemy to its HUD, each ally/token to its slot;
+  `item_pos` finds an item's cell in the right-edge column or any HUD/slot.
 
 The view `bind(cm, player, potions)`s the live fight (it reads the rosters off the CM)
 and exposes `item_pos` / `actor_pos` / `target_pos` to the wall; `release()` nulls the
@@ -139,6 +145,6 @@ registered in `project.godot`) — see [localization](../reference/localization.
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
 draft_card · map_strip · speed_button · pause_menu); `src/autoloads/prefs.gd`; `src/scenes/combat/`
-(combat_view_framed · combat_corridor · board_strip · item_cell); `src/vfx/vfx_driver.gd`;
+(combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell); `src/vfx/vfx_driver.gd`;
 the occupant law on `src/scenes/corridors/corridor_scaled.gd` (`axis_scale`). Tests in
 `tests/ui/`.

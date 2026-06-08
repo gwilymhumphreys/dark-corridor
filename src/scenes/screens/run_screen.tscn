@@ -25,5 +25,11 @@ color = Color(0.03, 0.03, 0.04, 1)
 [node name="HUD" type="CanvasLayer" parent="."]
 
 [node name="MapStrip" parent="HUD" instance=ExtResource("2")]
+anchor_right = 0.0
+offset_left = 1720.0
+offset_top = 8.0
+offset_right = 2550.0
+offset_bottom = 118.0
+grow_horizontal = 1
 
 [node name="SpeedButton" parent="HUD" instance=ExtResource("3")]

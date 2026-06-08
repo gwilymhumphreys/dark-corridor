@@ -41,6 +41,7 @@ func _init(encounter_def: EncounterDef, player_actor: Actor, combat_seed: int = 
 func _spawn_enemy(enemy_id: String) -> Actor:
   var enemy_def: EnemyDef = EnemyCatalog.get_def(enemy_id)
   var actor := Actor.new(enemy_def.max_hp)
+  actor.display_name = enemy_def.name_key
   for item_id in enemy_def.item_ids:
     actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
   return actor

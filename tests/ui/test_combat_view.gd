@@ -49,33 +49,40 @@ func test_axis_scale_matches_the_wall_perspective() -> void:
   corridor.free()
 
 
-func test_board_strip_builds_one_cell_per_item() -> void:
-  var strip: BoardStrip = preload('res://src/scenes/combat/board_strip.tscn').instantiate()
-  _host(strip)
-  strip.setup(_spawn(100.0, [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]))
-  assert_eq(strip.get_node('Row').get_child_count(), 3, 'one cell per board item')
+func test_enemy_hud_builds_one_cell_per_item() -> void:
+  var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
+  _host(hud)
+  hud.setup(_spawn(100.0, [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]))
+  assert_eq(hud.get_node('Items').get_child_count(), 3, 'one cell per board item')
 
 
-func test_board_strip_hp_text_tracks_actor() -> void:
-  var strip: BoardStrip = preload('res://src/scenes/combat/board_strip.tscn').instantiate()
-  _host(strip)
+func test_enemy_hud_hp_text_tracks_actor() -> void:
+  var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
+  _host(hud)
   var a := _spawn(100.0, [ItemCatalog.WEAPON])
-  strip.setup(a)
+  hud.setup(a)
   a.take_damage(40.0)
-  strip._refresh_hp()   # the per-frame refresh, called directly — deterministic, no _process race
-  assert_eq(strip.get_node('HP/Label').text, '60 / 100', 'HP text tracks the actor')
+  hud._refresh_hp()   # the per-frame refresh, called directly — deterministic, no _process race
+  assert_eq(hud.get_node('HpRow/HP/Label').text, '60 / 100', 'HP text tracks the actor')
 
 
-func test_board_strip_mouse_over_detects_a_cell() -> void:
+func test_ally_slot_builds_one_cell_per_item() -> void:
+  var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
+  _host(slot)
+  slot.setup(_spawn(15.0, [ItemCatalog.ENEMY_CLAW]))
+  assert_eq(slot.get_node('Items').get_child_count(), 1, 'one cell per board item')
+
+
+func test_ally_slot_mouse_over_detects_a_cell() -> void:
   # The hover hit-test (the slow-mo intent's surface) uses each cell's global rect.
-  var strip: BoardStrip = preload('res://src/scenes/combat/board_strip.tscn').instantiate()
-  _host(strip)
-  strip.setup(_spawn(100.0, [ItemCatalog.WEAPON]))
+  var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
+  _host(slot)
+  slot.setup(_spawn(15.0, [ItemCatalog.ENEMY_CLAW]))
   await get_tree().process_frame   # let the container lay the cell out
-  var cell: Control = strip.get_node('Row').get_child(0)
+  var cell: Control = slot.get_node('Items').get_child(0)
   var centre: Vector2 = cell.global_position + cell.size * 0.5
-  assert_true(strip.mouse_over(centre), 'a point over a cell is detected')
-  assert_false(strip.mouse_over(centre + Vector2(10000, 10000)), 'a far point is not')
+  assert_true(slot.mouse_over(centre), 'a point over a cell is detected')
+  assert_false(slot.mouse_over(centre + Vector2(10000, 10000)), 'a far point is not')
 
 
 func test_view_potion_slots_emit_the_throw_intent() -> void:
@@ -87,9 +94,9 @@ func test_view_potion_slots_emit_the_throw_intent() -> void:
   cm.start()
   var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
   view.bind(cm, p, potions)
-  assert_eq(view.get_node('PlayerSide/Potions').get_child_count(), 1, 'one slot per potion')
+  assert_eq(view.get_node('RightPanel/Potions').get_child_count(), 1, 'one slot per potion')
   watch_signals(view)
-  var slot: Button = view.get_node('PlayerSide/Potions').get_child(0)
+  var slot: Button = view.get_node('RightPanel/Potions').get_child(0)
   slot.pressed.emit()
   assert_signal_emitted_with_parameters(view, 'potion_thrown', [0])
   cm.free()
@@ -137,14 +144,14 @@ func test_framed_view_binds_a_fight_without_error() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  assert_eq(view.get_node('PlayerSide/PlayerBoard/Row').get_child_count(), 3, 'player board built')
-  assert_eq(view.get_node('EnemySide/EnemyStrips').get_child_count(), 1, 'one strip for the one enemy')
+  assert_eq(view.get_node('RightPanel/PlayerItems').get_child_count(), 3, 'player board built (the right-edge column)')
+  assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 1, 'one HUD for the one enemy')
   cm.free()   # after_each dissolves the actors (breaks the Actor<->Item cycles)
 
 
 func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
-  # The reachable case (the 2-grunt elite) + allies: a strip per enemy on the enemy side,
-  # a strip per ally beside the player, and actor_pos resolves each to a distinct point.
+  # The reachable case (the 2-grunt elite) + an ally: a HUD per enemy over the corridor, an
+  # ally slot flanking the player, and actor_pos resolves each to a distinct point.
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
   var p := _spawn(100.0, [ItemCatalog.WEAPON])
@@ -154,10 +161,10 @@ func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
   var cm := CombatManager.new(p, [e1, e2], 0, [ally])
   cm.start()
   view.bind(cm, p, [])
-  assert_eq(view.get_node('EnemySide/EnemyStrips').get_child_count(), 2, 'a strip per enemy (the elite)')
-  assert_eq(view.get_node('PlayerSide/AllyStrips').get_child_count(), 1, 'a strip for the ally')
-  await wait_frames(2)   # let the containers lay the strips out so strip_centre is real
-  # each enemy resolves to its own strip — the second grunt no longer collapses to the player
+  assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 2, 'a HUD per enemy (the elite)')
+  assert_eq(view.get_node('BottomBar/AllyLeft').get_child_count(), 1, 'the first ally fills the left slot')
+  await wait_frames(2)   # let the containers lay the widgets out so the centres are real
+  # each enemy resolves to its own HUD — the second grunt no longer collapses to the player
   assert_ne(view.actor_pos(e2), view.actor_pos(p), 'the second enemy is NOT at the player portrait')
   assert_ne(view.actor_pos(e1), view.actor_pos(e2), 'the two enemies are at distinct positions')
   cm.free()

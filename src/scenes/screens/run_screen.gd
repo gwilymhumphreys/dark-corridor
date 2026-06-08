@@ -76,6 +76,18 @@ func _show_choice() -> void:
   add_child(_choice)
   _choice.picked.connect(_on_choice_picked)
   _choice.setup(_run.pending_choice())
+  # Dev hook (`--autofight`, pairs with `--shot`): auto-pick the first fight so a live combat
+  # view can be captured — the choice layer otherwise parks here. Presentation-only.
+  if '--autofight' in OS.get_cmdline_args() or '--autofight' in OS.get_cmdline_user_args():
+    _on_choice_picked.call_deferred(_first_fight_candidate())
+
+
+func _first_fight_candidate() -> int:
+  var candidates: Array = _run.pending_choice()
+  for i in candidates.size():
+    if EncounterCatalog.get_def(candidates[i]).type == EncounterDef.Type.FIGHT:
+      return i
+  return 0
 
 
 func _on_choice_picked(index: int) -> void:

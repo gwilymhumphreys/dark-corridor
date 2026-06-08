@@ -1,33 +1,35 @@
-class_name BoardStrip
-extends VBoxContainer
-## One actor's board in the framed combat view (ui_layout_prd): an HP bar (fill +
-## text) above a row of ItemCells. Structure is authored in board_strip.tscn; setup()
-## builds the row from the live board and the strip reads HP each frame. Reads the
-## actor; writes nothing.
+class_name AllySlot
+extends HBoxContainer
+## A run-scoped ally / combat-scoped summon token in the framed combat view, in one of the
+## slots flanking the player (ui_layout_prd): a portrait + HP + name, with its board items
+## beside it. Structure is authored in ally_slot.tscn; setup() builds the item row and HP
+## reads each frame. Reads the Actor; writes nothing. The VFX wall reads slot_centre /
+## cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
 
 var actor: Actor
 
-@onready var _hp_fill: ColorRect = $HP/Fill
-@onready var _hp_label: Label = $HP/Label
-@onready var _row: HBoxContainer = $Row
+@onready var _hp_fill: ColorRect = $Left/HP/Fill
+@onready var _hp_label: Label = $Left/HP/Label
+@onready var _name: Label = $Left/Name
+@onready var _items: HBoxContainer = $Items
 
 var _cells: Dictionary = {}   # Item -> ItemCell
 
 
 func setup(target: Actor) -> void:
   actor = target
+  _name.text = tr(actor.display_name) if actor.display_name != '' else tr('Ally')
   for item in actor.board:
     var cell: ItemCell = ITEM_CELL.instantiate()
-    _row.add_child(cell)
+    _items.add_child(cell)
     cell.setup(item)
     _cells[item] = cell
   _refresh_hp()
 
 
 func _exit_tree() -> void:
-  # CLAUDE.md runtime cleanup: drop the Item->cell map + the live-actor ref on free.
   _cells.clear()
   actor = null
 
@@ -45,14 +47,10 @@ func _refresh_hp() -> void:
   _hp_label.text = '%d / %d' % [int(round(actor.hp)), int(round(actor.max_hp))]
 
 
-## Centre of this strip in global (screen) space — the VFX wall's actor position for the
-## actor this strip represents (projectiles fly to/from here).
-func strip_centre() -> Vector2:
+func slot_centre() -> Vector2:
   return global_position + size * 0.5
 
 
-## Centre of `item`'s cell in global (screen) space, or Vector2.INF if not on this
-## board — the VFX wall reads it.
 func cell_centre(item: Item) -> Vector2:
   if _cells.has(item):
     return (_cells[item] as ItemCell).cell_centre()
