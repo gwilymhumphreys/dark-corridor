@@ -448,6 +448,17 @@ func test_draft_pool_is_character_plus_colorless() -> void:
   assert_eq(pool.size(), run.character.item_pool.size() + ColorlessPool.ITEMS.size(), 'pool = character + colorless')
 
 
+func test_start_with_a_chosen_character_uses_its_kit() -> void:
+  # The character-select pick routes through start(seed, id): the run opens in the chosen
+  # character's pool + starting kit (the Duelist's distinct no-relic loadout proves it).
+  var run := _run()
+  run.start(1, CharacterCatalog.DUELIST)
+  assert_eq(run.character.id, CharacterCatalog.DUELIST, 'the run opens in the chosen character')
+  assert_eq(run.relics.size(), 0, 'the Duelist starts with no relic (a distinct kit from the Wanderer)')
+  assert_eq(_board_ids(run.player), [ItemCatalog.WEAPON, ItemCatalog.WEAPON, ItemCatalog.POISON_DAGGER],
+    'and its own starting board')
+
+
 func test_character_round_trips_through_the_snapshot() -> void:
   var run := _run()
   run.start(1)

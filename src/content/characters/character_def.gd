@@ -4,10 +4,11 @@ extends RefCounted
 ## item set). Per decision #27 each character draws from its OWN item pool — so a run's
 ## drafts stay focused while the game's range lives across the roster. Authored in
 ## GDScript (#23), collected in CharacterCatalog. The placeholder default ports the
-## prototype seed; the owner authors the real characters (e.g. the Mushroom Druid).
+## prototype seed; the owner authors the real characters (e.g. the Spore Druid).
 
 var id: String = ''
 var name_key: String = ''            # source English; displayed via tr() — localizable
+var blurb_key: String = ''           # one-line identity hook for the character-select screen (tr())
 var item_pool: Array = []            # this character's draftable item ids (#27); colorless is added at draw
 var starting_item_ids: Array = []    # the run-start board, left-to-right
 var starting_relic_id: String = ''   # the signature starting relic (the most build-defining — design)
