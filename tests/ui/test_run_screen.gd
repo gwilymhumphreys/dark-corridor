@@ -148,6 +148,22 @@ func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
   screen.free()
 
 
+func test_settings_opens_over_the_pause_menu_and_closes_back() -> void:
+  var screen := _mount_into_fight(1)
+  for i in 4:
+    screen._physics_process(1.0)
+  screen._toggle_pause()
+  assert_not_null(screen._pause_menu, 'paused')
+  screen._pause_menu.settings_pressed.emit()    # the pause menu's Settings button
+  assert_not_null(screen._settings, 'settings opens over the pause menu')
+  assert_eq(screen._settings.get_parent(), screen._pause_menu,
+    'inside the pause CanvasLayer (layer 100), so its opaque screen covers the paused panel')
+  screen._settings.closed.emit()                # Back
+  assert_null(screen._settings, 'Back closes settings')
+  assert_true(screen._paused, 'and the run is still paused underneath')
+  screen.free()
+
+
 # Mount the run screen and resolve the opening choice beat into a FIGHT (most tests below
 # exercise the live fight). The act pool also holds an event, so pick the first fight
 # candidate, not blindly index 0. `seed >= 0` starts a fresh run first.

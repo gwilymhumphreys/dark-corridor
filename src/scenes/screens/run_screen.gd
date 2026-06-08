@@ -20,6 +20,7 @@ const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overl
 const CHOICE_OVERLAY: PackedScene = preload('res://src/scenes/screens/choice_overlay.tscn')
 const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
+const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 
 enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, ENDED }
 
@@ -33,6 +34,7 @@ var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
 var _pause_menu: PauseMenu = null
+var _settings: SettingsScreen = null
 
 @onready var _map: MapStrip = $HUD/MapStrip
 
@@ -210,14 +212,33 @@ func _pause() -> void:
   _pause_menu = PAUSE_MENU.instantiate()
   add_child(_pause_menu)
   _pause_menu.resume_pressed.connect(_resume)
+  _pause_menu.settings_pressed.connect(_open_settings)
   _pause_menu.quit_pressed.connect(_quit_to_menu)
 
 
 func _resume() -> void:
   _paused = false
+  _close_settings()
   if _pause_menu != null:
     _pause_menu.queue_free()
     _pause_menu = null
+
+
+# Settings, raised from the pause menu — added INSIDE the pause menu's CanvasLayer (layer 100)
+# so its opaque screen covers the pause panel; Close frees it back to the pause menu. Volume
+# changes apply + persist live via Prefs (the run stays paused throughout).
+func _open_settings() -> void:
+  if _settings != null or _pause_menu == null:
+    return
+  _settings = SETTINGS_SCREEN.instantiate()
+  _pause_menu.add_child(_settings)
+  _settings.closed.connect(_close_settings)
+
+
+func _close_settings() -> void:
+  if _settings != null:
+    _settings.queue_free()
+    _settings = null
 
 
 # Quit-to-menu: release the combat view BEFORE the run (and its CombatManager) is freed,

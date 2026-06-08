@@ -69,3 +69,13 @@ text = "Resume"
 
 [node name="Juice" type="Node" parent="Menu/ResumeButton"]
 script = ExtResource("2")
+
+[node name="SettingsButton" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(400, 110)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 44
+text = "Settings"
+
+[node name="Juice" type="Node" parent="Menu/SettingsButton"]
+script = ExtResource("2")

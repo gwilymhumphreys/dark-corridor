@@ -66,6 +66,16 @@ text = "Resume"
 [node name="Juice" type="Node" parent="Catcher/Panel/Menu/ResumeButton"]
 script = ExtResource("2")
 
+[node name="SettingsButton" type="Button" parent="Catcher/Panel/Menu"]
+custom_minimum_size = Vector2(360, 90)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 36
+text = "Settings"
+
+[node name="Juice" type="Node" parent="Catcher/Panel/Menu/SettingsButton"]
+script = ExtResource("2")
+
 [node name="QuitButton" type="Button" parent="Catcher/Panel/Menu"]
 custom_minimum_size = Vector2(360, 90)
 layout_mode = 2

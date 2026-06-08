@@ -7,12 +7,15 @@ extends CanvasLayer
 ## the run screen owns the actual pause/resume gate + the quit routing.
 
 signal resume_pressed
+signal settings_pressed
 signal quit_pressed
 
 @onready var _resume_button: Button = $Catcher/Panel/Menu/ResumeButton
+@onready var _settings_button: Button = $Catcher/Panel/Menu/SettingsButton
 @onready var _quit_button: Button = $Catcher/Panel/Menu/QuitButton
 
 
 func _ready() -> void:
   _resume_button.pressed.connect(func() -> void: resume_pressed.emit())
+  _settings_button.pressed.connect(func() -> void: settings_pressed.emit())
   _quit_button.pressed.connect(func() -> void: quit_pressed.emit())
