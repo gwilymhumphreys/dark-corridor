@@ -15,7 +15,19 @@ setting needed) defines:
 - **Music** → Master
 - **Effects** → Master
 
-So music and effects volume can be controlled independently later.
+So music and effects volume are controlled independently — see **Prefs** below.
+
+## Prefs (`src/autoloads/prefs.gd`)
+
+The settings autoload — persists per-player **volume** preferences to `user://` (a
+`ConfigFile`, **separate** from the run `Save`, which holds run-state only and is cleared
+on death/win). It stores a 0..1 linear level per audio key (`master` / `music` /
+`effects`), applies each to its bus via `AudioServer.set_bus_volume_db` (`linear_to_db`;
+0 → −80 dB silence), and re-applies them at boot. `set_volume(key, value)` clamps, applies,
+and writes through immediately; `disabled` (mirrors `Save.disabled` — the tests / a nosave
+run) skips the disk write. The [settings screen](run_screen.md) binds its sliders here.
+Defaults + bus map are constants at the top of `prefs.gd`; the owner extends it with
+video / accessibility keys as settings grow.
 
 ## SfxManager (`src/autoloads/sfx_manager.gd`)
 

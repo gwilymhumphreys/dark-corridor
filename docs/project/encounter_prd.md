@@ -70,7 +70,7 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 ## Prototype scope — BUILT
 
 - **Fight** Encounter (regular / elite / boss): spawns its enemy `Actor`s in order, creates the `Combat manager` on begin, awaits win/loss, reports the reward up (DRAFT / RELIC / ELITE = relic+draft).
-- **Event** Encounter: `begin()` **awaits** the tier-2 binary choice; `pick_event_option(index)` applies the chosen `EventOptionDef`'s direct outcome to the player run-state (placeholder effects: heal / max-HP / damage) and resolves (reward NONE — the outcome is the reward). Prose + options are localized.
+- **Event** Encounter: `begin()` **awaits** the tier-2 binary choice; the pick (routed through `RunManager.pick_event_option(index)`) applies the chosen `EventOptionDef`'s direct outcome and resolves (reward NONE — the outcome is the reward). Player-Actor effects (heal / max-HP / damage) are applied by the Encounter; an **ADD_ALLY** outcome (the **recruit event** — the event-driven ally-acquisition path) touches the *roster*, so the `RunManager` applies it (`add_ally`, capped at `MAX_ALLIES` = the 4 ally slots) before delegating. Prose + options are localized.
 - **Rest** Encounter: a partial heal on begin, resolves immediately.
 - Instantiated by the `Run manager` from the act pool (a fixed beat) or a CHOICE candidate; reports outcome (died / won / resolved) + reward up. The two-tier choice **UI** (choice overlay + event overlay) is built (run_screen).
 

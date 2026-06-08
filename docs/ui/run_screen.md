@@ -10,10 +10,17 @@ PRD](../project/vfx_driver_prd.md) in the **framed** layout. The presentation on
 ```
 main.tscn (Main) ── main_controller.gd
 └─ ScreenHolder (Control)
-   ├─ title_screen.tscn      Start Run / Resume → Game.start_run / resume_run
+   ├─ title_screen.tscn      Start Run → character_select → Game.start_run ;
+   │                         Resume → resume_run ; Settings → settings_screen
    ├─ run_screen.tscn        the live run (below)
    └─ outcome_screen.tscn    Victory / You Died → New Run / Return to Title
 ```
+
+**Title overlays.** Start Run raises **`character_select.tscn`** (one `character_card`
+per `CharacterCatalog.ids()` — name + blurb + a starting-kit hint; a pick →
+`Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
+kit, #27). The Settings button raises **`settings_screen.tscn`** (below). Dev hooks skip
+the menu: `--autostart` (default-character run), `--select`, `--settings`.
 
 `MainController` boots with `Game` (already in TITLE — autoloads ready first) and
 **swaps the active screen on `Game.phase_changed`** (TITLE / RUN / DEATH / WIN). It
@@ -59,10 +66,18 @@ the headless autotest mounts none of this:
   slow-mo override still **replaces** this base absolutely while inspecting, returning to
   it on release (resolved: absolute slow-mo — [timekeeper_prd](../project/timekeeper_prd.md)).
 - **Pause** — a run-screen gate (`_paused`), **not** a `Game` phase. `ui_cancel` (Escape)
-  toggles it during APPROACHING / FIGHTING; while paused, `_physics_process` (the approach
+  toggles it at any point in a live run; while paused, `_physics_process` (the approach
   walk *and* the fight clock) and the hover `_process` are short-circuited. It raises the
-  pause menu; quit-to-menu routes through `Game.return_to_title()` (which **keeps** the
-  save, so Title's Resume re-enters the beat).
+  pause menu (Resume / **Settings** / Quit-to-menu); **Settings** raises `settings_screen.tscn`
+  *inside* the pause menu's CanvasLayer (layer 100) so its opaque screen covers the paused
+  panel, returning to it on Close. Quit-to-menu routes through `Game.return_to_title()`
+  (which **keeps** the save, so Title's Resume re-enters the beat).
+
+**Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Effects)
+bound to the **`Prefs`** autoload, which applies each level to its AudioServer bus and
+persists it to `user://` (a ConfigFile, **separate** from the run `Save`). Opened from the
+title and the pause menu; Close emits `closed` and the opener frees it. See
+[audio](audio.md).
 
 ## The framed combat view
 
@@ -122,7 +137,8 @@ registered in `project.godot`) — see [localization](../reference/localization.
 ## File map
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
-(title · run · outcome · draft_overlay · draft_card · map_strip · speed_button · pause_menu); `src/scenes/combat/`
+(title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
+draft_card · map_strip · speed_button · pause_menu); `src/autoloads/prefs.gd`; `src/scenes/combat/`
 (combat_view_framed · combat_corridor · board_strip · item_cell); `src/vfx/vfx_driver.gd`;
 the occupant law on `src/scenes/corridors/corridor_scaled.gd` (`axis_scale`). Tests in
 `tests/ui/`.
