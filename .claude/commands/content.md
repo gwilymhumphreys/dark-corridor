@@ -8,7 +8,7 @@ Author game content for Dark Corridor — items, enemies, relics, potions, encha
 
 **The design — WHAT to make:**
 - [`docs/design/influence_dcc.md`](../../docs/design/influence_dcc.md) — tone: *recombination* (fuse two recognisable things from different domains; humour is a byproduct, delivery stays grim). Shapes enemies / bosses / NPCs.
-- [`docs/design/mushroom_druid.md`](../../docs/design/mushroom_druid.md) — the first character: the spore engine (Mass / Self ways to play, summon pillar).
+- [`docs/design/spore_druid.md`](../../docs/design/spore_druid.md) — the first character: the spore engine (Mass / Self ways to play, summon pillar).
 - [`docs/design/character_ideas.md`](../../docs/design/character_ideas.md) — **parking lot** of uncommitted character concepts (Spore Druid promoted; Blade Mage, Wizard, Black Hole, Mechanic parked) + the **resource toolkit** for designing new characters: reusable resources (mana, heat, ammo, gold, HP, allies, items) placed on axes, and the `resource + theme` screen ("don't put a resource on its obvious home"). Where new character ideas land before they graduate to a working file.
 - [`docs/design/card_pool_targets.md`](../../docs/design/card_pool_targets.md) — per-character breadth *signals* (held loosely, never quotas).
 - [`docs/design/per_character_pools.md`](../../docs/design/per_character_pools.md) — decision #27: each character draws from its **own** item pool (+ a small shared colorless pool); enemies & the reward-relic pool stay shared.

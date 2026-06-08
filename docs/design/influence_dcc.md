@@ -12,7 +12,7 @@ The chaos of *Dungeon Crawler Carl* — characters, NPCs, enemies, bosses that f
 
 - **Both sources must stay recognisable in the result.** If you can't name the two familiar things someone would see, it's drifted too far — pull back.
 - **The sources must be far enough apart to spark.** Mushroom + toadstool isn't a combination, it's a theme. Two things from *different domains* that share just enough logic to fuse — that's the sweet spot.
-- The mushroom Druid already is one (fungus + spellcaster class). The method works on a character; this note is about applying it across the whole bestiary.
+- The spore Druid already is one (fungus + spellcaster class). The method works on a character; this note is about applying it across the whole bestiary.
 
 It pairs with the mechanics, which are themselves recombinational — a spore that's lethal-execute-*plus*-spawn is two familiar effects fused. Enemies can work the same way: not "weird monster," but "two known things welded so the seam shows."
 

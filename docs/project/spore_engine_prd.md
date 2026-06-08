@@ -2,7 +2,7 @@
 
 > **This is engineering work, NOT content — a building agent should implement it.**
 > It specs the *engine capabilities* the first status-identity character (the
-> **Mushroom Druid** — [`../design/mushroom_druid.md`](../design/mushroom_druid.md))
+> **Spore Druid** — [`../design/spore_druid.md`](../design/spore_druid.md))
 > needs beyond the current apply / tick / resolve model. The spores, cards, numbers,
 > and which-status-does-what stay the **owner's** content (decision #23). Throughout,
 > **"spore" = a status** ([StatusManager](status_manager_prd.md)); the capabilities
@@ -20,7 +20,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts](architectu
 
 ## Purpose
 
-The Mushroom Druid is a **status-identity character** (the Slay-the-Spire Silent analog — most of its board is status appliers). Its two pillars (Spores: Mass / Self; Summon) need three mechanical seams the spine doesn't have. This PRD enumerates that engine work so it can be picked up cleanly, and — equally important — marks the large surface that needs **nothing new**, so the work isn't over-built.
+The Spore Druid is a **status-identity character** (the Slay-the-Spire Silent analog — most of its board is status appliers). Its two pillars (Spores: Mass / Self; Summon) need three mechanical seams the spine doesn't have. This PRD enumerates that engine work so it can be picked up cleanly, and — equally important — marks the large surface that needs **nothing new**, so the work isn't over-built.
 
 **What needs no engine work (author as content whenever):** the **applier commons** — a damage item with a status rider (Pocket Shrooms), poison (stacked / periodic), beneficial self-spores (regen = periodic, self-block = pool), burn (the timed counterpart DoT). These are the built apply-status item subtype + the existing status shapes (periodic / timed / pool / static-modifier — [StatusManager](status_manager_prd.md)). The engine is already built for this character; only the gaps below are open.
 
@@ -121,7 +121,7 @@ The engine hardcodes **no spore** — it gains verbs, flags, and one capability;
 > character-start ally) + the token/ally content stay the owner's. (Original deferral note below.)
 
 
-**Driver:** Pillar 2 (**Summon**) tokens; the **lethal** spore's "spawn a token on kill" rider (the design decouples that spawn onto a relic/enchant — [`../design/mushroom_druid.md`](../design/mushroom_druid.md)).
+**Driver:** Pillar 2 (**Summon**) tokens; the **lethal** spore's "spawn a token on kill" rider (the design decouples that spawn onto a relic/enchant — [`../design/spore_druid.md`](../design/spore_druid.md)).
 
 **Current state — already a documented deferred item; do not re-spec, point to it:** the Combat manager assumes a **fixed roster** seeded at fight start ([Enemy PRD → open](enemy_prd.md), [decision-log → open](decision-log.md)); adding an `Actor` mid-combat (register its Tickers, subscribe its triggers, extend the ordering) is deferred until the boss **"summons-adds"** signature is built. The player side being a **party** (not a hardwired single actor) is **decision #22** ("treat each side as a roster, roster of 1 today; don't hardwire one player `Actor`").
 
@@ -167,5 +167,5 @@ The applier commons (above) need none of this — they can be authored against t
 - **Item** — declares "I consume `type` from my target" on a def; self-fuel consume resolves in the fire pipeline (Cap 1).
 - **Combat manager** — opponent-fuel consume + payload scale in the per-target spawn path (Cap 1); the blinded-source fizzle + fizzle-reason at Delivery resolution (Cap 2); the deferred mid-fight roster add/remove + both-sides support (Cap 3).
 - **combat_prd / Delivery** — reuses the fire → resolve → Delivery → land/fizzle model; Cap 2 adds a fizzle cause.
-- **Driven by content:** the owner's spore `StatusDef`s + Mushroom Druid `ItemDef`s ([`../design/`](../design/mushroom_druid.md)) are what exercise these seams; this PRD is the engine they run on.
+- **Driven by content:** the owner's spore `StatusDef`s + Spore Druid `ItemDef`s ([`../design/`](../design/spore_druid.md)) are what exercise these seams; this PRD is the engine they run on.
 - Hub interface-contract entries added when each capability is built.

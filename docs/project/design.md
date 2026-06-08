@@ -262,6 +262,10 @@ Specific stat-statuses (strength / weak / vulnerable and kin) are **content**, a
 
 The standing constraint is **authoring guidance**, not a global rule: a *flat* damage modifier applied **per fire** interacts badly with the high-trigger cascade — a +N that hits every trigger from a fast item applies ~15×/fight, from a slow item ~3×, making fast items strictly dominant. So **per-fire damage scaling should be percentage (or charge-limited)**; flat is fine for effects not applied per-fire (timed states, block-like pools, one-shot amplifiers). The author picks per status with this in mind.
 
+### Shared status baseline (per character)
+
+Every character can apply a small **shared baseline** of generic statuses — **Vulnerable** and **Weak** to start (the Slay-the-Spire model: any character reaches a common status vocabulary). This is a shared *status* vocabulary, **not** a shared *item* layer — the **appliers** still live in each character's own pool (decision #27 rejected a colorless commons *item* tier, not shared statuses). The payoff: a character's *bespoke* statuses can stay **few and deep** (the routine debuffs are covered by the baseline), and a card that "cares how many different statuses are present" draws variety from baseline + bespoke without authoring a wide status bestiary. First applied by the Spore Druid — one signature spore counter + the reused baseline ([`../design/spore_druid.md`](../design/spore_druid.md)). Decision #28.
+
 -----
 
 ## Relics
@@ -344,7 +348,7 @@ The corridor stays single and linear. What the choice changes is the reward/enco
 Minimum viable character system: portrait + signature starting relic + small starting item set. Optional passive trait only as a property of the starting relic; no separate system.
 
 - **Per-character item pools** (decision #27 — [per_character_pools](../design/per_character_pools.md)). Each character draws from its **own** item pool, *not* one shared pool. (Departs from the original single-shared-pool plan: a no-hidden-weighting 1-of-3 draft can't be both wide *and* connective from one pool, so focus lives per-run and range per-game.) Each pool is small and coherent (a few directions); the character's identity goes deep. A character is a meaningfully different run, not just flavor of start.
-- Starting items: 2-3 items from the **character's own pool**, chosen to anchor an archetype (e.g. the Mushroom Druid starts pointed at spores) — teaching its build from turn 1.
+- Starting items: 2-3 items from the **character's own pool**, chosen to anchor an archetype (e.g. the Spore Druid starts pointed at spores) — teaching its build from turn 1.
 - **Hold the line on what gets split (the Battledraft scope trap, refined):** per-character *item pools* — yes; **enemies stay a shared pool** and the **reward-relic pool stays shared**; per-character *everything* (relic/enemy pools, bespoke commons) is the trap to avoid. The unique build-defining starting relic per character is unchanged — that's one bespoke relic, not a split pool.
 - Default character has the least-twisted starting relic + most generic starting items — teaches the loop.
 - Unlockables get progressively weirder starting relics + more archetype-specific starting items.

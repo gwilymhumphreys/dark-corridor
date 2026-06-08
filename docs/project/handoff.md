@@ -97,7 +97,7 @@ the character system #23/#27). See the per-item status in "Your task" below.
 
 **What does NOT exist yet** (most of it is content — the project owner's domain): the
 real item/enemy/encounter pools beyond the placeholders, boss **signature mechanics**,
-real event prose, the Mushroom Druid (and other) **character** content + the
+real event prose, the Spore Druid (and other) **character** content + the
 spore-engine's player-side lethal/summon riders (Cap 3 *mechanism* is built), the
 lethal-spore execute, meta-progression, and a real **`tune` pass** (the machinery is
 ready; it waits on content). The multi-act map, choice layer, Event type, reward
@@ -245,7 +245,7 @@ test-first + its own green commit, with the headless autotest as the regression 
    `CombatManager` two-roster model (`add_actor` combat-scoped summon · `register_ally`
    run-scoped ally · `Delivery.Kind.SUMMON` · scope-aware teardown), so **allies support both
    run and combat scope** (#22), wired into the live fight + the multi-actor view (#4/#6).
-   **Still the owner's:** the Mushroom Druid content itself, the spore **appliers** (poison /
+   **Still the owner's:** the Spore Druid content itself, the spore **appliers** (poison /
    blinding-status / burn / self-regen / self-block — they need nothing new, just authoring),
    and the **lethal-spore execute / spawn-on-kill rider** content. Full spec:
    [spore_engine](spore_engine_prd.md). **The seams are engineering (done); the spores are content.**

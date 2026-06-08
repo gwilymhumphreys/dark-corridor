@@ -1,4 +1,4 @@
-# Mushroom Druid — Working File
+# Spore Druid — Working File
 
 > First character. Working doc — add cards as they come, cull to a pool later. Targets in [`card_pool_targets.md`](card_pool_targets.md), held loosely.
 
@@ -19,7 +19,13 @@ The spore engine has two ways to play — **Mass** and **Self** — not separate
 - **Mass** — each Mass card *names its own fuel*: consume X of a printed spore type (rarely >1 type) for a scaling effect. Not a generic engine — a card only references a spore that can be consumed, so the stacked/timed split (below) is a per-card authoring fact, not a system rule. Conditional (dead without their fuel) → skews uncommon/rare. Commons stay the appliers; Mass lives a tier up.
 - **Self** — payoffs for being heavily spored, plus *beneficial* self-spores (regen, block-on-tick). Cleanest framing is "spore myself with good stuff + reward being spored," **not** "poison yourself and cope" — the masochist line (eat a bad spore, payoff justifies it) is the spicy high-risk *sub*-line, not the whole premise. Inward/defensive. **Anti-synergy with Mass** lives in *target shape* (Self appliers spray everyone; Mass wants one type stacked on one target) — kept live deliberately as a real draft tension.
 
-Cross-cutting applier commons feed multiple flavours — a poison applier counts toward Mass-poison, adds to Spread's variety, and (if self-shaped) feeds Self. That overlap keeps any one flavour from becoming the only concern.
+Cross-cutting applier commons feed multiple flavours — a main-spore applier counts toward Mass *and* the distinct-status variety, and (if self-shaped) feeds Self. That overlap keeps any one flavour from becoming the only concern.
+
+### Spore roster — small and synergistic (resolved 2026-06-08)
+
+Rather than a wide bestiary of bespoke spores (flavourful, but a steep learning curve, and most would just shadow statuses the engine already has), the roster is **deliberately small and synergistic**: **one main spore** — a *stacked* counter that is the Mass fuel and the character's signature — plus **1–2 minor** bespoke spores. Everything else reuses the **shared status baseline** every character can reach (**Vulnerable**, **Weak** — the StS model; [`../project/design.md`](../project/design.md) Status System, decision #28). "Many spore effects" is then expressed by cards that **count distinct statuses present** (the Spread mechanism), not by authoring many statuses. The main spore counter **stands out** precisely because it's the one bespoke stacked thing amid reused statuses.
+
+The main spore **does nothing on its own for now** — pure Mass ammo (the thallid-counter shape) — explicitly **open to change** (it may earn a solo effect later). **Name: TBD (owner.)** This **supersedes** the earlier doc framing that used *poison* as the canonical Mass fuel: the bespoke main spore is the fuel now; poison, if it appears at all, is just another reusable status, not the signature.
 
 ### Pillar 2 — Summon (candidate, specifics TBD)
 
@@ -32,13 +38,16 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 - **Self anti-synergy must stay live both ways.** Too-strong self payoff → you take both for free and the tension was fake; too-weak → nobody touches Self and it's a trap archetype. Both halves have to stay draftable. Prototype-tuning watch — easy to balance away without noticing you killed the decision.
 - **Spread is a mechanism, not an archetype** (demoted). A card or two can reward holding different spore types; it has no consume-verb or build identity of its own, so don't author toward it as a thread. If a spread-payoff card ends up wanting a consume-verb (fire once per distinct type present, variety spent as ammo), fine — but that's one card's design, not a direction.
-- **Spore accumulation differs by type (by design, like DoTs generally).** Stacked spores (e.g. poison — count grows, the count is Mass fuel) vs. timed spores (e.g. blinding, slow — applications extend duration, not effect). Rationale: stacks are useless in hallway fights and overpowered vs. bosses; timing dodges that. Consequence: only stacked spores are Mass-eligible, and per-card Mass naturally never references a timed one. So a Mass-poison payoff needs poison appliers to exist first — don't write a Mass card whose fuel doesn't exist yet.
+- **Spore accumulation differs by type (by design, like DoTs generally).** Stacked spores (the main spore counter — count grows, the count is Mass fuel) vs. timed spores (e.g. blinding — applications extend duration, not effect). Rationale: stacks are useless in hallway fights and overpowered vs. bosses; timing dodges that. Consequence: only stacked spores are Mass-eligible, and per-card Mass naturally never references a timed one. So a Mass payoff needs the main-spore appliers to exist first — don't write a Mass card whose fuel doesn't exist yet.
 - **Self-application is a property of the applier's target shape, not the spore.** Whether a spore is survivable on self depends on which applier carries it (enemy-shaped vs self/all-shaped), same per-card logic as Mass. So lethal/blind/confuse simply never ride a self-shaped applier — no spore needs to be universally self-safe. Self uses the specific appliers authored to carry good-or-tolerable-on-you spores.
-- **Spore type count** — the hidden dial under the spore engine. Mass wants few-and-deep; a spread-reward card wants several-and-distinct. Don't solve on paper. **Open.**
+- **Spore type count — resolved (2026-06-08): few-and-deep.** One main bespoke spore (the stacked Mass fuel) + 1–2 minor, with **Vulnerable / Weak** reused as the shared baseline (#28) and "count distinct statuses" carrying variety. See *Spore roster* above. The dial is set toward **few**; revisit only with new info.
 
 ## Spores defined so far
 
-- **Blinding** (timed) — enemy misses for 3s; further applications extend duration, not effect. Animate the whiff with a clear tell so the eaten swing reads against the dark. Spread/Self fuel, not Mass.
+- **Main spore** *(name TBD — the signature)* (stacked) — the Mass fuel + variety-counter. **Does nothing on its own for now** (pure ammo; open to change). The only Mass-eligible spore in the kit, and the one bespoke stacked status — it stands out against the reused baseline.
+- **Blinding** (timed, minor) — enemy misses for **2s**; further applications extend duration, not effect. Carried by the rare **Pocket Shrooms**. Animate the whiff with a clear tell so the eaten swing reads against the dark. Spread/Self fuel, not Mass.
+
+**Reused baseline (not bespoke spores):** **Vulnerable**, **Weak** — the shared status vocabulary every character can apply (#28). Their appliers sit in the pool like any card and feed the distinct-status variety, but are never Mass fuel (timed, not stacked).
 
 ## Tagging key
 - **Type:** A = attack (damage item) · S = skill (block / resource / utility)
@@ -50,7 +59,7 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 | Name | Shape (ST/AoE) | Archetype | Effect | Notes |
 |------|----------------|-----------|--------|-------|
-| Pocket Shrooms | ST | x | 10 dmg, 3s; apply 1 blinding spore | Baseline-ish attack (~3.3 DPS) + a timed spore rider. Blinding = Spread/Self fuel. |
+| | | | | |
 
 ### Skills
 
@@ -78,6 +87,10 @@ On-mechanism standouts: thallid counter, decompose-for-fuel, board-linking, spaw
 
 ## Rares — later
 
+| Name | Type | Shape | Archetype | Effect | Notes |
+|------|------|-------|-----------|--------|-------|
+| Pocket Shrooms | A | ST | x | 10 dmg, 3s; apply 1 blinding spore (2s blind) | The blinding enabler. ~3.3 DPS attack + a timed control rider; **rare for the access to blinding, not for bigger numbers** (rarity = complexity, not power). |
+
 ---
 
-**Running count:** Attacks 1 · Skills 0 — (block 0 / resource 0 / utility 0)
+**Running count:** Commons — Attacks 0 · Skills 0 (block 0 / resource 0 / utility 0). Rares — 1 (Pocket Shrooms, attack).

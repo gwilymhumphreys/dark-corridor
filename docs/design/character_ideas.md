@@ -2,7 +2,7 @@
 
 > **Uncommitted.** A holding pen for character/class concepts so they don't get lost.
 > Nothing here is decided, scheduled, or implied to ship. Ideas graduate to their own
-> working file (like [`mushroom_druid.md`](mushroom_druid.md)) only when the owner
+> working file (like [`spore_druid.md`](spore_druid.md)) only when the owner
 > chooses to pursue one — most should stay parked.
 >
 > Read each through the **recombination** lens ([`influence_dcc.md`](influence_dcc.md)):
@@ -21,7 +21,7 @@
 
 ## Spore Druid — **promoted**
 
-Has its own working file: [`mushroom_druid.md`](mushroom_druid.md). The first character.
+Has its own working file: [`spore_druid.md`](spore_druid.md). The first character.
 Listed here only so the parking lot reads as the full set. Fusion: fungus meets druid → a
 status-identity engine (spores), not warrior/mage/rogue.
 
@@ -169,7 +169,7 @@ an Item) spawned and consumed on the board. Three consequences:
   gold) + gold-**spenders** (gold as in-fight ammo — spicy, can death-spiral).
 - **HP is gold's inverse — nearly free, highest-stakes.** Reuses the Actor's life total +
   heal/regen/max-HP, no new pool; double-booked as both the resource *and* the lose-condition —
-  which is the tension. It's the druid's masochist Self sub-line ([`mushroom_druid.md`](mushroom_druid.md))
+  which is the tension. It's the druid's masochist Self sub-line ([`spore_druid.md`](spore_druid.md))
   generalized, with the same knife-edge (too cheap = free power, too costly = a trap).
 
 **Screen for the trawl — `resource + theme`.** A resource is a reusable part, not an identity. A
