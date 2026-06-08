@@ -7,6 +7,7 @@ extends HBoxContainer
 ## cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
+const DOWNED_TINT := Color(0.45, 0.45, 0.45)   # darken a downed (dead) ally — alpha 1, not transparency
 
 var actor: Actor
 
@@ -37,6 +38,8 @@ func _exit_tree() -> void:
 
 func _process(_delta: float) -> void:
   _refresh_hp()
+  # A downed (dead) run-scoped ally keeps its slot but reads as out — dim the whole slot.
+  modulate = DOWNED_TINT if (actor != null and not actor.is_alive()) else Color.WHITE
 
 
 func _refresh_hp() -> void:

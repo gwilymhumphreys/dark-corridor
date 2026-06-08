@@ -168,3 +168,40 @@ func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
   assert_ne(view.actor_pos(e2), view.actor_pos(p), 'the second enemy is NOT at the player portrait')
   assert_ne(view.actor_pos(e1), view.actor_pos(e2), 'the two enemies are at distinct positions')
   cm.free()
+
+
+func test_corridor_backdrop_is_not_inspectable() -> void:
+  # The corridor now fills most of the screen (corridor-forward layout). Hovering its backdrop
+  # must NOT count as inspectable — otherwise the resting mouse holds the hover slow-mo on and
+  # the whole fight crawls. Only the entities (HUDs / items / potions / ally slots) are.
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [])
+  await wait_frames(2)
+  assert_false(view.mouse_over_inspectable(Vector2(200.0, 600.0)),
+    'a point in the corridor backdrop (away from any HUD/item) is not inspectable — no perma-slow-mo')
+  cm.free()
+
+
+func test_reaped_enemy_drops_its_hud() -> void:
+  # A slain enemy leaves combat (CombatManager reaps it); the view must drop its HUD, not keep
+  # a stale one — every frame it reconciles the widget set against the live roster.
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(1000.0, [ItemCatalog.WEAPON])
+  var e1 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var e2 := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e1, e2])
+  cm.start()
+  view.bind(cm, p, [])
+  assert_eq(view._enemy_huds.size(), 2, 'two HUDs at fight start')
+  e1.take_damage(50.0)
+  cm.sim_step()          # the CombatManager reaps the slain e1
+  view._process(0.0)     # the view reconciles its widgets to the roster
+  assert_eq(view._enemy_huds.size(), 1, 'the reaped enemy\'s HUD is dropped')
+  assert_false(e1 in view._enemy_huds, 'and it was the dead one (the living enemy keeps its HUD)')
+  cm.free()

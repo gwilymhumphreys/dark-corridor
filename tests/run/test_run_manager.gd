@@ -254,6 +254,22 @@ func test_between_act_full_heal_revives_allies() -> void:
   assert_almost_eq(run.allies[0].hp, run.allies[0].max_hp, 0.0001, 'the between-act restore heals allies too')
 
 
+func test_run_scoped_allies_revive_to_full_each_fight() -> void:
+  # Allies revive between combats (only the player carries HP attrition) — a downed ally enters
+  # the next fight at full HP.
+  var run := _run()
+  run.start(5)
+  run.add_ally(EnemyCatalog.SPORE_THRALL)
+  run.allies[0].take_damage(run.allies[0].max_hp)   # down it
+  assert_false(run.allies[0].is_alive(), 'the ally is downed')
+  for i in run.pending_choice().size():             # reach a fight beat
+    if EncounterCatalog.get_def(run.pending_choice()[i]).type == EncounterDef.Type.FIGHT:
+      run.pick_path(i)
+      break
+  run.begin_current()
+  assert_almost_eq(run.allies[0].hp, run.allies[0].max_hp, 0.0001, 'the ally enters the fight revived to full')
+
+
 func test_add_ally_mid_fight_joins_the_live_combat() -> void:
   var run := _run()
   run.start(5)

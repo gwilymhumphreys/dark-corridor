@@ -26,6 +26,7 @@ var bus: EventBus
 var rng: RandomNumberGenerator   # the per-fight stream — random item-targeting (#14/#20)
 
 var _player_tokens: Array = []   # Array[Actor] — combat-scoped player-side summons (dissolved)
+var _discarded: Array = []       # Array[Actor] — combat-scoped bodies reaped on death; dissolved at teardown
 
 var _items: Array = []           # Array[Item] — cooldown Tickers, registration order
 var _deliveries: Array = []      # Array[Delivery] — in-flight + recently-resolved
@@ -170,13 +171,18 @@ func sim_step() -> void:
   for d in arrived:
     _land(d)
 
-  # 4. (Routing is inline: events published in fire/land push tickers, which are
+  # 4. Reap the combat-scoped dead (enemies + summon tokens leave combat on death; a downed
+  #    run-scoped ally stays — see _reap_dead). Before the win/loss check, so clearing the last
+  #    enemy this step resolves the fight.
+  _reap_dead()
+
+  # 5. (Routing is inline: events published in fire/land push tickers, which are
   #    only evaluated next step — one link per step, loop-proof.)
 
-  # 5. Win/loss.
+  # 6. Win/loss.
   _check_resolution()
 
-  # 6. Drop spent Deliveries (fizzled = no visual; landed = held briefly for the
+  # 7. Drop spent Deliveries (fizzled = no visual; landed = held briefly for the
   #    impact number/flash) so the in-flight set can't grow unbounded over a long
   #    fight — vfx_driver_prd's "keep until the visual elapses, then drop."
   _prune_deliveries()
@@ -431,6 +437,27 @@ func _all_enemies_dead() -> bool:
   return true
 
 
+## Reap the COMBAT-SCOPED dead from the live rosters: dead enemies and dead player-side summon
+## tokens leave combat — out of targeting + firing, their HUD removed, dissolved at teardown.
+## RUN-SCOPED allies are deliberately NOT reaped: a downed ally stays on the roster (its slot
+## remains, it just stops participating — its items are already skipped while dead) and is
+## revived to full by the RunManager at the next fight. The player is never reaped (its death
+## is the loss). Their item Tickers are dropped from the sweep so they stop being advanced.
+func _reap_dead() -> void:
+  _reap_from(enemies)
+  _reap_from(_player_tokens)
+
+
+func _reap_from(roster: Array) -> void:
+  for i in range(roster.size() - 1, -1, -1):
+    var actor: Actor = roster[i]
+    if not actor.is_alive():
+      for it in actor.board:
+        _items.erase(it)
+      roster.remove_at(i)
+      _discarded.append(actor)   # kept intact (live Deliveries/VFX may still ref it); dissolved at teardown
+
+
 func _finish(player_won: bool) -> void:
   _resolved = true
   _player_won = player_won
@@ -536,11 +563,14 @@ func teardown() -> void:
     e.dissolve()
   for t in _player_tokens:
     t.dissolve()
+  for d in _discarded:   # combat-scoped bodies reaped mid-fight — dissolve them here too
+    d.dissolve()
   _items.clear()
   _deliveries.clear()
   enemies = []
   allies = []
   _player_tokens = []
+  _discarded = []
   player = null
   timekeeper = null
   bus = null

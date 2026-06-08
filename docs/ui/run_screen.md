@@ -93,14 +93,18 @@ layout (the layout mockup), composition:
   The corridor renders **one occupant sprite per enemy**, arranged side by side and shrunk by
   count (`CombatCorridor.set_enemy_count`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`. The HUD / ally-slot item cells
-  are smaller than the player's board (`ItemCell.set_cell_size`).
+  are smaller than the player's board (`ItemCell.set_cell_size`). The view **reconciles** its
+  widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
+  dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
   "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
   a grid of `item_cell.tscn`: family-colour panel + value + cooldown ring + fire recoil),
   with the **potion slots** above it.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
   + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right;
-  `AllyLeft` / `AllyRight`). The view reads the CombatManager's rosters (`enemies` +
+  `AllyLeft` / `AllyRight`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
+  participating, revived to full next fight); a **dead combat-scoped token is reaped** like an
+  enemy (slot removed). The view reads the CombatManager's rosters (`enemies` +
   `player_side()`) each frame, so mid-fight summons (a boss add, a player token) appear as
   they spawn.
 - **VFX wall** (`vfx_driver.gd`) over it — projectiles fly in screen space; `actor_pos`

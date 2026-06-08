@@ -310,6 +310,47 @@ func test_enemy_summon_adds_to_the_enemy_side() -> void:
   assert_eq(cm.enemies.size(), 2, 'the enemy summoned an add onto its own side')
 
 
+# --- reaping the combat-scoped dead vs. keeping a downed run-scoped ally ------
+
+func test_dead_enemy_is_reaped_and_the_fight_continues() -> void:
+  var p := Actor.new(1000.0)
+  var e1 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var e2 := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := _manager(p, [e1, e2])
+  cm.start()
+  e1.take_damage(50.0)         # slay e1 outright
+  cm.sim_step()                # the reap runs this step
+  assert_false(e1 in cm.enemies, 'the slain enemy was reaped from the roster')
+  assert_true(e2 in cm.enemies, 'the living enemy remains')
+  assert_false(cm.is_resolved(), 'and the fight continues (one enemy left)')
+
+
+func test_dead_summon_token_is_reaped_like_an_enemy() -> void:
+  var p := Actor.new(1000.0)
+  var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  var token := _spawn(5.0, [ItemCatalog.ENEMY_CLAW])
+  cm.add_actor(token, true, true)   # a combat-scoped player-side summon
+  assert_true(token in cm.player_side(), 'the token joined the player side')
+  token.take_damage(50.0)
+  cm.sim_step()
+  assert_false(token in cm.player_side(), 'a dead combat-scoped token is reaped like an enemy')
+
+
+func test_downed_run_scoped_ally_stays_on_the_roster() -> void:
+  var p := Actor.new(1000.0)
+  var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
+  var ally := _spawn(5.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e], 0, [ally])
+  _made.append(cm)
+  cm.start()
+  ally.take_damage(50.0)
+  cm.sim_step()
+  assert_true(ally in cm.allies, 'a downed run-scoped ally is NOT reaped — its slot stays')
+  assert_false(ally.is_alive(), 'it is downed (out of combat, revived by the RunManager next fight)')
+
+
 func test_dead_actor_items_stop_ticking_and_firing() -> void:
   # The bug a single-enemy fight hid: in a multi-body fight a slain body must stop swinging.
   var p := Actor.new(1000.0)

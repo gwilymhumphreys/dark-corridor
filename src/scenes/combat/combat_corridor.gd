@@ -32,9 +32,10 @@ func _exit_tree() -> void:
   _enemies.clear()
 
 
-## Ensure exactly `n` occupant sprites (min 1), arranged side by side.
+## Ensure exactly `n` occupant sprites, arranged side by side (0 once the last enemy is reaped —
+## the fight resolves that same step, so the empty corridor is only ever a teardown frame away).
 func set_enemy_count(n: int) -> void:
-  n = maxi(n, 1)
+  n = maxi(n, 0)
   while _enemies.size() < n:
     var s := Sprite2D.new()
     s.texture = ENEMY_SPRITE

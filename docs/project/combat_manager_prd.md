@@ -111,7 +111,7 @@ UI never writes combat state directly; the manager interprets the intent.
 
 ## Win/loss
 
-Checked each tick after **Land** (step 3): player `Actor` dead → loss; all enemy `Actor`s dead → win. On resolution: stop the `Timekeeper`, drop in-flight effects, signal the result up. *(Simultaneous death — both sides empty the same tick — resolves to **loss**; a rare edge, provisional.)*
+Checked each tick after **Land** + the dead-reaping (steps 3–4): player `Actor` dead → loss; the enemy side empty (every enemy reaped on death) → win. On resolution: stop the `Timekeeper`, drop in-flight effects, signal the result up. *(Simultaneous death — both sides empty the same tick — resolves to **loss**; a rare edge, provisional.)*
 
 ---
 
@@ -134,7 +134,7 @@ Checked each tick after **Land** (step 3): player `Actor` dead → loss; all ene
 - **AOE-at-arrival** specifics (set resolved at spawn; dead-at-arrival fizzle) — confirm when multi-enemy fights are built.
 - **Per-fight RNG for random item-targeting — resolved + BUILT (#20):** the `Combat manager` owns a `RandomNumberGenerator` seeded in `start()` from a `combat_seed`. The `Run manager` derives that seed from its run **seed** (constant, saved) + the beat index (`_combat_seed_for(pos)`) and threads it through the `Encounter` — so fights stay bit-reproducible, a re-entered fight replays identically (resume isn't save-scummable), and deriving it never consumes the run stream the draft draws from. Item-target shapes draw their random pick from this stream. Item-targeted Deliveries land on the `Item` (its owning actor must be alive, else fizzle); the status applies to the item (e.g. silence gates it).
 - **Encounter handoff — resolved (Encounter PRD):** the `Encounter` creates the `Combat manager` with the player + spawned enemy `Actor`s + their left-to-right ordering, and awaits the win/loss result.
-- **Mid-fight roster changes (summoning)** — this spec assumes a **fixed roster** seeded at combat start. Adding / removing an `Actor` mid-fight (register/deregister its Tickers + triggers, re-order) is deferred until the boss "summons-adds" signature is built (see Enemy PRD). *(A **static** multi-Actor player side — drafting allies, #22 — needs no new combat code: sides are already lists + targeting is side-relative; only the **mid-fight** change is deferred.)*
+- **Mid-fight roster changes (summoning + reaping) — BUILT.** `add_actor` files a combat-scoped summon onto either side (registers its Tickers/triggers, inserts front/back); `register_ally` adds a run-scoped ally mid-fight. On death the **combat-scoped** bodies (enemies + summon tokens) are **reaped** — removed from the roster + the component sweep, kept intact until **dissolved at teardown** (live Deliveries/VFX may still reference them) — so the fight is N-vs-M with bodies leaving as they fall. A **downed run-scoped ally is NOT reaped**: it stays on the roster (out of targeting + firing while dead, its slot kept dimmed) and the `Run manager` **revives it to full at the next fight** — only the player carries HP attrition.
 
 ## Dependencies
 

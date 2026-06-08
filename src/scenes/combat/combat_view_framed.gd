@@ -36,7 +36,7 @@ var _player: Actor
 var _enemy_huds: Dictionary = {}    # Actor -> EnemyHud
 var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
-var _roster_count: int = -1
+var _enemy_sprite_count: int = -1   # last count handed to the corridor (re-arrange only on change)
 
 
 ## Bind the live fight: the player's portrait + HP (centre-bottom) and its board column (right),
@@ -84,11 +84,14 @@ func _sync_rosters() -> void:
     return
   var enemies: Array = _cm.enemies
   var player_side: Array = _cm.player_side()
-  var count: int = enemies.size() + player_side.size()
-  if count == _roster_count:
-    return
-  _roster_count = count
-  _corridor.set_enemy_count(enemies.size())   # one corridor occupant sprite per enemy, side by side
+  # Drop widgets whose actor left the roster — reaped dead enemies / summon tokens. A downed
+  # run-scoped ally stays in player_side (kept on the roster), so its slot survives (shown dimmed).
+  _drop_missing(_enemy_huds, enemies)
+  _drop_missing(_ally_slots, player_side)
+  # One corridor occupant sprite per enemy — re-arranged only when the count changes.
+  if enemies.size() != _enemy_sprite_count:
+    _corridor.set_enemy_count(enemies.size())
+    _enemy_sprite_count = enemies.size()
   for e in enemies:
     if not _enemy_huds.has(e):
       var hud: EnemyHud = ENEMY_HUD.instantiate()
@@ -102,6 +105,14 @@ func _sync_rosters() -> void:
       box.add_child(slot)
       slot.setup(a)
       _ally_slots[a] = slot
+
+
+## Free + forget any widget whose actor is no longer present in the roster (reaped from combat).
+func _drop_missing(widgets: Dictionary, present: Array) -> void:
+  for actor in widgets.keys():
+    if actor not in present:
+      (widgets[actor] as Node).queue_free()
+      widgets.erase(actor)
 
 
 ## Pin each enemy HUD's bottom-centre just above its corridor sprite (enemy_anchor), so the HUD
@@ -165,8 +176,10 @@ func _exit_tree() -> void:
   _player_cells.clear()
 
 
-## The hover surface for the slow-mo intent: any board item (enemy HUD, ally slot, or the
-## player's column), any potion slot, or the corridor occupant.
+## The hover surface for the slow-mo intent: a board item on any HUD / ally slot / the player's
+## column, or a potion slot. NOT the corridor backdrop — it now fills most of the screen
+## (corridor-forward layout), so hovering it must not hold slow-mo on; the enemy reads off its
+## HUD, which IS inspectable.
 func mouse_over_inspectable(point: Vector2) -> bool:
   for hud in _enemy_huds.values():
     if (hud as EnemyHud).mouse_over(point):
@@ -177,8 +190,6 @@ func mouse_over_inspectable(point: Vector2) -> bool:
   for cell in _player_cells.values():
     if (cell as ItemCell).get_global_rect().has_point(point):
       return true
-  if _corridor.get_global_rect().has_point(point):
-    return true
   for slot in _potions.get_children():
     if (slot as Control).get_global_rect().has_point(point):
       return true

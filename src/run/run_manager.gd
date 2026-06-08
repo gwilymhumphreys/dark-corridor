@@ -138,7 +138,16 @@ func begin_current() -> void:
     _current.resolved.connect(_on_encounter_resolved)
   _current.begin()
   if _current.is_fight():
+    _revive_allies()          # run-scoped allies enter every fight at full HP (downed → revived)
     _apply_relics_to_player()
+
+
+## Run-scoped allies are revived to full HP at the start of every fight (design: allies revive
+## between combats — only the player carries HP attrition through the run). A downed ally from
+## the previous fight is restored; its slot was kept on the roster, so it simply rejoins.
+func _revive_allies() -> void:
+  for a in allies:
+    a.hp = a.max_hp
 
 
 ## Relic effect shape (a): apply each combat-start relic's status to the player at
