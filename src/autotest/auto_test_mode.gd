@@ -171,7 +171,7 @@ func run_full() -> Dictionary:
     if enc.is_event():
       var ev: int = driver.choose_event_option(enc.event_options())
       logger.log_event('event', { 'beat': run.position, 'options': enc.event_options().size(), 'picked': ev })
-      enc.pick_event_option(ev)
+      run.pick_event_option(ev)   # via the RunManager so an ADD_ALLY option recruits a run-scoped ally
     var cm: CombatManager = run.combat_manager()
     var fight_steps: int = 0
     var fail: String = ''

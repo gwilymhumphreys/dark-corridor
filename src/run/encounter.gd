@@ -99,6 +99,9 @@ func _apply_event_outcome(opt: EventOptionDef) -> void:
       player.hp += opt.amount
     EventOptionDef.Effect.DAMAGE:
       player.take_damage(opt.amount)
+    EventOptionDef.Effect.ADD_ALLY:
+      pass   # an ally grant touches the run roster, not the player Actor — the RunManager
+             # applies it (RunManager.pick_event_option) before delegating the pick here
 
 
 func _on_fight_resolved(player_won: bool) -> void:

@@ -20,6 +20,11 @@ enum Outcome { WON, DIED }
 # Spreads the run seed into a distinct per-beat combat stream (a prime stride).
 const COMBAT_SEED_STRIDE: int = 1000003
 
+# The player side holds at most this many run-scoped allies (the 4 ally slots flanking the
+# player — UI/Layout). add_ally past the cap is a no-op; an acquisition source should gate on
+# can_add_ally() so it never offers a slot that can't be filled.
+const MAX_ALLIES: int = 4
+
 # Run-state (the snapshot persists exactly this). `position` is the global beat index
 # (0 .. RunMap.TOTAL_BEATS-1); the act/beat-within-act are derived (RunMap).
 var player: Actor
@@ -210,18 +215,42 @@ func apply_draft_pick(index: int) -> void:
   _pending_offer = []
 
 
+## Whether the player side has a free ally slot (cap = MAX_ALLIES). An acquisition source
+## (the recruit event today; a draftable `ally` category later) gates on this.
+func can_add_ally() -> bool:
+  return allies.size() < MAX_ALLIES
+
+
 ## Acquire a run-scoped (persistent) ally (spore_engine_prd Cap 3, Stage B): build an Actor
 ## from an EnemyDef and add it to the player-side roster. It persists across fights, is saved
 ## in the snapshot, and joins every fight (the Encounter seeds the CombatManager with it).
-## The acquisition path (a draftable `ally` category / a character-start ally) is the owner's;
-## this is the run-state surface it calls.
+## The acquisition path today is the recruit EVENT (RunManager.pick_event_option → here); a
+## draftable `ally` category is the deferred alternative. No-op past the MAX_ALLIES cap.
 func add_ally(def_id: String) -> void:
+  if not can_add_ally():
+    return   # the 4 ally slots are full — the source should have gated on can_add_ally()
   var ally := _make_ally(def_id)
   allies.append(ally)   # the live CombatManager shares this array by reference, so it sees it
   _ally_def_ids.append(def_id)
   var cm: CombatManager = combat_manager()
   if cm != null and not cm.is_resolved():
     cm.register_ally(ally)   # acquired mid-fight → register its Tickers so it joins the fight
+
+
+## The event's binary-choice intent, routed through the RunManager (not straight to the
+## Encounter) so an option can touch run-state beyond the player Actor. An ADD_ALLY option
+## recruits a run-scoped ally here; the player-Actor effects (heal / max-HP / damage) + the
+## beat resolution stay in the Encounter, which this then delegates to. The autotest + run
+## screen call THIS, not Encounter.pick_event_option, for events.
+func pick_event_option(index: int) -> void:
+  if _current == null or not _current.is_event():
+    return
+  var opts: Array = _current.event_options()
+  if not opts.is_empty():
+    var opt: EventOptionDef = opts[clampi(index, 0, opts.size() - 1)]
+    if opt.effect == EventOptionDef.Effect.ADD_ALLY:
+      add_ally(opt.ally_def_id)
+  _current.pick_event_option(index)
 
 
 func _make_ally(def_id: String) -> Actor:

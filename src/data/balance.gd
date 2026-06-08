@@ -108,6 +108,7 @@ const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fract
 # Placeholder event outcomes (#1) — the owner tunes/authors real event content.
 const EVENT_SHRINE_HEAL_FRACTION: float = 0.4
 const EVENT_SHRINE_MAX_HP: float = 15.0
+const EVENT_WANDERER_DECLINE_HEAL_FRACTION: float = 0.15   # the "walk on alone" recruit-event decline
 
 
 # ── Presentation — the framed combat view (ui_layout_prd; phase4_plan) ───────

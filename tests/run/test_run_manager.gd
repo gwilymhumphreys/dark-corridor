@@ -282,6 +282,49 @@ func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
   assert_null(weak_item.get_ref(), 'and its board items free')
 
 
+# --- ally acquisition via a recruit EVENT (the event-driven path) ------------
+
+## Drive a freshly-created EVENT beat to a chosen option (deterministic, seed-independent):
+## set the current def + create the encounter, begin it, pick the option through the RunManager.
+func _resolve_event(run: RunManager, def_id: String, option: int) -> void:
+  run._current_def_id = def_id
+  run._create_current_encounter()
+  run.begin_current()
+  run.pick_event_option(option)
+
+
+func test_recruit_event_adds_a_run_scoped_ally() -> void:
+  # The ADD_ALLY option, routed through RunManager.pick_event_option, recruits a run-scoped
+  # ally (the event-driven acquisition path) — it then joins every later fight + persists.
+  var run := _run()
+  run.start(1)
+  assert_eq(run.allies.size(), 0, 'no allies before the event')
+  _resolve_event(run, EncounterCatalog.EVENT_WANDERER, 0)   # 'Let it join you'
+  assert_eq(run.allies.size(), 1, 'the recruit event added a run-scoped ally')
+  assert_eq(run.allies[0].board.size(), 1, 'the ally was built from its EnemyDef board')
+
+
+func test_recruit_event_declined_adds_no_ally() -> void:
+  var run := _run()
+  run.start(1)
+  run.player.take_damage(30.0)
+  var hurt: float = run.player.hp
+  _resolve_event(run, EncounterCatalog.EVENT_WANDERER, 1)   # 'Walk on alone'
+  assert_eq(run.allies.size(), 0, 'declining recruits no ally')
+  assert_gt(run.player.hp, hurt, 'and the decline heals a little (the player-Actor outcome still applies)')
+
+
+func test_add_ally_respects_the_four_slot_cap() -> void:
+  var run := _run()
+  run.start(1)
+  for i in RunManager.MAX_ALLIES:
+    run.add_ally(EnemyCatalog.SPORE_THRALL)
+  assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'the four ally slots fill')
+  assert_false(run.can_add_ally(), 'and report full')
+  run.add_ally(EnemyCatalog.SPORE_THRALL)   # one past the cap
+  assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'a 5th recruit is a no-op (the cap holds)')
+
+
 # --- multi-act structure + HP economy + the choice layer (#1) ----------------
 
 func test_opening_beat_is_a_choice_and_pick_creates_the_encounter() -> void:
@@ -419,7 +462,11 @@ func test_character_round_trips_through_the_snapshot() -> void:
 func test_advance_autosaves_the_entry_point() -> void:
   var run := _run()
   run.start(3)
-  _play_one_beat(run, 0)          # advance() writes the snapshot at the new beat
+  for i in run.pending_choice().size():   # pick a FIGHT candidate so a draft reward lands
+    if EncounterCatalog.get_def(run.pending_choice()[i]).type == EncounterDef.Type.FIGHT:
+      run.pick_path(i)
+      break
+  _play_one_beat(run, 0)          # choice already resolved → begin, fight, draft, advance (saves at entry)
   var saved: Dictionary = Save.read()
   assert_false(saved.is_empty(), 'a save exists at the encounter entry')
   assert_eq(int(saved['position']), 1, 'the save is at the freshly-entered beat')

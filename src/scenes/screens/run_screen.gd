@@ -114,7 +114,7 @@ func _show_event(enc: Encounter) -> void:
 func _on_event_picked(index: int) -> void:
   _event.queue_free()
   _event = null
-  _run.current_encounter().pick_event_option(index)
+  _run.pick_event_option(index)   # via the RunManager so an ADD_ALLY option recruits a run-scoped ally
   _after_beat()
 
 
