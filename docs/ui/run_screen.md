@@ -88,10 +88,12 @@ layout (the layout mockup), composition:
 - **Corridor large, top-left** — `combat_corridor.tscn` (`SubViewportContainer` →
   `SubViewport` → `CorridorScaled` → the **enemy sprite as a central-axis occupant**).
   Resizeable; the SubViewportContainer clips it. See *Enemy-in-corridor* below.
-- **An `enemy_hud` floating over the corridor per enemy** — its **item cells** (top),
+- **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
   a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
-  Multiple enemies sit **side-by-side** across the top (`EnemyArea/EnemyHuds`, an HBox).
-  The HUD / ally-slot item cells are smaller than the player's board (`ItemCell.set_cell_size`).
+  The corridor renders **one occupant sprite per enemy**, arranged side by side and shrunk by
+  count (`CombatCorridor.set_enemy_count`); the view pins each HUD's bottom-centre just above
+  its sprite each frame via `CombatCorridor.enemy_anchor(i)`. The HUD / ally-slot item cells
+  are smaller than the player's board (`ItemCell.set_cell_size`).
 - **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
   "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
   a grid of `item_cell.tscn`: family-colour panel + value + cooldown ring + fire recoil),
@@ -114,8 +116,11 @@ wall's `cm` ref before teardown.
 The corridor is a perspective law: a tile at depth `e` cells scales by
 **`depth_ratio^e`** about the vanishing point (the renderer origin). An object **on
 the central axis always projects to the vanishing point** — only its scale changes.
-So the enemy is a child of `CorridorScaled` at the origin, scaled by
-`CorridorScaled.axis_scale(depth)` (the same law). The **approach** (`run_screen`
+So each enemy is a child of `CorridorScaled` near the origin (`CombatCorridor` offsets them
+side-to-side and shrinks them by count), scaled by `CorridorScaled.axis_scale(depth)` (the
+same law). The renderer is 1:1 with the panel (origin = panel centre), so a sprite's local x
+offset is its on-screen x offset — which is how `enemy_anchor(i)` finds each HUD's spot. The
+**approach** (`run_screen`
 APPROACHING state) tweens depth `APPROACH_DEPTH_START → 0` over `APPROACH_DURATION`
 (off `_physics_process`, so the headless test walks it), gliding the corridor for
 parallax; the **fight clock is not ticked until arrival**, so combat is frozen while

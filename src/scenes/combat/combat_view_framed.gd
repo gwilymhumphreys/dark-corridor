@@ -23,7 +23,7 @@ var _cm: CombatManager
 var _player: Actor
 
 @onready var _corridor: CombatCorridor = $CorridorPanel
-@onready var _enemy_huds_box: HBoxContainer = $EnemyArea/EnemyHuds
+@onready var _enemy_huds_box: Control = $EnemyArea/EnemyHuds
 @onready var _player_items: GridContainer = $RightPanel/PlayerItems
 @onready var _potions: HBoxContainer = $RightPanel/Potions
 @onready var _portrait: Control = $BottomBar/PlayerPortrait/Portrait
@@ -53,7 +53,8 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
 
 
 func _process(_delta: float) -> void:
-  _sync_rosters()        # pick up mid-fight summons (a boss add / a player token)
+  _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
+  _position_enemy_huds()  # keep each HUD pinned above its enemy's corridor sprite
   _refresh_player_hp()
 
 
@@ -87,10 +88,10 @@ func _sync_rosters() -> void:
   if count == _roster_count:
     return
   _roster_count = count
+  _corridor.set_enemy_count(enemies.size())   # one corridor occupant sprite per enemy, side by side
   for e in enemies:
     if not _enemy_huds.has(e):
       var hud: EnemyHud = ENEMY_HUD.instantiate()
-      hud.size_flags_vertical = Control.SIZE_SHRINK_BEGIN   # top-align each HUD over the corridor
       _enemy_huds_box.add_child(hud)
       hud.setup(e)
       _enemy_huds[e] = hud
@@ -101,6 +102,22 @@ func _sync_rosters() -> void:
       box.add_child(slot)
       slot.setup(a)
       _ally_slots[a] = slot
+
+
+## Pin each enemy HUD's bottom-centre just above its corridor sprite (enemy_anchor), so the HUD
+## stays visually attached to its enemy as the roster + layout settle. Runs each frame.
+func _position_enemy_huds() -> void:
+  if _cm == null:
+    return
+  var enemies: Array = _cm.enemies
+  var base: Vector2 = _enemy_huds_box.global_position
+  for i in enemies.size():
+    var e: Actor = enemies[i]
+    if not _enemy_huds.has(e):
+      continue
+    var hud: EnemyHud = _enemy_huds[e]
+    var anchor: Vector2 = _corridor.enemy_anchor(i)            # global, the HUD's bottom-centre target
+    hud.position = anchor - base - Vector2(hud.size.x * 0.5, hud.size.y)
 
 
 ## (Re)build the potion slots from the reserve. Each is a clickable button emitting
