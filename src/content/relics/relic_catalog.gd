@@ -34,9 +34,9 @@ static func _stone_ward() -> RelicDef:
   d.id = STONE_WARD
   d.name_key = 'Stone Ward'
   d.kind = RelicDef.Kind.COMBAT_START_STATUS
-  d.status_type = StatusDef.Type.BLOCK
+  d.status_id = 'block'
   d.status_count = Balance.RELIC_STONE_WARD_BLOCK
-  d.panel_color = Color(0.4, 0.5, 0.6)
+  d.panel_color = Colours.RELIC_STONE_WARD
   return d
 
 
@@ -47,7 +47,7 @@ static func _vital_charm() -> RelicDef:
   d.name_key = 'Vital Charm'
   d.kind = RelicDef.Kind.MAX_HP_BONUS
   d.max_hp_bonus = Balance.RELIC_VITAL_CHARM_MAX_HP
-  d.panel_color = Color(0.6, 0.3, 0.35)
+  d.panel_color = Colours.RELIC_VITAL_CHARM
   return d
 
 
@@ -57,7 +57,7 @@ static func _iron_idol() -> RelicDef:
   d.id = IRON_IDOL
   d.name_key = 'Iron Idol'
   d.kind = RelicDef.Kind.COMBAT_START_STATUS
-  d.status_type = StatusDef.Type.BLOCK
+  d.status_id = 'block'
   d.status_count = Balance.RELIC_IRON_IDOL_BLOCK
-  d.panel_color = Color(0.45, 0.45, 0.5)
+  d.panel_color = Colours.RELIC_IRON_IDOL
   return d

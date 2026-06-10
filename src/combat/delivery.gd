@@ -12,7 +12,8 @@ enum Flag { NONE = 0, UNBLOCKABLE = 1 }   # bitmask; resolved by StatusManager
 
 var kind: int = Kind.DAMAGE
 var value: float = 0.0
-var status_type: int = -1     # set when kind == APPLY_STATUS
+var status_id: String = ''    # set when kind == APPLY_STATUS (string id, #23)
+var duration: float = 0.0     # per-application duration carried to apply() (timed statuses)
 var summon_def_id: String = ''   # EnemyCatalog id of the token to spawn (kind == SUMMON)
 var summon_in_front: bool = true   # SUMMON: insert leftmost on the summoner's side (body-block)
 var flags: int = 0            # Flag bitmask (e.g. unblockable) — resolved on land

@@ -58,6 +58,42 @@ const HEX_BOLT_COOLDOWN: float = 2.5
 # to end; catalog-only, not pooled by default.
 const SUNDER_COOLDOWN: float = 3.0
 
+# Pocket Shrooms — the blinding-enabler RARE (spore_druid.md): a single-target attack that
+# both deals damage AND applies the blinding spore (a timed evasion status). The first
+# multi-effect item + the first authored Spore Druid card. Rare for the ACCESS to blinding,
+# not bigger numbers (rarity = complexity; design.md). ~3.3 DPS + a timed control rider.
+const POCKET_SHROOMS_COOLDOWN: float = 3.0
+const POCKET_SHROOMS_DAMAGE: float = 10.0
+const POCKET_SHROOMS_BLIND_STACKS: float = 1.0   # one blinding spore (count; duration = STATUS_BLIND_DURATION)
+
+# Druid Staff — the Spore Druid's first Spores applier + its starting card (spore_druid.md):
+# a single-target attack that deals damage AND stacks the Spores counter (Mass fuel) on the
+# struck enemy. A COMMON applier — appliers are commons; the Mass payoff lives a tier up.
+const DRUID_STAFF_COOLDOWN: float = 3.0
+const DRUID_STAFF_DAMAGE: float = 10.0
+const DRUID_STAFF_SPORE_STACKS: float = 1.0      # Spores applied per fire (count on the SPORES counter)
+
+# Spore Druid common weapons — the first speed/damage spread (spore_druid.md). The axis is
+# NOT neutral here: each attack's cooldown also sets its Spore-accrual RATE, so fast = fast
+# fuel. Tuned around the 5 DPS baseline (Rusted Blade); the spore-carriers pay a DPS "tax"
+# for the fuel they stack. Starting numbers — authored to be ADJUSTED in tuning.
+const SPORE_SPITTER_COOLDOWN: float = 1.0        # fast jab — 1 Spore/sec, the Mass-fuel engine (4 DPS)
+const SPORE_SPITTER_DAMAGE: float = 4.0
+const SPORE_SPITTER_SPORE_STACKS: float = 1.0
+const CAPPED_CUDGEL_COOLDOWN: float = 2.0        # clean tempo weapon — baseline 5 DPS, NO fuel
+const CAPPED_CUDGEL_DAMAGE: float = 10.0
+const BLOOMHAMMER_COOLDOWN: float = 5.0          # slow burst — 8 DPS + dumps 2 fuel in one heavy hit
+const BLOOMHAMMER_DAMAGE: float = 40.0
+const BLOOMHAMMER_SPORE_STACKS: float = 2.0
+
+# Wilt Frond (PLACEHOLDER name) — a Weak-applier attack: 4s cooldown → curve DPS 7, minus a
+# 2 DPS effect tax for the Weakness rider = 5 DPS of damage = 20 dmg, plus 2s Weak. Per the
+# item heuristics (docs/design/item_heuristics.md): effect cost ~2 DPS, Weak duration is the
+# status's global 2s. Starting properties — to be adjusted in tuning.
+const WILT_FROND_COOLDOWN: float = 4.0
+const WILT_FROND_DAMAGE: float = 20.0
+const WILT_FROND_WEAK_STACKS: float = 1.0         # presence count (duration = STATUS_WEAK_DURATION)
+
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks
@@ -68,12 +104,13 @@ const SAMPLE_DEBUFF_DURATION: float = 5.0   # a timed status, to exercise that s
 # Stat-statuses (#6) — % damage modifiers (timed). Placeholder values; the owner tunes
 # them (and may author per-stack variants — the engine supports it).
 const STATUS_WEAK_DAMAGE_MULT: float = 0.75       # Weak: holder deals 25% less damage
-const STATUS_WEAK_DURATION: float = 5.0
+const STATUS_WEAK_DURATION: float = 2.0           # global to all Weak appliers (duration lives on the status, not the item)
 const STATUS_VULNERABLE_DAMAGE_MULT: float = 1.5  # Vulnerable: holder takes 50% more
 const STATUS_VULNERABLE_DURATION: float = 5.0
 # Blind (spore_engine_prd Cap 2) — a timed evasion status; the holder's attacks whiff for
-# this long. Placeholder; the owner authors the real blinding spore (duration, enemy-only).
-const STATUS_BLIND_DURATION: float = 3.0
+# this long. 2s = the Spore Druid's blinding spore as designed (spore_druid.md), applied by
+# Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).
+const STATUS_BLIND_DURATION: float = 2.0
 
 
 # ── Triggers (charges model — push as a fraction of the bar; combat_prd) ─────

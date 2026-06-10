@@ -112,7 +112,7 @@ func _register_actor(actor: Actor) -> void:
     it.cooldown.accum = 0.0
     _items.append(it)
     for sub in it.def.trigger_subs:
-      bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', -1))
+      bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null))
 
 
 # --- The tick ---------------------------------------------------------------
@@ -216,13 +216,13 @@ func _advance_statuses_on(target) -> void:
 ## A visual-only Delivery for a DoT tick so the wall shows the number — the damage
 ## itself was already applied inside StatusManager.advance_status. Pre-landed, never
 ## passed to _land, and flagged so the autotest's direct-hit attribution skips it.
-func _dot_visual(status: Status, target, dealt: float) -> Delivery:
+func _dot_visual(status: StatusEffect, target, dealt: float) -> Delivery:
   var d := Delivery.new()
   d.kind = Delivery.Kind.DAMAGE
   d.value = dealt
   d.target = target
   d.source = status.source
-  d.color = StatusCatalog.get_def(status.type).color
+  d.color = status.color
   d.travel = Ticker.new(0)
   d.fire_time = timekeeper.sim_time
   d.impact_time = timekeeper.sim_time
@@ -244,8 +244,8 @@ func _fire_item(it: Item, arrived: Array) -> void:
       var d := _spawn_delivery(p, target)
       # Opponent-fuel consume (Mass, Cap 1): spend the resolved TARGET's stacks here (it's
       # only known now), scaling the Delivery — the Item stayed downward-clean (it declared).
-      if p.consume_type >= 0 and p.consume_from_target:
-        d.value += StatusManager.consume(target, p.consume_type, p.consume_amount) * p.consume_scale
+      if p.consume_id != '' and p.consume_from_target:
+        d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
       if blinded and d.kind == Delivery.Kind.DAMAGE:
         d.evaded = true
       _deliveries.append(d)
@@ -273,7 +273,8 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   var d := Delivery.new()
   d.kind = p.kind
   d.value = p.value
-  d.status_type = p.status_type
+  d.status_id = p.status_id
+  d.duration = p.duration
   d.summon_def_id = p.summon_def_id
   d.summon_in_front = p.summon_in_front
   d.flags = p.flags
@@ -311,8 +312,8 @@ func _land(d: Delivery) -> void:
         d.target.heal(d.value)
         bus.publish(EventBus.Event.HEALED)
     Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
-      StatusManager.apply(d.target, d.status_type, d.value, d.source, d.flags)
-      bus.publish(EventBus.Event.STATUS_APPLIED, d.status_type)
+      StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
+      bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id)
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)
       if d.summon_def_id != '' and d.target is Actor:
         add_actor(_spawn_token(d.summon_def_id), _on_player_side(d.target), d.summon_in_front)
@@ -320,21 +321,21 @@ func _land(d: Delivery) -> void:
 
 # --- Target-shape resolution (the runtime targeting authority) --------------
 
-## Resolve a payload's relative shape into concrete targets, relative to `owner`
+## Resolve a payload's relative shape into concrete targets, relative to `owner_actor`
 ## (the firing item's owner, or a thrown consumable's thrower).
-func _resolve_targets(p: Payload, owner: Actor) -> Array:
+func _resolve_targets(p: Payload, owner_actor: Actor) -> Array:
   match p.shape:
     ItemEffect.Shape.SELF:
-      return [owner]
+      return [owner_actor]
     ItemEffect.Shape.OPPONENT_LEFTMOST:
-      var t = _leftmost_living_opponent(owner)
+      var t = _leftmost_living_opponent(owner_actor)
       return [t] if t != null else []
     ItemEffect.Shape.ALL_OPPONENTS:
-      return _living_opponents(owner)
+      return _living_opponents(owner_actor)
     ItemEffect.Shape.OPPONENT_ITEM_RANDOM:
-      return _random_opponent_item(owner)
+      return _random_opponent_item(owner_actor)
     ItemEffect.Shape.ALL_OPPONENT_ITEMS:
-      return _all_opponent_items(owner)
+      return _all_opponent_items(owner_actor)
     _:
       # A future shape with no resolver — warn ONCE so an authored item using it isn't a
       # silent no-op (it would fire nothing with no clue why).
@@ -458,11 +459,11 @@ func _reap_from(roster: Array) -> void:
       _discarded.append(actor)   # kept intact (live Deliveries/VFX may still ref it); dissolved at teardown
 
 
-func _finish(player_won: bool) -> void:
+func _finish(won: bool) -> void:
   _resolved = true
-  _player_won = player_won
+  _player_won = won
   set_physics_process(false)
-  resolved.emit(player_won)
+  resolved.emit(won)
 
 
 ## The fight result surface (the `resolved` signal is the push form; these are
@@ -513,12 +514,12 @@ func throw_consumable(consumable, thrower: Actor) -> void:
   for effect in consumable.def.effects:
     var p := _payload_from_effect(effect)
     # Self-fuel consume (Cap 1) — the thrower is known here, so resolve it like an item fire.
-    if p.consume_type >= 0 and not p.consume_from_target:
-      p.value += StatusManager.consume(thrower, p.consume_type, p.consume_amount) * p.consume_scale
+    if p.consume_id != '' and not p.consume_from_target:
+      p.value += StatusManager.consume(thrower, p.consume_id, p.consume_amount) * p.consume_scale
     for target in _resolve_targets(p, thrower):
       var d := _spawn_delivery(p, target)
-      if p.consume_type >= 0 and p.consume_from_target:   # opponent-fuel: spend the target's stacks
-        d.value += StatusManager.consume(target, p.consume_type, p.consume_amount) * p.consume_scale
+      if p.consume_id != '' and p.consume_from_target:   # opponent-fuel: spend the target's stacks
+        d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
       _deliveries.append(d)
       if d.travel.crossed():
         _land(d)
@@ -533,10 +534,11 @@ func _payload_from_effect(effect: ItemEffect) -> Payload:
   p.value = effect.value
   p.shape = effect.shape
   p.travel = effect.travel
-  p.status_type = effect.status_type
+  p.status_id = effect.status_id
+  p.duration = effect.duration
   p.summon_def_id = effect.summon_def_id   # a thrown consumable can summon / consume too
   p.summon_in_front = effect.summon_in_front
-  p.consume_type = effect.consume_type
+  p.consume_id = effect.consume_id
   p.consume_amount = effect.consume_amount
   p.consume_from_target = effect.consume_from_target
   p.consume_scale = effect.consume_scale

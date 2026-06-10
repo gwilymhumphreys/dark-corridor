@@ -40,18 +40,19 @@ func _board_ids(actor: Actor) -> Array:
 
 func _block_count(actor: Actor) -> float:
   for s in actor.statuses:
-    if s.type == StatusDef.Type.BLOCK:
+    if s.id == 'block':
       return s.count
   return 0.0
 
 
-## Resolve one beat: pick a path if it's a choice beat, begin it, step a fight's
-## CombatManager to a verdict, take the draft pick if offered, advance. (Mirrors what the
-## autotest run loop does.) `pick` indexes both the choice candidate and the draft card.
+## Resolve one beat (auto-roll: the beat already has a live encounter). Begin it; resolve an
+## event's binary choice; step a fight's CombatManager to a verdict; take the draft if offered;
+## advance. (Mirrors the autotest run loop.) `pick` indexes the draft card + the event option.
 func _play_one_beat(run: RunManager, pick: int) -> void:
-  if run.has_pending_choice():
-    run.pick_path(pick)
   run.begin_current()
+  var enc: Encounter = run.current_encounter()
+  if enc != null and enc.is_event():
+    run.pick_event_option(0)   # resolve the event's binary choice (option 0)
   var cm: CombatManager = run.combat_manager()
   if cm != null:
     cm.run_headless()
@@ -92,8 +93,8 @@ func test_draft_pick_lands_on_the_board() -> void:
 func test_starting_relic_grants_combat_start_block() -> void:
   var run := _run()
   run.start(1)
-  run.pick_path(0)         # resolve the opening choice → a live fight
-  run.begin_current()      # relics apply at fight start, before any step
+  # beat 0 auto-rolls to a live (easy) fight — begin it; relics apply at fight start, before any step
+  run.begin_current()
   assert_almost_eq(_block_count(run.player), Balance.RELIC_STONE_WARD_BLOCK, 0.0001,
     'Stone Ward applies its block when the fight begins')
 
@@ -208,8 +209,7 @@ func test_per_fight_seeds_differ_by_beat() -> void:
 func test_fight_rng_is_seeded_from_the_beat_seed() -> void:
   var run := _run()
   run.start(5)
-  run.pick_path(0)                    # resolve the opening choice → a live, seeded fight
-  run.begin_current()
+  run.begin_current()                 # beat 0 auto-rolls to a live, seeded fight
   assert_eq(run.combat_manager().rng.seed, run._combat_seed_for(0),
     'the fight RNG is seeded from the derived per-beat seed')
 
@@ -262,27 +262,19 @@ func test_run_scoped_allies_revive_to_full_each_fight() -> void:
   run.add_ally(EnemyCatalog.SPORE_THRALL)
   run.allies[0].take_damage(run.allies[0].max_hp)   # down it
   assert_false(run.allies[0].is_alive(), 'the ally is downed')
-  for i in run.pending_choice().size():             # reach a fight beat
-    if EncounterCatalog.get_def(run.pending_choice()[i]).type == EncounterDef.Type.FIGHT:
-      run.pick_path(i)
-      break
-  run.begin_current()
+  run.begin_current()                               # beat 0 auto-rolls to a fight
   assert_almost_eq(run.allies[0].hp, run.allies[0].max_hp, 0.0001, 'the ally enters the fight revived to full')
 
 
 func test_add_ally_mid_fight_joins_the_live_combat() -> void:
   var run := _run()
   run.start(5)
-  for i in run.pending_choice().size():   # reach a fight (the opening beat is a choice)
-    if EncounterCatalog.get_def(run.pending_choice()[i]).type == EncounterDef.Type.FIGHT:
-      run.pick_path(i)
-      break
-  run.begin_current()
+  run.begin_current()                     # beat 0 auto-rolls to a fight
   var cm: CombatManager = run.combat_manager()
   assert_not_null(cm, 'a live fight is running')
   run.add_ally(EnemyCatalog.SPORE_THRALL)
   assert_true(run.allies[0] in cm.allies, 'the ally joined the live fight (shared roster)')
-  for i in 3:
+  for _i in 3:
     cm.sim_step()
   assert_gt(run.allies[0].board[0].cooldown.accum, 0.0, 'and its items fight (registered mid-fight)')
 
@@ -303,6 +295,7 @@ func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
 ## Drive a freshly-created EVENT beat to a chosen option (deterministic, seed-independent):
 ## set the current def + create the encounter, begin it, pick the option through the RunManager.
 func _resolve_event(run: RunManager, def_id: String, option: int) -> void:
+  run._teardown_current()   # drop the auto-rolled opening fight before swapping in the event
   run._current_def_id = def_id
   run._create_current_encounter()
   run.begin_current()
@@ -333,7 +326,7 @@ func test_recruit_event_declined_adds_no_ally() -> void:
 func test_add_ally_respects_the_four_slot_cap() -> void:
   var run := _run()
   run.start(1)
-  for i in RunManager.MAX_ALLIES:
+  for _i in RunManager.MAX_ALLIES:
     run.add_ally(EnemyCatalog.SPORE_THRALL)
   assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'the four ally slots fill')
   assert_false(run.can_add_ally(), 'and report full')
@@ -341,35 +334,56 @@ func test_add_ally_respects_the_four_slot_cap() -> void:
   assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'a 5th recruit is a no-op (the cap holds)')
 
 
-# --- multi-act structure + HP economy + the choice layer (#1) ----------------
+# --- multi-act structure + HP economy + the auto-roll map (#1) ---------------
 
-func test_opening_beat_is_a_choice_and_pick_creates_the_encounter() -> void:
+func test_opening_beat_auto_rolls_a_live_fight() -> void:
+  # Beats auto-roll their content — no player choice. The easy opener (0 .. EASY_BEATS_END) is
+  # forced combat, so the run opens straight into a live fight.
   var run := _run()
   run.start(1)
-  assert_true(run.has_pending_choice(), 'the opening beat offers a choice')
-  assert_eq(run.pending_choice().size(), RunMap.CHOICE_COUNT, 'CHOICE_COUNT candidates')
-  for id in run.pending_choice():
-    assert_true(id in RunMap.act_pool(0), 'each candidate is from the act pool')
-  assert_null(run.current_encounter(), 'no live encounter until a path is picked')
-  run.pick_path(0)
-  assert_false(run.has_pending_choice(), 'the pick clears the choice')
-  assert_not_null(run.current_encounter(), 'and creates the live encounter')
+  assert_false(run.has_pending_choice(), 'no choice — beats auto-roll')
+  assert_not_null(run.current_encounter(), 'the opening beat has a live encounter at once')
+  assert_true(run.current_encounter().is_fight(), 'the easy opener is forced combat')
 
 
-func test_choice_candidates_survive_resume() -> void:
+func test_rolled_beat_and_streak_survive_resume() -> void:
+  # The current beat's rolled def + the COMBAT/EVENT streak round-trip the snapshot, so a resumed
+  # run re-enters the same encounter and reproduces the next beat's roll (no save-scum).
   var run := _run()
   run.start(1)
-  var candidates: Array = run.pending_choice().duplicate()
+  run._roll_streak = RunManager.RollType.EVENT
+  run._roll_streak_count = 2
+  var def_id: String = run._current_def_id
   var run_b := _run()
   run_b.rehydrate(run.snapshot())
-  assert_eq(run_b.pending_choice(), candidates, 'a resumed choice re-presents the same candidates (no re-roll)')
+  assert_eq(run_b._current_def_id, def_id, 'the rolled encounter is restored (not re-rolled)')
+  assert_eq(run_b._roll_streak, RunManager.RollType.EVENT, 'the streak type round-trips')
+  assert_eq(run_b._roll_streak_count, 2, 'and the streak count')
 
 
-func test_fixed_beats_are_boss_relic_and_rest() -> void:
+func test_roll_bias_force_breaks_a_maxed_streak() -> void:
+  # The −ROLL_BIAS_STEP-per-repeat bias: after 5 straight rolls the streaking type's chance floors
+  # at 0 (50 − 10×5), so the next roll MUST land the other type and reset the streak (count 1).
+  var run := _run()
+  run.start(1)
+  run._roll_streak = RunManager.RollType.COMBAT
+  run._roll_streak_count = 5
+  assert_eq(run._roll_type(), RunManager.RollType.EVENT, 'a maxed combat streak forces an event')
+  assert_eq(run._roll_streak, RunManager.RollType.EVENT, 'and the streak switches to event')
+  assert_eq(run._roll_streak_count, 1, 'reset to a fresh count')
+  run._roll_streak_count = 5   # now a maxed EVENT streak forces a combat (the other direction)
+  assert_eq(run._roll_type(), RunManager.RollType.COMBAT, 'a maxed event streak forces a combat')
+
+
+func test_fixed_beats_are_boss_and_relic_others_roll() -> void:
   assert_eq(RunMap.beat_spec(RunMap.BOSS_BEAT)['id'], EncounterCatalog.FIGHT_BOSS, 'act end = boss')
   assert_eq(RunMap.beat_spec(RunMap.RELIC_BEAT)['id'], EncounterCatalog.FIGHT_RELIC, 'midpoint = relic')
-  assert_eq(RunMap.beat_spec(RunMap.REST_BEAT)['id'], EncounterCatalog.REST, 'a per-act rest')
-  assert_eq(int(RunMap.beat_spec(0)['kind']), RunMap.BeatKind.CHOICE, 'other beats are choices')
+  assert_eq(int(RunMap.beat_spec(0)['kind']), RunMap.BeatKind.ROLL, 'other beats auto-roll')
+  assert_true(RunMap.beat_spec(0)['event_pool'].is_empty(), 'the easy opener forces combat (no events)')
+  assert_false(RunMap.beat_spec(RunMap.EASY_BEATS_END + 1)['event_pool'].is_empty(),
+    'events become possible after the opener')
+  assert_true(EncounterCatalog.FIGHT_ELITE in RunMap.beat_spec(RunMap.ELITE_FROM_BEAT)['combat_pool'],
+    'an elite is possible in the combat pool from ELITE_FROM_BEAT on')
   assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
 
 
@@ -425,8 +439,7 @@ func test_starting_kit_saves_and_rehydrates() -> void:
 func test_throw_potion_heals_and_empties_the_slot() -> void:
   var run := _run()
   run.start(1)
-  run.pick_path(0)                     # resolve the opening choice → a live fight
-  run.begin_current()
+  run.begin_current()                  # beat 0 auto-rolls to a live fight
   run.player.take_damage(40.0)
   var before: float = run.player.hp
   assert_eq(run.potions.size(), 1)
@@ -489,11 +502,7 @@ func test_character_round_trips_through_the_snapshot() -> void:
 func test_advance_autosaves_the_entry_point() -> void:
   var run := _run()
   run.start(3)
-  for i in run.pending_choice().size():   # pick a FIGHT candidate so a draft reward lands
-    if EncounterCatalog.get_def(run.pending_choice()[i]).type == EncounterDef.Type.FIGHT:
-      run.pick_path(i)
-      break
-  _play_one_beat(run, 0)          # choice already resolved → begin, fight, draft, advance (saves at entry)
+  _play_one_beat(run, 0)          # beat 0 is a fight (draft) → begin, fight, draft, advance (saves at entry)
   var saved: Dictionary = Save.read()
   assert_false(saved.is_empty(), 'a save exists at the encounter entry')
   assert_eq(int(saved['position']), 1, 'the save is at the freshly-entered beat')

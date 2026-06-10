@@ -22,7 +22,9 @@ Content = typed GDScript **def objects** in static **catalogs**, keyed by a **st
 
 Each kind has a `*_def.gd` (the schema), a `*_catalog.gd` (the collection — lazily built, keyed by
 string id), and where relevant a runtime instance class (`relic.gd`, `enchantment.gd`,
-`consumable.gd`). Status *type* is still an enum (engine vocabulary), not a string id.
+`consumable.gd`). **Statuses are the exception:** they are not def-objects but **polymorphic
+`StatusEffect` subclasses** (one class per status, keyed by string id #23, registered in
+`StatusRegistry`) — see below.
 
 ## To add a draftable item (the common case)
 
@@ -42,11 +44,19 @@ a flag on the def, not a folder. (`HEX_BOLT` / `SUNDER` are catalog-only example
 
 ## Other kinds
 
-Enemies, relics, potions, enchants, statuses, and encounters follow the same **def + catalog**
+Enemies, relics, potions, enchants, and encounters follow the same **def + catalog**
 pattern in their own dir — see the matching PRD ([item](../project/item_prd.md) ·
-[status](../project/status_manager_prd.md) · [enemy](../project/enemy_prd.md) ·
+[enemy](../project/enemy_prd.md) ·
 [content](../project/content_prd.md) (relics/enchants/potions) · [encounter](../project/encounter_prd.md))
 for each def's fields and how it resolves.
+
+- A **status** is NOT a def — it's a **`StatusEffect` subclass** (`statuses/<name>_status.gd`)
+  overriding the hooks it needs (`modify_outgoing`, `absorb`, `on_step`, …; default no-op),
+  extending an intermediate base (`TimedStatus` / `PeriodicStatus` / `PoolStatus`) or `StatusEffect`
+  directly. Set `id` / `name_key` / `color` by plain assignment in `_init` (the `name_key = '...'`
+  assignment is what localizes it). Make it live with **one line** in `StatusRegistry` (`id →
+  creator`). An applier (item/relic) references it by string id (`status_id = 'weak'`) and, for a
+  timed status, sets `duration` (per-application). See [status PRD](../project/status_manager_prd.md).
 
 - A **character** is a `CharacterDef` (`characters/character_catalog.gd`): its own `item_pool`,
   starting board, starting relic, starting potions/enchants. Adding a character = a def + registering

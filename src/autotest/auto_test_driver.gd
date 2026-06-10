@@ -66,10 +66,10 @@ func _family_of(def: ItemDef) -> String:
     Delivery.Kind.HEAL:
       return 'heal'
     Delivery.Kind.APPLY_STATUS:
-      match effect.status_type:
-        StatusDef.Type.BLOCK:
+      match effect.status_id:
+        'block':
           return 'block'
-        StatusDef.Type.POISON:
+        'poison':
           return 'poison'
         _:
           return 'status'
@@ -95,32 +95,32 @@ func _synergy_score(def: ItemDef, board: Array) -> float:
   var score: float = 0.0
   # (a) def triggers off a status the board already applies.
   for sub in def.trigger_subs:
-    if _board_applies_status(board, int(sub.get('filter', -1))):
+    if _board_applies_status(board, sub.get('filter', '')):
       score += 1.0
   # (b) a board item triggers off a status def applies.
-  var applied: int = _status_applied_by(def)
-  if applied != -1:
+  var applied: String = _status_applied_by(def)
+  if applied != '':
     for item in board:
       for sub in item.def.trigger_subs:
-        if int(sub.get('filter', -1)) == applied:
+        if sub.get('filter', '') == applied:
           score += 1.0
   return score
 
 
-func _board_applies_status(board: Array, status_type: int) -> bool:
-  if status_type == -1:
+func _board_applies_status(board: Array, status_id: String) -> bool:
+  if status_id == '':
     return false
   for item in board:
-    if _status_applied_by(item.def) == status_type:
+    if _status_applied_by(item.def) == status_id:
       return true
   return false
 
 
-func _status_applied_by(def: ItemDef) -> int:
+func _status_applied_by(def: ItemDef) -> String:
   for effect in def.effects:
     if effect.kind == Delivery.Kind.APPLY_STATUS:
-      return effect.status_type
-  return -1
+      return effect.status_id
+  return ''
 
 
 ## The binary choice inside a non-combat event (the tier-2 pick). Seeded so a run takes a

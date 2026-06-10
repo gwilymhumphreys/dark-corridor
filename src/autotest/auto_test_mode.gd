@@ -352,16 +352,16 @@ func _dot_snapshot(actors: Array) -> Dictionary:
 func _dot_sources_of(actor) -> Array:
   var out: Array = []
   for st in actor.statuses:
-    var def: StatusDef = StatusCatalog.get_def(st.type)
-    if def.shape == StatusDef.Shape.PERIODIC and def.damage_per_tick > 0.0:
-      out.append({ 'label': _dot_label(st, def), 'weight': maxf(st.count, 0.0) * def.damage_per_tick })
+    var weight: float = st.dot_tick_weight()   # 0 unless a damaging DoT (count × per-tick)
+    if weight > 0.0:
+      out.append({ 'label': _dot_label(st), 'weight': weight })
   return out
 
 
-func _dot_label(st: Status, def: StatusDef) -> String:
+func _dot_label(st: StatusEffect) -> String:
   if st.source is Item and st.source.def != null and st.source.def.name_key != '':
     return st.source.def.name_key
-  return def.name_key   # source-less DoT keeps the status-name channel (e.g. 'Poison')
+  return st.name_key   # source-less DoT keeps the status-name channel (e.g. 'Poison')
 
 
 ## A label for the per-encounter table: the (first) enemy's name for a fight, else the

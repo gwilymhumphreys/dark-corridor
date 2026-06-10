@@ -7,7 +7,7 @@ extends HBoxContainer
 ## cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
-const DOWNED_TINT := Color(0.45, 0.45, 0.45)   # darken a downed (dead) ally — alpha 1, not transparency
+const DOWNED_TINT := Colours.ALLY_DOWNED   # darken a downed (dead) ally — alpha 1, not transparency
 
 var actor: Actor
 

@@ -26,6 +26,14 @@ const COMBAT_SEED_STRIDE: int = 1000003
 # avoid offering a "join me" choice that can't be filled.
 const MAX_ALLIES: int = 4
 
+# Auto-roll bias for ROLL beats (run_map). A beat with both a combat and an event option rolls
+# COMBAT vs EVENT: the streaking type's chance falls ROLL_BIAS_STEP points per consecutive prior
+# roll of it (from ROLL_BASE_CHANCE), floored at 0 so a long run is force-broken; the first beat
+# that lands the OTHER type resets the streak. (#1 — the owner's map design.)
+enum RollType { COMBAT, EVENT }
+const ROLL_BASE_CHANCE: int = 50
+const ROLL_BIAS_STEP: int = 10
+
 # Run-state (the snapshot persists exactly this). `position` is the global beat index
 # (0 .. RunMap.TOTAL_BEATS-1); the act/beat-within-act are derived (RunMap).
 var player: Actor
@@ -40,7 +48,12 @@ var _ally_def_ids: Array = []  # parallel to `allies` — each ally's EnemyCatal
 
 var _current: Encounter = null
 var _current_def_id: String = ''    # the resolved EncounterDef id for the current beat (resume)
-var _pending_choice: Array = []  # Array[EncounterCatalog.Id] — choice candidates awaiting a pick
+# The COMBAT/EVENT anti-repeat streak for ROLL beats (run-state — saved so resume reproduces the
+# rolls). `_roll_streak_count == 0` means no streak (base 50/50); otherwise `_roll_streak` is the
+# type on the streak and the count is the bias depth.
+var _roll_streak: int = RollType.COMBAT
+var _roll_streak_count: int = 0
+var _pending_choice: Array = []  # kept empty — the choice layer is dormant (see _roll_beat)
 var _pending_offer: Array = []   # Array[ItemDef] — the held draft offer (1-of-3)
 var _ended: bool = false
 var _outcome: int = Outcome.WON
@@ -69,6 +82,8 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   _pending_offer = []
   _current_def_id = ''
   _pending_choice = []
+  _roll_streak = RollType.COMBAT
+  _roll_streak_count = 0
   allies = []                  # no starting allies by default (the owner wires acquisition)
   _ally_def_ids = []
   _enter_beat(position)
@@ -102,11 +117,13 @@ func beat_in_act() -> int:
   return RunMap.beat_in_act(position)
 
 
-# --- the choice layer (a choice-point intent) -------------------------------
+# --- the choice layer (DORMANT — beats auto-roll; see _roll_beat) ------------
+# Every beat now auto-rolls its content (RunManager._roll_beat), so no beat produces a pending
+# choice: has_pending_choice() is always false and these three are inert. They're kept so the run
+# screen / autotest choice branch + the choice_overlay component stay wired for a possible future
+# fork-beat (one that genuinely offers the player a pick). Remove them if that's ruled out.
 
-## At a CHOICE beat the RunManager has assembled 2-3 candidate encounters and is waiting
-## for the player to pick one (no encounter exists yet — the pick creates it). A FIXED
-## beat (boss / midpoint relic / rest) skips straight to a live encounter, so this is false.
+## True only when a beat is waiting on a player pick — never, while beats auto-roll.
 func has_pending_choice() -> bool:
   return not _pending_choice.is_empty()
 
@@ -156,11 +173,11 @@ func _revive_allies() -> void:
 func _apply_relics_to_player() -> void:
   for relic in relics:
     if relic.def.kind == RelicDef.Kind.COMBAT_START_STATUS:
-      StatusManager.apply(player, relic.def.status_type, relic.def.status_count)
+      StatusManager.apply(player, relic.def.status_id, relic.def.status_count, relic.def.status_duration)
 
 
-func _on_encounter_resolved(outcome: int, reward: int) -> void:
-  if outcome == Encounter.Outcome.LOST:
+func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
+  if outcome_value == Encounter.Outcome.LOST:
     _end_run(Outcome.DIED)
     return
   if RunMap.is_final_beat(position):   # the final act's boss — beating it ends the descent
@@ -327,34 +344,55 @@ func outcome() -> int:
 
 # --- map + run-end ----------------------------------------------------------
 
-## Set up the beat at `pos`: a FIXED beat (boss / midpoint relic / rest) creates its live
-## encounter immediately; a CHOICE beat assembles candidates and waits for a pick (no
-## encounter yet — pick_path creates it). Clears any prior beat's transient state.
+## Set up the beat at `pos`: a FIXED beat (boss / midpoint relic) creates its live encounter
+## immediately; a ROLL beat auto-selects COMBAT vs EVENT and draws a def (no player choice —
+## the encounter is live at once). Clears any prior beat's transient state.
 func _enter_beat(pos: int) -> void:
   _current_def_id = ''
-  _pending_choice = []
   var spec: Dictionary = RunMap.beat_spec(pos)
-  if spec['kind'] == RunMap.BeatKind.CHOICE:
-    _pending_choice = _assemble_choice(spec['pool'])
-  else:
+  if spec['kind'] == RunMap.BeatKind.FIXED:
     _current_def_id = spec['id']
     _create_current_encounter()
+  else:
+    _roll_beat(spec['combat_pool'], spec['event_pool'])
 
 
 func _create_current_encounter() -> void:
   _current = Encounter.new(EncounterCatalog.get_def(_current_def_id), player, _combat_seed_for(position), allies)
 
 
-## Draw RunMap.CHOICE_COUNT distinct candidates from the act pool on the run RNG
-## (deterministic + resume-stable — the snapshot saves the drawn set, never re-rolled).
-func _assemble_choice(pool: Array) -> Array:
-  var bag: Array = pool.duplicate()
-  var out: Array = []
-  for i in mini(RunMap.CHOICE_COUNT, bag.size()):
-    var idx: int = rng.randi_range(0, bag.size() - 1)
-    out.append(bag[idx])
-    bag.remove_at(idx)
-  return out
+## Roll a ROLL beat's content (run_map bands): pick COMBAT or EVENT via the anti-repeat weighted
+## roll, then draw a def from that pool on the run RNG (deterministic + resume-stable). An empty
+## event pool forces combat (the easy opener) and does NOT count toward the streak — only genuine
+## two-way rolls bias it.
+func _roll_beat(combat_pool: Array, event_pool: Array) -> void:
+  var pool: Array
+  if event_pool.is_empty():
+    pool = combat_pool
+  elif combat_pool.is_empty():
+    pool = event_pool
+  else:
+    pool = combat_pool if _roll_type() == RollType.COMBAT else event_pool
+  _current_def_id = pool[rng.randi_range(0, pool.size() - 1)]
+  _create_current_encounter()
+
+
+## Roll COMBAT vs EVENT with the −ROLL_BIAS_STEP-per-repeat bias and update the streak. The
+## streaking type's chance is ROLL_BASE_CHANCE − step×count (floored at 0); landing the other
+## type resets the streak to that type (count 1).
+func _roll_type() -> int:
+  var combat_chance: int = ROLL_BASE_CHANCE
+  if _roll_streak_count > 0:
+    var bias: int = ROLL_BIAS_STEP * _roll_streak_count
+    combat_chance = ROLL_BASE_CHANCE - bias if _roll_streak == RollType.COMBAT else ROLL_BASE_CHANCE + bias
+  combat_chance = clampi(combat_chance, 0, 100)
+  var picked: int = RollType.COMBAT if rng.randi_range(1, 100) <= combat_chance else RollType.EVENT
+  if picked == _roll_streak and _roll_streak_count > 0:
+    _roll_streak_count += 1
+  else:
+    _roll_streak = picked
+    _roll_streak_count = 1
+  return picked
 
 
 ## The per-fight RNG seed for beat `pos` (decision #20): derived from the run SEED (a
@@ -401,10 +439,11 @@ func snapshot() -> Dictionary:
     'relics': relic_ids,
     'potions': potion_ids,
     'position': position,
-    # The current beat's resolution: a picked/fixed encounter id (resume re-enters it), or
-    # the pending choice candidates (resume re-presents them) — never re-drawn.
+    # The current beat's resolution: the rolled/fixed encounter id (resume re-enters it, never
+    # re-rolled) + the COMBAT/EVENT streak so the NEXT beat's roll reproduces on resume.
     'current_def_id': _current_def_id,
-    'pending_choice': _pending_choice.duplicate(),
+    'roll_streak': _roll_streak,
+    'roll_streak_count': _roll_streak_count,
     # RNG full state as strings — a JSON double can't hold a 64-bit value exactly.
     'rng': { 'seed': str(rng.seed), 'state': str(rng.state) },
   }
@@ -442,15 +481,15 @@ func rehydrate(snap: Dictionary) -> void:
   rng.state = int(snap['rng']['state'])
   _ended = false
   _pending_offer = []
-  # Restore the current beat's resolution exactly — never re-draw a choice (no save-scum).
-  _current_def_id = str(snap.get('current_def_id', ''))
   _pending_choice = []
-  for v in snap.get('pending_choice', []):
-    _pending_choice.append(str(v))
+  # Restore the current beat's resolution + the roll streak exactly — never re-roll (no save-scum).
+  _current_def_id = str(snap.get('current_def_id', ''))
+  _roll_streak = int(snap.get('roll_streak', RollType.COMBAT))
+  _roll_streak_count = int(snap.get('roll_streak_count', 0))
   if _current_def_id != '':
     _create_current_encounter()
-  elif _pending_choice.is_empty():
-    _enter_beat(position)   # fallback for an older/edgeless snapshot
+  else:
+    _enter_beat(position)   # fresh/edge snapshot — roll the current beat
 
 
 # --- teardown ---------------------------------------------------------------

@@ -10,7 +10,8 @@ var kind: int = Delivery.Kind.DAMAGE
 var value: float = 0.0
 var shape: int = Shape.OPPONENT_LEFTMOST
 var travel: float = 0.0          # seconds (0 = instant; combat_prd's zero case)
-var status_type: int = -1        # for kind == APPLY_STATUS
+var status_id: String = ''       # for kind == APPLY_STATUS (string id, #23)
+var duration: float = 0.0        # for kind == APPLY_STATUS — per-application duration (timed statuses)
 var flags: int = 0               # Delivery.Flag bits (e.g. unblockable)
 var color: Color = Color.WHITE
 
@@ -19,7 +20,7 @@ var color: Color = Color.WHITE
 # false = self-fuel (the owner's stacks, resolved at fire — Item._resolve_effect); true =
 # opponent-fuel (the resolved target's stacks — Mass, resolved by the Combat manager at
 # Delivery spawn). Numbers are content (ItemDef).
-var consume_type: int = -1       # StatusDef.Type to spend (-1 = none)
+var consume_id: String = ''      # status id to spend ('' = none)
 var consume_amount: float = 0.0  # up to this many stacks
 var consume_from_target: bool = false
 var consume_scale: float = 0.0   # value added to the payload per stack consumed

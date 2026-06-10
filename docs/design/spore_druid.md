@@ -25,7 +25,7 @@ Cross-cutting applier commons feed multiple flavours — a main-spore applier co
 
 Rather than a wide bestiary of bespoke spores (flavourful, but a steep learning curve, and most would just shadow statuses the engine already has), the roster is **deliberately small and synergistic**: **one main spore** — a *stacked* counter that is the Mass fuel and the character's signature — plus **1–2 minor** bespoke spores. Everything else reuses the **shared status baseline** every character can reach (**Vulnerable**, **Weak** — the StS model; [`../project/design.md`](../project/design.md) Status System, decision #28). "Many spore effects" is then expressed by cards that **count distinct statuses present** (the Spread mechanism), not by authoring many statuses. The main spore counter **stands out** precisely because it's the one bespoke stacked thing amid reused statuses.
 
-The main spore **does nothing on its own for now** — pure Mass ammo (the thallid-counter shape) — explicitly **open to change** (it may earn a solo effect later). **Name: TBD (owner.)** This **supersedes** the earlier doc framing that used *poison* as the canonical Mass fuel: the bespoke main spore is the fuel now; poison, if it appears at all, is just another reusable status, not the signature.
+The main spore **does nothing on its own for now** — pure Mass ammo (the thallid-counter shape) — explicitly **open to change** (it may earn a solo effect later). **Name: Spores** (owner's call — the signature counter is simply *Spores*, no bespoke flavour name; plain, no invented jargon). This **supersedes** the earlier doc framing that used *poison* as the canonical Mass fuel: the bespoke main spore is the fuel now; poison, if it appears at all, is just another reusable status, not the signature.
 
 ### Pillar 2 — Summon (candidate, specifics TBD)
 
@@ -44,7 +44,7 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 ## Spores defined so far
 
-- **Main spore** *(name TBD — the signature)* (stacked) — the Mass fuel + variety-counter. **Does nothing on its own for now** (pure ammo; open to change). The only Mass-eligible spore in the kit, and the one bespoke stacked status — it stands out against the reused baseline.
+- **Spores** *(the signature)* (stacked) — the Mass fuel + variety-counter. **Does nothing on its own for now** (pure ammo; open to change). The only Mass-eligible spore in the kit, and the one bespoke stacked status — it stands out against the reused baseline. **Authored in code** as `StatusDef.Type.SPORES`, shape `COUNTER` (an inert stacked counter — accumulates, never ticks/decays/damages, spent only by `StatusManager.consume`).
 - **Blinding** (timed, minor) — enemy misses for **2s**; further applications extend duration, not effect. Carried by the rare **Pocket Shrooms**. Animate the whiff with a clear tell so the eaten swing reads against the dark. Spread/Self fuel, not Mass.
 
 **Reused baseline (not bespoke spores):** **Vulnerable**, **Weak** — the shared status vocabulary every character can apply (#28). Their appliers sit in the pool like any card and feed the distinct-status variety, but are never Mass fuel (timed, not stacked).
@@ -59,7 +59,17 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 | Name | Shape (ST/AoE) | Archetype | Effect | Notes |
 |------|----------------|-----------|--------|-------|
-| | | | | |
+| Druid Staff | ST | mass (x) | 10 dmg, 3s; apply 1 Spore | The starter Spores applier. Single-target so Spores pile on one enemy (the Mass shape); a cross-cutting common that also feeds distinct-status variety. Authored: `ItemCatalog.DRUID_STAFF`, in the Spore Druid pool. |
+| Spore Spitter † | ST | mass (x) | 4 dmg, 1s; apply 1 Spore | Fast pole of the first weapon spread. 1s cooldown = ~1 Spore/sec — the kit's fastest Mass-fuel engine. 4 DPS. `ItemCatalog.SPORE_SPITTER`. |
+| Capped Cudgel † | ST | x | 10 dmg, 2s | Middle pole: clean tempo weapon, NO spore. 5 DPS baseline — the pure-damage draft option. `ItemCatalog.CAPPED_CUDGEL`. |
+| Bloomhammer † | ST | mass (x) | 40 dmg, 5s; apply 2 Spores | Slow pole: heavy hit that dumps 2 fuel in one strike. 8 DPS — slow accrual but a sudden fuel spike. `ItemCatalog.BLOOMHAMMER`. |
+| Wilt Frond † | ST | x | 20 dmg, 4s; apply Weak (2s) | A Weakness applier. Damage sits 2 DPS under the curve (7→5 = 20 dmg) to pay for the Weak rider ([`item_heuristics.md`](item_heuristics.md)). Weak isn't Mass fuel — feeds distinct-status variety. `ItemCatalog.WILT_FROND`. |
+
+> † **Placeholder name** — agent-coined, owner's to rename (also flagged in the def's `name_key` comment).
+
+> **DPS curve: `DPS = cooldown + 3`** (+1 DPS per second of cooldown, anchored at 2s = 5 DPS baseline). Slow items need *more* printed DPS to be worth a slot, because big hits lose value to **overkill** (damage past 0 HP wasted) and **fewer per-hit triggers** (on-hit procs / Spores-applied events fire per swing, not per damage). The cooldown axis is *also* the Spore-accrual axis (fast = fast fuel). Linear holds across the **1–6s** authoring range; the tail must taper (overkill/trigger loss is bounded) or ultra-slow weapons run away. Spore-carriers pay a tax off the line. **Authored to be adjusted in tuning.**
+>
+> **Outlier:** Druid Staff (10 dmg / 3s = 3.3 DPS) sits well under the line — by it the 3s starter wants 18 dmg. Left as-is (it's the starter) pending the owner's call.
 
 ### Skills
 
@@ -91,6 +101,10 @@ On-mechanism standouts: thallid counter, decompose-for-fuel, board-linking, spaw
 |------|------|-------|-----------|--------|-------|
 | Pocket Shrooms | A | ST | x | 10 dmg, 3s; apply 1 blinding spore (2s blind) | The blinding enabler. ~3.3 DPS attack + a timed control rider; **rare for the access to blinding, not for bigger numbers** (rarity = complexity, not power). |
 
+> **Authored in code** as `ItemCatalog.POCKET_SHROOMS` (the first multi-effect rare + first Spore Druid card). Now in the **Spore Druid's `item_pool`** (#27) alongside Druid Staff; reachable in drafts once the Spore Druid is flipped into `CharacterCatalog.ids()` (selectable).
+
 ---
 
-**Running count:** Commons — Attacks 0 · Skills 0 (block 0 / resource 0 / utility 0). Rares — 1 (Pocket Shrooms, attack).
+**Running count:** Commons — Attacks 5 (Druid Staff, Spore Spitter, Capped Cudgel, Bloomhammer, Wilt Frond) · Skills 0 (block 0 / resource 0 / utility 0). Rares — 1 (Pocket Shrooms, attack).
+
+**Character:** `CharacterCatalog.SPORE_DRUID` scaffolded (pool: Druid Staff + Pocket Shrooms; starts with Druid Staff; no signature relic yet; not yet selectable).

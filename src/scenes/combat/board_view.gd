@@ -27,7 +27,7 @@ func _build() -> void:
   var portrait := ColorRect.new()
   portrait.size = PORTRAIT
   portrait.position = anchor - PORTRAIT * 0.5
-  portrait.color = Color(0.2, 0.3, 0.5) if is_player else Color(0.5, 0.2, 0.22)
+  portrait.color = Colours.PORTRAIT_PLAYER if is_player else Colours.PORTRAIT_ENEMY
   add_child(portrait)
 
   var bar_top: float = anchor.y + PORTRAIT.y * 0.5 + 14.0
@@ -35,13 +35,13 @@ func _build() -> void:
   var hp_bg := ColorRect.new()
   hp_bg.size = BAR
   hp_bg.position = Vector2(bar_x, bar_top)
-  hp_bg.color = Color(0.12, 0.12, 0.14)
+  hp_bg.color = Colours.HP_BAR_BG
   add_child(hp_bg)
 
   _hp_fill = ColorRect.new()
   _hp_fill.size = BAR
   _hp_fill.position = Vector2(bar_x, bar_top)
-  _hp_fill.color = Color(0.4, 0.75, 0.35)
+  _hp_fill.color = Colours.HP_BAR_FILL
   add_child(_hp_fill)
 
   _hp_label = Label.new()

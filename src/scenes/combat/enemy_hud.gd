@@ -66,13 +66,7 @@ func _refresh_statuses() -> void:
 
 
 func _status_color(status) -> Color:
-  match status.type:
-    StatusDef.Type.BLOCK:
-      return Color(0.55, 0.7, 0.95)
-    StatusDef.Type.POISON:
-      return Color(0.5, 0.8, 0.35)
-    _:
-      return Color(0.85, 0.55, 0.4)
+  return status.color
 
 
 func hud_centre() -> Vector2:

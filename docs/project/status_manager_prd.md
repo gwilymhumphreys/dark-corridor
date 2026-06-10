@@ -1,6 +1,8 @@
 # Dark Corridor — StatusManager PRD
 
-Foundation PRD. Sits under the [Architecture Map](architecture.md). The `StatusManager` is the **stateless rulebook** for statuses: it defines how each status type behaves and exposes `apply` / read / resolve calls, but holds **no per-fight state** — status *instances* live on their targets (`Actor` / `Item`) and are advanced each step by the `Combat manager` (on the [Timekeeper](timekeeper_prd.md)'s clock).
+Foundation PRD. Sits under the [Architecture Map](architecture.md). The `StatusManager` is the **stateless facade** over statuses: it exposes `apply` / read / resolve calls and holds **no per-fight state**. Behaviour is **not** a rulebook keyed by type here — each status is a **polymorphic `StatusEffect` subclass** (one class per status, the Slay-the-Spire `AbstractPower` model) that owns both its state and its behaviour via hooks; the facade just loops a target's statuses and calls those hooks. Status *instances* live on their targets (`Actor` / `Item`) and are advanced each step by the `Combat manager` (on the [Timekeeper](timekeeper_prd.md)'s clock).
+
+> **Refactored 2026-06-10** from a centralized rulebook (one `StatusManager` switching on `StatusDef.Shape`) to per-status classes. Rationale: many statuses with wildly different effects bloat a central switch; a class-per-status keeps each effect's behaviour in its own ~6-line file and lets the engine stop naming statuses (`type == BLOCK` → `status.absorb(...)`). See `docs/project/status_system_refactor_plan.md`.
 
 **Engine:** Godot 4.
 **Date:** 2026-06-04. Pre-prototype.
@@ -13,13 +15,14 @@ Boundaries (inbound / exposed surface) live in the hub: [architecture.md → Int
 
 Statuses are the shared modifier primitive — dots (poison/burn), block, regen, freeze, timed buffs/debuffs, item buffs, silence, and similar. A status is **`(target, count/stacks, behaviour)`**, where target is an `Actor` *or* an `Item` (the dual-targeting that's the key extension over Spire — items, which persist across fights, can carry statuses *during a fight*). All statuses are **combat-scoped** (decision #26) — see below.
 
-The `StatusManager` owns only the **behaviour rules**, keyed by status type — a global, stateless autoload anyone can call (`StatusManager.apply(…)`). Globally reachable is *correct* precisely because it's stateless (it's a rulebook, not a per-fight manager — see [the scope discussion in architecture](architecture.md)).
+The `StatusManager` is a thin **facade** — a global, stateless autoload anyone can call (`StatusManager.apply(…)`). It delegates every decision to the status instances; the **behaviour lives in the `StatusEffect` classes**, not here. Globally reachable is *correct* precisely because it's stateless (a facade, not a per-fight manager — see [the scope discussion in architecture](architecture.md)).
 
 What it **is not**:
 
-- **Not an instance store** — instances live on their targets; the Manager is rules. (Purely to keep the autoload **stateless** — *not* a persistence mechanism: statuses are combat-scoped, never run-persistent — decision #26.)
-- **Not the ticker** — the `Combat manager` advances each instance's Ticker each step (on the `Timekeeper`'s clock).
-- **Not effect *content*** — specific per-effect numbers and decrement rules are content (the [Combat PRD](combat_prd.md) defers those); the Manager is the engine that runs them.
+- **Not an instance store** — instances live on their targets; the facade just routes calls to them. (Statuses are combat-scoped, never run-persistent — decision #26.)
+- **Not the rulebook** — each `StatusEffect` subclass is its own rule. The facade holds no per-type switch.
+- **Not the ticker** — the `Combat manager` advances each instance each step (on the `Timekeeper`'s clock).
+- **Not effect *content*** — specific per-effect numbers are content (`Balance`); the classes are the engine that runs them.
 
 ### Naming
 
@@ -29,26 +32,26 @@ What it **is not**:
 
 ## The status model
 
-A status **instance** (held by its target) is data:
+A status is a **`StatusEffect` subclass instance**, held in its target's `statuses` list. It carries its own state:
 
-- `type` (poison, block, …) — keys into the behaviour rule.
-- `target` — the `Actor` or `Item` it sits on.
+- `id` (`'poison'`, `'block'`, … — string id, decision #23). The `Type` enum is gone.
 - `count / stacks` — numeric value.
-- `ticker` — *optional*; only time-driven shapes have one (see shapes).
-- `source` — *optional*; the actor/item that applied it, for source-dependent rules.
+- `duration` + `ticker` — *optional*; time-driven subclasses build the ticker **from the application's duration** (so duration rides the application, not a global on a def).
+- `source` — *optional*; the actor/item that applied it, for source-dependent rules / attribution.
+- **No `target` reference** — every hook receives `(target, ctx)` instead, preserving the no-back-reference / no-RefCounted-cycle invariant.
 
-The **behaviour** (how a type acts) lives in the `StatusManager`, keyed by `type`. Composition, not subclassing: an instance is data + a type key; the Manager looks up the rule. (Same instinct as the Ticker — share the engine, keep identities distinct.)
+The **behaviour** lives in the subclass: it overrides only the hooks it needs. A `StatusRegistry` maps `id → creator`. New statuses are authored as a class file + one registration line.
 
-### Status shapes
+### Status shapes → class hierarchy
 
-Not every status ticks. Four shapes:
+The old shapes are now **intermediate base classes** that carry the common machinery, so a concrete status is tiny:
 
-- **Periodic** (poison / burn / regen) — a Ticker fires its payload each interval. *Realized:* the tick applies its damage in-place through `take_damage` (carrying the instance's `flags`, so an `unblockable` DoT bypasses block — the applying Delivery is long gone by tick time), and the Combat manager spawns a **visual-only** Delivery so the wall still shows the number (no double damage, no on-`DAMAGE_DEALT` event). Has a Ticker → **registered for stepping** (in the Combat manager's registry).
-- **Timed** (a 5s debuff) — a Ticker counts the duration down, then `on_expire`. Has a Ticker → registered.
-- **Persistent pool** (block) — a `count` consumed by an external event (incoming damage), not by time. **No Ticker** — block persists until consumed or combat ends (no decay). Not a time component.
-- **Static modifier** (a flat / "again" modifier read at resolve time) — no Ticker; alters a calculation when read. Not a time component.
+- **`PeriodicStatus`** (poison / burn / regen) — ticks each interval, dealing `count × damage_per_tick` to the holder in-place through `take_damage` (carrying the instance's `flags`, so an `unblockable` DoT bypasses block — the applying Delivery is long gone by tick time), then decays a stack and expires when drained. The Combat manager spawns a **visual-only** Delivery so the wall still shows the number (no double damage, no on-`DAMAGE_DEALT` event). Mass fuel.
+- **`TimedStatus`** (Weak / Vulnerable / Blind) — a duration Ticker counts down, then expires. Reapply **stacks** by extending the timer (the ratified default; override for refresh / max).
+- **`PoolStatus`** (block) — an inert `count` consumed by `absorb()` during the incoming-damage pass, not by time. **No Ticker**; removed once emptied (`is_spent`).
+- **Static** (silence / the inert Spores counter) — extends `StatusEffect` directly, no ticker; gates a fire or sits as fuel.
 
-Only Ticker-bearing shapes (periodic / timed) get registered for stepping; pools and static modifiers don't tick. The Combat manager advances statuses **uniformly across both target kinds** — each actor *and* each board item is swept the same way each step (a timed status on an item counts down exactly like one on an actor). Periodic-damage shapes only sit on actors (the `take_damage` owner); timed / static work on either.
+Time-driven instances (`on_step` returns expiry) are advanced each step. The Combat manager advances statuses **uniformly across both target kinds** — each actor *and* each board item is swept the same way (a timed status on an item counts down exactly like one on an actor). Periodic damage only lands on actors (the `take_damage` owner; the hook guards `target is Actor`); timed / static work on either.
 
 ### Statuses are combat-scoped (decision #26)
 
@@ -56,12 +59,14 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 ---
 
-## `apply(target, type, count, source?) → instance`
+## `apply(target, id, count, duration?, source?, flags?, ctx?) → instance`
 
-1. **Resolve source-side application modifiers** — e.g. a relic's "your poison is applied twice" scales `count`. (Read from `source`; the specific modifiers are content.)
-2. **Create or update** the instance on the target per the type's **stacking policy** — default **additive stacks**; some types refresh duration or stay independent. The policy is per-type; the *specific* policies are content (Combat PRD defers decrement/stacking).
-3. **Return the instance**, so the `Combat manager` can register its Ticker (if any) in its registry. Content never reaches *up* — `apply` hands the instance back; the in-combat caller registers it (matches the Combat manager's pull-based registration).
-4. **Emit an on-apply event** so reactive items can trigger ("when you apply poison, gain 1 block"). The trigger *mechanism* (accrual pushes) is the Combat/Item PRD's; the Manager only makes application observable.
+1. **Find** an existing status of the same `id` on the target.
+2. **Reapply or create.** Existing → `existing.reapply(count, duration, source, flags)` — **the class decides stacking** (additive count by default; `TimedStatus` extends its duration; a class may refresh / max). Else → `StatusRegistry.create(id)`, `setup(count, duration, …)` (which builds the ticker from the **per-application duration**), `on_apply(target, ctx)`, append.
+3. **Return the instance.**
+4. **On-apply event** is emitted by the *Combat manager* at the Delivery's land (`STATUS_APPLIED` carries the string id), so reactive items can trigger ("when you apply poison, gain 1 block").
+
+`ctx` is a thin `StatusContext` the Combat manager hands to active hooks (apply other statuses, spawn, publish); it is `null` for apply-outside-combat (e.g. a relic at fight start), so `on_apply` tolerates a null ctx.
 
 ---
 
@@ -71,19 +76,24 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 - Iterates the target's damage-modifier statuses in a defined order — **amplifiers** (`Vulnerable`) then **absorbers** (block). Block consumes its `count` against the remaining (amplified) damage; the remainder hits HP.
 - **Block absorbs damage unless the effect is `unblockable`.** Per-effect flag — some DoTs set it, some don't; an `unblockable` payload skips the absorber stage and hits HP (after any amplifiers). For a DoT the flag is stored on the `Status` instance at apply time and re-passed into `take_damage` on every tick (the originating Delivery no longer exists).
-- **Stat-statuses — BUILT (#6).** A status carries `incoming_damage_mult` (amplifier — `Vulnerable` > 1.0) and `outgoing_damage_mult` (read by `outgoing_damage_mult(actor)`; applied to the holder's DAMAGE payloads **at fire time** in `Item._resolve_effect` — `Weak` < 1.0). Both are **% multipliers**, not flat-per-fire (a flat per-fire modifier makes fast items strictly dominant — the authoring guidance). Placeholder statuses `Weak` / `Vulnerable` (+ a `Sundering Bolt` applier) prove both seams; the real stat-status content (numbers, per-stack variants) is the owner's.
+- **Stat-statuses — BUILT (#6).** `VulnerableStatus` overrides `modify_incoming` (amplifier — scales up before block) and `WeakStatus` overrides `modify_outgoing` (applied to the holder's DAMAGE payloads **at fire time** via `StatusManager.modify_outgoing(actor, amount)` in `Item._resolve_effect`). Both fold each status's hook in `statuses`-list order. Magnitudes are **% multipliers**, not flat-per-fire (a flat per-fire modifier makes fast items strictly dominant — the authoring guidance). The real stat-status content (numbers, per-stack variants) is the owner's.
 
 ---
 
-## Behaviour hooks (the rule interface)
+## Behaviour hooks (the `StatusEffect` interface)
 
-A type's rule may implement: `on_tick` (periodic payload), `on_expire`, `modify_incoming_damage` (absorb / amplify), `on_apply` / `on_stack`, and `gate` (e.g. silence → the item can't fire while gated). Small, additive set — extend as effects need.
+A subclass overrides only what it does; every hook is a no-op / identity by default. Two kinds:
+
+- **Active (push)** — the status acts via `ctx`: `on_apply`, `on_expire`, `on_step(target, ctx) -> expired`, `setup` / `reapply` (lifecycle + stacking).
+- **Modifiers (pull)** — the engine queries at a pipeline stage, in list order: `modify_outgoing`, `modify_incoming`, `absorb(amount, flags, …) -> remaining`, `gates_fire`, `causes_evasion`. Plus `is_fuel` / `consume` (Mass), `is_spent` (pool removal), `dot_tick_weight` (autotest attribution), and presentation fields.
+
+Pull for modifiers keeps the engine in control of *when and in what order* contributions compose — preserving the deterministic sweep (#24) and amplify-before-absorb (#6). Push for active effects lets the status do its own work. Small, additive set — extend as effects need.
 
 ---
 
 ## Surface (presentation reads, doesn't live here)
 
-Distinct icon + per-effect colour per type (the design's colour vocabulary; a status uses the same colour as the panel of the item that applied it). Naming preserves intuition — poison should *feel* different from a damage buff even though the engine treats them uniformly. The Manager exposes `type → {icon, colour, name}` for the UI; it does not draw.
+Distinct icon + per-effect colour per type (the design's colour vocabulary). Presentation is **instance fields** (`name_key`, `color`, `icon`) set by plain assignment in each class's `_init` — which is also how `tools/extract_pot.gd` localizes the names (it scans `name_key = '...'`). The UI reads `status.color` / `status.name_key` directly; the facade does not draw.
 
 ## Asymmetric acquisition
 
@@ -91,26 +101,22 @@ Distinct icon + per-effect colour per type (the design's colour vocabulary; a st
 
 ---
 
-## Prototype scope
+## Built
 
-- The instance model + behaviour-by-type lookup.
-- Three statuses exercising the shapes: **block** (pool / absorber), **poison** (periodic DoT), one **timed debuff**.
-- `apply` (stacking + return-for-registration + on-apply event) and `resolve_incoming_damage` (block).
-- Tie-ins: Combat-manager registration of periodic/timed Tickers; `Actor.take_damage` through the pipeline.
-
-**Not** in scope: stat-statuses (below); per-effect decrement/decay numbers (content); the full hook list.
+- The polymorphic `StatusEffect` hierarchy + `StatusRegistry` (id → creator).
+- Seven statuses across the shapes: **block** (pool), **poison** (periodic DoT), **weak** / **vulnerable** / **blind** (timed), **silence** (static gate), **spores** (inert counter / Mass fuel).
+- `apply` (per-application duration + class-decided stacking) and `resolve_incoming_damage` (amplify → absorb).
+- Tie-ins: Combat-manager stepping of time-driven statuses; `Actor.take_damage` through the pipeline; the autotest DoT attribution via `dot_tick_weight`.
 
 ---
 
 ## Open / deferred
 
-- **Stat-statuses (strength / weak / vulnerable)** — **content, authored later** as GD `StatusDef`s (decision #23), not one hardcoded rule. The engine model already covers the variants they need — flat **or** percentage magnitude, the TIMED shape, and per-stack growth (add magnitude **or** extend duration, via the stacking policy). The two damage-modifier seams — an **outgoing** scale read at item fire time (`Item._resolve_effect`, beside the enchant mult) and the reserved **incoming amplifier** slot here — get wired when the first such status is authored. **Authoring guidance** (not a global rule): a *flat per-fire* damage modifier makes fast items strictly dominant in the cascade, so per-fire damage scaling should be percentage or charge-limited ([design](design.md)).
-- **Per-effect stack / decrement semantics** (how poison decrements, whether regen counts down) — content, settled as effects are authored (Combat PRD defers these).
-- **Damage-modifier ordering** — precise amplifier/absorber order, settled when the first amplifier (vulnerable-type) is designed.
-- **Status-definition data format — resolved:** typed GDScript `StatusDef` objects in a static catalog (decision-log #23), not JSON.
-- **Trigger delivery** — how on-apply events reach reactive items (the accrual-push backbone) is the Combat/Item PRD's.
+- **`StatusContext` is minimal** — none of the current 7 statuses need it (their hooks touch only the target), so active hooks are passed `null` today. It fleshes out (`apply_status`, `spawn_token`, `publish_event`, `rng`) when a status that spawns / chains is authored.
+- **Event-subscribing statuses** ("when a spore is applied, gain block") are not yet a hook — the surface allows adding `on_event` later; no current status needs it.
+- **Authoring guidance** (not a global rule): a *flat per-fire* damage modifier makes fast items strictly dominant in the cascade, so per-fire damage scaling should be percentage or charge-limited ([design](design.md)).
 
-Resolved: **block** persists until consumed (pure pool, no Ticker) and absorbs all damage except `unblockable` payloads — a per-effect flag (varies by DoT, not a blanket rule).
+Resolved: **statuses are polymorphic `StatusEffect` classes**, string-id (#23), one file per status (2026-06-10 refactor). **block** persists until consumed (pure pool, no Ticker) and absorbs all damage except `unblockable` payloads. **Reapply stacks by default**; `TimedStatus` extends its duration. Damage-modifier order is amplify (`modify_incoming`) then absorb.
 
 ## Dependencies
 

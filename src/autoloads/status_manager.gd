@@ -1,136 +1,91 @@
 class_name StatusManagerAutoload
 extends Node
-## The stateless status rulebook (status_manager_prd) — autoload registered
-## `StatusManager`. Holds NO instances (they live on their targets); it only
-## defines how each type behaves, keyed via StatusDef. Globally reachable
-## precisely because it's stateless.
+## The status FACADE (status_manager_prd) — autoload registered `StatusManager`. Holds NO
+## instances (they live on their targets, as StatusEffect subclasses). Behaviour is no longer a
+## switch here: each call delegates to the status instances, looping a target's `statuses` in
+## insertion order so composition stays deterministic (#24). Statuses are keyed by string id (#23);
+## the StatusRegistry builds the right subclass. Globally reachable precisely because it's stateless.
 
 
-## Apply / stack a status on a target; returns the instance (the Combat manager
-## registers its Ticker, if any, and publishes the on-apply event — Step 4).
-func apply(target, type: int, count: float, source = null, flags: int = 0) -> Status:
-  var def: StatusDef = StatusCatalog.get_def(type)
-  # (source-side application modifiers — e.g. "your poison applies twice" — deferred)
-  var existing: Status = _find(target, type)
+## Apply / stack a status on a target; returns the instance. An existing status of the same id is
+## re-applied (the class decides stacking — additive by default; timed extends its duration);
+## otherwise the registry builds a fresh one, sets its per-application state (count + DURATION —
+## duration rides the application now, not a global), and runs on_apply. `ctx` is null outside
+## combat (e.g. a relic at fight start); on_apply tolerates that.
+func apply(target, id: String, count: float, duration: float = 0.0, source = null, flags: int = 0, ctx = null) -> StatusEffect:
+  var existing: StatusEffect = _find(target, id)
   if existing != null:
-    if def.stacking == StatusDef.Stacking.REFRESH:
-      existing.count = count
-      if existing.ticker != null:
-        existing.ticker.accum = 0.0
-    else:
-      existing.count += count
+    existing.reapply(count, duration, source, flags)
     return existing
-  var s := Status.new()
-  s.type = type
-  s.count = count
-  s.source = source
-  s.flags = flags
-  match def.shape:
-    StatusDef.Shape.PERIODIC:
-      s.ticker = Ticker.from_seconds(def.tick_interval)
-    StatusDef.Shape.TIMED:
-      s.ticker = Ticker.from_seconds(def.duration)
-  target.statuses.append(s)
+  var s: StatusEffect = StatusRegistry.create(id)
+  if s == null:
+    return null
+  s.setup(count, duration, source, flags)
+  target.statuses.append(s)   # in place BEFORE on_apply, so the hook sees itself on the target
+  s.on_apply(target, ctx)
   return s
 
 
-## The incoming-damage pipeline: amplifiers (deferred) then absorbers (block).
-## Block consumes its pool unless the payload is `unblockable`. Returns net to HP.
-func resolve_incoming_damage(target, raw: float, flags: int = 0) -> float:
+## The incoming-damage pipeline: amplifiers (Vulnerable) scale up FIRST, then absorbers (Block)
+## soak the amplified amount (#6). Two passes over the target's statuses so the order holds;
+## emptied pools are removed afterward. Returns net damage to HP.
+func resolve_incoming_damage(target, raw: float, flags: int = 0, ctx = null) -> float:
   var net: float = raw
-  # Amplifiers (Vulnerable, …) — scale up BEFORE absorbers, so block soaks the
-  # amplified amount (#6 incoming seam). A product of the target's modifier statuses.
-  net *= _incoming_damage_mult(target)
-  if (flags & Delivery.Flag.UNBLOCKABLE) == 0:
-    var block: Status = _find(target, StatusDef.Type.BLOCK)
-    if block != null:
-      var absorbed: float = minf(block.count, net)
-      block.count -= absorbed
-      net -= absorbed
-      if block.count <= 0.0:
-        target.statuses.erase(block)
+  for s in target.statuses:
+    net = s.modify_incoming(net, target, ctx)
+  for s in target.statuses:
+    net = s.absorb(net, flags, target, ctx)
+  _remove_spent(target)
   return maxf(net, 0.0)
 
 
-## Advance one sim-step of a time-driven status; applies its effect and returns
-## true when it has expired (the caller removes it). Periodic fires its payload —
-## Step 4 will route this through a travel-0 Delivery for the VFX wall; the net
-## effect (take_damage) is identical.
-func advance_status(status: Status, owner) -> bool:
-  var def: StatusDef = StatusCatalog.get_def(status.type)
-  match def.shape:
-    StatusDef.Shape.PERIODIC:
-      if status.ticker.step():
-        # Carry the applying effect's flags (e.g. UNBLOCKABLE) into the tick, so an
-        # unblockable DoT bypasses block per decision #5 (the flag is otherwise lost
-        # between application and the tick — the Delivery is long gone). Periodic damage
-        # only applies to ACTORS (items have no HP) — a periodic status authored onto an
-        # item-target just ticks down harmlessly instead of crashing on take_damage.
-        if owner is Actor:
-          owner.take_damage(status.count * def.damage_per_tick, status.flags)
-        status.count -= 1.0
-        status.ticker.reset()
-        return status.count <= 0.0
-    StatusDef.Shape.TIMED:
-      if status.ticker.step():
-        return true
-  return false
+## Advance one sim-step of a status; returns true when it has expired (the caller removes it).
+## Active effects (a DoT tick) happen inside the instance's on_step.
+func advance_status(status: StatusEffect, target, ctx = null) -> bool:
+  return status.on_step(target, ctx)
 
 
-## Presentation lookup for the UI (it draws; this doesn't).
-func info(type: int) -> Dictionary:
-  var def: StatusDef = StatusCatalog.get_def(type)
-  return { 'icon': def.icon, 'color': def.color, 'name': def.name_key }
+## The product of `actor`'s outgoing-damage modifiers (#6) applied to an outgoing DAMAGE value at
+## fire time (Weak scales it down). Folds each status's modify_outgoing in list order.
+func modify_outgoing(actor, amount: float, ctx = null) -> float:
+  var out: float = amount
+  for s in actor.statuses:
+    out = s.modify_outgoing(out, actor, ctx)
+  return out
 
 
-func _find(target, type: int) -> Status:
-  for s in target.statuses:
-    if s.type == type:
-      return s
-  return null
-
-
-## Spend up to `amount` stacks of `type` from `target` as fuel (spore_engine_prd Cap 1),
-## returning how many were actually present-and-removed (so the consuming effect scales by
-## what it found). Only **stacked** (PERIODIC) statuses are spendable — the design's
-## stacked-only Mass rule; timed / pool / static return 0 (a Mass effect naming one was
-## authored wrong, per #23 — no special-case). A drained instance is removed.
-func consume(target, type: int, amount: float) -> float:
-  var def: StatusDef = StatusCatalog.get_def(type)
-  if def.shape != StatusDef.Shape.PERIODIC:
-    return 0.0
-  var s: Status = _find(target, type)
-  if s == null:
-    return 0.0
-  var removed: float = minf(amount, s.count)
-  s.count -= removed
-  if s.count <= 0.0:
-    target.statuses.erase(s)
-  return removed
-
-
-## True if `actor` carries any status whose def marks it evasion-causing (spore_engine_prd
-## Cap 2 — e.g. blinding). The engine checks the flag, never a status name (#23).
+## True if `actor` carries any status that causes evasion (Blind) — the engine asks the instances,
+## never a status name (#23).
 func has_evasion(actor) -> bool:
   for s in actor.statuses:
-    if StatusCatalog.get_def(s.type).causes_evasion:
+    if s.causes_evasion():
       return true
   return false
 
 
-## The product of `actor`'s outgoing damage modifiers (#6) — applied to its items' DAMAGE
-## payloads at fire time (Item._resolve_effect). 1.0 when unaffected (Weak → 0.75).
-func outgoing_damage_mult(actor) -> float:
-  var mult: float = 1.0
-  for s in actor.statuses:
-    mult *= StatusCatalog.get_def(s.type).outgoing_damage_mult
-  return mult
+## Spend up to `amount` of `id` from `target` as Mass fuel (spore_engine_prd Cap 1), returning how
+## many were removed (so the consuming effect scales by what it found). Only fuel statuses (stacked
+## DoT / the Spores counter) spend; others return 0. A drained instance is removed.
+func consume(target, id: String, amount: float) -> float:
+  var s: StatusEffect = _find(target, id)
+  if s == null:
+    return 0.0
+  var removed: float = s.consume(amount)
+  if s.count <= 0.0 and removed > 0.0:
+    target.statuses.erase(s)
+  return removed
 
 
-## The product of `target`'s incoming damage amplifiers (#6) — applied before block in
-## resolve_incoming_damage. 1.0 when unaffected (Vulnerable → 1.5).
-func _incoming_damage_mult(target) -> float:
-  var mult: float = 1.0
+func _find(target, id: String) -> StatusEffect:
   for s in target.statuses:
-    mult *= StatusCatalog.get_def(s.type).incoming_damage_mult
-  return mult
+    if s.id == id:
+      return s
+  return null
+
+
+func _remove_spent(target) -> void:
+  # In-place reverse walk: no allocation when nothing is spent (this runs on every take_damage),
+  # and removing from the tail can't shift an index we haven't visited yet.
+  for i in range(target.statuses.size() - 1, -1, -1):
+    if target.statuses[i].is_spent():
+      target.statuses.remove_at(i)

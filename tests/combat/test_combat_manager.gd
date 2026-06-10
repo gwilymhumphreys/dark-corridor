@@ -38,16 +38,16 @@ func _manager(p: Actor, enemy_list: Array) -> CombatManager:
   return cm
 
 
-func _has_status(actor: Actor, type: int) -> bool:
+func _has_status(actor: Actor, id: String) -> bool:
   for s in actor.statuses:
-    if s.type == type:
+    if s.id == id:
       return true
   return false
 
 
-func _item_has_status(item: Item, type: int) -> bool:
+func _item_has_status(item: Item, id: String) -> bool:
   for s in item.statuses:
-    if s.type == type:
+    if s.id == id:
       return true
   return false
 
@@ -84,14 +84,14 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
   avenger.cooldown = 9999.0
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_type = StatusDef.Type.BLOCK
+  blk.status_id = 'block'
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   avenger.effects = [blk]
   avenger.trigger_subs = [{
     'event': EventBus.Event.STATUS_APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
-    'filter': StatusDef.Type.POISON,
+    'filter': 'poison',
   }]
 
   var p := Actor.new(500.0)
@@ -103,14 +103,14 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
 
   # Step until the poison lands on the enemy.
   var guard := 0
-  while not _has_status(e, StatusDef.Type.POISON) and guard < 1000:
+  while not _has_status(e, 'poison') and guard < 1000:
     cm.sim_step()
     guard += 1
-  assert_true(_has_status(e, StatusDef.Type.POISON), 'poison was applied')
-  assert_false(_has_status(p, StatusDef.Type.BLOCK), 'the push does NOT fire the avenger the same step')
+  assert_true(_has_status(e, 'poison'), 'poison was applied')
+  assert_false(_has_status(p, 'block'), 'the push does NOT fire the avenger the same step')
 
   cm.sim_step()
-  assert_true(_has_status(p, StatusDef.Type.BLOCK), 'the avenger fires one step later (loop-proof synergy)')
+  assert_true(_has_status(p, 'block'), 'the avenger fires one step later (loop-proof synergy)')
 
 
 func test_delivery_fizzles_if_target_died() -> void:
@@ -150,7 +150,7 @@ func test_deliveries_are_pruned_not_accumulated() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var peak := 0
-  for i in 2000:
+  for _i in 2000:
     cm.sim_step()
     peak = maxi(peak, cm._deliveries.size())
   assert_false(cm._resolved, 'neither actor dies in this window — the fight is still live')
@@ -165,25 +165,25 @@ func test_actor_and_item_statuses_advance_identically() -> void:
   var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
-  StatusManager.apply(p, StatusDef.Type.WEAK, 1.0)            # timed status on the actor
-  StatusManager.apply(p.board[0], StatusDef.Type.WEAK, 1.0)   # timed status on one of its items
-  assert_true(_has_status(p, StatusDef.Type.WEAK), 'actor weak applied')
-  assert_true(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak applied')
+  StatusManager.apply(p, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)            # timed status on the actor
+  StatusManager.apply(p.board[0], 'weak', 1.0, Balance.STATUS_WEAK_DURATION)   # timed status on one of its items
+  assert_true(_has_status(p, 'weak'), 'actor weak applied')
+  assert_true(_item_has_status(p.board[0], 'weak'), 'item weak applied')
 
-  var dur_steps: int = int(ceil(Balance.SAMPLE_DEBUFF_DURATION / Balance.STEP))
-  for i in dur_steps - 1:
+  var dur_steps: int = int(ceil(Balance.STATUS_WEAK_DURATION / Balance.STEP))
+  for _i in dur_steps - 1:
     cm.sim_step()
-  assert_true(_has_status(p, StatusDef.Type.WEAK), 'actor weak still ticking')
-  assert_true(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak still ticking')
+  assert_true(_has_status(p, 'weak'), 'actor weak still ticking')
+  assert_true(_item_has_status(p.board[0], 'weak'), 'item weak still ticking')
 
   cm.sim_step()   # the expiry step
-  assert_false(_has_status(p, StatusDef.Type.WEAK), 'actor weak expired')
-  assert_false(_item_has_status(p.board[0], StatusDef.Type.WEAK), 'item weak expired on the same step')
+  assert_false(_has_status(p, 'weak'), 'actor weak expired')
+  assert_false(_item_has_status(p.board[0], 'weak'), 'item weak expired on the same step')
 
 
 # --- spore engine seams (spore_engine_prd) -----------------------------------
 
-func _instant_damage_item(owner: Actor, value: float) -> Item:
+func _instant_damage_item(owner_actor: Actor, value: float) -> Item:
   var def := ItemDef.new()
   var hit := ItemEffect.new()
   hit.kind = Delivery.Kind.DAMAGE
@@ -191,12 +191,12 @@ func _instant_damage_item(owner: Actor, value: float) -> Item:
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
   def.effects = [hit]
-  return Item.new(def, owner)
+  return Item.new(def, owner_actor)
 
 
-func _status_count(actor: Actor, type: int) -> float:
+func _status_count(actor: Actor, id: String) -> float:
   for s in actor.statuses:
-    if s.type == type:
+    if s.id == id:
       return s.count
   return 0.0
 
@@ -208,14 +208,14 @@ func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  StatusManager.apply(e, StatusDef.Type.POISON, 5.0)
+  StatusManager.apply(e, 'poison', 5.0)
   var def := ItemDef.new()
   var hit := ItemEffect.new()
   hit.kind = Delivery.Kind.DAMAGE
   hit.value = 10.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
-  hit.consume_type = StatusDef.Type.POISON
+  hit.consume_id = 'poison'
   hit.consume_amount = 4.0
   hit.consume_from_target = true   # opponent-fuel (Mass)
   hit.consume_scale = 3.0
@@ -227,7 +227,7 @@ func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
   for d in arrived:
     cm._land(d)
   assert_almost_eq(before - e.hp, 10.0 + 4.0 * 3.0, 0.0001, 'Mass damage = base 10 + 4 poison consumed × 3')
-  assert_almost_eq(_status_count(e, StatusDef.Type.POISON), 1.0, 0.0001, 'the target spent 4 of 5 poison stacks')
+  assert_almost_eq(_status_count(e, 'poison'), 1.0, 0.0001, 'the target spent 4 of 5 poison stacks')
 
 
 func test_blinded_attacker_damage_whiffs() -> void:
@@ -237,7 +237,7 @@ func test_blinded_attacker_damage_whiffs() -> void:
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  StatusManager.apply(p, StatusDef.Type.BLIND, 1.0)
+  StatusManager.apply(p, 'blind', 1.0)
   var arrived: Array = []
   cm._fire_item(_instant_damage_item(p, 8.0), arrived)
   assert_eq(arrived.size(), 1, 'the attack still fired (a delivery spawned)')
@@ -254,11 +254,11 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  StatusManager.apply(p, StatusDef.Type.BLIND, 1.0)
+  StatusManager.apply(p, 'blind', 1.0)
   var def := ItemDef.new()
   var ap := ItemEffect.new()
   ap.kind = Delivery.Kind.APPLY_STATUS
-  ap.status_type = StatusDef.Type.POISON
+  ap.status_id = 'poison'
   ap.value = 3.0
   ap.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   ap.travel = 0.0
@@ -267,12 +267,12 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   cm._fire_item(Item.new(def, p), arrived)
   assert_false(arrived[0].evaded, 'a non-damage delivery is not evaded')
   cm._land(arrived[0])
-  assert_true(_has_status(e, StatusDef.Type.POISON), 'the blinded actor still applies its status')
+  assert_true(_has_status(e, 'poison'), 'the blinded actor still applies its status')
 
 
 # --- mid-fight roster: summons + both-side rosters (spore_engine_prd Cap 3) --
 
-func _summon_item(owner: Actor, token_id: String, in_front: bool = true) -> Item:
+func _summon_item(owner_actor: Actor, token_id: String, in_front: bool = true) -> Item:
   var def := ItemDef.new()
   var s := ItemEffect.new()
   s.kind = Delivery.Kind.SUMMON
@@ -281,7 +281,7 @@ func _summon_item(owner: Actor, token_id: String, in_front: bool = true) -> Item
   s.shape = ItemEffect.Shape.SELF
   s.travel = 0.0
   def.effects = [s]
-  return Item.new(def, owner)
+  return Item.new(def, owner_actor)
 
 
 func test_summon_adds_a_token_to_the_players_side() -> void:
@@ -360,7 +360,7 @@ func test_dead_actor_items_stop_ticking_and_firing() -> void:
   cm.start()
   e1.take_damage(40.0)
   assert_false(e1.is_alive(), 'e1 is down')
-  for i in 10:
+  for _i in 10:
     cm.sim_step()
   assert_eq(e1.board[0].cooldown.accum, 0.0, 'a dead body\'s items neither tick nor fire')
   assert_gt(e2.board[0].cooldown.accum, 0.0, 'a living body\'s items still tick')
@@ -402,7 +402,7 @@ func test_register_ally_joins_a_live_fight_and_survives_teardown() -> void:
   cm.allies.append(ally)        # mirror RunManager.add_ally (shared array)
   cm.register_ally(ally)
   assert_true(ally in cm.player_side(), 'the mid-fight ally is on the player side')
-  for i in 5:
+  for _i in 5:
     cm.sim_step()
   assert_gt(ally.board[0].cooldown.accum, 0.0, 'its items tick (registered into the live fight)')
   cm.teardown()
@@ -453,7 +453,7 @@ func _hex_silence_index(combat_seed: int) -> int:
   var p := Actor.new(5000.0)
   p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.HEX_BOLT), p))
   var e := Actor.new(5000.0)
-  for i in 4:
+  for _i in 4:
     e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.ENEMY_CLAW), e))
   var cm := CombatManager.new(p, [e], combat_seed)
   _made.append(cm)
@@ -461,7 +461,7 @@ func _hex_silence_index(combat_seed: int) -> int:
   for _i in 1000:
     cm.sim_step()
     for idx in e.board.size():
-      if _item_has_status(e.board[idx], StatusDef.Type.SILENCE):
+      if _item_has_status(e.board[idx], 'silence'):
         return idx
   return -1
 
@@ -487,15 +487,15 @@ func test_dot_tick_through_block_does_not_skip_a_later_status() -> void:
   var a := Actor.new(100.0)
   var cm := _manager(p, [a])
   cm.start()
-  StatusManager.apply(a, StatusDef.Type.BLOCK, 1.0)          # one poison tick empties it
-  var pois: Status = StatusManager.apply(a, StatusDef.Type.POISON, 3.0)
+  StatusManager.apply(a, 'block', 1.0)          # one poison tick empties it
+  var pois: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
   pois.ticker.accum = pois.ticker.threshold - 1.0            # fire on the next advance
-  var weak: Status = StatusManager.apply(a, StatusDef.Type.WEAK, 1.0)   # after poison in the list
+  var weak: StatusEffect = StatusManager.apply(a, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)   # after poison in the list
 
   cm._advance_statuses_on(a)
 
   assert_eq(weak.ticker.accum, 1.0, 'the status after block still advanced (no skip)')
-  assert_false(_has_status(a, StatusDef.Type.BLOCK), 'block was consumed and erased mid-pass')
+  assert_false(_has_status(a, 'block'), 'block was consumed and erased mid-pass')
   assert_eq(a.hp, 98.0, 'poison dealt 3, block absorbed 1, 2 leaked to HP')
 
 
@@ -506,7 +506,7 @@ func test_dot_tick_shows_a_visual_on_the_wall() -> void:
   var a := Actor.new(100.0)
   var cm := _manager(p, [a])
   cm.start()
-  var pois: Status = StatusManager.apply(a, StatusDef.Type.POISON, 3.0)
+  var pois: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
   pois.ticker.accum = pois.ticker.threshold - 1.0
   cm._advance_statuses_on(a)
   var visuals: Array = []
@@ -545,7 +545,7 @@ func test_item_cooldowns_reset_each_fight() -> void:
   var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
   var cm := _manager(p, [e])
   cm.start()
-  for i in 20:
+  for _i in 20:
     cm.sim_step()
   assert_gt(p.board[0].cooldown.accum, 0.0, 'the weapon charged partway through fight 1')
   cm.teardown()   # the player survives teardown (only its statuses clear); its board persists

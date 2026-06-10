@@ -48,13 +48,13 @@ func _reward_hint(def: EncounterDef) -> String:
 
 func _category_color(def: EncounterDef) -> Color:
   if def.type == EncounterDef.Type.REST:
-    return Color(0.4, 0.75, 0.45)
+    return Colours.BEAT_REST
   if def.type == EncounterDef.Type.EVENT:
-    return Color(0.45, 0.55, 0.8)
+    return Colours.BEAT_EVENT
   match def.reward:
     EncounterDef.Reward.ELITE:
-      return Color(0.7, 0.4, 0.9)
+      return Colours.BEAT_BOSS
     EncounterDef.Reward.RELIC:
-      return Color(0.85, 0.7, 0.3)
+      return Colours.BEAT_RELIC
     _:
-      return Color(0.7, 0.35, 0.35)
+      return Colours.BEAT_COMBAT

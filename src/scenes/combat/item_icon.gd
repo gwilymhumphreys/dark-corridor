@@ -48,10 +48,10 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
   draw_rect(Rect2(-SIZE * 0.5, SIZE), item.def.panel_color)
-  draw_rect(Rect2(-SIZE * 0.5, SIZE), Color.BLACK, false, 3.0)
+  draw_rect(Rect2(-SIZE * 0.5, SIZE), Color.BLACK, false, Consts.PANEL_BORDER_WIDTH)
   var prog: float = item.cooldown.progress()
   if prog < 1.0:
-    draw_arc(Vector2.ZERO, SIZE.x * 0.5 + 10.0, -PI * 0.5, -PI * 0.5 + prog * TAU, 48, Color(0.95, 0.95, 0.95), 5.0)
+    draw_arc(Vector2.ZERO, SIZE.x * 0.5 + 10.0, -PI * 0.5, -PI * 0.5 + prog * TAU, Consts.COOLDOWN_RING_SEGMENTS, Colours.COOLDOWN_RING, Consts.COOLDOWN_RING_WIDTH)
 
 
 func _recoil() -> void:

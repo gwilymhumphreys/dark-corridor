@@ -29,6 +29,6 @@ static func _healing_draught() -> ConsumableDef:
   heal.value = Balance.POTION_HEAL
   heal.shape = ItemEffect.Shape.SELF
   heal.travel = 0.0
-  heal.color = Color(0.3, 0.9, 0.4)
+  heal.color = Colours.HEAL
   d.effects = [heal]
   return d

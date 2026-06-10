@@ -7,124 +7,232 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/content/consumable_catalog.gd
+#: src/content/characters/character_catalog.gd
+msgid "Wanderer"
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
+msgid "Spore Druid"
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
+msgid "Duelist"
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
+msgid "A balanced kit — blade, plate, and a creeping poison."
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
+msgid "Stack Spores, then spend them."
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
+msgid "Twin blades, no safety net — all pressure, no plate."
+msgstr ""
+
+#: src/content/consumables/consumable_catalog.gd
 msgid "Healing Draught"
 msgstr ""
 
-#: src/content/enchant_catalog.gd
+#: src/content/enchants/enchant_catalog.gd
 msgid "Whetstone"
 msgstr ""
 
-#: src/content/encounter_catalog.gd
+#: src/content/encounters/encounter_catalog.gd
 msgid "A dim corridor"
 msgstr ""
 
-#: src/content/encounter_catalog.gd
+#: src/content/encounters/encounter_catalog.gd
 msgid "A quiet alcove"
 msgstr ""
 
-#: src/content/encounter_catalog.gd
+#: src/content/encounters/encounter_catalog.gd
 msgid "An elite ambush"
 msgstr ""
 
-#: src/content/encounter_catalog.gd
+#: src/content/encounters/encounter_catalog.gd
 msgid "A warded vault"
 msgstr ""
 
-#: src/content/encounter_catalog.gd
+#: src/content/encounters/encounter_catalog.gd
 msgid "A blocked passage"
 msgstr ""
 
-#: src/content/encounter_catalog.gd
-msgid "The warden\\"
+#: src/content/encounters/encounter_catalog.gd
+msgid "The warden's gate"
 msgstr ""
 
-#: src/content/encounter_catalog.gd
+#: src/content/encounters/encounter_catalog.gd
 msgid "A dripping shrine"
 msgstr ""
 
-#: src/content/enemy_catalog.gd
+#: src/content/encounters/encounter_catalog.gd
+msgid "A figure in the dark"
+msgstr ""
+
+#: src/content/encounters/encounter_catalog.gd
+msgid "Kneel and drink"
+msgstr ""
+
+#: src/content/encounters/encounter_catalog.gd
+msgid "Pry the shard loose"
+msgstr ""
+
+#: src/content/encounters/encounter_catalog.gd
+msgid "Let it join you"
+msgstr ""
+
+#: src/content/encounters/encounter_catalog.gd
+msgid "Walk on alone"
+msgstr ""
+
+#: src/content/encounters/encounter_catalog.gd
+msgid "A black idol slumps in an alcove, weeping cold water. You could kneel and drink, or pry the shard from its brow."
+msgstr ""
+
+#: src/content/encounters/encounter_catalog.gd
+msgid "A gaunt shape uncurls from a recess, a notched blade across its knees. It rasps an offer: walk together a while, and it will fight at your side."
+msgstr ""
+
+#: src/content/enemies/enemy_catalog.gd
 msgid "Corridor Grunt"
 msgstr ""
 
-#: src/content/enemy_catalog.gd
+#: src/content/enemies/enemy_catalog.gd
 msgid "Corridor Brute"
 msgstr ""
 
-#: src/content/enemy_catalog.gd
+#: src/content/enemies/enemy_catalog.gd
 msgid "Corridor Warden"
 msgstr ""
 
-#: src/content/enemy_catalog.gd
+#: src/content/enemies/enemy_catalog.gd
 msgid "Spore Thrall"
 msgstr ""
 
-#: src/content/item_catalog.gd
+#: src/content/items/item_catalog.gd
 msgid "Rusted Blade"
 msgstr ""
 
-#: src/content/item_catalog.gd
+#: src/content/items/item_catalog.gd
 msgid "Iron Guard"
 msgstr ""
 
-#: src/content/item_catalog.gd
+#: src/content/items/item_catalog.gd
 msgid "Venom Fang"
 msgstr ""
 
-#: src/content/item_catalog.gd
+#: src/content/items/item_catalog.gd
 msgid "Spite Ward"
 msgstr ""
 
-#: src/content/item_catalog.gd
+#: src/content/items/item_catalog.gd
 msgid "Hex Bolt"
 msgstr ""
 
-#: src/content/item_catalog.gd
+#: src/content/items/item_catalog.gd
 msgid "Sundering Bolt"
 msgstr ""
 
-#: src/content/item_catalog.gd
+#: src/content/items/item_catalog.gd
+msgid "Pocket Shrooms"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Druid Staff"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Spore Spitter"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Capped Cudgel"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Bloomhammer"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Wilt Frond"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
 msgid "Claw"
 msgstr ""
 
-#: src/content/relic_catalog.gd
+#: src/content/relics/relic_catalog.gd
 msgid "Stone Ward"
 msgstr ""
 
-#: src/content/relic_catalog.gd
+#: src/content/relics/relic_catalog.gd
 msgid "Vital Charm"
 msgstr ""
 
-#: src/content/relic_catalog.gd
+#: src/content/relics/relic_catalog.gd
 msgid "Iron Idol"
 msgstr ""
 
-#: src/content/status_catalog.gd
+#: src/content/statuses/blind_status.gd
+msgid "Blind"
+msgstr ""
+
+#: src/content/statuses/block_status.gd
 msgid "Block"
 msgstr ""
 
-#: src/content/status_catalog.gd
+#: src/content/statuses/poison_status.gd
 msgid "Poison"
 msgstr ""
 
-#: src/content/status_catalog.gd
-msgid "Weak"
-msgstr ""
-
-#: src/content/status_catalog.gd
-msgid "Vulnerable"
-msgstr ""
-
-#: src/content/status_catalog.gd
+#: src/content/statuses/silence_status.gd
 msgid "Silence"
 msgstr ""
 
-#: src/content/status_catalog.gd
-msgid "Blind"
+#: src/content/statuses/spores_status.gd
+msgid "Spores"
+msgstr ""
+
+#: src/content/statuses/status_effect.gd
+msgid "Weak"
+msgstr ""
+
+#: src/content/statuses/status_effect.gd
+msgid "..."
+msgstr ""
+
+#: src/content/statuses/vulnerable_status.gd
+msgid "Vulnerable"
+msgstr ""
+
+#: src/scenes/combat/ally_slot.gd
+msgid "Ally"
+msgstr ""
+
+#: src/scenes/combat/combat_view_framed.tscn
+msgid "Potions"
+msgstr ""
+
+#: src/scenes/combat/combat_view_framed.tscn
+msgid "Items"
 msgstr ""
 
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "You"
+msgstr ""
+
+#: src/scenes/screens/character_card.gd
+msgid "Starts with: {0}"
+msgstr ""
+
+#: src/scenes/screens/character_select.tscn
+msgid "Choose a character"
+msgstr ""
+
+#: src/scenes/screens/character_select.tscn
+msgid "Back"
 msgstr ""
 
 #: src/scenes/screens/choice_card.gd
@@ -212,7 +320,23 @@ msgid "Resume"
 msgstr ""
 
 #: src/scenes/screens/pause_menu.tscn
+msgid "Settings"
+msgstr ""
+
+#: src/scenes/screens/pause_menu.tscn
 msgid "Quit to Menu"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Master volume"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Music volume"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Effects volume"
 msgstr ""
 
 #: src/scenes/screens/speed_button.tscn
