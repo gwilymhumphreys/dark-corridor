@@ -4,8 +4,8 @@ class_name Colours
 ## an applier item references the SAME const as the status it applies, the map and choice cards
 ## share one beat palette, etc. British 'colours' for the file; Godot's `Color` keeps its API spelling.
 ##
-## NOTE: a few colours still live at their use site by design — pure dev/debug tints (e.g. the
-## corridor "see gaps" magenta) and colours inside the owner's uncommitted WIP files (map_strip).
+## NOTE: a couple of colours still live at their use site by design — pure dev/debug tints (e.g.
+## the corridor "see gaps" magenta), which never ship.
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 # Each StatusEffect subclass AND its appliers reference the same const (applier = status colour).
@@ -42,3 +42,12 @@ const HP_BAR_BG := Color(0.12, 0.12, 0.14)
 const HP_BAR_FILL := Color(0.4, 0.75, 0.35)
 const COOLDOWN_RING := Color(0.95, 0.95, 0.95)
 const ALLY_DOWNED := Color(0.45, 0.45, 0.45)     # darken a downed (dead) ally — alpha 1, not transparency
+
+# ── Map strip (1D progress map) ──────────────────────────────────────────────
+# BEAT_BOSS / BEAT_RELIC above are shared with the choice cards; these are map-strip-only.
+const MAP_TRACK := Color(0.4, 0.4, 0.45)
+const MAP_CURRENT_HALO := Color(0.95, 0.92, 0.55)
+const MAP_CLEARED := Color(0.5, 0.46, 0.3)       # a cleared beat — dim gold
+const MAP_ARROW := Color(0.55, 0.55, 0.6)        # the scroll chevrons
+const MAP_LABEL := Color(0.85, 0.85, 0.88)       # the "Act N" label
+const MAP_ROLLED_BEAT := Color(0.65, 0.4, 0.4)   # a beat whose type is rolled on arrival

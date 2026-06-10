@@ -35,8 +35,8 @@ func test_block_strategy_prefers_a_block_candidate() -> void:
 func test_greedy_synergy_prefers_a_connecting_candidate() -> void:
   # The board applies poison (Venom Fang); the avenger (Spite Ward) triggers on poison
   # being applied — so greedy-synergy connects them over a non-synergistic weapon.
-  var owner := Actor.new(100.0)
-  var board: Array = [Item.new(_def(ItemCatalog.POISON_DAGGER), owner)]
+  var owner_actor := Actor.new(100.0)
+  var board: Array = [Item.new(_def(ItemCatalog.POISON_DAGGER), owner_actor)]
   var driver := AutoTestDriver.new('greedy-synergy', 1)
   # WEAPON (no synergy) at 0, AVENGER (synergy) at 1 → pick index 1.
   assert_eq(driver.choose_draft([_def(ItemCatalog.WEAPON), _def(ItemCatalog.AVENGER)], board), 1)

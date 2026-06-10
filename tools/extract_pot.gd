@@ -20,6 +20,12 @@ const LOCALES: Array[String] = ['en']
 const POT_PATH: String = 'res://locale/messages.pot'
 const SCAN_DIR: String = 'res://src'
 
+# Escape-aware string-body sub-patterns: any char that isn't the quote or a backslash, OR a
+# backslash-escape (so an escaped quote `\'` stays inside the captured string instead of
+# truncating it — `gd_escapes` then unfolds `\'`/`\"`/`\n`/`\t` to the real character).
+const Q1: String = "(?:[^'\\\\]|\\\\.)*"    # single-quoted body
+const Q2: String = "(?:[^\"\\\\]|\\\\.)*"   # double-quoted body
+
 # Dev / throwaway hosts never ship to players — their text stays English.
 const EXCLUDE_FILES: Array[String] = ['corridor_testbed', 'corridor_panel_example', 'combat_sandbox']
 # Format specifiers / placeholders that aren't real copy.
@@ -85,11 +91,16 @@ func _scan_gd(path: String) -> void:
   var text: String = FileAccess.get_file_as_string(path)
   var label: String = path.replace('res://', '')
   # tr('...') / tr("...") — the lookbehind avoids matching substr(, etc.
-  _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*'([^']*)'", label, true)
-  _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*\"([^\"]*)\"", label, true)
-  # Content def names: `name_key = 'Rusted Blade'` (shown via tr(def.name_key)).
-  _match_all(text, "name_key\\s*=\\s*'([^']*)'", label, true)
-  _match_all(text, "name_key\\s*=\\s*\"([^\"]*)\"", label, true)
+  _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*'(%s)'" % Q1, label, true)
+  _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*\"(%s)\"" % Q2, label, true)
+  # Single-literal player-facing def fields, each shown via tr(def.<field>):
+  #   name_key (every def) · blurb_key (character select hook) · label_key (event option button).
+  for field: String in ['name_key', 'blurb_key', 'label_key']:
+    _match_all(text, "%s\\s*=\\s*'(%s)'" % [field, Q1], label, true)
+    _match_all(text, "%s\\s*=\\s*\"(%s)\"" % [field, Q2], label, true)
+  # event_prose_key (event body) may be split across lines as `'...' \ + '...'`; join the
+  # segments so the msgid matches the concatenated string tr(def.event_prose_key) sees.
+  _scan_joined(text, 'event_prose_key', label)
 
 
 func _scan_tscn(path: String) -> void:
@@ -97,6 +108,27 @@ func _scan_tscn(path: String) -> void:
   var label: String = path.replace('res://', '')
   # Control text + tooltip serialize as `... = "..."`.
   _match_all(text, "(?m)^(?:text|tooltip_text) = \"([^\"]*)\"", label)
+
+
+## Collect a def field whose value may be a multi-segment single-quoted concatenation
+## (`field = '...' \ + '...'`, the house single-quote style). Captures the whole segment chain
+## and joins the pieces, so a translator gets one entry matching the concatenated runtime
+## string (a single '...' value is just a chain of one).
+func _scan_joined(text: String, field: String, label: String) -> void:
+  var re: RegEx = RegEx.new()
+  if re.compile("%s\\s*=\\s*((?:'(?:%s)'[\\s\\\\+]*)+)" % [field, Q1]) != OK:
+    push_error('[extract_pot] bad regex for field: ' + field)
+    return
+  var seg: RegEx = RegEx.new()
+  if seg.compile("'(%s)'" % Q1) != OK:
+    push_error('[extract_pot] bad segment regex')
+    return
+  for m: RegExMatch in re.search_all(text):
+    var joined: String = ''
+    for sm: RegExMatch in seg.search_all(m.get_string(1)):
+      joined += sm.get_string(1)
+    joined = joined.replace('\\n', '\n').replace('\\t', '\t').replace("\\'", "'").replace('\\"', '"')
+    _add(joined, label)
 
 
 func _match_all(text: String, pattern: String, label: String, gd_escapes: bool = false) -> void:

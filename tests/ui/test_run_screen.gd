@@ -21,9 +21,7 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
 
   var guard: int = 0
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
-    if screen._choice != null:
-      screen._on_choice_picked(0)   # stand in for the player picking a path
-    elif screen._event != null:
+    if screen._event != null:
       screen._on_event_picked(0)    # the event's binary choice
     elif screen._draft != null:
       screen._on_draft_picked(0)    # stand in for the player picking the first card
@@ -39,25 +37,13 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   screen.free()
 
 
-func test_choice_beat_raises_the_choice_overlay() -> void:
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
-  assert_eq(screen._state, RunScreen.State.CHOOSING, 'the opening (choice) beat parks in CHOOSING')
-  assert_not_null(screen._choice, 'the choice overlay is up')
-  screen._on_choice_picked(0)
-  assert_null(screen._choice, 'picking dismisses the overlay')
-  assert_eq(screen._state, RunScreen.State.APPROACHING, 'the chosen encounter begins approaching')
-  screen.free()
-
-
 func test_fight_beat_approaches_then_fights() -> void:
   # A fight beat opens with the corridor approach (combat frozen), then begins on
   # arrival. The clock is not ticked until FIGHTING, so the enemy is unharmed while
-  # it walks in. (The opening beat is a choice — pick a path to reach the fight.)
+  # it walks in. (The opening beat auto-rolls to a fight.)
   var screen := _mount_into_fight(1)
   assert_eq(screen._state, RunScreen.State.APPROACHING, 'a fight beat starts in the approach')
-  for i in 4:   # 4s of delta walks past APPROACH_DURATION (2.5s)
+  for _i in 4:   # 4s of delta walks past APPROACH_DURATION (2.5s)
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'combat begins on arrival')
   screen.free()
@@ -69,7 +55,7 @@ func test_a_fight_opens_at_the_current_battle_speed() -> void:
   Game.start_run(1)
   Game.set_battle_speed_index(2)   # ×3 before the screen mounts
   var screen := _mount_into_fight(-1)   # -1: run already started above
-  for i in 4:   # walk the approach into the fight
+  for _i in 4:   # walk the approach into the fight
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[2], 0.00001,
@@ -79,7 +65,7 @@ func test_a_fight_opens_at_the_current_battle_speed() -> void:
 
 func test_battle_speed_dial_retimes_the_live_fight() -> void:
   var screen := _mount_into_fight(1)
-  for i in 4:
+  for _i in 4:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[0], 0.00001,
@@ -92,7 +78,7 @@ func test_battle_speed_dial_retimes_the_live_fight() -> void:
 
 func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
   var screen := _mount_into_fight(1)
-  for i in 4:   # walk the approach into the fight
+  for _i in 4:   # walk the approach into the fight
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   var before: int = Game.run.potions.size()
@@ -110,7 +96,7 @@ func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
 
 func test_escape_toggles_pause_during_a_fight() -> void:
   var screen := _mount_into_fight(1)
-  for i in 4:   # walk the approach into the fight
+  for _i in 4:   # walk the approach into the fight
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   screen._unhandled_input(_escape())
@@ -124,11 +110,11 @@ func test_escape_toggles_pause_during_a_fight() -> void:
 
 func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
   var screen := _mount_into_fight(1)
-  for i in 4:
+  for _i in 4:
     screen._physics_process(1.0)
   screen._toggle_pause()
   var frozen: float = screen._cm.timekeeper.sim_time
-  for i in 3:
+  for _i in 3:
     screen._physics_process(1.0)   # ignored while paused
   assert_almost_eq(screen._cm.timekeeper.sim_time, frozen, 0.00001, 'paused: the fight clock does not advance')
   screen._toggle_pause()           # resume
@@ -139,7 +125,7 @@ func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
 
 func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
   var screen := _mount_into_fight(1)
-  for i in 4:
+  for _i in 4:
     screen._physics_process(1.0)
   screen._toggle_pause()
   screen._quit_to_menu()
@@ -150,7 +136,7 @@ func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
 
 func test_settings_opens_over_the_pause_menu_and_closes_back() -> void:
   var screen := _mount_into_fight(1)
-  for i in 4:
+  for _i in 4:
     screen._physics_process(1.0)
   screen._toggle_pause()
   assert_not_null(screen._pause_menu, 'paused')
@@ -164,38 +150,34 @@ func test_settings_opens_over_the_pause_menu_and_closes_back() -> void:
   screen.free()
 
 
-# Mount the run screen and resolve the opening choice beat into a FIGHT (most tests below
-# exercise the live fight). The act pool also holds an event, so pick the first fight
-# candidate, not blindly index 0. `seed >= 0` starts a fresh run first.
+# Mount the run screen into a live FIGHT. Beats 0 .. EASY_BEATS_END auto-roll to forced (easy)
+# combat, so the opening beat is always a fight — _ready begins its approach. `seed >= 0` starts
+# a fresh run first.
 func _mount_into_fight(seed_value: int) -> RunScreen:
   if seed_value >= 0:
     Game.start_run(seed_value)
   var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
   add_child(screen)
-  if screen._choice != null:
-    screen._on_choice_picked(_first_candidate_of_type(EncounterDef.Type.FIGHT))
   return screen
 
 
-func _first_candidate_of_type(type: int) -> int:
-  var candidates: Array = Game.run.pending_choice()
-  for i in candidates.size():
-    if EncounterCatalog.get_def(candidates[i]).type == type:
-      return i
-  return 0
+# Mount the run screen into an EVENT beat. Beats auto-roll (events are positional + rare), so drive
+# the current beat to an event directly — the event overlay is the unit under test here.
+func _mount_into_event(seed_value: int) -> RunScreen:
+  Game.start_run(seed_value)
+  Game.run._teardown_current()
+  Game.run._current_def_id = EncounterCatalog.EVENT_SHRINE
+  Game.run._create_current_encounter()
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)   # _ready → _enter_beat → _begin_beat → _show_event
+  return screen
 
 
 func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:
-  # Find a seed whose opening choice offers the event, pick it → the event overlay; an
-  # option pick applies its outcome (heal) and dismisses the overlay, then advances.
-  var seed_value: int = _seed_with_opening_event()
-  assert_true(seed_value >= 0, 'a seed offering the event at the opening choice exists')
-  if seed_value < 0:
-    return
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
+  # An event beat raises the event overlay; an option pick applies its outcome (heal), dismisses
+  # the overlay, then advances.
+  var screen := _mount_into_event(1)
   Game.run.player.hp = 1.0   # so the heal outcome is observable
-  screen._on_choice_picked(_first_candidate_of_type(EncounterDef.Type.EVENT))
   assert_eq(screen._state, RunScreen.State.EVENTING, 'the event raises its overlay')
   assert_not_null(screen._event, 'the event overlay is up')
   screen._on_event_picked(0)   # 'Kneel and drink' → heal a fraction of max HP
@@ -204,36 +186,8 @@ func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:
   screen.free()
 
 
-func _seed_with_opening_event() -> int:
-  for s in 50:
-    Game.start_run(s)
-    if EncounterCatalog.EVENT_SHRINE in Game.run.pending_choice():
-      return s
-    Game.reset()
-  return -1
-
-
-func test_pause_available_during_a_choice() -> void:
-  Game.start_run(1)
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
-  assert_eq(screen._state, RunScreen.State.CHOOSING, 'the opening beat is a choice')
-  screen._unhandled_input(_escape())
-  assert_true(screen._paused, 'Escape pauses during a choice')
-  assert_not_null(screen._pause_menu, 'the pause menu is up over the choice overlay')
-  screen._unhandled_input(_escape())
-  assert_false(screen._paused, 'and Escape resumes')
-  screen.free()
-
-
 func test_pause_available_during_an_event() -> void:
-  var seed_value: int = _seed_with_opening_event()
-  assert_true(seed_value >= 0, 'a seed offering the event at the opening choice exists')
-  if seed_value < 0:
-    return
-  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
-  add_child(screen)
-  screen._on_choice_picked(_first_candidate_of_type(EncounterDef.Type.EVENT))
+  var screen := _mount_into_event(1)
   assert_eq(screen._state, RunScreen.State.EVENTING, 'at the event')
   screen._unhandled_input(_escape())
   assert_true(screen._paused, 'Escape pauses during an event')

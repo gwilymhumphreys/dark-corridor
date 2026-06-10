@@ -190,10 +190,10 @@ func _settle() -> void:
       .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
-func _scale_to(target_factor: float, time: float, trans: Tween.TransitionType, ease: Tween.EaseType) -> void:
+func _scale_to(target_factor: float, time: float, trans: Tween.TransitionType, ease_type: Tween.EaseType) -> void:
   _kill_tween()
   _tween = _target.create_tween()
-  _tween.tween_property(_target, 'scale', _base_scale * target_factor, time).set_trans(trans).set_ease(ease)
+  _tween.tween_property(_target, 'scale', _base_scale * target_factor, time).set_trans(trans).set_ease(ease_type)
 
 
 func _play_hover() -> void:
@@ -218,4 +218,16 @@ func _kill_tween() -> void:
 func _exit_tree() -> void:
   _kill_tween()
   _tween = null
+  # Drop the parent's signal connections before releasing the ref — otherwise the
+  # still-alive parent can emit mouse_exited during teardown and _settle() would
+  # call create_tween() on a null _target.
+  if is_instance_valid(_target):
+    _target.resized.disconnect(_center_pivot)
+    _target.mouse_entered.disconnect(_on_mouse_entered)
+    _target.mouse_exited.disconnect(_on_mouse_exited)
+    if _is_button:
+      var btn: BaseButton = _target as BaseButton
+      btn.button_down.disconnect(_on_button_down)
+      btn.button_up.disconnect(_on_button_up)
+      btn.pressed.disconnect(_on_pressed)
   _target = null

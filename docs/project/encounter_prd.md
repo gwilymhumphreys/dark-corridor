@@ -21,7 +21,7 @@ An `Encounter` resolves one beat and reports its outcome up. The descent's beats
 
 What it **is not**:
 
-- **Not the choice layer's *assembly*.** The 2–3 candidate options at a choice point are drawn by the `Run manager` (a pool-draw under act constraints + the run RNG — it owns the map); UI presents them; the picked candidate becomes a live `Encounter`. The Encounter is the *resolved unit*, not the selector. *(The within-encounter tier-2 choice — an event's binary, an elite's engage-by-picking — is the Encounter's own resolution.)*
+- **Not the beat *selection*.** Which beat happens is the `Run manager`'s — it **auto-rolls** a ROLL beat's content (COMBAT vs EVENT on the run RNG, anti-repeat biased) or takes a fixed beat, then draws a def from the per-band pool. The Encounter is the *resolved unit*, not the selector. *(The within-encounter tier-2 choice — an event's binary pick — is the Encounter's own resolution.)*
 - **Not the fight.** A fight `Encounter` creates the `Combat manager` and awaits its result; it never runs the combat tick (`Timekeeper` / `Combat manager`).
 - **Not run-state.** Event/rest outcomes and rewards mutate the player run-state, which the `Run manager` owns — the Encounter reports them; the `Run manager` applies them.
 - **Not enemy/draft content** — it *uses* enemy definitions ([Enemy PRD](enemy_prd.md)) and triggers the reward `Draft` (via the `Run manager`); it doesn't define them.

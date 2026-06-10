@@ -196,9 +196,9 @@ func _apply_battle_speed() -> void:
   _on_battle_speed_changed(Game.battle_speed)
 
 
-func _on_battle_speed_changed(scale: float) -> void:
+func _on_battle_speed_changed(speed: float) -> void:
   if _cm != null and _cm.timekeeper != null:
-    _cm.timekeeper.set_base_scale(scale)
+    _cm.timekeeper.set_base_scale(speed)
 
 
 # Slow-mo-on-hover intent (ui_layout_prd "one verb"): hovering any inspectable — a

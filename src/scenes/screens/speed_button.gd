@@ -13,8 +13,8 @@ func _ready() -> void:
 
 
 # The multiplier glyph is digits + 'x' — locale-neutral, so no tr() (localization.md).
-func _refresh(scale: float) -> void:
-  text = '%dx' % roundi(scale)
+func _refresh(speed: float) -> void:
+  text = '%dx' % roundi(speed)
 
 
 func _exit_tree() -> void:

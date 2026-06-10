@@ -39,7 +39,7 @@ screen is the one real-time client: each `_physics_process` it calls
 `run_screen.gd` is a **polling FSM** mirroring `AutoTestMode.run_full`:
 
 ```
-IDLE → enter beat → choice?  CHOOSING (await path pick) → begin beat
+IDLE → enter beat (auto-rolled or fixed — a live encounter already) → begin beat
                     begin:  event?  EVENTING (await option pick) → after-beat
                             fight?  APPROACHING → FIGHTING ─(resolved)→ after-beat
                             rest?   resolves on begin → after-beat
@@ -47,10 +47,12 @@ after-beat: pending draft? DRAFTING (await pick) ; else advance → enter beat
 run_ended → Game → outcome screen
 ```
 
-A **CHOICE** beat raises `choice_overlay.tscn` (2-3 telegraphed candidates → `RunManager.pick_path`,
-which creates the live encounter). An **EVENT** beat raises `event_overlay.tscn` (prose + a binary
-choice → `Encounter.pick_event_option`, applying the outcome + resolving). Both park the FSM until
-the player picks, like the draft overlay.
+Beats **auto-roll** their content (`RunManager._roll_beat`), so every beat enters with a live
+encounter — there's no player path-pick. An **EVENT** beat raises `event_overlay.tscn` (prose + a
+binary choice → `Encounter.pick_event_option`, applying the outcome + resolving), parking the FSM
+until the pick, like the draft overlay. *(The `CHOOSING` state + `choice_overlay.tscn` are
+**dormant** — kept inert behind `has_pending_choice()` (always false now) for a possible future
+fork-beat.)*
 
 It **polls `cm.is_resolved()`** (never reacts inside the `resolved` signal), so the
 fight is torn down + advanced safely — the run fulfils the outcome (reward / run-end)

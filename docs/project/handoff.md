@@ -194,25 +194,28 @@ content unless explicitly asked.** The prototype loop is feature-complete; what'
 for engineering is below, roughly highest-value first. Pick *with the owner*; each is
 test-first + its own green commit, with the headless autotest as the regression backstop.
 
-1. **Run structure — multi-act + HP economy + the choice layer — DONE (mechanism;
+1. **Run structure — multi-act + HP economy + the auto-roll map — DONE (mechanism;
    placeholder content).** `RunMap` = 3 acts × 15 beats (tunable): boss at each act end
-   (final-act boss wins), guaranteed midpoint relic + a per-act rest fixed, the rest are
-   **CHOICE** beats. The **choice layer** assembles 2-3 seeded candidates (`has_pending_choice`
-   / `pending_choice` / `pick_path`); the **two-tier choice UI** (`choice_overlay` telegraphs
-   the candidates) + the **event** type (`event_overlay`, prose + binary outcome, `pick_event_option`)
-   are built; the run-screen FSM gained CHOOSING / EVENTING states. **HP economy:** between-act
-   full heal, per-act rest, max-HP via relics. Snapshot/resume carry the picked/pending beat.
+   (final-act boss wins) + a guaranteed midpoint relic are fixed; every other beat is a
+   **ROLL** beat. The `Run manager` **auto-rolls** each ROLL beat's content — COMBAT vs EVENT
+   on the run RNG, **anti-repeat biased** (`ROLL_BASE_CHANCE − ROLL_BIAS_STEP × streak`, floored,
+   reset on a type change; streak saved) — and draws a def from per-band pools (easy-combat opener,
+   elites possible from `ELITE_FROM_BEAT`). No player path-pick. The **event** type (`event_overlay`,
+   prose + binary outcome, `pick_event_option`) is built; the run-screen FSM has EVENTING. *(The old
+   choice layer — `has_pending_choice` / `pending_choice` / `pick_path` + `choice_overlay` + the
+   CHOOSING state — is **dormant**, inert behind an always-false `has_pending_choice()`.)* **HP economy:**
+   between-act full heal, max-HP via relics. Snapshot/resume carry the rolled beat + the streak.
    **Still the owner's:** the real encounter/enemy/event content + boss **signature mechanics**;
-   choice-set tuning (category spread, elite budget). PRDs: [run_manager](run_manager_prd.md) ·
+   band/pool tuning (combat-vs-event mix, elite budget, rest placement). PRDs: [run_manager](run_manager_prd.md) ·
    [encounter](encounter_prd.md).
 2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**
    `RunManager._on_encounter_resolved` now grants a relic on the **RELIC** reward (drawn from
    `RelicCatalog.REWARD_POOL` on the run RNG — deterministic + resume-stable) and a **relic +
    draft** on the new **ELITE** reward (the reward asymmetry). Relics gained a **MAX_HP_BONUS**
    direct-mod shape (applied once on grant, baked into the snapshot). Placeholder reward relics
-   (Vital Charm / Iron Idol) + placeholder elite/relic `EncounterDef`s (catalog-only). **Still
-   the owner's:** which relics/elites exist, and **elite engage/skip** (that's the choice layer —
-   item 1). [content](content_prd.md) · [encounter](encounter_prd.md).
+   (Vital Charm / Iron Idol) + placeholder elite/relic `EncounterDef`s. **Still the owner's:** which
+   relics/elites exist, and elite frequency/depth (an elite is now a rolled-combat outcome from
+   `ELITE_FROM_BEAT` on — tune the `combat_pool` — item 1). [content](content_prd.md) · [encounter](encounter_prd.md).
 3. **Settings / pause + battle-speed — DONE.** The ×1/×2/×3 **battle-speed dial** + in-run
    **pause** (2026-06-06), and now (2026-06-09) the **settings screen** itself — audio volume
    sliders (Master / Music / Effects) bound to a new **`Prefs`** autoload (a `ConfigFile` at
