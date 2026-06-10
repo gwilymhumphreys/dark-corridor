@@ -31,8 +31,8 @@ string id), and where relevant a runtime instance class (`relic.gd`, `enchantmen
 1. **Write the def.** Add a `_name() -> ItemDef` builder in `items/item_catalog.gd` (or a new
    themed file the catalog aggregates). Give it a **string id** with a const alias —
    `const POCKET_SHROOMS := 'pocket_shrooms'` — and set its effects via `ItemEffect` (kind / value
-   / shape / travel / `status_type`, the `consume_*` Mass fields, the `summon_*` fields). Shared
-   numbers point to `Balance`; the player-facing `name_key` is source English.
+   / shape / travel / `status_id` + `duration` for a status applier, the `consume_id` Mass fields,
+   the `summon_*` fields). Shared numbers point to `Balance`; the player-facing `name_key` is source English.
 2. **Register it.** Add it to the catalog's `_build()` — `_defs[POCKET_SHROOMS] = _pocket_shrooms()`.
 3. **Make it live.** Add the id to a character's `item_pool` in `characters/character_catalog.gd` —
    or to `items/colorless_pool.gd` if it genuinely belongs to *every* character (the exception that

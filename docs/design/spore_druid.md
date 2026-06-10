@@ -44,7 +44,7 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 ## Spores defined so far
 
-- **Spores** *(the signature)* (stacked) — the Mass fuel + variety-counter. **Does nothing on its own for now** (pure ammo; open to change). The only Mass-eligible spore in the kit, and the one bespoke stacked status — it stands out against the reused baseline. **Authored in code** as `StatusDef.Type.SPORES`, shape `COUNTER` (an inert stacked counter — accumulates, never ticks/decays/damages, spent only by `StatusManager.consume`).
+- **Spores** *(the signature)* (stacked) — the Mass fuel + variety-counter. **Does nothing on its own for now** (pure ammo; open to change). The only Mass-eligible spore in the kit, and the one bespoke stacked status — it stands out against the reused baseline. **Authored in code** as `SporesStatus` (id `'spores'`) — an inert stacked counter (`is_fuel()`; accumulates, never ticks/decays/damages, spent only by `StatusManager.consume`).
 - **Blinding** (timed, minor) — enemy misses for **2s**; further applications extend duration, not effect. Carried by the rare **Pocket Shrooms**. Animate the whiff with a clear tell so the eaten swing reads against the dark. Spread/Self fuel, not Mass.
 
 **Reused baseline (not bespoke spores):** **Vulnerable**, **Weak** — the shared status vocabulary every character can apply (#28). Their appliers sit in the pool like any card and feed the distinct-status variety, but are never Mass fuel (timed, not stacked).

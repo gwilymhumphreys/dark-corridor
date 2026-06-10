@@ -2,7 +2,7 @@
 
 Foundation PRD. Sits under the [Architecture Map](architecture.md). The `StatusManager` is the **stateless facade** over statuses: it exposes `apply` / read / resolve calls and holds **no per-fight state**. Behaviour is **not** a rulebook keyed by type here — each status is a **polymorphic `StatusEffect` subclass** (one class per status, the Slay-the-Spire `AbstractPower` model) that owns both its state and its behaviour via hooks; the facade just loops a target's statuses and calls those hooks. Status *instances* live on their targets (`Actor` / `Item`) and are advanced each step by the `Combat manager` (on the [Timekeeper](timekeeper_prd.md)'s clock).
 
-> **Refactored 2026-06-10** from a centralized rulebook (one `StatusManager` switching on `StatusDef.Shape`) to per-status classes. Rationale: many statuses with wildly different effects bloat a central switch; a class-per-status keeps each effect's behaviour in its own ~6-line file and lets the engine stop naming statuses (`type == BLOCK` → `status.absorb(...)`). See `docs/project/status_system_refactor_plan.md`.
+> **Refactored 2026-06-10** from a centralized rulebook (one `StatusManager` switching on a shape enum, statuses keyed by an int `Type`) to per-status classes. Rationale: many statuses with wildly different effects bloat a central switch; a class-per-status keeps each effect's behaviour in its own ~6-line file and lets the engine stop naming statuses (`type == BLOCK` → `status.absorb(...)`). Canonical record: decision-log **#29**.
 
 **Engine:** Godot 4.
 **Date:** 2026-06-04. Pre-prototype.
@@ -75,7 +75,7 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 `Actor.take_damage` delegates to `StatusManager.resolve_incoming_damage(target, raw, flags) → net`:
 
 - Iterates the target's damage-modifier statuses in a defined order — **amplifiers** (`Vulnerable`) then **absorbers** (block). Block consumes its `count` against the remaining (amplified) damage; the remainder hits HP.
-- **Block absorbs damage unless the effect is `unblockable`.** Per-effect flag — some DoTs set it, some don't; an `unblockable` payload skips the absorber stage and hits HP (after any amplifiers). For a DoT the flag is stored on the `Status` instance at apply time and re-passed into `take_damage` on every tick (the originating Delivery no longer exists).
+- **Block absorbs damage unless the effect is `unblockable`.** Per-effect flag — some DoTs set it, some don't; an `unblockable` payload skips the absorber stage and hits HP (after any amplifiers). For a DoT the flag is stored on the `StatusEffect` instance at apply time and re-passed into `take_damage` on every tick (the originating Delivery no longer exists).
 - **Stat-statuses — BUILT (#6).** `VulnerableStatus` overrides `modify_incoming` (amplifier — scales up before block) and `WeakStatus` overrides `modify_outgoing` (applied to the holder's DAMAGE payloads **at fire time** via `StatusManager.modify_outgoing(actor, amount)` in `Item._resolve_effect`). Both fold each status's hook in `statuses`-list order. Magnitudes are **% multipliers**, not flat-per-fire (a flat per-fire modifier makes fast items strictly dominant — the authoring guidance). The real stat-status content (numbers, per-stack variants) is the owner's.
 
 ---

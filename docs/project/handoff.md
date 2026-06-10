@@ -13,7 +13,11 @@
 > (#1), **reward routing** (#2), the **spore-engine seams** (Cap 1+2) + **mid-fight roster
 > changes** (Cap 3, #22), **pause at any point** (#8), and the **content scaffolding** (string
 > ids, kind-grouped `src/content/`, a **character system** + per-character pools, #23/#27).
-> **241 GUT tests green** on Godot 4.6; the run is watchable end-to-end and the autotest plays +
+> Latest 2026-06-10: the **status system refactored to polymorphic `StatusEffect` classes**
+> (string-id, per-application duration, one file per status — #29), the beat model **CHOICE→ROLL**
+> (beats auto-roll combat/event, the choice layer dormant), the **Spore Druid's first common
+> weapons** + Wilt Frond, and a **central colour/const palette** (`Colours` / `Consts`).
+> **251 GUT tests green** on Godot 4.6; the run is watchable end-to-end and the autotest plays +
 > reports builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
@@ -239,9 +243,9 @@ test-first + its own green commit, with the headless autotest as the regression 
    splits by weight; a source-less DoT keeps the generic channel. In `src/autotest/`
    (logger `attribute_damage` + the mode's per-step observation). [autotest](../testing/autotest.md).
 6. **Stat-statuses — SEAMS WIRED (placeholder content).** Both damage-modifier seams are
-   built: `outgoing_damage_mult` (applied at fire time in `Item._resolve_effect`) and the
-   incoming **amplifier** stage in `resolve_incoming_damage` (before block). `StatusDef`
-   carries both as **% multipliers** (cascade-safe — not flat-per-fire). Placeholder statuses
+   built: `modify_outgoing` (applied at fire time in `Item._resolve_effect`) and the
+   incoming **amplifier** stage in `resolve_incoming_damage` (before block). The `StatusEffect`
+   classes carry both as **% multipliers** (cascade-safe — not flat-per-fire). Placeholder statuses
    **Weak** (outgoing −25%) / **Vulnerable** (incoming +50%) + a **Sundering Bolt** applier
    prove the path; the real stat-status content (numbers, per-stack variants, which damage
    types amplify) is the **owner's**. [status_manager](status_manager_prd.md) · [design](design.md).

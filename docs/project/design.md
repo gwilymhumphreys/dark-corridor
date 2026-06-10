@@ -243,7 +243,7 @@ Bazaar-shaped — items have their own status layer parallel to actors.
 
 ### Surface design
 
-Players should feel that poison and strength and freeze are different kinds of things even though the engine treats them identically:
+Players should feel that poison and strength and freeze are different kinds of things even though they're all one status system (each is its own `StatusEffect` class behind a shared facade):
 
 - Distinct icons per status type
 - Color-family-coded (red = damage, blue = defense), consistent with item panel colors
@@ -256,9 +256,9 @@ Players should feel that poison and strength and freeze are different kinds of t
 
 Wanting a status "enemies get often, players rarely" (e.g. strength) is a design choice about acquisition rates — same mechanic, different exposure tuning by source. No special-case code; tune at source.
 
-### Stat-statuses — data-driven content, authored later
+### Stat-statuses — content, authored as StatusEffect classes
 
-Specific stat-statuses (strength / weak / vulnerable and kin) are **content**, authored later as GD `StatusDef`s (decision #23) alongside items and enemies — *not* one hardcoded global rule. Each declares its own behaviour: **flat or percentage** magnitude, **instant or timed**, and per-stack growth that either **adds magnitude** or **extends duration**. The engine provides the shapes + the two damage-modifier seams (an outgoing scale read at item fire time, the reserved incoming amplifier slot); the specific statuses + numbers come with the content, and the seams get wired when the first one is authored.
+Specific stat-statuses (strength / weak / vulnerable and kin) are **content**, authored as GD `StatusEffect` classes (decision #23 + #29) alongside items and enemies — *not* one hardcoded global rule (Weak / Vulnerable are built). Each declares its own behaviour: **flat or percentage** magnitude, **instant or timed**, and per-stack growth that either **adds magnitude** or **extends duration**. The engine provides the shapes + the two damage-modifier seams (an outgoing scale read at item fire time, the reserved incoming amplifier slot); the specific statuses + numbers come with the content, and the seams get wired when the first one is authored.
 
 The standing constraint is **authoring guidance**, not a global rule: a *flat* damage modifier applied **per fire** interacts badly with the high-trigger cascade — a +N that hits every trigger from a fast item applies ~15×/fight, from a slow item ~3×, making fast items strictly dominant. So **per-fire damage scaling should be percentage (or charge-limited)**; flat is fine for effects not applied per-fire (timed states, block-like pools, one-shot amplifiers). The author picks per status with this in mind.
 

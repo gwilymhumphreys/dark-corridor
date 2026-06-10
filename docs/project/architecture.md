@@ -23,7 +23,7 @@ Layers depend *downward* only for **structural** ownership (who creates / holds 
 ### Foundation (depends on nothing above)
  
 - **`Timekeeper`** (instanced — one per fight, owned by the `Combat manager`) — the combat **clock**: a stepped `sim_time` + a continuous `render_time` (for the visual wall) + the one speed dial + the fixed-step cadence (`steps_due`: real time × dial → whole steps, capped, backlog dropped). It does **not** hold the component registry or advance components — the `Combat manager` does, on the clock's step. Fixed timestep → deterministic and reproducible (the autotest runs K steps). Built at combat start, torn down at end.
-- **`StatusManager`** (autoload) — **stateless** rules for statuses: `(target, count/stacks, behaviour)`, where target is an actor *or* an item. Status *instances* live on their targets (Actor / Item), not here; the `Combat manager` advances their Tickers each step (on the `Timekeeper`'s clock). Called by items, relics, consumables, enemy abilities to apply/read. Depends on nothing — a global rulebook holding no per-fight state.
+- **`StatusManager`** (autoload) — a **stateless facade** over statuses: it routes `apply` / read / resolve calls to the status instances. Behaviour lives in **polymorphic `StatusEffect` subclasses** (one class per status, the AbstractPower model — #29), not here. Instances live on their targets (Actor / Item), where target is an actor *or* an item; the `Combat manager` advances time-driven ones each step (on the `Timekeeper`'s clock). Called by items, relics, consumables, enemy abilities to apply/read. Depends on nothing — holds no per-fight state.
 - **`Actor`** (instanced) — HP, a board of items, a status list. Knows nothing about which side it's on.
 - **`Save`** (autoload) — persists a run snapshot it's *handed* on encounter entry, and returns it on load; the `Run manager` writes it, the `Game manager` reads it back on launch, the `Run manager` rehydrates. **Push, not pull** — `Save` reads no live state and writes none back. No migration (`CLAUDE.md`).
 ### Content → Foundation
@@ -66,7 +66,7 @@ Two layers the downward rule treats differently:
  
 ## The Draftable contract
 
-`Draftable` is **what a draft can offer** — expressed as **composition, not a parent class** (same instinct as the Ticker and Status: share the engine, keep identities distinct). It is a **definition-level contract**, not a runtime supertype:
+`Draftable` is **what a draft can offer** — expressed as **composition, not a parent class** (same instinct as the Ticker: share the engine by composition, keep identities distinct). It is a **definition-level contract**, not a runtime supertype:
 
 - **Shared definition-face.** Every content definition (item / relic / consumable / enchant) carries a common header — `id`, `name`, `icon`, `rarity`, `category`, `tooltip` — by composition (the def *has* it; it doesn't *inherit* it). The `category` set is **open** — a new kind is additive.
 - **`Draft` + inspection are category-blind.** They read only that header to offer, rarity/depth-weight, and tooltip — never branching on category to draw or show.
@@ -108,9 +108,9 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
  
 ### `StatusManager` — PRD: [status_manager_prd.md](status_manager_prd.md)
  
-- **Exposes:** `apply(target, type, count, source?, flags?) → instance` (resolves source-side application modifiers, applies the stacking policy, returns the instance for the `Combat manager` to register, emits an on-apply event); `resolve_incoming_damage(target, raw, flags) → net` (amplifiers — Vulnerable — then absorbers — block); `outgoing_damage_mult(actor)` (Weak, at fire); `consume(target, type, amount) → stacks-removed` (spend stacked spores as fuel — spore_engine Cap 1); `has_evasion(actor)` (a blinding-class status is active — spore_engine Cap 2); read helpers (`type → icon/colour/name`, query a target's statuses). **Stateless** — holds no instances.
+- **Exposes:** `apply(target, id, count, duration?, source?, flags?, ctx?) → StatusEffect` (find-and-reapply or build via `StatusRegistry`; the class decides stacking; duration rides the application); `resolve_incoming_damage(target, raw, flags) → net` (folds each status's `modify_incoming` — amplifiers like Vulnerable — then `absorb` — block); `modify_outgoing(actor, amount)` (folds outgoing modifiers like Weak, at fire); `consume(target, id, amount) → stacks-removed` (spend a fuel status — spore_engine Cap 1); `has_evasion(actor)` (any status `causes_evasion()` — spore_engine Cap 2); `advance_status`. **Stateless** — holds no instances; behaviour is in the `StatusEffect` classes.
 - **Inbound:** `Item` / `Relic` / `Consumable` / `Enemy` abilities → `apply` / read; `Actor.take_damage` → `resolve_incoming_damage`.
-- **Outbound:** none — a rulebook. Status *instances* live on targets; their Tickers are advanced by the `Combat manager` each step (registered from `apply`'s return).
+- **Outbound:** none — a facade. Status *instances* (`StatusEffect` subclasses) live on their targets; the `Combat manager` advances time-driven ones each step by walking `target.statuses` (no separate registry).
 - **Does not:** hold instances or per-fight state; advance components (the `Combat manager` does, on the `Timekeeper`'s clock); author effect content; deliver triggers (the Combat/Item PRD's accrual-push).
  
 ### `Item` — PRD: [item_prd.md](item_prd.md)
@@ -223,7 +223,8 @@ Game  (autoload Node, "Game")          session state machine + run lifecycle
       └─ Combat manager (Node)          per fight: the ONE _physics_process tick + registry
          ├─ Timekeeper          (RefCounted)   the clock (owned, not a child)
          ├─ Actor ×N            (RefCounted)   HP · board · statuses
-         ├─ Item / Status / Delivery (RefCounted)  the registry (seq_id-ordered)
+         ├─ Item / Delivery (RefCounted)        the registry (seq_id-ordered)
+         ├─ StatusEffect ×N     (RefCounted)   live on their targets, walked each step
          └─ event bus           (RefCounted)
 ```
 

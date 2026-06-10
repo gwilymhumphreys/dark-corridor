@@ -26,26 +26,26 @@ The Spore Druid is a **status-identity character** (the Slay-the-Spire Silent an
 
 **Is:** three capabilities — (1) **status-stack consumption** (spend spores as fuel), (2) **evasion** (the "acts but misses" seam, for blinding), (3) the **player-side consumer** of the already-deferred mid-fight roster add (summon).
 
-**Is not:** the spores / cards / numbers (content — owner's); a new resolution model (it reuses fire → resolve → Delivery → land/fizzle); the character / draft / draftable layer; a status *content* catalog (those are GD `StatusDef`s the owner authors).
+**Is not:** the spores / cards / numbers (content — owner's); a new resolution model (it reuses fire → resolve → Delivery → land/fizzle); the character / draft / draftable layer; the status *content* itself (those are GD `StatusEffect` classes the owner authors).
 
 ### Consistency with decision #23 — general seams, no baked spore
 
-Every capability here is **plumbing the GDScript-authored defs drive** (decision #23), not a hardcoded effect — the same shape as the stat-status seams already built (handoff backlog #6: seams wired, the statuses themselves are the owner's `StatusDef`s):
+Every capability here is **plumbing the GDScript-authored content drives** (decision #23), not a hardcoded effect — the same shape as the stat-status seams already built (handoff backlog #6: seams wired, the statuses themselves are the owner's `StatusEffect` classes):
 
-- `consume(target, type, amount)` is a **type-agnostic verb** on the stateless rulebook, beside `apply` — the *which type, how much, scaling* live on the `ItemDef` / `StatusDef`. The engine knows no "poison," no "Mass."
-- **Evasion is a `StatusDef` flag**, beside the built `unblockable` / `outgoing_damage_mult` flags — the engine checks "does the source carry a status whose def sets the flag," **never the name "blinding."** Any status the owner flags evades.
+- `consume(target, id, amount)` is an **id-agnostic verb** on the stateless facade, beside `apply` — the *which status, how much, scaling* live on the `ItemDef` / the `StatusEffect` class (`is_fuel()`). The engine knows no "poison," no "Mass."
+- **Evasion is a `StatusEffect` hook** (`causes_evasion()`), beside the built `absorb` / `modify_outgoing` behaviours — the engine checks "does the source carry a status whose `causes_evasion()` returns true," **never the name "blinding."** Any status that overrides it evades.
 - The **roster add** is a general both-sides capability; *what* spawns (the token's authored actor definition + the spawn trigger on a relic/enchant) is content.
 - **Lethal-execute** stays a verify-content-vs-hook call, not a pre-built mechanic.
 
-The engine hardcodes **no spore** — it gains verbs, flags, and one capability; the Spire-style spore effects are `StatusDef`s / `ItemDef`s the owner authors that *use* this plumbing. (Same discipline the memory bank records from the stat-status build: when a task is "make the engine able to express what content will choose," wire a seam, don't bake the content.)
+The engine hardcodes **no spore** — it gains verbs, hooks, and one capability; the Spire-style spore effects are `StatusEffect` classes / `ItemDef`s the owner authors that *use* this plumbing. (Same discipline the memory bank records from the stat-status build: when a task is "make the engine able to express what content will choose," wire a seam, don't bake the content.)
 
 ---
 
 ## Capability 1 — Status-stack consumption (spend spores as fuel) — BUILT (2026-06-07)
 
-> **Realized:** `StatusManager.consume(target, type, amount) → float` (stacks removed; a
-> no-op returning 0 for non-PERIODIC statuses). `ItemEffect` / `Payload` carry the consume
-> declaration (`consume_type` / `consume_amount` / `consume_from_target` / `consume_scale`).
+> **Realized:** `StatusManager.consume(target, id, amount) → float` (stacks removed; a
+> no-op returning 0 for non-fuel statuses — those whose `is_fuel()` is false). `ItemEffect` /
+> `Payload` carry the consume declaration (`consume_id` / `consume_amount` / `consume_from_target` / `consume_scale`).
 > **Self-fuel** resolves in `Item._resolve_effect` (spend the owner's stacks, scale the
 > payload value at fire); **opponent-fuel (Mass)** in `CombatManager._fire_item`'s per-target
 > spawn path (spend the resolved target's stacks, scale the Delivery). Sequential drain in the
@@ -73,7 +73,7 @@ The engine hardcodes **no spore** — it gains verbs, flags, and one capability;
 
 ## Capability 2 — Evasion (the "acts but misses" seam, for blinding) — BUILT (2026-06-07)
 
-> **Realized:** a `StatusDef.causes_evasion` flag (beside `unblockable` / the damage mults)
+> **Realized:** a `StatusEffect.causes_evasion()` hook (beside `absorb` / the damage modifiers)
 > + `StatusManager.has_evasion(actor)`. A blinded actor still fires (cooldown resets), but in
 > `CombatManager._fire_item` its **DAMAGE** Deliveries are marked `Delivery.evaded` at fire;
 > they travel, then **fizzle on land** (`_land`) with no damage. `evaded` is the fizzle reason
@@ -90,7 +90,7 @@ The engine hardcodes **no spore** — it gains verbs, flags, and one capability;
 **The work:**
 
 - A **blinded-source → outgoing attack Deliveries fizzle** rule. While a blinding-class status is active on an actor, that actor still **fires normally** (the item's cooldown resets, the fire-emote plays), but its outgoing **damage** Deliveries **fizzle** (no landing) — reusing the existing fizzle path, with a **new cause**. Lands in the **Combat manager** at Delivery spawn/landing: check the *source* actor for the blinding status; if present, mark the Delivery to fizzle.
-- **Per-status flag, content-tuned** (the `unblockable` pattern): a `StatusDef` flag marks a status as causing evasion; the engine provides the "source has an evasion status → its damage Deliveries fizzle" seam. *Which* status blinds + the duration + whether it's enemy-only are content.
+- **Per-status hook, content-tuned**: a status overrides `causes_evasion()` to return true; the engine provides the "source has an evasion status → its damage Deliveries fizzle" seam. *Which* status blinds + the duration + whether it's enemy-only are content.
 - **Fizzle carries a reason.** The fizzle must distinguish *evaded* from *target-died* so the VFX wall can play a distinct miss tell (projectile goes wide / swing whiffs) vs. nothing. Small addition to the Delivery/fizzle path; the tell itself is presentation (VFX/content).
 
 **Open / to decide when built:**
@@ -137,7 +137,7 @@ The engine hardcodes **no spore** — it gains verbs, flags, and one capability;
 
 ## Note — lethal-as-execute: content or a seam? (verify when authored)
 
-The **lethal** spore ("kill when stacked count ≥ target current HP") is **likely content** — a `StatusDef` whose `on_tick` reads the target's current HP and applies a lethal payload (`take_damage`, optionally `unblockable` — both built). Confirm the `StatusDef` behaviour surface can express a **target-HP-conditional** in `on_tick`; if the behaviour authoring can't (today's hooks are "a small, additive set — extend as effects need" — [StatusManager](status_manager_prd.md)), that's a **small hook addition** (engine), not a rewrite. Resolve this *when lethal is actually authored*, not speculatively — same discipline as the stat-statuses seam (don't pre-build variants content hasn't chosen).
+The **lethal** spore ("kill when stacked count ≥ target current HP") is **likely content** — a `StatusEffect` class whose `on_step` reads the target's current HP and applies a lethal payload (`take_damage`, optionally `unblockable` — both built). Confirm the `StatusEffect` hook surface can express a **target-HP-conditional** in `on_step`; if the hooks can't (today's set is "small, additive — extend as effects need" — [StatusManager](status_manager_prd.md)), that's a **small hook addition** (engine), not a rewrite. Resolve this *when lethal is actually authored*, not speculatively — same discipline as the stat-statuses seam (don't pre-build variants content hasn't chosen).
 
 ---
 
@@ -159,13 +159,13 @@ The applier commons (above) need none of this — they can be authored against t
 - **Capability 2:** miss scope (damage-only default); total vs probabilistic (total by design; probabilistic flagged, unbuilt). Above.
 - **Capability 3:** the whole mid-fight roster capability (shared with boss summons-adds — #22 + [Enemy PRD](enemy_prd.md)); token insertion ordering. Above.
 - **Lethal-as-execute:** content-vs-hook call, resolved when authored. Above.
-- **All numbers** (consume amounts, blind duration, lethal threshold, token stats) are content — `StatusDef` / `ItemDef` / `Balance`, never this doc (docs describe systems, not numbers — `CLAUDE.md`).
+- **All numbers** (consume amounts, blind duration, lethal threshold, token stats) are content — the `StatusEffect` class / `ItemDef` / `Balance`, never this doc (docs describe systems, not numbers — `CLAUDE.md`).
 
 ## Dependencies
 
-- **StatusManager** — gains `consume(target, type, amount)` (Cap 1); a `StatusDef` evasion flag (Cap 2). Stateless rulebook unchanged otherwise.
-- **Item** — declares "I consume `type` from my target" on a def; self-fuel consume resolves in the fire pipeline (Cap 1).
+- **StatusManager** — gains `consume(target, id, amount)` (Cap 1); a `StatusEffect.causes_evasion()` hook (Cap 2). Stateless facade unchanged otherwise.
+- **Item** — declares "I consume `id` from my target" on a def; self-fuel consume resolves in the fire pipeline (Cap 1).
 - **Combat manager** — opponent-fuel consume + payload scale in the per-target spawn path (Cap 1); the blinded-source fizzle + fizzle-reason at Delivery resolution (Cap 2); the deferred mid-fight roster add/remove + both-sides support (Cap 3).
 - **combat_prd / Delivery** — reuses the fire → resolve → Delivery → land/fizzle model; Cap 2 adds a fizzle cause.
-- **Driven by content:** the owner's spore `StatusDef`s + Spore Druid `ItemDef`s ([`../design/`](../design/spore_druid.md)) are what exercise these seams; this PRD is the engine they run on.
+- **Driven by content:** the owner's spore `StatusEffect` classes + Spore Druid `ItemDef`s ([`../design/`](../design/spore_druid.md)) are what exercise these seams; this PRD is the engine they run on.
 - Hub interface-contract entries added when each capability is built.
