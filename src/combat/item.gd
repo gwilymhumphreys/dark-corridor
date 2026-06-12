@@ -73,4 +73,5 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   p.flags = effect.flags
   p.color = effect.color
   p.source = self
+  p.source_actor = owner
   return p

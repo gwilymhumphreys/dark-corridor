@@ -27,6 +27,7 @@ var rng: RandomNumberGenerator   # the per-fight stream — random item-targetin
 
 var _player_tokens: Array = []   # Array[Actor] — combat-scoped player-side summons (dissolved)
 var _discarded: Array = []       # Array[Actor] — combat-scoped bodies reaped on death; dissolved at teardown
+var _discarded_player_side: Array = []   # Array[Actor] — the reaped that still resolve player-side
 
 var _items: Array = []           # Array[Item] — cooldown Tickers, registration order
 var _deliveries: Array = []      # Array[Delivery] — in-flight + recently-resolved
@@ -51,6 +52,7 @@ func _init(player_actor: Actor, enemy_actors: Array, combat_seed: int = 0, ally_
 func start() -> void:
   timekeeper = Timekeeper.new()
   bus = EventBus.new()
+  bus.side_resolver = _on_player_side   # side is resolved at EVENT time (rosters mutate)
   rng = RandomNumberGenerator.new()
   rng.seed = _combat_seed
   _register_actor(player)
@@ -112,7 +114,10 @@ func _register_actor(actor: Actor) -> void:
     it.cooldown.accum = 0.0
     _items.append(it)
     for sub in it.def.trigger_subs:
-      bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null), it)
+      # The CONTENT default for trigger source is OWN_SIDE — "when MY side does X"
+      # (decision #30); a def opts out per subscription via 'source_filter'.
+      bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null),
+          sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE), it)
 
 
 # --- The tick ---------------------------------------------------------------
@@ -246,7 +251,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
   var payloads := it.fire()
   if payloads.is_empty():
     return   # gated (silence)
-  bus.publish(EventBus.Event.ITEM_FIRED)
+  bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
   # The item still fires (cooldown reset, fire-emote) even when blinded — but its DAMAGE
   # whiffs (docs/systems/spore_engine.md Cap 2). Locked at fire so a swing launched while blinded misses.
   var blinded: bool = StatusManager.has_evasion(it.owner)
@@ -291,6 +296,7 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   d.flags = p.flags
   d.color = p.color
   d.source = p.source
+  d.source_actor = p.source_actor
   d.target = target
   d.travel = Ticker.from_seconds(p.travel)
   d.fire_time = timekeeper.sim_time
@@ -317,18 +323,25 @@ func _land(d: Delivery) -> void:
     Delivery.Kind.DAMAGE:
       if d.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
         d.target.take_damage(d.value, d.flags)
-        bus.publish(EventBus.Event.DAMAGE_DEALT)
+        bus.publish(EventBus.Event.DAMAGE_DEALT, null, d.source_actor, _source_item_of(d))
     Delivery.Kind.HEAL:
       if d.target is Actor:
         d.target.heal(d.value)
-        bus.publish(EventBus.Event.HEALED)
+        bus.publish(EventBus.Event.HEALED, null, d.source_actor, _source_item_of(d))
     Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
       var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
       if applied != null:   # an unknown id applies nothing — publish no event for it
-        bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id)
+        bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id, d.source_actor, _source_item_of(d))
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)
       if d.summon_def_id != '' and d.target is Actor:
         add_actor(_spawn_token(d.summon_def_id), _on_player_side(d.target), d.summon_in_front)
+
+
+## The firing Item behind a Delivery, for event source identity — `source` doubles as
+## the VFX origin, so it is null for a thrown consumable (the throw's actor identity
+## still rides `source_actor`).
+func _source_item_of(d: Delivery) -> Item:
+  return d.source if d.source is Item else null
 
 
 # --- Target-shape resolution (the runtime targeting authority) --------------
@@ -385,7 +398,8 @@ func player_side() -> Array:
 
 
 func _on_player_side(actor) -> bool:
-  return actor == player or actor in allies or actor in _player_tokens
+  return actor == player or actor in allies or actor in _player_tokens \
+      or actor in _discarded_player_side
 
 
 func _all_actors() -> Array:
@@ -457,17 +471,22 @@ func _all_enemies_dead() -> bool:
 ## revived to full by the RunManager at the next fight. The player is never reaped (its death
 ## is the loss). Their item Tickers are dropped from the sweep so they stop being advanced.
 func _reap_dead() -> void:
-  _reap_from(enemies)
-  _reap_from(_player_tokens)
+  _reap_from(enemies, false)
+  _reap_from(_player_tokens, true)
 
 
-func _reap_from(roster: Array) -> void:
+func _reap_from(roster: Array, player_side_roster: bool) -> void:
   for i in range(roster.size() - 1, -1, -1):
     var actor: Actor = roster[i]
     if not actor.is_alive():
       for it in actor.board:
         _items.erase(it)
+        bus.unsubscribe(it)   # a reaped body's items stop receiving trigger pushes
       roster.remove_at(i)
+      if player_side_roster:
+        # A reaped player-side token must still resolve as player-side for events its
+        # in-flight Deliveries land after the reap (_on_player_side checks live rosters).
+        _discarded_player_side.append(actor)
       _discarded.append(actor)   # kept intact (live Deliveries/VFX may still ref it); dissolved at teardown
 
 
@@ -525,6 +544,7 @@ func throw_consumable(consumable, thrower: Actor) -> void:
     return
   for effect in consumable.def.effects:
     var p := _payload_from_effect(effect)
+    p.source_actor = thrower   # event source identity; `source` stays null (the VFX origin)
     # Self-fuel consume (Cap 1) — the thrower is known here, so resolve it like an item fire.
     if p.consume_id != '' and not p.consume_from_target:
       p.value += StatusManager.consume(thrower, p.consume_id, p.consume_amount) * p.consume_scale
@@ -596,8 +616,11 @@ func teardown() -> void:
   allies = []
   _player_tokens = []
   _discarded = []
+  _discarded_player_side = []
   player = null
   timekeeper = null
+  if bus != null:
+    bus.clear()   # releases the bus's strong Subscription -> Item refs + listeners
   bus = null
   rng = null
 

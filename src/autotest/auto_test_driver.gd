@@ -93,18 +93,24 @@ func _strategy_family(strat: String) -> String:
 ## connection is a trigger on one side keyed off a status the other side applies.
 func _synergy_score(def: ItemDef, board: Array) -> float:
   var score: float = 0.0
-  # (a) def triggers off a status the board already applies.
+  # (a) def triggers off a status the board already applies. An OPPONENT_SIDE
+  # subscription can't be fed by the own board, so it scores no connection.
   for sub in def.trigger_subs:
-    if _board_applies_status(board, sub.get('filter', '')):
+    if _sub_listens_to_own_side(sub) and _board_applies_status(board, sub.get('filter', '')):
       score += 1.0
   # (b) a board item triggers off a status def applies.
   var applied: String = _status_applied_by(def)
   if applied != '':
     for item in board:
       for sub in item.def.trigger_subs:
-        if sub.get('filter', '') == applied:
+        if _sub_listens_to_own_side(sub) and sub.get('filter', '') == applied:
           score += 1.0
   return score
+
+
+func _sub_listens_to_own_side(sub: Dictionary) -> bool:
+  var source_filter: int = sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE)
+  return source_filter != EventBus.SourceFilter.OPPONENT_SIDE
 
 
 func _board_applies_status(board: Array, status_id: String) -> bool:

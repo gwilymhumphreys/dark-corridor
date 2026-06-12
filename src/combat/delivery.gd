@@ -17,8 +17,10 @@ var duration: float = 0.0     # per-application duration carried to apply() (tim
 var summon_def_id: String = ''   # EnemyCatalog id of the token to spawn (kind == SUMMON)
 var summon_in_front: bool = true   # SUMMON: insert leftmost on the summoner's side (body-block)
 var flags: int = 0            # Flag bitmask (e.g. unblockable) — resolved on land
-var target                    # Actor (Phase 1); item-targeting resolved later
-var source                    # the Actor/Item that fired this
+var target                    # Actor or Item (item-target shapes carry statuses)
+var source                    # the firing Item — the VFX origin (null = thrown consumable;
+                              # combat_view_framed relies on that to fly throws from the player)
+var source_actor: Actor = null   # the acting Actor — event source identity (decision #30)
 var travel: Ticker
 var color: Color = Color.WHITE
 

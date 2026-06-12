@@ -83,7 +83,7 @@ An item has **one enchant slot**. An enchant hooks the item's fire/resolve: scal
 
 Synergy is the core decision mechanism (design). The item side:
 
-- An item **declares trigger conditions** — event types that push its accumulator *on top of* the normal time accrual (the item still ticks), e.g. "on any poison applied: +N", "on item fired" (the charges model).
+- An item **declares trigger conditions** — event types that push its accumulator *on top of* the normal time accrual (the item still ticks), e.g. "on poison applied: +N", "on item fired" (the charges model). A declaration (`trigger_subs`) carries the event, the push amount, an optional **data filter** (a status string id), and an optional **source filter** — whose events it listens to, defaulting to **OWN_SIDE** ("when MY side applies X", decision #30); `ANY` / `OPPONENT_SIDE` are per-item opt-ins.
 - An item **emits events** others trigger off — its fire; its Deliveries, on landing, emit on-damage / on-status-applied.
 - **Routing** — collecting events and pushing matching items' Tickers — is the combat **event bus**, owned by the `Combat manager` (it holds all participants). This PRD defines the item's declare/emit surface; the bus is the Combat manager PRD's. *(This closes the "trigger delivery" the StatusManager PRD deferred.)*
 - "Scales with item count" and similar read board state **at resolve** — a computed modifier, not a trigger.

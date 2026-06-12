@@ -600,6 +600,193 @@ func test_request_slowmo_sets_and_clears_the_dial() -> void:
   assert_almost_eq(cm.timekeeper.effective_scale(), Balance.TIMESCALE_BASE, 0.0001, 'exit returns to base')
 
 
+# --- Event-bus source identity (decision #30) ---
+
+## A trigger item that never fires on its own cooldown, so any block it grants MUST
+## come from its trigger push. `source_filter` omitted = the OWN_SIDE content default.
+func _never_fires_avenger(source_filter: int = -1) -> ItemDef:
+  var def := ItemDef.new()
+  def.cooldown = 9999.0
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = 5.0
+  blk.shape = ItemEffect.Shape.SELF
+  def.effects = [blk]
+  var sub := {
+    'event': EventBus.Event.STATUS_APPLIED,
+    'amount': Balance.TRIGGER_PUSH_FULL,
+    'filter': 'poison',
+  }
+  if source_filter >= 0:
+    sub['source_filter'] = source_filter
+  def.trigger_subs = [sub]
+  return def
+
+
+func test_enemy_poison_does_not_charge_own_side_trigger() -> void:
+  # Decision #30 headline: a trigger defaults to "when MY side applies X" — an
+  # ENEMY-applied poison must not charge the player's reactive item.
+  var p := Actor.new(500.0)
+  p.board.append(Item.new(_never_fires_avenger(), p))
+  var e := Actor.new(500.0)
+  e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), e))
+  var cm := _manager(p, [e])
+  cm.start()
+  var guard := 0
+  while not _has_status(p, 'poison') and guard < 1000:
+    cm.sim_step()
+    guard += 1
+  assert_true(_has_status(p, 'poison'), 'the enemy poisoned the player')
+  cm.sim_step()
+  cm.sim_step()
+  assert_false(_has_status(p, 'block'), "the enemy's application charged nothing (OWN_SIDE default)")
+
+
+func test_opponent_side_filter_inverts_the_default() -> void:
+  var p := Actor.new(500.0)
+  p.board.append(Item.new(_never_fires_avenger(EventBus.SourceFilter.OPPONENT_SIDE), p))
+  var e := Actor.new(500.0)
+  e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), e))
+  var cm := _manager(p, [e])
+  cm.start()
+  var guard := 0
+  while not _has_status(p, 'poison') and guard < 1000:
+    cm.sim_step()
+    guard += 1
+  cm.sim_step()
+  assert_true(_has_status(p, 'block'), "an OPPONENT_SIDE sub charges off the enemy's application")
+
+
+func test_summoned_token_trigger_resolves_own_side_at_event_time() -> void:
+  # add_actor subscribes BEFORE roster insertion — side must resolve at event time,
+  # or a summon's trigger would never see its own side's events.
+  var p := Actor.new(500.0)
+  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), p))
+  var e := Actor.new(500.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var token := Actor.new(50.0)
+  token.board.append(Item.new(_never_fires_avenger(), token))
+  cm.add_actor(token, true)
+  var guard := 0
+  while not _has_status(e, 'poison') and guard < 1000:
+    cm.sim_step()
+    guard += 1
+  assert_true(_has_status(e, 'poison'), "the player's poison landed")
+  cm.sim_step()
+  assert_true(_has_status(token, 'block'), "the player-side token's trigger charged off its own side")
+
+
+func test_reaped_actors_trigger_item_receives_no_pushes() -> void:
+  # _reap_from unsubscribes a dead body's items — no zombie pushes into its tickers.
+  # A SECOND living enemy keeps the fight (and the poison applications) going, so a
+  # still-subscribed item WOULD be pushed — the assertion is not vacuous.
+  var p := Actor.new(500.0)
+  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), p))
+  var dies := Actor.new(50.0)
+  var reactive := ItemDef.new()
+  reactive.cooldown = 9999.0
+  reactive.trigger_subs = [{
+    'event': EventBus.Event.STATUS_APPLIED,
+    'amount': Balance.TRIGGER_PUSH_FULL,
+    'filter': 'poison',
+    'source_filter': EventBus.SourceFilter.ANY,
+  }]
+  var reactive_item := Item.new(reactive, dies)
+  dies.board.append(reactive_item)
+  var survives := Actor.new(100000.0)
+  var cm := _manager(p, [dies, survives])
+  cm.start()
+  dies.take_damage(999.0)
+  cm.sim_step()   # reaps the dead enemy
+  assert_false(cm.enemies.has(dies), 'the dead enemy left the roster')
+  var accum_at_reap: float = reactive_item.cooldown.accum
+  var guard := 0
+  var poison_landed := false
+  while guard < 1000:
+    cm.sim_step()
+    guard += 1
+    if _has_status(survives, 'poison'):
+      poison_landed = true
+      break
+  cm.sim_step()   # the push (if any, wrongly) would convert on the next step
+  assert_true(poison_landed, 'poison kept landing on the surviving enemy')
+  assert_eq(reactive_item.cooldown.accum, accum_at_reap, 'no pushes reached the reaped item')
+
+
+func test_subscribed_trigger_item_frees_after_teardown() -> void:
+  # The bus now holds strong Subscription -> Item refs; teardown's bus.clear() must
+  # release them (the current leak tests use the sub-less claw — this covers triggers).
+  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var e := Actor.new(40.0)
+  e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.AVENGER), e))
+  var cm := _manager(p, [e])
+  cm.start()
+  var item_ref: WeakRef = weakref(e.board[0])
+  cm.teardown()
+  assert_null(item_ref.get_ref(), 'a subscribed trigger item frees after teardown')
+
+
+func test_item_fired_event_carries_item_and_owner() -> void:
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON])
+  var e := _spawn(1000.0, [])
+  var cm := _manager(p, [e])
+  cm.start()
+  var seen: Array = []
+  cm.bus.add_listener(EventBus.Event.ITEM_FIRED,
+      func(data, source_actor, source_item) -> void:
+        seen.append([data, source_actor, source_item]))
+  var guard := 0
+  while seen.is_empty() and guard < 1000:
+    cm.sim_step()
+    guard += 1
+  assert_eq(seen.size(), 1, 'the first fire was observed')
+  assert_eq(seen[0][0], ItemCatalog.WEAPON, 'ITEM_FIRED data is the def id')
+  assert_eq(seen[0][1], p, 'source actor is the owner')
+  assert_eq(seen[0][2], p.board[0], 'source item is the firing item')
+
+
+func test_thrown_consumable_event_carries_the_thrower() -> void:
+  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var e := _spawn(1000.0, [])
+  var cm := _manager(p, [e])
+  cm.start()
+  var seen: Array = []
+  cm.bus.add_listener(EventBus.Event.DAMAGE_DEALT,
+      func(_data, source_actor, source_item) -> void:
+        seen.append([source_actor, source_item]))
+  var def := ConsumableDef.new()
+  def.id = 'test_dart'
+  def.name_key = 'Test Dart'
+  var effect := ItemEffect.new()
+  effect.kind = Delivery.Kind.DAMAGE
+  effect.value = 5.0
+  effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  effect.travel = 0.0
+  def.effects = [effect]
+  cm.throw_consumable(Consumable.new(def), p)
+  assert_eq(seen.size(), 1, 'the throw published DAMAGE_DEALT')
+  assert_eq(seen[0][0], p, 'source actor is the thrower')
+  assert_null(seen[0][1], 'source item is null — a throw has no firing Item')
+
+
+func test_fight_with_triggers_is_deterministic() -> void:
+  var results: Array = []
+  for _round in 2:
+    var p := Actor.new(200.0)
+    p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), p))
+    p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.AVENGER), p))
+    var e := _spawn(200.0, [ItemCatalog.ENEMY_CLAW])
+    var cm := _manager(p, [e])
+    cm.start()
+    var steps := cm.run_headless()
+    results.append({ 'steps': steps, 'hp': p.hp, 'won': cm.player_won() })
+  assert_eq(results[0]['steps'], results[1]['steps'], 'same step count with triggers live')
+  assert_almost_eq(results[0]['hp'], results[1]['hp'], 0.0001, 'identical final HP')
+  assert_eq(results[0]['won'], results[1]['won'], 'same winner')
+
+
 # --- Review fixes: gate freeze · same-step death · throw resolution · guards ---
 
 ## Observes on_expire at the Combat manager's timed-expiry removal site.

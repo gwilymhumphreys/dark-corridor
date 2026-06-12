@@ -11,5 +11,7 @@ var name_key: String = ''         # source English; displayed via tr()
 var rarity: int = Rarity.COMMON
 var cooldown: float = 1.0          # seconds -> Ticker threshold
 var effects: Array = []            # Array[ItemEffect] (one usually; rares combine)
-var trigger_subs: Array = []       # Array[{ event:int, amount:float, filter:int }]
+# Array[{ event:int (EventBus.Event), amount:float, filter:Variant (a status string id),
+#         source_filter:int (EventBus.SourceFilter; omitted = OWN_SIDE — decision #30) }]
+var trigger_subs: Array = []
 var panel_color: Color = Color.WHITE

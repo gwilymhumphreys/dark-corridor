@@ -45,9 +45,6 @@ var notutorial: bool = true
 var logger: AutoTestLogger
 var driver: AutoTestDriver
 
-# Per-player-item cooldown progress across the run, for fire-count detection (a fire
-# resets the cooldown, dropping progress). Player items only — they persist the run.
-var _item_progress: Dictionary = {}
 
 
 ## sim-steps spanning `seconds` of game-time (rounds up). The one bit of timeout
@@ -132,7 +129,6 @@ func run_full() -> Dictionary:
   Save.disabled = nosave   # honour the forced nosave: never clobber the real run slot
   logger = AutoTestLogger.new()
   driver = AutoTestDriver.new(strategy, seed_value)
-  _item_progress.clear()
   Game.start_run(seed_value)
   var run: RunManager = Game.run
   logger.log_event('run_started', { 'seed': seed_value })
@@ -241,6 +237,14 @@ func _drive_fight(
     cm: CombatManager, actors: Array, wall_start: int, wall_timeout_ms: int, timeout_steps: int) -> Dictionary:
   var stuck := AutoTestStuckDetector.new(seconds_to_steps(stuck_threshold_seconds))
   stuck.note(_total_hp(actors))   # baseline
+  # EXACT fire counts off the bus's observation channel (replaces the old cooldown-drop
+  # heuristic, which missed double-crossings and false-flagged zero-threshold tickers).
+  # Player fires only — the contribution table is player-only.
+  var fight_player: Actor = actors[0]
+  cm.bus.add_listener(EventBus.Event.ITEM_FIRED,
+      func(_data, source_actor: Actor, source_item: Item) -> void:
+        if source_actor == fight_player and source_item != null:
+          logger.record_item_fire(source_item.def.name_key))
   var steps: int = 0
   var outcome: String = ''
   while not cm.is_resolved():
@@ -255,23 +259,10 @@ func _drive_fight(
     cm.sim_step()
     steps += 1
     _observe_damage(cm, actors, before, dot_before)
-    _observe_fires(actors[0])   # player fires (the contribution table is player-only)
     if stuck.note(_total_hp(actors)):
       outcome = 'STUCK'
       break
   return { 'steps': steps, 'outcome': outcome }
-
-
-## Count a player item's fire when its cooldown resets this step (progress drops). The
-## same "did it fire" read the ItemIcon uses for its recoil — handed state, no game
-## write. First sight of an item records no fire (last = current).
-func _observe_fires(player: Actor) -> void:
-  for it in player.board:
-    var progress: float = it.cooldown.progress()
-    var last: float = _item_progress.get(it, progress)
-    if progress < last - 0.2:
-      logger.record_item_fire(it.def.name_key)
-    _item_progress[it] = progress
 
 
 # --- fight construction -----------------------------------------------------

@@ -78,9 +78,12 @@ Items declare a *relative* shape (Item PRD); the manager resolves it against the
 
 A per-fight pub-sub the manager owns (it holds every participant) — this resolves the "trigger delivery" the StatusManager and Item PRDs deferred:
 
-- **Subscribe** — at start (and whenever an item is added) each item registers its declared trigger conditions (event type → push amount).
-- **Publish** — during a tick, emitted events (fires, damage, status-applied, heal, …) are routed to subscribed items, pushing each accumulator by its declared amount.
+- **Subscribe** — at start (and whenever an item is added) each item registers its declared trigger conditions (event type → push amount, plus the data + source filters below). **Unsubscribe** — a reaped body's items are dropped from the bus (no zombie pushes); mid-fight item removal would ride the same call.
+- **Publish** — during a tick, emitted events (fires, damage, status-applied, heal, …) carry **source identity** — the acting Actor + the acting Item where one exists (`ITEM_FIRED` carries the firing item + its owner; a Delivery's land carries its `source_actor`; a thrown consumable's events carry the thrower with a null item). Matching subscriptions get their accumulator pushed by the declared amount; a push to a **gated** item is dropped (decision #30 — the gate freezes the item's time).
+- **Filtering** — a subscription filters on the event's **data** (e.g. STATUS_APPLIED scoped to `'poison'`) and on the **source's side** relative to the subscriber: `OWN_SIDE` ("when MY side does X" — the content default, decision #30) / `ANY` / `OPPONENT_SIDE` (the Avenger shape — opt-in per subscription via `trigger_subs.source_filter`). Side is resolved **at event time** through the manager's side resolver, never cached at subscribe time (rosters mutate — a summon subscribes before its roster insertion). A side filter needs the whole identity chain (resolver + subscriber owner + source actor); a null-identity event only reaches `ANY`.
 - **Timing** — pushes take effect for the *next* tick's advance (loop-proof, above).
+- **Listeners** — an observation-only channel (`add_listener`): callables receive `(data, source_actor, source_item)` after the pushes and never push a Ticker. The autotest's exact fire counts ride it.
+- **Teardown** — the manager's teardown clears the bus (subscriptions hold strong refs to their Items; clearing releases them).
 
 The event catalog and push amounts are content (the Item PRD: item declares; combat_model.md: charges model). "Scales with item count" reads board state at resolve — a computed modifier, not an event.
 
