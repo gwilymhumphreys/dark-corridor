@@ -88,7 +88,9 @@ func pick_event_option(index: int) -> void:
     return
   var opt: EventOptionDef = def.event_options[clampi(index, 0, def.event_options.size() - 1)]
   _apply_event_outcome(opt)
-  _resolve(Outcome.RESOLVED)
+  # A damaging option can be lethal — the run must end NOW (LOST), not deferred to the
+  # next fight's win/loss check with the player walking on dead in between.
+  _resolve(Outcome.LOST if not player.is_alive() else Outcome.RESOLVED)
 
 
 func _apply_event_outcome(opt: EventOptionDef) -> void:
@@ -123,4 +125,10 @@ func teardown() -> void:
     _cm.teardown()
     _cm.free()
     _cm = null
+  else:
+    # Never begun (torn down before begin(), e.g. a run reset mid-approach): no CM
+    # exists to dissolve the spawned enemies, so their Actor<->Item cycles are
+    # broken here — clearing the array alone would leak them.
+    for enemy in enemies:
+      enemy.dissolve()
   enemies.clear()

@@ -154,6 +154,9 @@ func begin_current() -> void:
   if not _current.resolved.is_connected(_on_encounter_resolved):
     _current.resolved.connect(_on_encounter_resolved)
   _current.begin()
+  # Ordering constraint: revive + relic statuses run AFTER begin() (the CM exists, its
+  # registration done). Safe because registration reads neither HP nor statuses and no
+  # sim time passes until the caller steps — don't insert anything between that changes that.
   if _current.is_fight():
     _revive_allies()          # run-scoped allies enter every fight at full HP (downed → revived)
     _apply_relics_to_player()
@@ -317,6 +320,12 @@ func throw_potion(index: int) -> bool:
 func advance() -> void:
   if _ended:
     return
+  if not _pending_offer.is_empty():
+    # The no-skip invariant: a draft must be consumed before advancing. A caller that
+    # advances past one has a flow bug — drop the offer loudly rather than carry it
+    # unsaved into the next beat (the run RNG already advanced; resume would diverge).
+    push_error('RunManager.advance: advancing past an unconsumed draft offer — dropping it')
+    _pending_offer = []
   _teardown_current()
   if RunMap.crosses_act(position):   # the act boss was just cleared → enter the next act full
     _full_heal()
@@ -428,8 +437,10 @@ func snapshot() -> Dictionary:
   for consumable in potions:
     potion_ids.append(consumable.def.id)
   var ally_snaps: Array = []
-  for i in allies.size():
-    ally_snaps.append({ 'id': _ally_def_ids[i], 'hp': allies[i].hp })
+  for aid in _ally_def_ids:
+    # Def id only — an ally's HP is NOT saved: allies are revived to full at every fight
+    # begin (only the player carries HP attrition), so a saved value would be dead weight.
+    ally_snaps.append({ 'id': aid })
   return {
     'character': character.id,
     'hp': player.hp,
@@ -449,9 +460,20 @@ func snapshot() -> Dictionary:
   }
 
 
+# Snapshot keys a save must carry to be usable. Save already discards corrupt / wrong-
+# version files; this catches a parsable save with a broken SHAPE (truncated, hand-edited)
+# so resume discards to fresh instead of crashing (the no-migration rule, docs/systems/save.md).
+const SNAPSHOT_KEYS: Array = [
+  'hp', 'max_hp', 'board', 'relics', 'potions', 'position', 'current_def_id', 'rng',
+]
+
+
 ## Rebuild run-state from a snapshot and re-enter the saved beat (the resume point).
-## Does not re-save (this is a load, not an encounter entry).
-func rehydrate(snap: Dictionary) -> void:
+## Does not re-save (this is a load, not an encounter entry). Returns false — building
+## nothing — when the snapshot is shape-incompatible; the Game manager then discards it.
+func rehydrate(snap: Dictionary) -> bool:
+  if not _snapshot_usable(snap):
+    return false
   character = CharacterCatalog.get_def(snap.get('character', CharacterCatalog.DEFAULT))
   player = Actor.new(float(snap['max_hp']))
   player.hp = float(snap['hp'])
@@ -464,11 +486,7 @@ func rehydrate(snap: Dictionary) -> void:
   allies = []
   _ally_def_ids = []
   for entry in snap.get('allies', []):
-    var aid: String = str(entry['id'])
-    var ally := _make_ally(aid)
-    ally.hp = float(entry['hp'])
-    allies.append(ally)
-    _ally_def_ids.append(aid)
+    add_ally(str(entry['id']))
   relics = []
   for rid in snap['relics']:
     relics.append(Relic.new(RelicCatalog.get_def(str(rid))))
@@ -483,13 +501,23 @@ func rehydrate(snap: Dictionary) -> void:
   _pending_offer = []
   _pending_choice = []
   # Restore the current beat's resolution + the roll streak exactly — never re-roll (no save-scum).
-  _current_def_id = str(snap.get('current_def_id', ''))
+  _current_def_id = str(snap['current_def_id'])
   _roll_streak = int(snap.get('roll_streak', RollType.COMBAT))
   _roll_streak_count = int(snap.get('roll_streak_count', 0))
-  if _current_def_id != '':
-    _create_current_encounter()
-  else:
-    _enter_beat(position)   # fresh/edge snapshot — roll the current beat
+  _create_current_encounter()
+  return true
+
+
+## Shape check for a parsed snapshot: every required key present, the RNG pair intact,
+## and a resolved current beat (every save happens after _enter_beat sets one).
+func _snapshot_usable(snap: Dictionary) -> bool:
+  for key in SNAPSHOT_KEYS:
+    if not snap.has(key):
+      return false
+  var rng_snap: Variant = snap['rng']
+  if not (rng_snap is Dictionary and rng_snap.has('seed') and rng_snap.has('state')):
+    return false
+  return str(snap['current_def_id']) != ''
 
 
 # --- teardown ---------------------------------------------------------------

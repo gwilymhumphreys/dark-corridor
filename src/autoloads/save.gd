@@ -45,11 +45,20 @@ func write(snapshot: Dictionary) -> void:
 
 
 ## Return the saved run snapshot, or {} for "no usable save" (absent / unreadable /
-## not a dict / wrong version — no migration, so an old format is discarded).
+## not a dict / wrong version — no migration, so an old format is discarded). When
+## the main slot is unusable, the temp file is tried: a crash in write()'s commit
+## window (after remove, before rename) leaves only the tmp holding the newest save.
 func read() -> Dictionary:
-  if not FileAccess.file_exists(PATH):
+  var data: Dictionary = _read_snapshot(PATH)
+  if data.is_empty():
+    data = _read_snapshot(TMP_PATH)
+  return data
+
+
+func _read_snapshot(path: String) -> Dictionary:
+  if not FileAccess.file_exists(path):
     return {}
-  var text: String = FileAccess.get_file_as_string(PATH)
+  var text: String = FileAccess.get_file_as_string(path)
   if text.is_empty():
     return {}
   var json: JSON = JSON.new()
@@ -63,8 +72,10 @@ func read() -> Dictionary:
   return data
 
 
+## Whether a USABLE save exists — version-checked via read(), so a stale-format file
+## doesn't light a Resume button that would then no-op.
 func has_save() -> bool:
-  return FileAccess.file_exists(PATH)
+  return not read().is_empty()
 
 
 ## Drop the run save (death / win). Also clears any stray temp file.

@@ -42,7 +42,7 @@ What it **is not**:
 The `Run manager` instantiates the picked Encounter; it resolves by type, then reports outcome + reward up:
 
 - **Fight** (regular / elite / boss) — spawn the authored enemy `Actor`s from their definitions ([Enemy PRD](enemy.md)), set their **left-to-right ordering** (composition: tank in front, adds before boss — design), and create the `Combat manager` with the player + enemy `Actor`s + ordering. Await win/loss. **Loss** → report **died** (the `Run manager` signals run-ended up to `Game`). **Win** → report the reward.
-- **Event** — present the prose + the **binary choice** (a UI intent — the player picks an option); apply the chosen option's **outcome** (direct effects — heal / damage / a relic / a potion / a status — applied to run-state via the `Run manager`). Events are lore + a tradeoff (design); outcomes are *direct*, not the combat path.
+- **Event** — present the prose + the **binary choice** (a UI intent — the player picks an option); apply the chosen option's **outcome** (direct effects — heal / damage / a relic / a potion / a status — applied to run-state via the `Run manager`). Events are lore + a tradeoff (design); outcomes are *direct*, not the combat path. A **lethal** damaging outcome resolves the beat **LOST** on the spot — the run ends there, never a dead player walking to the next fight.
 - **Rest** (the in-act small rest — one guaranteed per act, design) — apply a **partial heal** to the player `Actor` (via the `Run manager`'s HP-economy surface). No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
 
 ## Composition & ordering (the fight case)

@@ -19,8 +19,8 @@ const DEFAULT_COUNT: int = 3
 ## advances — the consumed state is what the snapshot persists for deterministic
 ## resume). Distinct within the offer while the pool has the breadth; refills to
 ## allow repeats only if the pool is smaller than `count`.
-func draw(pool: Array, depth: int, rng: RandomNumberGenerator, count: int = DEFAULT_COUNT) -> Array:
-  var _depth: int = depth   # reserved for rarity-by-depth weighting (tuning) — inert in Phase 3
+func draw(pool: Array, _depth: int, rng: RandomNumberGenerator, count: int = DEFAULT_COUNT) -> Array:
+  # `_depth` is reserved for rarity-by-depth weighting (tuning) — inert in Phase 3.
   var offer: Array = []
   var bag: Array = pool.duplicate()
   for i in count:

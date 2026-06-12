@@ -43,7 +43,8 @@ func start_run(seed_value: int, character_id: String = CharacterCatalog.DEFAULT)
 
 
 ## Resume from the save slot. Returns false (and stays put) if there is no usable
-## save — no migration, so Save returns {} for absent / corrupt / old formats.
+## save — no migration: Save returns {} for absent / corrupt / wrong-version files,
+## and a parsable save with a broken SHAPE (rehydrate refuses it) is discarded here.
 func resume_run() -> bool:
   var snap: Dictionary = Save.read()
   if snap.is_empty():
@@ -51,7 +52,10 @@ func resume_run() -> bool:
   _clear_run()
   run = RunManager.new()
   run.run_ended.connect(_on_run_ended)
-  run.rehydrate(snap)
+  if not run.rehydrate(snap):
+    _clear_run()
+    Save.clear()   # drop the unusable slot so Resume stops offering it
+    return false
   _set_phase(Phase.RUN)
   return true
 

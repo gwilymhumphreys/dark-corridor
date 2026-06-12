@@ -22,7 +22,7 @@ What it **is not**: not the run-flow (the `Run manager` builds the snapshot, wri
 
 ## When
 
-**Auto-save on encounter entry** (design) — at the start of each encounter, before it resolves; that's the resume point. **One run slot**, overwritten each time, written **atomically** (temp file → rename) so a quit mid-write can't corrupt it. On **death or final-boss win**, the run save is **cleared** (death is final per run — design). No manual saves; no mid-combat save.
+**Auto-save on encounter entry** (design) — at the start of each encounter, before it resolves; that's the resume point. **One run slot**, overwritten each time, written **atomically** (temp file → remove → rename); a crash inside that commit window leaves only the temp file, which `read()` recovers as a fallback — so a quit mid-write can't corrupt or lose the slot. On **death or final-boss win**, the run save is **cleared** (death is final per run — design). No manual saves; no mid-combat save.
 
 ---
 
@@ -49,7 +49,7 @@ On launch the `Game manager` calls `Save.read()`; if a run save exists and is re
 
 ## No migration (`CLAUDE.md`)
 
-We do **not** migrate saves. An absent, unreadable, or format-incompatible save → start a **fresh run** (discard). No version-upgrade logic, no compat shims; the format may change freely during development.
+We do **not** migrate saves. An absent, unreadable, or format-incompatible save → start a **fresh run** (discard). `Save` discards corruption and wrong versions; a parsable save with a broken **shape** (missing keys) is refused by `RunManager.rehydrate`, and the `Game manager` then clears the slot and stays at Title. No version-upgrade logic, no compat shims; the format may change freely during development.
 
 ---
 

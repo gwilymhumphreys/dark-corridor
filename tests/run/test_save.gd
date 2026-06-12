@@ -80,3 +80,21 @@ func test_wrong_version_is_discarded() -> void:
   f.store_string(JSON.stringify({ 'version': 999, 'hp': 1.0 }))
   f.close()
   assert_true(Save.read().is_empty(), 'an incompatible version is discarded (no migration)')
+
+
+func test_read_recovers_the_tmp_after_a_crashed_commit() -> void:
+  # write() commits remove-then-rename; a crash between the two leaves only the tmp
+  # holding the newest save — read() must recover it instead of losing the run.
+  Save.write(_sample())
+  var dir := DirAccess.open('user://')
+  dir.rename(SaveAutoload.PATH, SaveAutoload.TMP_PATH)   # simulate the crash window
+  assert_false(FileAccess.file_exists(SaveAutoload.PATH), 'the main slot is gone')
+  var got := Save.read()
+  assert_eq(got['hp'], 72.0, 'read() recovered the snapshot from the tmp file')
+
+
+func test_has_save_rejects_a_stale_format_file() -> void:
+  var f := FileAccess.open(SaveAutoload.PATH, FileAccess.WRITE)
+  f.store_string(JSON.stringify({ 'version': 999, 'hp': 1.0 }))
+  f.close()
+  assert_false(Save.has_save(), 'has_save() is version-checked — no Resume button that would no-op')

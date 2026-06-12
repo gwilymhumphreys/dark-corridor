@@ -108,3 +108,33 @@ func test_event_max_hp_option_grows_max_hp() -> void:
   enc.pick_event_option(1)   # 'Pry the shard loose' → +max HP
   assert_almost_eq(player.max_hp, 100.0 + Balance.EVENT_SHRINE_MAX_HP, 0.0001, 'max HP grew')
   assert_almost_eq(player.hp, 100.0 + Balance.EVENT_SHRINE_MAX_HP, 0.0001, 'and current HP too')
+
+
+func test_lethal_event_outcome_resolves_lost() -> void:
+  # A damaging event option that kills the player must end the beat LOST — not
+  # RESOLVED with a dead player walking on to the next fight.
+  var def := EncounterDef.new()
+  def.id = 'test_deathtrap'
+  def.type = EncounterDef.Type.EVENT
+  var opt := EventOptionDef.new()
+  opt.label_key = 'Reach into the dark'
+  opt.effect = EventOptionDef.Effect.DAMAGE
+  opt.amount = 999.0
+  def.event_options = [opt]
+  var player := Actor.new(50.0)
+  var enc := Encounter.new(def, player)
+  _encs.append(enc)
+  enc.begin()
+  watch_signals(enc)
+  enc.pick_event_option(0)
+  assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.LOST, EncounterDef.Reward.NONE])
+
+
+func test_teardown_before_begin_dissolves_spawned_enemies() -> void:
+  # Enemies spawn at _init (for the approach); a fight torn down BEFORE begin() has no
+  # CombatManager to dissolve them — teardown must break the Actor<->Item cycles itself.
+  var enc := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.FIGHT_GRUNT), _default_player(100.0))
+  var item_ref: WeakRef = weakref(enc.enemies[0].board[0])
+  enc.teardown()
+  enc.free()
+  assert_null(item_ref.get_ref(), 'a never-begun fight still frees its spawned enemy boards')

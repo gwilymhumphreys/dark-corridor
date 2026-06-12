@@ -235,12 +235,13 @@ func test_ally_persists_through_save_and_resume() -> void:
   var run := _run()
   run.start(1)
   run.add_ally(EnemyCatalog.SPORE_THRALL)
-  run.allies[0].take_damage(5.0)   # so its HP isn't full
-  var hp: float = run.allies[0].hp
+  run.allies[0].take_damage(5.0)   # mid-run damage — deliberately NOT persisted
   var run_b := _run()
   run_b.rehydrate(run.snapshot())
   assert_eq(run_b.allies.size(), 1, 'the ally is restored on resume')
-  assert_almost_eq(run_b.allies[0].hp, hp, 0.0001, 'with its persisted HP')
+  # An ally's HP is not saved: allies are revived to full at every fight begin (only the
+  # player carries HP attrition), so resume rebuilds the ally at full.
+  assert_almost_eq(run_b.allies[0].hp, run_b.allies[0].max_hp, 0.0001, 'rebuilt at full HP')
   assert_eq(run_b.allies[0].board.size(), 1, 'and its board (rebuilt from the def)')
 
 
@@ -507,3 +508,29 @@ func test_advance_autosaves_the_entry_point() -> void:
   assert_false(saved.is_empty(), 'a save exists at the encounter entry')
   assert_eq(int(saved['position']), 1, 'the save is at the freshly-entered beat')
   assert_eq(saved['board'].size(), 4, 'and reflects the drafted item')
+
+
+func test_rehydrate_refuses_a_truncated_snapshot() -> void:
+  # A parsable save with a broken SHAPE (missing keys) is unusable — rehydrate must
+  # refuse it (the caller discards to fresh) instead of crashing on a missing index.
+  var run := _run()
+  assert_false(run.rehydrate({ 'hp': 50.0, 'max_hp': 100.0 }), 'a truncated snapshot is refused')
+  var complete := _run()
+  complete.start(5)
+  assert_true(_run().rehydrate(complete.snapshot()), 'a complete snapshot rehydrates')
+
+
+func test_advance_past_an_unconsumed_draft_drops_the_offer() -> void:
+  # The no-skip invariant: a caller that advances past a pending draft has a flow bug —
+  # the offer is dropped (loudly) rather than carried unsaved into the next beat.
+  var run := _run()
+  run.start(3)
+  run.begin_current()
+  var cm: CombatManager = run.combat_manager()
+  cm.run_headless()               # beat 0 is a fight with a draft reward
+  assert_true(run.has_pending_draft(), 'a draft is pending after the win')
+  var board_size: int = run.player.board.size()
+  run.advance()                   # flow bug: nobody consumed the draft
+  assert_false(run.has_pending_draft(), 'the stale offer was dropped, not carried')
+  assert_eq(run.player.board.size(), board_size, 'nothing was silently added to the board')
+  assert_eq(run.position, 1, 'the run still advanced')

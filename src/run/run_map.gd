@@ -12,12 +12,13 @@ class_name RunMap
 ## the beat's content is auto-selected (RunManager._roll_beat). An empty event pool forces
 ## combat (the easy opener).
 ##
-## Per-act bands (0-based beat index):
-##   0 .. EASY_BEATS_END        easy combat (draft), no events
-##   (EASY_BEATS_END+1) .. 5    combat or event
-##   ELITE_FROM_BEAT, 8 .. 13   combat or event; a rolled combat may be an elite
-##   RELIC_BEAT (7)             FIXED — the guaranteed midpoint relic
-##   BOSS_BEAT (14)             FIXED — the act-end boss (the final act's boss ends the run)
+## Per-act bands (0-based beat index; the boundaries are the consts below — beat_spec is
+## the authority, this is the shape):
+##   the easy opener (0 .. EASY_BEATS_END)      easy combat (draft), no events
+##   the mid band (up to ELITE_FROM_BEAT)       combat or event
+##   from ELITE_FROM_BEAT on                    combat or event; a rolled combat may be an elite
+##   RELIC_BEAT                                 FIXED — the guaranteed midpoint relic
+##   BOSS_BEAT (the act's last)                 FIXED — the act-end boss (the final act's ends the run)
 
 enum BeatKind { FIXED, ROLL }
 
