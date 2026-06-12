@@ -41,6 +41,10 @@ func on_apply(target, ctx) -> void:
   pass
 
 
+## Called at every NATURAL removal: timed expiry (the Combat manager's status pass),
+## consumed-to-zero (StatusManager.consume), and spent-removal after a damage pass
+## (an emptied block pool). NOT called at combat teardown — the fight ending is a
+## clear, not an expiry (an on-expire effect must not fire into a finished fight).
 func on_expire(target, ctx) -> void:
   pass
 

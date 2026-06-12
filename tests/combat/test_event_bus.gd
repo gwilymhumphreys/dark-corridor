@@ -28,3 +28,19 @@ func test_event_with_no_subscribers_is_noop() -> void:
   bus.subscribe(EventBus.Event.STATUS_APPLIED, cd, 1.0)
   bus.publish(EventBus.Event.ITEM_FIRED)
   assert_false(cd.crossed(), 'an event with no subscribers pushes nothing')
+
+
+func test_push_to_gated_subscriber_is_dropped() -> void:
+  # Decision #30: a gated item's Ticker is frozen — trigger pushes are dropped too,
+  # so nothing banks toward a burst while silenced.
+  var bus := EventBus.new()
+  var holder := Actor.new(10.0)
+  var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), holder)
+  bus.subscribe(EventBus.Event.STATUS_APPLIED, item.cooldown, 1.0, null, item)
+  var silence: StatusEffect = StatusManager.apply(item, 'silence', 1.0)
+  bus.publish(EventBus.Event.STATUS_APPLIED)
+  assert_eq(item.cooldown.accum, 0.0, 'a push to a gated subscriber is dropped')
+  item.statuses.erase(silence)
+  bus.publish(EventBus.Event.STATUS_APPLIED)
+  assert_gt(item.cooldown.accum, 0.0, 'pushes resume once the gate lifts')
+  holder.dissolve()

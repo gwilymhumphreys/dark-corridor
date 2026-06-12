@@ -145,6 +145,92 @@ func test_has_evasion_reads_the_flag() -> void:
   assert_true(StatusManager.has_evasion(a), 'a blind status causes evasion')
 
 
+# --- Review fixes: flag-split reapply · on_expire at the facade's removal sites ---
+
+## A fuel status with an observable on_expire (consume-to-zero removal site).
+class FuelProbeStatus extends StatusEffect:
+  var expired_called: bool = false
+
+
+  func _init() -> void:
+    id = 'fuel_probe'
+
+
+  func is_fuel() -> bool:
+    return true
+
+
+  func on_expire(_target, _ctx) -> void:
+    expired_called = true
+
+
+## A block-like absorber with an observable on_expire (spent-removal site).
+class SpentProbeStatus extends StatusEffect:
+  var expired_called: bool = false
+
+
+  func _init() -> void:
+    id = 'spent_probe'
+
+
+  func absorb(amount: float, _incoming_flags: int, _target, _ctx) -> float:
+    var soaked: float = minf(amount, count)
+    count -= soaked
+    return amount - soaked
+
+
+  func is_spent() -> bool:
+    return count <= 0.0
+
+
+  func on_expire(_target, _ctx) -> void:
+    expired_called = true
+
+
+func test_different_flag_applications_get_separate_instances() -> void:
+  # Reapply matches id AND flags: unblockable poison applied over blockable poison must
+  # not inherit (or rewrite) the earlier application's flags — each keeps its own.
+  var a := Actor.new(50.0)
+  StatusManager.apply(a, 'block', 100.0)
+  var plain: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
+  var piercing: StatusEffect = StatusManager.apply(a, 'poison', 3.0, 0.0, null, Delivery.Flag.UNBLOCKABLE)
+  assert_ne(plain, piercing, 'a different-flags application is its own instance')
+  _advance(a, plain, int(plain.ticker.threshold))
+  assert_eq(a.hp, 50.0, 'the blockable tick was absorbed by block')
+  _advance(a, piercing, int(piercing.ticker.threshold))
+  assert_eq(a.hp, 47.0, 'the unblockable tick went straight to HP')
+
+
+func test_same_flag_reapplication_still_stacks() -> void:
+  var a := Actor.new(50.0)
+  var first: StatusEffect = StatusManager.apply(a, 'poison', 2.0)
+  var second: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
+  assert_eq(first, second, 'a same-flags reapplication merges into the existing instance')
+  assert_eq(first.count, 5.0, 'and stacks additively')
+
+
+func test_consume_to_zero_calls_on_expire() -> void:
+  var a := Actor.new(50.0)
+  var probe := FuelProbeStatus.new()
+  probe.setup(2.0, 0.0, null, 0)
+  a.statuses.append(probe)
+  var removed := StatusManager.consume(a, 'fuel_probe', 2.0)
+  assert_eq(removed, 2.0, 'the full stack was spent')
+  assert_true(probe.expired_called, 'draining a fuel status to zero runs on_expire')
+  assert_false(a.statuses.has(probe), 'and removes it')
+
+
+func test_spent_removal_calls_on_expire() -> void:
+  var a := Actor.new(50.0)
+  var probe := SpentProbeStatus.new()
+  probe.setup(5.0, 0.0, null, 0)
+  a.statuses.append(probe)
+  a.take_damage(5.0)
+  assert_eq(a.hp, 50.0, 'the pool absorbed the hit')
+  assert_true(probe.expired_called, 'an emptied absorb pool runs on_expire at removal')
+  assert_false(a.statuses.has(probe), 'and is removed')
+
+
 # --- helpers (not test_*; GUT ignores them) ---
 
 func _advance(owner_actor: Actor, status: StatusEffect, steps: int) -> bool:

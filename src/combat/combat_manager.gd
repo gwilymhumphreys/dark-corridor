@@ -112,7 +112,7 @@ func _register_actor(actor: Actor) -> void:
     it.cooldown.accum = 0.0
     _items.append(it)
     for sub in it.def.trigger_subs:
-      bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null))
+      bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null), it)
 
 
 # --- The tick ---------------------------------------------------------------
@@ -148,6 +148,11 @@ func sim_step() -> void:
     # in a multi-enemy fight a slain body must stop swinging). Its statuses still resolve
     # on their own targets; only this owner's own item firing is suppressed.
     if it.owner != null and not it.owner.is_alive():
+      continue
+    # A gated item's cooldown FREEZES (decision #30): no accrual while silenced, so the
+    # gate lifting never releases a banked burst — the first fire comes one full
+    # cooldown after the gate lifts. (Item.fire() keeps its own gate check as backstop.)
+    if it.is_gated():
       continue
     if it.cooldown.step():
       fired_items.append(it)
@@ -210,6 +215,7 @@ func _advance_statuses_on(target) -> void:
       if dealt > 0.0:
         _deliveries.append(_dot_visual(st, target, dealt))
   for st in spent:
+    st.on_expire(target, null)   # the natural-removal hook (every removal site calls it)
     target.statuses.erase(st)
 
 
@@ -232,6 +238,11 @@ func _dot_visual(status: StatusEffect, target, dealt: float) -> Delivery:
 
 
 func _fire_item(it: Item, arrived: Array) -> void:
+  # Re-check the owner: the status pass runs AFTER crossings are collected, so a DoT
+  # tick can kill an actor whose item crossed this same step — a slain body must not
+  # swing (the Cap 3 rule; the loop's check above only covers earlier deaths).
+  if it.owner != null and not it.owner.is_alive():
+    return
   var payloads := it.fire()
   if payloads.is_empty():
     return   # gated (silence)
@@ -312,8 +323,9 @@ func _land(d: Delivery) -> void:
         d.target.heal(d.value)
         bus.publish(EventBus.Event.HEALED)
     Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
-      StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
-      bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id)
+      var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
+      if applied != null:   # an unknown id applies nothing — publish no event for it
+        bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id)
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)
       if d.summon_def_id != '' and d.target is Actor:
         add_actor(_spawn_token(d.summon_def_id), _on_player_side(d.target), d.summon_in_front)
@@ -523,6 +535,10 @@ func throw_consumable(consumable, thrower: Actor) -> void:
       _deliveries.append(d)
       if d.travel.crossed():
         _land(d)
+  # A throw can be lethal outside the step loop (e.g. while paused at timescale 0, when
+  # no sim_step follows to notice) — reap and resolve NOW, like step 4/6 of sim_step.
+  _reap_dead()
+  _check_resolution()
 
 
 ## Build a Payload from an ItemEffect template (shared by consumable throws; items
@@ -554,6 +570,13 @@ func _payload_from_effect(effect: ItemEffect) -> Payload:
 ## statuses clear, its board survives. COMBAT-SCOPED actors (enemies, enemy summons,
 ## player-side tokens) are discarded, so we break their Actor<->Item cycle (dissolve).
 ## Call after reading the result.
+## Safety net (CLAUDE.md runtime cleanup): a CombatManager freed while in the tree
+## (the sandbox host, or any future mount) still breaks its cycles. The owning
+## Encounter calls teardown() explicitly; this is the idempotent backstop.
+func _exit_tree() -> void:
+  teardown()
+
+
 func teardown() -> void:
   if _torn_down:
     return

@@ -44,7 +44,7 @@ One `Item` class, configured by its definition; some definitions also declare tr
 
 When the item's `Ticker` crosses — its accumulator filled step-by-step, plus any trigger pushes (combat_model.md):
 
-1. **Gate check** — item-targeted gate statuses (e.g. *silence*) can suppress the fire (`StatusManager`). (Whether a gated item's cooldown holds or keeps cycling is the gate status's behaviour — content.)
+1. **Gate check** — item-targeted gate statuses (e.g. *silence*) can suppress the fire (`StatusManager`). A gated item's cooldown **freezes** (decision #30): the Combat manager skips its accrual while a gate status sits on it, so a lifting gate never releases a banked burst — the first fire lands one full cooldown after the lift. (The in-`fire()` gate check stays as a backstop.)
 2. **Fire** — reset the cooldown; play the fire-emote (recoil / flash — combat_model.md). The fire is an event others can trigger off.
 3. **Resolve payload(s)** — for each of the item's effects, apply value modifiers (item-targeted statuses like *+2 damage* or *triggers-twice*, via `StatusManager`) and enchant hooks → a **payload** `(kind, value)`, plus its target-shape and `travel_time`.
 4. **Hand them up** — the item returns its payload(s) + shape + travel to the `Combat manager`, which resolves the shape and spawns a `combat_model.md` **Delivery** per target. The item never calls up.
@@ -120,7 +120,7 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 - **Effect-kind catalog + values / cooldowns / sizes** — content (the design's pool work).
 - **Enchantment specifics** — [Content PRD](content.md).
 - **Trigger event catalog + the event bus mechanism** — Combat manager PRD (the item declares/emits; the bus routes).
-- **Silenced-item cooldown** — does the Ticker hold or keep cycling while gated? = gate-status behaviour (content).
+- **Silenced-item cooldown — resolved (decision #30):** the Ticker **holds** while gated (no accrual, nothing banked); the first fire lands one full cooldown after the gate lifts.
 - **Size** — whether to ship size-as-tempo and how many sizes (art doc: a leaning to test).
 - **Ally-targeting shape** — only if enemies ever buff/heal allies; the Combat manager would resolve it; not in the prototype.
 - **Item-target shapes — added (resolved 2026-06-05):** `opponent-item-random` (one random enemy item; selection **random via seeded RNG**, provisional) and `all-opponent-items`.

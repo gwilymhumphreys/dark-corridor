@@ -41,7 +41,7 @@ A **`Draftable`** (drafted / inspected / tooltipped like Item / Relic / Consumab
 A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing that doesn't accrue-toward-firing).
 
 - **Slots** — 3 potion slots (design); found mainly in drafts; consumed on use; a potion taken when slots are full drops one (the potion-drop sub-choice — Draft PRD).
-- **Throw → resolve** — a **throw-potion intent** reaches the `Combat manager`, which activates the consumable: builds its payload(s), resolves the target-shape, spawns its Deliveries (combat_model.md) — the same resolution surface as an item fire, minus the Ticker. Effects are tactical (heal, instant block, freeze, instant damage, apply-status-to-all — design).
+- **Throw → resolve** — a **throw-potion intent** reaches the `Combat manager`, which activates the consumable: builds its payload(s), resolves the target-shape, spawns its Deliveries (combat_model.md) — the same resolution surface as an item fire, minus the Ticker. Effects are tactical (heal, instant block, freeze, instant damage, apply-status-to-all — design). A lethal throw resolves the fight immediately (no waiting on the next step — a paused fight at timescale 0 still concludes). **Thrown payloads are exempt from the thrower's combat modifiers** (decision #30): Weak doesn't scale a potion down and Blind can't whiff a throw — potions are the reserve, not the engine.
 - **Slow-mo-on-hover** to inspect + throw during combat (design — opt-in agency; slows both sides).
 - **Saved** — potions are run-state, in the snapshot (Save PRD).
 

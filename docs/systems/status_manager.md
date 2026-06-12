@@ -61,10 +61,10 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 ## `apply(target, id, count, duration?, source?, flags?, ctx?) → instance`
 
-1. **Find** an existing status of the same `id` on the target.
+1. **Find** an existing status of the same `id` **and the same `flags`** on the target — a different-flags application (unblockable poison over blockable poison) gets its **own instance**, so one application's flags never silently rewrite another's. A reapply keeps the **first** applier as `source` (autotest attribution splits multi-applier DoT by weight regardless).
 2. **Reapply or create.** Existing → `existing.reapply(count, duration, source, flags)` — **the class decides stacking** (additive count by default; `TimedStatus` extends its duration; a class may refresh / max). Else → `StatusRegistry.create(id)`, `setup(count, duration, …)` (which builds the ticker from the **per-application duration**), `on_apply(target, ctx)`, append.
 3. **Return the instance.**
-4. **On-apply event** is emitted by the *Combat manager* at the Delivery's land (`STATUS_APPLIED` carries the string id), so reactive items can trigger ("when you apply poison, gain 1 block").
+4. **On-apply event** is emitted by the *Combat manager* at the Delivery's land (`STATUS_APPLIED` carries the string id) — **only when the apply succeeded** (an unknown id applies nothing and publishes nothing) — so reactive items can trigger ("when you apply poison, gain 1 block").
 
 `ctx` is a thin `StatusContext` the Combat manager hands to active hooks (apply other statuses, spawn, publish); it is `null` for apply-outside-combat (e.g. a relic at fight start), so `on_apply` tolerates a null ctx.
 
@@ -84,8 +84,10 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 A subclass overrides only what it does; every hook is a no-op / identity by default. Two kinds:
 
-- **Active (push)** — the status acts via `ctx`: `on_apply`, `on_expire`, `on_step(target, ctx) -> expired`, `setup` / `reapply` (lifecycle + stacking).
+- **Active (push)** — the status acts via `ctx`: `on_apply`, `on_expire`, `on_step(target, ctx) -> expired`, `setup` / `reapply` (lifecycle + stacking). `on_expire` runs at every **natural** removal — timed expiry, consumed-to-zero, spent-removal after a damage pass — but **not** at combat teardown (the fight ending is a clear, not an expiry).
 - **Modifiers (pull)** — the engine queries at a pipeline stage, in list order: `modify_outgoing`, `modify_incoming`, `absorb(amount, flags, …) -> remaining`, `gates_fire`, `causes_evasion`. Plus `is_fuel` / `consume` (Mass), `is_spent` (pool removal), `dot_tick_weight` (autotest attribution), and presentation fields.
+
+**Thrown consumables are exempt from the holder's combat modifiers** (decision #30): a potion's payload skips `modify_outgoing` (Weak) and `has_evasion` (Blind) — potions are the reserve, not the engine, so debuffs that degrade the board don't degrade the panic button. A deliberate asymmetry with the item fire pipeline, not an accident.
 
 Pull for modifiers keeps the engine in control of *when and in what order* contributions compose — preserving the deterministic sweep (#24) and amplify-before-absorb (#6). Push for active effects lets the status do its own work. Small, additive set — extend as effects need.
 

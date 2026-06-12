@@ -9,7 +9,7 @@ First per-system PRD. Sits under the Architecture Map. This specifies how effect
 
 ### One accrual primitive — the Ticker
 Items, active effects (poison / burn / regen / etc.), and triggered relics all have a Ticker: an accumulator, a threshold, an accrual source (the fixed time-step, or an event-push), and a payload that runs when the accumulator crosses the threshold.
-The central tick advances every Ticker by one fixed step; those that cross fire their payload and reset (or decrement, for stack-based effects). A poison status ticking its damage and an item charging toward activation are the same mechanism, configured differently — same loop, no separate "status tick" vs "item tick".
+The central tick advances every Ticker by one fixed step; those that cross fire their payload and reset (or decrement, for stack-based effects). A poison status ticking its damage and an item charging toward activation are the same mechanism, configured differently — same loop, no separate "status tick" vs "item tick". A **gated** item's Ticker is skipped entirely — accrual *and* trigger pushes — while the gate holds (decision #30: silence freezes the item's time; the gate lifting releases no banked burst).
 
 Composition, not inheritance. Entities own a Ticker; they are not subclasses of one. This keeps item / status / relic distinct in identity, ownership, and presentation while sharing the accrual engine. (Avoids the if type == branching that signals a wrongly-carved abstraction.)
 Potions have no Ticker — they're manually fired. The one thing that doesn't accrue-toward-firing is the one thing excluded, which is the tell that the boundary is right.

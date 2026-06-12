@@ -600,6 +600,137 @@ func test_request_slowmo_sets_and_clears_the_dial() -> void:
   assert_almost_eq(cm.timekeeper.effective_scale(), Balance.TIMESCALE_BASE, 0.0001, 'exit returns to base')
 
 
+# --- Review fixes: gate freeze · same-step death · throw resolution · guards ---
+
+## Observes on_expire at the Combat manager's timed-expiry removal site.
+class ExpiryProbeStatus extends TimedStatus:
+  var expired_called: bool = false
+
+
+  func _init() -> void:
+    id = 'expiry_probe'
+
+
+  func on_expire(_target, _ctx) -> void:
+    expired_called = true
+
+
+func test_gated_item_cooldown_freezes_and_lifts_without_burst() -> void:
+  # Decision #30: a gate (silence) FREEZES the cooldown — no accrual while gated, so
+  # the gate lifting releases no banked burst; the first fire lands one full cooldown
+  # after the lift.
+  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON])
+  var e := _spawn(1000.0, [])
+  var cm := _manager(p, [e])
+  cm.start()
+  var weapon: Item = p.board[0]
+  var silence: StatusEffect = StatusManager.apply(weapon, 'silence', 1.0)
+  var threshold := int(weapon.cooldown.threshold)
+  for _i in threshold * 3:
+    cm.sim_step()
+  assert_eq(weapon.cooldown.accum, 0.0, 'a gated cooldown holds at zero — nothing banked')
+  assert_true(cm.deliveries().is_empty(), 'no fires while gated')
+  weapon.statuses.erase(silence)   # lift the gate (a timed gate would expire the same way)
+  for _i in threshold - 1:
+    cm.sim_step()
+  assert_true(cm.deliveries().is_empty(), 'no instant fire on the lift — the cooldown restarts')
+  cm.sim_step()
+  assert_eq(cm.deliveries().size(), 1, 'exactly one fire, one full cooldown after the lift')
+
+
+func test_dot_killed_actor_does_not_fire_collected_swing() -> void:
+  # The status pass runs AFTER crossings are collected, so a poison tick can kill an
+  # actor whose item crossed this same step — the collected swing must be suppressed.
+  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var e := _spawn(10.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  var claw: Item = e.board[0]
+  claw.cooldown.accum = claw.cooldown.threshold - 1.0    # crosses next step
+  var poison: StatusEffect = StatusManager.apply(e, 'poison', 99.0)
+  poison.ticker.accum = poison.ticker.threshold - 1.0    # ticks (lethally) the same step
+  var hp_before: float = p.hp
+  cm.sim_step()
+  assert_false(e.is_alive(), 'the poison tick killed the enemy this step')
+  for _i in 60:   # long enough for any (wrongly) launched swing to land
+    cm.sim_step()
+  assert_eq(p.hp, hp_before, "the dead enemy's collected swing never fired")
+
+
+func test_lethal_potion_resolves_fight_without_a_step() -> void:
+  # A throw can land outside the step loop (paused, timescale 0): resolution must not
+  # wait for a sim_step that never comes.
+  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var e := _spawn(10.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := _manager(p, [e])
+  cm.start()
+  var def := ConsumableDef.new()
+  def.id = 'test_bomb'
+  def.name_key = 'Test Bomb'
+  var effect := ItemEffect.new()
+  effect.kind = Delivery.Kind.DAMAGE
+  effect.value = 50.0
+  effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  effect.travel = 0.0
+  def.effects = [effect]
+  cm.throw_consumable(Consumable.new(def), p)
+  assert_true(cm.is_resolved(), 'the lethal throw resolved the fight immediately')
+  assert_true(cm.player_won(), 'and the player won it')
+
+
+func test_status_applied_event_only_published_on_success() -> void:
+  # An unknown status id applies nothing — no STATUS_APPLIED event may be routed for it.
+  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var e := _spawn(1000.0, [])
+  var cm := _manager(p, [e])
+  cm.start()
+  var probe := Ticker.new(100)
+  cm.bus.subscribe(EventBus.Event.STATUS_APPLIED, probe, 1.0, null)
+  cm._land(_status_delivery(e, 'nonexistent_status'))
+  assert_eq(probe.accum, 0.0, 'an unknown id publishes no event')
+  cm._land(_status_delivery(e, 'block'))
+  assert_gt(probe.accum, 0.0, 'a real apply still publishes')
+
+
+func test_free_while_mounted_breaks_cycles_via_exit_tree() -> void:
+  # The _exit_tree safety net: a CombatManager freed while in the tree must break the
+  # enemy Actor<->Item cycle even when nobody called teardown() first.
+  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  add_child(cm)
+  var item_ref: WeakRef = weakref(e.board[0])
+  cm.free()
+  assert_null(item_ref.get_ref(), 'freeing a mounted manager dissolved the enemy board')
+
+
+func test_timed_expiry_calls_on_expire() -> void:
+  # The Combat manager's status pass is one of the three natural-removal sites — the
+  # hook must run there (the facade's two sites are covered in test_status_manager).
+  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var e := _spawn(1000.0, [])
+  var cm := _manager(p, [e])
+  cm.start()
+  var probe := ExpiryProbeStatus.new()
+  probe.setup(1.0, 0.1, null, 0)
+  p.statuses.append(probe)
+  for _i in int(probe.ticker.threshold) + 1:
+    cm.sim_step()
+  assert_true(probe.expired_called, 'on_expire ran at timed expiry')
+  assert_false(p.statuses.has(probe), 'and the expired status was removed')
+
+
+func _status_delivery(target, status_id: String) -> Delivery:
+  var d := Delivery.new()
+  d.kind = Delivery.Kind.APPLY_STATUS
+  d.status_id = status_id
+  d.value = 1.0
+  d.target = target
+  d.travel = Ticker.new(0)
+  return d
+
+
 func test_physics_process_drives_tick_when_mounted() -> void:
   # A directly-mounted CombatManager (the sandbox) must still self-drive: its
   # _physics_process delegates to tick(). Mount it, run a couple of physics frames,

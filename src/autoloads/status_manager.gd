@@ -7,13 +7,17 @@ extends Node
 ## the StatusRegistry builds the right subclass. Globally reachable precisely because it's stateless.
 
 
-## Apply / stack a status on a target; returns the instance. An existing status of the same id is
-## re-applied (the class decides stacking — additive by default; timed extends its duration);
-## otherwise the registry builds a fresh one, sets its per-application state (count + DURATION —
-## duration rides the application now, not a global), and runs on_apply. `ctx` is null outside
-## combat (e.g. a relic at fight start); on_apply tolerates that.
+## Apply / stack a status on a target; returns the instance. An existing status of the same id
+## AND the same flags is re-applied (the class decides stacking — additive by default; timed
+## extends its duration); a different-flags application (e.g. unblockable poison over blockable)
+## gets its OWN instance, so the flags of one application never silently rewrite another's.
+## A reapply keeps the FIRST applier as `source` (autotest attribution splits multi-applier
+## DoT by weight regardless). Otherwise the registry builds a fresh one, sets its
+## per-application state (count + DURATION — duration rides the application now, not a global),
+## and runs on_apply. `ctx` is null outside combat (e.g. a relic at fight start); on_apply
+## tolerates that.
 func apply(target, id: String, count: float, duration: float = 0.0, source = null, flags: int = 0, ctx = null) -> StatusEffect:
-  var existing: StatusEffect = _find(target, id)
+  var existing: StatusEffect = _find_matching(target, id, flags)
   if existing != null:
     existing.reapply(count, duration, source, flags)
     return existing
@@ -72,6 +76,7 @@ func consume(target, id: String, amount: float) -> float:
     return 0.0
   var removed: float = s.consume(amount)
   if s.count <= 0.0 and removed > 0.0:
+    s.on_expire(target, null)   # the natural-removal hook (every removal site calls it)
     target.statuses.erase(s)
   return removed
 
@@ -83,9 +88,19 @@ func _find(target, id: String) -> StatusEffect:
   return null
 
 
+## The apply-time match: same id AND same flags (consume/_find stay id-only — fuel
+## spend doesn't care which application's flags a stack arrived under).
+func _find_matching(target, id: String, flags: int) -> StatusEffect:
+  for s in target.statuses:
+    if s.id == id and s.flags == flags:
+      return s
+  return null
+
+
 func _remove_spent(target) -> void:
   # In-place reverse walk: no allocation when nothing is spent (this runs on every take_damage),
   # and removing from the tail can't shift an index we haven't visited yet.
   for i in range(target.statuses.size() - 1, -1, -1):
     if target.statuses[i].is_spent():
+      target.statuses[i].on_expire(target, null)   # the natural-removal hook
       target.statuses.remove_at(i)

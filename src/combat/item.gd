@@ -21,11 +21,12 @@ func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
 
 ## The fire pipeline (docs/systems/item.md): gate -> fire (reset the cooldown) -> resolve
 ## each effect into a Payload (applying modifiers / enchants — none yet) -> hand
-## them up. Returns [] if a gate status (silence) suppresses the fire. The
-## manager only calls this on a cooldown cross; the fire-emote + event routing
-## are the manager's.
+## them up. Returns [] if a gate status (silence) suppresses the fire — a backstop:
+## the Combat manager already freezes a gated item's cooldown (decision #30), so a
+## gated item normally never crosses. The manager only calls this on a cooldown
+## cross; the fire-emote + event routing are the manager's.
 func fire() -> Array:
-  if _is_gated():
+  if is_gated():
     return []
   cooldown.reset()
   var payloads: Array = []
@@ -34,7 +35,10 @@ func fire() -> Array:
   return payloads
 
 
-func _is_gated() -> bool:
+## True while a gate status (silence) sits on this item. The Combat manager consults
+## this each step to FREEZE the cooldown (decision #30: a gate holds time — no accrual,
+## so the gate lifting never releases a banked burst of fires).
+func is_gated() -> bool:
   for s in statuses:
     if s.gates_fire():
       return true
