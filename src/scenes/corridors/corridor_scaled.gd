@@ -9,7 +9,7 @@ extends CorridorRenderer
 ## corners for ANY aspect ratio. Each side's tile cell is computed from view_size;
 ## the per-side texture is stretched to fill it, so any art of any size fits.
 ##
-## See docs/corridors/scale-and-place.md.
+## See docs/systems/corridors/scale_and_place.md.
 
 @export var depth_ratio: float = 0.5    ## cell-to-cell shrink (perspective steepness); 0..1
 @export var num_tiles: int = 9          ## min per side; auto-extended to reach min_tile_px
@@ -116,6 +116,6 @@ func _wall_nodes() -> Array:
 ## An on-axis object always projects to the vanishing point (the node origin), so
 ## only its scale changes with depth: `0` = at the mouth / full size, larger =
 ## deeper / smaller. The combat view uses this to scale the enemy occupant on the
-## approach, keeping it locked to the wall perspective. See phase4_plan.md.
+## approach, keeping it locked to the wall perspective. See docs/history/phase4_plan.md.
 func axis_scale(depth_cells: float) -> float:
   return pow(depth_ratio, depth_cells)

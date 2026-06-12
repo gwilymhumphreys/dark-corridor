@@ -12,12 +12,12 @@ Author game content for Dark Corridor — items, enemies, relics, potions, encha
 - [`docs/design/character_ideas.md`](../../docs/design/character_ideas.md) — **parking lot** of uncommitted character concepts (Spore Druid promoted; Blade Mage, Wizard, Black Hole, Mechanic parked) + the **resource toolkit** for designing new characters: reusable resources (mana, heat, ammo, gold, HP, allies, items) placed on axes, and the `resource + theme` screen ("don't put a resource on its obvious home"). Where new character ideas land before they graduate to a working file.
 - [`docs/design/card_pool_targets.md`](../../docs/design/card_pool_targets.md) — per-character breadth *signals* (held loosely, never quotas).
 - [`docs/design/per_character_pools.md`](../../docs/design/per_character_pools.md) — decision #27: each character draws from its **own** item pool (+ a small shared colorless pool); enemies & the reward-relic pool stay shared.
-- [`docs/project/design.md`](../../docs/project/design.md) — the whole-game snapshot (core loop, rarity = complexity not power, the damage/block/scaling triad, encounters, characters).
+- [`docs/design/game_design.md`](../../docs/design/game_design.md) — the whole-game snapshot (core loop, rarity = complexity not power, the damage/block/scaling triad, encounters, characters).
 
 **The mechanics — HOW it works (read the one for what you're authoring):**
-- Items → [`item_prd.md`](../../docs/project/item_prd.md) · statuses → [`status_manager_prd.md`](../../docs/project/status_manager_prd.md) · enemies → [`enemy_prd.md`](../../docs/project/enemy_prd.md) · relics / enchants / potions → [`content_prd.md`](../../docs/project/content_prd.md) · encounters / events → [`encounter_prd.md`](../../docs/project/encounter_prd.md) · the draft → [`draft_prd.md`](../../docs/project/draft_prd.md).
-- Spore-build engine seams — status-stack **consume** (Mass fuel), **evasion** (blinding whiff), **summon** roster — all **BUILT** → [`spore_engine_prd.md`](../../docs/project/spore_engine_prd.md).
-- Canonical record + open questions → [`decision-log.md`](../../docs/project/decision-log.md). Localization → [`reference/localization.md`](../../docs/reference/localization.md).
+- Items → [`item.md`](../../docs/systems/item.md) · statuses → [`status_manager.md`](../../docs/systems/status_manager.md) · enemies → [`enemy.md`](../../docs/systems/enemy.md) · relics / enchants / potions → [`content.md`](../../docs/systems/content.md) · encounters / events → [`encounter.md`](../../docs/systems/encounter.md) · the draft → [`draft.md`](../../docs/systems/draft.md).
+- Spore-build engine seams — status-stack **consume** (Mass fuel), **evasion** (blinding whiff), **summon** roster — all **BUILT** → [`spore_engine.md`](../../docs/systems/spore_engine.md).
+- Canonical record + open questions → [`decision_log.md`](../../docs/decision_log.md). Localization → [`reference/localization.md`](../../docs/systems/localization.md).
 
 ## The authoring how-to
 
@@ -29,7 +29,7 @@ The spore engine is fully built (consume / evasion / summon), so the **entire sp
 
 ## Working rhythm
 
-- Run + test commands (Godot exe, GUT suite, headless autotest) are in [`docs/project/handoff.md`](../../docs/project/handoff.md). Keep the suite green; `--import` after adding a `class_name`.
+- Run + test commands (Godot exe, GUT suite, headless autotest) are in [`docs/handoff.md`](../../docs/handoff.md). Keep the suite green; `--import` after adding a `class_name`.
 - After authoring: update the relevant design doc if the design shifted, and the card-pool running counts. Commit coherent additions when the owner says so (`/c`).
 
 ARGUMENTS: $ARGUMENTS

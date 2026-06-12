@@ -1,7 +1,7 @@
 class_name ConsumableDef
 extends RefCounted
-## A consumable (potion) definition (content_prd, decision #23) — a manually-fired
-## reserve with NO Ticker (combat_prd: the one thing that doesn't accrue toward
+## A consumable (potion) definition (docs/systems/content.md, decision #23) — a manually-fired
+## reserve with NO Ticker (docs/systems/combat_model.md: the one thing that doesn't accrue toward
 ## firing). Held in a potion slot, consumed on use. On throw the Combat manager
 ## builds its effect(s) into Deliveries — the same resolution surface as an item
 ## fire, minus the cooldown. Phase 3: one heal potion. Effects reuse `ItemEffect`

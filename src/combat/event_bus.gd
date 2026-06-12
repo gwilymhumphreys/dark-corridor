@@ -1,10 +1,10 @@
 class_name EventBus
 extends RefCounted
-## The per-fight trigger pub/sub (combat_manager_prd). Items subscribe their
+## The per-fight trigger pub/sub (docs/systems/combat_manager.md). Items subscribe their
 ## declared trigger conditions (an event -> a Ticker push); emitted events push
 ## the subscribed Tickers. A push only adds to the accumulator — it is evaluated
 ## on the NEXT step's advance, so a chain advances at most one link per step
-## (loop-proof by construction; combat_prd's Bazaar lesson).
+## (loop-proof by construction; docs/systems/combat_model.md's Bazaar lesson).
 
 enum Event { ITEM_FIRED, DAMAGE_DEALT, STATUS_APPLIED, HEALED }
 

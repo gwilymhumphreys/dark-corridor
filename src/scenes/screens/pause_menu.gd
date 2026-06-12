@@ -1,6 +1,6 @@
 class_name PauseMenu
 extends CanvasLayer
-## The in-run pause overlay (ui_layout_prd). A CanvasLayer ABOVE the HUD: an opaque
+## The in-run pause overlay (docs/systems/ui_layout.md). A CanvasLayer ABOVE the HUD: an opaque
 ## centered panel over the frozen run — no translucent scrim (alpha breaks the
 ## pixel-art aesthetic; CLAUDE.md). Its full-rect Catcher (mouse_filter STOP) swallows
 ## input so the paused combat/HUD can't be clicked through. It emits the two intents;

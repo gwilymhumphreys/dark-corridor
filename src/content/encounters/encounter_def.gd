@@ -1,6 +1,6 @@
 class_name EncounterDef
 extends RefCounted
-## An encounter definition (encounter_prd, decision #23) — authored in GDScript,
+## An encounter definition (docs/systems/encounter.md, decision #23) — authored in GDScript,
 ## collected in EncounterCatalog. One beat of the descent: a FIGHT (an enemy
 ## composition + a reward) or a REST (a partial heal). The location frame +
 ## telegraph are player-facing → localizable via tr(def.name_key). Phase 3 builds

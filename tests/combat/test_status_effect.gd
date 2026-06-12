@@ -1,5 +1,5 @@
 extends GutTest
-## The new polymorphic status model (docs/project/status_system_refactor_plan.md) — proving the
+## The new polymorphic status model (docs/systems/status_manager.md) — proving the
 ## WeakStatus slice before the full migration: registry construction, the outgoing-damage modifier
 ## (PULL hook), per-application duration, and reapply = STACK (extend the timer). The old
 ## StatusDef / StatusManager path is untouched and runs alongside; this is purely additive.

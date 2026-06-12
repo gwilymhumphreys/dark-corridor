@@ -1,6 +1,6 @@
 class_name StatusManagerAutoload
 extends Node
-## The status FACADE (status_manager_prd) — autoload registered `StatusManager`. Holds NO
+## The status FACADE (docs/systems/status_manager.md) — autoload registered `StatusManager`. Holds NO
 ## instances (they live on their targets, as StatusEffect subclasses). Behaviour is no longer a
 ## switch here: each call delegates to the status instances, looping a target's `statuses` in
 ## insertion order so composition stays deterministic (#24). Statuses are keyed by string id (#23);
@@ -63,7 +63,7 @@ func has_evasion(actor) -> bool:
   return false
 
 
-## Spend up to `amount` of `id` from `target` as Mass fuel (spore_engine_prd Cap 1), returning how
+## Spend up to `amount` of `id` from `target` as Mass fuel (docs/systems/spore_engine.md Cap 1), returning how
 ## many were removed (so the consuming effect scales by what it found). Only fuel statuses (stacked
 ## DoT / the Spores counter) spend; others return 0. A drained instance is removed.
 func consume(target, id: String, amount: float) -> float:

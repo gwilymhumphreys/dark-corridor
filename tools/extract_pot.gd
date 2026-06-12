@@ -14,7 +14,7 @@ extends SceneTree
 ##   3. .gd   — `name_key = '...'` literals (item / enemy / status / encounter names,
 ##              displayed at runtime via tr(def.name_key))
 ##
-## See docs/reference/localization.md.
+## See docs/systems/localization.md.
 
 const LOCALES: Array[String] = ['en']
 const POT_PATH: String = 'res://locale/messages.pot'

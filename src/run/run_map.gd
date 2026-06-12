@@ -1,5 +1,5 @@
 class_name RunMap
-## The act/beat structure of a descent (run_manager_prd) — a single linear track of
+## The act/beat structure of a descent (docs/systems/run_manager.md) — a single linear track of
 ## ACTS acts x BEATS_PER_ACT beats. PLACEHOLDER layout + numbers: the owner tunes act
 ## count, beat count, the per-band placement, and the candidate pools. The design target
 ## is 3 acts of ~15 beats; the content is intentionally a tiny pool drawn repeatedly, not

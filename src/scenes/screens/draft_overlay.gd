@@ -1,6 +1,6 @@
 class_name DraftOverlay
 extends Control
-## The draft overlay (ui_layout_prd / draft_prd): the 1-of-3 reward offer shown after a
+## The draft overlay (docs/systems/ui_layout.md / docs/systems/draft.md): the 1-of-3 reward offer shown after a
 ## fight, as DraftCards on an opaque panel. The pick emits `picked(index)` — a draft-pick
 ## intent the run screen forwards to RunManager.apply_draft_pick. No skip (a pick always
 ## resolves). Reads the candidate defs; writes nothing.

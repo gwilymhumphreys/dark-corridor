@@ -1,6 +1,6 @@
 class_name EventOverlay
 extends Control
-## The event overlay (encounter_prd / ui_layout_prd): a non-combat EVENT's prose + its
+## The event overlay (docs/systems/encounter.md / docs/systems/ui_layout.md): a non-combat EVENT's prose + its
 ## binary choice as option buttons. A pick emits option_picked(index) — the tier-2 event
 ## intent the run screen forwards to Encounter.pick_event_option (which applies the chosen
 ## outcome + resolves the beat). Reads the live Encounter; writes nothing. Text localized.

@@ -15,7 +15,10 @@ If you change behaviour a doc describes, update that doc in the same change.
 Doc structure:
 
 - `docs/index.md` — catalog / lookup index for all docs (read this first)
-- `docs/corridors/` — the two corridor renderers (default + toggle) + shared base/host (`common.md`)
+- `docs/handoff.md` + `docs/decision_log.md` — fresh-agent orientation + the canonical decision record
+- `docs/systems/` — one doc per engineering system (spec + as-built), incl. the corridor renderers (`systems/corridors/`) and dev tooling (autotest, localization)
+- `docs/design/` — game/content design (the owner's domain) + the content authoring guide
+- `docs/history/` — the chronological build log + the original phase plans
 
 ## Allowed External Directories
 
@@ -104,7 +107,7 @@ func test_something() -> void:
 
 ### AutoTest Mode (E2E)
 
-AI-controlled E2E testing. See `docs/testing/autotest.md` for standard commands, defaults, and full argument reference. Always use `--nosave --notutorial` flags.
+AI-controlled E2E testing. See `docs/systems/autotest.md` for standard commands, defaults, and full argument reference. Always use `--nosave --notutorial` flags.
 
 ## Importing Assets
 
@@ -132,7 +135,7 @@ godot --headless --import --exit
 
 ## Localization
 
-All player-facing text must be translatable (dev/debug panels stay English). See `docs/reference/localization.md` for the full system.
+All player-facing text must be translatable (dev/debug panels stay English). See `docs/systems/localization.md` for the full system.
 
 - **Static UI text** (menus, labels, buttons, dropdown items): put it in the `.tscn` as plain English and let auto-translate handle it — no `tr()`, no locale-change handler. Set `auto_translate_mode = DISABLED` for text that must not translate (e.g. language names).
 - **Dynamic / formatted / data-driven text**: use `tr('...')` (e.g. `tr('Time: {0}').format(...)`, `tr(data.name)`). Never `node.text = tr('...')` for static text — it won't re-translate on a locale switch.

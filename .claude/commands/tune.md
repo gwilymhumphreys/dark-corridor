@@ -1,6 +1,6 @@
 Combat & draft tuning — balance items, enemies, and encounters so every pick pulls its weight and fights resolve.
 
-> **Status: scaffolding.** The autotest harness, the draft-strategy AI, and the tunable content (item / enemy / encounter JSON) don't exist yet — this is the workflow, ready for when they do. See [`docs/testing/autotest.md`](../../docs/testing/autotest.md). Model: `../a-machine/.claude/commands/tune.md`.
+> **Status: scaffolding.** The autotest harness, the draft-strategy AI, and the tunable content (item / enemy / encounter JSON) don't exist yet — this is the workflow, ready for when they do. See [`docs/systems/autotest.md`](../../docs/systems/autotest.md). Model: `../a-machine/.claude/commands/tune.md`.
 
 ## Tuning philosophy
 
@@ -18,7 +18,7 @@ Don't tune value to fix appearance-rate, or vice versa. (Rarity is complexity, n
 
 ## Before starting
 
-Read: the autotest spec (`docs/testing/autotest.md`), the relevant system PRDs (`docs/project/item_prd.md`, `enemy_prd.md`, `combat_manager_prd.md`), the item / enemy / encounter content + its JSON (when it exists), the tuning log, and past run reports.
+Read: the autotest spec (`docs/systems/autotest.md`), the relevant system PRDs (`docs/systems/item.md`, `enemy.md`, `combat_manager.md`), the item / enemy / encounter content + its JSON (when it exists), the tuning log, and past run reports.
 
 ## Parameters
 

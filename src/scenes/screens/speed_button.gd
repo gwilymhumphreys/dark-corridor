@@ -1,6 +1,6 @@
 class_name SpeedButton
 extends Button
-## The always-visible battle-speed dial on the run HUD (ui_layout_prd). One click
+## The always-visible battle-speed dial on the run HUD (docs/systems/ui_layout.md). One click
 ## cycles ×1 → ×2 → ×3 → ×1 via Game.cycle_battle_speed(); the label reflects the
 ## live Game.battle_speed. The dial is a session preference on Game and this button is
 ## thin glue — the run screen applies the speed to each fight's Timekeeper base scale.

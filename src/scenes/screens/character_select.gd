@@ -1,6 +1,6 @@
 class_name CharacterSelect
 extends Control
-## The character-select screen (#27 / game_manager_prd) — one CharacterCard per catalog
+## The character-select screen (#27 / docs/systems/game_manager.md) — one CharacterCard per catalog
 ## character on an opaque panel. Picking emits `picked(character_id)`; Back emits `cancelled`.
 ## The title screen raises it from Start Run and routes the pick to Game.start_run(seed, id),
 ## so each run opens in the chosen character's pool + kit. Reads CharacterCatalog; writes

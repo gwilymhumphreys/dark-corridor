@@ -44,7 +44,7 @@ static func _build() -> void:
   boss.item_ids = [ItemCatalog.ENEMY_CLAW, ItemCatalog.ENEMY_CLAW]
   _defs[boss.id] = boss
 
-  # A summon/token actor (spore_engine_prd Cap 3): low HP, one weak attack. Usable as a
+  # A summon/token actor (docs/systems/spore_engine.md Cap 3): low HP, one weak attack. Usable as a
   # boss add, a player-side summon, OR (Stage B) a draftable persistent ally. Placeholder.
   var thrall := EnemyDef.new()
   thrall.id = SPORE_THRALL

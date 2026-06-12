@@ -31,7 +31,7 @@ const ENEMY_PLACEHOLDER_HP: float = 40.0
 # with two items.
 const ENEMY_BRUTE_HP: float = 70.0
 const ENEMY_BOSS_HP: float = 140.0
-# A summon/token actor (spore_engine_prd Cap 3) — low HP, disposable. Placeholder; the
+# A summon/token actor (docs/systems/spore_engine.md Cap 3) — low HP, disposable. Placeholder; the
 # owner authors the real saprolings / boss adds (and uses it as a draftable ally too).
 const ENEMY_SPORE_THRALL_HP: float = 15.0
 
@@ -40,10 +40,19 @@ const ENEMY_SPORE_THRALL_HP: float = 15.0
 # A Ticker threshold in steps = ceil(cooldown_seconds / STEP).
 const WEAPON_COOLDOWN: float = 1.2
 const WEAPON_DAMAGE: float = 6.0
-const WEAPON_TRAVEL: float = 0.3            # projectile flight time (combat_prd)
+const WEAPON_TRAVEL: float = 0.3            # projectile flight time (docs/systems/combat_model.md)
 
 const ARMOR_COOLDOWN: float = 2.0
 const ARMOR_BLOCK: float = 8.0              # self-target, travel 0
+
+# Leather block spread — self-block on a cooldown curve mirroring the weapon DPS tax
+# (fast = taxed, slow = rewarded). Trews sits on the established 4 block/sec baseline.
+const LEATHER_GLOVES_COOLDOWN: float = 1.0      # fast, taxed — 3 block/sec
+const LEATHER_GLOVES_BLOCK: float = 3.0
+const LEATHER_TREWS_COOLDOWN: float = 2.0       # baseline — 4 block/sec (matches Iron Guard)
+const LEATHER_TREWS_BLOCK: float = 8.0
+const LEATHER_BREASTPLATE_COOLDOWN: float = 3.0  # slow, rewarded — 5 block/sec
+const LEATHER_BREASTPLATE_BLOCK: float = 15.0
 
 const POISON_APPLIER_COOLDOWN: float = 1.6
 const POISON_APPLIER_STACKS: float = 3.0    # stacks applied per fire
@@ -107,20 +116,20 @@ const STATUS_WEAK_DAMAGE_MULT: float = 0.75       # Weak: holder deals 25% less 
 const STATUS_WEAK_DURATION: float = 2.0           # global to all Weak appliers (duration lives on the status, not the item)
 const STATUS_VULNERABLE_DAMAGE_MULT: float = 1.5  # Vulnerable: holder takes 50% more
 const STATUS_VULNERABLE_DURATION: float = 5.0
-# Blind (spore_engine_prd Cap 2) — a timed evasion status; the holder's attacks whiff for
+# Blind (docs/systems/spore_engine.md Cap 2) — a timed evasion status; the holder's attacks whiff for
 # this long. 2s = the Spore Druid's blinding spore as designed (spore_druid.md), applied by
 # Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).
 const STATUS_BLIND_DURATION: float = 2.0
 
 
-# ── Triggers (charges model — push as a fraction of the bar; combat_prd) ─────
+# ── Triggers (charges model — push as a fraction of the bar; docs/systems/combat_model.md) ─────
 # "on poison applied -> push the block item." ~1.0 fills the bar (an instant
 # reaction); smaller values accelerate firing without completing it.
 const TRIGGER_PUSH_FULL: float = 1.0
 const TRIGGER_PUSH_SMALL: float = 0.25
 
 
-# ── Content — Relics (run-level modifiers; content_prd) ──────────────────────
+# ── Content — Relics (run-level modifiers; docs/systems/content.md) ──────────────────────
 # Stone Ward (starting relic): a combat-start status applier (start each fight with
 # this much block on the player).
 const RELIC_STONE_WARD_BLOCK: float = 10.0
@@ -130,17 +139,17 @@ const RELIC_VITAL_CHARM_MAX_HP: float = 20.0
 const RELIC_IRON_IDOL_BLOCK: float = 6.0
 
 
-# ── Content — Enchantments (permanent item modifiers; content_prd, #26) ──────
+# ── Content — Enchantments (permanent item modifiers; docs/systems/content.md, #26) ──────
 # Whetstone: scales the host item's payload values (e.g. +50% weapon damage).
 const ENCHANT_WHETSTONE_MULT: float = 1.5
 
 
-# ── Content — Consumables (manually-fired potions; content_prd) ──────────────
+# ── Content — Consumables (manually-fired potions; docs/systems/content.md) ──────────────
 # Healing Draught: a thrown self-heal (no Ticker — fired on the throw intent).
 const POTION_HEAL: float = 20.0
 
 
-# ── Run loop (HP economy + map; run_manager_prd) ─────────────────────────────
+# ── Run loop (HP economy + map; docs/systems/run_manager.md) ─────────────────────────────
 const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fraction of max HP
 # Placeholder event outcomes (#1) — the owner tunes/authors real event content.
 const EVENT_SHRINE_HEAL_FRACTION: float = 0.4
@@ -148,18 +157,18 @@ const EVENT_SHRINE_MAX_HP: float = 15.0
 const EVENT_WANDERER_DECLINE_HEAL_FRACTION: float = 0.15   # the "walk on alone" recruit-event decline
 
 
-# ── Presentation — the framed combat view (ui_layout_prd; phase4_plan) ───────
+# ── Presentation — the framed combat view (docs/systems/ui_layout.md; docs/history/phase4_plan.md) ───────
 # The enemy occupant's on-screen scale when arrived (depth 0) inside the corridor
 # SubViewport; the approach scales it from depth via CorridorScaled.axis_scale.
 const ENEMY_FULL_SCALE: float = 3.0
-# The approach (phase4_plan Step 7): the enemy starts this many corridor cells deep
+# The approach (docs/history/phase4_plan.md Step 7): the enemy starts this many corridor cells deep
 # (a speck at the vanishing point) and walks to depth 0 (full size) over this many
 # seconds; the boards activate / combat begins on arrival.
 const APPROACH_DEPTH_START: float = 5.0
 const APPROACH_DURATION: float = 2.5
 
 
-# ── Delivery visual hold (presentation lifetime; vfx_driver_prd) ─────────────
+# ── Delivery visual hold (presentation lifetime; docs/systems/vfx_driver.md) ─────────────
 # Sim-seconds a LANDED Delivery is retained after impact so the VFX wall can
 # finish drawing its impact number / flash before the Combat manager drops it.
 # This bounds the in-flight Delivery set so it can't grow unbounded over a long

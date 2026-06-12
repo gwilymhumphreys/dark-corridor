@@ -23,7 +23,7 @@ func _init(strategy_name: String = 'first-viable', seed_value: int = 0) -> void:
 
 
 ## 1-of-N reward draft. Scores each candidate by the strategy + the current board and
-## returns the best index. No skip exists, so a pick always resolves (draft_prd).
+## returns the best index. No skip exists, so a pick always resolves (docs/systems/draft.md).
 func choose_draft(candidates: Array, board: Array = []) -> int:
   if candidates.is_empty():
     return -1
@@ -78,7 +78,7 @@ func _family_of(def: ItemDef) -> String:
 
 ## Map a strategy name to the family it targets. `scaling` / `burn` alias to the
 ## nearest family present in the prototype pool until their own content exists
-## (phase5_plan: the deferred raw-damage/scaling + burn content).
+## (docs/history/phase5_plan.md: the deferred raw-damage/scaling + burn content).
 func _strategy_family(strat: String) -> String:
   match strat:
     'scaling':

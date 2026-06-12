@@ -1,6 +1,6 @@
 class_name OutcomeScreen
 extends Control
-## The run-end screen (game_manager_prd phases WIN / DEATH): the outcome + a choice to
+## The run-end screen (docs/systems/game_manager.md phases WIN / DEATH): the outcome + a choice to
 ## start a New Run or return to Title. One scene for both endings — the title text is
 ## set from the outcome (dynamic → tr()). It only emits the two run-lifecycle intents.
 

@@ -1,6 +1,6 @@
 class_name DraftCard
 extends Button
-## One reward candidate in the draft overlay (draft_prd): the item's family-colour
+## One reward candidate in the draft overlay (docs/systems/draft.md): the item's family-colour
 ## block + its value, the name, and rarity, with a hover tooltip. A themed Button with
 ## UIJuice; the overlay connects `pressed` to the pick index. Reads an ItemDef; writes
 ## nothing. Player-facing text is localized.
@@ -23,7 +23,7 @@ func setup(def: ItemDef) -> void:
 
 
 ## The localized rarity label. tr() wraps the literals here (not the call sites) so
-## they are POT-extractable — see docs/reference/localization.md.
+## they are POT-extractable — see docs/systems/localization.md.
 func _rarity_name(rarity: int) -> String:
   match rarity:
     ItemDef.Rarity.UNCOMMON:

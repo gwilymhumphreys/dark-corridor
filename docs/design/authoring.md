@@ -1,8 +1,8 @@
 # Content Authoring Guide
 
 > How to add content to the game — the **file mechanics**. The *design* (what to make) lives in
-> the other `docs/design/` files + [`design.md`](../project/design.md); the *systems* (how each
-> kind works) live in the `docs/project/` PRDs. This is the bridge: where a def goes, how it's
+> the other `docs/design/` files + [`design.md`](game_design.md); the *systems* (how each
+> kind works) live in the `docs/systems/` PRDs. This is the bridge: where a def goes, how it's
 > keyed, and how it goes live. The front door for content work is the **`/content`** skill.
 
 ## Ownership
@@ -45,9 +45,9 @@ a flag on the def, not a folder. (`HEX_BOLT` / `SUNDER` are catalog-only example
 ## Other kinds
 
 Enemies, relics, potions, enchants, and encounters follow the same **def + catalog**
-pattern in their own dir — see the matching PRD ([item](../project/item_prd.md) ·
-[enemy](../project/enemy_prd.md) ·
-[content](../project/content_prd.md) (relics/enchants/potions) · [encounter](../project/encounter_prd.md))
+pattern in their own dir — see the matching PRD ([item](../systems/item.md) ·
+[enemy](../systems/enemy.md) ·
+[content](../systems/content.md) (relics/enchants/potions) · [encounter](../systems/encounter.md))
 for each def's fields and how it resolves.
 
 - A **status** is NOT a def — it's a **`StatusEffect` subclass** (`statuses/<name>_status.gd`)
@@ -56,7 +56,7 @@ for each def's fields and how it resolves.
   directly. Set `id` / `name_key` / `color` by plain assignment in `_init` (the `name_key = '...'`
   assignment is what localizes it). Make it live with **one line** in `StatusRegistry` (`id →
   creator`). An applier (item/relic) references it by string id (`status_id = 'weak'`) and, for a
-  timed status, sets `duration` (per-application). See [status PRD](../project/status_manager_prd.md).
+  timed status, sets `duration` (per-application). See [status PRD](../systems/status_manager.md).
 
 - A **character** is a `CharacterDef` (`characters/character_catalog.gd`): its own `item_pool`,
   starting board, starting relic, starting potions/enchants. Adding a character = a def + registering
@@ -67,9 +67,9 @@ for each def's fields and how it resolves.
 ## After authoring
 
 - **Added a new `class_name` script?** Run a headless `--import --exit` once or the test suite won't
-  see the global (commands in [`../project/handoff.md`](../project/handoff.md)).
+  see the global (commands in [`../handoff.md`](../handoff.md)).
 - **Player-facing strings** (names, encounter prose) show via `tr(def.name_key)` — run the POT
-  pipeline after adding them ([localization](../reference/localization.md)).
+  pipeline after adding them ([localization](../systems/localization.md)).
 - Keep the GUT suite green; update the relevant design doc if the design shifted, and the card-pool
   running counts. Commit coherent additions (`/c`).
 
@@ -77,6 +77,6 @@ for each def's fields and how it resolves.
 
 The spore engine is fully built — status-stack **consume** (Mass fuel), **evasion** (blinding
 whiff), and **summon** (mid-fight roster + persistent allies); see
-[`../project/spore_engine_prd.md`](../project/spore_engine_prd.md). So the **entire spore pillar is
+[`../systems/spore_engine.md`](../systems/spore_engine.md). So the **entire spore pillar is
 authorable today**: appliers, Mass payoffs, blinding, lethal-as-execute, summon tokens. Nothing in
 the spore design is engine-gated.

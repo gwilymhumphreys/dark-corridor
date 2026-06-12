@@ -181,7 +181,7 @@ func test_actor_and_item_statuses_advance_identically() -> void:
   assert_false(_item_has_status(p.board[0], 'weak'), 'item weak expired on the same step')
 
 
-# --- spore engine seams (spore_engine_prd) -----------------------------------
+# --- spore engine seams (docs/systems/spore_engine.md) -----------------------------------
 
 func _instant_damage_item(owner_actor: Actor, value: float) -> Item:
   var def := ItemDef.new()
@@ -270,7 +270,7 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   assert_true(_has_status(e, 'poison'), 'the blinded actor still applies its status')
 
 
-# --- mid-fight roster: summons + both-side rosters (spore_engine_prd Cap 3) --
+# --- mid-fight roster: summons + both-side rosters (docs/systems/spore_engine.md Cap 3) --
 
 func _summon_item(owner_actor: Actor, token_id: String, in_front: bool = true) -> Item:
   var def := ItemDef.new()

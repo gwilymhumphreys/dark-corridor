@@ -1,6 +1,6 @@
 class_name ChoiceCard
 extends Button
-## One choice-point candidate (encounter_prd telegraph): the encounter's location frame +
+## One choice-point candidate (docs/systems/encounter.md telegraph): the encounter's location frame +
 ## its category (Fight / Elite / Boss / Rest) + a reward hint — telegraph the category,
 ## not the contents (design). A themed Button with UIJuice; the overlay wires `pressed` to
 ## the pick index. Reads an EncounterDef; writes nothing. Player-facing text is localized.

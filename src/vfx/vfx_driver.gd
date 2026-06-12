@@ -1,6 +1,6 @@
 class_name VfxDriver
 extends Node2D
-## The combat wall (vfx_driver_prd), minimal + opaque. A pure function of the
+## The combat wall (docs/systems/vfx_driver.md), minimal + opaque. A pure function of the
 ## CombatManager's Delivery set + the Timekeeper's render_time(): solid
 ## projectiles in flight, pop-in damage numbers on landing. No alpha, no impact
 ## flash / screen pulse yet (grown incrementally). Writes no game state.

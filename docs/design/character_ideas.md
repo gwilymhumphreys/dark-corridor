@@ -150,14 +150,14 @@ an Item) spawned and consumed on the board. Three consequences:
   other resource (an ally holding ammo, a summon you sacrifice for a burst, a thrall venting heat).
   Object resources stack *on top of* the number ones rather than competing with them.
 - **They reuse big systems, not a new counter.** Allies ride the **already-built** summon /
-  mid-fight roster mechanism ([`spore_engine_prd.md`](../project/spore_engine_prd.md)) on the
+  mid-fight roster mechanism ([`spore_engine.md`](../systems/spore_engine.md)) on the
   symmetric Actor — the druid's Summon pillar is one instance. Items/potions ride the **Item board
   + Consumable** path. So the cost isn't a new pool — it's **board/screen space** (the framed view
   shows ~1–2 bodies today) and **mid-fight board mutation** (adding an Item to a live board — a
   cousin of roster-add; **check** it's wired).
 - **Objects that make objects invite loops** (items spawning items, allies spawning allies). The
   tick is already designed not to loop (accrual-only triggers, the Bazaar lesson —
-  [`combat_prd.md`](../project/combat_prd.md)), but a cascade that never settles is the balance
+  [`combat_model.md`](../systems/combat_model.md)), but a cascade that never settles is the balance
   risk to watch. Obvious homes to avoid: allies → *necromancer*; items → *artificer / alchemist*.
 
 **Two reframes**

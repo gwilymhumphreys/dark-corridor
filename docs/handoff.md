@@ -1,0 +1,289 @@
+# Dark Corridor — Handoff (for a fresh agent)
+
+> **Start here if you're picking up the work.** This is the orientation: what the
+> game is, what's built, how to work, what's settled, and what's next. It points to
+> the canonical docs rather than duplicating them — read this, then the linked docs.
+>
+> **Last updated:** 2026-06-09 — **ally acquisition** (a recruit Event grants a run-scoped ally,
+> 4-slot cap), a **character-select** screen + a **settings** screen (audio-volume `Prefs`
+> persisted to `user://`), and a **combat-view relayout** (corridor-forward: the corridor large
+> top-left with an `enemy_hud` pinned above each occupant sprite, the player portrait + HP
+> centre-bottom, its board a column down the right edge, allies in flanking slots) + a **compact
+> windowed map**. Earlier 2026-06-08: the **multi-act run** + **choice layer** + **Event** type
+> (#1), **reward routing** (#2), the **spore-engine seams** (Cap 1+2) + **mid-fight roster
+> changes** (Cap 3, #22), **pause at any point** (#8), and the **content scaffolding** (string
+> ids, kind-grouped `src/content/`, a **character system** + per-character pools, #23/#27).
+> Latest 2026-06-10: the **status system refactored to polymorphic `StatusEffect` classes**
+> (string-id, per-application duration, one file per status — #29), the beat model **CHOICE→ROLL**
+> (beats auto-roll combat/event, the choice layer dormant), the **Spore Druid's first common
+> weapons** + Wilt Frond, and a **central colour/const palette** (`Colours` / `Consts`).
+> **251 GUT tests green** on Godot 4.6; the run is watchable end-to-end and the autotest plays +
+> reports builds.
+>
+> **Content (items / enemies / encounters) is the project owner's domain — do NOT
+> author content unless asked.** This handoff is for the *non-content* engineering
+> backlog (see "Your task" below). *Authoring content (owner, or when asked)? The how-to is
+> the [content authoring guide](design/authoring.md) — or run the `/content` skill.*
+
+---
+
+## What the game is
+
+**Dark Corridor** — a draft-heavy auto-combat dungeon descent (Slay-the-Spire ×
+Bazaar lineage). You descend a single linear corridor of beats; each fight auto-
+resolves on a fixed-step clock while you draft items between fights to build a
+synergistic board. The prototype target is a **playable itch.io build**.
+
+Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The system map + the
+**Interface contracts (boundary hub)** every PRD links to: [`architecture.md`](systems/architecture.md).
+
+## Read in this order
+
+1. **[`CLAUDE.md`](../CLAUDE.md)** (repo root, auto-loaded) — code standards
+   (single quotes, static typing, 2-space indent, `snake_case` filenames,
+   `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
+   self-attribution in git messages**). These OVERRIDE defaults.
+2. **[`decision_log.md`](decision_log.md)** — the canonical record: every decision
+   (numbered #1–#29) and what's still open. **Don't re-litigate anything in it.**
+3. **[`architecture.md`](systems/architecture.md)** — system map, the combat spine, the
+   **Scene tree & node model**, and the boundary hub.
+4. The per-system **PRDs** as needed (one per system in `docs/systems/`, spec +
+   as-built together — the run screen's is [`systems/run_screen.md`](systems/run_screen.md)).
+5. **[`systems/autotest.md`](systems/autotest.md)** — the headless harness +
+   draft strategies + the report `tune` reads; you'll use it to drive + test everything.
+
+## Where things stand (what's built)
+
+**Phases 1–5 are complete, committed, 251 GUT tests green, feel gate passed.**
+See `git log` (each step is its own green commit); the dated build chronology is
+[`history/build_log.md`](history/build_log.md), with the original phase plans
+beside it in `docs/history/`. Most of
+the **non-content engineering backlog is now also done** (mechanism + placeholder content):
+the multi-act run + choice layer + Event type (#1), reward routing (#2), the spore-engine
+seams Cap 1+2 + mid-fight roster changes Cap 3 (run/combat-scoped allies, #22), the
+multi-actor combat view (#4), pause-anytime (#8), settings/pause + battle-speed, DoT
+per-applier attribution, and the content scaffolding (string ids, kind-grouped content,
+the character system #23/#27). See the per-item status in "Your task" below.
+
+- **Phase 1 — combat spine** (`src/combat/`): `Ticker` · `Timekeeper` (fixed-step
+  clock) · `Actor` · `Item` (+ fire pipeline) · `Delivery`/`Payload` · `EventBus` ·
+  `CombatManager` (the one tick) + `StatusManager` autoload. Minimal **opaque** VFX
+  wall (`src/vfx/`) + a watchable host `src/scenes/combat_sandbox.tscn`.
+- **Phase 2 — autotest harness** (`src/autotest/`): `AutoTestMode` (+ scene
+  `autotest.tscn`) · stub `AutoTestDriver` · `AutoTestStuckDetector` ·
+  `AutoTestLogger`. Drives fights headless + deterministic.
+- **Phase 3 — the run loop**: `Save` · `Game` · `RunManager` (`src/run/`) ·
+  `Encounter` (`src/run/`) · `Draft`, content catalogs in `src/content/` (GDScript
+  defs, decision #23). The autotest's `run_full` drives a **whole descent** (draft
+  → fight → advance → win) headless, deterministic by `--seed`, with quit/resume.
+- **Content** (`src/content/`): all three categories — **Relic** (Stone Ward,
+  combat-start block), **Enchant** (Whetstone, scale-a-value, saved on the board),
+  **Consumable** (Healing Draught, thrown self-heal). Each proves its path end-to-end.
+- **Phase 4 — real UI / the run screen** (`src/scenes/main.tscn` + `main_controller.gd`,
+  `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title (→ **character
+  select**) → **framed run** (corridor large top-left with an `enemy_hud` above each occupant
+  sprite, the player portrait + HP centre-bottom, its items down the right edge, allies in
+  flanking slots, the VFX wall) → **approach** (the enemy scales from depth) → fight
+  (slow-mo-on-hover, the **potion-throw UI**) → **draft overlay** → advance along a **map
+  strip** → win/death
+  screens. The run screen drives `CombatManager.tick` each frame; the logic tree stays
+  out of the scene tree (the autotest path is unchanged). Full doc:
+  [`systems/run_screen.md`](systems/run_screen.md). Plus the **localization POT pipeline**
+  (`tools/extract_pot.gd` → `locale/`; [`systems/localization.md`](systems/localization.md)).
+- **Phase 5 (machinery bite) — the `tune` harness** (`src/autotest/`): seeded,
+  board-aware **draft strategies** (`--strategy` live) + a **per-encounter / per-item
+  report** (durations vs window, HP attrition, item fires + damage + trap-pick flags).
+  The autotest can now *play different builds* and *report what each item did* — the two
+  things `tune` needed. Doc: [`systems/autotest.md`](systems/autotest.md).
+- **Settings/pause + battle-speed (non-content backlog #3)** — the **×1/×2/×3 battle-speed
+  dial** (a `Game` session preference + an always-visible HUD `speed_button`, applied to
+  each fight's `Timekeeper` base scale) + in-run **pause** (`ui_cancel` → `pause_menu`:
+  Resume / Quit-to-menu — a run-screen gate, *not* a `Game` phase; the save is preserved
+  so Title's Resume re-enters the beat). Resolved the **timescale replace-vs-multiply**
+  open → **replace** (absolute slow-mo). Doc: [`systems/run_screen.md`](systems/run_screen.md).
+
+**What does NOT exist yet** (most of it is content — the project owner's domain): the
+real item/enemy/encounter pools beyond the placeholders, boss **signature mechanics**,
+real event prose, the Spore Druid (and other) **character** content + the
+spore-engine's player-side lethal/summon riders (Cap 3 *mechanism* is built), the
+lethal-spore execute, meta-progression, and a real **`tune` pass** (the machinery is
+ready; it waits on content). The multi-act map, choice layer, Event type, reward
+routing, allies, and characters now exist as **mechanism with placeholder content** —
+the systems are wired; the pools are the owner's. The remaining **non-content** gaps are
+the backlog in "Your task" (mostly the full-screen feel compare + the character-select /
+ally-acquisition UI seams).
+
+## The architecture in one picture
+
+Lifetime tiers: **`Game` (session) → `Run` (descent) → `Encounter` (beat) → `Combat`
+(fight)**. Combat/run logic is plain `RefCounted`; only the three orchestrators
+(`RunManager` / `Encounter` / `CombatManager`) are `Node`s, and **only
+`CombatManager` runs `_physics_process`** (the one fixed-step tick).
+
+**Autoloads (6, in `project.godot`):** `SfxManager`, `MusicManager`, `StatusManager`
+(stateless rules), `Save` (JSON snapshot service), `Draft` (stateless reward draw),
+`Game` (session singleton — phase machine + run lifecycle).
+
+**The driving seam — important.** The run-logic Nodes stay **out of the scene tree**
+(a Phase-3 invariant Phase 4 preserved — it did *not* mount them). Two clients drive
+the same intent seam: the **autotest** steps `CombatManager.sim_step()` directly (no
+real time → bit-reproducible), and the **run screen** calls `CombatManager.tick(delta)`
+each physics frame (real-time play). Both supply draft picks (the Driver / the draft
+overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
+
+## How to work (the rhythm)
+
+- **Godot exe:** `C:\projects\godot\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe`
+- **Run the GUT suite:**
+  `<exe> --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/ -gexit`
+- **GOTCHA:** after adding any new `class_name` script, run
+  `<exe> --headless --path . --import --exit` FIRST or GUT won't see the new global.
+- **Drive a whole run headless** (the product loop):
+  `<exe> --headless --path . res://src/autotest/autotest.tscn -- --autotest --seed 1`
+  → prints a summary, writes a log + markdown report to `autotest_results/`
+  (git-ignored), exit `0` = resolved / `1` = stuck-or-timeout. `--single-fight` runs
+  one fight; `--encounters N` caps; flags in [`autotest.md`](systems/autotest.md).
+- **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn` → Start Run
+  (append `-- --autostart` to skip the menu; `--shot [--shot-delay s]` screenshots).
+  The fixed **combat sandbox** (one fight, not the run) is still there:
+  `<exe> --path . res://src/scenes/combat_sandbox.tscn` (hover to slow-mo, R restarts).
+- **Discipline:** test-first; drive logic via `sim_step()` / intents in GUT (no
+  `_physics_process` in tests). **Each step green headless before the next. Commit
+  each green step; NO self-attribution / Co-Authored-By** (CLAUDE.md overrides).
+- **Docs:** if you change behaviour a doc describes, update that doc in the same
+  change. Docs describe *systems/intent, not numbers* — point to `Balance`
+  (`src/data/balance.gd`) / catalogs for tunables.
+
+## Settled decisions & lessons (don't re-litigate)
+
+- **Statuses are combat-scoped (decision #26).** Created in a fight, cleared at
+  teardown, **never saved**. Run persistence is **Relics / Enchantments** (a relic
+  may carry a counter and re-apply a fresh combat-scoped status each fight — Stone
+  Ward does this). The run snapshot never serializes status instances. Statuses live
+  *on* their targets (`Actor.statuses` / `Item.statuses`) only to keep
+  `StatusManager` stateless + `Actor.take_damage` self-contained — not for persistence.
+- **`Actor` ↔ `Item` is a RefCounted cycle** (`board` ↔ `owner`). Broken with
+  **`Actor.dissolve()`** at discard: enemies in `CombatManager.teardown()`, the
+  player in `RunManager.teardown()` (run end only — its board persists between
+  fights). Teardowns are idempotent. Verified by weakref leak tests.
+- **Fixed timestep + one dial** (decision #9): the `Timekeeper` is the combat clock;
+  the `CombatManager` advances every component each `sim_step`. `--speed`/the dial is
+  steps-per-real-second; the headless loop ignores it (steps directly).
+- **Triggers are accrual-only / loop-proof** (the Bazaar lesson, decision #12): an
+  event pushes a Ticker; it fires on the *next* step — one link per step.
+- **Within-step order is deterministic** (decision #24, realized as fixed
+  type-ordered passes: item cooldowns → statuses (actor + item) → Delivery travel).
+- **Save = JSON, atomic, no migration** (decision #11): RNG `seed`/`state` stored as
+  **strings** (JSON doubles can't hold a 64-bit value). Absent/corrupt/old → `{}` →
+  fresh run.
+- **Content = GDScript def objects + static catalogs** (decision #23), keyed by a
+  **string id** (amended from int), in kind-grouped `src/content/<kind>/` subdirs;
+  localized via `tr(def.name_key)`. Drafts pull from the **character's pool + colorless** (#27).
+- **Exit codes** (autotest): `0` = the sim reached a clean conclusion (win OR die OR
+  cap), `1` = it didn't (stuck / timeout) — not who wins (that's `tune`'s job later).
+- **VFX = opaque placeholders only** (no alpha — ask before adding opacity; user
+  preference + CLAUDE.md).
+- **Benign at-exit noise:** "N resources still in use" / "ObjectDB leaked" =
+  the static catalog `_defs` caches + GDScript Script resources, NOT a game leak
+  (the real Actor/Item leak was fixed — see `Actor.dissolve()`).
+
+A project memory also banks the status-lifetime + cycle gotchas (auto-surfaced).
+
+## Your task: the non-content engineering backlog
+
+**Content (items / enemies / encounters) is the project owner's job — do NOT author
+content unless explicitly asked.** The prototype loop is feature-complete; what's left
+for engineering is below, roughly highest-value first. Pick *with the owner*; each is
+test-first + its own green commit, with the headless autotest as the regression backstop.
+
+1. **Run structure — multi-act + HP economy + the auto-roll map — DONE (mechanism;
+   placeholder content).** `RunMap` = 3 acts × 15 beats (tunable): boss at each act end
+   (final-act boss wins) + a guaranteed midpoint relic are fixed; every other beat is a
+   **ROLL** beat. The `Run manager` **auto-rolls** each ROLL beat's content — COMBAT vs EVENT
+   on the run RNG, **anti-repeat biased** (`ROLL_BASE_CHANCE − ROLL_BIAS_STEP × streak`, floored,
+   reset on a type change; streak saved) — and draws a def from per-band pools (easy-combat opener,
+   elites possible from `ELITE_FROM_BEAT`). No player path-pick. The **event** type (`event_overlay`,
+   prose + binary outcome, `pick_event_option`) is built; the run-screen FSM has EVENTING. *(The old
+   choice layer — `has_pending_choice` / `pending_choice` / `pick_path` + `choice_overlay` + the
+   CHOOSING state — is **dormant**, inert behind an always-false `has_pending_choice()`.)* **HP economy:**
+   between-act full heal, max-HP via relics. Snapshot/resume carry the rolled beat + the streak.
+   **Still the owner's:** the real encounter/enemy/event content + boss **signature mechanics**;
+   band/pool tuning (combat-vs-event mix, elite budget, rest placement). PRDs: [run_manager](systems/run_manager.md) ·
+   [encounter](systems/encounter.md).
+2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**
+   `RunManager._on_encounter_resolved` now grants a relic on the **RELIC** reward (drawn from
+   `RelicCatalog.REWARD_POOL` on the run RNG — deterministic + resume-stable) and a **relic +
+   draft** on the new **ELITE** reward (the reward asymmetry). Relics gained a **MAX_HP_BONUS**
+   direct-mod shape (applied once on grant, baked into the snapshot). Placeholder reward relics
+   (Vital Charm / Iron Idol) + placeholder elite/relic `EncounterDef`s. **Still the owner's:** which
+   relics/elites exist, and elite frequency/depth (an elite is now a rolled-combat outcome from
+   `ELITE_FROM_BEAT` on — tune the `combat_pool` — item 1). [content](systems/content.md) · [encounter](systems/encounter.md).
+3. **Settings / pause + battle-speed — DONE.** The ×1/×2/×3 **battle-speed dial** + in-run
+   **pause** (2026-06-06), and now (2026-06-09) the **settings screen** itself — audio volume
+   sliders (Master / Music / Effects) bound to a new **`Prefs`** autoload (a `ConfigFile` at
+   `user://`, separate from the run `Save`), opened from the title and the pause menu. Still
+   open *here*: video / accessibility settings as they're wanted. [game_manager](systems/game_manager.md) ·
+   [ui_layout](systems/ui_layout.md) · [run_screen](systems/run_screen.md).
+4. **Combat view — DONE; relaid out to the corridor-forward mockup (2026-06-09).** The framed
+   `CombatView` renders a per-actor widget: the **corridor large top-left** with **one occupant
+   sprite per enemy** (side by side, shrunk by count) and an **`enemy_hud` pinned above each**
+   (name + status + HP + items); the **player portrait + HP centre-bottom** with its board a
+   **column down the right edge** (potions above it); run-scoped allies / combat-scoped tokens in
+   the **4 flanking `ally_slot`s** (2 left, 2 right). Reads the CM rosters each frame, so mid-fight
+   summons appear as they spawn. Pairs with **mid-fight ally wiring (#6)**, **ally acquisition
+   (the recruit Event)**, **character-select**, and **pause-anytime (#8)** — all DONE. **Still
+   open here:** the **full-screen `CombatView` variant + the framed-vs-fullscreen feel compare**
+   (the owner deferred it). [ui_layout](systems/ui_layout.md) · [run_screen](systems/run_screen.md).
+5. **Tune-report fidelity — DoT per-applier attribution — DONE (2026-06-06).** Poison
+   damage was lumped as "Poison" (Venom Fang read 0 in the contribution table). Now a
+   **pre-step status snapshot** credits the DoT remainder to the item that applied it
+   (`Status.source`) — Venom Fang reads its real poison damage; a multi-applier remainder
+   splits by weight; a source-less DoT keeps the generic channel. In `src/autotest/`
+   (logger `attribute_damage` + the mode's per-step observation). [autotest](systems/autotest.md).
+6. **Stat-statuses — SEAMS WIRED (placeholder content).** Both damage-modifier seams are
+   built: `modify_outgoing` (applied at fire time in `Item._resolve_effect`) and the
+   incoming **amplifier** stage in `resolve_incoming_damage` (before block). The `StatusEffect`
+   classes carry both as **% multipliers** (cascade-safe — not flat-per-fire). Placeholder statuses
+   **Weak** (outgoing −25%) / **Vulnerable** (incoming +50%) + a **Sundering Bolt** applier
+   prove the path; the real stat-status content (numbers, per-stack variants, which damage
+   types amplify) is the **owner's**. [status_manager](systems/status_manager.md) · [design](design/game_design.md).
+
+7. **Spore-engine seams (the first status-identity character) — Caps 1+2+3 DONE (mechanism;
+   2026-06-07/08).** All three engine seams are built: (1) **status-stack consumption** —
+   `StatusManager.consume(target, type, amount)` spends spores as fuel (self-fuel in the Item
+   fire pipeline; opponent-fuel in the Combat manager's per-target spawn path); (2) **evasion** —
+   the "acts but misses" fizzle seam (`causes_evasion` → `Delivery.evaded`, a whiff *with a
+   reason*, distinct from silence/`gate` = inert); (3) the **mid-fight roster add** — the
+   `CombatManager` two-roster model (`add_actor` combat-scoped summon · `register_ally`
+   run-scoped ally · `Delivery.Kind.SUMMON` · scope-aware teardown), so **allies support both
+   run and combat scope** (#22), wired into the live fight + the multi-actor view (#4/#6).
+   **Still the owner's:** the Spore Druid content itself, the spore **appliers** (poison /
+   blinding-status / burn / self-regen / self-block — they need nothing new, just authoring),
+   and the **lethal-spore execute / spawn-on-kill rider** content. Full spec:
+   [spore_engine](systems/spore_engine.md). **The seams are engineering (done); the spores are content.**
+
+**Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
+**HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a
+bar). *(The **timescale replace-vs-multiply** open is now resolved → replace, with the
+battle-speed dial — item 3 above.)* Decision-AI: the Driver's **potion / choice / event**
+policies stay stubs until those beats exist.
+
+**Run / watch:** `<exe> --path . res://src/scenes/main.tscn` → Start Run; append
+`-- --autostart --shot [--shot-delay s]` to capture a frame. **Autotest:** `<exe>
+--headless --path . res://src/autotest/autotest.tscn -- --autotest --seed 1 --strategy
+greedy-synergy --report autotest_results/r.md`. **Suite:** `<exe> --headless --path .
+-s addons/gut/gut_cmdln.gd -gdir=res://tests/ -gexit`.
+
+## Quick file map
+
+`src/combat/` (spine) · `src/run/` (run_manager · encounter) · `src/content/`
+(kind-grouped: items/enemies/relics/consumables/enchants/encounters/statuses/characters
+— def + catalog per kind) · `src/autoloads/` (status_manager · save · prefs · draft ·
+game_manager · sfx · music) · `src/autotest/` (the harness + strategies + report) · `src/vfx/` ·
+`src/scenes/main.tscn` + `main_controller.gd` (presentation root) · `src/scenes/screens/`
+(title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
+draft_card · map_strip · speed_button · pause_menu) · `src/scenes/combat/`
+(combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell · potion_slot) ·
+`src/scenes/` (sandbox + corridors) · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
++ `locale/` (i18n) · `tests/` (combat · content · run · autotest · ui · smoke · utils) ·
+`addons/gut/` (vendored).

@@ -1,6 +1,6 @@
 class_name Actor
 extends RefCounted
-## The symmetric combatant (actor_prd): HP + an ordered board of items + an
+## The symmetric combatant (docs/systems/actor.md): HP + an ordered board of items + an
 ## actor-targeted status list. Deliberately dumb — a passive holder others act
 ## on. It never knows which side it's on; ordering / targeting / win-loss are the
 ## Combat manager's. `take_damage` is its one sideways call (to StatusManager, to

@@ -1,6 +1,6 @@
 class_name Ticker
 extends RefCounted
-## The shared accrual primitive (combat_prd). An accumulator that fills toward a
+## The shared accrual primitive (docs/systems/combat_model.md). An accumulator that fills toward a
 ## threshold (measured in sim-steps) by time-accrual (one per step) and/or
 ## event-pushes (a fraction of the bar), firing when it crosses. Composition,
 ## not inheritance — items / statuses / Deliveries OWN a Ticker, they are not

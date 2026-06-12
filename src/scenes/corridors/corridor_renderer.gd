@@ -6,7 +6,7 @@ extends Node2D
 ## drives. Subclasses implement only the geometry, via `_build()` and
 ## `_layout(frac)` (and `_wall_nodes()` so the base can toggle their filter).
 ##
-## See docs/corridors/common.md.
+## See docs/systems/corridors/common.md.
 
 const SHARP_SHADER: Shader = preload('res://src/shaders/sharp_bilinear.gdshader')
 

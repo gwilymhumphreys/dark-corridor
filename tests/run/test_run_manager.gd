@@ -229,7 +229,7 @@ func test_resumed_run_derives_the_same_per_fight_seed() -> void:
   assert_eq(run_b._combat_seed_for(run_b.position), seed_a, 'and derives the identical per-fight seed')
 
 
-# --- run-scoped allies (spore_engine_prd Cap 3, Stage B) ---------------------
+# --- run-scoped allies (docs/systems/spore_engine.md Cap 3, Stage B) ---------------------
 
 func test_ally_persists_through_save_and_resume() -> void:
   var run := _run()

@@ -19,6 +19,9 @@ const SPORE_SPITTER := 'spore_spitter'
 const CAPPED_CUDGEL := 'capped_cudgel'
 const BLOOMHAMMER := 'bloomhammer'
 const WILT_FROND := 'wilt_frond'
+const LEATHER_GLOVES := 'leather_gloves'
+const LEATHER_TREWS := 'leather_trews'
+const LEATHER_BREASTPLATE := 'leather_breastplate'
 
 static var _defs: Dictionary = {}
 
@@ -45,6 +48,9 @@ static func _build() -> void:
   _defs[CAPPED_CUDGEL] = _capped_cudgel()
   _defs[BLOOMHAMMER] = _bloomhammer()
   _defs[WILT_FROND] = _wilt_frond()
+  _defs[LEATHER_GLOVES] = _leather_gloves()
+  _defs[LEATHER_TREWS] = _leather_trews()
+  _defs[LEATHER_BREASTPLATE] = _leather_breastplate()
 
 
 static func _weapon() -> ItemDef:
@@ -317,6 +323,57 @@ static func _wilt_frond() -> ItemDef:
   weak.color = Colours.STATUS_WEAK           # applier shares the status colour
   d.effects = [hit, weak]
   d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  return d
+
+
+## Leather block spread — three plain self-block items on a cooldown curve (Gloves fast/taxed,
+## Trews baseline, Breastplate slow/rewarded), mirroring the weapon DPS tax. No Spore consume yet
+## (the consume source is an open design question — Spores land on enemies, not the wearer). COMMON.
+static func _leather_gloves() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = LEATHER_GLOVES
+  d.name_key = 'Leather Gloves'
+  d.cooldown = Balance.LEATHER_GLOVES_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = Balance.LEATHER_GLOVES_BLOCK
+  blk.shape = ItemEffect.Shape.SELF
+  blk.color = Colours.STATUS_BLOCK
+  d.effects = [blk]
+  d.panel_color = blk.color
+  return d
+
+
+static func _leather_trews() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = LEATHER_TREWS
+  d.name_key = 'Leather Trews'
+  d.cooldown = Balance.LEATHER_TREWS_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = Balance.LEATHER_TREWS_BLOCK
+  blk.shape = ItemEffect.Shape.SELF
+  blk.color = Colours.STATUS_BLOCK
+  d.effects = [blk]
+  d.panel_color = blk.color
+  return d
+
+
+static func _leather_breastplate() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = LEATHER_BREASTPLATE
+  d.name_key = 'Leather Breastplate'
+  d.cooldown = Balance.LEATHER_BREASTPLATE_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = Balance.LEATHER_BREASTPLATE_BLOCK
+  blk.shape = ItemEffect.Shape.SELF
+  blk.color = Colours.STATUS_BLOCK
+  d.effects = [blk]
+  d.panel_color = blk.color
   return d
 
 

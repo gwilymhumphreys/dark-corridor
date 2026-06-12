@@ -1,6 +1,6 @@
 class_name CombatManager
 extends Node
-## The per-fight orchestrator (combat_manager_prd). Owns the Timekeeper, the
+## The per-fight orchestrator (docs/systems/combat_manager.md). Owns the Timekeeper, the
 ## component registry, the event bus, and the in-flight Deliveries; runs the
 ## single fixed-step tick (advance -> fire -> land -> route -> win/loss). Makes no
 ## combat decisions — boards auto-fire on their Tickers. Instanced one-per-fight.
@@ -13,7 +13,7 @@ extends Node
 
 signal resolved(player_won: bool)
 
-# Two side-rosters (spore_engine_prd Cap 3). The PLAYER side is the run-state actor +
+# Two side-rosters (docs/systems/spore_engine.md Cap 3). The PLAYER side is the run-state actor +
 # run-scoped `allies` (persistent, passed in) + `_player_tokens` (combat-scoped summons);
 # the ENEMY side is `enemies` (+ enemy summons append here). Targeting + win/loss work over
 # the rosters. `player` stays the run-state ref — loss is the PLAYER dying (a token doesn't
@@ -60,7 +60,7 @@ func start() -> void:
     _register_actor(e)
 
 
-## Add an Actor to a side mid-fight (spore_engine_prd Cap 3) — a summon / boss add. Registers
+## Add an Actor to a side mid-fight (docs/systems/spore_engine.md Cap 3) — a summon / boss add. Registers
 ## its item Tickers + triggers and inserts it into the side; `in_front` puts it leftmost
 ## (body-block / adds-in-front). Combat-scoped — dissolved at teardown (it is NOT in `allies`).
 func add_actor(actor: Actor, on_player_side: bool, in_front: bool = true) -> void:
@@ -184,7 +184,7 @@ func sim_step() -> void:
 
   # 7. Drop spent Deliveries (fizzled = no visual; landed = held briefly for the
   #    impact number/flash) so the in-flight set can't grow unbounded over a long
-  #    fight — vfx_driver_prd's "keep until the visual elapses, then drop."
+  #    fight — docs/systems/vfx_driver.md's "keep until the visual elapses, then drop."
   _prune_deliveries()
 
 
@@ -237,7 +237,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
     return   # gated (silence)
   bus.publish(EventBus.Event.ITEM_FIRED)
   # The item still fires (cooldown reset, fire-emote) even when blinded — but its DAMAGE
-  # whiffs (spore_engine_prd Cap 2). Locked at fire so a swing launched while blinded misses.
+  # whiffs (docs/systems/spore_engine.md Cap 2). Locked at fire so a swing launched while blinded misses.
   var blinded: bool = StatusManager.has_evasion(it.owner)
   for p in payloads:
     for target in _resolve_targets(p, it.owner):
@@ -294,7 +294,7 @@ func _land(d: Delivery) -> void:
   if d.evaded:
     d.fizzled = true
     return
-  # A single target that died/left mid-flight fizzles — no retarget (combat_prd). For an
+  # A single target that died/left mid-flight fizzles — no retarget (docs/systems/combat_model.md). For an
   # item target, "alive" means its owning actor is still alive (you can't silence a
   # dead enemy's item).
   if not _target_alive(d.target):
@@ -477,7 +477,7 @@ func player_won() -> bool:
 
 
 ## The in-flight + recently-landed Delivery set — the read-only "wall" the VFX
-## driver and the autotest logger sample (vfx_driver_prd / autotest.md). Pruned
+## driver and the autotest logger sample (docs/systems/vfx_driver.md / autotest.md). Pruned
 ## each step, so it stays bounded; never mutate it from outside.
 func deliveries() -> Array:
   return _deliveries
@@ -504,7 +504,7 @@ func request_slowmo(on: bool) -> void:
     timekeeper.clear_override()
 
 
-## Throw-potion intent: activate a thrown consumable (content_prd). Build its
+## Throw-potion intent: activate a thrown consumable (docs/systems/content.md). Build its
 ## effect(s) into Deliveries resolved relative to the thrower, then land any that
 ## arrive instantly — the same resolution surface as an item fire, minus the
 ## Ticker. The RunManager removes the potion from its slot; this just resolves it.

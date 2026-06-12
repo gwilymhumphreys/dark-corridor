@@ -1,7 +1,7 @@
 class_name AllySlot
 extends HBoxContainer
 ## A run-scoped ally / combat-scoped summon token in the framed combat view, in one of the
-## slots flanking the player (ui_layout_prd): a portrait + HP + name, with its board items
+## slots flanking the player (docs/systems/ui_layout.md): a portrait + HP + name, with its board items
 ## beside it. Structure is authored in ally_slot.tscn; setup() builds the item row and HP
 ## reads each frame. Reads the Actor; writes nothing. The VFX wall reads slot_centre /
 ## cell_centre.

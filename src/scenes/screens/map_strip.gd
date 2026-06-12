@@ -1,6 +1,6 @@
 class_name MapStrip
 extends Control
-## The 1D progress map (ui_layout_prd): the descent as a horizontal line of beats, the
+## The 1D progress map (docs/systems/ui_layout.md): the descent as a horizontal line of beats, the
 ## player's global position marked, the fixed beats flagged (an act boss at each act end,
 ## the guaranteed midpoint relic), and the rest shown as generic beats (their type is rolled
 ## on arrival — combat or event, not known ahead). Reads RunMap + the position it's handed;

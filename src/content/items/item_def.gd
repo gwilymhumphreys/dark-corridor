@@ -1,6 +1,6 @@
 class_name ItemDef
 extends RefCounted
-## The item definition (item_prd) — authored in GDScript (#23), collected in
+## The item definition (docs/systems/item.md) — authored in GDScript (#23), collected in
 ## ItemCatalog. Configures one Item class; rarity is a complexity tier, not a
 ## power multiplier. Numbers point to Balance.
 

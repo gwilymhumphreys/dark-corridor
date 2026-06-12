@@ -1,6 +1,6 @@
 class_name GameManagerAutoload
 extends Node
-## The session singleton (game_manager_prd) — autoload registered `Game`. Owns the
+## The session singleton (docs/systems/game_manager.md) — autoload registered `Game`. Owns the
 ## phase machine, the run lifecycle (create / resume / end the RunManager), and the
 ## save-lifecycle calls (Save.read on resume, Save.clear on death/win). Holds only a
 ## reference to the live run (null between runs) — never per-run state itself.
@@ -75,7 +75,7 @@ func reset() -> void:
   battle_speed = Balance.TIMESCALE_BASE
 
 
-# --- battle-speed dial (a session preference; ui_layout_prd) -----------------
+# --- battle-speed dial (a session preference; docs/systems/ui_layout.md) -----------------
 
 ## Advance the dial one notch (×1 → ×2 → ×3 → ×1; Balance.BATTLE_SPEEDS) on the
 ## player's intent (the HUD speed button). Emits so a live fight can retime at once.

@@ -1,6 +1,6 @@
 class_name ItemCell
 extends Control
-## One board item in the framed combat view (ui_layout_prd): an opaque effect-family
+## One board item in the framed combat view (docs/systems/ui_layout.md): an opaque effect-family
 ## colour panel + its value, a Bazaar-style radial cooldown ring, and a scale-punch
 ## recoil when it fires. Structure is authored in item_cell.tscn; this binds the data
 ## and draws the ring + recoil. Reads the live Item; writes nothing. No alpha.

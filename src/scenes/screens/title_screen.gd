@@ -1,5 +1,5 @@
 extends Control
-## Title screen (game_manager_prd, phase TITLE). Start a fresh seeded run (via the
+## Title screen (docs/systems/game_manager.md, phase TITLE). Start a fresh seeded run (via the
 ## character-select screen) or resume the saved one — the two run-lifecycle intents.
 ## Static text auto-translates from the .tscn (CLAUDE.md localization); this wires the
 ## buttons to the select overlay + Game.

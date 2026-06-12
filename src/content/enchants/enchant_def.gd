@@ -1,6 +1,6 @@
 class_name EnchantDef
 extends RefCounted
-## An enchantment definition (content_prd, decision #23) — a one-per-item modifier,
+## An enchantment definition (docs/systems/content.md, decision #23) — a one-per-item modifier,
 ## a Draftable. A PERMANENT item modifier (saved on the board), NOT a status
 ## (decision #26: statuses are combat-scoped; durable item power is an enchant).
 ## Phase 3 builds the simplest hook only: scale-a-value (multiply the host item's

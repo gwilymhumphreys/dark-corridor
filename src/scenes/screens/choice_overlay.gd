@@ -1,6 +1,6 @@
 class_name ChoiceOverlay
 extends Control
-## The choice-point overlay (encounter_prd / ui_layout_prd): the 2-3 candidate encounters
+## The choice-point overlay (docs/systems/encounter.md / docs/systems/ui_layout.md): the 2-3 candidate encounters
 ## at a fork, as ChoiceCards on an opaque panel. The pick emits `picked(index)` — a
 ## choice-point intent the run screen forwards to RunManager.pick_path (which creates the
 ## live Encounter). No skip — a pick always resolves. Reads candidate EncounterDef ids.

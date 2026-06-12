@@ -1,6 +1,6 @@
 class_name RelicDef
 extends RefCounted
-## A relic definition (content_prd, decision #23) — authored in GDScript, collected
+## A relic definition (docs/systems/content.md, decision #23) — authored in GDScript, collected
 ## in RelicCatalog. Carries the Draftable definition-face (id / name / rarity) by
 ## composition. Two effect shapes built:
 ##   COMBAT_START_STATUS — apply a status to the player Actor at each fight start
@@ -14,7 +14,7 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 
 var id: String = ''
 var name_key: String = ''           # source English; displayed via tr() — localizable
-var rarity: int = Rarity.COMMON     # feel-based for relics (content_prd), not a power ladder
+var rarity: int = Rarity.COMMON     # feel-based for relics (docs/systems/content.md), not a power ladder
 var kind: int = Kind.COMBAT_START_STATUS
 var status_id: String = ''          # status id applied at combat start (COMBAT_START_STATUS, #23)
 var status_count: float = 0.0       # stacks / pool applied (COMBAT_START_STATUS)

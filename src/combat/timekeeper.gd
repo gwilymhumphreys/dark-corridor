@@ -1,7 +1,7 @@
 class_name Timekeeper
 extends RefCounted
 ## The combat clock — one per fight, owned and driven by the Combat manager
-## (timekeeper_prd). Fixed-step: a stepped `sim_time` (logic) + a continuous
+## (docs/systems/timekeeper.md). Fixed-step: a stepped `sim_time` (logic) + a continuous
 ## `render_time()` (the VFX wall) + the one speed dial + the `steps_due()`
 ## cadence (real time x dial -> whole sim-steps, capped, backlog dropped). It is
 ## passive — it holds no component registry and runs no loop; the Combat manager
@@ -18,7 +18,7 @@ var _acc: float = 0.0
 
 
 ## The active dial: a momentary override (hover slow-mo) replaces the base while
-## set, then returns TO the base — not to x1 (timekeeper_prd). Replace-vs-multiply is
+## set, then returns TO the base — not to x1 (docs/systems/timekeeper.md). Replace-vs-multiply is
 ## RESOLVED to replace: hover slow-mo is an absolute, consistently-readable speed
 ## regardless of the player's battle-speed dial (base ×1/×2/×3 just sets what it
 ## returns to). Proven by test_timekeeper's override-replaces-base case at base ×2.

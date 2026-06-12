@@ -1,6 +1,6 @@
 class_name RunManager
 extends Node
-## The descent (run_manager_prd) — one run, instanced/owned by the Game manager.
+## The descent (docs/systems/run_manager.md) — one run, instanced/owned by the Game manager.
 ## Owns the map, the player run-state { actor, relics, potions, position, rng },
 ## the HP-economy, the sequencing cycle, and the run snapshot. Signals
 ## `run_ended(outcome)` up to Game on a death / final win.
@@ -168,7 +168,7 @@ func _revive_allies() -> void:
 
 
 ## Relic effect shape (a): apply each combat-start relic's status to the player at
-## fight start (content_prd). Combat-scoped — CombatManager.teardown clears it, so
+## fight start (docs/systems/content.md). Combat-scoped — CombatManager.teardown clears it, so
 ## it is re-applied fresh each fight.
 func _apply_relics_to_player() -> void:
   for relic in relics:
@@ -233,7 +233,7 @@ func pending_draft() -> Array:
 
 
 ## Apply the player's draft pick (a draft-pick intent) — add the chosen item to the
-## board, clear the offer. No skip (draft_prd): a pick always resolves.
+## board, clear the offer. No skip (docs/systems/draft.md): a pick always resolves.
 func apply_draft_pick(index: int) -> void:
   if _pending_offer.is_empty():
     return
@@ -249,7 +249,7 @@ func can_add_ally() -> bool:
   return allies.size() < MAX_ALLIES
 
 
-## Acquire a run-scoped (persistent) ally (spore_engine_prd Cap 3, Stage B): build an Actor
+## Acquire a run-scoped (persistent) ally (docs/systems/spore_engine.md Cap 3, Stage B): build an Actor
 ## from an EnemyDef and add it to the player-side roster. It persists across fights, is saved
 ## in the snapshot, and joins every fight (the Encounter seeds the CombatManager with it).
 ## The acquisition path today is the recruit EVENT (RunManager.pick_event_option → here); a
@@ -299,7 +299,7 @@ func apply_enchant(enchant: Enchantment, item_index: int) -> void:
 
 
 ## Throw-potion intent: consume the potion in `index` and activate it in the live
-## fight (content_prd). Only valid mid-fight (a consumable resolves through the
+## fight (docs/systems/content.md). Only valid mid-fight (a consumable resolves through the
 ## Combat manager). Returns whether it was thrown.
 func throw_potion(index: int) -> bool:
   var cm: CombatManager = combat_manager()

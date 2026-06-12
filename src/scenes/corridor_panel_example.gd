@@ -5,7 +5,7 @@ extends Control
 ## clips its overflow), framed by a themed Panel. Themed Buttons drive it through
 ## the CorridorRenderer interface — set_forward_held / set_back_held / set_blur —
 ## so nothing here knows or cares which renderer is inside the panel. Each button
-## carries a UIJuice child for hover/press life. See docs/corridors/common.md.
+## carries a UIJuice child for hover/press life. See docs/systems/corridors/common.md.
 
 # Reach into the instanced panel: panel root -> SubViewport -> the renderer.
 @onready var _corridor: CorridorRenderer = $Frame/CorridorPanel/SubViewport/CorridorScaled

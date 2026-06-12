@@ -8,7 +8,7 @@ extends CorridorRenderer
 ## Geometry is driven by the base `view_size`: the near wall fills the rect edges
 ## (× `overscan`) and recedes 1/d to the centre vanishing point. Side walls only.
 ##
-## See docs/corridors/perspective-quad.md.
+## See docs/systems/corridors/perspective_quad.md.
 
 @export var overscan: float = 1.05      ## near wall sits this much past the view edge (engulf)
 @export var subdivisions: int = 12      ## vertical strips for the NEAREST cell (tapers to 1 far away)

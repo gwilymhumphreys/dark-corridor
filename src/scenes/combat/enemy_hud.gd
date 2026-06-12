@@ -1,6 +1,6 @@
 class_name EnemyHud
 extends VBoxContainer
-## An enemy in the framed combat view, floating over the corridor occupant (ui_layout_prd):
+## An enemy in the framed combat view, floating over the corridor occupant (docs/systems/ui_layout.md):
 ## its board items as cells (top), a status-icon row + HP bar, and the enemy's name (bottom).
 ## Structure is authored in enemy_hud.tscn; setup() builds the item row and HP reads each
 ## frame. Reads the Actor; writes nothing. The VFX wall reads hud_centre / cell_centre.

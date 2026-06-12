@@ -1,6 +1,6 @@
 class_name CombatCorridor
 extends SubViewportContainer
-## The combat corridor (phase4_plan → enemy-in-corridor): a clipping SubViewportContainer
+## The combat corridor (docs/history/phase4_plan.md → enemy-in-corridor): a clipping SubViewportContainer
 ## hosting the CorridorScaled renderer. Each enemy is a central-axis OCCUPANT sprite (a child
 ## of the renderer at the vanishing point) — now MULTI-ENEMY: `set_enemy_count(n)` spawns n
 ## sprites arranged side by side, shrinking + spacing them to fit; `enemy_anchor(i)` is the

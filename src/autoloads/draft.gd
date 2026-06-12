@@ -1,6 +1,6 @@
 class_name DraftAutoload
 extends Node
-## The reward-draw service (draft_prd) — autoload registered `Draft`. Stateless: it
+## The reward-draw service (docs/systems/draft.md) — autoload registered `Draft`. Stateless: it
 ## answers "given the pool and where the run is, what are the candidates?" and
 ## nothing else. The Run manager calls draw() with the pool + depth + the run RNG,
 ## holds the returned offer, and applies the pick to run-state (Draft writes

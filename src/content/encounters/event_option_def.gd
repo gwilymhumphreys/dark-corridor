@@ -1,6 +1,6 @@
 class_name EventOptionDef
 extends RefCounted
-## One option of a non-combat EVENT encounter (encounter_prd) — a label + a direct outcome
+## One option of a non-combat EVENT encounter (docs/systems/encounter.md) — a label + a direct outcome
 ## applied to the run-state on pick. Authored in GDScript (#23). PLACEHOLDER effect set:
 ## player-Actor outcomes (heal / max-HP growth / damage) AND recruiting a run-scoped ally
 ## (ADD_ALLY — the event-driven ally-acquisition path). Player-Actor effects are applied by

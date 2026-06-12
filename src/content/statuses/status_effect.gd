@@ -1,7 +1,7 @@
 class_name StatusEffect
 extends RefCounted
 ## A status INSTANCE that owns BOTH its state and its behaviour — the polymorphic model
-## (docs/project/status_system_refactor_plan.md), replacing the old StatusDef-data + StatusManager-
+## (docs/systems/status_manager.md), replacing the old StatusDef-data + StatusManager-
 ## switch rulebook. One subclass per status; each overrides only the hooks it needs. Lives in its
 ## target's `statuses` list; the StatusManager facade calls these hooks at the right moments.
 ##
@@ -81,7 +81,7 @@ func causes_evasion() -> bool:
   return false
 
 
-# --- Mass fuel (spore_engine_prd Cap 1) ---
+# --- Mass fuel (docs/systems/spore_engine.md Cap 1) ---
 
 func is_fuel() -> bool:
   return false

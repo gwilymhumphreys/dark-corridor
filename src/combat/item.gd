@@ -1,6 +1,6 @@
 class_name Item
 extends RefCounted
-## A board participant (item_prd) configured by an ItemDef. Owns a cooldown
+## A board participant (docs/systems/item.md) configured by an ItemDef. Owns a cooldown
 ## Ticker; the Combat manager advances it each step and, on cross, calls fire().
 ## Every item is active (ticks); declared triggers push the SAME accumulator (the
 ## def's trigger_subs, wired to the event bus by the manager). Holds its own
@@ -19,7 +19,7 @@ func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
   cooldown = Ticker.from_seconds(def.cooldown)
 
 
-## The fire pipeline (item_prd): gate -> fire (reset the cooldown) -> resolve
+## The fire pipeline (docs/systems/item.md): gate -> fire (reset the cooldown) -> resolve
 ## each effect into a Payload (applying modifiers / enchants — none yet) -> hand
 ## them up. Returns [] if a gate status (silence) suppresses the fire. The
 ## manager only calls this on a cooldown cross; the fire-emote + event routing
@@ -46,12 +46,12 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   p.kind = effect.kind
   p.value = effect.value         # (item-status value-modifiers: later)
   if enchant != null:
-    p.value *= enchant.def.value_mult   # scale-a-value enchant (content_prd / #26)
+    p.value *= enchant.def.value_mult   # scale-a-value enchant (docs/systems/content.md / #26)
   # Outgoing-damage stat-status seam (#6): scale DAMAGE by the owner's modifiers AT FIRE
   # TIME (e.g. Weak). A % multiplier, so it's locked into the payload here, cascade-safe.
   if effect.kind == Delivery.Kind.DAMAGE and owner != null:
     p.value = StatusManager.modify_outgoing(owner, p.value)
-  # Status-stack consume (spore_engine_prd Cap 1). Carry the declaration on the payload;
+  # Status-stack consume (docs/systems/spore_engine.md Cap 1). Carry the declaration on the payload;
   # SELF-fuel resolves now (the owner is known) by spending its stacks + scaling. OPPONENT-
   # fuel (Mass) is left for the Combat manager, which knows the resolved target.
   p.consume_id = effect.consume_id

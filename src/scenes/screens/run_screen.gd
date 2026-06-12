@@ -1,6 +1,6 @@
 class_name RunScreen
 extends Control
-## The run screen (ui_layout_prd) — the real-time client of the run. It reads
+## The run screen (docs/systems/ui_layout.md) — the real-time client of the run. It reads
 ## Game.run + the live CombatManager and emits intents (slow-mo); it never mutates
 ## game state. The logic tree stays OUT of the scene tree: each physics frame this
 ## screen calls `cm.tick(delta)` on the active fight — the same one tick the autotest
@@ -146,7 +146,7 @@ func _on_event_picked(index: int) -> void:
   _after_beat()
 
 
-# The corridor approach (phase4_plan Step 7): the enemy walks from depth into full
+# The corridor approach (docs/history/phase4_plan.md Step 7): the enemy walks from depth into full
 # view while the corridor glides; the fight clock is NOT ticked yet, so combat is
 # frozen until arrival. Driven off _physics_process (not a Tween) so the headless
 # run-screen test advances it with the same manual ticks that drive the fights.
@@ -201,7 +201,7 @@ func _on_battle_speed_changed(speed: float) -> void:
     _cm.timekeeper.set_base_scale(speed)
 
 
-# Slow-mo-on-hover intent (ui_layout_prd "one verb"): hovering any inspectable — a
+# Slow-mo-on-hover intent (docs/systems/ui_layout.md "one verb"): hovering any inspectable — a
 # board item (either side), a potion, or the enemy in the corridor — asks the Combat
 # manager to slow the clock (both sides) to read it.
 func _process(_delta: float) -> void:

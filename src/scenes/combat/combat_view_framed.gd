@@ -1,6 +1,6 @@
 class_name CombatViewFramed
 extends Control
-## The framed combat view (ui_layout_prd) — the corridor-forward layout: the corridor large
+## The framed combat view (docs/systems/ui_layout.md) — the corridor-forward layout: the corridor large
 ## top-left with each **enemy floating over it** (`enemy_hud`: name + status + HP + item cells),
 ## the **player's portrait + HP centre-bottom** with its board as a **column down the right edge**,
 ## and run-scoped allies / combat-scoped summon tokens in the **slots flanking the player**
@@ -151,7 +151,7 @@ func refresh_potions(potions: Array) -> void:
   _build_potions(potions)
 
 
-## Approach controls (phase4_plan Step 7) — the run screen tweens the corridor's lead occupant
+## Approach controls (docs/history/phase4_plan.md Step 7) — the run screen tweens the corridor's lead occupant
 ## from depth into full view (the mood; the per-actor widgets are the combat).
 func set_enemy_depth(depth_cells: float) -> void:
   _corridor.set_enemy_depth(depth_cells)

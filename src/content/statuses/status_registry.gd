@@ -2,7 +2,7 @@ class_name StatusRegistry
 ## Maps a status string id (#23) to a creator for its StatusEffect subclass — the polymorphic
 ## replacement for StatusCatalog. One registration line per status; the behaviour lives in the
 ## class file. Lazily built once, like the other catalogs. New statuses are authored as a class
-## file + one line here (docs/project/status_system_refactor_plan.md).
+## file + one line here (docs/systems/status_manager.md).
 
 static var _creators: Dictionary = {}
 

@@ -1,6 +1,6 @@
 class_name Encounter
 extends Node
-## The per-beat orchestrator (encounter_prd) — one resolved beat, instanced by the
+## The per-beat orchestrator (docs/systems/encounter.md) — one resolved beat, instanced by the
 ## Run manager. A FIGHT spawns enemy Actors from their definitions (left-to-right)
 ## and, on begin(), creates the per-fight CombatManager; a REST applies a partial
 ## heal. It reports its outcome + reward-kind up via `resolved`; the Run manager
@@ -76,7 +76,7 @@ func begin() -> void:
     _resolve(Outcome.RESOLVED)
 
 
-## The event's binary choice (a tier-2, within-encounter pick — encounter_prd). The
+## The event's binary choice (a tier-2, within-encounter pick — docs/systems/encounter.md). The
 ## options are presented by the UI; this applies the chosen option's direct outcome to the
 ## player run-state, then resolves the beat (events report no reward — the outcome is it).
 func event_options() -> Array:

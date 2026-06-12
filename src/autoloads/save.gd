@@ -1,6 +1,6 @@
 class_name SaveAutoload
 extends Node
-## The run-persistence service (save_prd) — autoload registered `Save`. Push, not
+## The run-persistence service (docs/systems/save.md) — autoload registered `Save`. Push, not
 ## pull: the Run manager HANDS it a snapshot Dictionary (write on encounter entry);
 ## on load it returns that snapshot for the Game manager to hand back to a fresh
 ## Run manager. It holds no live state and reads no live system.

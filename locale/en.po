@@ -160,6 +160,18 @@ msgid "Wilt Frond"
 msgstr "Wilt Frond"
 
 #: src/content/items/item_catalog.gd
+msgid "Leather Gloves"
+msgstr "Leather Gloves"
+
+#: src/content/items/item_catalog.gd
+msgid "Leather Trews"
+msgstr "Leather Trews"
+
+#: src/content/items/item_catalog.gd
+msgid "Leather Breastplate"
+msgstr "Leather Breastplate"
+
+#: src/content/items/item_catalog.gd
 msgid "Claw"
 msgstr "Claw"
 
