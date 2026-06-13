@@ -22,6 +22,11 @@ var total_damage: float = 0.0
 # Phase 5 (tune machinery): per-encounter breakdown + per-item fire counts.
 var encounters: Array = []             # Array[Dictionary] — one per resolved beat
 var fires_by_item: Dictionary = {}     # item name_key -> times it fired (player items)
+# Defensive-item value (tune): block applied + healing landed per player item, so a
+# block/heal item can be RANKED, not just cleared of the trap flag by firing.
+var block_by_item: Dictionary = {}     # item name_key -> total block applied
+var healing_by_item: Dictionary = {}   # item name_key -> total healing landed (pre-cap;
+                                       # overheal is not subtracted — see _observe_support)
 
 
 ## Net HP loss for ONE actor in ONE sim-step, split into damage records by family.
@@ -97,6 +102,20 @@ func record_item_fire(name: String) -> void:
   fires_by_item[name] = int(fires_by_item.get(name, 0)) + 1
 
 
+## Accumulate block applied by a player item (a landed 'block' APPLY_STATUS Delivery).
+func record_item_block(name: String, amount: float) -> void:
+  if amount <= 0.0:
+    return
+  block_by_item[name] = float(block_by_item.get(name, 0.0)) + amount
+
+
+## Accumulate healing landed by a player item (a landed HEAL Delivery, pre-cap).
+func record_item_healing(name: String, amount: float) -> void:
+  if amount <= 0.0:
+    return
+  healing_by_item[name] = float(healing_by_item.get(name, 0.0)) + amount
+
+
 ## Fold the handed run `result` together with the accumulated tallies into a flat
 ## summary dict. `result` carries what only AutoTestMode can read off the fight:
 ##   { outcome, won, resolved, steps, sim_seconds, wall_ms,
@@ -118,8 +137,11 @@ func summarize(result: Dictionary) -> Dictionary:
     'damage_by_family': damage_by_family.duplicate(),
     'encounters': encounters.duplicate(true),           # run mode only
     'fires_by_item': fires_by_item.duplicate(),
+    'block_by_item': block_by_item.duplicate(),
+    'healing_by_item': healing_by_item.duplicate(),
     'player_items': result.get('player_items', []),     # final board names (run mode)
     'strategy': result.get('strategy', ''),
+    'seed': result.get('seed', 0),
   }
 
 
@@ -162,6 +184,11 @@ func write_report(path: String, summary: Dictionary) -> void:
   lines.append('- Outcome: **%s** (%s)' % [
     summary['outcome'], 'player won' if summary['won'] else 'player did not win',
   ])
+  # Provenance — a tune pass produces many reports across seeds × strategies; each
+  # artifact must identify itself.
+  lines.append('- Seed: %d' % int(summary['seed']))
+  if summary['strategy'] != '':
+    lines.append('- Strategy: %s' % summary['strategy'])
   lines.append('- Duration: %d sim-steps (%.2fs game-time)' % [summary['steps'], summary['sim_seconds']])
   lines.append('- Wall time: %d ms' % summary['wall_ms'])
   if summary['board_size'] > 0:
@@ -198,17 +225,19 @@ func write_report(path: String, summary: Dictionary) -> void:
         float(enc.get('hp_after', 0.0)), enc.get('outcome', ''),
       ])
 
-  # Per-item contribution (run mode) — fires + damage; a never-fired item is a trap pick.
+  # Per-item contribution (run mode) — fires + damage + block + healing; a never-fired
+  # item is a trap pick, and the defensive columns let block/heal items be RANKED.
   var rows: Array = _item_contribution_rows(summary)
   if not rows.is_empty():
     lines.append('')
     lines.append('## Item contribution (player board)')
     lines.append('')
-    lines.append('| Item | Count | Fires | Damage | Trap? |')
-    lines.append('|------|-------|-------|--------|-------|')
+    lines.append('| Item | Count | Fires | Damage | Block | Healing | Trap? |')
+    lines.append('|------|-------|-------|--------|-------|---------|-------|')
     for r in rows:
-      lines.append('| %s | %d | %d | %.1f | %s |' % [
-        r['name'], int(r['count']), int(r['fires']), float(r['damage']), 'yes' if r['trap'] else '',
+      lines.append('| %s | %d | %d | %.1f | %.1f | %.1f | %s |' % [
+        r['name'], int(r['count']), int(r['fires']), float(r['damage']),
+        float(r['block']), float(r['healing']), 'yes' if r['trap'] else '',
       ])
 
   _write_file(path, '\n'.join(lines) + '\n')
@@ -235,6 +264,8 @@ func _item_contribution_rows(summary: Dictionary) -> Array:
       'count': counts[name],
       'fires': fires,
       'damage': float(summary['damage_by_family'].get(name, 0.0)),
+      'block': float(summary['block_by_item'].get(name, 0.0)),
+      'healing': float(summary['healing_by_item'].get(name, 0.0)),
       'trap': fires == 0,
     })
   return rows

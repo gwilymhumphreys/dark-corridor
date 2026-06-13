@@ -150,6 +150,46 @@ func test_resume_mid_run_finishes_the_descent() -> void:
   assert_eq(Game.run.outcome(), RunManager.Outcome.WON, 'the resumed descent still wins')
 
 
+# --- tune-report fidelity ----------------------------------------------------
+
+func test_block_is_tallied_per_item_for_the_report() -> void:
+  # Defensive items must be RANKABLE, not just trap-cleared by firing: the run summary
+  # carries block-applied per item (Iron Guard is in the Wanderer's starting kit).
+  var r := _mode(1).run_full()
+  var armor_name: String = ItemCatalog.get_def(ItemCatalog.ARMOR).name_key
+  assert_gt(float(r['summary']['block_by_item'].get(armor_name, 0.0)), 0.0,
+      'the block item shows its applied block in the summary')
+
+
+func test_summary_carries_seed_and_strategy() -> void:
+  var m := _mode(7)
+  m.strategy = 'damage'
+  var r := m.run_full()
+  assert_eq(int(r['summary']['seed']), 7, 'the seed rides the summary into the report')
+  assert_eq(r['summary']['strategy'], 'damage', 'and so does the strategy')
+
+
+func test_body_block_fight_is_not_falsely_stuck() -> void:
+  # Observation + the stuck guard read the LIVE rosters: a summon token tanking the
+  # enemy is progress (its HP moves), not a stall — previously only the fight-start
+  # pair was watched and this exact shape tripped a false STUCK.
+  var m := _mode(1)
+  m.logger = AutoTestLogger.new()
+  m.stuck_threshold_seconds = 2.0
+  var player := Actor.new(30.0)            # no items — contributes nothing itself
+  var enemy := Actor.new(20.0)
+  enemy.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.ENEMY_CLAW), enemy))
+  var cm := CombatManager.new(player, [enemy])
+  cm.start()
+  var token := Actor.new(40.0)             # a pure body-block token, leftmost
+  cm.add_actor(token, true, true)
+  var fr: Dictionary = m._drive_fight(
+      cm, player, Time.get_ticks_msec(), 30000, AutoTestMode.seconds_to_steps(60.0))
+  assert_ne(fr['outcome'], 'STUCK', "the token's HP movement counts as progress")
+  cm.teardown()
+  cm.free()
+
+
 # --- helpers (drive Game.run as the autotest loop does) ---------------------
 
 func _play_one_beat(run: RunManager, pick: int) -> void:

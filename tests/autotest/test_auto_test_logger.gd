@@ -183,6 +183,29 @@ func test_item_contribution_aggregates_duplicates() -> void:
   assert_eq(rows[0]['count'], 2, 'with a count')
 
 
+func test_item_contribution_carries_block_and_healing() -> void:
+  var log := AutoTestLogger.new()
+  log.record_item_fire('Iron Guard')
+  log.record_item_block('Iron Guard', 8.0)
+  log.record_item_block('Iron Guard', 8.0)
+  log.record_item_healing('Salve', 12.0)
+  var rows := log._item_contribution_rows(log.summarize({ 'player_items': ['Iron Guard', 'Salve'] }))
+  assert_almost_eq(float(rows[0]['block']), 16.0, 0.0001, 'block accumulates per item')
+  assert_almost_eq(float(rows[1]['healing']), 12.0, 0.0001, 'healing accumulates per item')
+  assert_false(rows[0]['trap'], 'a firing block item is not a trap')
+
+
+func test_report_header_carries_seed_and_strategy() -> void:
+  var log := AutoTestLogger.new()
+  var summary := log.summarize({ 'seed': 42, 'strategy': 'greedy-synergy' })
+  var path := 'user://test_tune_report.md'
+  log.write_report(path, summary)
+  var text := FileAccess.get_file_as_string(path)
+  DirAccess.open('user://').remove(path)
+  assert_string_contains(text, '- Seed: 42', 'the report identifies its seed')
+  assert_string_contains(text, '- Strategy: greedy-synergy', 'and its strategy')
+
+
 # --- helpers ----------------------------------------------------------------
 
 func _by_family(records: Array) -> Dictionary:

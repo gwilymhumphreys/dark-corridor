@@ -10,6 +10,14 @@ extends RefCounted
 ## candidate against the current board and the driver takes the best (ties → lowest
 ## index, for determinism). `random` draws from a seeded RNG so runs reproduce.
 
+# Every strategy name choose_draft understands — the validation list for --strategy
+# (an unknown name silently behaves as first-viable, so the flag parser warns on it).
+const STRATEGIES: Array = [
+  'first-viable', 'random', 'greedy-synergy',
+  'damage', 'block', 'poison', 'heal',
+  'scaling', 'burn',   # alias to the nearest present family until their content exists
+]
+
 var strategy: String = 'first-viable'
 
 var _rng: RandomNumberGenerator

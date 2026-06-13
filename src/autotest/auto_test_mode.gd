@@ -72,7 +72,6 @@ func _ready() -> void:
 ## Build and drive ONE fight to a verdict (the Phase-2 path; `--single-fight`).
 ## Pure of the scene tree and process exit so GUT can call it directly.
 func run_once() -> Dictionary:
-  seed(seed_value)   # plumbed; a single Phase-1 fight draws no RNG
   logger = AutoTestLogger.new()
   driver = AutoTestDriver.new(strategy, seed_value)
 
@@ -81,7 +80,6 @@ func run_once() -> Dictionary:
   var player: Actor = fight['player']
   var enemies: Array = fight['enemies']
   var names: Dictionary = fight['names']
-  var actors: Array = [player] + enemies
 
   cm.start()
   cm.timekeeper.set_base_scale(speed)   # plumbed; inert for the direct sim_step loop
@@ -93,7 +91,7 @@ func run_once() -> Dictionary:
 
   var wall_start: int = Time.get_ticks_msec()
   var fr: Dictionary = _drive_fight(
-    cm, actors, wall_start, int(wall_timeout_seconds * 1000.0), seconds_to_steps(timeout_seconds))
+    cm, player, wall_start, int(wall_timeout_seconds * 1000.0), seconds_to_steps(timeout_seconds))
 
   var resolved: bool = cm.is_resolved()
   var outcome: String = fr['outcome']
@@ -110,6 +108,7 @@ func run_once() -> Dictionary:
     'player_hp': player.hp,
     'player_max_hp': player.max_hp,
     'enemies': _enemy_states(enemies, names),
+    'seed': seed_value,
   }
   logger.log_event('fight_ended', { 'outcome': outcome, 'steps': fr['steps'] })
   result['summary'] = logger.summarize(result)
@@ -175,8 +174,7 @@ func run_full() -> Dictionary:
       if run.potions.size() > 0 and driver.should_throw_potion():
         logger.log_event('potion_thrown', { 'beat': run.position, 'potion': run.potions[0].def.name_key })
         run.throw_potion(0)
-      var fr: Dictionary = _drive_fight(
-        cm, [run.player] + enc.enemies, wall_start, wall_timeout_ms, timeout_steps)
+      var fr: Dictionary = _drive_fight(cm, run.player, wall_start, wall_timeout_ms, timeout_steps)
       fight_steps = fr['steps']
       total_steps += fight_steps
       fail = fr['outcome']
@@ -222,6 +220,7 @@ func run_full() -> Dictionary:
     'enemies': [],
     'player_items': _player_item_names(run.player),
     'strategy': strategy,
+    'seed': seed_value,
   }
   logger.log_event('run_ended', { 'outcome': outcome, 'beats': beats_cleared, 'steps': total_steps })
   result['summary'] = logger.summarize(result)
@@ -234,13 +233,12 @@ func run_full() -> Dictionary:
 ## watchdog. Returns { steps, outcome }; outcome is '' when it resolved normally,
 ## else 'STUCK' / 'TIMEOUT' / 'WALL_TIMEOUT'. Shared by run_once + run_full.
 func _drive_fight(
-    cm: CombatManager, actors: Array, wall_start: int, wall_timeout_ms: int, timeout_steps: int) -> Dictionary:
+    cm: CombatManager, fight_player: Actor, wall_start: int, wall_timeout_ms: int, timeout_steps: int) -> Dictionary:
   var stuck := AutoTestStuckDetector.new(seconds_to_steps(stuck_threshold_seconds))
-  stuck.note(_total_hp(actors))   # baseline
+  stuck.note(_total_hp(_live_actors(cm)))   # baseline
   # EXACT fire counts off the bus's observation channel (replaces the old cooldown-drop
   # heuristic, which missed double-crossings and false-flagged zero-threshold tickers).
   # Player fires only — the contribution table is player-only.
-  var fight_player: Actor = actors[0]
   cm.bus.add_listener(EventBus.Event.ITEM_FIRED,
       func(_data, source_actor: Actor, source_item: Item) -> void:
         if source_actor == fight_player and source_item != null:
@@ -254,15 +252,27 @@ func _drive_fight(
     if steps >= timeout_steps:
       outcome = 'TIMEOUT'
       break
-    var before: Dictionary = _hp_snapshot(actors)
-    var dot_before: Dictionary = _dot_snapshot(actors)   # applier sources, pre-tick
+    # Observe over the LIVE rosters, captured at step start — allies + summon tokens are
+    # included (their damage tallies; their HP movement counts as progress for the stuck
+    # guard), and a body killed this step is still in the captured set for attribution.
+    var observed: Array = _live_actors(cm)
+    var before: Dictionary = _hp_snapshot(observed)
+    var dot_before: Dictionary = _dot_snapshot(observed)   # applier sources, pre-tick
     cm.sim_step()
     steps += 1
-    _observe_damage(cm, actors, before, dot_before)
-    if stuck.note(_total_hp(actors)):
+    _observe_damage(cm, observed, before, dot_before)
+    _observe_support(cm, fight_player)
+    if stuck.note(_total_hp(_live_actors(cm))):
       outcome = 'STUCK'
+      logger.log_event('stuck', { 'flat_steps': stuck.flat_steps() })
       break
   return { 'steps': steps, 'outcome': outcome }
+
+
+## Every body currently in the fight — the whole player side (run actor + allies +
+## summon tokens) plus the enemy side. Fresh each call: rosters mutate mid-fight.
+func _live_actors(cm: CombatManager) -> Array:
+  return cm.player_side() + cm.enemies
 
 
 # --- fight construction -----------------------------------------------------
@@ -323,6 +333,23 @@ func _family_of(source: Variant) -> String:
   if source is Item and source.def != null and source.def.name_key != '':
     return source.def.name_key
   return 'Unknown'
+
+
+## Tally the PLAYER's defensive output this step: block applied + healing landed, per
+## source item (so the contribution table can rank block/heal items, not just damage).
+## Healing is recorded as landed (pre-cap) — overheal is not subtracted; the heal-mask
+## limitation on _observe_damage applies here in mirror.
+func _observe_support(cm: CombatManager, fight_player: Actor) -> void:
+  var now: float = cm.timekeeper.sim_time
+  for d in cm.deliveries():
+    if d.visual_only or not d.landed or not is_equal_approx(d.impact_time, now):
+      continue
+    if not (d.source is Item) or d.source.owner != fight_player:
+      continue
+    if d.kind == Delivery.Kind.APPLY_STATUS and d.status_id == 'block':
+      logger.record_item_block(d.source.def.name_key, d.value)
+    elif d.kind == Delivery.Kind.HEAL:
+      logger.record_item_healing(d.source.def.name_key, d.value)
 
 
 ## Snapshot each actor's DoT-applying statuses BEFORE a step, so the post-step
@@ -436,6 +463,10 @@ func _parse_args() -> void:
       i += 1
     elif arg == '--strategy':
       strategy = _value(args, i)
+      if not AutoTestDriver.STRATEGIES.has(strategy):
+        push_warning('[AutoTest] unknown --strategy "%s" (valid: %s) — it will behave as first-viable' % [
+          strategy, ', '.join(AutoTestDriver.STRATEGIES),
+        ])
       i += 1
     elif arg == '--log':
       log_path = _value(args, i)
