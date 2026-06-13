@@ -12,4 +12,4 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 var id: String = ''
 var name_key: String = ''        # source English; displayed via tr() — localizable
 var rarity: int = Rarity.COMMON
-var effects: Array = []          # Array[ItemEffect]
+var effects: Array[ItemEffect] = []

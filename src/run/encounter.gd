@@ -18,12 +18,15 @@ enum Outcome { WON, LOST, RESOLVED }   # RESOLVED = a non-fight beat completed
 
 var def: EncounterDef
 var player: Actor
-var enemies: Array = []          # spawned enemy Actors (fight), left-to-right
+var enemies: Array[Actor] = []   # spawned enemy Actors (fight), left-to-right (the live
+                                 # CombatManager shares this array by reference — reaps show here)
 
-var _cm: CombatManager = null
+var _combat_manager: CombatManager = null
 var _resolved: bool = false
 var _combat_seed: int = 0
-var _allies: Array = []   # run-scoped player-side allies, seeded into the fight (Cap 3 Stage B)
+# Run-scoped player-side allies seeded into the fight (Cap 3 Stage B). Untyped: shared
+# BY REFERENCE down from RunManager.allies into the CombatManager.
+var _allies: Array = []
 
 
 func _init(encounter_def: EncounterDef, player_actor: Actor, combat_seed: int = 0, ally_actors: Array = []) -> void:
@@ -56,19 +59,19 @@ func is_event() -> bool:
 
 
 func combat_manager() -> CombatManager:
-  return _cm
+  return _combat_manager
 
 
 ## Begin resolution (on arrival). FIGHT: create + start the CombatManager (the
 ## caller then supplies the clock via sim_step; its `resolved` relays here). REST:
 ## apply the partial heal and resolve immediately. Idempotent.
 func begin() -> void:
-  if _resolved or _cm != null:
+  if _resolved or _combat_manager != null:
     return
   if is_fight():
-    _cm = CombatManager.new(player, enemies, _combat_seed, _allies)
-    _cm.resolved.connect(_on_fight_resolved)
-    _cm.start()
+    _combat_manager = CombatManager.new(player, enemies, _combat_seed, _allies)
+    _combat_manager.resolved.connect(_on_fight_resolved)
+    _combat_manager.start()
   elif is_event():
     pass   # await the tier-2 binary choice (pick_event_option) — the event's resolution
   else:
@@ -86,22 +89,22 @@ func event_options() -> Array:
 func pick_event_option(index: int) -> void:
   if not is_event() or _resolved or def.event_options.is_empty():
     return
-  var opt: EventOptionDef = def.event_options[clampi(index, 0, def.event_options.size() - 1)]
-  _apply_event_outcome(opt)
+  var option: EventOptionDef = def.event_options[clampi(index, 0, def.event_options.size() - 1)]
+  _apply_event_outcome(option)
   # A damaging option can be lethal — the run must end NOW (LOST), not deferred to the
   # next fight's win/loss check with the player walking on dead in between.
   _resolve(Outcome.LOST if not player.is_alive() else Outcome.RESOLVED)
 
 
-func _apply_event_outcome(opt: EventOptionDef) -> void:
-  match opt.effect:
+func _apply_event_outcome(option: EventOptionDef) -> void:
+  match option.effect:
     EventOptionDef.Effect.HEAL_FRACTION:
-      player.heal(opt.amount * player.max_hp)
+      player.heal(option.amount * player.max_hp)
     EventOptionDef.Effect.MAX_HP_BONUS:
-      player.max_hp += opt.amount
-      player.hp += opt.amount
+      player.max_hp += option.amount
+      player.hp += option.amount
     EventOptionDef.Effect.DAMAGE:
-      player.take_damage(opt.amount)
+      player.take_damage(option.amount)
     EventOptionDef.Effect.ADD_ALLY:
       pass   # an ally grant touches the run roster, not the player Actor — the RunManager
              # applies it (RunManager.pick_event_option) before delegating the pick here
@@ -121,10 +124,10 @@ func _resolve(outcome: int) -> void:
 ## Free the fight's combat resources (the Run manager calls this after reading the
 ## result, before advancing). Breaks the CombatManager's RefCounted cycles.
 func teardown() -> void:
-  if _cm != null:
-    _cm.teardown()
-    _cm.free()
-    _cm = null
+  if _combat_manager != null:
+    _combat_manager.teardown()
+    _combat_manager.free()
+    _combat_manager = null
   else:
     # Never begun (torn down before begin(), e.g. a run reset mid-approach): no CM
     # exists to dissolve the spawned enemies, so their Actor<->Item cycles are

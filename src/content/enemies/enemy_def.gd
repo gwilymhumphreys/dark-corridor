@@ -8,4 +8,4 @@ extends RefCounted
 var id: String = ''
 var name_key: String = ''
 var max_hp: float = Balance.ENEMY_PLACEHOLDER_HP
-var item_ids: Array = []     # Array[String] -> ItemCatalog ids, in board order
+var item_ids: Array[String] = []     # Array[String] -> ItemCatalog ids, in board order

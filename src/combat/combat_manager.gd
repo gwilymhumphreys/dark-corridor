@@ -19,18 +19,21 @@ signal resolved(player_won: bool)
 # the rosters. `player` stays the run-state ref — loss is the PLAYER dying (a token doesn't
 # save the run); win is the whole enemy side dead.
 var player: Actor
+# `enemies` / `allies` are deliberately UNTYPED Arrays: both are shared BY REFERENCE
+# with their owners (the Encounter's spawned list; the RunManager's run-scoped allies
+# — register_ally relies on that sharing), and a typed assignment would copy.
 var enemies: Array = []          # Array[Actor] — the enemy side, left-to-right
 var allies: Array = []           # Array[Actor] — run-scoped player-side allies (passed in)
 var timekeeper: Timekeeper
 var bus: EventBus
 var rng: RandomNumberGenerator   # the per-fight stream — random item-targeting (#14/#20)
 
-var _player_tokens: Array = []   # Array[Actor] — combat-scoped player-side summons (dissolved)
-var _discarded: Array = []       # Array[Actor] — combat-scoped bodies reaped on death; dissolved at teardown
-var _discarded_player_side: Array = []   # Array[Actor] — the reaped that still resolve player-side
+var _player_tokens: Array[Actor] = []   # combat-scoped player-side summons (dissolved)
+var _discarded: Array[Actor] = []       # combat-scoped bodies reaped on death; dissolved at teardown
+var _discarded_player_side: Array[Actor] = []   # the reaped that still resolve player-side
 
-var _items: Array = []           # Array[Item] — cooldown Tickers, registration order
-var _deliveries: Array = []      # Array[Delivery] — in-flight + recently-resolved
+var _items: Array[Item] = []            # cooldown Tickers, registration order
+var _deliveries: Array[Delivery] = []   # in-flight + recently-resolved
 var _resolved: bool = false
 var _player_won: bool = false
 var _torn_down: bool = false
@@ -147,7 +150,7 @@ func sim_step() -> void:
   timekeeper.advance()
 
   # 1. Advance every component one step; collect crossings.
-  var fired_items: Array = []
+  var fired_items: Array[Item] = []
   for it in _items:
     # A dead actor's items neither tick nor fire (Cap 3 — matters once a side has >1 body:
     # in a multi-enemy fight a slain body must stop swinging). Its statuses still resolve
@@ -168,7 +171,7 @@ func sim_step() -> void:
     _advance_statuses_on(actor)
     for it in actor.board:
       _advance_statuses_on(it)
-  var arrived: Array = []
+  var arrived: Array[Delivery] = []
   for d in _deliveries:
     if not d.landed and not d.fizzled and d.step_travel():
       arrived.append(d)
@@ -203,7 +206,7 @@ func sim_step() -> void:
 ## owner); timed / static shapes work on either — so one pass serves both, and item
 ## statuses tick on the same cadence as actor statuses.
 func _advance_statuses_on(target) -> void:
-  var spent: Array = []
+  var spent: Array[StatusEffect] = []
   # Iterate a COPY: a PERIODIC tick calls take_damage, which can erase a spent block
   # status from `target.statuses` mid-pass (StatusManager.resolve_incoming_damage).
   # Mutating the list being iterated would skip the status after it — so walk a
@@ -275,7 +278,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
 ## what keeps `_deliveries` bounded; teardown clears whatever's left at fight end.
 func _prune_deliveries() -> void:
   var now: float = timekeeper.sim_time
-  var kept: Array = []
+  var kept: Array[Delivery] = []
   for d in _deliveries:
     if d.fizzled:
       continue
@@ -377,7 +380,7 @@ func _warn_unhandled_shape(shape: int) -> void:
   if _warned_shapes.has(shape):
     return
   _warned_shapes[shape] = true
-  push_warning('[CombatManager] target shape %d is not resolved yet (item-target shapes need the per-fight RNG, #14/#20); the effect fires nothing.' % shape)
+  push_warning('[CombatManager] target shape %d has no resolver; the effect fires nothing.' % shape)
 
 
 ## Is a Delivery's target still a valid landing site? An Actor must be alive; an Item's
@@ -543,7 +546,9 @@ func throw_consumable(consumable, thrower: Actor) -> void:
   if _resolved:
     return
   for effect in consumable.def.effects:
-    var p := _payload_from_effect(effect)
+    # The shared template copy only — a throw deliberately SKIPS the item-side stages
+    # (enchant scaling, modify_outgoing, evasion): potions are exempt (decision #30).
+    var p := Payload.from_effect(effect)
     p.source_actor = thrower   # event source identity; `source` stays null (the VFX origin)
     # Self-fuel consume (Cap 1) — the thrower is known here, so resolve it like an item fire.
     if p.consume_id != '' and not p.consume_from_target:
@@ -561,27 +566,6 @@ func throw_consumable(consumable, thrower: Actor) -> void:
   _check_resolution()
 
 
-## Build a Payload from an ItemEffect template (shared by consumable throws; items
-## go through Item._resolve_effect, which also applies enchants). A consumable has
-## no source Item — source stays null.
-func _payload_from_effect(effect: ItemEffect) -> Payload:
-  var p := Payload.new()
-  p.kind = effect.kind
-  p.value = effect.value
-  p.shape = effect.shape
-  p.travel = effect.travel
-  p.status_id = effect.status_id
-  p.duration = effect.duration
-  p.summon_def_id = effect.summon_def_id   # a thrown consumable can summon / consume too
-  p.summon_in_front = effect.summon_in_front
-  p.consume_id = effect.consume_id
-  p.consume_amount = effect.consume_amount
-  p.consume_from_target = effect.consume_from_target
-  p.consume_scale = effect.consume_scale
-  p.flags = effect.flags
-  p.color = effect.color
-  p.source = null
-  return p
 
 
 ## Break the fight's reference cycles so it can free (CLAUDE.md runtime cleanup),

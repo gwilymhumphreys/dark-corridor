@@ -9,8 +9,8 @@ extends RefCounted
 var def: ItemDef
 var owner: Actor               # board membership (self-target; opponent resolution)
 var cooldown: Ticker
-var statuses: Array = []       # item-targeted StatusEffect instances (silence, +damage, …)
-var enchant = null             # one enchant slot (Content PRD; later)
+var statuses: Array[StatusEffect] = []   # item-targeted instances (silence, +damage, …)
+var enchant: Enchantment = null          # one enchant slot
 
 
 func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
@@ -29,7 +29,7 @@ func fire() -> Array:
   if is_gated():
     return []
   cooldown.reset()
-  var payloads: Array = []
+  var payloads: Array[Payload] = []
   for effect in def.effects:
     payloads.append(_resolve_effect(effect))
   return payloads
@@ -45,33 +45,21 @@ func is_gated() -> bool:
   return false
 
 
+## The item-side stages on top of the shared template copy (Payload.from_effect):
+## enchant scaling, the outgoing stat-status seam, self-fuel consume, source identity.
 func _resolve_effect(effect: ItemEffect) -> Payload:
-  var p := Payload.new()
-  p.kind = effect.kind
-  p.value = effect.value         # (item-status value-modifiers: later)
+  var p := Payload.from_effect(effect)
   if enchant != null:
     p.value *= enchant.def.value_mult   # scale-a-value enchant (docs/systems/content.md / #26)
   # Outgoing-damage stat-status seam (#6): scale DAMAGE by the owner's modifiers AT FIRE
   # TIME (e.g. Weak). A % multiplier, so it's locked into the payload here, cascade-safe.
   if effect.kind == Delivery.Kind.DAMAGE and owner != null:
     p.value = StatusManager.modify_outgoing(owner, p.value)
-  # Status-stack consume (docs/systems/spore_engine.md Cap 1). Carry the declaration on the payload;
-  # SELF-fuel resolves now (the owner is known) by spending its stacks + scaling. OPPONENT-
-  # fuel (Mass) is left for the Combat manager, which knows the resolved target.
-  p.consume_id = effect.consume_id
-  p.consume_amount = effect.consume_amount
-  p.consume_from_target = effect.consume_from_target
-  p.consume_scale = effect.consume_scale
+  # Status-stack consume (docs/systems/spore_engine.md Cap 1): SELF-fuel resolves now (the
+  # owner is known) by spending its stacks + scaling. OPPONENT-fuel (Mass) rides the
+  # payload's consume declaration to the Combat manager, which knows the resolved target.
   if effect.consume_id != '' and not effect.consume_from_target and owner != null:
     p.value += StatusManager.consume(owner, effect.consume_id, effect.consume_amount) * effect.consume_scale
-  p.summon_def_id = effect.summon_def_id
-  p.summon_in_front = effect.summon_in_front
-  p.shape = effect.shape
-  p.travel = effect.travel
-  p.status_id = effect.status_id
-  p.duration = effect.duration
-  p.flags = effect.flags
-  p.color = effect.color
   p.source = self
   p.source_actor = owner
   return p

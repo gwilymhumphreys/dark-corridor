@@ -57,7 +57,7 @@ var data: Dictionary = {
 - **No preloads for `class_name` classes** — Godot makes them globally available
 - **Autoload class names**: Use `<Name>Autoload` suffix (e.g., `class_name CursorManagerAutoload`) to avoid conflict with the autoload's registered name. Access via the registered name (e.g., `CursorManager.request_hand()`).
 - **Surgical edits only** — Modify least code possible; ask before major refactors
-- **Theme over code** — Style UI via the theme resource (`assets/themes/a-machine-theme.tres`), not `add_theme_*_override()` in code
+- **Theme over code** — Style UI via the theme resource (`assets/themes/black_white_ui.tres`, the project default), not `add_theme_*_override()` in code
 - **Scenes over code** — Prefer `.tscn` scene files for UI and node trees over building them programmatically in `_ready()`
 - **Opacity/transparency** — Alpha fades or semi-transparent effects can break the pixel-art aesthetic. Be careful with these and ask the user before adding any opacity.
 - **Juicy animations**: When adding new ui or visual entities, add the ui juice node to it

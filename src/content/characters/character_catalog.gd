@@ -52,11 +52,11 @@ static func _wanderer() -> CharacterDef:
 
 
 ## Spore Druid — the first real character (spore_druid.md). Status-identity: its kit is built
-## on the Spores counter (the Mass fuel) + spore appliers. SCAFFOLD — holds only what's
-## authored so far: Druid Staff (the starter applier) + Pocket Shrooms (the blinding rare) in
-## its OWN pool (#27); starts with Druid Staff. Still the owner's to fill: the signature
-## starting relic (the most build-defining — design), more pool + starting cards, the real
-## select-screen blurb, and flipping it into ids() once the pool is deep enough to draft.
+## on the Spores counter (the Mass fuel) + spore appliers. SCAFFOLD — holds what's authored
+## so far (the pool below is the authority; spore_druid.md tracks the running count); starts
+## with Druid Staff. Still the owner's to fill: the signature starting relic (the most
+## build-defining — design), skills + more cards, the real select-screen blurb, and flipping
+## it into ids() once the pool is deep enough to draft.
 static func _spore_druid() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = SPORE_DRUID

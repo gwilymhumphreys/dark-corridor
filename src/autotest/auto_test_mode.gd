@@ -90,11 +90,11 @@ func run_once() -> Dictionary:
   })
 
   var wall_start: int = Time.get_ticks_msec()
-  var fr: Dictionary = _drive_fight(
+  var fight_result: Dictionary = _drive_fight(
     cm, player, wall_start, int(wall_timeout_seconds * 1000.0), seconds_to_steps(timeout_seconds))
 
   var resolved: bool = cm.is_resolved()
-  var outcome: String = fr['outcome']
+  var outcome: String = fight_result['outcome']
   if outcome == '':
     outcome = 'WIN' if cm.player_won() else 'LOSS'
 
@@ -102,7 +102,7 @@ func run_once() -> Dictionary:
     'outcome': outcome,
     'resolved': resolved,
     'won': resolved and cm.player_won(),
-    'steps': fr['steps'],
+    'steps': fight_result['steps'],
     'sim_seconds': cm.timekeeper.sim_time,
     'wall_ms': Time.get_ticks_msec() - wall_start,
     'player_hp': player.hp,
@@ -110,7 +110,7 @@ func run_once() -> Dictionary:
     'enemies': _enemy_states(enemies, names),
     'seed': seed_value,
   }
-  logger.log_event('fight_ended', { 'outcome': outcome, 'steps': fr['steps'] })
+  logger.log_event('fight_ended', { 'outcome': outcome, 'steps': fight_result['steps'] })
   result['summary'] = logger.summarize(result)
   result['exit_code'] = 0 if resolved else 1
 
@@ -164,9 +164,9 @@ func run_full() -> Dictionary:
     # EVENT beat: the Driver makes the binary choice (the tier-2 pick), which applies the
     # outcome + resolves it. A FIXED/CHOICE fight has a CombatManager; a rest resolved on begin.
     if enc.is_event():
-      var ev: int = driver.choose_event_option(enc.event_options())
-      logger.log_event('event', { 'beat': run.position, 'options': enc.event_options().size(), 'picked': ev })
-      run.pick_event_option(ev)   # via the RunManager so an ADD_ALLY option recruits a run-scoped ally
+      var event_pick: int = driver.choose_event_option(enc.event_options())
+      logger.log_event('event', { 'beat': run.position, 'options': enc.event_options().size(), 'picked': event_pick })
+      run.pick_event_option(event_pick)   # via the RunManager so an ADD_ALLY option recruits a run-scoped ally
     var cm: CombatManager = run.combat_manager()
     var fight_steps: int = 0
     var fail: String = ''
@@ -174,10 +174,10 @@ func run_full() -> Dictionary:
       if run.potions.size() > 0 and driver.should_throw_potion():
         logger.log_event('potion_thrown', { 'beat': run.position, 'potion': run.potions[0].def.name_key })
         run.throw_potion(0)
-      var fr: Dictionary = _drive_fight(cm, run.player, wall_start, wall_timeout_ms, timeout_steps)
-      fight_steps = fr['steps']
+      var fight_result: Dictionary = _drive_fight(cm, run.player, wall_start, wall_timeout_ms, timeout_steps)
+      fight_steps = fight_result['steps']
       total_steps += fight_steps
-      fail = fr['outcome']
+      fail = fight_result['outcome']
     var beat_outcome: String = fail
     if beat_outcome == '':
       beat_outcome = ('WON' if cm.player_won() else 'LOST') if cm != null else ('event' if enc.is_event() else 'rest')
@@ -362,12 +362,12 @@ func _observe_support(cm: CombatManager, fight_player: Actor) -> void:
 ## same-type poison from two items is all credited to the first applier.
 func _dot_snapshot(actors: Array) -> Dictionary:
   var snap: Dictionary = {}
-  for a in actors:
-    snap[a] = _dot_sources_of(a)
+  for fight_actor in actors:
+    snap[fight_actor] = _dot_sources_of(fight_actor)
   return snap
 
 
-func _dot_sources_of(actor) -> Array:
+func _dot_sources_of(actor: Actor) -> Array:
   var out: Array = []
   for st in actor.statuses:
     var weight: float = st.dot_tick_weight()   # 0 unless a damaging DoT (count × per-tick)
@@ -408,22 +408,22 @@ func _player_item_names(player: Actor) -> Array:
 
 func _hp_snapshot(actors: Array) -> Dictionary:
   var snap: Dictionary = {}
-  for a in actors:
-    snap[a] = a.hp
+  for fight_actor in actors:
+    snap[fight_actor] = fight_actor.hp
   return snap
 
 
 func _total_hp(actors: Array) -> float:
   var total: float = 0.0
-  for a in actors:
-    total += a.hp
+  for fight_actor in actors:
+    total += fight_actor.hp
   return total
 
 
 func _enemy_states(enemies: Array, names: Dictionary) -> Array:
   var out: Array = []
-  for e in enemies:
-    out.append({ 'name': names.get(e, 'Enemy'), 'hp': e.hp, 'max_hp': e.max_hp })
+  for enemy in enemies:
+    out.append({ 'name': names.get(enemy, 'Enemy'), 'hp': enemy.hp, 'max_hp': enemy.max_hp })
   return out
 
 

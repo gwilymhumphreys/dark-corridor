@@ -37,14 +37,15 @@ const ROLL_BIAS_STEP: int = 10
 # Run-state (the snapshot persists exactly this). `position` is the global beat index
 # (0 .. RunMap.TOTAL_BEATS-1); the act/beat-within-act are derived (RunMap).
 var player: Actor
-var allies: Array = []        # Array[Actor] — run-scoped (persistent) player-side allies
-var relics: Array = []        # Array[Relic]
-var potions: Array = []       # Array[Consumable]
+var allies: Array[Actor] = []        # run-scoped (persistent) player-side allies (shared
+                                     # BY REFERENCE into the live CombatManager — untyped there)
+var relics: Array[Relic] = []
+var potions: Array[Consumable] = []
 var position: int = 0
 var rng: RandomNumberGenerator
 var character: CharacterDef    # the chosen character (#27) — its item pool feeds the draft
 
-var _ally_def_ids: Array = []  # parallel to `allies` — each ally's EnemyCatalog def id (snapshot)
+var _ally_def_ids: Array[String] = []  # parallel to `allies` — each ally's EnemyCatalog def id (snapshot)
 
 var _current: Encounter = null
 var _current_def_id: String = ''    # the resolved EncounterDef id for the current beat (resume)
@@ -53,8 +54,8 @@ var _current_def_id: String = ''    # the resolved EncounterDef id for the curre
 # type on the streak and the count is the bias depth.
 var _roll_streak: int = RollType.COMBAT
 var _roll_streak_count: int = 0
-var _pending_choice: Array = []  # kept empty — the choice layer is dormant (see _roll_beat)
-var _pending_offer: Array = []   # Array[ItemDef] — the held draft offer (1-of-3)
+var _pending_choice: Array[String] = []  # kept empty — the choice layer is dormant (see _roll_beat)
+var _pending_offer: Array[ItemDef] = []   # the held draft offer (1-of-3)
 var _ended: bool = false
 var _outcome: int = Outcome.WON
 var _torn_down: bool = false
@@ -73,10 +74,10 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   if character.starting_relic_id != '':
     relics.append(Relic.new(RelicCatalog.get_def(character.starting_relic_id)))
   potions = []
-  for pid in character.starting_potion_ids:
-    potions.append(Consumable.new(ConsumableCatalog.get_def(pid)))
-  for e in character.starting_enchants:
-    apply_enchant(Enchantment.new(EnchantCatalog.get_def(e['enchant_id'])), e['item_index'])
+  for potion_id in character.starting_potion_ids:
+    potions.append(Consumable.new(ConsumableCatalog.get_def(potion_id)))
+  for enchant_spec in character.starting_enchants:
+    apply_enchant(Enchantment.new(EnchantCatalog.get_def(enchant_spec['enchant_id'])), enchant_spec['item_index'])
   position = 0
   _ended = false
   _pending_offer = []
@@ -166,8 +167,8 @@ func begin_current() -> void:
 ## between combats — only the player carries HP attrition through the run). A downed ally from
 ## the previous fight is restored; its slot was kept on the roster, so it simply rejoins.
 func _revive_allies() -> void:
-  for a in allies:
-    a.hp = a.max_hp
+  for ally in allies:
+    ally.hp = ally.max_hp
 
 
 ## Relic effect shape (a): apply each combat-start relic's status to the player at
@@ -263,9 +264,9 @@ func add_ally(def_id: String) -> void:
   var ally := _make_ally(def_id)
   allies.append(ally)   # the live CombatManager shares this array by reference, so it sees it
   _ally_def_ids.append(def_id)
-  var cm: CombatManager = combat_manager()
-  if cm != null and not cm.is_resolved():
-    cm.register_ally(ally)   # acquired mid-fight → register its Tickers so it joins the fight
+  var combat: CombatManager = combat_manager()
+  if combat != null and not combat.is_resolved():
+    combat.register_ally(ally)   # acquired mid-fight → register its Tickers so it joins the fight
 
 
 ## The event's binary-choice intent, routed through the RunManager (not straight to the
@@ -305,12 +306,12 @@ func apply_enchant(enchant: Enchantment, item_index: int) -> void:
 ## fight (docs/systems/content.md). Only valid mid-fight (a consumable resolves through the
 ## Combat manager). Returns whether it was thrown.
 func throw_potion(index: int) -> bool:
-  var cm: CombatManager = combat_manager()
-  if cm == null or index < 0 or index >= potions.size():
+  var combat: CombatManager = combat_manager()
+  if combat == null or index < 0 or index >= potions.size():
     return false
   var consumable: Consumable = potions[index]
   potions.remove_at(index)
-  cm.throw_consumable(consumable, player)
+  combat.throw_consumable(consumable, player)
   return true
 
 
@@ -339,8 +340,8 @@ func advance() -> void:
 func _full_heal() -> void:
   if player != null:
     player.hp = player.max_hp
-  for a in allies:   # the between-act restore covers the whole run-scoped player side
-    a.hp = a.max_hp
+  for ally in allies:   # the between-act restore covers the whole run-scoped player side
+    ally.hp = ally.max_hp
 
 
 func is_ended() -> bool:
@@ -428,8 +429,8 @@ func _save() -> void:
 
 func snapshot() -> Dictionary:
   var board: Array = []
-  for it in player.board:
-    board.append({ 'id': it.def.id, 'enchant': it.enchant.def.id if it.enchant != null else null })
+  for item in player.board:
+    board.append({ 'id': item.def.id, 'enchant': item.enchant.def.id if item.enchant != null else null })
   var relic_ids: Array = []
   for relic in relics:
     relic_ids.append(relic.def.id)
@@ -437,10 +438,10 @@ func snapshot() -> Dictionary:
   for consumable in potions:
     potion_ids.append(consumable.def.id)
   var ally_snaps: Array = []
-  for aid in _ally_def_ids:
+  for ally_def_id in _ally_def_ids:
     # Def id only — an ally's HP is NOT saved: allies are revived to full at every fight
     # begin (only the player carries HP attrition), so a saved value would be dead weight.
-    ally_snaps.append({ 'id': aid })
+    ally_snaps.append({ 'id': ally_def_id })
   return {
     'character': character.id,
     'hp': player.hp,
@@ -488,11 +489,11 @@ func rehydrate(snap: Dictionary) -> bool:
   for entry in snap.get('allies', []):
     add_ally(str(entry['id']))
   relics = []
-  for rid in snap['relics']:
-    relics.append(Relic.new(RelicCatalog.get_def(str(rid))))
+  for relic_id in snap['relics']:
+    relics.append(Relic.new(RelicCatalog.get_def(str(relic_id))))
   potions = []
-  for pid in snap['potions']:
-    potions.append(Consumable.new(ConsumableCatalog.get_def(str(pid))))
+  for potion_id in snap['potions']:
+    potions.append(Consumable.new(ConsumableCatalog.get_def(str(potion_id))))
   position = int(snap['position'])
   rng = RandomNumberGenerator.new()
   rng.seed = int(snap['rng']['seed'])
@@ -540,8 +541,8 @@ func teardown() -> void:
   if player != null:
     player.dissolve()
     player = null
-  for a in allies:   # run-scoped allies are run-lifetime too — break their cycle at run end
-    a.dissolve()
+  for ally in allies:   # run-scoped allies are run-lifetime too — break their cycle at run end
+    ally.dissolve()
   allies.clear()
   _ally_def_ids.clear()
   relics.clear()

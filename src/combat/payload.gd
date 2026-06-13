@@ -26,3 +26,26 @@ var consume_scale: float = 0.0
 # Summon (docs/systems/spore_engine.md Cap 3): the token def + position, resolved by the Combat manager.
 var summon_def_id: String = ''
 var summon_in_front: bool = true
+
+
+## Copy an ItemEffect template's fields into a fresh Payload — the ONE place the
+## field-by-field copy lives. The item fire pipeline and the consumable throw both
+## build on this, then add their own stages: enchant/outgoing modifiers are the
+## item's (a throw is exempt — decision #30); source identity is the caller's.
+static func from_effect(effect: ItemEffect) -> Payload:
+  var payload := Payload.new()
+  payload.kind = effect.kind
+  payload.value = effect.value
+  payload.shape = effect.shape
+  payload.travel = effect.travel
+  payload.status_id = effect.status_id
+  payload.duration = effect.duration
+  payload.summon_def_id = effect.summon_def_id
+  payload.summon_in_front = effect.summon_in_front
+  payload.consume_id = effect.consume_id
+  payload.consume_amount = effect.consume_amount
+  payload.consume_from_target = effect.consume_from_target
+  payload.consume_scale = effect.consume_scale
+  payload.flags = effect.flags
+  payload.color = effect.color
+  return payload

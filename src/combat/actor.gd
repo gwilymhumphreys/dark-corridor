@@ -10,8 +10,8 @@ signal died
 
 var hp: float
 var max_hp: float
-var board: Array = []        # Item instances (Step 3); ordered, not a grid
-var statuses: Array = []     # actor-targeted StatusEffect instances
+var board: Array[Item] = []              # ordered, not a grid
+var statuses: Array[StatusEffect] = []   # actor-targeted instances
 var display_name: String = ''  # presentation label (the def's name_key, tr()'d by the view); combat ignores it
 
 
