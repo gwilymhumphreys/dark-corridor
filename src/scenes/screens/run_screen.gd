@@ -6,14 +6,13 @@ extends Control
 ## screen calls `cm.tick(delta)` on the active fight — the same one tick the autotest
 ## runs via sim_step (combat_manager.gd).
 ##
-## STEP 4 scope: a polling state machine that drives the WHOLE descent in real time,
-## mirroring AutoTestMode.run_full — enter beat → (fight: tick to resolution | rest:
-## resolves on begin) → fulfil reward → advance → repeat, until the run ends (Game
-## then swaps to the win/death screen). The run processes each beat's outcome via its
-## own signal chain DURING the resolving tick; this screen reacts by POLLING
-## cm.is_resolved() (never from inside the signal), so it can safely tear the fight
-## down and advance. The draft pick is auto-taken here (the Step-5 overlay supplies it);
-## the corridor approach is inserted at _advance in Step 7.
+## A polling state machine that drives the WHOLE descent in real time, mirroring
+## AutoTestMode.run_full — enter beat → approach → (fight: tick to resolution | rest:
+## resolves on begin | event: overlay) → fulfil reward (draft overlay) → advance →
+## repeat, until the run ends (Game then swaps to the win/death screen). The run
+## processes each beat's outcome via its own signal chain DURING the resolving tick;
+## this screen reacts by POLLING cm.is_resolved() (never from inside the signal), so
+## it can safely tear the fight down and advance.
 
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
@@ -22,11 +21,11 @@ const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overl
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 
-enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, ENDED }
+enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING }
 
 var _run: RunManager
 var _cm: CombatManager
-var _view: CombatViewFramed
+var _view: CombatView   # the swappable surface — framed today, full-screen drops in here
 var _draft: DraftOverlay
 var _choice: ChoiceOverlay
 var _event: EventOverlay
@@ -235,6 +234,10 @@ func _toggle_pause() -> void:
 
 func _pause() -> void:
   _paused = true
+  # The corridor renderer self-animates (the one allowed cosmetic _process), so the
+  # paused approach must also halt the treadmill — not just the depth lerp.
+  if _view != null and _state == State.APPROACHING:
+    _view.set_gliding(false)
   _pause_menu = PAUSE_MENU.instantiate()
   add_child(_pause_menu)
   _pause_menu.resume_pressed.connect(_resume)
@@ -244,6 +247,8 @@ func _pause() -> void:
 
 func _resume() -> void:
   _paused = false
+  if _view != null and _state == State.APPROACHING:
+    _view.set_gliding(true)   # the treadmill resumes with the walk
   _close_settings()
   if _pause_menu != null:
     _pause_menu.queue_free()
@@ -310,7 +315,7 @@ func _advance() -> void:
   _teardown_combat_view()
   _run.advance()
   _map.mark_position(_run.position)
-  _enter_beat()   # TODO Step 7: the corridor approach plays here before the fight
+  _enter_beat()
 
 
 # --- combat view lifetime ----------------------------------------------------

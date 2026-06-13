@@ -26,6 +26,11 @@ const SHARP_SHADER: Shader = preload('res://src/shaders/sharp_bilinear.gdshader'
 @export var speed: float = 1.2          ## cells per second at full glide
 @export var ramp_time: float = 0.3      ## seconds to ease speed in/out (filter rides the same ramp)
 
+## Whether the renderer polls the move_forward / move_back actions itself — a testbed
+## affordance. Hosts that DRIVE the corridor (the combat view's backdrop) turn this off,
+## or W/S would scroll the fight's corridor at any time.
+@export var input_enabled: bool = true
+
 var player_z: float = 0.0               ## continuous forward position, in cells
 var velocity: float = 0.0               ## eased cells/sec; ramps over ramp_time
 var blur_amount: float = 0.0            ## filter strength WHILE MOVING (0 = off even moving; never on at rest)
@@ -66,9 +71,9 @@ func rebuild() -> void:
 
 func _process(delta: float) -> void:
   var dir: float = 0.0
-  if forward_held or Input.is_action_pressed('move_forward'):
+  if forward_held or (input_enabled and Input.is_action_pressed('move_forward')):
     dir += 1.0
-  if back_held or Input.is_action_pressed('move_back'):
+  if back_held or (input_enabled and Input.is_action_pressed('move_back')):
     dir -= 1.0
 
   # Ease velocity toward the target over ramp_time (no snap on start/stop).

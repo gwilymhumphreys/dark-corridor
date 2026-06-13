@@ -21,6 +21,7 @@ var _depth: float = 0.0
 
 
 func _ready() -> void:
+  _corridor.input_enabled = false   # the view drives the glide; W/S must not scroll the fight
   set_enemy_count(1)
 
 

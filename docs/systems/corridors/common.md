@@ -75,7 +75,10 @@ it never touches the geometry. Run it directly (it's not the main scene):
   `view_size` yourself. (Requires the renderer's parent to sit at origin (0,0).)
 - **Input → motion**: `move_forward`/`move_back` (or `set_forward_held`/
   `set_back_held` from UI) set `dir`; a `velocity` eases toward `dir*speed` via
-  `move_toward` over `ramp_time` (0.3s); `player_z += velocity*delta`.
+  `move_toward` over `ramp_time` (0.3s); `player_z += velocity*delta`. The direct
+  action polling is gated by `input_enabled` (default on — a testbed affordance);
+  hosts that drive the corridor programmatically (the combat view's backdrop) turn
+  it off so W/S can't scroll their corridor.
   `player_z` is a continuous float in **cells**; `fposmod(player_z, 1.0)` is the
   sub-cell offset passed to `_layout()`.
 - **Blur/filter model**: `aa_strength = blur_amount * (|velocity|/speed)`. So the

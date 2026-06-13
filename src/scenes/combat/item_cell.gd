@@ -4,8 +4,15 @@ extends Control
 ## colour panel + its value, a Bazaar-style radial cooldown ring, and a scale-punch
 ## recoil when it fires. Structure is authored in item_cell.tscn; this binds the data
 ## and draws the ring + recoil. Reads the live Item; writes nothing. No alpha.
+##
+## The recoil is a pure function of the COMBAT clock (render_time − fire_time, the
+## vfx_driver.md rule) — under hover slow-mo it glides with everything else, and pause
+## freezes it. The Timekeeper is RefCounted, so holding it here outlives the fight's
+## teardown safely.
 
 const CELL_SIZE := Vector2(120, 120)   # the default (the player's prominent board); HUDs shrink it
+const RECOIL_SCALE: float = 1.3
+const RECOIL_DURATION: float = 0.18    # combat-clock seconds
 
 var item: Item
 var cell_size: Vector2 = CELL_SIZE
@@ -13,8 +20,9 @@ var cell_size: Vector2 = CELL_SIZE
 @onready var _panel: ColorRect = $Panel
 @onready var _value: Label = $Value
 
-var _last_progress: float = 1.0
-var _scale_tween: Tween
+var _timekeeper: Timekeeper = null     # the fight's clock; null = no recoil (sandbox/tests)
+var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurious recoil on bind
+var _recoil_start: float = -1.0        # render_time at the last fire; -1 = idle
 
 
 func _ready() -> void:
@@ -32,16 +40,16 @@ func set_cell_size(px: float) -> void:
 
 
 func _exit_tree() -> void:
-  # CLAUDE.md runtime cleanup: stop the recoil tween + drop the live-item ref on free.
-  if _scale_tween != null and _scale_tween.is_valid():
-    _scale_tween.kill()
-  _scale_tween = null
+  # CLAUDE.md runtime cleanup: drop the live refs on free.
   item = null
+  _timekeeper = null
 
 
 ## Bind to an item. Call after the cell is in the tree (so the node refs exist).
-func setup(target_item: Item) -> void:
+## `timekeeper` is the fight's clock for the recoil; null (default) disables it.
+func setup(target_item: Item, timekeeper: Timekeeper = null) -> void:
   item = target_item
+  _timekeeper = timekeeper
   _panel.color = item.def.panel_color
   _value.text = _value_text()
   queue_redraw()
@@ -58,9 +66,26 @@ func _process(_delta: float) -> void:
     return
   var progress: float = item.cooldown.progress()
   if progress < _last_progress - 0.2:   # cooldown reset -> it just fired
-    _recoil()
+    _recoil_start = _timekeeper.render_time() if _timekeeper != null else -1.0
   _last_progress = progress
+  _update_recoil()
   queue_redraw()
+
+
+## Scale = f(render_time − fire_time): the same stateless pattern as the projectiles,
+## so the recoil honours slow-mo and pause instead of popping at wall speed.
+func _update_recoil() -> void:
+  if _recoil_start < 0.0 or _timekeeper == null:
+    scale = Vector2.ONE
+    return
+  var since: float = _timekeeper.render_time() - _recoil_start
+  if since >= RECOIL_DURATION:
+    scale = Vector2.ONE
+    _recoil_start = -1.0
+    return
+  var s: float = Tween.interpolate_value(
+      RECOIL_SCALE, 1.0 - RECOIL_SCALE, since, RECOIL_DURATION, Tween.TRANS_BACK, Tween.EASE_OUT)
+  scale = Vector2(s, s)
 
 
 func _draw() -> void:
@@ -73,14 +98,7 @@ func _draw() -> void:
     draw_arc(centre, cell_size.x * 0.5 + 8.0, -PI * 0.5, -PI * 0.5 + progress * TAU, Consts.COOLDOWN_RING_SEGMENTS, Colours.COOLDOWN_RING, Consts.COOLDOWN_RING_WIDTH)
 
 
-func _recoil() -> void:
-  if _scale_tween != null and _scale_tween.is_valid():
-    _scale_tween.kill()
-  scale = Vector2(1.3, 1.3)
-  _scale_tween = create_tween()
-  _scale_tween.tween_property(self, 'scale', Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-
-
-## Centre of the cell in global (screen) space — the VFX wall reads it.
+## Centre of the cell in global (screen) space — the VFX wall reads it. With a centre
+## pivot, scaling keeps the visual centre fixed, so scale plays no part here.
 func cell_centre() -> Vector2:
-  return global_position + cell_size * 0.5 * scale
+  return global_position + cell_size * 0.5

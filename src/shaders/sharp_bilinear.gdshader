@@ -7,7 +7,8 @@
 // manipulates UVs and relies on the hardware doing a bilinear fetch.
 //
 // aa_strength: 0.0 = behaves like pure nearest, 1.0 = full sharp-bilinear.
-// Driven per-frame by corridor.gd's filter_mode (OFF / ON / WHEN_MOVING).
+// Driven per-frame by CorridorRenderer (corridor_renderer.gd): blur_amount × the
+// velocity ramp — full strength while gliding, fading to nearest at rest.
 shader_type canvas_item;
 
 uniform float aa_strength : hint_range(0.0, 1.0) = 1.0;

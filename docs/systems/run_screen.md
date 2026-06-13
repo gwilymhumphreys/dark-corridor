@@ -83,9 +83,12 @@ title and the pause menu; Close emits `closed` and the opener frees it. See
 
 ## The framed combat view
 
-`combat_view_framed.tscn` (the swappable `CombatView` — the framed-vs-fullscreen
-open is isolated here; full-screen is an additive later compare). The **corridor-forward**
-layout (the layout mockup), composition:
+`combat_view_framed.tscn` extends the **`CombatView` base class** (`combat_view.gd`) — the
+swappable surface (bind / release / approach controls / hover / the `item_pos` / `actor_pos` /
+`target_pos` lookups the VFX wall reads). The run screen and `VfxDriver` are typed against the
+base, so the framed-vs-fullscreen open is isolated here; a full-screen variant is an additive
+later compare (extend the base, swap one preload). The **corridor-forward** layout (the layout
+mockup), composition:
 
 - **Corridor large, top-left** — `combat_corridor.tscn` (`SubViewportContainer` →
   `SubViewport` → `CorridorScaled` → the **enemy sprite as a central-axis occupant**).
@@ -103,7 +106,8 @@ layout (the layout mockup), composition:
   a grid of `item_cell.tscn`: family-colour panel + value + cooldown ring + fire recoil),
   with the **potion slots** above it.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
-  + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right;
+  + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right —
+  capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
   `AllyLeft` / `AllyRight`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
   participating, revived to full next fight); a **dead combat-scoped token is reaped** like an
   enemy (slot removed). The view reads the CombatManager's rosters (`enemies` +
@@ -136,13 +140,16 @@ the demon walks into full view. Constants in `src/data/balance.gd`.
 
 - **Draft** — `draft_overlay.tscn` raises 3 `draft_card.tscn`s after a fight; a pick
   emits `picked(index)` → `RunManager.apply_draft_pick`. No skip.
-- **Map** — `map_strip.tscn` draws the run's beats as a labelled line (Fight / Rest /
-  Boss) with the position haloed; `mark_position` on each advance.
+- **Map** — `map_strip.tscn` draws the run's beats as a line of colour-coded dots (cleared
+  solid, upcoming rings, the current beat haloed) with an "Act N" label and edge chevrons
+  for off-screen beats; `mark_position` on each advance.
 - **Speed button** — `speed_button.tscn` on the HUD (bottom-right): an always-visible
   ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
 - **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque
-  centered panel (no translucent scrim — the pixel-art opacity rule) + Resume / Quit-to-menu;
-  its full-rect Catcher swallows input so the paused board can't be clicked through.
+  centered panel (no translucent scrim — the pixel-art opacity rule) + Resume / Settings /
+  Quit-to-menu; its full-rect Catcher swallows input so the paused board can't be clicked
+  through. Pausing mid-approach also halts the corridor treadmill (the renderer's cosmetic
+  self-animation), not just the depth walk.
 
 ## Localization
 

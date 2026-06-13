@@ -9,11 +9,11 @@ const PROJ_RADIUS := 14.0
 const NUM_DURATION := 0.6    # seconds a damage number shows (render-time)
 
 var combat: CombatManager
-var layout                    # provides item_pos(item) / actor_pos(actor)
+var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
 var _font: Font
 
 
-func setup(cm: CombatManager, layout_source) -> void:
+func setup(cm: CombatManager, layout_source: CombatView) -> void:
   combat = cm
   layout = layout_source
   _font = ThemeDB.fallback_font

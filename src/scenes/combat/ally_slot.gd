@@ -19,14 +19,15 @@ var actor: Actor
 var _cells: Dictionary = {}   # Item -> ItemCell
 
 
-func setup(target: Actor) -> void:
+## `timekeeper` drives the cells' fire recoil on the combat clock (null = no recoil).
+func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
   actor = target
   _name.text = tr(actor.display_name) if actor.display_name != '' else tr('Ally')
   for item in actor.board:
     var cell: ItemCell = ITEM_CELL.instantiate()
     _items.add_child(cell)
     cell.set_cell_size(76.0)   # compact — these slots flank the player
-    cell.setup(item)
+    cell.setup(item, timekeeper)
     _cells[item] = cell
   _refresh_hp()
 

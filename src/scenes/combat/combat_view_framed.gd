@@ -1,5 +1,5 @@
 class_name CombatViewFramed
-extends Control
+extends CombatView
 ## The framed combat view (docs/systems/ui_layout.md) — the corridor-forward layout: the corridor large
 ## top-left with each **enemy floating over it** (`enemy_hud`: name + status + HP + item cells),
 ## the **player's portrait + HP centre-bottom** with its board as a **column down the right edge**,
@@ -7,17 +7,15 @@ extends Control
 ## (`ally_slot`). It reads the CombatManager's rosters each frame, so mid-fight summons (a boss
 ## add, a player token) appear as they spawn. Hosts the VFX wall; reads logic, writes nothing.
 ## The corridor stays as the mood backdrop + the lead occupant for the approach. No alpha.
-
-## Emitted when a potion slot is clicked — a throw-potion intent the run screen forwards to
-## RunManager.throw_potion (which activates it through the Combat manager).
-signal potion_thrown(index: int)
+## (The swappable surface — bind/release/positions + potion_thrown — is the CombatView base.)
 
 const POTION_SLOT: PackedScene = preload('res://src/scenes/combat/potion_slot.tscn')
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
 const ENEMY_HUD: PackedScene = preload('res://src/scenes/combat/enemy_hud.tscn')
 const ALLY_SLOT: PackedScene = preload('res://src/scenes/combat/ally_slot.tscn')
 
-const MAX_LEFT_SLOTS: int = 2   # ally slots fill left-to-right: 2 left of the player, then right
+const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
+const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
 
 var _cm: CombatManager
 var _player: Actor
@@ -68,12 +66,13 @@ func _refresh_player_hp() -> void:
 
 
 ## The player's board is fixed during a fight (drafts happen between beats), so build the
-## right-edge item column once at bind.
+## right-edge item column once at bind. Cells get the fight's clock so their fire recoil
+## rides render_time (slow-mo slows it; pause freezes it).
 func _build_player_items(player: Actor) -> void:
   for item in player.board:
     var cell: ItemCell = ITEM_CELL.instantiate()
     _player_items.add_child(cell)
-    cell.setup(item)
+    cell.setup(item, _cm.timekeeper)
     _player_cells[item] = cell
 
 
@@ -96,15 +95,27 @@ func _sync_rosters() -> void:
     if not _enemy_huds.has(e):
       var hud: EnemyHud = ENEMY_HUD.instantiate()
       _enemy_huds_box.add_child(hud)
-      hud.setup(e)
+      # Budget each HUD a per-enemy share of the corridor panel so a multi-enemy row
+      # shrinks its item cells instead of overlapping neighbours / clipping off-panel.
+      hud.setup(e, _cm.timekeeper, _corridor.size.x * HUD_WIDTH_MARGIN / maxf(enemies.size(), 1.0))
       _enemy_huds[e] = hud
   for a in player_side:
     if a != _player and not _ally_slots.has(a):   # the player keeps its centre-bottom portrait
       var slot: AllySlot = ALLY_SLOT.instantiate()
-      var box: HBoxContainer = _ally_left if _ally_slots.size() < MAX_LEFT_SLOTS else _ally_right
-      box.add_child(slot)
-      slot.setup(a)
+      _pick_ally_box().add_child(slot)
+      slot.setup(a, _cm.timekeeper)
       _ally_slots[a] = slot
+
+
+## Fill the 4 flanking slots left-first (2 left of the player, then 2 right — the documented
+## layout); past 4 (summon tokens), alternate to the emptier side so overflow never marches
+## one-sidedly into the player's board column.
+func _pick_ally_box() -> HBoxContainer:
+  if _ally_left.get_child_count() < MAX_SLOTS_PER_SIDE:
+    return _ally_left
+  if _ally_right.get_child_count() < MAX_SLOTS_PER_SIDE:
+    return _ally_right
+  return _ally_left if _ally_left.get_child_count() <= _ally_right.get_child_count() else _ally_right
 
 
 ## Free + forget any widget whose actor is no longer present in the roster (reaped from combat).
@@ -129,6 +140,8 @@ func _position_enemy_huds() -> void:
     var hud: EnemyHud = _enemy_huds[e]
     var anchor: Vector2 = _corridor.enemy_anchor(i)            # global, the HUD's bottom-centre target
     hud.position = anchor - base - Vector2(hud.size.x * 0.5, hud.size.y)
+    # Keep the HUD on the panel — an edge occupant's wide HUD clamps in rather than clipping off.
+    hud.position.x = clampf(hud.position.x, 0.0, maxf(_enemy_huds_box.size.x - hud.size.x, 0.0))
 
 
 ## (Re)build the potion slots from the reserve. Each is a clickable button emitting
