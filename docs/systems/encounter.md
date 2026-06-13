@@ -15,7 +15,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Encoun
 An `Encounter` resolves one beat and reports its outcome up. The descent's beats — regular fights, elites, bosses, non-combat events, in-act rests — are unified as Encounters (one system, not separate fight/event/rest systems — [design](../design/game_design.md)). It owns:
 
 - **Its type + content** — a fight (an enemy composition), an event (lore prose + a binary choice), or a rest (a partial heal). Data-defined (definition vs. instance, below).
-- **Its telegraph** — what it advertised as a choice-layer option (the category + an elite's demand), first-run legible.
+- **Its telegraph** — *(dormant with the choice layer; see below)* what it would advertise as a choice-layer option (the category + an elite's demand), first-run legible. While beats auto-roll, nothing presents a telegraph.
 - **Its resolution** — spawn enemies → run the fight → win/loss; or present the event's choice → apply the outcome; or apply the rest heal.
 - **Its reward hook** — on completion it reports its outcome + reward-kind up; the `Run manager` fulfills it.
 
@@ -49,9 +49,9 @@ The `Run manager` instantiates the picked Encounter; it resolves by type, then r
 
 A fight Encounter spawns **1–4 enemies** (most 1–2; group fights authored to give AOE a reason — design) and places them in a **left-to-right order** before handing the set to the `Combat manager` (which owns runtime ordering + the leftmost-targeting rule). Spatial composition is the puzzle — "tank in front of DPS," "adds before the boss." This resolves the composition/ordering authoring the [Enemy PRD](enemy.md) deferred here.
 
-## Telegraph (the option's advertisement)
+## Telegraph (the option's advertisement — DORMANT with the choice layer)
 
-Each candidate advertises its **category** — combat-heavy/item-reward · safe/healing · risk/high-reward — and, for an **elite**, its **demand** (e.g. "high single-target burst," "applies poison — bring cleanse"). First-run legible (telegraph the category, not the contents — design). An **elite** is a fight candidate with a stronger telegraph + a bigger reward; **engaging** is picking it, **skipping** is picking another option — no separate skip mechanic.
+*The choice layer is dormant (beats auto-roll — decision-log build status; `has_pending_choice()` is always false), so nothing currently presents a telegraph and `EncounterDef` carries no telegraph field. Kept as the spec for a possible future fork-beat:* each candidate would advertise its **category** — combat-heavy/item-reward · safe/healing · risk/high-reward — and, for an **elite**, its **demand** (e.g. "high single-target burst," "applies poison — bring cleanse"). First-run legible (telegraph the category, not the contents — design). Today an **elite** is a rolled-combat outcome from the deeper per-band pool (`ELITE_FROM_BEAT` on), not an engage/skip pick.
 
 ## Reward
 
@@ -72,7 +72,7 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 - **Fight** Encounter (regular / elite / boss): spawns its enemy `Actor`s in order, creates the `Combat manager` on begin, awaits win/loss, reports the reward up (DRAFT / RELIC / ELITE = relic+draft).
 - **Event** Encounter: `begin()` **awaits** the tier-2 binary choice; the pick (routed through `RunManager.pick_event_option(index)`) applies the chosen `EventOptionDef`'s direct outcome and resolves (reward NONE — the outcome is the reward). Player-Actor effects (heal / max-HP / damage) are applied by the Encounter; an **ADD_ALLY** outcome (the **recruit event** — the event-driven ally-acquisition path) touches the *roster*, so the `RunManager` applies it (`add_ally`, capped at `MAX_ALLIES` = the 4 ally slots) before delegating. Prose + options are localized.
 - **Rest** Encounter: a partial heal on begin, resolves immediately.
-- Instantiated by the `Run manager` from the act pool (a fixed beat) or a CHOICE candidate; reports outcome (died / won / resolved) + reward up. The two-tier choice **UI** (choice overlay + event overlay) is built (run_screen).
+- Instantiated by the `Run manager` from a FIXED beat (boss / midpoint relic) or an auto-ROLLED def (the choice layer is dormant); reports outcome (died / won / resolved) + reward up. The event overlay is live; the choice overlay survives as a dormant component (run_screen).
 
 **Not** in scope: the real ~30-encounter pool + event prose (the owner's content), boss **signature mechanics**, relic/potion event outcomes (route through the `Run manager`'s run-state surface — added with real content), reward tuning.
 
@@ -82,7 +82,7 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 
 - **Encounter-definition data format — resolved (#23):** typed GDScript `EncounterDef` + catalog. The **~30-encounter pool** (location frames, telegraphs, event prose) — content/impl + design.
 - **Event-outcome catalog** (the direct effects an option can apply) — content.
-- **Telegraph iconography** + the **two-tier choice UI** — a UI pass (the candidate *assembly* is the `Run manager`'s; presentation is UI).
+- **Telegraph iconography** — dormant with the choice layer; only relevant if a fork-beat ever revives it.
 - **Choice-point frequency + candidate-set rules** (category spread, no-repeat, elite budget) — design/tuning, applied by the `Run manager`'s draw.
 - **Reward specifics per tier** — design/tuning + the `Draft` PRD.
 - **Resolved here:** composition/ordering authoring (Enemy PRD's deferral); the `Encounter` → `Combat manager` handoff (player + enemy `Actor`s + ordering); elite/boss reward routing (reported up, fulfilled by the `Run manager`).

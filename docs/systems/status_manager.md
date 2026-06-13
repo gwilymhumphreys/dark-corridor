@@ -66,7 +66,7 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 3. **Return the instance.**
 4. **On-apply event** is emitted by the *Combat manager* at the Delivery's land (`STATUS_APPLIED` carries the string id) — **only when the apply succeeded** (an unknown id applies nothing and publishes nothing) — so reactive items can trigger ("when you apply poison, gain 1 block").
 
-`ctx` is a thin `StatusContext` the Combat manager hands to active hooks (apply other statuses, spawn, publish); it is `null` for apply-outside-combat (e.g. a relic at fight start), so `on_apply` tolerates a null ctx.
+`ctx` is the reserved seam for a future `StatusContext` (apply other statuses, spawn, publish) — **today it is `null` on every call path and no `StatusContext` class exists** (none of the built statuses need it; their hooks touch only the target). Hooks must tolerate a null ctx.
 
 ---
 

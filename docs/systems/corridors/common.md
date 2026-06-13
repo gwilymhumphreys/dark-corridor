@@ -111,7 +111,8 @@ shader's nearest-reconstruction drifts slightly on heavily-scaled nodes.)
   to any 16:9 monitor with no letterbox and no blurry blit.
 - `rendering/.../default_texture_filter = 0` (Nearest).
 - **Input map**: `move_forward` = W + Up, `move_back` = S + Down (physical keys).
-- `application/run/main_scene = "res://src/scenes/corridor_testbed.tscn"` (the host).
+- `application/run/main_scene = "res://src/scenes/main.tscn"` (the game; the corridor
+  testbed stays runnable directly: `--path . res://src/scenes/corridor_testbed.tscn`).
 
 ## Pixel-art "low-res look at high-res"
 

@@ -69,7 +69,7 @@ The `Combat manager` (which knows sides + ordering) resolves the shape to actual
 
 ## Item-targeted statuses
 
-Items hold their own statuses (`StatusManager` rules; instances on the item): value modifiers (+damage), charges (triggers-twice-next), gates (silence), timed item-buffs. The fire pipeline consults them (steps 1, 3). Item-targeted statuses persist on player items across fights; their timers only advance during combat (a Timekeeper consequence).
+Items hold their own statuses (`StatusManager` rules; instances on the item): value modifiers (+damage), charges (triggers-twice-next), gates (silence), timed item-buffs. The fire pipeline consults them (steps 1, 3). Like every status, item-targeted statuses are **combat-scoped** (decision #26) — cleared at the fight's teardown, never carried between fights; the *permanent* item modifier is an **Enchantment** (one slot, below).
 
 ---
 
