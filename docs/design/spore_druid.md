@@ -31,6 +31,11 @@ The main spore **does nothing on its own for now** — pure Mass ammo (the thall
 
 Fungal without being a spore (thallids, saprolings, the dead rising as spore-thralls), and crosses over with pillar 1 (spores spawn tokens; tokens carry spores). A board of tokens *is* the cascade getting wider — obvious fantasy, obvious payoff.
 
+- **Summons are shared vocabulary** (owner, 2026-06-12 — see the cross-cutting note in
+  [`character_ideas.md`](character_ideas.md)): other characters (e.g. the Elementalist) will
+  summon too, so the druid's summons must *feel different* — this character's corner is
+  **byproduct / ephemeral / swarm / sacrificeable** (the engine overflows into tokens), vs.
+  deliberate-purchase durable allies elsewhere.
 - **Open: is summon a replacement for Spread, or a genuine second pillar?** Leaning second pillar (the Defect shape), but summon may be the tighter third-flavour than Spread is — Spread still lacks a consume-verb, summon has an obvious one. Walk-and-think, not decide-now.
 - **Cost flag:** summon promotes the deferred party/roster experiment (decision #22 — "treat each side as a roster," currently *don't build it now*) to *required* for the demo character. Fights are mostly 1–2 bodies; a summon thread needs the player side to be a party. Real cost — possibly right, but it's being called in early. If summon is a true pillar carrying real weight, the justification is sound.
 
@@ -107,4 +112,4 @@ On-mechanism standouts: thallid counter, decompose-for-fuel, board-linking, spaw
 
 **Running count:** Commons — Attacks 5 (Druid Staff, Spore Spitter, Capped Cudgel, Bloomhammer, Wilt Frond) · Skills 0 (block 0 / resource 0 / utility 0). Rares — 1 (Pocket Shrooms, attack).
 
-**Character:** `CharacterCatalog.SPORE_DRUID` scaffolded (pool: Druid Staff + Pocket Shrooms; starts with Druid Staff; no signature relic yet; not yet selectable).
+**Character:** `CharacterCatalog.SPORE_DRUID` scaffolded (pool: the 5 commons + Pocket Shrooms — the running count above; starts with Druid Staff; no signature relic yet; not yet selectable).

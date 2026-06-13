@@ -145,6 +145,24 @@ This game is closest to Bazaar without the size cap, which also means without ca
 - No cap = an acquisition decision (is this above the usefulness floor). One-sided. "More is more" unless an item is actively bad.
 - We deliberately removed the cheapest source of decision tension and committed to manufacturing all of it through synergy interactions instead. The synergy system does the structural job the cap does in Bazaar.
 - Tension to stay aware of: "no cap" and "drafts stay interesting deep into a run" are in conflict. Maximalist is the chosen answer.
+### Item categories — not all items are physical (2026-06-13)
+
+The engineering term "item" is the umbrella type for anything on the combat board — the same
+way Magic's "card" covers creatures and sorceries. **It stays engineering-side** (`Item`,
+`ItemCatalog`, `item_pool` in code + docs); renaming it gains nothing.
+
+**Player-facing labels go category-specific**, not to a new umbrella word. Items don't need to
+be physical objects — the Spore Druid has fungal weapons/tools and the Elementalist has spells.
+The UI already knows what category it's showing, so it says "Weapon" / "Spell" / "Summon" etc.
+rather than "Item." Three current player-facing strings (`Items` header in the combat view,
+`tr('Item')` / `tr('Relic + item')` in the choice card) are the only migration cost.
+
+Known categories so far:
+- **Weapon** — physical, Spore Druid default
+- **Spell** — Elementalist; at common, all spells require mana to activate and only spells cost
+  mana (the rule may bend at higher rarities)
+- **Summon** — Elementalist; its own category (not a spell) with a single activation per fight
+
 ### How items act — active, with triggers layered on
 
 - **Every item is active** — a timer-based tick effect (a cooldown that fires). Subtypes:

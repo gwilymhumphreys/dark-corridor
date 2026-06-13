@@ -3,7 +3,8 @@
 > **Uncommitted.** A holding pen for character/class concepts so they don't get lost.
 > Nothing here is decided, scheduled, or implied to ship. Ideas graduate to their own
 > working file (like [`spore_druid.md`](spore_druid.md)) only when the owner
-> chooses to pursue one — most should stay parked.
+> chooses to pursue one — most should stay parked. Ideas that close don't get deleted —
+> they move to [Retired](#retired) at the bottom, with the reason and anything salvageable.
 >
 > Read each through the **recombination** lens ([`influence_dcc.md`](influence_dcc.md)):
 > fuse two recognisable things from different domains so both stay recognisable, and let the
@@ -16,6 +17,11 @@
 >
 > Sounding-board notes (**Fusion / hook**, **Risk / open**) are *options to react to*,
 > not proposals — pitched, not chosen.
+>
+> **Front-runners (owner, 2026-06-13): Spore Druid (promoted) · Elementalist · Mech.**
+> The three also ladder in complexity — druid (bespoke status engine, most to learn) ·
+> elementalist (the on-ramp) · mech (legible fiction, but the heat economy is a new concept) —
+> a portfolio, not three competitors for one slot.
 
 ---
 
@@ -27,37 +33,47 @@ status-identity engine (spores), not warrior/mage/rogue.
 
 ---
 
-## Blade Mage / Steel Mage — *parked*
-
-- **Concept:** lots of weapons — plays like a fighter but isn't a "fighter" trope class.
-  Working name "Steel Mage" or similar.
-- **Fusion / hook:** a *mage* whose spells **are** weapons — doesn't equip and swing steel,
-  but conjures / suspends / launches it. The fusion is "arsenal as spellbook." Candidates:
-  weapons that temper or consume each other, a forge/whetstone sub-engine, blades that stack
-  into one big strike.
-- **Risk / open:** the whole game is already item-boards of weapons — *every* character holds
-  weapons. So "lots of weapons" isn't yet an identity; it needs the weapons to do something to
-  *each other* (temper, consume, combine into one strike), not just the baseline board with the
-  volume turned up. That's the design problem to crack before this graduates.
-
-## Wizard — *parked (resource-economy character)*
+## Wizard / Elementalist — *parked (resource-economy character; direction chosen 2026-06-12)*
 
 - **Concept:** a wizard of some sort with a **mana** mechanic. Owner's reframing: card games
   spend cards/energy as resources; we don't have those — we inherit **time** (cooldowns) as our
   one natural resource. So a mana layer isn't a duplicate clock, it's a *second, added* resource
   with **producers and consumers you balance**. Starting point: one given resource (time), and
   items that manipulate a second.
-- **Fusion / hook:** mana is a **stock** economy (a shared pool that fills and dumps) layered on
+- **Direction (owner, 2026-06-12): an elementalist** — elemental spells **plus elemental
+  summons**, the summons being **classic elementals** (fire/water/air/earth — owner, 2026-06-13;
+  the most legible answer, chosen on purpose). Deliberately legible: mana-elementalist-with-summons reads instantly, and the
+  game's **complexity budget** is finite — the Spore Druid already spends a lot of it (a bespoke
+  status engine to learn), so character #2 occupying the **on-ramp slot** (the Ironclad role) is
+  a portfolio choice, not a failure of imagination. Distinctiveness comes from theming/visuals
+  (strangeness in flavour costs zero comprehension) and from the summon pillar.
+- **Mana × summons couples two resource kinds:** mana is a number-stock; summons are an
+  *object* resource. Summons as mana **spenders** give the pool sinks of different sizes (cheap
+  wisp vs. expensive big elemental), and the conversion could run both ways (dissolve an
+  elemental back into mana). The pool becomes embodied — an engine, not a paint job.
+- **Item categories (owner, 2026-06-13):** items don't need to be *physical* items — the druid
+  and elementalist both imply this. The elementalist gets **spells** as an item category: at
+  common, **all spells require mana to activate, and only spells cost mana** (the common tier
+  is where the rule is strict; higher rarities can bend it). **Summons are their own item
+  category**, not spells, with a **single activation per fight** — considered as spells, but
+  own-category-once-per-fight makes sense.
+- **Open (engine):** how a mana cost composes with the cooldown clock — presumably the item
+  fires when its cooldown is ready *and* the pool can pay, which is the producer/consumer
+  economy made concrete (starved pool = stalled spells). Needs a check against the
+  Ticker/activation model when this graduates; same for what triggers a once-per-fight summon.
+- **Fusion / hook (mechanics):** mana is a **stock** economy (a shared pool that fills and dumps) layered on
   top of the **flow** economy (cooldowns, decentralized + automatic). It *couples the board*
   in a way cooldowns can't — one item's output is another's fuel through the pool. Distinct from
   the druid too: the druid's stock lives **on a target** (spores → Mass); the wizard's stock
   lives in a **player-side pool**. Different location, different coupling — no collision. See
   [Cross-cutting](#cross-cutting--resource-economies).
-- **Risk / open:** the engine is sound and unclaimed; "generic" has collapsed from *mechanical*
-  to *cosmetic*. The only generic thing is the **word "mana"** and a bland caster. Gate is
-  flavour, not mechanics — give the stock a grim identity (blood, pressure, charge, rot, debt)
-  and a grim spender. Owner's original instinct ("if the flavour's unique enough") was the whole
-  ballgame.
+- **Risk / open:** mana-on-an-elementalist is the resource's obvious home — accepted
+  deliberately for legibility (see the obvious-home caveat under
+  [Cross-cutting](#cross-cutting--resource-economies)), and the summons are likewise the
+  classic, legible answer. What's still open: the grim theming/visuals that carry tone, and
+  making its summons **feel different** from the Spore Druid's (see *Summons are shared
+  vocabulary*) — purchase/durable/few/invested is the open corner opposite the druid's
+  byproduct/ephemeral/swarm.
 
 ## Black Hole — *parked*
 
@@ -70,10 +86,22 @@ status-identity engine (spores), not warrior/mage/rogue.
 - **Risk / open:** strongest tone fit of the batch; the design question is what "gravity" *does*
   mechanically that block/damage/status don't already cover — what's the void's unique state.
 
-## Mechanic — *parked (owner-flagged overdone)*
+## Mech — *front-runner (direction set 2026-06-13)*
 
-- **Concept:** a little creature piloting a mech. Owner's flag: maybe overdone — what makes it
-  interesting?
+- **Concept:** a little creature piloting a mech. Owner's earlier flag: maybe overdone — what
+  makes it interesting?
+- **Direction (owner, 2026-06-13): the weapons-focused character.** Melee **and** ranged
+  attacks, **low-tech machinery**, easy to understand — an interesting way to do a
+  weapons-heavy character without it being a classic warrior/rogue. The "not that original"
+  worry is answered two ways: (1) the legibility caveat (see
+  [Cross-cutting](#cross-cutting--resource-economies)) — heat → mech is the obvious home,
+  taken on purpose; (2) **recombination by context** — in a grim-fantasy corridor a machine is
+  already cross-domain; the fusion comes free from the setting, and low-tech (scrap, clockwork,
+  a rig held together with spite) is what bridges it. The owner's low-tech instinct lines up
+  with the scavenged-failing-rig de-trope below.
+- **Absorbs Blade Mage (2026-06-13):** heat gives weapons the mutual coupling Blade Mage was
+  parked for lacking (every weapon feeds one shared economy) — the mech *is* the weapons
+  character. Blade Mage moved to [Retired](#retired).
 - **Fusion / hook:** the trope is overdone when the mech is just "big robot." De-trope by making
   the **pilot and the machine grim and specific**: a tiny, fragile creature in a scavenged,
   failing rig — or the "mech" is something horrible being puppeted (a corpse, a caged beast, a
@@ -89,6 +117,22 @@ status-identity engine (spores), not warrior/mage/rogue.
   engine doesn't have.)
 - **Risk / open:** if it stays "robot," it's a generic-class fail like the wizard. The creature +
   the failing-machine relationship is what would carry it.
+
+## Octopus — *parked (new 2026-06-13; owner-cooled — probably won't pursue)*
+
+- **Concept:** octopus-themed, with **unlimited arms** for weapons — holds as many weapons as
+  it can grab.
+- **Fusion / hook:** the identity is **capacity** — arms as a growable count, each arm a slot.
+  Where every other character is bounded by board space, this one's engine could be *growing
+  the board itself* (arms as a resource: grow them, lose them, maybe spend them). That's a
+  different axis from any resource in the table — the resource is *slots*.
+- **Risk / open:** collision risk with the [Mech](#mech--front-runner-direction-set-2026-06-13),
+  which just claimed "the weapons character" — the mech's identity is weapons *coupled through
+  heat*; the octopus only stands apart if its identity is *quantity/board-growth*, not weapon
+  interaction. Also needs a fact-check on what actually limits item count today — "unlimited
+  arms" only means something if arms lift a real constraint the player feels. Obvious-home
+  check: many-armed weapon-wielder is the expected octopus image (legibility caveat applies if
+  taken on purpose).
 
 ---
 
@@ -160,6 +204,22 @@ an Item) spawned and consumed on the board. Three consequences:
   [`combat_model.md`](../systems/combat_model.md)), but a cascade that never settles is the balance
   risk to watch. Obvious homes to avoid: allies → *necromancer*; items → *artificer / alchemist*.
 
+**Summons are shared vocabulary (owner, 2026-06-12).** More than one character can summon —
+summons are becoming a core part of the game, like weapons or block: a vocabulary everyone draws
+from, not one character's exclusive identity. The requirement is that each character's summons
+are **used and feel different**. Differentiation axes (a summon identity is a position on these,
+the way a resource is a position on polarity/location/timescale):
+
+- **Arrival** — *byproduct* (the engine spawns them; you didn't choose) vs. *purchase* (a
+  deliberate resource spend).
+- **Lifespan** — ephemeral tokens that pop and die vs. durable allies you invest in and protect.
+- **Count** — a swarm of small bodies vs. one or two big ones you upgrade.
+- **Role** — bodies that fight vs. bodies as a resource (sacrifice as fuel, dissolve back into
+  the pool).
+
+The Spore Druid sketches as byproduct/ephemeral/swarm/sacrificeable; the Elementalist's open
+corner is purchase/durable/few/invested.
+
 **Two reframes**
 
 - **Gold's cost is a subsystem, not a character.** It needs shops-as-encounter + a sink + gold in
@@ -190,6 +250,12 @@ character is a resource dressed in a theme, and it passes only if both land:
      priest is spiciest + most on-tone.
    - Every resource has one to avoid: heat → mech, mana → wizard, ammo → gunner, gold → merchant.
      **"No generic classes" = "don't put a resource on its obvious home."**
+   - **Legibility caveat (owner, 2026-06-12):** the obvious home can be taken *deliberately* —
+     obviousness is ease of understanding, and the game's **complexity budget** (new concepts
+     players must learn) is finite. A roster needs an on-ramp character (the Ironclad role).
+     The two budgets are different currencies: mechanics spend comprehension; theming/visuals
+     carry tone for free. So an obvious-home character keeps mechanics legible and spends its
+     strangeness purely on flavour. First use: mana → Elementalist (see the Wizard entry).
 
 A resource isn't one move — it's a **space**. A character's pool fills with many items that touch the
 resource different ways: spend it (several ways), generate it, convert it, or just **manage** it
@@ -201,3 +267,24 @@ single signature action.
 ## To add
 
 - **D&D subclass trawl** (owner) — mine subclasses for more seeds; drop concepts here as they come.
+
+---
+
+## Retired
+
+> Ideas taken off the bench — kept so they aren't re-pitched from scratch, with the reason they
+> retired. A retired idea's good parts get credited to wherever they went.
+
+### Blade Mage / Steel Mage — *retired 2026-06-13 (absorbed by the Mech)*
+
+- **Concept was:** lots of weapons — plays like a fighter but isn't a "fighter" trope class.
+  A *mage* whose spells **are** weapons — conjures / suspends / launches steel ("arsenal as
+  spellbook"); candidates included weapons that temper or consume each other, a forge/whetstone
+  sub-engine, blades stacking into one big strike.
+- **Why retired:** parked on the problem that every character holds weapons, so "lots of
+  weapons" needed the weapons to act on *each other* to be an identity. The
+  [Mech](#mech--front-runner-direction-set-2026-06-13)'s heat economy supplies exactly that
+  coupling (every weapon feeds one shared gauge), so the mech is the weapons-focused character
+  and this slot closed.
+- **Salvageable if revisited:** the conjured-arsenal *fiction* and the temper/consume/merge
+  weapon-interaction ideas — none of them are claimed by the mech's heat framing.
