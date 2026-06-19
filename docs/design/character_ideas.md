@@ -272,9 +272,15 @@ status-identity engine (spores), not warrior/mage/rogue.
   of the (not-yet-built) ammo charge-counter (count down → dissolve, no reload); the item-dissolve
   teardown path already exists.
 - **Open — engine seams (the build risk / graduation gate):**
-  - **Mid-fight item creation** = adding an Item to a *live* board mid-fight — the doc flags this
-    as a cousin of roster-add, **CHECK it's wired** (the summon/roster path is built; item-board
-    mutation may not be). This is the primary gate.
+  - **Mid-fight item creation** = adding an Item to a *live* board mid-fight — **confirmed NOT
+    built (code check 2026-06-19):** no runtime item-board mutation exists; the *only* mid-fight
+    spawn is a **summon**, which is a full Actor (a body with HP/board slot), not an item. Building
+    item-creation is the cousin-of-summon the doc anticipated. This is the primary gate.
+  - **Decay / use-counter — confirmed NOT built (code check 2026-06-19):** no charges/uses/lifespan
+    on items *or* summons; items fire forever until removed, summons die by HP or at combat end.
+    The chunk-of-flesh's "gone after N activations" needs this built (small — the item-dissolve
+    teardown path already exists). Routing the chunk through summons does NOT supply decay and turns
+    the character into a summoner with permanent bodies — the collision the design avoids.
   - **Loop guard:** objects-that-make-objects invite cascades (the Bazaar lesson). Here the **HP
     cost is a natural brake** (you run out of flesh) — but watch fleshy-items-that-make-fleshy-items.
   - **Board space** for many mid-fight items; HP engine itself is **~free** (reuses the life total).

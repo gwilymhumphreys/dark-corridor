@@ -91,8 +91,12 @@ unless asked.** The authoring how-to is the bridge to implementation.
 
 Approved-but-unbuilt designs. Each becomes a `systems/` doc on ship.
 
-_None pending — the tooltip system (gen 3) shipped; see [systems/tooltips.md](systems/tooltips.md).
-Its plan, [plans/tooltip_system.md](plans/tooltip_system.md), is kept for the design rationale + prior-art lineage._
+| Doc | Covers | Keywords |
+|-----|--------|----------|
+| [plans/item_creation_and_decay.md](plans/item_creation_and_decay.md) | **Item Creation & Decay support PRD** (engine, not content; for the Fleshmancer). Two general seams: mid-fight item creation (a `CREATE_ITEM` Delivery kind + `add_item`, cousin of summon) and item decay / limited-use as an **item-targeted use-status** (block's twin — a pool drained by firing, seeded by `ItemDef.starting_uses`, removing the item via a minimal `StatusContext`). Build order, tests, files touched. | item creation, decay, limited use, use-status, starting_uses, StatusContext, add_item, CREATE_ITEM, mid-fight, board mutation, Fleshmancer, chunk of flesh, seam |
+
+_The tooltip system (gen 3) shipped; see [systems/tooltips.md](systems/tooltips.md). Its plan,
+[plans/tooltip_system.md](plans/tooltip_system.md), is kept for the design rationale + prior-art lineage._
 
 ## History (`docs/history/`)
 
