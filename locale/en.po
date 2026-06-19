@@ -175,6 +175,62 @@ msgstr "Leather Breastplate"
 msgid "Claw"
 msgstr "Claw"
 
+#: src/content/keywords/keyword_catalog.gd
+msgid "Fuel"
+msgstr "Fuel"
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Summon"
+msgstr "Summon"
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "All Enemies"
+msgstr "All Enemies"
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Item Target"
+msgstr "Item Target"
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Unblockable"
+msgstr "Unblockable"
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Trigger"
+msgstr "Trigger"
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Enchant"
+msgstr "Enchant"
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Spends stacks of a status to power up the effect."
+msgstr "Spends stacks of a status to power up the effect."
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Brings an ally onto your side of the board."
+msgstr "Brings an ally onto your side of the board."
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Hits every enemy at once."
+msgstr "Hits every enemy at once."
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Targets an enemy item rather than the enemy."
+msgstr "Targets an enemy item rather than the enemy."
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Cannot be soaked by Block."
+msgstr "Cannot be soaked by Block."
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Charges faster when its condition happens."
+msgstr "Charges faster when its condition happens."
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "A permanent modifier attached to this item."
+msgstr "A permanent modifier attached to this item."
+
 #: src/content/relics/relic_catalog.gd
 msgid "Stone Ward"
 msgstr "Stone Ward"
@@ -191,21 +247,41 @@ msgstr "Iron Idol"
 msgid "Blind"
 msgstr "Blind"
 
+#: src/content/statuses/blind_status.gd
+msgid "Attacks miss while it lasts."
+msgstr "Attacks miss while it lasts."
+
 #: src/content/statuses/block_status.gd
 msgid "Block"
 msgstr "Block"
+
+#: src/content/statuses/block_status.gd
+msgid "Absorbs incoming damage, then wears off."
+msgstr "Absorbs incoming damage, then wears off."
 
 #: src/content/statuses/poison_status.gd
 msgid "Poison"
 msgstr "Poison"
 
+#: src/content/statuses/poison_status.gd
+msgid "Deals damage over time, losing a stack each tick."
+msgstr "Deals damage over time, losing a stack each tick."
+
 #: src/content/statuses/silence_status.gd
 msgid "Silence"
 msgstr "Silence"
 
+#: src/content/statuses/silence_status.gd
+msgid "The affected item cannot fire."
+msgstr "The affected item cannot fire."
+
 #: src/content/statuses/spores_status.gd
 msgid "Spores"
 msgstr "Spores"
+
+#: src/content/statuses/spores_status.gd
+msgid "A stacking counter that Mass effects spend."
+msgstr "A stacking counter that Mass effects spend."
 
 #: src/content/statuses/status_effect.gd
 msgid "Weak"
@@ -218,6 +294,14 @@ msgstr "..."
 #: src/content/statuses/vulnerable_status.gd
 msgid "Vulnerable"
 msgstr "Vulnerable"
+
+#: src/content/statuses/vulnerable_status.gd
+msgid "Takes more damage while it lasts."
+msgstr "Takes more damage while it lasts."
+
+#: src/content/statuses/weak_status.gd
+msgid "Deals less damage while it lasts."
+msgstr "Deals less damage while it lasts."
 
 #: src/scenes/combat/ally_slot.gd
 msgid "Ally"
@@ -362,3 +446,71 @@ msgstr "Dark Corridor"
 #: src/scenes/screens/title_screen.tscn
 msgid "Start Run"
 msgstr "Start Run"
+
+#: src/scenes/ui/tooltip/keyword_card.tscn
+msgid "Keyword"
+msgstr "Keyword"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Deal {0} damage to all enemies"
+msgstr "Deal {0} damage to all enemies"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Deal {0} damage to {1}"
+msgstr "Deal {0} damage to {1}"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Heal {0}"
+msgstr "Heal {0}"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Gain {0} {1}"
+msgstr "Gain {0} {1}"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Apply {0} {1}"
+msgstr "Apply {0} {1}"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Summon {0}"
+msgstr "Summon {0}"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When {0} is applied"
+msgstr "When {0} is applied"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "On trigger"
+msgstr "On trigger"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Every {0}s"
+msgstr "Every {0}s"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "yourself"
+msgstr "yourself"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "all enemies"
+msgstr "all enemies"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "a random enemy item"
+msgstr "a random enemy item"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "all enemy items"
+msgstr "all enemy items"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "the enemy"
+msgstr "the enemy"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "an ally"
+msgstr "an ally"
+
+#: src/scenes/ui/tooltip/tooltip_panel.tscn
+msgid "Every 1s"
+msgstr "Every 1s"

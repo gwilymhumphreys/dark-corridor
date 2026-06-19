@@ -175,6 +175,62 @@ msgstr ""
 msgid "Claw"
 msgstr ""
 
+#: src/content/keywords/keyword_catalog.gd
+msgid "Fuel"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Summon"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "All Enemies"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Item Target"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Unblockable"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Trigger"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Enchant"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Spends stacks of a status to power up the effect."
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Brings an ally onto your side of the board."
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Hits every enemy at once."
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Targets an enemy item rather than the enemy."
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Cannot be soaked by Block."
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Charges faster when its condition happens."
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "A permanent modifier attached to this item."
+msgstr ""
+
 #: src/content/relics/relic_catalog.gd
 msgid "Stone Ward"
 msgstr ""
@@ -191,20 +247,40 @@ msgstr ""
 msgid "Blind"
 msgstr ""
 
+#: src/content/statuses/blind_status.gd
+msgid "Attacks miss while it lasts."
+msgstr ""
+
 #: src/content/statuses/block_status.gd
 msgid "Block"
+msgstr ""
+
+#: src/content/statuses/block_status.gd
+msgid "Absorbs incoming damage, then wears off."
 msgstr ""
 
 #: src/content/statuses/poison_status.gd
 msgid "Poison"
 msgstr ""
 
+#: src/content/statuses/poison_status.gd
+msgid "Deals damage over time, losing a stack each tick."
+msgstr ""
+
 #: src/content/statuses/silence_status.gd
 msgid "Silence"
 msgstr ""
 
+#: src/content/statuses/silence_status.gd
+msgid "The affected item cannot fire."
+msgstr ""
+
 #: src/content/statuses/spores_status.gd
 msgid "Spores"
+msgstr ""
+
+#: src/content/statuses/spores_status.gd
+msgid "A stacking counter that Mass effects spend."
 msgstr ""
 
 #: src/content/statuses/status_effect.gd
@@ -217,6 +293,14 @@ msgstr ""
 
 #: src/content/statuses/vulnerable_status.gd
 msgid "Vulnerable"
+msgstr ""
+
+#: src/content/statuses/vulnerable_status.gd
+msgid "Takes more damage while it lasts."
+msgstr ""
+
+#: src/content/statuses/weak_status.gd
+msgid "Deals less damage while it lasts."
 msgstr ""
 
 #: src/scenes/combat/ally_slot.gd
@@ -361,4 +445,72 @@ msgstr ""
 
 #: src/scenes/screens/title_screen.tscn
 msgid "Start Run"
+msgstr ""
+
+#: src/scenes/ui/tooltip/keyword_card.tscn
+msgid "Keyword"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Deal {0} damage to all enemies"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Deal {0} damage to {1}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Heal {0}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Gain {0} {1}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Apply {0} {1}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Summon {0}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When {0} is applied"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "On trigger"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Every {0}s"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "yourself"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "all enemies"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "a random enemy item"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "all enemy items"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "the enemy"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "an ally"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_panel.tscn
+msgid "Every 1s"
 msgstr ""

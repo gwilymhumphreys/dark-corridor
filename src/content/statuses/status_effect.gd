@@ -21,6 +21,9 @@ var flags: int = 0             # Delivery.Flag bits carried from the applying ef
 # Presentation — set by PLAIN ASSIGNMENT in each subclass's _init (`name_key = 'Weak'`) so
 # tools/extract_pot.gd's `name_key = '...'` scan localizes it. Typed here on the base.
 var name_key: String = ''
+# Tooltip keyword-card body (docs/systems/tooltips.md) — set by PLAIN ASSIGNMENT in each subclass's
+# _init (like name_key) so extract_pot localizes it. Owner authors the real copy.
+var desc_key: String = ''
 var color: Color = Color.WHITE
 var icon: String = ''
 

@@ -10,6 +10,7 @@ const ID := 'blind'
 func _init() -> void:
   id = ID
   name_key = 'Blind'
+  desc_key = 'Attacks miss while it lasts.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_BLIND
 
 

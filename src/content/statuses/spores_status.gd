@@ -11,6 +11,7 @@ const ID := 'spores'
 func _init() -> void:
   id = ID
   name_key = 'Spores'
+  desc_key = 'A stacking counter that Mass effects spend.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_SPORES
 
 

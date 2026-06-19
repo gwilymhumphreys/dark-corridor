@@ -47,6 +47,7 @@ contracts (boundary hub)**, which every system doc links to.
 | [systems/ui_layout.md](systems/ui_layout.md) | **UI / layout spec + the input layer.** Screen composition; input emits intents and never mutates state; framed-vs-full-screen is the open mockup question. | ui, layout, hud, boards, cooldown ring, hover, intents, draft, progress map, portrait, framed, full-screen |
 | [systems/vfx_driver.md](systems/vfx_driver.md) | **The combat wall.** Renders projectiles, impacts, fire-emotes, damage numbers as a pure function of handed state + `render_time`; writes no game state. | vfx, wall, projectile, impact, render_time, fire-emote, damage numbers, screen shake, stateless |
 | [systems/run_screen.md](systems/run_screen.md) | **The built run UI** (as-built companion to ui_layout + vfx_driver). The presentation tree, the real-time seam, the run-screen FSM, the framed combat view, overlays, character select, settings. | run screen, presentation tree, framed, combat view, corridor, occupant, approach, FSM, draft overlay, map strip, character select, settings, pause, slow-mo |
+| [systems/tooltips.md](systems/tooltips.md) | **The combat item tooltip** (gen 3, built). Hover a board item → a cluster (main panel + always-shown keyword column) beside it; per-keyword info via Godot built-in custom tooltips on body chips; default-side + screen-half-fallback positioning; live read-only values with a changed-value highlight; the item↔cluster mouse-bridge; catalog-gated keywords. | tooltip, hover, keyword, custom tooltip, _make_custom_tooltip, positioning, mouse bridge, item panel, KeywordCatalog, live values, chip, cluster |
 | [systems/audio.md](systems/audio.md) | **Audio.** Two autoloads + bus layout: `SfxManager` (polyphonic one-shots, per-key cooldown, pitch jitter) and `MusicManager` (shuffle + crossfade). | audio, sound, sfx, music, SfxManager, MusicManager, autoload, bus, crossfade, one-shot |
 | [systems/ui_juice.md](systems/ui_juice.md) | **UI juice.** The `UIJuice` drop-in node: hover bounce + press squash + sounds for any Control; presets + per-value overrides. | juice, UIJuice, hover, press, bounce, squash, tween, preset, button feel |
 | [systems/localization.md](systems/localization.md) | **Localization.** How player-facing text is authored (static `.tscn` auto-translate; dynamic `tr()`) and the headless POT pipeline. | localization, i18n, translation, tr, POT, locale, po, auto_translate, name_key, gettext |
@@ -84,6 +85,13 @@ unless asked.** The authoring how-to is the bridge to implementation.
 | [design/per_character_pools.md](design/per_character_pools.md) | **Per-character item pools** (decision #27 rationale). Pools split per character; the colorless *layer* rejected (individual colorless items allowed); enemies + reward relics stay shared. | per-character pools, shared pool, colorless, focus vs range, scope trap, Battledraft, decision #27 |
 | [design/item_heuristics.md](design/item_heuristics.md) | **Item tuning heuristics** (starting numbers, not rules): the DPS curve, rider costs, spores free; real balance is decided in `/tune`. | item heuristics, DPS curve, cooldown, rider cost, spores free, starting properties, balance |
 | [design/authoring.md](design/authoring.md) | **Content authoring guide** (companion to the `/content` skill): the def + catalog pattern, string ids, pool membership = active/disabled, import + POT gotchas. | authoring, how to add content, def, catalog, string id, src/content, pool membership, item_pool, colorless, import, POT |
+
+## Plans (`docs/plans/`)
+
+Approved-but-unbuilt designs. Each becomes a `systems/` doc on ship.
+
+_None pending — the tooltip system (gen 3) shipped; see [systems/tooltips.md](systems/tooltips.md).
+Its plan, [plans/tooltip_system.md](plans/tooltip_system.md), is kept for the design rationale + prior-art lineage._
 
 ## History (`docs/history/`)
 

@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://dctooltipcluster1"]
+
+[ext_resource type="Script" path="res://src/scenes/ui/tooltip/tooltip_cluster.gd" id="1"]
+
+[node name="TooltipCluster" type="CanvasLayer"]
+layer = 50
+script = ExtResource("1")
+
+[node name="Body" type="Control" parent="."]
+mouse_filter = 2

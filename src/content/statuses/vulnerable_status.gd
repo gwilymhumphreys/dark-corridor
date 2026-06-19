@@ -10,6 +10,7 @@ const ID := 'vulnerable'
 func _init() -> void:
   id = ID
   name_key = 'Vulnerable'
+  desc_key = 'Takes more damage while it lasts.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_VULNERABLE
 
 

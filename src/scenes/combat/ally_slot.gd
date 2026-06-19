@@ -67,3 +67,18 @@ func mouse_over(point: Vector2) -> bool:
     if (cell as ItemCell).get_global_rect().has_point(point):
       return true
   return false
+
+
+## The Item whose cell is under `point` (the tooltip hover target), or null. Mirrors mouse_over.
+func item_at(point: Vector2) -> Item:
+  for item in _cells:
+    if (_cells[item] as ItemCell).get_global_rect().has_point(point):
+      return item
+  return null
+
+
+## The global rect of `item`'s cell — the tooltip's anchor.
+func cell_rect(item: Item) -> Rect2:
+  if _cells.has(item):
+    return (_cells[item] as ItemCell).get_global_rect()
+  return Rect2()

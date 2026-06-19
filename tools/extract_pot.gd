@@ -27,7 +27,7 @@ const Q1: String = "(?:[^'\\\\]|\\\\.)*"    # single-quoted body
 const Q2: String = "(?:[^\"\\\\]|\\\\.)*"   # double-quoted body
 
 # Dev / throwaway hosts never ship to players — their text stays English.
-const EXCLUDE_FILES: Array[String] = ['corridor_testbed', 'corridor_panel_example', 'combat_sandbox']
+const EXCLUDE_FILES: Array[String] = ['corridor_testbed', 'corridor_panel_example', 'combat_sandbox', 'tooltip_demo']
 # Format specifiers / placeholders that aren't real copy.
 const EXCLUDE_IDS: Array[String] = []
 
@@ -94,10 +94,14 @@ func _scan_gd(path: String) -> void:
   _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*'(%s)'" % Q1, label, true)
   _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*\"(%s)\"" % Q2, label, true)
   # Single-literal player-facing def fields, each shown via tr(def.<field>):
-  #   name_key (every def) · blurb_key (character select hook) · label_key (event option button).
-  for field: String in ['name_key', 'blurb_key', 'label_key']:
+  #   name_key (every def) · blurb_key (character select hook) · label_key (event option button) ·
+  #   desc_key (status keyword card) · description_key (item flavor line) — tooltip copy.
+  for field: String in ['name_key', 'blurb_key', 'label_key', 'desc_key', 'description_key']:
     _match_all(text, "%s\\s*=\\s*'(%s)'" % [field, Q1], label, true)
     _match_all(text, "%s\\s*=\\s*\"(%s)\"" % [field, Q2], label, true)
+    # …and the dict-entry form `'<field>': '...'` (KeywordCatalog authors mechanic copy as dict entries).
+    _match_all(text, "'%s'\\s*:\\s*'(%s)'" % [field, Q1], label, true)
+    _match_all(text, "'%s'\\s*:\\s*\"(%s)\"" % [field, Q2], label, true)
   # event_prose_key (event body) may be split across lines as `'...' \ + '...'`; join the
   # segments so the msgid matches the concatenated string tr(def.event_prose_key) sees.
   _scan_joined(text, 'event_prose_key', label)

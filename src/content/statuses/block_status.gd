@@ -9,4 +9,5 @@ const ID := 'block'
 func _init() -> void:
   id = ID
   name_key = 'Block'
+  desc_key = 'Absorbs incoming damage, then wears off.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_BLOCK

@@ -205,8 +205,14 @@ func _on_battle_speed_changed(speed: float) -> void:
 # manager to slow the clock (both sides) to read it.
 func _process(_delta: float) -> void:
   if _paused or _state != State.FIGHTING or _cm == null or _view == null or _cm.is_resolved():
+    # Suppressed while paused / between fights — hide the tooltip cluster (pause is also blocked by
+    # the pause menu's layer-100 Catcher, but this is the explicit off-switch). No-op if already hidden.
+    if _view != null:
+      _view.stop_inspection()
     return
-  _cm.request_slowmo(_view.mouse_over_inspectable(get_global_mouse_position()))
+  var mouse: Vector2 = get_global_mouse_position()
+  _cm.request_slowmo(_view.mouse_over_inspectable(mouse))
+  _view.update_inspection(mouse)   # feed the cluster the current hover target (the hide-bridge ticks here)
 
 
 # Pause is a run-screen presentation gate (NOT a Game phase): Escape (ui_cancel) toggles

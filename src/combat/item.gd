@@ -45,6 +45,28 @@ func is_gated() -> bool:
   return false
 
 
+## Read-only display value for the tooltip (docs/systems/tooltips.md) — the value the tooltip
+## SHOWS, computed WITHOUT side effects. Mirrors the pure stages of _resolve_effect (enchant
+## scaling + the outgoing stat-status seam) but never resets the cooldown or spends fuel, so it
+## is safe to call every frame while inspecting. Consume-scaling is excluded (it needs a non-
+## mutating stack peek; tooltips.md). Pairs with base_value for the changed-value highlight.
+func display_value(effect: ItemEffect) -> float:
+  var v: float = base_value(effect)
+  if effect.kind == Delivery.Kind.DAMAGE and owner != null:
+    v = StatusManager.modify_outgoing(owner, v)   # pure (Weak etc.)
+  return v
+
+
+## The baseline the changed-value highlight compares against: the authored value scaled by the
+## enchant only (a PERMANENT modifier — #26), so the highlight reflects combat-scoped status
+## changes (Weak), not the enchant. Read-only.
+func base_value(effect: ItemEffect) -> float:
+  var v: float = effect.value
+  if enchant != null:
+    v *= enchant.def.value_mult   # pure (permanent item modifier)
+  return v
+
+
 ## The item-side stages on top of the shared template copy (Payload.from_effect):
 ## enchant scaling, the outgoing stat-status seam, self-fuel consume, source identity.
 func _resolve_effect(effect: ItemEffect) -> Payload:

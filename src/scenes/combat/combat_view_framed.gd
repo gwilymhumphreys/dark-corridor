@@ -13,6 +13,7 @@ const POTION_SLOT: PackedScene = preload('res://src/scenes/combat/potion_slot.ts
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
 const ENEMY_HUD: PackedScene = preload('res://src/scenes/combat/enemy_hud.tscn')
 const ALLY_SLOT: PackedScene = preload('res://src/scenes/combat/ally_slot.tscn')
+const TOOLTIP_CLUSTER: PackedScene = preload('res://src/scenes/ui/tooltip/tooltip_cluster.tscn')
 
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
@@ -35,6 +36,7 @@ var _enemy_huds: Dictionary = {}    # Actor -> EnemyHud
 var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
 var _enemy_sprite_count: int = -1   # last count handed to the corridor (re-arrange only on change)
+var _cluster: TooltipCluster = null   # the floating item tooltip (its own CanvasLayer, layer 50)
 
 
 ## Bind the live fight: the player's portrait + HP (centre-bottom) and its board column (right),
@@ -48,6 +50,8 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _sync_rosters()
   _refresh_player_hp()
   _vfx.setup(_cm, self)
+  _cluster = TOOLTIP_CLUSTER.instantiate()
+  add_child(_cluster)   # a CanvasLayer — renders in screen space regardless of this Control parent
 
 
 func _process(_delta: float) -> void:
@@ -178,6 +182,10 @@ func set_gliding(on: bool) -> void:
 ## freeing the view + advancing). Render resources free with the view.
 func release() -> void:
   _vfx.combat = null
+  # Drop the hovered Item ref BEFORE the run frees the CombatManager + its items (the Actor↔Item
+  # cycle is broken at dissolve() — the cluster must not retain an Item across teardown).
+  if _cluster != null:
+    _cluster.hide_cluster()
 
 
 func _exit_tree() -> void:
@@ -187,6 +195,7 @@ func _exit_tree() -> void:
   _enemy_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()
+  _cluster = null
 
 
 ## The hover surface for the slow-mo intent: a board item on any HUD / ally slot / the player's
@@ -207,6 +216,37 @@ func mouse_over_inspectable(point: Vector2) -> bool:
     if (slot as Control).get_global_rect().has_point(point):
       return true
   return false
+
+
+# --- tooltip cluster (docs/systems/tooltips.md) ------------------------------
+
+## The board item under `point` — enemy-HUD cells, ally-slot cells, then the player's column —
+## as {item, rect (global), side} for the cluster, or {} if the point is over no cell. The rect is
+## re-read each frame so the cluster tracks a moving cell (enemy HUDs reposition every frame).
+func inspectable_at(point: Vector2) -> Dictionary:
+  for hud in _enemy_huds.values():
+    var hud_item: Item = (hud as EnemyHud).item_at(point)
+    if hud_item != null:
+      return {'item': hud_item, 'rect': (hud as EnemyHud).cell_rect(hud_item), 'side': TooltipCluster.Side.LEFT}
+  for slot in _ally_slots.values():
+    var slot_item: Item = (slot as AllySlot).item_at(point)
+    if slot_item != null:
+      return {'item': slot_item, 'rect': (slot as AllySlot).cell_rect(slot_item), 'side': TooltipCluster.Side.LEFT}
+  for item in _player_cells:
+    var cell: ItemCell = _player_cells[item]
+    if cell.get_global_rect().has_point(point):
+      return {'item': item, 'rect': cell.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
+  return {}
+
+
+func update_inspection(point: Vector2) -> void:
+  if _cluster != null:
+    _cluster.update_target(inspectable_at(point), point)
+
+
+func stop_inspection() -> void:
+  if _cluster != null:
+    _cluster.hide_cluster()
 
 
 # --- layout lookups the VFX wall reads (global / screen space) ---------------

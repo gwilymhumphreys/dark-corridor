@@ -8,6 +8,9 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 
 var id: String = ''
 var name_key: String = ''         # source English; displayed via tr()
+# Optional authored flavor line (docs/systems/tooltips.md) — appended below the generated
+# mechanical lines in the tooltip; tr()'d. Empty = generated lines only.
+var description_key: String = ''
 var rarity: int = Rarity.COMMON
 var cooldown: float = 1.0          # seconds -> Ticker threshold
 var effects: Array[ItemEffect] = []   # one usually; rares combine

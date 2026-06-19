@@ -9,6 +9,7 @@ const ID := 'silence'
 func _init() -> void:
   id = ID
   name_key = 'Silence'
+  desc_key = 'The affected item cannot fire.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_SILENCE
 
 

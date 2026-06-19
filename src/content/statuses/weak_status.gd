@@ -11,6 +11,7 @@ const ID := 'weak'
 func _init() -> void:
   id = ID
   name_key = 'Weak'                          # plain assignment → localized by extract_pot
+  desc_key = 'Deals less damage while it lasts.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_WEAK
 
 

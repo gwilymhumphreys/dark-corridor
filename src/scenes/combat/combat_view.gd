@@ -34,6 +34,22 @@ func mouse_over_inspectable(_point: Vector2) -> bool:
   return false
 
 
+# --- tooltip cluster (docs/systems/tooltips.md) ------------------------------
+## The board item under `point` for the floating tooltip: {item, rect (global), side} or {} if none.
+func inspectable_at(_point: Vector2) -> Dictionary:
+  return {}
+
+
+## Driven each frame by the run screen while fighting — feeds the cluster the current hover target.
+func update_inspection(_point: Vector2) -> void:
+  pass
+
+
+## Hide the cluster (pause / fight end / teardown).
+func stop_inspection() -> void:
+  pass
+
+
 func refresh_potions(_potions: Array) -> void:
   pass
 
