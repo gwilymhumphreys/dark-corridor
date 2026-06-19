@@ -74,6 +74,30 @@ status-identity engine (spores), not warrior/mage/rogue.
   making its summons **feel different** from the Spore Druid's (see *Summons are shared
   vocabulary*) — purchase/durable/few/invested is the open corner opposite the druid's
   byproduct/ephemeral/swarm.
+- **Name candidates (Vermis register — placeholders, undecided 2026-06-15):** display-name
+  options in the *Vermis* register (Plastiboo's art-manuals: oblique, mournful, the name does
+  *not* telegraph the mechanic). Two competing **faces**, each with its own form:
+  - **Lead — exposure / survivor face (owner, 2026-06-15): "Weathered Traveller."** A *reframe*:
+    a figure **exposed to** the elements (walking alone across a plain, battered by sun/wind/rain)
+    is the inverse of a *master of* them — a wretch who **endures** the four, not an archmage who
+    rules them. More Vermis (mournful, weathered, powerless), more on-tone, and a real
+    recombination spin on "elementalist." The name reads both halves in one breath — *weathered*
+    (worn by the elements, the oblique element read) + *traveller* (the lone walker), the
+    *Stone Scholar* adjective+role shape. Cost: it names the **exposure**, not the four-ness, so it
+    no longer announces "elemental caster" — art + loadout carry that read (a small bet on the
+    deliberately-legible on-ramp). "Traveller" is the plainest word in the set (least cryptic);
+    swap the role for more strangeness if wanted (*Weathered Wayfarer / Weathered Stray*).
+  - **Alternatives — names-the-four face (the "[X] Orphan" form, now superseded as lead).** These
+    *announce* the elemental caster by referencing the **four-ness**; the Orphan form was dropped
+    as lead because *Orphan* + the Druid's *Mother/Maiden* read as a kinship-rhyme across a small
+    roster. **Primordial Orphan** — the four *prime* elements without leaning on one, cosmological
+    not wild. **Cardinal Orphan** — four cardinal points + clerical rank. **Paracelsus Orphan** —
+    Paracelsus codified the four classic elementals, nods at the **summon pillar**; erudite.
+    **Quarter Orphan** — most oblique (fourths / *quartered* / *no quarter*); elemental read may
+    not surface. *Nature's Orphan* set aside: "nature" is the Druid's organic/wild territory.
+    *Realm Wanderer* considered then dropped (owner, 2026-06-15): too fantasy-tropey — "realm"
+    overcorrects the mundane-Traveller worry into generic fantasy; the weathered-survivor read is
+    what's wanted, and *Weathered Traveller*'s plainness serves it.
 
 ## Black Hole — *parked*
 
@@ -133,6 +157,137 @@ status-identity engine (spores), not warrior/mage/rogue.
   arms" only means something if arms lift a real constraint the player feels. Obvious-home
   check: many-armed weapon-wielder is the expected octopus image (legibility caveat applies if
   taken on purpose).
+
+## Librarian / Scholar — *parked (new 2026-06-15; theme strong, resource open)*
+
+- **Concept (owner, 2026-06-15):** a librarian / scholar — **scrolls, books, lore as the item
+  category**. Owner pictures the figure more than the mechanics ("just a thought") — which is the
+  doc's `resource + theme` screen (see [Cross-cutting](#cross-cutting--resource-economies)) working
+  as intended: the *theme* lands, the *resource* is open. Half a character, the good half.
+- **Fusion / hook:** de-trope the book-caster (close to the classic spellbook wizard) by making it
+  a **non-combatant vocation** — a quiet archivist dropped into a place that kills people.
+  Recombination: archive / scholarship / bureaucracy fused with dungeon-horror; the seam (an
+  academic in the dark corridor) is on-tone and DCC-flavoured.
+- **The open question is the resource.** "Lore as items" is *item-category flavour*, not an engine;
+  without one it's a wizard reskin. Seams to consider:
+  - **Knowledge / study — "research the monster to death" (leading seam).** A resource that
+    **builds by observing** rather than by aggression; could live **on the enemy** (annotations /
+    marginalia accrued on the foe) — a distinct *location* from a player-side pool, a distinct
+    *polarity* (rewards time + observation). Fits the **watcher fantasy** of near-silent
+    auto-combat; recombination made literal (footnotes applied to a monster). The direction that
+    makes it a real character rather than a second caster.
+  - **Scrolls as consumables — the object "build → consume" resource** (see the resource table):
+    makes and burns one-shot scrolls. Known corner: items-making-items is the artificer/alchemist
+    obvious-home + a loop hazard.
+  - **Reading order / sequence** — caring about the order items fire (chapters). Novel coupling,
+    but **auto-combat may not let the player express order** — needs a hard check against the
+    activation model before it goes anywhere.
+- **Risk / open — Elementalist collision.** The Elementalist already owns the legible caster slot;
+  a scholar that's "just another spellcaster" collides with it. Earns its own pool only if the
+  resource is genuinely **not mana** (knowledge-over-time, not a spell-points stock) — same lesson
+  as nature-vs-druid.
+
+## Spiked Shield / Retributive Block — *parked (new 2026-06-16; engine found, fiction open)*
+
+- **Concept (owner, 2026-06-16):** an armoured figure with a big spiked shield — **block-themed**,
+  damage reflection (thorns), shield bash.
+- **Identity (the engine): turns the enemy's aggression into its own fuel.** Block stops being
+  survival and becomes **intake** — signature: *weapons / charge that build when your block absorbs
+  damage* (owner). New on the [resource table](#cross-cutting--resource-economies) as
+  **adversary-driven generation**: every other character self-generates fuel (spores/mana/heat),
+  this one outsources it to the opponent (the harder they hit, the more it costs them). De-trope:
+  not "the tank that survives" but "the thing that punishes you for attacking it."
+- **Win-more guard (owner's catch + the fix).** Shield *bash* feels win-more because it keys off
+  **block remaining** — a stockpile, highest when you're already safe. The thorns/charge idea cures
+  it: key payoff off **damage absorbed** — a *flow*, highest under the most pressure. Same mechanic,
+  opposite economics. Rule: **tie payoffs to absorbed-damage-flow, not block-on-hand** — even a bash
+  that spends *charge earned by tanking* rather than current block stops being win-more and becomes
+  a comeback button.
+- **The resource is a space — populate four ways:** *intake* (block-generators — block is the
+  prerequisite to have something for hits to charge through) · *spend* (charged weapons, overcharge
+  payoff) · *convert/passive* (thorns auto-reflect a slice of what's absorbed — the always-on
+  porcupine tax) · *manage/risk* (a masochist sub-line, cf. the druid's Self: deliberately drop
+  block / invite the hit to charge faster — eat damage on purpose for fuel).
+- **Open — engine seam:** needs an **"on-block-absorbed-damage" trigger** (block soaks a hit →
+  emit charge); unverified against the Ticker/activation model — check before graduating, don't
+  assume wired.
+- **Risk / open — shared vocabulary + obvious home.** Block is shared vocabulary (everyone blocks,
+  like summons): own a *use* of block (the absorbed-damage engine), not block itself. And
+  block→armoured-knight is the StS Ironclad obvious home, while the Elementalist already holds the
+  deliberate-legible slot — two obvious-home characters is a portfolio question. The thorns-engine
+  de-tropes the *mechanic*; the *fiction* "armoured guy" is still generic-knight, which is where
+  the obvious-home risk lives.
+- **Fiction seam (open):** to dodge generic-knight *and* not collide with the Mech's fused-body, a
+  grim recombination like an **iron maiden as a person** (a walking torture-cabinet, spikes turned
+  in and out — explains the thorns natively, body-horror without "man welded into armour"). Held
+  loosely; the engine stands without the costume.
+
+## Flesh Golem / Meat — *parked (new 2026-06-16)*
+
+- **"Only pick one" (owner, 2026-06-16):** Scholar / Spiked Shield / Meat are alternatives for
+  **one** slot, not three to ship — but uncommitted, none ranked. What the owner liked about Meat:
+  it arrives with a worked-out engine (below) rather than a resource-still-open.
+- **Concept (owner, 2026-06-16):** a golem of **sewn-together chunks of flesh** — *not* undead /
+  reanimated (deliberately not-Frankenstein): **assembled, not resurrected**. The horror is
+  **assembly**; the seam is literal **stitches** (the recurring "the fusion shows" move). The
+  recombination is flesh + **needlework/crafting** (butcher-as-tailor, a patchwork), not flesh +
+  death — which also dodges the **necromancer obvious-home**.
+- **Owner's read (2026-06-18):** the most interesting concept so far; **"Fleshmancer"** endorsed as
+  the concept label (a Vermis display-name like *Rot Shepherd* / *Weathered Traveller* can come
+  later). On overlap: Druid / Elementalist / Fleshmancer share a *caster coat* but their engines are
+  unrelated (statuses · mana economy · HP-flesh-into-items), so "a few magic users" is fine — the
+  *kind* of magic is a differentiation layer on top of already-distinct mechanics, not a collision
+  (cf. StS's several spellcasters who play nothing alike).
+- **The engine (owner, 2026-06-16): it fills two mechanical spaces fused into one
+  loop — mid-fight item creation *and* HP-as-resource:**
+  - **Spend HP → make fleshy items** (cut off a piece of yourself; it becomes a thing on the
+    board). HP is the crafting substrate — exactly the doc's named recombination, *fleshmancer:
+    "flesh as crafting substrate, necromancy meets sculpture"* (a blessed HP-home; see the
+    resource+theme screen in [Cross-cutting](#cross-cutting--resource-economies)).
+  - **Block to stay alive** while you voluntarily bleed HP — block *protects the engine* (a
+    distinct use from the Spiked Shield's block-as-intake; only one ships anyway).
+  - **Healing is double-duty** — survival **and** refilling the HP you spend (heal = reload). This
+    dissolves the usual "healing items are boring" problem: here lifegain *is* an engine piece.
+  - **Ramp-up-over-time** scaling character: the board of fleshy items compounds; the ramp is gated
+    by sustain (heal/block) vs. spend. Too fast = die before payoff, too slow = out-scaled. The
+    masochist knife-edge *is* the core loop (the doc's HP warning made into the gameplay).
+- **Threads two obvious-homes by fusing them.** Items→artificer and HP→warrior/vampire are both
+  obvious homes; "a flesh-crafter who makes items from its own body" is neither (no workshop, no
+  life-drain) — the flesh+sculpture fusion keeps it off both. Passes the screen on both resources.
+- **Self-sourced → sidesteps consume.** The engine spends *your own* flesh (HP), not enemy flesh,
+  so it does **not** lean on the shared consume mechanism (druid Mass / Black Hole void). Cleaner;
+  cannibalize could be added as flavour later but isn't the core.
+- **Where the design work is:** the loop is only as good as the **variety of the conversion** —
+  fleshy items at different HP costs and different roles (a cheap chump vs. an expensive engine
+  piece vs. a flesh-healer), so the spend decision has texture. Flat conversion ("3 HP → a
+  3-damage body") is the failure mode; the pool must touch HP many different ways (cf. "a resource
+  is a space").
+- **Item lifespan — decay / limited-use (owner, 2026-06-18):** items disappear after X activations,
+  turning the lean on *items* into managing a **churning** board (make → use → wears out → gone)
+  rather than a static one. Pairs with the creation engine as two halves of one loop — creation
+  feeds the board, decay drains it — and **decay is the natural brake on the objects-make-objects
+  cascade** below: anything you spawn rots, so it can't snowball. Theme watch: decay/rot sits next
+  to the Druid's rot identity — keep this one's flavour as *wearing-out / used-up*, not
+  spreading-rot, so they don't read same-y. Engine: a per-item **use-counter** — the simpler cousin
+  of the (not-yet-built) ammo charge-counter (count down → dissolve, no reload); the item-dissolve
+  teardown path already exists.
+- **Open — engine seams (the build risk / graduation gate):**
+  - **Mid-fight item creation** = adding an Item to a *live* board mid-fight — the doc flags this
+    as a cousin of roster-add, **CHECK it's wired** (the summon/roster path is built; item-board
+    mutation may not be). This is the primary gate.
+  - **Loop guard:** objects-that-make-objects invite cascades (the Bazaar lesson). Here the **HP
+    cost is a natural brake** (you run out of flesh) — but watch fleshy-items-that-make-fleshy-items.
+  - **Board space** for many mid-fight items; HP engine itself is **~free** (reuses the life total).
+  - **Ramp tuning:** ramp characters die in fast fights / trivialise long ones if the early power
+    budget is mis-set — a balance characteristic to watch, not a blocker.
+- **Absorbs the Octopus.** Its modular-body / parts-as-loadout idea likely supersedes the cooled
+  Octopus's "growable body / slots" — so they don't compete.
+- **Roster-tone flag (open question):** Meat is the **4th body-horror-leaning character** (Black
+  Hole = cosmic absence, Mech = flesh-fused-to-metal, Spiked Shield = iron-maiden flesh, Meat =
+  sewn flesh). Different flavours, but the bestiary tone is consolidating around flesh/horror; the
+  only counterweights are the Elementalist (weathered survivor) and the Scholar (archivist).
+  Decide deliberately whether grim-flesh is the house style or the roster needs range. Picking
+  *one* of the recent batch (the owner's stated intent) eases this — only one joins, not all three.
 
 ---
 

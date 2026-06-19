@@ -6,6 +6,33 @@
 
 **Status-identity character (the Silent analog):** most cards are spore appliers, which are skills/utility. Expect this character to run skill-heavy — the attack-heavy default likely inverts here.
 
+**Name candidate (Vermis register — placeholder, undecided 2026-06-15):** display-name options in
+the *Vermis* register (oblique, mournful, the name does *not* telegraph the mechanic). All pair
+**Rot** with a second word; that word leans the Druid's *face* — which pillar the name presents:
+- the **tending / spreading face** (Mass + summon): she *acts on others* — herds, spreads, spawns
+  the rot;
+- the **Self face**: she *rots from within* (heavily-spored, the masochist line).
+
+The working concept label stays **Spore Druid**; internal id / file stay `spore_druid` until renamed.
+
+- **Rot Shepherd** — **lead (owner, 2026-06-15).** The *tending* face, strongest engine-fit: a
+  shepherd tends a flock = the summon/token/Mass mechanic as fiction (she herds the rot, leads a
+  drift of rotting things). **Gender-neutral** (opens the character's gender, where Maiden/Mother
+  are female-coded), and "tends a flock" reads the summon pillar more precisely than "makes more."
+  Occupational *Murk Sage*-shape name (adjective + role), so it rhymes in *form* with the
+  Elementalist's *Weathered Traveller* — fine, not a collision. Mild flag: *shepherd* carries a
+  pastoral/biblical echo — a lighter version of the tint that set aside *Lamb/Saint/Novice* below;
+  more occupational than clerical, so judged acceptable.
+- **Rot Maiden** — alternative, the **Self face**. Virginal/fairy-tale purity against decay; a
+  sharp innocence-vs-harm contrast (vs. Shepherd's coherent tender-of-decay image). Kept as the
+  lead for the *rots-from-within* face if that pillar becomes the character's front.
+- *Rot Mother* — superseded by Shepherd on the tending face (Shepherd is gender-neutral and reads
+  the summon pillar more precisely); kept here so the reasoning isn't re-derived.
+- Set aside (logged so they aren't re-pitched): *Rot Lily* — floral symbolism is locked-door
+  meaning most players (incl. Steam audience) won't read; *Rot Bride* — too close to *Corpse
+  Bride*; *Rot Lamb / Rot Saint / Rot Novice* — over-rhyme the religious register already running
+  (Cardinal, the crucified Mech).
+
 ---
 
 ## Structure — two pillars (not four threads)
