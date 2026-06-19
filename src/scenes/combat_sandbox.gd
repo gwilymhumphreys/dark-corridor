@@ -1,4 +1,4 @@
-extends Node2D
+extends CombatView
 ## Throwaway host (like corridor_testbed) to WATCH the combat spine: builds one
 ## player vs one enemy, runs a real CombatManager (its _physics_process drives
 ## the tick), and composes the placeholder boards + VFX over it. Not the main
@@ -97,7 +97,7 @@ func item_pos(item: Item) -> Vector2:
   return actor_pos(item.owner)
 
 
-func actor_pos(actor: Actor) -> Vector2:
+func actor_pos(actor) -> Vector2:
   return PLAYER_ANCHOR if actor == _player else ENEMY_ANCHOR
 
 
