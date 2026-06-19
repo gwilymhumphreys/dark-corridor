@@ -20,6 +20,7 @@ The layout, by the kind of question you're answering:
 |-----|--------|----------|
 | [handoff.md](handoff.md) | **Fresh-agent orientation.** What the game is, current build status, how to run/test, settled lessons, and the engineering backlog. | handoff, onboarding, orientation, start here, build status, how to run, autotest commands, next steps |
 | [decision_log.md](decision_log.md) | **The canonical decision record** (#1–#29): what was decided and why, the working approach, and what's open/deferred. Don't re-litigate anything in it. | decisions, rationale, settled, open questions, deferred, naming history |
+| [documentation.md](documentation.md) | **How the docs work** — where each kind lives, and the rules for writing/maintaining them (sync-with-code in the same change, catalog every doc, intent-not-numbers, plan→system lifecycle). | documentation, docs, conventions, style guide, index entry, update docs, keep in sync, plan to system, meta |
 
 ## Systems (`docs/systems/`)
 

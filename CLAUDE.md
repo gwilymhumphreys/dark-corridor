@@ -61,6 +61,7 @@ var data: Dictionary = {
 - **Scenes over code** — Prefer `.tscn` scene files for UI and node trees over building them programmatically in `_ready()`
 - **Opacity/transparency** — Alpha fades or semi-transparent effects can break the pixel-art aesthetic. Be careful with these and ask the user before adding any opacity.
 - **Juicy animations**: When adding new ui or visual entities, add the ui juice node to it
+- **Animate UI with `offset_transform_*`** (Godot 4.7) — When animating a Control's position/scale/rotation (hover bounces, presses, slides, shakes), set `offset_transform_enabled = true` and tween the `offset_transform_position` / `offset_transform_scale` / `offset_transform_rotation` properties (pivot via `offset_transform_pivot` / `offset_transform_pivot_ratio`) instead of the layout `position` / `scale` / `rotation`. The offset transform is visual-only (`offset_transform_visual_only` defaults true), so it does not fight container layout — use it wherever a container positions the node (the old `position`-tween caveat). Tween the layout properties only when the node is not container-managed and the animation must affect layout.
 - **Full names, not abbreviations**: Refer to game entities by their full names. Applies to code, comments, docs, run reports, tuning logs, and chat replies — abbreviations make grep harder and obscure what's being discussed.
 - **Don't add jargon**: No invented terms or vague, high-level, obtuse shorthand. Use plain, concrete language; if a term is genuinely needed, define it where it's introduced, and don't reuse a word that already means something specific in the game. Applies to code, comments, docs, run reports, tuning logs, and chat replies.
 
@@ -129,7 +130,10 @@ godot --headless --import --exit
 
 ## Documentation
 
-- After making changes, always review the documentation and create or update if needed
+**Full conventions: [`docs/documentation.md`](docs/documentation.md).** The essentials:
+
+- **Always update the docs in the SAME change as the behaviour they describe.** After any change, review the affected doc(s) and create/update as needed — code and its doc are never left out of sync. This is mandatory, not a follow-up.
+- **Every new doc gets a catalog entry in [`docs/index.md`](docs/index.md)** — an uncatalogued doc is invisible (the index is read first).
 - Keep all documentation concise with minimal examples so that an agent can quickly reference it to understand the subject
 - **Docs describe systems, mechanics, and design intent — not specific numbers.** Point to source files (`upgrades/*.json`, GDScript constants) for tunable values. This prevents docs from going stale when values are tuned. If a formula is important for understanding the system, include it but reference the source file for the actual constants.
 
