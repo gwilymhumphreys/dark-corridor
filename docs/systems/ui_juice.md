@@ -36,9 +36,9 @@ defaults to `-1` meaning "inherit from preset":
 
 - `hover_scale` — resting hover size multiplier.
 - `press_scale` — squash size while pressed.
-- `lift` — pixels the node rises on hover. **Caveat:** lift moves `position`,
-  which fights container layout — only use it on nodes a container does not
-  position.
+- `lift` — pixels the node rises on hover. Safe on container-managed nodes: the
+  rise is applied through the visual-only offset transform (see below), so it
+  no longer fights layout.
 
 ## Sounds
 
@@ -51,10 +51,15 @@ sound later.
 
 ## Behaviour notes
 
-- **Centred scaling** — sets the parent's `pivot_offset` to its centre on ready
-  and on resize, so it grows in place.
+- **Offset transform (Godot 4.7)** — all motion runs on the parent's visual-only
+  `offset_transform_*` (enabled on ready), never the layout `scale`/`position`.
+  This is what lets juice live on container-managed Controls without fighting the
+  container — including `lift`.
+- **Centred scaling** — relies on `offset_transform_pivot_ratio`'s default of
+  `(0.5, 0.5)`, so it grows from the centre at any size (no pivot recompute on
+  resize).
 - **Bounce** — hover overshoots past the hover size then settles back (a small
   secondary dip via `TRANS_BACK`); release from a press pops back up.
-- **Rest state** — captures the parent's base scale/position on ready and always
-  returns to them, so interrupted hovers don't drift.
+- **Rest state** — the offset transform rests at scale `1` / position `0`, so
+  interrupted hovers always return cleanly without capturing a base transform.
 - **Cleanup** — kills its tween in `_exit_tree()`.

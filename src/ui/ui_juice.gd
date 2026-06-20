@@ -67,17 +67,12 @@ const _INHERIT: float = -1.0
 ## Squash size multiplier while pressed. -1 keeps the preset value.
 @export var press_scale: float = _INHERIT
 ## Pixels the node rises on hover. -1 keeps the preset value.
-## WARNING: lift moves position, which fights container layout — only use it on
-## nodes that a container does not position.
 @export var lift: float = _INHERIT
 
 var _target: Control
 var _is_button: bool = false
 var _hovered: bool = false
 var _tween: Tween
-
-var _base_scale: Vector2 = Vector2.ONE
-var _base_position: Vector2 = Vector2.ZERO
 
 # Resolved feel (preset merged with overrides).
 var _hover_scale: float
@@ -98,10 +93,11 @@ func _ready() -> void:
   _target = parent as Control
   _is_button = _target is BaseButton
   _resolve_feel()
-  _base_scale = _target.scale
-  _base_position = _target.position
-  _center_pivot()
-  _target.resized.connect(_center_pivot)
+  # Animate via the Godot 4.7 offset transform: it is visual-only, so juice never
+  # fights the container that lays this Control out (this is what frees `lift`).
+  # The pivot ratio defaults to (0.5, 0.5), so scaling grows from the centre at any
+  # size — no manual pivot recompute on resize needed.
+  _target.offset_transform_enabled = true
   _target.mouse_entered.connect(_on_mouse_entered)
   _target.mouse_exited.connect(_on_mouse_exited)
   if _is_button:
@@ -123,18 +119,10 @@ func _resolve_feel() -> void:
   _press_time = p['press_time']
 
 
-func _center_pivot() -> void:
-  # Scale from the centre so the node grows in place, not toward a corner.
-  _target.pivot_offset = _target.size / 2.0
-
-
 func _on_mouse_entered() -> void:
   if _is_button and (_target as BaseButton).disabled:
     return
   _hovered = true
-  # Re-centre in case the first interaction happens before a layout pass has
-  # given the Control its real size (size is (0,0) in _ready inside a container).
-  _center_pivot()
   if play_sounds:
     _play_hover()
   _bounce_to(_hover_scale, true)
@@ -148,7 +136,6 @@ func _on_mouse_exited() -> void:
 func _on_button_down() -> void:
   if (_target as BaseButton).disabled:
     return
-  _center_pivot()
   _scale_to(_press_scale, _press_time, Tween.TRANS_QUAD, Tween.EASE_OUT)
 
 
@@ -171,29 +158,29 @@ func _bounce_to(target_factor: float, from_rest: bool) -> void:
   _kill_tween()
   _tween = _target.create_tween()
   var peak: float = _overshoot_scale if from_rest else maxf(target_factor, _press_scale) + 0.04
-  _tween.tween_property(_target, 'scale', _base_scale * peak, _rise_time) \
+  _tween.tween_property(_target, 'offset_transform_scale', Vector2.ONE * peak, _rise_time) \
     .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-  _tween.tween_property(_target, 'scale', _base_scale * target_factor, _settle_time) \
+  _tween.tween_property(_target, 'offset_transform_scale', Vector2.ONE * target_factor, _settle_time) \
     .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
   if _lift > 0.0:
-    _tween.parallel().tween_property(_target, 'position:y', _base_position.y - _lift, _rise_time) \
+    _tween.parallel().tween_property(_target, 'offset_transform_position:y', -_lift, _rise_time) \
       .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
 func _settle() -> void:
   _kill_tween()
   _tween = _target.create_tween()
-  _tween.tween_property(_target, 'scale', _base_scale, _exit_time) \
+  _tween.tween_property(_target, 'offset_transform_scale', Vector2.ONE, _exit_time) \
     .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
   if _lift > 0.0:
-    _tween.parallel().tween_property(_target, 'position:y', _base_position.y, _exit_time) \
+    _tween.parallel().tween_property(_target, 'offset_transform_position:y', 0.0, _exit_time) \
       .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
 func _scale_to(target_factor: float, time: float, trans: Tween.TransitionType, ease_type: Tween.EaseType) -> void:
   _kill_tween()
   _tween = _target.create_tween()
-  _tween.tween_property(_target, 'scale', _base_scale * target_factor, time).set_trans(trans).set_ease(ease_type)
+  _tween.tween_property(_target, 'offset_transform_scale', Vector2.ONE * target_factor, time).set_trans(trans).set_ease(ease_type)
 
 
 func _play_hover() -> void:
@@ -222,7 +209,6 @@ func _exit_tree() -> void:
   # still-alive parent can emit mouse_exited during teardown and _settle() would
   # call create_tween() on a null _target.
   if is_instance_valid(_target):
-    _target.resized.disconnect(_center_pivot)
     _target.mouse_entered.disconnect(_on_mouse_entered)
     _target.mouse_exited.disconnect(_on_mouse_exited)
     if _is_button:
