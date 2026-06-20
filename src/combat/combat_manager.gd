@@ -27,6 +27,11 @@ var allies: Array = []           # Array[Actor] — run-scoped player-side allie
 var timekeeper: Timekeeper
 var bus: EventBus
 var rng: RandomNumberGenerator   # the per-fight stream — random item-targeting (#14/#20)
+# The per-fight observation sink (docs/systems/combat_log.md) — OPTIONAL, null-guarded at every
+# write. The run screen / the autotest assign one after start(); the sandbox + most GUT tests
+# leave it null (no observation needed). Direct-written at each mutation site (not the event bus):
+# the bus's listener channel carries no amount + no timestamp. No game-object refs are stored.
+var combat_log: CombatLog = null
 
 var _player_tokens: Array[Actor] = []   # combat-scoped player-side summons (dissolved)
 var _discarded: Array[Actor] = []       # combat-scoped bodies reaped on death; dissolved at teardown
@@ -298,6 +303,14 @@ func _advance_statuses_on(target) -> void:
       var dealt: float = hp_before - target.hp
       if dealt > 0.0:
         _deliveries.append(_dot_visual(st, target, dealt))
+        # The DoT damage is logged HERE — the bus publishes no event for a tick, so this is the
+        # only place the log catches it. `st.source` may be an Item (→ its name + owner side), an
+        # Actor (→ SOURCELESS + that actor's side), or null (→ SOURCELESS, credited to the
+        # target's opponent). The single source of truth (docs/systems/combat_log.md Design B):
+        # this credits each tick to its own status's source exactly.
+        if combat_log != null:
+          combat_log.on_damage(_status_source_name(st), _status_source_side(st, target),
+              target.display_name, _side_of(target), dealt, timekeeper.sim_time)
   for st in spent:
     st.on_expire(target, null)   # the natural-removal hook (every removal site calls it)
     target.statuses.erase(st)
@@ -331,6 +344,8 @@ func _fire_item(it: Item, arrived: Array) -> void:
   if payloads.is_empty():
     return   # gated (silence)
   bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
+  if combat_log != null:
+    combat_log.on_item_fired(it.def.name_key, _side_of(it.owner), timekeeper.sim_time)
   # The item still fires (cooldown reset, fire-emote) even when blinded — but its DAMAGE
   # whiffs (docs/systems/spore_engine.md Cap 2). Locked at fire so a swing launched while blinded misses.
   var blinded: bool = StatusManager.has_evasion(it.owner)
@@ -439,16 +454,31 @@ func _land(d: Delivery) -> void:
   match d.kind:
     Delivery.Kind.DAMAGE:
       if d.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
-        d.target.take_damage(d.value, d.flags)
+        var dealt: float = d.target.take_damage(d.value, d.flags)
         bus.publish(EventBus.Event.DAMAGE_DEALT, null, d.source_actor, _source_item_of(d))
+        if combat_log != null:
+          combat_log.on_damage(_delivery_source_name(d), _delivery_source_side(d),
+              d.target.display_name, _side_of(d.target), dealt, timekeeper.sim_time)
     Delivery.Kind.HEAL:
       if d.target is Actor:
-        d.target.heal(d.value)
+        var healed: float = d.target.heal(d.value)
         bus.publish(EventBus.Event.HEALED, null, d.source_actor, _source_item_of(d))
+        if combat_log != null:
+          combat_log.on_heal(_delivery_source_name(d), _delivery_source_side(d),
+              d.target.display_name, _side_of(d.target), healed, timekeeper.sim_time)
     Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
       var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
       if applied != null:   # an unknown id applies nothing — publish no event for it
         bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id, d.source_actor, _source_item_of(d))
+        if combat_log != null:
+          # Shield (block) carries its value; every other status is a count. Use BlockStatus.ID,
+          # not a literal, so the two stay in step (docs/systems/combat_log.md Cap 2 site 5).
+          if d.status_id == BlockStatus.ID:
+            combat_log.on_block(_delivery_source_name(d), _delivery_source_side(d),
+                _target_name(d.target), _target_side(d.target), d.value, timekeeper.sim_time)
+          else:
+            combat_log.on_status_applied(_delivery_source_name(d), _delivery_source_side(d),
+                _target_name(d.target), _target_side(d.target), d.status_id, timekeeper.sim_time)
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)
       if d.summon_def_id != '' and d.target is Actor:
         add_actor(_spawn_token(d.summon_def_id), _on_player_side(d.target), d.summon_in_front)
@@ -462,6 +492,73 @@ func _land(d: Delivery) -> void:
 ## still rides `source_actor`).
 func _source_item_of(d: Delivery) -> Item:
   return d.source if d.source is Item else null
+
+
+# --- CombatLog source/side resolution (docs/systems/combat_log.md) -----------
+# The log stores name_keys + side ints (never object refs), resolved at the write site.
+
+## Which side an actor is on, as a CombatLog.Side (the log keys per side — a colorless
+## item can sit on both, so a flat key would conflate them).
+func _side_of(actor) -> int:
+  return CombatLog.Side.PLAYER if _on_player_side(actor) else CombatLog.Side.ENEMY
+
+
+## The opposite side — for a source-less DoT, whose dealer is the holder's opponent.
+func _other_side(side: int) -> int:
+  return CombatLog.Side.ENEMY if side == CombatLog.Side.PLAYER else CombatLog.Side.PLAYER
+
+
+## The dealing item's name_key behind a Delivery — SOURCELESS when there is none (a
+## thrown consumable has a null `source`; its actor identity rides `source_actor`).
+func _delivery_source_name(d: Delivery) -> String:
+  var it: Item = _source_item_of(d)
+  return it.def.name_key if it != null else CombatLog.SOURCELESS
+
+
+## The dealing side behind a Delivery — the source item's owner side, else the acting
+## actor's (a thrown consumable), else the target's opponent (a fully source-less hit).
+func _delivery_source_side(d: Delivery) -> int:
+  var it: Item = _source_item_of(d)
+  if it != null and it.owner != null:
+    return _side_of(it.owner)
+  if d.source_actor != null:
+    return _side_of(d.source_actor)
+  return _other_side(_target_side(d.target))
+
+
+## A status-targeting Delivery's target name — the Actor's display_name, or for an
+## item-targeted status the host item's name_key.
+func _target_name(target) -> String:
+  if target is Actor:
+    return target.display_name
+  if target is Item:
+    return target.def.name_key
+  return ''
+
+
+## A status-targeting Delivery's target side — the Actor's side, or the host item's owner's.
+func _target_side(target) -> int:
+  if target is Item:
+    return _side_of(target.owner)
+  return _side_of(target)
+
+
+## A DoT status's applier name_key — the applier item's name when known, else SOURCELESS
+## (an Actor-applied or item-less DoT; the old DOT_FAMILY fallback moves to the log).
+func _status_source_name(st: StatusEffect) -> String:
+  if st.source is Item and st.source.def != null:
+    return st.source.def.name_key
+  return CombatLog.SOURCELESS
+
+
+## A DoT status's dealer side — the applier item's owner side, an applier Actor's side, or
+## (no source) the holder's opponent (a DoT damages its holder; the dealer is the other side).
+func _status_source_side(st: StatusEffect, holder) -> int:
+  if st.source is Item and st.source.owner != null:
+    return _side_of(st.source.owner)
+  if st.source is Actor:
+    return _side_of(st.source)
+  return _other_side(_side_of(holder))
 
 
 # --- Target-shape resolution (the runtime targeting authority) --------------
@@ -667,6 +764,8 @@ func request_slowmo(on: bool) -> void:
 func throw_consumable(consumable, thrower: Actor) -> void:
   if _resolved:
     return
+  if combat_log != null:
+    combat_log.on_throw(consumable.def.id, _side_of(thrower), timekeeper.sim_time)
   for effect in consumable.def.effects:
     # The shared template copy only — a throw deliberately SKIPS the item-side stages
     # (enchant scaling, modify_outgoing, evasion): potions are exempt (decision #30).

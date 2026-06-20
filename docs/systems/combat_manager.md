@@ -101,6 +101,12 @@ The manager holds the in-flight Delivery set. A *resolved* Delivery is kept unti
 
 ---
 
+## The combat log (observation sink)
+
+The manager holds an **optional** `var combat_log: CombatLog = null` ([combat_log.md](combat_log.md)). The run screen / the autotest assign one after `start()`; the sandbox + most tests leave it null. At each mutation site the manager makes one **null-guarded** direct call (not via the [event bus](#the-trigger-event-bus) — the listener channel carries no amount and no timestamp, and DoT publishes no event). Six sites + throws: **fire** (`_fire_item`, after `ITEM_FIRED`), **direct damage** + **heal** (`_land`, capturing `Actor.take_damage` / `heal`'s now-returned HP delta), **shield** (`_land` APPLY_STATUS where `d.status_id == BlockStatus.ID`) and **other statuses** (the else branch), **DoT damage** (`_advance_statuses_on`, where the tick's `dealt` is already computed for the visual — `st.source` resolves Item → name+owner-side, Actor → side, null → the holder's opponent), and **throws** (`throw_consumable`). Source identity + side are resolved at the write site (`_delivery_source_*` / `_status_source_*` / `_side_of`) into `name_key`s + side ints — no game-object refs are stored. `teardown()` is unaffected (the log is the caller's to retain for a post-fight screen).
+
+---
+
 ## Player input (intents)
 
 The manager receives UI *input-intents* during a fight (the input/output split — see architecture):
