@@ -20,6 +20,10 @@ msgid "Duelist"
 msgstr ""
 
 #: src/content/characters/character_catalog.gd
+msgid "Fleshmancer"
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
 msgid "A balanced kit — blade, plate, and a creeping poison."
 msgstr ""
 
@@ -29,6 +33,10 @@ msgstr ""
 
 #: src/content/characters/character_catalog.gd
 msgid "Twin blades, no safety net — all pressure, no plate."
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
+msgid "Carve yourself into a churning board of flesh."
 msgstr ""
 
 #: src/content/consumables/consumable_catalog.gd
@@ -172,6 +180,34 @@ msgid "Leather Breastplate"
 msgstr ""
 
 #: src/content/items/item_catalog.gd
+msgid "Chunk of Flesh"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Carving Knife"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Cleaver"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Bone Saw"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Flesh Explosion"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Flensing Hook"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Skin Graft"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
 msgid "Claw"
 msgstr ""
 
@@ -259,6 +295,14 @@ msgstr ""
 msgid "Absorbs incoming damage, then wears off."
 msgstr ""
 
+#: src/content/statuses/decay_status.gd
+msgid "Decay"
+msgstr ""
+
+#: src/content/statuses/decay_status.gd
+msgid "The affected item is destroyed after a number of uses."
+msgstr ""
+
 #: src/content/statuses/poison_status.gd
 msgid "Poison"
 msgstr ""
@@ -317,6 +361,10 @@ msgstr ""
 
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "You"
+msgstr ""
+
+#: src/scenes/combat/value_pill.tscn
+msgid "0"
 msgstr ""
 
 #: src/scenes/screens/character_card.gd
@@ -476,6 +524,10 @@ msgid "Summon {0}"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Create {0}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "When {0} is applied"
 msgstr ""
 
@@ -509,6 +561,10 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "an ally"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "an item"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_panel.tscn

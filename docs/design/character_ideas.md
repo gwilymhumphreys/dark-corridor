@@ -249,8 +249,8 @@ status-identity engine (spores), not warrior/mage/rogue.
   **low** damage (the chunk is the payload, not the hit) and a **3s minimum cooldown** (a chunk lives
   ~4s; faster creation stacks chunks up too quickly). Differentiate by cadence + chunk **count** (Bone
   Maul makes 2 per swing). Current commons: Carving Knife 3s·1·3dmg (chunk-rate edge) · Cleaver
-  4s·1·6dmg (bigger-hit edge) · Bone Saw 6s·2·4dmg (2-chunk burst) — Boning & Cleaver split
-  fast-low / slow-high so neither dominates (Carving Knife & Cleaver).
+  4s·1·6dmg (bigger-hit edge) · Bone Saw 6s·2·4dmg (2-chunk burst) — Carving Knife & Cleaver split
+  fast-low / slow-high so neither dominates.
 - **Flesh Explosion (owner) — authored:** the first destroy-charged payoff (Mode A) — **AOE**, ~70
   damage (reduced from ~100 for AOE parity), 20s base cooldown, **charges ~1s whenever one of your
   items is destroyed** (the churning chunks build it), Uncommon, in the Fleshmancer pool. Built on the

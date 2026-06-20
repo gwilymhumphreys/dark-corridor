@@ -600,6 +600,11 @@ func _reap_from(roster: Array, player_side_roster: bool) -> void:
     var actor: Actor = roster[i]
     if not actor.is_alive():
       for it in actor.board:
+        # Deliberately NOT via remove_item: an item leaving with its DEAD OWNER is not a "destroy"
+        # for triggers (docs/systems/item_creation_and_decay.md). ITEM_DESTROYED fires only for the
+        # ACTIVE removal of a still-owned item (decay-depletion, own-board-consume) — a charge-on-
+        # destroy item does NOT charge when a token/ally/enemy dies. So this strips the wiring
+        # directly (drop from the sweep + unsubscribe) and publishes nothing.
         _items.erase(it)
         bus.unsubscribe(it)   # a reaped body's items stop receiving trigger pushes
       roster.remove_at(i)

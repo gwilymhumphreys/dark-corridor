@@ -20,6 +20,10 @@ msgid "Duelist"
 msgstr "Duelist"
 
 #: src/content/characters/character_catalog.gd
+msgid "Fleshmancer"
+msgstr "Fleshmancer"
+
+#: src/content/characters/character_catalog.gd
 msgid "A balanced kit — blade, plate, and a creeping poison."
 msgstr "A balanced kit — blade, plate, and a creeping poison."
 
@@ -30,6 +34,10 @@ msgstr "Stack Spores, then spend them."
 #: src/content/characters/character_catalog.gd
 msgid "Twin blades, no safety net — all pressure, no plate."
 msgstr "Twin blades, no safety net — all pressure, no plate."
+
+#: src/content/characters/character_catalog.gd
+msgid "Carve yourself into a churning board of flesh."
+msgstr "Carve yourself into a churning board of flesh."
 
 #: src/content/consumables/consumable_catalog.gd
 msgid "Healing Draught"
@@ -172,6 +180,34 @@ msgid "Leather Breastplate"
 msgstr "Leather Breastplate"
 
 #: src/content/items/item_catalog.gd
+msgid "Chunk of Flesh"
+msgstr "Chunk of Flesh"
+
+#: src/content/items/item_catalog.gd
+msgid "Carving Knife"
+msgstr "Carving Knife"
+
+#: src/content/items/item_catalog.gd
+msgid "Cleaver"
+msgstr "Cleaver"
+
+#: src/content/items/item_catalog.gd
+msgid "Bone Saw"
+msgstr "Bone Saw"
+
+#: src/content/items/item_catalog.gd
+msgid "Flesh Explosion"
+msgstr "Flesh Explosion"
+
+#: src/content/items/item_catalog.gd
+msgid "Flensing Hook"
+msgstr "Flensing Hook"
+
+#: src/content/items/item_catalog.gd
+msgid "Skin Graft"
+msgstr "Skin Graft"
+
+#: src/content/items/item_catalog.gd
 msgid "Claw"
 msgstr "Claw"
 
@@ -259,6 +295,14 @@ msgstr "Block"
 msgid "Absorbs incoming damage, then wears off."
 msgstr "Absorbs incoming damage, then wears off."
 
+#: src/content/statuses/decay_status.gd
+msgid "Decay"
+msgstr "Decay"
+
+#: src/content/statuses/decay_status.gd
+msgid "The affected item is destroyed after a number of uses."
+msgstr "The affected item is destroyed after a number of uses."
+
 #: src/content/statuses/poison_status.gd
 msgid "Poison"
 msgstr "Poison"
@@ -318,6 +362,10 @@ msgstr "Items"
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "You"
 msgstr "You"
+
+#: src/scenes/combat/value_pill.tscn
+msgid "0"
+msgstr "0"
 
 #: src/scenes/screens/character_card.gd
 msgid "Starts with: {0}"
@@ -476,6 +524,10 @@ msgid "Summon {0}"
 msgstr "Summon {0}"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Create {0}"
+msgstr "Create {0}"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "When {0} is applied"
 msgstr "When {0} is applied"
 
@@ -510,6 +562,10 @@ msgstr "the enemy"
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "an ally"
 msgstr "an ally"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "an item"
+msgstr "an item"
 
 #: src/scenes/ui/tooltip/tooltip_panel.tscn
 msgid "Every 1s"

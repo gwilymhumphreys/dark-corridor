@@ -23,7 +23,7 @@ const LEATHER_GLOVES := 'leather_gloves'
 const LEATHER_TREWS := 'leather_trews'
 const LEATHER_BREASTPLATE := 'leather_breastplate'
 const FLESH_CHUNK := 'flesh_chunk'
-const FLESH_CARVING_KNIFE := 'flesh_paring_knife'
+const FLESH_CARVING_KNIFE := 'flesh_carving_knife'
 const FLESH_CLEAVER := 'flesh_cleaver'
 const FLESH_BONE_SAW := 'flesh_bone_maul'
 const FLESH_EXPLOSION := 'flesh_explosion'
@@ -414,7 +414,7 @@ static func _flesh_chunk() -> ItemDef:
   return d
 
 
-## Carving Knife (PLACEHOLDER name — owner's to rename) — the FAST pole of the Fleshmancer attack
+## Carving Knife — the FAST pole of the Fleshmancer attack
 ## spread (character_ideas.md → Flesh Golem / Meat): a quick jab that deals LOW damage AND creates a
 ## Chunk of Flesh on the player's OWN board (shape SELF → the firer). At the **3s chunk-creator
 ## minimum** — a chunk lives ~4s, so faster creation would stack chunks up too quickly. COMMON.
@@ -422,7 +422,7 @@ static func _flesh_chunk() -> ItemDef:
 static func _flesh_carving_knife() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_CARVING_KNIFE
-  d.name_key = 'Carving Knife'          # PLACEHOLDER name — owner's to rename
+  d.name_key = 'Carving Knife'
   d.cooldown = Balance.FLESH_CARVING_KNIFE_COOLDOWN
   var hit := ItemEffect.new()
   hit.kind = Delivery.Kind.DAMAGE

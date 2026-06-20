@@ -118,7 +118,7 @@ const FLESH_CHUNK_USES: int = 2                   # decays after 2 activations (
 const FLESH_CARVING_KNIFE_COOLDOWN: float = 3.0    # fast pole — at the 3s chunk-creator minimum (1 chunk)
 const FLESH_CARVING_KNIFE_DAMAGE: float = 3.0      # fast / low — chunk-rate is its edge
 const FLESH_CLEAVER_COOLDOWN: float = 4.0         # mid pole (1 chunk)
-const FLESH_CLEAVER_DAMAGE: float = 6.0           # slower but punchier — the bigger hit is its edge (vs Boning)
+const FLESH_CLEAVER_DAMAGE: float = 6.0           # slower but punchier — the bigger hit is its edge (vs Carving Knife)
 const FLESH_BONE_SAW_COOLDOWN: float = 6.0       # slow pole — makes 2 chunks (two CREATE_ITEM effects)
 const FLESH_BONE_SAW_DAMAGE: float = 4.0         # low — its payoff is the 2 chunks, not the hit
 

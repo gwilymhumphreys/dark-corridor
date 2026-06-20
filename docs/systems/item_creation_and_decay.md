@@ -149,6 +149,14 @@ strip during `teardown()`. A fight ending is **not** a "destroy" for triggers, s
 suppressed once `_resolved` (the flag `add_item` guards on; teardown also nulls `bus`, the redundant
 backstop). **Determinism:** published in the deterministic removal path — no RNG.
 
+**Scope — owner-death is NOT a destroy.** `ITEM_DESTROYED` fires only for the **active removal of a
+still-owned item** (decay-depletion or own-board-consume — the two paths through `remove_item`). When
+an **actor dies**, its items leave with it via the dead-actor reap (`_reap_from`), which strips their
+wiring **directly** (drop from the sweep + `bus.unsubscribe`) and publishes **nothing**. So a charge-
+on-destroy item does **not** charge when a token, ally, or enemy dies — "destroyed" means the *item*
+was consumed/decayed away, not that its owner fell. (If a future character wants "charge when a body
+dies," that is a *separate* death event, not this one.)
+
 ## Capability 4 — Own-board item-consume (the Mass-twin) — BUILT (2026-06-20)
 
 > **Realized:** `ItemEffect` / `Payload` carry **`consume_item_def_id`** / **`consume_item_amount`** /
