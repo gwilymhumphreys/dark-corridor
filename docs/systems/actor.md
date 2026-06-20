@@ -36,7 +36,7 @@ What it does **not** hold: **relics and potions** — both live in the **player 
 
 ## Interface (surface others act through)
 
-- `take_damage(amount, …)` — runs the raw amount through the target's incoming-damage-modifier statuses via the `StatusManager` (absorbers like block consume before HP; the precise amplifier/absorber order is settled when `vulnerable`-type statuses exist — StatusManager PRD), applies the remainder to HP; at 0 HP → `died`. `heal(amount)` is straightforward. Called by Deliveries / items on arrival, and by potions/relics.
+- `take_damage(amount, …)` — runs the raw amount through the target's incoming-damage-modifier statuses via the `StatusManager` (absorbers like block consume before HP; the precise amplifier/absorber order is settled when `vulnerable`-type statuses exist — StatusManager PRD), applies the remainder to HP; at 0 HP → `died`. `heal(amount)` is straightforward. Called by Deliveries / items on arrival, and by potions/relics. **Both return the actual HP delta** (`take_damage` → net-after-block, capped on a killing blow; `heal` → post-overheal-cap HP restored) so the [Combat log](combat_log.md) records honest numbers with no HP-diff reconstruction — additive and safe (statement-callers ignore the return). Returns `0.0` for a dead actor.
 - `is_alive()` + a **`died` signal** — the `Combat manager` reads these for win/loss. No Actor decides the fight is over.
 - **Board access** — read the item list (for the Combat manager's registry and UI); add/remove an item (draft adds to the player board between fights).
 - **Status access** — add/remove/read actor-targeted statuses (the StatusManager operates here).

@@ -26,23 +26,31 @@ func is_alive() -> bool:
 
 ## Run the raw amount through the target's incoming-damage modifiers (block, and
 ## later amplifiers), then apply the remainder to HP. Dead actors ignore damage
-## (so `died` fires once).
-func take_damage(amount: float, flags: int = 0) -> void:
+## (so `died` fires once). Returns the ACTUAL HP lost — post-block, capped at the
+## remaining HP (a killing blow returns effective, not inflated raw, damage) — so
+## the CombatLog records honest numbers with no HP-diff machinery (docs/systems/
+## combat_log.md). Statement-callers may ignore the return.
+func take_damage(amount: float, flags: int = 0) -> float:
   if not is_alive():
-    return
+    return 0.0
   var net: float = StatusManager.resolve_incoming_damage(self, amount, flags)
+  var hp_before: float = hp
   hp = maxf(hp - net, 0.0)
   if hp <= 0.0:
     died.emit()
+  return hp_before - hp
 
 
 ## A dead actor stays dead — heal cannot revive (death is final this fight).
 ## Currently unreachable via Deliveries (a HEAL to a dead target fizzles in the
 ## Combat manager) but guarded here so no future caller can resurrect a corpse.
-func heal(amount: float) -> void:
+## Returns the ACTUAL HP restored (post-overheal-cap) — see take_damage.
+func heal(amount: float) -> float:
   if not is_alive():
-    return
+    return 0.0
+  var hp_before: float = hp
   hp = minf(hp + amount, max_hp)
+  return hp - hp_before
 
 
 ## Break the Actor<->Item reference cycle (the board holds each item; every item's
