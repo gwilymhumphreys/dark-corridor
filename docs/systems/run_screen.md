@@ -103,7 +103,9 @@ mockup), composition:
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
   "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
-  a grid of `item_cell.tscn`: family-colour panel + value + cooldown ring + fire recoil),
+  a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding a placeholder item icon, a
+  centred row of effect-coloured value pills (`value_pill.tscn`, one per value-bearing effect)
+  straddling the top edge, a cooldown wipe (a horizontal line rising bottom→top) + fire recoil),
   with the **potion slots** above it.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
   + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right —

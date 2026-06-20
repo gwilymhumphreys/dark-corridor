@@ -64,6 +64,14 @@ func on_step(target, ctx) -> bool:
   return false
 
 
+## Called on an ITEM-targeted status when its holder item FIRES (after the payload resolves —
+## docs/systems/item_creation_and_decay.md Cap 2). The decay use-status decrements here and asks
+## `ctx` to remove the host item when spent; default no-op. `ctx` is the Combat manager's
+## StatusContext (it may be null outside combat — tolerate that).
+func on_holder_fired(item, ctx) -> void:
+  pass
+
+
 # --- modifiers (PULL — the engine queries these at the pipeline stage, in statuses-list order,
 #     so composition stays deterministic (#24) and amplify-before-absorb holds (#6)). ---
 

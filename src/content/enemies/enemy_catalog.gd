@@ -16,6 +16,7 @@ static func get_def(id: String) -> EnemyDef:
     _build()
   if not _defs.has(id):
     push_error('EnemyCatalog: unknown enemy id "%s"' % id)
+    return null   # caller guards (a typo'd id no-ops + logs, never crashes)
   return _defs[id]
 
 

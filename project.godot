@@ -33,8 +33,8 @@ window/stretch/mode="canvas_items"
 
 [gui]
 
-theme/custom="res://assets/themes/black_white_ui.tres"
 timers/tooltip_delay_sec=0.0
+theme/custom="res://assets/themes/black_white_ui.tres"
 
 [input]
 

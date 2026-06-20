@@ -66,7 +66,7 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 3. **Return the instance.**
 4. **On-apply event** is emitted by the *Combat manager* at the Delivery's land (`STATUS_APPLIED` carries the string id) — **only when the apply succeeded** (an unknown id applies nothing and publishes nothing) — so reactive items can trigger ("when you apply poison, gain 1 block").
 
-`ctx` is the reserved seam for a future `StatusContext` (apply other statuses, spawn, publish) — **today it is `null` on every call path and no `StatusContext` class exists** (none of the built statuses need it; their hooks touch only the target). Hooks must tolerate a null ctx.
+`ctx` is the seam for a `StatusContext` (apply other statuses, spawn, publish). It is **still `null` on the `apply` path** (no built status needs ctx *at apply*), but the class now exists in a **minimal form** — one `remove_item(item)` capability the Combat manager fulfils — realized for the **Decay use-status**, whose emptying must remove its host item ([`item_creation_and_decay.md`](item_creation_and_decay.md) Cap 2). The Combat manager passes it to the `on_holder_fired` active hook. Hooks must still tolerate a null ctx (apply-outside-combat).
 
 ---
 
@@ -84,7 +84,7 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 A subclass overrides only what it does; every hook is a no-op / identity by default. Two kinds:
 
-- **Active (push)** — the status acts via `ctx`: `on_apply`, `on_expire`, `on_step(target, ctx) -> expired`, `setup` / `reapply` (lifecycle + stacking). `on_expire` runs at every **natural** removal — timed expiry, consumed-to-zero, spent-removal after a damage pass — but **not** at combat teardown (the fight ending is a clear, not an expiry).
+- **Active (push)** — the status acts via `ctx`: `on_apply`, `on_expire`, `on_step(target, ctx) -> expired`, `on_holder_fired(item, ctx)` (an **item-targeted** status acts when its holder item fires — Decay drains here, [`item_creation_and_decay.md`](item_creation_and_decay.md)), `setup` / `reapply` (lifecycle + stacking). `on_expire` runs at every **natural** removal — timed expiry, consumed-to-zero, spent-removal after a damage pass — but **not** at combat teardown (the fight ending is a clear, not an expiry).
 - **Modifiers (pull)** — the engine queries at a pipeline stage, in list order: `modify_outgoing`, `modify_incoming`, `absorb(amount, flags, …) -> remaining`, `gates_fire`, `causes_evasion`. Plus `is_fuel` / `consume` (Mass), `is_spent` (pool removal), `dot_tick_weight` (autotest attribution), and presentation fields.
 
 **Thrown consumables are exempt from the holder's combat modifiers** (decision #30): a potion's payload skips `modify_outgoing` (Weak) and `has_evasion` (Blind) — potions are the reserve, not the engine, so debuffs that degrade the board don't degrade the panic button. A deliberate asymmetry with the item fire pipeline, not an accident.
@@ -106,7 +106,7 @@ Distinct icon + per-effect colour per type (the design's colour vocabulary). Pre
 ## Built
 
 - The polymorphic `StatusEffect` hierarchy + `StatusRegistry` (id → creator).
-- Seven statuses across the shapes: **block** (pool), **poison** (periodic DoT), **weak** / **vulnerable** / **blind** (timed), **silence** (static gate), **spores** (inert counter / Mass fuel).
+- Eight statuses across the shapes: **block** (pool), **poison** (periodic DoT), **weak** / **vulnerable** / **blind** (timed), **silence** (static gate), **spores** (inert counter / Mass fuel), **decay** (item-targeted use-status — drained by the holder's fire, removes the item at 0; [`item_creation_and_decay.md`](item_creation_and_decay.md)).
 - `apply` (per-application duration + class-decided stacking) and `resolve_incoming_damage` (amplify → absorb).
 - Tie-ins: Combat-manager stepping of time-driven statuses; `Actor.take_damage` through the pipeline; the autotest DoT attribution via `dot_tick_weight`.
 
@@ -114,7 +114,7 @@ Distinct icon + per-effect colour per type (the design's colour vocabulary). Pre
 
 ## Open / deferred
 
-- **`StatusContext` is minimal** — none of the current 7 statuses need it (their hooks touch only the target), so active hooks are passed `null` today. It fleshes out (`apply_status`, `spawn_token`, `publish_event`, `rng`) when a status that spawns / chains is authored.
+- **`StatusContext` is minimal** — realized with one `remove_item(item)` capability for the **Decay** use-status ([`item_creation_and_decay.md`](item_creation_and_decay.md)); the `apply` path still passes `null` (no status needs ctx *at apply*). It fleshes out further (`apply_status`, `spawn_token`, `publish_event`, `rng`) only when a status that applies / spawns / chains is authored.
 - **Event-subscribing statuses** ("when a spore is applied, gain block") are not yet a hook — the surface allows adding `on_event` later; no current status needs it.
 - **Authoring guidance** (not a global rule): a *flat per-fire* damage modifier makes fast items strictly dominant in the cascade, so per-fire damage scaling should be percentage or charge-limited ([design](../design/game_design.md)).
 

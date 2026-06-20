@@ -17,4 +17,9 @@ var effects: Array[ItemEffect] = []   # one usually; rares combine
 # Array[{ event:int (EventBus.Event), amount:float, filter:Variant (a status string id),
 #         source_filter:int (EventBus.SourceFilter; omitted = OWN_SIDE — decision #30) }]
 var trigger_subs: Array[Dictionary] = []
+# A starting seed for the decay use-status (docs/systems/item_creation_and_decay.md Cap 2): >0 means
+# the engine applies Decay with this many activations at item birth (fight start, or add_item for a
+# created chunk), so the item is destroyed after that many fires. 0 = unlimited (never decays). Just a
+# seed — the live thing is the status, which content can then top up / re-target. Numbers -> Balance.
+var starting_uses: int = 0
 var panel_color: Color = Color.WHITE

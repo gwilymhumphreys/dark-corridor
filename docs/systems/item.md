@@ -51,6 +51,8 @@ When the item's `Ticker` crosses — its accumulator filled step-by-step, plus a
 
 A fire may yield several payloads (a rare combining damage + heal); each becomes its own Delivery (fire-rate and travel are decoupled — combat_model.md).
 
+**Use-status drain (Decay).** After the payloads are handed up, the Combat manager drains the item's item-targeted **use-statuses** — one more consultation of the item's own statuses, beside the gate (step 1) and value-modifiers (step 3). The drain runs *after* the fire so the final activation still lands; when a use-status (Decay) empties, the item is **removed from its board** (deregistered + dissolved). Seeded by the def's `starting_uses`. See [`item_creation_and_decay.md`](item_creation_and_decay.md).
+
 ---
 
 ## Targeting: declare a shape, don't resolve a target

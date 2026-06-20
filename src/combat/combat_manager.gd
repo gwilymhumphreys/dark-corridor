@@ -33,6 +33,11 @@ var _discarded: Array[Actor] = []       # combat-scoped bodies reaped on death; 
 var _discarded_player_side: Array[Actor] = []   # the reaped that still resolve player-side
 
 var _items: Array[Item] = []            # cooldown Tickers, registration order
+# Items CREATED mid-fight (docs/systems/item_creation_and_decay.md Cap 1) — combat-scoped, like
+# _player_tokens: tracked here so teardown strips them from their (possibly run-scoped) board and
+# they never reach the run snapshot. A created item still lives on actor.board for targeting/firing.
+var _created_items: Array[Item] = []
+var _ctx: StatusContext = null          # the reserved status `ctx`, realized (decay's remove-item)
 var _deliveries: Array[Delivery] = []   # in-flight + recently-resolved
 var _resolved: bool = false
 var _player_won: bool = false
@@ -58,6 +63,7 @@ func start() -> void:
   bus.side_resolver = _on_player_side   # side is resolved at EVENT time (rosters mutate)
   rng = RandomNumberGenerator.new()
   rng.seed = _combat_seed
+  _ctx = StatusContext.new(self)   # the handle active status hooks act through (decay → remove_item)
   _register_actor(player)
   for a in allies:
     _register_actor(a)
@@ -99,6 +105,11 @@ func register_ally(actor: Actor) -> void:
 ## spawns enemies. The token def is content (the owner authors saprolings / boss adds).
 func _spawn_token(def_id: String) -> Actor:
   var def: EnemyDef = EnemyCatalog.get_def(def_id)
+  if def == null:
+    # A typo'd summon_def_id (content-authoring error): log + skip rather than crash. add_actor
+    # already no-ops on a null actor, so the summon simply doesn't land — be safe for players.
+    push_error('[CombatManager] _spawn_token: unknown enemy id "%s" — summon skipped.' % def_id)
+    return null
   var actor := Actor.new(def.max_hp)
   actor.display_name = def.name_key
   for item_id in def.item_ids:
@@ -115,12 +126,77 @@ func _register_actor(actor: Actor) -> void:
     # — breaking decision #20's "a re-entered fight replays identically." Enemy items
     # are fresh instances each fight, so this only matters for the player.
     it.cooldown.accum = 0.0
-    _items.append(it)
-    for sub in it.def.trigger_subs:
-      # The CONTENT default for trigger source is OWN_SIDE — "when MY side does X"
-      # (decision #30); a def opts out per subscription via 'source_filter'.
-      bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null),
-          sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE), it)
+    _register_item(it)
+    _seed_item_uses(it)
+
+
+## Register one item with the sweep + event bus: append its cooldown Ticker to the swept set and
+## subscribe its declared triggers. Shared by fight-start registration (_register_actor) and the
+## mid-fight add_item (Cap 1) — the same wiring an item gets either way.
+func _register_item(it: Item) -> void:
+  _items.append(it)
+  for sub in it.def.trigger_subs:
+    # The CONTENT default for trigger source is OWN_SIDE — "when MY side does X"
+    # (decision #30); a def opts out per subscription via 'source_filter'.
+    bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null),
+        sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE), it)
+
+
+## Seed an item's decay use-status from its def's starting_uses (docs/systems/item_creation_and_decay.md
+## Cap 2): >0 applies Decay with that many activations at item birth (fight start, or add_item for a
+## created chunk), so authoring stays one number while the live thing is a status content can top up
+## or re-target. 0 = unlimited (never decays). Combat-scoped like every status (#26).
+func _seed_item_uses(it: Item) -> void:
+  if it.def.starting_uses > 0:
+    StatusManager.apply(it, DecayStatus.ID, float(it.def.starting_uses))
+
+
+## Add a new Item to a live board mid-fight (docs/systems/item_creation_and_decay.md Cap 1) — the cousin
+## of add_actor (which adds a whole Actor). Builds the item from an ItemCatalog def, appends it to
+## `actor`'s board, registers its cooldown Ticker + trigger subs, and seeds its decay use-status.
+## COMBAT-SCOPED: tracked in _created_items so teardown strips it from the (possibly run-scoped)
+## board and the run snapshot never serializes it. Resolved at a CREATE_ITEM Delivery's land.
+func add_item(actor: Actor, def_id: String) -> void:
+  if actor == null or _resolved:
+    return
+  var def: ItemDef = ItemCatalog.get_def(def_id)
+  if def == null:
+    # A typo'd create_item_def_id (content-authoring error): log it (the catalog already did)
+    # and skip the create rather than crash a live fight — be safe for players.
+    push_error('[CombatManager] add_item: unknown item id "%s" — create skipped.' % def_id)
+    return
+  var it := Item.new(def, actor)
+  it.cooldown.accum = 0.0
+  actor.board.append(it)
+  _created_items.append(it)
+  _register_item(it)
+  _seed_item_uses(it)
+
+
+## Remove a SINGLE live item from its owner's board mid-fight — the genuinely new plumbing (the
+## decay use-status emptying calls this via StatusContext; Cap 1's teardown strip converges here).
+## Mirrors the dead-actor reap for one item: drop it from the board + the swept set, deregister its
+## triggers (so it stops firing AND stops receiving/emitting pushes), and dissolve it to break the
+## Item<->Actor cycle. Idempotent.
+func remove_item(it: Item) -> void:
+  if it == null:
+    return
+  # Publish ITEM_DESTROYED FIRST (docs/systems/item_creation_and_decay.md — charge-on-destroy hook),
+  # before deregistering this item's wiring, so the bus still routes the event to the OTHER items
+  # (a charge item subscribes it). Source = the destroyed item's OWNER, so OWN_SIDE trigger filtering
+  # works ("when MY item dies", decision #30). GUARDED: a fight resolving/tearing down strips items
+  # too, and that is not a "destroy" for triggers — suppress the publish once _resolved (the flag
+  # add_item guards on; teardown also nulls `bus`, the redundant backstop). Decay-death and Cap-2
+  # consume-death are the same event — both flow through here.
+  if bus != null and not _resolved:
+    bus.publish(EventBus.Event.ITEM_DESTROYED, it.def.id, it.owner, it)
+  _items.erase(it)
+  _created_items.erase(it)
+  if bus != null:
+    bus.unsubscribe(it)
+  if it.owner != null:
+    it.owner.board.erase(it)
+  it.dissolve()
 
 
 # --- The tick ---------------------------------------------------------------
@@ -259,6 +335,13 @@ func _fire_item(it: Item, arrived: Array) -> void:
   # whiffs (docs/systems/spore_engine.md Cap 2). Locked at fire so a swing launched while blinded misses.
   var blinded: bool = StatusManager.has_evasion(it.owner)
   for p in payloads:
+    # Own-board item-consume (the Mass-twin, docs/systems/item_creation_and_decay.md): spend a pile of
+    # the owner's matching board items as fuel BEFORE spawning this payload's deliveries — counted +
+    # removed once (a single board pool), scaling this payload's value by the count. Removed VIA
+    # remove_item so each consumed item publishes ITEM_DESTROYED (the synergy: a charge-on-destroy
+    # item charges off active consume for free — consume-death is the same event as decay-death).
+    if p.consume_item_def_id != '':
+      p.value += _consume_board_items(it.owner, p.consume_item_def_id, p.consume_item_amount) * p.consume_item_scale
     for target in _resolve_targets(p, it.owner):
       var d := _spawn_delivery(p, target)
       # Opponent-fuel consume (Mass, Cap 1): spend the resolved TARGET's stacks here (it's
@@ -270,6 +353,36 @@ func _fire_item(it: Item, arrived: Array) -> void:
       _deliveries.append(d)
       if d.travel.crossed():
         arrived.append(d)   # instant (travel 0) lands this same step
+  # Drain the item's use-statuses AFTER its payload(s) are spawned (docs/systems/item.md fire
+  # pipeline): decay spends one activation, so the final fire still lands, then removes the item at 0.
+  _drain_uses(it)
+
+
+## After an item fires, advance its item-targeted use-statuses (Decay): each spends one activation
+## and, at 0, asks the StatusContext to remove the host item. Iterate a COPY — a spent use-status
+## removes the item, which clears item.statuses mid-pass.
+func _drain_uses(it: Item) -> void:
+  for s in it.statuses.duplicate():
+    s.on_holder_fired(it, _ctx)
+
+
+## Consume up to `amount` of `owner_actor`'s board items whose def id matches `def_id`, as fuel for an
+## own-board-consume payload (docs/systems/item_creation_and_decay.md — the Mass-twin). `amount` <= 0
+## consumes ALL present. Each match is removed via remove_item (the ITEM_DESTROYED-publishing path),
+## so a charge-on-destroy item sees consume-death and decay-death as the same event. Iterates a COPY —
+## remove_item mutates the board mid-pass (cf. _drain_uses walking it.statuses.duplicate()). Returns
+## the count removed (the scaling multiplier). Deterministic — no RNG.
+func _consume_board_items(owner_actor: Actor, def_id: String, amount: int) -> int:
+  if owner_actor == null:
+    return 0
+  var removed: int = 0
+  for it in owner_actor.board.duplicate():
+    if amount > 0 and removed >= amount:
+      break
+    if it.def.id == def_id:
+      remove_item(it)
+      removed += 1
+  return removed
 
 
 ## Retain in-flight Deliveries and recently-landed ones (for their impact visual);
@@ -296,6 +409,7 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   d.duration = p.duration
   d.summon_def_id = p.summon_def_id
   d.summon_in_front = p.summon_in_front
+  d.create_item_def_id = p.create_item_def_id
   d.flags = p.flags
   d.color = p.color
   d.source = p.source
@@ -338,6 +452,9 @@ func _land(d: Delivery) -> void:
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)
       if d.summon_def_id != '' and d.target is Actor:
         add_actor(_spawn_token(d.summon_def_id), _on_player_side(d.target), d.summon_in_front)
+    Delivery.Kind.CREATE_ITEM:   # create an item on the firing actor's OWN board (shape SELF → target = firer)
+      if d.create_item_def_id != '' and d.target is Actor:
+        add_item(d.target, d.create_item_def_id)
 
 
 ## The firing Item behind a Delivery, for event source identity — `source` doubles as
@@ -585,6 +702,15 @@ func teardown() -> void:
   if _torn_down:
     return
   _torn_down = true
+  # Strip combat-scoped CREATED items (Cap 1) from their boards FIRST, while owner refs are intact.
+  # On a RUN-SCOPED board (the player / an ally) this restores the drafted board so the run snapshot
+  # — taken between fights — never serializes a created chunk. On a combat-scoped board it is
+  # redundant with the dissolve below, but harmless.
+  for it in _created_items:
+    if it.owner != null:
+      it.owner.board.erase(it)
+    it.dissolve()
+  _created_items.clear()
   _clear_statuses(player)
   for a in allies:
     _clear_statuses(a)
@@ -607,6 +733,7 @@ func teardown() -> void:
     bus.clear()   # releases the bus's strong Subscription -> Item refs + listeners
   bus = null
   rng = null
+  _ctx = null   # the StatusContext holds a back-ref to this manager — drop it
 
 
 func _clear_statuses(actor: Actor) -> void:

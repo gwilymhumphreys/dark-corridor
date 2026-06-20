@@ -238,6 +238,32 @@ status-identity engine (spores), not warrior/mage/rogue.
   unrelated (statuses · mana economy · HP-flesh-into-items), so "a few magic users" is fine — the
   *kind* of magic is a differentiation layer on top of already-distinct mechanics, not a collision
   (cf. StS's several spellcasters who play nothing alike).
+- **Naming axis (owner, 2026-06-20):** the item economy's two halves get distinct themes mirroring
+  the create→consume loop. **Producers** — the chunk-*creating* attacks (carve flesh off) — are
+  **carving / butchery** (placeholder commons: Carving Knife · Cleaver · Bone Saw). **Consumers** —
+  the later items that *spend* chunks / HP (put flesh back together) — will be **surgery / sewing**.
+  Butchery takes apart; surgery/sewing reassembles. (Item display names are placeholders; the
+  character's Vermis display-name is a separate, still-open question.)
+- **Pricing rule (owner, 2026-06-20):** a chunk is a persistent auto-attacker, so chunk-*creation* is
+  worth MORE than a spore stack — the common creators are priced **above** the druid's appliers: flat
+  **low** damage (the chunk is the payload, not the hit) and a **3s minimum cooldown** (a chunk lives
+  ~4s; faster creation stacks chunks up too quickly). Differentiate by cadence + chunk **count** (Bone
+  Maul makes 2 per swing). Current commons: Carving Knife 3s·1·3dmg (chunk-rate edge) · Cleaver
+  4s·1·6dmg (bigger-hit edge) · Bone Saw 6s·2·4dmg (2-chunk burst) — Boning & Cleaver split
+  fast-low / slow-high so neither dominates (Carving Knife & Cleaver).
+- **Flesh Explosion (owner) — authored:** the first destroy-charged payoff (Mode A) — **AOE**, ~70
+  damage (reduced from ~100 for AOE parity), 20s base cooldown, **charges ~1s whenever one of your
+  items is destroyed** (the churning chunks build it), Uncommon, in the Fleshmancer pool. Built on the
+  now-shipped `ITEM_DESTROYED` seam. Other Mode B (consume-directly) items still to author.
+- **Self-harm / heal synergy (owner, authored):** the HP-spend identity, as a third use of the one
+  `ITEM_DESTROYED` exhaust. **Flensing Hook** — deals **2 UNBLOCKABLE** self-damage + makes 2 chunks
+  (carve your own flesh; unblockable so the player's own block can't absorb the cost). **Skin Graft**
+  — consume 1 chunk to heal (surgery theme); healing scales off the consumed chunk, so it routes
+  through `remove_item` and *also* charges Flesh Explosion (heal + charge in one). **Consume-on-empty
+  = reset** (fires, heals 0, resets — no fuel-gate; the gate model would be *less* responsive, decision
+  #30). **Values are deliberately provisional (owner):** they don't live in a vacuum — self-harm can
+  stack, and flesh spent on a heal isn't attacking or banking explosion charge (opportunity cost), so
+  a number can look generous in isolation while the real cost emerges in context. `/tune` territory.
 - **The engine (owner, 2026-06-16): it fills two mechanical spaces fused into one
   loop — mid-fight item creation *and* HP-as-resource:**
   - **Spend HP → make fleshy items** (cut off a piece of yourself; it becomes a thing on the

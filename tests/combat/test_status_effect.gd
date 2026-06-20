@@ -46,3 +46,38 @@ func test_reapply_stacks_by_extending_the_timer() -> void:
   w.reapply(1.0, 2.0, null, 0)
   assert_true(w.ticker.threshold > before, 'reapply STACKS — the timer is extended, not refreshed')
   assert_almost_eq(w.count, 2.0, 0.0001, 'and count adds')
+
+
+# --- Decay use-status (docs/systems/item_creation_and_decay.md Cap 2) -----------------------
+# Block's twin: a pool of count on an ITEM, drained by the item firing, that removes the item at 0.
+
+## Records the ctx.remove_item call so the unit test can assert the host item is requested for removal.
+class _RecordingCtx:
+  var removed = null
+  func remove_item(item) -> void:
+    removed = item
+
+
+func test_registry_builds_a_decay_status_for_its_id() -> void:
+  var d := StatusRegistry.create('decay')
+  assert_not_null(d, 'the registry knows the decay id')
+  assert_eq(d.id, 'decay', 'and builds a DecayStatus carrying that id')
+
+
+func test_decay_drains_one_per_fire_and_asks_to_remove_at_zero() -> void:
+  var d := StatusRegistry.create('decay')
+  d.setup(2.0, 0.0, null, 0)
+  var ctx := _RecordingCtx.new()
+  d.on_holder_fired('item_a', ctx)
+  assert_almost_eq(d.count, 1.0, 0.0001, 'one activation spent per fire')
+  assert_null(ctx.removed, 'not removed while charges remain (decay 2 fires twice)')
+  d.on_holder_fired('item_a', ctx)
+  assert_almost_eq(d.count, 0.0, 0.0001, 'drained to zero on the second fire')
+  assert_eq(ctx.removed, 'item_a', 'and asks ctx to remove the host item at zero')
+
+
+func test_decay_reapply_tops_up_charges() -> void:
+  var d := StatusRegistry.create('decay')
+  d.setup(2.0, 0.0, null, 0)
+  d.reapply(2.0, 0.0, null, 0)
+  assert_almost_eq(d.count, 4.0, 0.0001, 'reapply STACKS — charges add (top-up is reapply)')

@@ -53,6 +53,7 @@ The Actor calls *up* to nothing; its one sideways call is `take_damage` asking t
   - **Player Actor → run-lifetime.** HP carries across encounters; the board grows via draft; relics/events modify it. Owned by the run (seeded by `Characters`, held across the run).
   - **Enemy Actors → fight-lifetime.** Spawned by `Encounter` per fight from an authored board, discarded after.
   The `Combat manager` references both during a fight but owns *neither's* lifetime.
+- **Cycle break on discard.** `Actor`/`Item` is a `RefCounted` cycle (the board holds each item; every item's `owner` points back). `Actor.dissolve()` breaks the whole board at discard; `Item.dissolve()` breaks **one** item's half — used when a single item leaves a live board mid-fight (Decay emptying it, or the combat-scoped strip of a created item — [`item_creation_and_decay.md`](item_creation_and_decay.md)). `Actor.dissolve()` is just a loop of `Item.dissolve()` plus clearing the board.
 
 ---
 

@@ -22,6 +22,13 @@ const WILT_FROND := 'wilt_frond'
 const LEATHER_GLOVES := 'leather_gloves'
 const LEATHER_TREWS := 'leather_trews'
 const LEATHER_BREASTPLATE := 'leather_breastplate'
+const FLESH_CHUNK := 'flesh_chunk'
+const FLESH_CARVING_KNIFE := 'flesh_paring_knife'
+const FLESH_CLEAVER := 'flesh_cleaver'
+const FLESH_BONE_SAW := 'flesh_bone_maul'
+const FLESH_EXPLOSION := 'flesh_explosion'
+const FLESH_FLENSING_HOOK := 'flesh_flensing_hook'
+const FLESH_SKIN_GRAFT := 'flesh_skin_graft'
 
 static var _defs: Dictionary = {}
 
@@ -31,6 +38,7 @@ static func get_def(id: String) -> ItemDef:
     _build()
   if not _defs.has(id):
     push_error('ItemCatalog: unknown item id "%s"' % id)
+    return null   # caller guards (a typo'd id no-ops + logs, never crashes)
   return _defs[id]
 
 
@@ -51,6 +59,13 @@ static func _build() -> void:
   _defs[LEATHER_GLOVES] = _leather_gloves()
   _defs[LEATHER_TREWS] = _leather_trews()
   _defs[LEATHER_BREASTPLATE] = _leather_breastplate()
+  _defs[FLESH_CHUNK] = _flesh_chunk()
+  _defs[FLESH_CARVING_KNIFE] = _flesh_carving_knife()
+  _defs[FLESH_CLEAVER] = _flesh_cleaver()
+  _defs[FLESH_BONE_SAW] = _flesh_bone_saw()
+  _defs[FLESH_EXPLOSION] = _flesh_explosion()
+  _defs[FLESH_FLENSING_HOOK] = _flesh_flensing_hook()
+  _defs[FLESH_SKIN_GRAFT] = _flesh_skin_graft()
 
 
 static func _weapon() -> ItemDef:
@@ -374,6 +389,192 @@ static func _leather_breastplate() -> ItemDef:
   blk.color = Colours.STATUS_BLOCK
   d.effects = [blk]
   d.panel_color = blk.color
+  return d
+
+
+## Chunk of Flesh — the created token-item the Fleshmancer's attacks spawn on the player's OWN board
+## (docs/systems/item_creation_and_decay.md). A weak auto-attacker: deals 1 damage every 2s and
+## DECAYS after 2 activations (starting_uses → the Decay use-status) — "very low power, but does
+## something" (owner). NOT drafted directly (it isn't in any item_pool); it only appears via a
+## CREATE_ITEM rider. Numbers -> Balance (placeholders).
+static func _flesh_chunk() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_CHUNK
+  d.name_key = 'Chunk of Flesh'        # owner's term — rename if desired
+  d.cooldown = Balance.FLESH_CHUNK_COOLDOWN
+  d.starting_uses = Balance.FLESH_CHUNK_USES   # decays after this many fires (the Decay use-status seed)
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.FLESH_CHUNK_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  d.effects = [hit]
+  d.panel_color = hit.color
+  return d
+
+
+## Carving Knife (PLACEHOLDER name — owner's to rename) — the FAST pole of the Fleshmancer attack
+## spread (character_ideas.md → Flesh Golem / Meat): a quick jab that deals LOW damage AND creates a
+## Chunk of Flesh on the player's OWN board (shape SELF → the firer). At the **3s chunk-creator
+## minimum** — a chunk lives ~4s, so faster creation would stack chunks up too quickly. COMMON.
+## (Producer = carving/butchery; consumers will be surgery/sewing — see character_ideas.md.)
+static func _flesh_carving_knife() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_CARVING_KNIFE
+  d.name_key = 'Carving Knife'          # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.FLESH_CARVING_KNIFE_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.FLESH_CARVING_KNIFE_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  var make := ItemEffect.new()
+  make.kind = Delivery.Kind.CREATE_ITEM
+  make.create_item_def_id = FLESH_CHUNK
+  make.shape = ItemEffect.Shape.SELF         # the chunk lands on the firer's OWN board
+  make.color = Colours.STATUS_DECAY          # the created chunk decays
+  d.effects = [hit, make]
+  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  return d
+
+
+## Cleaver (PLACEHOLDER name — owner's to rename) — the MID pole + the Fleshmancer's starting card: a
+## tempo attack that creates a Chunk of Flesh (shape SELF) and hits HARDER than the faster Carving Knife
+## (6 vs 3 dmg) — slower chunk-rate, bigger hit, so neither pole dominates. COMMON.
+static func _flesh_cleaver() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_CLEAVER
+  d.name_key = 'Cleaver'               # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.FLESH_CLEAVER_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.FLESH_CLEAVER_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  var make := ItemEffect.new()
+  make.kind = Delivery.Kind.CREATE_ITEM
+  make.create_item_def_id = FLESH_CHUNK
+  make.shape = ItemEffect.Shape.SELF
+  make.color = Colours.STATUS_DECAY
+  d.effects = [hit, make]
+  d.panel_color = hit.color
+  return d
+
+
+## Bone Saw (PLACEHOLDER name — owner's to rename) — the SLOW pole: a heavy two-handed blow that
+## deals LOW damage AND creates TWO Chunks of Flesh in one swing (two CREATE_ITEM effects, shape
+## SELF). The bursty creator — ~2 chunks / 6s, same chunk-rate as the 3s Carving Knife but lumpier.
+## COMMON.
+static func _flesh_bone_saw() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_BONE_SAW
+  d.name_key = 'Bone Saw'             # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.FLESH_BONE_SAW_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.FLESH_BONE_SAW_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  var make := ItemEffect.new()
+  make.kind = Delivery.Kind.CREATE_ITEM
+  make.create_item_def_id = FLESH_CHUNK
+  make.shape = ItemEffect.Shape.SELF
+  make.color = Colours.STATUS_DECAY
+  var make2 := ItemEffect.new()
+  make2.kind = Delivery.Kind.CREATE_ITEM
+  make2.create_item_def_id = FLESH_CHUNK
+  make2.shape = ItemEffect.Shape.SELF
+  make2.color = Colours.STATUS_DECAY
+  d.effects = [hit, make, make2]
+  d.panel_color = hit.color
+  return d
+
+
+## Flesh Explosion (owner) — the Fleshmancer's first flesh CONSUMER payoff (Mode A: charge-on-destroy;
+## character_ideas.md → Flesh Golem / Meat): an AOE nuke that CHARGES as your items die — every own
+## item destroyed (a chunk decaying, or consumed) pushes its cooldown ~1s via the ITEM_DESTROYED
+## trigger (docs/systems/item_creation_and_decay.md). 20s base, but the churn drops the effective
+## cooldown far lower in a chunk-heavy build. AOE (all opponents). UNCOMMON (rarity = complexity: a
+## trigger-driven payoff, not bigger numbers). Numbers -> Balance (estimates, tune in /tune).
+static func _flesh_explosion() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_EXPLOSION
+  d.name_key = 'Flesh Explosion'       # owner's name
+  d.rarity = ItemDef.Rarity.UNCOMMON
+  d.cooldown = Balance.FLESH_EXPLOSION_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.FLESH_EXPLOSION_DAMAGE
+  hit.shape = ItemEffect.Shape.ALL_OPPONENTS
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  d.effects = [hit]
+  # Charges as your OWN items die — each ITEM_DESTROYED pushes the cooldown ~1s (OWN_SIDE is the
+  # wired default; no data filter = any own item, per "whenever one of your items is destroyed").
+  d.trigger_subs = [{
+    'event': EventBus.Event.ITEM_DESTROYED,
+    'amount': Balance.FLESH_EXPLOSION_CHARGE_PER_DESTROY,
+  }]
+  d.panel_color = hit.color
+  return d
+
+
+## Flensing Hook (PLACEHOLDER name — owner's to rename) — the self-harm PRODUCER (carving theme;
+## character_ideas.md → Flesh Golem / Meat): deals UNBLOCKABLE damage to YOURSELF (shape SELF) and
+## creates 2 Chunks of Flesh — the HP-spend identity made literal. Self-damage is UNBLOCKABLE so the
+## player's own block can't absorb the cost (a Fleshmancer runs block to survive, so a blockable cost
+## would silently no-op). No enemy damage — pure produce-by-bleeding. COMMON. Numbers -> Balance.
+static func _flesh_flensing_hook() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_FLENSING_HOOK
+  d.name_key = 'Flensing Hook'         # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.FLESH_FLENSING_HOOK_COOLDOWN
+  var hurt := ItemEffect.new()
+  hurt.kind = Delivery.Kind.DAMAGE
+  hurt.value = Balance.FLESH_FLENSING_HOOK_SELF_DAMAGE
+  hurt.shape = ItemEffect.Shape.SELF          # the firer takes the hit — self-harm
+  hurt.flags = Delivery.Flag.UNBLOCKABLE      # own block must NOT absorb the cost (else the HP-spend no-ops)
+  hurt.color = Colours.DAMAGE                 # travel 0 (self, instant)
+  var make := ItemEffect.new()
+  make.kind = Delivery.Kind.CREATE_ITEM
+  make.create_item_def_id = FLESH_CHUNK
+  make.shape = ItemEffect.Shape.SELF
+  make.color = Colours.STATUS_DECAY
+  var make2 := ItemEffect.new()
+  make2.kind = Delivery.Kind.CREATE_ITEM
+  make2.create_item_def_id = FLESH_CHUNK
+  make2.shape = ItemEffect.Shape.SELF
+  make2.color = Colours.STATUS_DECAY
+  d.effects = [hurt, make, make2]
+  d.panel_color = Colours.STATUS_DECAY        # identity is flesh production, not an attack (self-damage)
+  return d
+
+
+## Skin Graft (PLACEHOLDER name — owner's to rename) — a flesh CONSUMER (surgery/sewing theme): every
+## fire, consume 1 Chunk of Flesh to heal yourself (graft the flesh back on). HEAL value comes entirely
+## from the consumed chunk (value 0 + consume_item_scale per chunk), so no chunk = heals 0 and resets
+## (the consume "reset" behaviour — no fuel-gate). Removes the chunk VIA remove_item, so it ALSO
+## charges Flesh Explosion (the destroy synergy: heal + charge in one). COMMON. Numbers -> Balance
+## (HEAL_PER_CHUNK is a flagged tuning watch — see balance.gd).
+static func _flesh_skin_graft() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_SKIN_GRAFT
+  d.name_key = 'Skin Graft'            # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.FLESH_SKIN_GRAFT_COOLDOWN
+  var heal := ItemEffect.new()
+  heal.kind = Delivery.Kind.HEAL
+  heal.value = 0.0                            # all healing comes from the consumed flesh
+  heal.shape = ItemEffect.Shape.SELF
+  heal.consume_item_def_id = FLESH_CHUNK      # eat a chunk off the OWN board
+  heal.consume_item_amount = Balance.FLESH_SKIN_GRAFT_CONSUME
+  heal.consume_item_scale = Balance.FLESH_SKIN_GRAFT_HEAL_PER_CHUNK  # heal per chunk consumed
+  heal.color = Colours.HEAL
+  d.effects = [heal]
+  d.panel_color = heal.color
   return d
 
 

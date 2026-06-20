@@ -73,11 +73,11 @@ static func _value_seg(item: Item, effect: ItemEffect) -> Dictionary:
   var dir: int = 0
   if changed:
     dir = 1 if disp > base else -1
-  return {'t': 'value', 's': _fmt(disp), 'changed': changed, 'dir': dir}
+  return {'t': 'value', 's': fmt(disp), 'changed': changed, 'dir': dir}
 
 
 func _stat_lines(item: Item) -> Array:
-  return [tr('Every {0}s').format([_fmt(item.def.cooldown)])]
+  return [tr('Every {0}s').format([fmt(item.def.cooldown)])]
 
 
 ## The single-target DAMAGE line's {1} target phrase. Baseline copy (owner refines). Literal tr()
@@ -191,8 +191,9 @@ static func _interpolate(template: String, args: Array) -> Array:
   return segs
 
 
-## Format a number with no trailing zeros (8.0 → "8", 1.5 → "1.5").
-static func _fmt(v: float) -> String:
+## Format a number with no trailing zeros (8.0 → "8", 1.5 → "1.5"). Public + static so other
+## presentation (e.g. ItemCell's value pills) shares the one formatting rule.
+static func fmt(v: float) -> String:
   if is_equal_approx(v, roundf(v)):
     return str(int(roundf(v)))
   return str(snappedf(v, 0.1))

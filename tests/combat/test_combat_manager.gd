@@ -935,3 +935,300 @@ func test_physics_process_drives_tick_when_mounted() -> void:
   remove_child(cm)
   cm.teardown()
   cm.free()
+
+
+# --- Cap 2: decay use-status · Cap 1: mid-fight item creation -----------------
+# docs/systems/item_creation_and_decay.md — general seams (no baked chunk): seed decay from a def,
+# drain it per fire (removing the host item at 0), add an item to a live board, strip it at teardown.
+
+func _decay_weapon_def(uses: int) -> ItemDef:
+  var def := ItemDef.new()
+  def.id = 'test_decay_weapon'
+  def.cooldown = Balance.WEAPON_COOLDOWN
+  def.starting_uses = uses
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.WEAPON_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = 0.0
+  def.effects = [hit]
+  return def
+
+
+func _create_item_item(owner_actor: Actor, created_id: String) -> Item:
+  var def := ItemDef.new()
+  var c := ItemEffect.new()
+  c.kind = Delivery.Kind.CREATE_ITEM
+  c.create_item_def_id = created_id
+  c.shape = ItemEffect.Shape.SELF
+  c.travel = 0.0
+  def.effects = [c]
+  return Item.new(def, owner_actor)
+
+
+func _decay_status_on(item: Item) -> StatusEffect:
+  for s in item.statuses:
+    if s.id == 'decay':
+      return s
+  return null
+
+
+func test_starting_uses_seeds_the_decay_status_at_fight_start() -> void:
+  var p := Actor.new(1000.0)
+  var it := Item.new(_decay_weapon_def(3), p)
+  p.board.append(it)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  var decay := _decay_status_on(it)
+  assert_not_null(decay, 'starting_uses > 0 seeded the decay use-status at item birth')
+  assert_almost_eq(decay.count, 3.0, 0.0001, 'with the def\'s activation count')
+
+
+func test_zero_starting_uses_never_decays() -> void:
+  var p := Actor.new(1000.0)
+  var it := Item.new(_decay_weapon_def(0), p)
+  p.board.append(it)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  assert_null(_decay_status_on(it), 'starting_uses 0 seeds nothing — the item is unlimited')
+
+
+func test_decay_drains_one_per_fire_then_removes_the_item_after_the_last_hit() -> void:
+  var p := Actor.new(1000.0)
+  var it := Item.new(_decay_weapon_def(2), p)
+  p.board.append(it)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  var arrived: Array = []
+  cm._fire_item(it, arrived)
+  assert_almost_eq(_decay_status_on(it).count, 1.0, 0.0001, 'one activation spent after the first fire')
+  assert_true(it in p.board, 'still on the board (decay 2 fires twice)')
+  arrived.clear()
+  cm._fire_item(it, arrived)
+  assert_eq(arrived.size(), 1, 'the final activation still fired its payload — the last hit lands')
+  assert_false(it in p.board, 'then removed from the board at 0')
+  assert_false(it in cm._items, 'and deregistered from the sweep (stops ticking)')
+
+
+func test_decay_runs_a_self_limiting_attack_to_zero_in_a_real_fight() -> void:
+  # A decay weapon on an otherwise board-less player: it fires N times then is gone, so a
+  # high-HP enemy survives — the item self-limited (no runaway), the fight stalls to the cap.
+  var p := Actor.new(100000.0)
+  var it := Item.new(_decay_weapon_def(2), p)
+  p.board.append(it)
+  var e := Actor.new(100000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var steps := cm.run_headless(2000)
+  assert_false(it in cm._items, 'the decay weapon removed itself after its uses')
+  assert_almost_eq(e.hp, 100000.0 - 2.0 * Balance.WEAPON_DAMAGE, 0.0001,
+      'it dealt exactly two hits of damage, then stopped')
+  assert_eq(steps, 2000, 'with no other source, the fight ran to the cap (the item self-limited)')
+
+
+func test_add_item_appends_registers_and_the_created_item_fires() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(40.0)
+  var cm := _manager(p, [e])   # the player has NO board
+  cm.start()
+  cm.add_item(p, ItemCatalog.WEAPON)
+  assert_eq(p.board.size(), 1, 'the created item joined the board')
+  assert_true(p.board[0] in cm._items, 'and was registered into the sweep (a working Ticker)')
+  assert_true(p.board[0] in cm._created_items, 'tracked as combat-scoped')
+  cm.run_headless()
+  assert_true(cm.player_won(), 'the created weapon ticked and fired, killing the grunt')
+
+
+func test_create_item_effect_lands_an_item_on_the_firing_actors_own_board() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var arrived: Array = []
+  cm._fire_item(_create_item_item(p, ItemCatalog.WEAPON), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_eq(p.board.size(), 1, 'the CREATE_ITEM effect put a new item on the firer\'s OWN board (shape SELF)')
+  assert_true(p.board[0] in cm._created_items, 'and tracked it combat-scoped')
+
+
+func test_created_items_are_stripped_at_teardown_restoring_the_drafted_board() -> void:
+  var p := _spawn(1000.0, [ItemCatalog.WEAPON])   # one DRAFTED item (run-state)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  var drafted: Array = p.board.duplicate()
+  cm.add_item(p, ItemCatalog.ARMOR)
+  assert_eq(p.board.size(), drafted.size() + 1, 'the created item is on the board mid-fight')
+  cm.teardown()
+  assert_eq(p.board, drafted, 'teardown stripped the created item — the drafted board is restored (snapshot stays clean)')
+
+
+# --- ITEM_DESTROYED event + own-board item-consume ---------------------------
+# docs/systems/item_creation_and_decay.md — the charge-on-destroy hook (Cap A) + the Mass-twin on
+# board items (Cap B), wired so a consume removes VIA remove_item: consume-death = decay-death.
+
+## A chunk item with an authored def id and no effects — fuel an own-board-consume item eats.
+func _chunk_def(def_id: String) -> ItemDef:
+  var def := ItemDef.new()
+  def.id = def_id
+  def.cooldown = 9999.0   # never fires on its own — it exists only to be consumed
+  return def
+
+
+## A damage item that, on fire, consumes up to `amount` of the owner's `chunk_id` board items,
+## scaling its hit by `scale` per chunk eaten (amount <= 0 = all present).
+func _chunk_consumer_def(chunk_id: String, amount: int, scale: float) -> ItemDef:
+  var def := ItemDef.new()
+  def.id = 'test_chunk_consumer'
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = 10.0
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = 0.0
+  hit.consume_item_def_id = chunk_id
+  hit.consume_item_amount = amount
+  hit.consume_item_scale = scale
+  def.effects = [hit]
+  return def
+
+
+## A reactive item that never fires on its own cooldown and charges (full push) off ITEM_DESTROYED,
+## granting itself block — so any block it grants proves it saw a destroy event. OWN_SIDE default.
+func _destroy_charged_avenger() -> ItemDef:
+  var def := ItemDef.new()
+  def.cooldown = 9999.0
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = 5.0
+  blk.shape = ItemEffect.Shape.SELF
+  def.effects = [blk]
+  def.trigger_subs = [{
+    'event': EventBus.Event.ITEM_DESTROYED,
+    'amount': Balance.TRIGGER_PUSH_FULL,
+  }]
+  return def
+
+
+func test_item_destroyed_fires_on_a_decay_destroy_with_the_owner_as_source() -> void:
+  var p := Actor.new(1000.0)
+  var it := Item.new(_decay_weapon_def(1), p)   # decay 1 — removed after one fire
+  p.board.append(it)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  var seen: Array = []
+  cm.bus.add_listener(EventBus.Event.ITEM_DESTROYED,
+      func(data, source_actor, source_item) -> void:
+        seen.append([data, source_actor, source_item]))
+  cm._fire_item(it, [])
+  assert_eq(seen.size(), 1, 'the decay-destroy published ITEM_DESTROYED')
+  assert_eq(seen[0][0], it.def.id, 'the event data is the destroyed item def id')
+  assert_eq(seen[0][1], p, 'the source actor is the destroyed item\'s OWNER (OWN_SIDE filtering)')
+  assert_eq(seen[0][2], it, 'and the source item is the destroyed item')
+
+
+func test_item_destroyed_does_not_fire_at_teardown() -> void:
+  # teardown strips items (created-item strip + status clear) — a fight ending is not a "destroy"
+  # for triggers, so no ITEM_DESTROYED may route. Use a created item (teardown strips it).
+  var p := _spawn(1000.0, [ItemCatalog.WEAPON])
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  cm.add_item(p, ItemCatalog.ARMOR)
+  var seen: Array = []
+  cm.bus.add_listener(EventBus.Event.ITEM_DESTROYED,
+      func(_data, _source_actor, _source_item) -> void:
+        seen.append(true))
+  cm.teardown()
+  assert_eq(seen.size(), 0, 'teardown published no ITEM_DESTROYED — fight-end is not a destroy')
+
+
+func test_a_trigger_item_charges_off_item_destroyed() -> void:
+  # A decay item dies on fire; an avenger subscribed to ITEM_DESTROYED charges off it one step later
+  # (accrual-only, loop-proof). The avenger never fires on its own cooldown, so the block proves it.
+  var p := Actor.new(1000.0)
+  var dying := Item.new(_decay_weapon_def(1), p)
+  var avenger := Item.new(_destroy_charged_avenger(), p)
+  p.board.append(dying)
+  p.board.append(avenger)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  cm._fire_item(dying, [])   # decay 1 → destroyed → ITEM_DESTROYED published
+  assert_false(_has_status(p, 'block'), 'the push does NOT fire the avenger the same step')
+  cm.sim_step()
+  assert_true(_has_status(p, 'block'), 'the avenger charged off ITEM_DESTROYED one step later (SELF block on its owner)')
+
+
+func test_own_board_consume_counts_removes_and_scales() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  for _i in 3:
+    p.board.append(Item.new(_chunk_def('chunk'), p))
+  var consumer := Item.new(_chunk_consumer_def('chunk', 0, 4.0), p)   # 0 = consume all present
+  p.board.append(consumer)
+  var cm := _manager(p, [e])
+  cm.start()
+  var before: float = e.hp
+  var arrived: Array = []
+  cm._fire_item(consumer, arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(before - e.hp, 10.0 + 3.0 * 4.0, 0.0001, 'base 10 + 3 chunks consumed × 4')
+  for it in p.board:
+    assert_ne(it.def.id, 'chunk', 'every chunk was removed from the board')
+
+
+func test_own_board_consume_respects_the_amount_cap() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  for _i in 5:
+    p.board.append(Item.new(_chunk_def('chunk'), p))
+  var consumer := Item.new(_chunk_consumer_def('chunk', 2, 4.0), p)   # eat up to 2
+  p.board.append(consumer)
+  var cm := _manager(p, [e])
+  cm.start()
+  var before: float = e.hp
+  var arrived: Array = []
+  cm._fire_item(consumer, arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(before - e.hp, 10.0 + 2.0 * 4.0, 0.0001, 'only 2 chunks consumed (the cap), scaling by 2')
+  var chunks_left: int = 0
+  for it in p.board:
+    if it.def.id == 'chunk':
+      chunks_left += 1
+  assert_eq(chunks_left, 3, '3 of the 5 chunks remain (only the cap was eaten)')
+
+
+func test_own_board_consume_with_no_fuel_is_a_safe_no_op() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var consumer := Item.new(_chunk_consumer_def('chunk', 0, 4.0), p)   # no chunks on the board
+  p.board.append(consumer)
+  var cm := _manager(p, [e])
+  cm.start()
+  var before: float = e.hp
+  var arrived: Array = []
+  cm._fire_item(consumer, arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(before - e.hp, 10.0, 0.0001, 'no fuel → just the base hit, no scaling, no crash')
+
+
+func test_consumed_items_publish_item_destroyed_for_the_charge_synergy() -> void:
+  # The critical wiring: consume removes VIA remove_item, so each consumed chunk publishes
+  # ITEM_DESTROYED — a charge item charges off ACTIVE consume exactly as off passive decay.
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  for _i in 3:
+    p.board.append(Item.new(_chunk_def('chunk'), p))
+  var consumer := Item.new(_chunk_consumer_def('chunk', 0, 4.0), p)
+  p.board.append(consumer)
+  var cm := _manager(p, [e])
+  cm.start()
+  var seen: Array = []
+  cm.bus.add_listener(EventBus.Event.ITEM_DESTROYED,
+      func(data, _source_actor, _source_item) -> void:
+        seen.append(data))
+  cm._fire_item(consumer, [])
+  assert_eq(seen.size(), 3, 'all 3 consumed chunks published ITEM_DESTROYED (consume-death = decay-death)')
+  assert_eq(seen[0], 'chunk', 'with the chunk def id as the event data')

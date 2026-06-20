@@ -30,3 +30,18 @@ var consume_scale: float = 0.0   # value added to the payload per stack consumed
 # leftmost (body-block / adds-in-front). The token def + the trigger are content.
 var summon_def_id: String = ''
 var summon_in_front: bool = true
+
+# Mid-fight item creation (docs/systems/item_creation_and_decay.md Cap 1): a kind == CREATE_ITEM
+# effect puts a new Item (an ItemCatalog def) on the firing actor's OWN board (shape SELF) — the
+# cousin of SUMMON's roster-add. WHICH item, and its decay/numbers, are content (the created def).
+var create_item_def_id: String = ''
+
+# Own-board item-consume (docs/systems/item_creation_and_decay.md — the Mass-twin on board items):
+# spend a pile of the OWNER's matching board items as fuel, scaling this effect's value by
+# `consume_item_scale` per item removed. Resolved in CombatManager._fire_item (item-removal lives on
+# the manager), removing each via remove_item so the consumed items publish ITEM_DESTROYED — a
+# charge-on-destroy item charges off active consume for free. `consume_item_amount` <= 0 = consume
+# ALL present; > 0 = up to that many. WHICH item, how many, and the scaling are content (ItemDef).
+var consume_item_def_id: String = ''   # board item def id to eat ('' = none)
+var consume_item_amount: int = 0       # up to this many (<= 0 = all present)
+var consume_item_scale: float = 0.0    # value added to the payload per item consumed

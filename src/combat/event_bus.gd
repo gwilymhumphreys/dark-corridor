@@ -14,7 +14,7 @@ extends RefCounted
 ## Side is resolved AT EVENT TIME via `side_resolver`, never cached at subscribe time
 ## (rosters change mid-fight — a summon subscribes before it is inserted into its roster).
 
-enum Event { ITEM_FIRED, DAMAGE_DEALT, STATUS_APPLIED, HEALED }
+enum Event { ITEM_FIRED, DAMAGE_DEALT, STATUS_APPLIED, HEALED, ITEM_DESTROYED }
 
 ## Which event sources a subscription listens to, relative to the SUBSCRIBER's side.
 enum SourceFilter { OWN_SIDE, ANY, OPPONENT_SIDE }

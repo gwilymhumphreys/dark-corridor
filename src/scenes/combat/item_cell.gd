@@ -1,9 +1,11 @@
 class_name ItemCell
 extends Control
-## One board item in the framed combat view (docs/systems/ui_layout.md): an opaque effect-family
-## colour panel + its value, a Bazaar-style radial cooldown ring, and a scale-punch
-## recoil when it fires. Structure is authored in item_cell.tscn; this binds the data
-## and draws the ring + recoil. Reads the live Item; writes nothing. No alpha.
+## One board item in the framed combat view (docs/systems/ui_layout.md): a themed item-slot
+## frame (PanelSlot) holding a placeholder icon, a row of effect-coloured value pills straddling
+## the top edge (one per value-bearing effect), a cooldown wipe (a horizontal line rising from the
+## bottom edge to the top as the item recharges), and a scale-punch recoil when it fires. Structure
+## is authored in item_cell.tscn; this binds the data, builds the pills, and draws the wipe + recoil.
+## Reads the live Item; writes nothing. No alpha.
 ##
 ## The recoil is a pure function of the COMBAT clock (render_time − fire_time, the
 ## vfx_driver.md rule) — under hover slow-mo it glides with everything else, and pause
@@ -11,14 +13,14 @@ extends Control
 ## teardown safely.
 
 const CELL_SIZE := Vector2(120, 120)   # the default (the player's prominent board); HUDs shrink it
+const VALUE_PILL: PackedScene = preload('res://src/scenes/combat/value_pill.tscn')
 const RECOIL_SCALE: float = 1.3
 const RECOIL_DURATION: float = 0.18    # combat-clock seconds
 
 var item: Item
 var cell_size: Vector2 = CELL_SIZE
 
-@onready var _panel: ColorRect = $Panel
-@onready var _value: Label = $Value
+@onready var _pills: HBoxContainer = $Pills
 
 var _timekeeper: Timekeeper = null     # the fight's clock; null = no recoil (sandbox/tests)
 var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurious recoil on bind
@@ -30,13 +32,12 @@ func _ready() -> void:
 
 
 ## Shrink the cell (the enemy HUDs / ally slots use smaller cells than the player's board).
-## Call after the cell is in the tree, before setup(). Scales the value font to match.
+## Call after the cell is in the tree, before setup() — setup() sizes the pills to `cell_size`.
 func set_cell_size(px: float) -> void:
   cell_size = Vector2(px, px)
   custom_minimum_size = cell_size
   size = cell_size
   pivot_offset = cell_size * 0.5
-  _value.add_theme_font_size_override('font_size', int(round(44.0 * px / CELL_SIZE.x)))
 
 
 func _exit_tree() -> void:
@@ -50,15 +51,35 @@ func _exit_tree() -> void:
 func setup(target_item: Item, timekeeper: Timekeeper = null) -> void:
   item = target_item
   _timekeeper = timekeeper
-  _panel.color = item.def.panel_color
-  _value.text = _value_text()
+  _build_pills()
   queue_redraw()
 
 
-func _value_text() -> String:
-  if item == null or item.def.effects.is_empty():
-    return ''
-  return str(int(item.def.effects[0].value))
+## A pill per value-bearing effect (damage / heal / status amount), tinted by the effect's family
+## colour, in a centred row straddling the top edge (vertical centre on the frame's top border).
+func _build_pills() -> void:
+  for child: Node in _pills.get_children():
+    child.queue_free()
+  if item == null:
+    return
+  var ratio: float = cell_size.x / CELL_SIZE.x
+  _pills.add_theme_constant_override('separation', int(round(4.0 * ratio)))  # scales with the cell
+  for effect: ItemEffect in item.def.effects:
+    if not _effect_has_value(effect):
+      continue
+    var pill: ValuePill = VALUE_PILL.instantiate()
+    _pills.add_child(pill)
+    pill.setup(TooltipContent.fmt(item.display_value(effect)), effect.color, ratio)
+  var pills_size: Vector2 = _pills.get_combined_minimum_size()
+  _pills.size = pills_size
+  _pills.position = Vector2((cell_size.x - pills_size.x) * 0.5, -pills_size.y * 0.5)
+
+
+func _effect_has_value(effect: ItemEffect) -> bool:
+  match effect.kind:
+    Delivery.Kind.DAMAGE, Delivery.Kind.HEAL, Delivery.Kind.APPLY_STATUS:
+      return true
+  return false
 
 
 func _process(_delta: float) -> void:
@@ -89,13 +110,14 @@ func _update_recoil() -> void:
 
 
 func _draw() -> void:
-  draw_rect(Rect2(Vector2.ZERO, cell_size), Color.BLACK, false, Consts.PANEL_BORDER_WIDTH)
+  # The PanelSlot frame (item_cell.tscn) supplies the border; this only adds the cooldown wipe:
+  # a horizontal line that rises from the bottom edge (just fired) to the top edge (ready).
   if item == null:
     return
   var progress: float = item.cooldown.progress()
   if progress < 1.0:
-    var centre: Vector2 = cell_size * 0.5
-    draw_arc(centre, cell_size.x * 0.5 + 8.0, -PI * 0.5, -PI * 0.5 + progress * TAU, Consts.COOLDOWN_RING_SEGMENTS, Colours.COOLDOWN_RING, Consts.COOLDOWN_RING_WIDTH)
+    var y: float = cell_size.y * (1.0 - progress)
+    draw_line(Vector2(0.0, y), Vector2(cell_size.x, y), Colours.COOLDOWN_RING, Consts.COOLDOWN_RING_WIDTH)
 
 
 ## Centre of the cell in global (screen) space — the VFX wall reads it. With a centre

@@ -35,7 +35,7 @@ What it **is not**: not the run-flow (the `Run manager` builds the snapshot, wri
 - **Run position** — act + encounter index, floor-map progress, character.
 - **RNG state** — the `Run manager`'s run RNG, captured as its **full state** (not just the seed), so resume is **deterministic**: reloading reproduces the same future draft offers and encounter beats *every time* — not re-rollable by quit-and-resume (no save-scum; consistent with "death is final").
 
-**Explicitly not saved:** live combat state — the fight, the `Timekeeper`, `Delivery`s, combat-scoped statuses (block, in-fight poison). Combat is ephemeral and the save sits *between* fights, so there's nothing mid-fight to persist; resume re-enters at the saved encounter. Enemy actors aren't saved either — they're regenerated per encounter from their definitions (Enemy PRD).
+**Explicitly not saved:** live combat state — the fight, the `Timekeeper`, `Delivery`s, combat-scoped statuses (block, in-fight poison). Combat is ephemeral and the save sits *between* fights, so there's nothing mid-fight to persist; resume re-enters at the saved encounter. Enemy actors aren't saved either — they're regenerated per encounter from their definitions (Enemy PRD). **Items created mid-fight** (the `CREATE_ITEM` seam — [`item_creation_and_decay.md`](item_creation_and_decay.md)) are combat-scoped too: the Combat manager strips them from the board at teardown, so the snapshot — taken between fights — only ever sees the *drafted* board.
 
 *(Statuses are **never** saved — all are combat-scoped (decision #26). Durable effects are **Relics / Enchantments**, which the snapshot stores by id + value; a relic re-applies any combat-start status fresh each fight.)*
 

@@ -52,7 +52,6 @@ func heal(amount: float) -> void:
 ## Never mid-run — it clears the board.
 func dissolve() -> void:
   for it in board:
-    it.owner = null
-    it.statuses.clear()
+    it.dissolve()   # the single-item cycle break (Item.dissolve)
   board.clear()
   statuses.clear()

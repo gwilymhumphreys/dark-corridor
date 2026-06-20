@@ -103,6 +103,54 @@ const WILT_FROND_COOLDOWN: float = 4.0
 const WILT_FROND_DAMAGE: float = 20.0
 const WILT_FROND_WEAK_STACKS: float = 1.0         # presence count (duration = STATUS_WEAK_DURATION)
 
+# Fleshmancer commons (PLACEHOLDER numbers — owner's to tune; docs/design/character_ideas.md →
+# Flesh Golem / Meat). Item-economy character: its attacks deal LOW damage AND create a Chunk of
+# Flesh on the player's OWN board (the CREATE_ITEM seam, docs/systems/item_creation_and_decay.md).
+# PRICING (owner, 2026-06-20): a chunk is a persistent auto-attacker, so chunk-creation is MORE
+# valuable than a spore stack — the creators are priced ABOVE the druid's appliers: damage is low
+# (the chunk is the payload, not the hit), tilting fast-low / slow-high between the two 1-chunk poles
+# so neither dominates, and there is a **3s MINIMUM cooldown for common chunk
+# creators** — a chunk lives ~4s (cd 2s x 2 uses), so faster creation stacks chunks up too quickly.
+# Differentiation is cadence + chunk COUNT (Bone Maul makes 2). Starting points — tune in /tune.
+const FLESH_CHUNK_COOLDOWN: float = 2.0           # the created Chunk of Flesh fires every 2s (owner)
+const FLESH_CHUNK_DAMAGE: float = 1.0             # very low power, but does something (owner)
+const FLESH_CHUNK_USES: int = 2                   # decays after 2 activations (the starting_uses seed)
+const FLESH_CARVING_KNIFE_COOLDOWN: float = 3.0    # fast pole — at the 3s chunk-creator minimum (1 chunk)
+const FLESH_CARVING_KNIFE_DAMAGE: float = 3.0      # fast / low — chunk-rate is its edge
+const FLESH_CLEAVER_COOLDOWN: float = 4.0         # mid pole (1 chunk)
+const FLESH_CLEAVER_DAMAGE: float = 6.0           # slower but punchier — the bigger hit is its edge (vs Boning)
+const FLESH_BONE_SAW_COOLDOWN: float = 6.0       # slow pole — makes 2 chunks (two CREATE_ITEM effects)
+const FLESH_BONE_SAW_DAMAGE: float = 4.0         # low — its payoff is the 2 chunks, not the hit
+
+# Flesh Explosion (owner) — the first flesh CONSUMER payoff (charge-on-destroy): an AOE nuke that
+# charges as your items die. 20s base, but each own ITEM_DESTROYED pushes it ~1s (the churning chunks
+# + any consume build it), so the effective cooldown is far lower in a chunk-heavy build. AOE damage
+# sits below a single-target nuke for multi-enemy parity. UNCOMMON (trigger-driven). Estimate — tune
+# in /tune; the charge accel is the power ceiling to watch.
+const FLESH_EXPLOSION_COOLDOWN: float = 20.0
+const FLESH_EXPLOSION_DAMAGE: float = 70.0              # AOE — all opponents
+const FLESH_EXPLOSION_CHARGE_PER_DESTROY: float = 0.05  # push per own item destroyed = ~1s on the 20s bar
+
+# Flensing Hook (PLACEHOLDER name) — the self-harm PRODUCER (carving theme): deals 1 UNBLOCKABLE
+# damage to YOURSELF and makes 2 chunks, 4s — the HP-spend identity made literal (carve your own
+# flesh). Self-damage is UNBLOCKABLE so the player's own block can't absorb it (else the cost AND the
+# self-damage synergy silently no-op). NOTE: values don't live in a vacuum (owner) — the real cost
+# emerges in context: self-harm can stack, and flesh spent here isn't attacking / banking explosion
+# charge (opportunity cost). Tune in /tune.
+const FLESH_FLENSING_HOOK_COOLDOWN: float = 4.0
+const FLESH_FLENSING_HOOK_SELF_DAMAGE: float = 2.0   # start at 2 (owner) — real cost emerges in context (stacking, flesh opportunity cost)
+const FLESH_FLENSING_HOOK_CHUNKS: int = 2          # made via two CREATE_ITEM effects
+
+# Skin Graft (PLACEHOLDER name) — a flesh CONSUMER (surgery/sewing theme): consume 1 chunk to heal,
+# 4s. value 0 + scale x amount 1 = HEAL_PER_CHUNK per chunk eaten; 0 chunks present = heals 0 and
+# resets (the consume "reset" behaviour — no fuel-gate). Consumes VIA remove_item, so it ALSO charges
+# Flesh Explosion (the destroy synergy — heal + charge in one). TUNING WATCH: paired with Flensing
+# Hook this is a net-positive HP loop; HEAL_PER_CHUNK is the dial (the real cost is contextual — flesh
+# opportunity cost + stacking self-harm).
+const FLESH_SKIN_GRAFT_COOLDOWN: float = 4.0
+const FLESH_SKIN_GRAFT_HEAL_PER_CHUNK: float = 4.0
+const FLESH_SKIN_GRAFT_CONSUME: int = 1
+
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks

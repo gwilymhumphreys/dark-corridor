@@ -44,6 +44,7 @@ contracts (boundary hub)**, which every system doc links to.
 | [systems/enemy.md](systems/enemy.md) | **Enemies.** Not a class — an Actor built from an authored enemy definition; enemy items are a content category; tiers are authoring conventions. | enemy, authored board, attack item, tier, regular, elite, boss, signature, summons |
 | [systems/content.md](systems/content.md) | **Relics · enchants · consumables.** The three thin content categories beyond Item — persistent run modifier / one-per-item modifier / manually-fired reserve. | content, relic, enchantment, consumable, potion, draftable, run-state, modifier, throw |
 | [systems/spore_engine.md](systems/spore_engine.md) | **Spore-engine seams** (engineering, not content — all built). Status-stack consumption, evasion (the "acts but misses" fizzle), the player-side mid-fight roster add. | spore engine, consume, stacks, fuel, evasion, miss, whiff, fizzle reason, summon, token, Spore Druid |
+| [systems/item_creation_and_decay.md](systems/item_creation_and_decay.md) | **Item creation, decay, destroy-event & consume seams** (engineering, not content — all built, for the Fleshmancer). Mid-fight item creation (a `CREATE_ITEM` Delivery kind + `add_item`, cousin of summon); item decay / limited-use as an **item-targeted use-status** (block's twin — drained by firing, seeded by `ItemDef.starting_uses`, removing the item via a minimal `StatusContext`); the **`ITEM_DESTROYED` event** (charge-on-destroy hook, owner-sourced, teardown-guarded); **own-board item-consume** (the Mass-twin — `consume_item_*` fields, removed via `remove_item` so consume-death = decay-death). | item creation, decay, limited use, use-status, starting_uses, StatusContext, add_item, remove_item, CREATE_ITEM, ITEM_DESTROYED, item destroyed, charge on destroy, consume item, consume_item_def_id, Mass-twin, on_holder_fired, mid-fight, board mutation, combat-scoped, Fleshmancer, chunk of flesh, seam |
 | [systems/save.md](systems/save.md) | **Run persistence.** A pushed snapshot on encounter entry, returned on load; run-persistent state only, combat ephemeral, no migration. | save, persistence, snapshot, encounter entry, resume, RNG, no migration, autosave |
 | [systems/ui_layout.md](systems/ui_layout.md) | **UI / layout spec + the input layer.** Screen composition; input emits intents and never mutates state; framed-vs-full-screen is the open mockup question. | ui, layout, hud, boards, cooldown ring, hover, intents, draft, progress map, portrait, framed, full-screen |
 | [systems/vfx_driver.md](systems/vfx_driver.md) | **The combat wall.** Renders projectiles, impacts, fire-emotes, damage numbers as a pure function of handed state + `render_time`; writes no game state. | vfx, wall, projectile, impact, render_time, fire-emote, damage numbers, screen shake, stateless |
@@ -89,14 +90,9 @@ unless asked.** The authoring how-to is the bridge to implementation.
 
 ## Plans (`docs/plans/`)
 
-Approved-but-unbuilt designs. Each becomes a `systems/` doc on ship.
-
-| Doc | Covers | Keywords |
-|-----|--------|----------|
-| [plans/item_creation_and_decay.md](plans/item_creation_and_decay.md) | **Item Creation & Decay support PRD** (engine, not content; for the Fleshmancer). Two general seams: mid-fight item creation (a `CREATE_ITEM` Delivery kind + `add_item`, cousin of summon) and item decay / limited-use as an **item-targeted use-status** (block's twin — a pool drained by firing, seeded by `ItemDef.starting_uses`, removing the item via a minimal `StatusContext`). Build order, tests, files touched. | item creation, decay, limited use, use-status, starting_uses, StatusContext, add_item, CREATE_ITEM, mid-fight, board mutation, Fleshmancer, chunk of flesh, seam |
-
-_The tooltip system (gen 3) shipped; see [systems/tooltips.md](systems/tooltips.md). Its plan,
-[plans/tooltip_system.md](plans/tooltip_system.md), is kept for the design rationale + prior-art lineage._
+Approved-but-unbuilt designs (temporary working specs). **Not catalogued here** — they're transient;
+browse [`docs/plans/`](plans/) directly. A plan that ships becomes a `docs/systems/` doc, which *is*
+catalogued above (the plan file stays for rationale/lineage).
 
 ## History (`docs/history/`)
 

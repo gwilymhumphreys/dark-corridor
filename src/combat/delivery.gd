@@ -7,7 +7,7 @@ extends RefCounted
 ## the manager resolves the item's relative target-shape into the concrete
 ## `target` here.
 
-enum Kind { DAMAGE, HEAL, APPLY_STATUS, SUMMON }
+enum Kind { DAMAGE, HEAL, APPLY_STATUS, SUMMON, CREATE_ITEM }
 enum Flag { NONE = 0, UNBLOCKABLE = 1 }   # bitmask; resolved by StatusManager
 
 var kind: int = Kind.DAMAGE
@@ -16,6 +16,7 @@ var status_id: String = ''    # set when kind == APPLY_STATUS (string id, #23)
 var duration: float = 0.0     # per-application duration carried to apply() (timed statuses)
 var summon_def_id: String = ''   # EnemyCatalog id of the token to spawn (kind == SUMMON)
 var summon_in_front: bool = true   # SUMMON: insert leftmost on the summoner's side (body-block)
+var create_item_def_id: String = ''   # ItemCatalog id of the item to create (kind == CREATE_ITEM)
 var flags: int = 0            # Flag bitmask (e.g. unblockable) — resolved on land
 var target                    # Actor or Item (item-target shapes carry statuses)
 var source                    # the firing Item — the VFX origin (null = thrown consumable;

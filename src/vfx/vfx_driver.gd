@@ -30,8 +30,8 @@ func _draw() -> void:
   for d in combat.deliveries():
     if d.fizzled:
       continue
-    if d.kind == Delivery.Kind.SUMMON:
-      continue   # a summon adds a body to a side; it has no projectile to draw (yet)
+    if d.kind == Delivery.Kind.SUMMON or d.kind == Delivery.Kind.CREATE_ITEM:
+      continue   # adds a body / an item to a side; no projectile to draw (the arrival tell is content, not yet built)
     var travel_dur: float = d.travel.threshold * Timekeeper.STEP
     if not d.landed and travel_dur > 0.0:
       var src: Vector2 = layout.item_pos(d.source)

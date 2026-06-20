@@ -133,7 +133,7 @@ godot --headless --import --exit
 **Full conventions: [`docs/documentation.md`](docs/documentation.md).** The essentials:
 
 - **Always update the docs in the SAME change as the behaviour they describe.** After any change, review the affected doc(s) and create/update as needed — code and its doc are never left out of sync. This is mandatory, not a follow-up.
-- **Every new doc gets a catalog entry in [`docs/index.md`](docs/index.md)** — an uncatalogued doc is invisible (the index is read first).
+- **Every new doc gets a catalog entry in [`docs/index.md`](docs/index.md)** — an uncatalogued doc is invisible (the index is read first). **Exception: `docs/plans/` plans are temporary and NOT catalogued** — a plan earns an index row only if it ships as a `systems/` doc.
 - Keep all documentation concise with minimal examples so that an agent can quickly reference it to understand the subject
 - **Docs describe systems, mechanics, and design intent — not specific numbers.** Point to source files (`upgrades/*.json`, GDScript constants) for tunable values. This prevents docs from going stale when values are tuned. If a formula is important for understanding the system, include it but reference the source file for the actual constants.
 

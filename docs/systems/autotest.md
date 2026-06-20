@@ -91,6 +91,7 @@ Modeled on a-machine's `tune` command + `tune-run` subagent: run the harness wit
 ## Open / deferred
 
 - **The decision AI** — draft strategies are **built** (seeded, board-aware); the event/potion policies are live but simple (a seeded option pick / one early throw) — richer policies come with the content.
+- **Family classifier gaps (`AutoTestDriver._family_of`)** — the draft-strategy family classifier covers `damage` / `block` / `poison` / `heal` / `status`; **`SUMMON` and `CREATE_ITEM` fall to `'other'`**, so no family strategy prefers a summon-primary or create-primary item (a damage item with a summon / create *rider* is fine — its primary effect classifies). Add families when such content is authored ([`item_creation_and_decay.md`](item_creation_and_decay.md)). Left unchanged for now — no such content exists (owner, 2026-06-19).
 - **The `tune` skill** — the command + experiment-runner subagent. The machinery (strategies + report) feeds it now; a real pass waits on tunable content.
 - **Report contents** — which metrics / charts — settle as combat metrics exist.
 

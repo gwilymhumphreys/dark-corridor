@@ -26,6 +26,15 @@ var consume_scale: float = 0.0
 # Summon (docs/systems/spore_engine.md Cap 3): the token def + position, resolved by the Combat manager.
 var summon_def_id: String = ''
 var summon_in_front: bool = true
+# Create-item (docs/systems/item_creation_and_decay.md Cap 1): the def of the item to create, resolved
+# by the Combat manager at the CREATE_ITEM Delivery's land (shape SELF → the firing actor's board).
+var create_item_def_id: String = ''
+# Own-board item-consume (docs/systems/item_creation_and_decay.md — the Mass-twin on board items): the
+# Combat manager counts + removes the owner's matching board items at fire (via remove_item, so each
+# publishes ITEM_DESTROYED) and scales this payload's value by the count. amount <= 0 = all present.
+var consume_item_def_id: String = ''
+var consume_item_amount: int = 0
+var consume_item_scale: float = 0.0
 
 
 ## Copy an ItemEffect template's fields into a fresh Payload — the ONE place the
@@ -42,6 +51,10 @@ static func from_effect(effect: ItemEffect) -> Payload:
   payload.duration = effect.duration
   payload.summon_def_id = effect.summon_def_id
   payload.summon_in_front = effect.summon_in_front
+  payload.create_item_def_id = effect.create_item_def_id
+  payload.consume_item_def_id = effect.consume_item_def_id
+  payload.consume_item_amount = effect.consume_item_amount
+  payload.consume_item_scale = effect.consume_item_scale
   payload.consume_id = effect.consume_id
   payload.consume_amount = effect.consume_amount
   payload.consume_from_target = effect.consume_from_target

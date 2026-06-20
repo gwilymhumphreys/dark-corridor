@@ -19,6 +19,16 @@ func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
   cooldown = Ticker.from_seconds(def.cooldown)
 
 
+## Break THIS item's half of the Actor<->Item reference cycle when it is removed from a board
+## mid-fight — decay emptying it (CombatManager.remove_item) or Cap 1's combat-scoped teardown
+## strip. The single-item parallel of Actor.dissolve() (which dissolves a whole board at discard):
+## drop the owner back-reference and clear the combat-scoped statuses. The board erase is the
+## caller's. Idempotent.
+func dissolve() -> void:
+  owner = null
+  statuses.clear()
+
+
 ## The fire pipeline (docs/systems/item.md): gate -> fire (reset the cooldown) -> resolve
 ## each effect into a Payload (applying modifiers / enchants — none yet) -> hand
 ## them up. Returns [] if a gate status (silence) suppresses the fire — a backstop:

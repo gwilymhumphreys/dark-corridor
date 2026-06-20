@@ -1,5 +1,9 @@
 # Dark Corridor — Item Creation & Decay Support PRD
 
+> **SHIPPED 2026-06-19** — both capabilities are built. The as-built record is
+> [`../systems/item_creation_and_decay.md`](../systems/item_creation_and_decay.md); this plan is kept
+> for the original spec + build-order rationale.
+
 > **This is engineering work, NOT content — a building agent should implement it.**
 > It specs two general engine capabilities the **Fleshmancer** character (design:
 > [`../design/character_ideas.md` → *Flesh Golem / Meat*](../design/character_ideas.md))
