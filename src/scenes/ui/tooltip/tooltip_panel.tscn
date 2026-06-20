@@ -34,6 +34,7 @@ theme_override_constants/separation = 4
 custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 mouse_filter = 2
+bbcode_enabled = true
 fit_content = true
 scroll_active = false
 autowrap_mode = 3

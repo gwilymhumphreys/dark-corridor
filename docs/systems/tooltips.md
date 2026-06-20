@@ -128,6 +128,15 @@ returned node is frameless). The column cards are NOT Godot tooltips, so they wr
 - Each status's `desc_key` (the 7 `*_status.gd` classes).
 - Mechanic keyword descriptions (and which mechanics exist) in `keyword_catalog.gd`.
 - Optional per-item `description_key` flavor lines (`item_def.gd`).
+
+  The keyword-card **description** and the item **flavor** are `RichTextLabel`s
+  with `bbcode_enabled` (the keyword *name* and the effect lines stay plain
+  Labels). Authored description/flavor text may therefore use BBCode — notably a
+  font-relative inline icon, `[img height=1em]res://path/icon.png[/img]` (Godot
+  4.7 `em` unit scales the icon to the text). **Caveat:** with BBCode on, a literal
+  `[` in copy is parsed as a tag — escape it as `[lb]`. Interactive inline keyword
+  references are still real `keyword_chip` nodes in the effect lines, not BBCode,
+  because chips carry the built-in per-keyword tooltip.
 - The generated-line baseline copy (templates + shape phrases in `tooltip_content.gd`).
 - The changed-value highlight + rarity-tint colour treatment (a theme call).
 
