@@ -29,7 +29,3 @@ func on_step(target, ctx) -> bool:
 
 func is_fuel() -> bool:
   return true
-
-
-func dot_tick_weight() -> float:
-  return maxf(count, 0.0) * damage_per_tick

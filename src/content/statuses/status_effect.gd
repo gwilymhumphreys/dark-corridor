@@ -116,8 +116,3 @@ func consume(amount: float) -> float:
 ## pool (Block). Time/stack expiry is handled by on_step / consume, not here.
 func is_spent() -> bool:
   return false
-
-
-## Autotest damage-by-source attribution weight for a damaging DoT (count × per-tick). 0 = not one.
-func dot_tick_weight() -> float:
-  return 0.0
