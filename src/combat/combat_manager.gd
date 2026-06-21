@@ -457,8 +457,10 @@ func _land(d: Delivery) -> void:
         var dealt: float = d.target.take_damage(d.value, d.flags)
         bus.publish(EventBus.Event.DAMAGE_DEALT, null, d.source_actor, _source_item_of(d))
         if combat_log != null:
+          # `d.value` is the GROSS hit (pre-block); `dealt` is the NET HP lost — log both
+          # (gross = the threat metric, survives a full block; net = what HP actually did).
           combat_log.on_damage(_delivery_source_name(d), _delivery_source_side(d),
-              d.target.display_name, _side_of(d.target), dealt, timekeeper.sim_time)
+              d.target.display_name, _side_of(d.target), dealt, timekeeper.sim_time, d.value)
     Delivery.Kind.HEAL:
       if d.target is Actor:
         var healed: float = d.target.heal(d.value)

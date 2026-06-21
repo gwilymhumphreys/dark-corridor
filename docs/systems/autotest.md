@@ -72,7 +72,7 @@ Each run writes a raw log + a markdown report to **`autotest_results/`** (projec
 
 - **Fights resolve** — stuck detection catches a combat that never ends (the design's "mutual engine never resolves" worry).
 - **Build viability** — does a draft strategy reach act N / beat a boss? (the cascade actually works).
-- **Balance** — per-encounter HP attrition, damage-by-family, item contribution → feeds tuning.
+- **Balance** — two lenses: *offense* (per-item damage dealt + the player-board contribution table) and *incoming pressure* (**Damage taken by enemy source** + per-encounter HP attrition) → feeds tuning. Both come from the per-fight `CombatLog` ([combat_log.md](combat_log.md)).
 - **Regression / perf** — after changes to combat / items / statuses; headless throughput.
 - Exit `0` (pass) / `1` (fail) for CI.
 

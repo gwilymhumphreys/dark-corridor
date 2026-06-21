@@ -49,6 +49,26 @@ func test_damage_of_zero_or_less_is_ignored() -> void:
   assert_eq(log.events.size(), 0, 'and appends no timeline event')
 
 
+func test_gross_defaults_to_net_when_raw_omitted() -> void:
+  var log := CombatLog.new()
+  log.on_damage('Rusted Blade', PLAYER, 'Grunt', ENEMY, 6.0, 0.1)
+  var rows := _by_name(log.summary(PLAYER))
+  assert_almost_eq(rows['Rusted Blade']['gross'], 6.0, 0.0001, 'gross defaults to net when raw omitted')
+  assert_almost_eq(rows['Rusted Blade']['damage'], 6.0, 0.0001)
+
+
+func test_gross_is_recorded_even_when_net_is_zero() -> void:
+  # A fully-blocked hit (net 0, gross 8): gross still registers the threat; net does not move HP.
+  var log := CombatLog.new()
+  log.on_damage('Claw', ENEMY, 'Player', PLAYER, 0.0, 0.1, 8.0)
+  var rows := _by_name(log.summary(ENEMY))
+  assert_almost_eq(rows['Claw']['gross'], 8.0, 0.0001, 'gross records the pre-block hit')
+  assert_almost_eq(rows['Claw']['damage'], 0.0, 0.0001, 'net stays zero — block ate it')
+  assert_almost_eq(float(log.total_gross[ENEMY]), 8.0, 0.0001, 'gross total accrues')
+  assert_false(log.total_damage_dealt.has(ENEMY), 'no net dealt recorded for a fully-blocked hit')
+  assert_eq(log.events.size(), 1, 'still appends one timeline event (amount = net 0)')
+
+
 # --- heal -------------------------------------------------------------------
 
 func test_healing_accumulates_per_source_and_total() -> void:

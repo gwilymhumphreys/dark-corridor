@@ -33,15 +33,18 @@ var events: Array = []
 # Per-source-item tallies, side-aware: each is Dictionary[int side -> Dictionary[String
 # name_key -> value]]. summary(side) flattens one side's rows.
 var fires_by_item: Dictionary = {}      # name_key -> fire count
-var damage_by_item: Dictionary = {}     # name_key -> total damage dealt
+var damage_by_item: Dictionary = {}     # name_key -> total NET damage dealt (effective HP removed)
+var gross_by_item: Dictionary = {}      # name_key -> total GROSS damage dealt (pre-mitigation, the
+                                        # threat/punch metric — meaningful even when block ate it all)
 var healing_by_item: Dictionary = {}    # name_key -> total healing done
 var block_by_item: Dictionary = {}      # name_key -> total block (shield) applied
 var statuses_by_item: Dictionary = {}   # name_key -> count of OTHER statuses applied
 
 # Totals, split by side (Dictionary[int side -> float]). `_dealt` is damage this side
 # DEALT to opponents; `_taken` is damage this side RECEIVED.
-var total_damage_dealt: Dictionary = {}
-var total_damage_taken: Dictionary = {}
+var total_damage_dealt: Dictionary = {}   # side -> NET damage this side dealt
+var total_damage_taken: Dictionary = {}   # side -> NET damage this side received (HP lost)
+var total_gross: Dictionary = {}          # side -> GROSS damage this side dealt (pre-mitigation)
 var total_healing: Dictionary = {}
 var total_block: Dictionary = {}
 
@@ -56,15 +59,23 @@ func on_item_fired(source_name: String, source_side: int, t: float) -> void:
 
 ## Damage landed on a target. `source_name` is the dealing item's name_key (SOURCELESS
 ## when none — a source-less DoT); `source_side` the dealer's side, `target_side` the
-## target's. `amount` is the EFFECTIVE HP lost (Actor.take_damage's return). Both the
-## dealer's dealt-total and the target's taken-total accrue.
-func on_damage(source_name: String, source_side: int, target_name: String, target_side: int, amount: float, t: float) -> void:
-  if amount <= 0.0:
+## target's. `net` is the EFFECTIVE HP lost (Actor.take_damage's return); `raw` is the
+## GROSS hit before the target's mitigation (block) — omit (or pass < 0) and it defaults
+## to `net`. GROSS is recorded even when block absorbs the whole hit (net 0), so the
+## incoming-pressure tally stays meaningful against a block-heavy build; NET only accrues
+## when HP actually moved.
+func on_damage(source_name: String, source_side: int, target_name: String, target_side: int, net: float, t: float, raw: float = -1.0) -> void:
+  if raw < 0.0:
+    raw = net
+  if raw <= 0.0:
     return
-  _bump(damage_by_item, source_side, source_name, amount)
-  total_damage_dealt[source_side] = float(total_damage_dealt.get(source_side, 0.0)) + amount
-  total_damage_taken[target_side] = float(total_damage_taken.get(target_side, 0.0)) + amount
-  _record(t, 'damage', source_name, source_side, target_name, amount, '')
+  _bump(gross_by_item, source_side, source_name, raw)
+  total_gross[source_side] = float(total_gross.get(source_side, 0.0)) + raw
+  if net > 0.0:
+    _bump(damage_by_item, source_side, source_name, net)
+    total_damage_dealt[source_side] = float(total_damage_dealt.get(source_side, 0.0)) + net
+    total_damage_taken[target_side] = float(total_damage_taken.get(target_side, 0.0)) + net
+  _record(t, 'damage', source_name, source_side, target_name, net, '')
 
 
 ## Healing done. `amount` is the EFFECTIVE HP restored (Actor.heal's return).
@@ -104,7 +115,7 @@ func on_throw(consumable_id: String, thrower_side: int, t: float) -> void:
 ## Views tr(name_key) at draw. Totals are read off the total_* dicts.
 func summary(side: int) -> Array:
   var names: Dictionary = {}
-  for tally in [fires_by_item, damage_by_item, block_by_item, healing_by_item, statuses_by_item]:
+  for tally in [fires_by_item, damage_by_item, gross_by_item, block_by_item, healing_by_item, statuses_by_item]:
     for name in tally.get(side, {}).keys():
       names[name] = true
   var rows: Array = []
@@ -113,6 +124,7 @@ func summary(side: int) -> Array:
       'name': name,
       'fires': int(_value(fires_by_item, side, name)),
       'damage': _value(damage_by_item, side, name),
+      'gross': _value(gross_by_item, side, name),
       'block': _value(block_by_item, side, name),
       'healing': _value(healing_by_item, side, name),
       'statuses': int(_value(statuses_by_item, side, name)),

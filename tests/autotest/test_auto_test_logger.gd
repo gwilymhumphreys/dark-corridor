@@ -67,6 +67,32 @@ func test_ingest_is_player_side_only() -> void:
   assert_almost_eq(log.total_damage, 0.0, 0.0001, 'the total is player-dealt only')
 
 
+func test_ingest_records_incoming_gross_by_enemy() -> void:
+  # Incoming pressure is the enemy side's GROSS output — for ranking which enemy items hit
+  # hardest, kept apart from the player's own output. (raw omitted → gross == net here.)
+  var clog := CombatLog.new()
+  clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 7.0, 0.1)
+  clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 5.0, 0.4)
+  clog.on_damage('Rusted Blade', PLAYER, 'Grunt', ENEMY, 9.0, 0.2)
+  var log := AutoTestLogger.new()
+  log.ingest_combat_log(clog)
+  assert_almost_eq(log.incoming_by_enemy['Claw'], 12.0, 0.0001, 'enemy gross output tallied by source')
+  assert_false(log.incoming_by_enemy.has('Rusted Blade'), 'player output is not "incoming"')
+  assert_almost_eq(log.total_incoming, 12.0, 0.0001, 'total incoming is the enemy gross')
+  assert_almost_eq(log.total_damage, 9.0, 0.0001, 'total dealt stays player output')
+
+
+func test_ingest_incoming_counts_fully_blocked_hits() -> void:
+  # The point of GROSS: a hit the player fully blocked (net 0) still registers as threat,
+  # so a block-heavy build does not read as "the enemy did nothing".
+  var clog := CombatLog.new()
+  clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 0.0, 0.1, 8.0)   # net 0, gross 8 (all blocked)
+  var log := AutoTestLogger.new()
+  log.ingest_combat_log(clog)
+  assert_almost_eq(log.incoming_by_enemy['Claw'], 8.0, 0.0001, 'a fully-blocked hit still shows as incoming')
+  assert_almost_eq(log.total_incoming, 8.0, 0.0001)
+
+
 func test_ingest_accumulates_across_multiple_fights() -> void:
   var log := AutoTestLogger.new()
   for _fight in 2:

@@ -33,10 +33,10 @@ item can sit on **both** sides, so a flat key would conflate the player's copy w
 enemy's; and the player report + the autotest contribution table want **player-side only**.
 `Side` is an enum (`PLAYER` / `ENEMY`); the manager resolves it per write via `_on_player_side`.
 
-- **Per-item:** `fires_by_item`, `damage_by_item`, `healing_by_item`, `block_by_item`,
-  `statuses_by_item` (count of non-block statuses).
-- **Totals (per side):** `total_damage_dealt` / `total_damage_taken`, `total_healing`,
-  `total_block`.
+- **Per-item:** `fires_by_item`, `damage_by_item` (net), `gross_by_item` (pre-mitigation),
+  `healing_by_item`, `block_by_item`, `statuses_by_item` (count of non-block statuses).
+- **Totals (per side):** `total_damage_dealt` / `total_damage_taken` (net), `total_gross`
+  (pre-mitigation dealt), `total_healing`, `total_block`.
 - A **source-less DoT** (a damaging status with no applier item — enemy-supplied or item-less)
   falls to the generic `CombatLog.SOURCELESS` (`'Poison'`) bucket on the dealer's side.
 
@@ -58,7 +58,16 @@ amount (records nothing, appends no event).
 
 The numbers are **honest** because `Actor.take_damage` / `Actor.heal` now return the actual HP
 delta (see [actor.md](actor.md)) — post-block, capped on a killing blow, post-overheal-cap —
-so the log shows effective damage/healing with no HP-diff machinery.
+so the log shows effective (net) damage/healing with no HP-diff machinery.
+
+**Net vs gross.** `on_damage(…, net, t, raw)` records two numbers: **net** (effective HP
+removed — the `take_damage` return) and **gross** (the pre-mitigation hit, `raw`; defaults to
+net when omitted). Gross is recorded **even when block absorbs the whole hit** (net 0), because
+*incoming pressure* tuning needs the enemy's real threat — a block-heavy build would otherwise
+read every enemy as harmless. The autotest's "Incoming damage (gross, by enemy item)" report is
+the enemy side's gross; net survivability is the per-encounter HP attrition. The direct-damage
+land site passes `raw = d.value`; a DoT tick has no pre-block value to hand, so its gross
+defaults to net (enemy DoT through player block is an uncommon edge — flagged, not solved).
 
 ---
 

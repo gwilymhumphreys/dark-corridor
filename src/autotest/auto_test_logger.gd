@@ -25,6 +25,11 @@ var fires_by_item: Dictionary = {}     # item name_key -> times it fired (player
 var block_by_item: Dictionary = {}     # item name_key -> total block applied
 var healing_by_item: Dictionary = {}   # item name_key -> total healing done (post-cap, from
                                        # Actor.heal's return — honest, no overheal)
+# Incoming pressure (tune): GROSS (pre-mitigation) enemy output, keyed by the enemy item that
+# dealt it. GROSS — not net HP lost — because a block-heavy test build absorbs the hit to ~0 net,
+# which would hide the enemy's real threat. Net survivability is the per-encounter HP attrition.
+var incoming_by_enemy: Dictionary = {}  # enemy item name_key -> gross damage thrown at the player side
+var total_incoming: float = 0.0         # gross damage the player side faced (pre-mitigation)
 
 
 func log_event(type: String, data: Dictionary = {}) -> void:
@@ -51,6 +56,13 @@ func ingest_combat_log(log: CombatLog) -> void:
     if float(row['healing']) > 0.0:
       healing_by_item[name] = float(healing_by_item.get(name, 0.0)) + float(row['healing'])
   total_damage += float(log.total_damage_dealt.get(side, 0.0))
+  # Incoming pressure = the enemy side's GROSS output (it lands on the player side). Gross, not
+  # net, so a hit the player fully blocked still registers as threat.
+  for row in log.summary(CombatLog.Side.ENEMY):
+    if float(row['gross']) > 0.0:
+      var src: String = row['name']
+      incoming_by_enemy[src] = float(incoming_by_enemy.get(src, 0.0)) + float(row['gross'])
+  total_incoming += float(log.total_gross.get(CombatLog.Side.ENEMY, 0.0))
 
 
 ## Record one resolved beat (a fight or rest) for the per-encounter table. `rec` =
@@ -78,6 +90,8 @@ func summarize(result: Dictionary) -> Dictionary:
     'board_size': result.get('board_size', 0),         # run mode only
     'total_damage': total_damage,
     'damage_by_family': damage_by_family.duplicate(),
+    'total_incoming': total_incoming,
+    'incoming_by_enemy': incoming_by_enemy.duplicate(),
     'encounters': encounters.duplicate(true),           # run mode only
     'fires_by_item': fires_by_item.duplicate(),
     'block_by_item': block_by_item.duplicate(),
@@ -106,6 +120,9 @@ func format_summary(summary: Dictionary) -> PackedStringArray:
   lines.append('Total damage dealt: %.1f' % summary['total_damage'])
   for family in _sorted_families(summary['damage_by_family']):
     lines.append('  %s: %.1f' % [family, summary['damage_by_family'][family]])
+  lines.append('Incoming (gross, pre-block): %.1f' % summary['total_incoming'])
+  for src in _sorted_families(summary['incoming_by_enemy']):
+    lines.append('  %s: %.1f' % [src, summary['incoming_by_enemy'][src]])
   return lines
 
 
@@ -153,6 +170,20 @@ func write_report(path: String, summary: Dictionary) -> void:
       lines.append('- %s: %.1f' % [family, summary['damage_by_family'][family]])
   lines.append('')
   lines.append('Total damage dealt: **%.1f**' % summary['total_damage'])
+
+  # Incoming pressure (the difficulty lens) — GROSS enemy output, total + per enemy item. Gross
+  # (pre-block) so a block-heavy build doesn't hide enemy threat; net HP loss is the per-encounter
+  # attrition below. This is what a tune pass reads to judge whether an enemy hits too hard.
+  lines.append('')
+  lines.append('## Incoming damage (gross, by enemy item)')
+  lines.append('')
+  if summary['incoming_by_enemy'].is_empty():
+    lines.append('- (none)')
+  else:
+    for src in _sorted_families(summary['incoming_by_enemy']):
+      lines.append('- %s: %.1f' % [src, summary['incoming_by_enemy'][src]])
+  lines.append('')
+  lines.append('Total incoming (gross, pre-block): **%.1f**' % summary['total_incoming'])
 
   # Per-encounter breakdown (run mode) — duration vs the ~10–15s window + HP attrition.
   if not summary['encounters'].is_empty():
