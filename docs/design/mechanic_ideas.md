@@ -21,33 +21,64 @@
 
 - **Rule as seen:** each time an item activates, the holder takes damage equal to **bleed**, then
   bleed is reduced by 1. A stacking value that pays itself down as the board fires.
-- **Read — it's activation-paced (a new clock for us).** Every status we have runs on *time*
-  (poison/burn tick per second) or *incoming damage* (block absorbs). Bleed runs on **board
-  tempo** — it advances on item activations. So a wide/fast board burns through it quickly and a
-  lean board stretches it out. Because of the `−1`, the **total** self-damage is a fixed triangular
-  number (bleed 5 → 5+4+3+2+1 = 15 over five activations, then gone), but the **rate** tracks how
-  hard the board is being driven. A front-loaded spike that always terminates.
-- **The `−1` decay is the safety rail.** Without it, bleed on an auto-firing board is a runaway
-  spiral; with it, it's a bounded, tunable cost. Treat the self-paydown as the core of the design,
-  not an incidental.
-- **Two polarities, two homes:**
-  - **Enemy debuff (apply bleed to them):** turns the enemy's *own* aggression against it — fast
-    attackers bleed themselves out. The likely grail reading.
-  - **Self-cost (bleed yourself):** the [Fleshmancer](character_ideas.md#flesh-golem--meat--parked-new-2026-06-16) fit.
-    Its identity is *HP-as-resource + a churning board*; bleed = "every item you fire taxes your HP,
-    scaled by board activity" — the masochist knife-edge the design already names as the core loop.
-    A different *texture* from the existing one-shot **Flensing Hook**: bleed is a spread-out,
-    board-wide, decaying tax, and the churning chunks each tick it (thematically apt, a `/tune`
-    watch — chunk count would spike it). For a self-cost, likely **unblockable** (the Flensing-Hook
-    precedent: blockable would let the Fleshmancer's own block silently no-op the cost).
-- **Engine cost — small, not free-wired.** `EventBus.Event.ITEM_FIRED` already exists, and there's
-  already a per-fire hook for *item*-targeted statuses (`on_holder_fired`, used by Decay). Bleed is
-  *actor*-targeted, so it'd need the actor-level twin: one new no-op `StatusEffect` hook + one call
-  site in the fire path (where ITEM_FIRED publishes). Comparable to the decay seam. Ordering: the
-  self-hit + decrement want a deterministic slot right after the payload resolves (#24).
-- **Open:** which polarity (or both); blockable-vs-not per polarity; whether it's a character-bound
-  status (Fleshmancer) or joins the shared baseline like Weak/Vulnerable (probably too complex for
-  baseline); the starting magnitude (small — the triangular total grows fast).
+- **Direction (owner, 2026-06-21): an ENEMY debuff you apply, with synergies around it.** Bleed
+  reads better as something you put *on the enemy* (its own attacks bleed it out) than as a status
+  on yourself. (A self-bleed version was considered and set aside for *this* mechanic — not a
+  blanket rule against self-statuses.) So: you stack bleed on the enemy, and the enemy's own attacks
+  bleed it out.
+- **Read — activation-paced (a new clock for us).** Existing statuses run on *time* (poison/burn) or
+  *incoming damage* (block); bleed advances on the **bleeding actor's item activations** — the
+  enemy's tempo cashes it out. Because of the `−1`, one application is a fixed triangular burst
+  (bleed 5 → 5+4+3+2+1 = 15 over five of the enemy's activations, then gone): fixed **total**, but
+  the **rate** tracks enemy tempo — gushes against a fast multi-item enemy, trickles against a slow
+  one-big-hit boss. Good texture (rewards reading the enemy), a feast/famine balance watch.
+- **The `−1` paydown is the engine for synergy.** Left alone, bleed winds down to nothing, so the
+  synergy space is *fighting the decay* two ways: **burst** (dump a big stack so the triangular
+  total is huge) vs. **sustain** (re-apply faster than it pays down → a standing wound). Two
+  draftable sub-strategies off one status.
+- **Synergy space ("around it"):**
+  - **Appliers** — stack bleed (the spore-applier equivalent); fast-small vs. slow-big appliers
+    split the burst / sustain poles.
+  - **Payoffs / cares-about-bleeding** — items that key off the enemy *being* bled or off a bleed
+    tick ("+X vs. a bleeding enemy"; "when it bleeds, gain block") — the distinct-status-cares
+    mechanism, like the Spore Druid's spread cards.
+- **Engine cost — small, not free-wired.** `EventBus.Event.ITEM_FIRED` already carries source
+  identity, and there's a per-fire hook for *item*-targeted statuses (`on_holder_fired`, used by
+  Decay). Bleed needs the actor-level twin: a `StatusEffect` hook the Combat manager calls when the
+  holder actor's items activate + one call site. Bleed damage routes through `take_damage` (publishes
+  DAMAGE_DEALT), so payoff items can subscribe. Ordering: the hit + decrement after the payload
+  resolves (#24).
+- **Open:** which character / pool owns it (a status-application archetype — *not* the Fleshmancer;
+  don't assign yet); whether the enemy's block soaks its own bleed (a lever); starting magnitude
+  (small — the triangular total grows fast); confirm the tempo reading is the holder's items only.
+
+---
+
+## Curses — *parked (source: Slay the Spire, 2026-06-21)*
+
+- **Source rule:** items that carry a **negative effect**. In Slay the Spire a curse is a card you
+  don't want — clogs the deck, often unplayable, sometimes with an active downside; acquired from
+  events / certain enemies, scrubbed at shops/events.
+- **Translation to us — board-slot cost, not hand-clog.** We have no deck/hand; items sit on the
+  board and auto-fire on cooldowns. So a curse's cost isn't deck dilution — it's **a board slot
+  occupied** + a bad effect on a timer. Board space is the scarce resource, so a slot doing
+  something *negative* (or nothing) is the penalty.
+- **Two readings:**
+  - **Pure curse (forced negative):** an item you're saddled with — buffs the enemy, debuffs you
+    each fire, or just wastes a slot. From events (a Faustian reward) or boss/enemy afflictions;
+    the play is mitigate-or-remove. Never appears as a draft reward (StS curses aren't card
+    rewards).
+  - **Tradeoff item (net-positive with a downside):** a strong item carrying a curse-like tax —
+    "big hit but you take some," "fast weapon but it Weakens you." Draftable *because* the upside
+    pays for it. (A natural home for a negative **self-status**, now that those aren't off the
+    table.)
+- **Reuses what's built.** A negative effect is just an ItemEffect (self-damage already exists; an
+  effect could heal the enemy, debuff your own board, etc.). A curse that **wears off** could ride
+  the new Decay use-status ([`item_creation_and_decay.md`](../systems/item_creation_and_decay.md)) —
+  a temporary affliction that expires after N activations — instead of needing a removal service.
+- **Open:** the acquisition path (grant a run-scoped board item *outside* the draft — check it
+  exists); removal vs. self-expiry; whether curses are a shared category (from events + enemies,
+  any character) or character-flavoured; how a forced item interacts with a full board.
 
 ---
 
