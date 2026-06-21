@@ -17,10 +17,11 @@ const AOE := 'kw:aoe'
 const ITEM_TARGET := 'kw:item_target'
 const UNBLOCKABLE := 'kw:unblockable'
 const TRIGGER := 'kw:trigger'
+const RECLAIM := 'kw:reclaim'
 const ENCHANT := 'kw:enchant'
 
 # The fixed display order for mechanic keywords in the column (statuses come first, in effect order).
-const MECHANIC_ORDER: Array[String] = [FUEL, SUMMON, AOE, ITEM_TARGET, UNBLOCKABLE, TRIGGER, ENCHANT]
+const MECHANIC_ORDER: Array[String] = [FUEL, SUMMON, AOE, ITEM_TARGET, UNBLOCKABLE, TRIGGER, RECLAIM, ENCHANT]
 
 static var _mechanics: Dictionary = {}
 
@@ -61,6 +62,15 @@ static func _build() -> void:
     'name_key': 'Trigger',
     'desc_key': 'Charges faster when its condition happens.',
     'color': Colours.STATUS_VULNERABLE,
+    'icon': '',
+  }
+  # Reclaim — the destroy-payoff keyword (the Fleshmancer's; character_ideas.md). The labelled
+  # trigger that replaces "when one of your items is destroyed". Pairs with the Decay status as
+  # cause -> payoff. PLACEHOLDER copy — owner's to refine/rename.
+  _mechanics[RECLAIM] = {
+    'name_key': 'Reclaim',
+    'desc_key': 'Charges as your own items are destroyed.',
+    'color': Colours.STATUS_DECAY,
     'icon': '',
   }
   _mechanics[ENCHANT] = {

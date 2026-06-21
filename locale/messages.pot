@@ -236,6 +236,10 @@ msgid "Trigger"
 msgstr ""
 
 #: src/content/keywords/keyword_catalog.gd
+msgid "Reclaim"
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
 msgid "Enchant"
 msgstr ""
 
@@ -261,6 +265,10 @@ msgstr ""
 
 #: src/content/keywords/keyword_catalog.gd
 msgid "Charges faster when its condition happens."
+msgstr ""
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Charges as your own items are destroyed."
 msgstr ""
 
 #: src/content/keywords/keyword_catalog.gd
@@ -585,6 +593,10 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "Summon {0}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} as your items are destroyed"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd

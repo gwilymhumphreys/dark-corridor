@@ -105,7 +105,9 @@ in `KeywordCatalog` (statuses first in effect order, then mechanics in a fixed o
 - per effect: `APPLY_STATUS` → its `status_id`; `consume_id` → that status + `kw:fuel`;
   `SUMMON` → `kw:summon`; AOE shapes → `kw:aoe`; item-target shapes → `kw:item_target`;
   the `UNBLOCKABLE` flag → `kw:unblockable`.
-- `trigger_subs` → `kw:trigger` + each sub's `filter` (a status id).
+- `trigger_subs` → `kw:trigger` + each sub's `filter` (a status id); an **`ITEM_DESTROYED`** sub
+  instead surfaces **`kw:reclaim`** (Reclaim, the destroy-payoff keyword — the Fleshmancer's;
+  `character_ideas.md`), not generic `kw:trigger`, and its trigger line renders the Reclaim chip.
 - `item.enchant` → `kw:enchant`.
 
 `KeywordCatalog` resolves a **status** id from its `StatusEffect` subclass

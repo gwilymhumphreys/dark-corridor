@@ -236,6 +236,10 @@ msgid "Trigger"
 msgstr "Trigger"
 
 #: src/content/keywords/keyword_catalog.gd
+msgid "Reclaim"
+msgstr "Reclaim"
+
+#: src/content/keywords/keyword_catalog.gd
 msgid "Enchant"
 msgstr "Enchant"
 
@@ -262,6 +266,10 @@ msgstr "Cannot be soaked by Block."
 #: src/content/keywords/keyword_catalog.gd
 msgid "Charges faster when its condition happens."
 msgstr "Charges faster when its condition happens."
+
+#: src/content/keywords/keyword_catalog.gd
+msgid "Charges as your own items are destroyed."
+msgstr "Charges as your own items are destroyed."
 
 #: src/content/keywords/keyword_catalog.gd
 msgid "A permanent modifier attached to this item."
@@ -586,6 +594,10 @@ msgstr "Apply {0} {1}"
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "Summon {0}"
 msgstr "Summon {0}"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} as your items are destroyed"
+msgstr "{0} as your items are destroyed"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "When {0} is applied"

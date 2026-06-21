@@ -60,6 +60,9 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
 
 
 func _trigger_line(sub: Dictionary) -> Array:
+  # An ITEM_DESTROYED trigger is the Reclaim keyword (the destroy-payoff; tooltips.md), not generic.
+  if sub.get('event', -1) == EventBus.Event.ITEM_DESTROYED:
+    return _interpolate(tr('{0} as your items are destroyed'), [{'t': 'chip', 'id': KeywordCatalog.RECLAIM}])
   var filter = sub.get('filter', null)
   if filter is String and filter != '':
     return _interpolate(tr('When {0} is applied'), [{'t': 'chip', 'id': filter}])
@@ -143,7 +146,16 @@ static func _item_uses_mechanic(item: Item, mech: String) -> bool:
     KeywordCatalog.UNBLOCKABLE:
       return _any_effect(item, func(e): return (e.flags & Delivery.Flag.UNBLOCKABLE) != 0)
     KeywordCatalog.TRIGGER:
-      return not item.def.trigger_subs.is_empty()
+      # Generic trigger — but an ITEM_DESTROYED sub surfaces Reclaim instead (below), not Trigger.
+      for sub: Dictionary in item.def.trigger_subs:
+        if sub.get('event', -1) != EventBus.Event.ITEM_DESTROYED:
+          return true
+      return false
+    KeywordCatalog.RECLAIM:
+      for sub: Dictionary in item.def.trigger_subs:
+        if sub.get('event', -1) == EventBus.Event.ITEM_DESTROYED:
+          return true
+      return false
     KeywordCatalog.ENCHANT:
       return item.enchant != null
   return false

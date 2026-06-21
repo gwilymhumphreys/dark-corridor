@@ -264,6 +264,25 @@ status-identity engine (spores), not warrior/mage/rogue.
   #30). **Values are deliberately provisional (owner):** they don't live in a vacuum — self-harm can
   stack, and flesh spent on a heal isn't attacking or banking explosion charge (opportunity cost), so
   a number can look generous in isolation while the real cost emerges in context. `/tune` territory.
+- **Synergy set — the "aristocrats" loop (owner, 2026-06-22):** the draft synergies are layers of
+  *one* engine — **your own flesh dying = value** (the Magic: the Gathering "aristocrats" pattern, in
+  flesh): **fuel** (self-harm / carving — spend HP to make chunks) → **churn** (create →
+  [decay](../systems/item_creation_and_decay.md), the board turns over) → **payoff**, two faces:
+  **consume** (the deliberate spend, e.g. Skin Graft) + **on-destroy** (the reactive trigger, e.g.
+  Flesh Explosion) — and a consume *is* a destroy, so consumers double as destroy-fuel → **offense**:
+  **bleed** the enemy ([`mechanic_ideas.md`](mechanic_ideas.md)), mechanically separate but the
+  tightest theme fit (the blade carves both ways).
+- **Reclaim — the destroy-payoff keyword (PLACEHOLDER, owner narrowed 2026-06-22):** a labelled
+  trigger that *replaces* "when one of your items is destroyed" in item text — "**Reclaim:** deal X".
+  **Reclaim** is the pick (recover-your-spent-flesh read; pairs with the **Decay** status as
+  cause→payoff; flexible across heal / block / damage payoffs); *Salvage* the near-equal (more
+  scrap/scavenger tone); *Recycle* set aside (modern/clinical clash with the grim register). Owner's
+  to rename. **Built (2026-06-22):** `kw:reclaim` in `KeywordCatalog` (Decay-coloured); the tooltip
+  routes an `ITEM_DESTROYED` trigger to it (Flesh Explosion now reads Reclaim, not generic Trigger).
+  Copy is placeholder.
+- **Bleed fusion (owner, 2026-06-22):** carving attacks can double as bleed appliers — one swing =
+  damage + a chunk (your fuel) + bleed (enemy attrition). Watch: damage + chunk + bleed on a single
+  common is a lot — rarity-gate the triple, keep commons to two effects.
 - **The engine (owner, 2026-06-16): it fills two mechanical spaces fused into one
   loop — mid-fight item creation *and* HP-as-resource:**
   - **Spend HP → make fleshy items** (cut off a piece of yourself; it becomes a thing on the

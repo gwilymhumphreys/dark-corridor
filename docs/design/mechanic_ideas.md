@@ -48,9 +48,11 @@
   holder actor's items activate + one call site. Bleed damage routes through `take_damage` (publishes
   DAMAGE_DEALT), so payoff items can subscribe. Ordering: the hit + decrement after the payload
   resolves (#24).
-- **Open:** which character / pool owns it (a status-application archetype — *not* the Fleshmancer;
-  don't assign yet); whether the enemy's block soaks its own bleed (a lever); starting magnitude
-  (small — the triangular total grows fast); confirm the tempo reading is the holder's items only.
+- **Open:** which character / pool owns it — now being weighed as the **Fleshmancer's** offense
+  layer (the carving theme cuts both ways; see its entry in
+  [`character_ideas.md`](character_ideas.md)), uncommitted; whether the enemy's block soaks its own
+  bleed (a lever); starting magnitude (small — the triangular total grows fast); confirm the tempo
+  reading is the holder's items only.
 
 ---
 
