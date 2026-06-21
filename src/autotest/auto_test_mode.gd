@@ -1,29 +1,28 @@
 class_name AutoTestMode
 extends Node
-## The headless autotest entry (autotest.md), Phase 2 scope: drive ONE deterministic
-## fight to a clean resolution and report it. The root of `autotest.tscn` — launch
-## it as a dedicated main scene so nothing presentational mounts:
+## The headless autotest entry (autotest.md). It drives a whole deterministic descent
+## (Game → Run → Encounter → Combat) — or one fight with --single-fight — to a clean
+## resolution and reports it. The root of `autotest.tscn` — launch it as a dedicated main
+## scene so nothing presentational mounts:
 ##
 ##   <godot> --headless --path . res://src/autotest/autotest.tscn -- \
 ##           --autotest --seed 1 --speed 5 --timeout 120 --wall-timeout 30 \
-##           --report user://autotest_report.md
+##           --strategy greedy-synergy --report user://autotest_report.md
 ##
-## It parses flags, forces a fresh-user run (nosave / notutorial), seeds the RNG,
-## sets the Timekeeper dial from --speed, builds a player-vs-enemy fight from the
-## catalogs, and drives `CombatManager.sim_step()` directly (no _physics_process,
-## no real time → bit-reproducible). It enforces a game-time timeout, a wall-clock
-## hang watchdog, and stuck detection, then sets the exit code (0 = the fight
-## resolved, 1 = stuck / timed out) and quits.
+## It parses flags, forces a fresh-user run (nosave / notutorial), seeds the run RNG
+## (--seed), sets the Timekeeper dial from --speed, takes draft picks via the AutoTestDriver's
+## seeded strategy (--strategy), and drives `CombatManager.sim_step()` directly (no
+## _physics_process, no real time → bit-reproducible). It enforces a game-time timeout, a
+## wall-clock hang watchdog, and stuck detection, then sets the exit code (0 = resolved —
+## won / died / capped; 1 = stuck / timed out) and quits.
 ##
 ## Damage / fire / block / healing numbers come from the CombatManager's CombatLog —
-## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md Design B). _drive_fight
-## attaches a fresh CombatLog before its sim_step loop and ingests its player side at
-## fight end; there is no per-step HP-diff reconstruction.
+## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md). Each fight attaches a fresh
+## CombatLog before its sim_step loop and ingests its player side at fight end; there is
+## no per-step HP-diff reconstruction.
 ##
-## The run loop (multiple encounters, draft strategies, the seeded run RNG) is
-## Phase 3; the AutoTestDriver is a no-op stub until then, and --seed / --speed are
-## plumbed-but-inert here (a single Phase 1 fight has no RNG and the direct
-## sim_step loop advances one STEP per call regardless of the dial).
+## (The harness doesn't quit/resume mid-run itself; the deterministic-resume invariant is
+## covered by GUT.)
 
 # Project-local, git-ignored output dir for run artifacts (log + report).
 const OUTPUT_DIR: String = 'res://autotest_results'
@@ -239,12 +238,12 @@ func run_full() -> Dictionary:
 ## Shared by run_once + run_full.
 ##
 ## The damage / fire / block / healing tallies come from the CombatManager's CombatLog —
-## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md Design B). We attach a fresh log
+## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md). We attach a fresh log
 ## before the loop (the manager direct-writes it at each mutation site) and ingest its
 ## PLAYER side at fight end; there is no per-step HP-diff reconstruction anymore. The stuck
 ## guard still reads live-roster HP (its job is detecting a flat fight, not attribution).
 func _drive_fight(
-    cm: CombatManager, fight_player: Actor, wall_start: int, wall_timeout_ms: int, timeout_steps: int) -> Dictionary:
+    cm: CombatManager, _fight_player: Actor, wall_start: int, wall_timeout_ms: int, timeout_steps: int) -> Dictionary:
   var stuck := AutoTestStuckDetector.new(seconds_to_steps(stuck_threshold_seconds))
   stuck.note(_total_hp(_live_actors(cm)))   # baseline
   cm.combat_log = CombatLog.new()   # the manager logs every mutation here — our source of truth

@@ -4,7 +4,7 @@
 > game is, what's built, how to work, what's settled, and what's next. It points to
 > the canonical docs rather than duplicating them — read this, then the linked docs.
 >
-> **Last updated:** 2026-06-09 — **ally acquisition** (a recruit Event grants a run-scoped ally,
+> **Last updated:** 2026-06-21 — **ally acquisition** (a recruit Event grants a run-scoped ally,
 > 4-slot cap), a **character-select** screen + a **settings** screen (audio-volume `Prefs`
 > persisted to `user://`), and a **combat-view relayout** (corridor-forward: the corridor large
 > top-left with an `enemy_hud` pinned above each occupant sprite, the player portrait + HP
@@ -13,11 +13,15 @@
 > (#1), **reward routing** (#2), the **spore-engine seams** (Cap 1+2) + **mid-fight roster
 > changes** (Cap 3, #22), **pause at any point** (#8), and the **content scaffolding** (string
 > ids, kind-grouped `src/content/`, a **character system** + per-character pools, #23/#27).
-> Latest 2026-06-10: the **status system refactored to polymorphic `StatusEffect` classes**
+> Then 2026-06-10: the **status system refactored to polymorphic `StatusEffect` classes**
 > (string-id, per-application duration, one file per status — #29), the beat model **CHOICE→ROLL**
 > (beats auto-roll combat/event, the choice layer dormant), the **Spore Druid's first common
 > weapons** + Wilt Frond, and a **central colour/const palette** (`Colours` / `Consts`).
-> **251 GUT tests green** on Godot 4.6; the run is watchable end-to-end and the autotest plays +
+> Latest 2026-06-21: the **combat item tooltip** (#31, 2026-06-19) and the **combat log** — a
+> combat-scoped observation sink that is the **single source of truth** for damage / heal / block
+> numbers (the autotest reads it instead of reconstructing from HP diffs), with a live HUD
+> *Dealt · Taken* readout + a post-fight summary screen.
+> **334 GUT tests green** on Godot 4.7; the run is watchable end-to-end and the autotest plays +
 > reports builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
@@ -54,7 +58,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
 
 ## Where things stand (what's built)
 
-**Phases 1–5 are complete, committed, 251 GUT tests green, feel gate passed.**
+**Phases 1–5 are complete, committed, 334 GUT tests green, feel gate passed.**
 See `git log` (each step is its own green commit); the dated build chronology is
 [`history/build_log.md`](history/build_log.md), with the original phase plans
 beside it in `docs/history/`. Most of
@@ -120,8 +124,9 @@ Lifetime tiers: **`Game` (session) → `Run` (descent) → `Encounter` (beat) �
 (`RunManager` / `Encounter` / `CombatManager`) are `Node`s, and **only
 `CombatManager` runs `_physics_process`** (the one fixed-step tick).
 
-**Autoloads (6, in `project.godot`):** `SfxManager`, `MusicManager`, `StatusManager`
-(stateless rules), `Save` (JSON snapshot service), `Draft` (stateless reward draw),
+**Autoloads (7, in `project.godot`):** `SfxManager`, `MusicManager`, `StatusManager`
+(stateless rules), `Save` (JSON run snapshot), `Prefs` (disk-persisted session prefs —
+audio bus volumes, separate from the run `Save`), `Draft` (stateless reward draw),
 `Game` (session singleton — phase machine + run lifecycle).
 
 **The driving seam — important.** The run-logic Nodes stay **out of the scene tree**
@@ -133,7 +138,7 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
 
 ## How to work (the rhythm)
 
-- **Godot exe:** `C:\projects\godot\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe`
+- **Godot exe:** `C:\projects\godot\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe`
 - **Run the GUT suite:**
   `<exe> --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/ -gexit`
 - **GOTCHA:** after adding any new `class_name` script, run

@@ -117,9 +117,20 @@ shader's nearest-reconstruction drifts slightly on heavily-scaled nodes.)
 ## Pixel-art "low-res look at high-res"
 
 No SubViewport: the corridor is drawn in the high-res canvas and the pixel-art
-textures are scaled *up* (each renderer scene's root has a large `scale`). Slice
-transforms are floats (no pixel snapping) → sub-pixel-smooth motion. UI lives on
-a `CanvasLayer` and stays crisp at full resolution.
+textures are scaled *up* (each renderer scene's root has a large `scale`). The art
+is authored at a low native resolution and sized so that, at this scale, it **reads
+as ~360p** (chunky pixels) on the 1440p canvas — the low-res look without a low-res
+framebuffer.
+
+The scale is deliberately **fractional, not an integer multiple** — that is the
+trade for **smooth scrolling**: slice transforms are floats (no pixel snapping), so
+forward/back motion glides sub-pixel instead of snapping texel-to-texel. The cost is
+that texel boundaries don't land on whole screen pixels, which `sharp_bilinear`
+(above) exists to hide. So the corridor is intentionally *not* pixel-perfect; it
+prioritises motion smoothness over a fixed pixel grid. (The UI is free to take the
+opposite trade — it doesn't scroll, so it can pin to an integer pixel scale for a
+crisp, fixed 360p look.) UI lives on a `CanvasLayer` and stays crisp at full
+resolution.
 
 ## Host extras (`corridor_testbed.gd`)
 
@@ -134,10 +145,10 @@ a `CanvasLayer` and stays crisp at full resolution.
 ## Running
 
 ```powershell
-& "C:\projects\godot\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe" --path "C:\projects\dark-corridor"
+& "C:\projects\godot\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe" --path "C:\projects\dark-corridor"
 ```
 Headless reimport after adding/replacing PNGs:
 ```powershell
-& "C:\projects\godot\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe" --headless --path "C:\projects\dark-corridor" --import
+& "C:\projects\godot\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe" --headless --path "C:\projects\dark-corridor" --import
 ```
-(Godot **4.6**; the runnable exe is nested inside the per-version folder.)
+(Godot **4.7**; the runnable exe is nested inside the per-version folder.)

@@ -5,8 +5,8 @@ writes to at each mutation site (damage / heal / shield / status / fire / throw)
 **single source of truth** for combat numbers — the [autotest](autotest.md) reads it instead
 of reconstructing tallies from HP diffs. Session-only, combat-scoped, gone at fight teardown.
 
-**Engine:** Godot 4. **Built:** 2026-06-21 (data layer; the live HUD readout + post-fight
-screen are deferred — see *Deferred*). Plan lineage: `docs/plans/combat_log.md`.
+**Engine:** Godot 4. **Built:** 2026-06-21 (data layer + presentation: the live HUD readout +
+the post-fight summary screen — see *Presentation*). Plan lineage: `docs/plans/combat_log.md`.
 
 ---
 

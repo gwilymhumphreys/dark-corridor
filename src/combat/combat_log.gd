@@ -79,7 +79,7 @@ func on_damage(source_name: String, source_side: int, target_name: String, targe
 
 
 ## Healing done. `amount` is the EFFECTIVE HP restored (Actor.heal's return).
-func on_heal(source_name: String, source_side: int, target_name: String, target_side: int, amount: float, t: float) -> void:
+func on_heal(source_name: String, source_side: int, target_name: String, _target_side: int, amount: float, t: float) -> void:
   if amount <= 0.0:
     return
   _bump(healing_by_item, source_side, source_name, amount)
@@ -88,7 +88,7 @@ func on_heal(source_name: String, source_side: int, target_name: String, target_
 
 
 ## Shield (block) applied — an APPLY_STATUS land whose status id is BlockStatus.ID.
-func on_block(source_name: String, source_side: int, target_name: String, target_side: int, amount: float, t: float) -> void:
+func on_block(source_name: String, source_side: int, target_name: String, _target_side: int, amount: float, t: float) -> void:
   if amount <= 0.0:
     return
   _bump(block_by_item, source_side, source_name, amount)
@@ -97,7 +97,7 @@ func on_block(source_name: String, source_side: int, target_name: String, target
 
 
 ## Any OTHER status applied (not block — that is on_block). `status_id` rides `data`.
-func on_status_applied(source_name: String, source_side: int, target_name: String, target_side: int, status_id: String, t: float) -> void:
+func on_status_applied(source_name: String, source_side: int, target_name: String, _target_side: int, status_id: String, t: float) -> void:
   _bump(statuses_by_item, source_side, source_name, 1.0)
   _record(t, 'status', source_name, source_side, target_name, 0.0, status_id)
 

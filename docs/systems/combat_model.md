@@ -25,15 +25,15 @@ We are not building a deferred-resolve queue. If a genuine event-reactive case e
 
 When an item's Ticker crosses, the item fires: it resets its cooldown immediately and plays its fire-emote (recoil / flash). It does not resolve its payload at fire time — it produces a payload (kind, value) and a target-shape, and a Delivery is spawned carrying (payload, target, travel_time).
 
-The Delivery counts down on the same tick and applies its payload (damage / status / etc.) when travel elapses — landing on arrival, not on fire.
+The Delivery owns a travel Ticker that advances each tick and lands its payload (damage / status / etc.) when travel elapses — on arrival, not on fire.
 Fire-rate and travel are decoupled. A fast item can have several Deliveries in flight at once. Preserves the size→cooldown tempo design (fast items ping often regardless of travel) and looks correct in a cascade.
-This is why the causal bind works: the projectile arriving is the damage event, so fire-emote, flight, and damage-landing are three things sharing one clock rather than one tangled event — which is what keeps slow-mo coherent.
+The projectile arriving *is* the damage event, so fire-emote, flight, and damage-landing are three things sharing one clock rather than one tangled event — which is what keeps slow-mo coherent.
 travel_time may be zero. Self-buffs, heals, instant potions, AOE-on-all resolve same-tick via zero countdown. Not a special path — just the zero case.
 
 ## Targeting
 
 Leftmost living enemy for single-target; all for AOE. Never gets smart (no lowest-HP, no highest-threat). Consistency over optimality — predictability is what lets the player learn their build.
-Target dies mid-flight → the Delivery fizzles. No retarget. (Consistent with "never gets smart".)
+Target dies mid-flight → the Delivery fizzles. No retarget. (Consistent with "never gets smart".) A second fizzle cause is **evasion**: when the firing actor is blinded the Delivery still travels but whiffs on land — carried as the `evaded` reason, distinct from target-died, so the wall can play a miss tell ([spore_engine.md](spore_engine.md)).
 **Item targets** (effects that hit an opponent's *items* — e.g. silence): single-item selection is **random** (seeded RNG — provisional, may become a rule after testing); all-items is deterministic. Same fizzle rule — an item removed before arrival fizzles. Random here is a deliberate exception to the actor rule's determinism, traded for variety.
 
 

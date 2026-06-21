@@ -16,7 +16,7 @@ The single session-level coordinator. It owns three things and nothing per-run:
 
 - **The game-state machine** — the top-level phase/screen flow (title → run → death → meta/skill-tree → new run) and the transitions between them.
 - **The run lifecycle** — start a fresh run, resume a saved one, or end one; it **creates, holds, and tears down** the `Run manager`.
-- **The save-lifecycle calls** — `Save.read()` on launch (resume-vs-fresh), `Save.clear()` on death/win, and the separate **meta-save**. (The `Run manager` writes the per-encounter run snapshot itself — see below.)
+- **The save-lifecycle calls** — `Save.read()` on resume (the title offers Resume when a save exists), `Save.clear()` on death/win, and the separate **meta-save**. (The `Run manager` writes the per-encounter run snapshot itself — see below.)
 
 It is also the **reachable-everywhere singleton** (`Game.*`): scene transitions, quit-to-menu, global pause, debug hooks — the things any layer may need to call without threading a reference through the tree.
 
@@ -39,7 +39,7 @@ What it **is not**:
 
 ## The game-state machine
 
-`Game` owns the phase machine — at minimum **Boot → Title → Run → (Death | Win) → Meta → Title/Run**. Each phase owns its screen; `Game` drives the transitions and the run-lifecycle hooks that hang off them:
+`Game` owns the phase machine — the built enum is **`Phase { BOOT, TITLE, RUN, DEATH, WIN }`**; a **Meta** phase (skill-tree → new run) is deferred. Each phase owns its screen; `Game` drives the transitions and the run-lifecycle hooks that hang off them:
 
 - **→ Run (fresh):** seed a new run from the chosen `Characters` definition (starting board + relic), create the `Run manager`.
 - **→ Run (resume):** `Save.read()`; if a run save exists, create the `Run manager` and have it **rehydrate** from the snapshot; resume at the saved encounter.
@@ -54,7 +54,7 @@ The exact phase list and screen content settle as screens are built — flagged,
 Push-not-pull is preserved across the split:
 
 - The **`Run manager` writes** its own snapshot to `Save` on encounter entry (it owns the run-state schema).
-- **`Game` owns the lifecycle calls** — `Save.read()` on launch, `Save.clear()` on death/win — and the **meta-save** (the cross-run dataset, survives death). On resume, `Game` reads the snapshot and hands it to a new `Run manager`, which rehydrates.
+- **`Game` owns the lifecycle calls** — `Save.read()` on resume, `Save.clear()` on death/win — and the **meta-save** (the cross-run dataset, survives death). On resume, `Game` reads the snapshot and hands it to a new `Run manager`, which rehydrates.
 
 So `Game` decides *whether to resume*; the `Run manager` decides *what the run-state is*.
 
@@ -64,7 +64,7 @@ So `Game` decides *whether to resume*; the `Run manager` decides *what the run-s
 
 - A **thin state machine**: Title → Run → Death → restart (Run). The meta screen + meta-save are deferred (no meta in the prototype).
 - Start a fresh run (seed via a stand-in `Characters`), end it on death/win, restart.
-- `Save.read()` on launch + `Save.clear()` on death; create / tear down the `Run manager`; receive its run-ended signal.
+- `Save.read()` on resume + `Save.clear()` on death; create / tear down the `Run manager`; receive its run-ended signal.
 
 **Not** in scope: the meta/skill-tree screen + meta-save schema, settings/options, pause UI, title-screen content.
 
@@ -81,6 +81,6 @@ So `Game` decides *whether to resume*; the `Run manager` decides *what the run-s
 
 - **Above:** nothing — top of the tree (the autoload root).
 - **Creates / owns:** the `Run manager` (fresh-seeded or rehydrated); tears it down on run end.
-- **Calls:** `Save` (`read` on launch, `clear` on death/win) + the meta-save; reads `Characters` to seed a fresh run.
+- **Calls:** `Save` (`read` on resume, `clear` on death/win) + the meta-save; reads `Characters` to seed a fresh run.
 - **Signalled by (below):** the `Run manager` → **run-ended (died / won)**.
 - **Does not:** touch the `Timekeeper` / `Combat manager`; own per-run state or the map (`Run manager`); serialize (`Save`).

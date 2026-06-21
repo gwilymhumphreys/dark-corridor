@@ -36,7 +36,7 @@ func test_write_then_read_round_trips() -> void:
   assert_eq(got['board'].size(), 2)
   assert_eq(int(got['board'][0]['id']), 0)
   assert_eq(int(got['relics'][0]), 0)
-  assert_eq(got['version'], 0, 'the format version is stamped on write')
+  assert_eq(int(got['version']), 0, 'the format version is stamped on write')
 
 
 func test_rng_state_survives_exactly() -> void:

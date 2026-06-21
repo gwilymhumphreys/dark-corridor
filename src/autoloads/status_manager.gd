@@ -11,8 +11,8 @@ extends Node
 ## AND the same flags is re-applied (the class decides stacking — additive by default; timed
 ## extends its duration); a different-flags application (e.g. unblockable poison over blockable)
 ## gets its OWN instance, so the flags of one application never silently rewrite another's.
-## A reapply keeps the FIRST applier as `source` (autotest attribution splits multi-applier
-## DoT by weight regardless). Otherwise the registry builds a fresh one, sets its
+## A reapply keeps the FIRST applier as `source`; the combat log credits that source for the
+## stack's DoT ticks (no proportional split). Otherwise the registry builds a fresh one, sets its
 ## per-application state (count + DURATION — duration rides the application now, not a global),
 ## and runs on_apply. `ctx` is null outside combat (e.g. a relic at fight start); on_apply
 ## tolerates that.

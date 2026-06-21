@@ -163,7 +163,7 @@ func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
   view.bind(cm, p, [])
   assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 2, 'a HUD per enemy (the elite)')
   assert_eq(view.get_node('BottomBar/AllyLeft').get_child_count(), 1, 'the first ally fills the left slot')
-  await wait_frames(2)   # let the containers lay the widgets out so the centres are real
+  await wait_physics_frames(2)   # let the containers lay the widgets out so the centres are real
   # each enemy resolves to its own HUD — the second grunt no longer collapses to the player
   assert_ne(view.actor_pos(e2), view.actor_pos(p), 'the second enemy is NOT at the player portrait')
   assert_ne(view.actor_pos(e1), view.actor_pos(e2), 'the two enemies are at distinct positions')
@@ -181,7 +181,7 @@ func test_corridor_backdrop_is_not_inspectable() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  await wait_frames(2)
+  await wait_physics_frames(2)
   assert_false(view.mouse_over_inspectable(Vector2(200.0, 600.0)),
     'a point in the corridor backdrop (away from any HUD/item) is not inspectable — no perma-slow-mo')
   cm.free()

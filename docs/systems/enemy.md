@@ -19,7 +19,7 @@ What it **is not**: not a subclass of `Actor`; not a new combat mechanism; not t
 
 ## Enemy definition (data)
 
-An enemy is authored as: **HP** (max), an **ordered board** of Item definitions, **portrait/sprite**, **tier** (regular / elite / boss), and an optional **signature** (boss). Data-defined; the format is content (deferred).
+An enemy is authored as an `EnemyDef` (#23): **HP** (max), a `name_key`, and an **ordered board** of Item ids (`item_ids`). `Encounter` instantiates an `Actor` from the def and gives it the Items. **Tier / signature / portrait** are authoring conventions, not yet `EnemyDef` fields.
 
 ---
 
@@ -52,7 +52,7 @@ Tier is also a tag the `Encounter` / reward layer reads (elites grant relics, bo
 
 Each boss has one signature mechanic (spike-armor, heal-over-time, summons-adds — design), expressed through items / enchants / statuses, **not bespoke combat code** wherever possible. Most are just a distinctive loadout (heal-over-time = a strong regen-applier; spike-armor = a thorns status).
 
-- **Summons-adds needs a capability the spine doesn't have yet:** adding an `Actor` to the live fight **mid-combat** (register its item Tickers, subscribe its triggers, extend the ordering). The `Combat manager` currently assumes a **fixed roster** seeded at combat start. Deferred — see open, and the matching note in the Combat manager PRD.
+- **Summons-adds — the capability is built** (the spore-engine's mid-fight roster add, Cap 3): the `Combat manager`'s two-roster model adds an `Actor` to the live fight (registers its item Tickers, subscribes its triggers, extends the ordering) via the `SUMMON` Delivery kind. The *boss content* that uses it is still the owner's. See [spore_engine.md](spore_engine.md) + [combat_manager.md](combat_manager.md).
 
 ---
 
@@ -71,13 +71,13 @@ Distinctness per encounter via the unit or the composition; most fights are 1–
 - One enemy definition (HP + a one-item authored board) instantiated as an `Actor` by a stand-in spawner, fighting the player in the `Combat manager`.
 - Confirms the symmetry path end-to-end — an authored `Actor` auto-fires and is targeted like any actor.
 
-**Not** in scope: tiers / elites / bosses, signatures, summoning, multi-body composition, the enemy pools' content.
+**Not** in scope *then*: tiers / elites / bosses, signatures, summoning, multi-body composition, the enemy pools' content. *(Since built as mechanism with placeholder content: **summoning** + **mid-fight roster add**, **multi-body fights**, and several placeholder enemies. The real pools / tiers / boss signatures stay the owner's.)*
 
 ---
 
 ## Open / deferred
 
-- **Mid-fight roster changes (summoning)** — the `Combat manager` must eventually support adding / removing an `Actor` mid-combat (register/deregister its Tickers + triggers, re-order). Required by the boss "summons-adds" signature; deferred until bosses are built, so the fixed-roster assumption gets revisited then.
+- **Mid-fight roster changes (summoning) — built** (spore-engine Cap 3): the `Combat manager` adds an `Actor` mid-combat (register its Tickers + triggers, re-order) via `add_actor` (combat-scoped token) / `register_ally` (run-scoped) + the `SUMMON` Delivery kind. The boss "summons-adds" *content* is the owner's. See [combat_manager.md](combat_manager.md) / [spore_engine.md](spore_engine.md).
 - **Enemy-definition data format — resolved (#23):** typed GDScript `EnemyDef` + catalog. The **enemy item pools'** content + **tier / signature** catalogues — content (the roster work).
 - **Composition / ordering authoring — resolved (Encounter PRD):** a fight `Encounter` spawns the enemy set in left-to-right order and hands it to the `Combat manager`.
 - **Elite / boss rewards** (relics) — the `Encounter` reports the reward; the `Run manager` fulfills it (Encounter / Run PRDs).

@@ -86,7 +86,7 @@ Modeled on a-machine's `tune` command + `tune-run` subagent: run the harness wit
 
 ## Prototype scope
 
-**Built:** `AutoTestMode` (`run_once` + `run_full`) + `AutoTestDriver` (seeded draft strategies — `--strategy` live, validated against `AutoTestDriver.STRATEGIES`) + `AutoTestStuckDetector` + `AutoTestLogger` (run/encounter/draft events + duration + HP + damage-by-family + per-item fires/damage/block/healing + a markdown report stamped with its **seed + strategy**) + `--seed --speed --timeout --wall-timeout --encounters --strategy --single-fight` (nosave / notutorial forced) + stuck detection + exit code. It runs "draft → fight → advance × N" over the multi-act map headless, deterministically by seed, and asserts the descent resolves. (The harness never quits/resumes itself; the resume invariant is GUT-covered.) **Still deferred:** the potion/event decision AI beyond the seeded stubs, and the `tune` skill itself.
+**Built:** the full Mode/Driver/Logger trio + the live flags (see *What's built* and *Flags* above). It runs "draft → fight → advance × N" over the multi-act map headless, deterministically by seed, and asserts the descent resolves. (The harness never quits/resumes itself; the resume invariant is GUT-covered.) **Still deferred:** the potion/event decision AI beyond the seeded stubs, and the `tune` skill itself.
 
 ## Open / deferred
 
@@ -94,10 +94,3 @@ Modeled on a-machine's `tune` command + `tune-run` subagent: run the harness wit
 - **Family classifier gaps (`AutoTestDriver._family_of`)** — the draft-strategy family classifier covers `damage` / `block` / `poison` / `heal` / `status`; **`SUMMON` and `CREATE_ITEM` fall to `'other'`**, so no family strategy prefers a summon-primary or create-primary item (a damage item with a summon / create *rider* is fine — its primary effect classifies). Add families when such content is authored ([`item_creation_and_decay.md`](item_creation_and_decay.md)). Left unchanged for now — no such content exists (owner, 2026-06-19).
 - **The `tune` skill** — the command + experiment-runner subagent. The machinery (strategies + report) feeds it now; a real pass waits on tunable content.
 - **Report contents** — which metrics / charts — settle as combat metrics exist.
-
-## Hooks (already in the architecture — nothing new needed)
-
-- **Input-intent layer** (Combat manager / Run manager inbound) — the driver emits the same intents the UI does.
-- **Timekeeper dial** → `--speed`. **Seedable run RNG** (`Run` owns it; `Save` snapshots its full state) → `--seed`.
-- **Game manager** starts / ends the run (the harness drives it); the **Run manager** drives the encounter sequence the harness steps through and exposes run state for logging.
-- **Output layer** is skipped headless — logic runs without renderer / VFX / audio.

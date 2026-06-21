@@ -61,7 +61,7 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 ## `apply(target, id, count, duration?, source?, flags?, ctx?) → instance`
 
-1. **Find** an existing status of the same `id` **and the same `flags`** on the target — a different-flags application (unblockable poison over blockable poison) gets its **own instance**, so one application's flags never silently rewrite another's. A reapply keeps the **first** applier as `source` (autotest attribution splits multi-applier DoT by weight regardless).
+1. **Find** an existing status of the same `id` **and the same `flags`** on the target — a different-flags application (unblockable poison over blockable poison) gets its **own instance**, so one application's flags never silently rewrite another's. A reapply keeps the **first** applier as `source`; the combat log credits that source for the stack's DoT ticks (no proportional multi-applier split).
 2. **Reapply or create.** Existing → `existing.reapply(count, duration, source, flags)` — **the class decides stacking** (additive count by default; `TimedStatus` extends its duration; a class may refresh / max). Else → `StatusRegistry.create(id)`, `setup(count, duration, …)` (which builds the ticker from the **per-application duration**), `on_apply(target, ctx)`, append.
 3. **Return the instance.**
 4. **On-apply event** is emitted by the *Combat manager* at the Delivery's land (`STATUS_APPLIED` carries the string id) — **only when the apply succeeded** (an unknown id applies nothing and publishes nothing) — so reactive items can trigger ("when you apply poison, gain 1 block").

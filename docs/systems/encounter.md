@@ -30,7 +30,7 @@ What it **is not**:
 
 ## Definition vs. instance
 
-- **Encounter definition** — content/data in the pool: type/tier, the **location frame** (one line, e.g. "A flooded antechamber"), the **telegraph** (advertised category + elite demand), the **content** (a fight's enemy composition + ordering; or an event's prose + binary options + each option's outcome; or a rest's heal), and the **reward** (by type). Format is content/impl (deferred, as with item/enemy definitions). Player-facing strings (frame, telegraph, event prose/options) are localizable (`tr()` — `CLAUDE.md`).
+- **Encounter definition** (`EncounterDef`, #23) — content/data in the pool: type/tier, the **location frame** (one line, e.g. "A flooded antechamber" — stored as the `name_key`), the **content** (a fight's enemy composition + ordering; or an event's prose + binary options + each option's outcome; or a rest's heal), and the **reward** (by type). (No telegraph field — the choice layer that would use one is dormant; see below.) Player-facing strings (frame, event prose/options) are localizable (`tr()` — `CLAUDE.md`).
 - **Encounter instance** — the live per-beat orchestrator the `Run manager` instantiates from a picked definition, handed its context (the player `Actor`, run-state accessors, the run RNG, position).
 
 ---
@@ -41,9 +41,9 @@ What it **is not**:
 
 The `Run manager` instantiates the picked Encounter; it resolves by type, then reports outcome + reward up:
 
-- **Fight** (regular / elite / boss) — spawn the authored enemy `Actor`s from their definitions ([Enemy PRD](enemy.md)), set their **left-to-right ordering** (composition: tank in front, adds before boss — design), and create the `Combat manager` with the player + enemy `Actor`s + ordering. Await win/loss. **Loss** → report **died** (the `Run manager` signals run-ended up to `Game`). **Win** → report the reward.
-- **Event** — present the prose + the **binary choice** (a UI intent — the player picks an option); apply the chosen option's **outcome** (direct effects — heal / damage / a relic / a potion / a status — applied to run-state via the `Run manager`). Events are lore + a tradeoff (design); outcomes are *direct*, not the combat path. A **lethal** damaging outcome resolves the beat **LOST** on the spot — the run ends there, never a dead player walking to the next fight.
-- **Rest** (the in-act small rest — one guaranteed per act, design) — apply a **partial heal** to the player `Actor` (via the `Run manager`'s HP-economy surface). No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
+- **Fight** (regular / elite / boss) — spawn the authored enemy `Actor`s from their definitions ([Enemy PRD](enemy.md)), set their **left-to-right ordering** (composition: tank in front, adds before boss — design), and create the `Combat manager` with the player + enemy `Actor`s (+ any run-scoped allies) + ordering. Await win/loss. **Loss** → report **died** (the `Run manager` signals run-ended up to `Game`). **Win** → report the reward.
+- **Event** — present the prose + the **binary choice** (a UI intent — the player picks an option); apply the chosen option's **outcome** — one of `HEAL_FRACTION` / `MAX_HP_BONUS` / `DAMAGE` (applied directly on the player `Actor`) or `ADD_ALLY` (which the `Run manager` applies to the run roster). Events are lore + a tradeoff (design); outcomes are *direct*, not the combat path. A **lethal** damaging outcome resolves the beat **LOST** on the spot — the run ends there, never a dead player walking to the next fight.
+- **Rest** (the in-act small rest — one guaranteed per act, design) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()`. No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
 
 ## Composition & ordering (the fight case)
 

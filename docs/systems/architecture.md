@@ -25,7 +25,7 @@ Layers depend *downward* only for **structural** ownership (who creates / holds 
 - **`Timekeeper`** (instanced — one per fight, owned by the `Combat manager`) — the combat **clock**: a stepped `sim_time` + a continuous `render_time` (for the visual wall) + the one speed dial + the fixed-step cadence (`steps_due`: real time × dial → whole steps, capped, backlog dropped). It does **not** hold the component registry or advance components — the `Combat manager` does, on the clock's step. Fixed timestep → deterministic and reproducible (the autotest runs K steps). Built at combat start, torn down at end.
 - **`StatusManager`** (autoload) — a **stateless facade** over statuses: it routes `apply` / read / resolve calls to the status instances. Behaviour lives in **polymorphic `StatusEffect` subclasses** (one class per status, the AbstractPower model — #29), not here. Instances live on their targets (Actor / Item), where target is an actor *or* an item; the `Combat manager` advances time-driven ones each step (on the `Timekeeper`'s clock). Called by items, relics, consumables, enemy abilities to apply/read. Depends on nothing — holds no per-fight state.
 - **`Actor`** (instanced) — HP, a board of items, a status list. Knows nothing about which side it's on.
-- **`Save`** (autoload) — persists a run snapshot it's *handed* on encounter entry, and returns it on load; the `Run manager` writes it, the `Game manager` reads it back on launch, the `Run manager` rehydrates. **Push, not pull** — `Save` reads no live state and writes none back. No migration (`CLAUDE.md`).
+- **`Save`** (autoload) — persists a run snapshot it's *handed* on encounter entry, and returns it on load; the `Run manager` writes it, the `Game manager` reads it back on resume, the `Run manager` rehydrates. **Push, not pull** — `Save` reads no live state and writes none back. No migration (`CLAUDE.md`).
 ### Content → Foundation
  
 - **`Item`** → `StatusManager` (apply / read statuses); reads its owner `Actor` (self-target, board membership). It declares a target-*shape*; the `Combat manager` resolves it and lands the Delivery — no direct `Item → Actor` damage call.
@@ -123,15 +123,15 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
 ### `Save` — PRD: [save.md](save.md)
  
 - **Exposes:** `write(snapshot)` (persist the run snapshot, atomic), `read() → snapshot?` (the saved run, or none), `clear()` (drop the run save on death/win). Stateless service — holds no live state.
-- **Inbound:** the `Run manager` → `write` on encounter entry; the `Game manager` → `read` on launch, `clear` on death/win, and the meta-save.
+- **Inbound:** the `Run manager` → `write` on encounter entry; the `Game manager` → `read` on resume, `clear` on death/win, and the meta-save.
 - **Outbound:** none — `Save` never writes back into live systems; on load it *returns* the snapshot, the `Game manager` reads it back, and the `Run manager` rehydrates.
 - **Does not:** decide *when* to save (the `Run manager` writes per-encounter; the `Game manager` owns load/clear timing); read live state itself (push, not pull); persist combat state (ephemeral) or meta-progression (a separate dataset — Meta PRD); migrate saves (`CLAUDE.md` — incompatible → fresh run).
 
 ### `Game manager` — PRD: [game_manager.md](game_manager.md)
 
-- **Exposes:** the **game-state machine** (current phase/screen + transitions) and the run lifecycle — `start_run(character)`, `resume_run()` (from `Save`), `end_run(outcome)`; a session singleton reachable as `Game.*` (scene transitions, quit-to-menu, pause). Holds a reference to the live `Run manager` (null between runs).
+- **Exposes:** the **game-state machine** (`Phase { BOOT, TITLE, RUN, DEATH, WIN }`; META deferred) + a `phase_changed` signal, and the run lifecycle — `start_run(seed_value, character_id)`, `resume_run() → bool` (from `Save`; false if no usable slot), `end_run` via the run's `run_ended` signal; a session singleton reachable as `Game.*` (scene transitions, quit-to-menu, pause). Holds a reference to the live `Run manager` (null between runs).
 - **Inbound:** app launch (boot → title / resume); the `Run manager` signals **run-ended (died / won)**; `UI` → menu / title / restart intents.
-- **Outbound:** creates & tears down the `Run manager` (seeds fresh via `Characters`, or rehydrates from a snapshot); `Save.read()` on launch + `Save.clear()` on death/win + the meta-save; drives screen transitions.
+- **Outbound:** creates & tears down the `Run manager` (seeds fresh via `Characters`, or rehydrates from a snapshot); `Save.read()` on resume + `Save.clear()` on death/win + the meta-save; emits `phase_changed` (the `main_controller` swaps screens off it).
 - **Does not:** own per-run state (the `Run manager` does); sequence encounters or touch the map (`Run manager`); touch the `Timekeeper` or combat (`Combat manager`).
 
 ### `Run manager` — PRD: [run_manager.md](run_manager.md)
@@ -150,7 +150,7 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
 
 ### `Draft` — PRD: [draft.md](draft.md)
 
-- **Exposes:** `draw(pool, run_state, rng) → candidates` — the 1-of-3 reward offer (slot composition + depth-weighting + seeded pull). Stateless — holds no offer.
+- **Exposes:** `draw(pool, depth, rng, count=3) → Array[ItemDef]` — the 1-of-3 reward offer: a seeded, distinct-within-offer pull from `pool`. Depth-weighting + slot composition (enchant / potion) are planned — today `depth` is inert and the pull is flat-common items. Stateless — holds no offer.
 - **Inbound:** the `Run manager` → `draw` on a reward; reads the draft **pool** (`Meta-progression`'s contents) + run-state depth + the run RNG (handed in).
 - **Outbound:** none — returns candidates. The `Run manager` holds the pending offer and applies the pick (board / potion / enchant-target / relic).
 - **Does not:** own the pool contents (`Meta-progression`); hold the offer or apply the pick (`Run manager`); weight by build/archetype (depth/rarity only — design's no-hidden-weighting); present (`UI`).
@@ -194,7 +194,7 @@ No entity has its own `_process`. Fixed steps make the cascade deterministic and
  
 A single scalar drives all of: slow-mo-on-hover (~×0.05), pause (×0), fast-test (×5+), and a player-facing battle-speed setting (×1 / ×2 / ×3). They are not separate features — the dial sets *how many fixed sim-steps run per real second* (not a per-step delta).
  
-- There is a **base speed** (player setting) and a **momentary override** (hover slow-mo). Hover overrides the base while active and returns *to the base*, not to ×1. The "what does the scalar return to" logic is a small combat-PRD detail — flag, not solve. *(TBD: override replaces vs. multiplies.)*
+- There is a **base speed** (player setting) and a **momentary override** (hover slow-mo). Hover overrides the base while active and returns *to the base*, not to ×1. The "what does the scalar return to" logic is a small combat-PRD detail. *(Resolved: the override **replaces** the base — absolute slow-mo — returning to the base on release, not to ×1.)*
 ### Effect resolution — pointer
  
 How items resolve (the Ticker accrual primitive, fire / Delivery, travel timing, trigger model) is the combat system's model and is now settled — see the **Combat PRD**. The only foundation-level facts the rest of the architecture leans on: Deliveries resolve on the fixed-step tick, and `travel_time` may be zero (instant Deliveries are the zero case, not a special path).
@@ -214,7 +214,7 @@ The renderer draws only handed state and holds no clock of its own.
 
 The structural rule that makes the input/output split concrete: **combat logic is plain `RefCounted`; only orchestrators are `Node`s.** That's what lets a headless autotest run the whole sim without instantiating any presentation.
 
-**Logic tree** — under the `Game` autoload; renders nothing; runs headless:
+**Ownership tree** — held by reference under the `Game` autoload (an ownership chain, **not** mounted as scene-tree children); renders nothing; runs headless:
 
 ```
 Game  (autoload Node, "Game")          session state machine + run lifecycle
@@ -228,22 +228,24 @@ Game  (autoload Node, "Game")          session state machine + run lifecycle
          └─ event bus           (RefCounted)
 ```
 
-`Run manager` / `Encounter` are Nodes but don't `_process` (they advance by explicit call / signal); **only the `Combat manager` runs `_physics_process`** (the one tick). A fight exists only while a `Combat manager` does. Within-step iteration is ascending `seq_id` — a monotonic id stamped at registration (deterministic order).
+`Run manager` / `Encounter` are Nodes but advance by explicit call / signal. The `Combat manager` owns the one fixed-step tick, but because the logic Nodes are held by reference (not mounted), in production it is **driven from outside**: the run screen calls `Combat manager.tick(delta)` each physics frame, and the autotest steps `sim_step()` directly. The `Combat manager`'s own `_physics_process` self-drives only when it *is* mounted (the combat sandbox). A fight exists only while a `Combat manager` does. Within-step iteration is ascending `seq_id` — a monotonic id stamped at registration (deterministic order).
 
 **Presentation tree** — the main scene; `Game` swaps screens:
 
 ```
-main.tscn  (Main, Node)                 boots → Game.boot()
+main.tscn  (Main, Node)                 main_controller swaps screens off Game.phase_changed
 └─ ScreenHolder
    ├─ title_screen.tscn
    ├─ run_screen.tscn      reads Game.run (+ the live Combat manager); emits intents
    │   ├─ CorridorLayer     corridor_panel.tscn (mood + the approach-from-depth)
-   │   ├─ CombatView         SWAPPABLE: combat_view_framed.tscn | _fullscreen.tscn
+   │   ├─ CombatView         combat_view_framed.tscn (full-screen variant deferred — see below)
    │   │     ├─ VfxDriver        reads the Delivery set + render_time()
    │   │     ├─ Player/EnemyBoardView
-   │   │     └─ Portrait · HP · PotionSlots
-   │   └─ OverlayLayer       draft / choice / 1D-map
-   └─ death_screen.tscn
+   │   │     ├─ Portrait · HP · PotionSlots
+   │   │     └─ combat_stats_readout   live Dealt · Taken (reads the CombatLog)
+   │   └─ OverlayLayer       draft / event / 1D-map (choice overlay dormant)
+   ├─ combat_summary.tscn    post-fight per-item report + event timeline (reads the CombatLog)
+   └─ outcome_screen.tscn    death + win
 ```
 
 - The presentation tree only **reads** the logic and **emits intents** (view → logic: `Combat manager.request_*`, `Run manager.pick_*`); the autotest driver calls the same methods with no presentation mounted.
@@ -261,4 +263,4 @@ main.tscn  (Main, Node)                 boots → Game.boot()
  
 ## What this pass deliberately leaves to per-system PRDs
  
-Timescale override replace-vs-multiply; the full meta/character internals; VFX content and palette. PRD the foundation (this doc's spine), build, then PRD the next layer up with real information from the prototype. Don't write all the PRDs up front.
+The full meta/character internals; VFX content and palette. PRD the foundation (this doc's spine), build, then PRD the next layer up with real information from the prototype. Don't write all the PRDs up front.
