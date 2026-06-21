@@ -52,14 +52,17 @@ func test_run_once_is_deterministic() -> void:
   assert_almost_eq(a['player_hp'], b['player_hp'], 0.0001, 'identical final HP — bit-reproducible')
 
 
-func test_run_once_attributes_damage_by_family() -> void:
+func test_run_once_attributes_damage_per_player_item() -> void:
+  # Sourced from the CombatLog (Design B): damage_by_family is now per ITEM and
+  # PLAYER-SIDE only (the contribution table is player-only), each DoT applier its own
+  # channel. So the enemy Claw is NOT here, and there is no generic Poison lump.
   var r := _mode().run_once()
   var fam: Dictionary = r['summary']['damage_by_family']
-  assert_true(fam.has('Rusted Blade'), 'weapon damage attributed to its family')
+  assert_true(fam.has('Rusted Blade'), 'weapon damage credited to the player item')
   assert_true(fam.has('Venom Fang'), 'poison DoT credited to its applier item, not a generic channel')
   assert_false(fam.has('Poison'), 'no generic Poison lump once the applier is known')
-  assert_true(fam.has('Claw'), 'the grunt claw damage attributed')
-  assert_gt(r['summary']['total_damage'], 0.0, 'some damage was dealt')
+  assert_false(fam.has('Claw'), 'the enemy claw is enemy-side — excluded from the player-only tally')
+  assert_gt(r['summary']['total_damage'], 0.0, 'some player damage was dealt')
 
 
 func test_tiny_timeout_fails_as_timeout() -> void:

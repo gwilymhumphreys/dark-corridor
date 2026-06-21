@@ -12,8 +12,13 @@ extends Node
 ## sets the Timekeeper dial from --speed, builds a player-vs-enemy fight from the
 ## catalogs, and drives `CombatManager.sim_step()` directly (no _physics_process,
 ## no real time → bit-reproducible). It enforces a game-time timeout, a wall-clock
-## hang watchdog, and stuck detection, hands every step to the logger, then sets
-## the exit code (0 = the fight resolved, 1 = stuck / timed out) and quits.
+## hang watchdog, and stuck detection, then sets the exit code (0 = the fight
+## resolved, 1 = stuck / timed out) and quits.
+##
+## Damage / fire / block / healing numbers come from the CombatManager's CombatLog —
+## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md Design B). _drive_fight
+## attaches a fresh CombatLog before its sim_step loop and ingests its player side at
+## fight end; there is no per-step HP-diff reconstruction.
 ##
 ## The run loop (multiple encounters, draft strategies, the seeded run RNG) is
 ## Phase 3; the AutoTestDriver is a no-op stub until then, and --seed / --speed are
@@ -228,21 +233,21 @@ func run_full() -> Dictionary:
   return result
 
 
-## Step a single fight's CombatManager to a verdict — per-step damage observation,
-## a per-fight game-time cap, a per-fight stuck guard, and the shared wall-clock
-## watchdog. Returns { steps, outcome }; outcome is '' when it resolved normally,
-## else 'STUCK' / 'TIMEOUT' / 'WALL_TIMEOUT'. Shared by run_once + run_full.
+## Step a single fight's CombatManager to a verdict — a per-fight game-time cap, a
+## per-fight stuck guard, and the shared wall-clock watchdog. Returns { steps, outcome };
+## outcome is '' when it resolved normally, else 'STUCK' / 'TIMEOUT' / 'WALL_TIMEOUT'.
+## Shared by run_once + run_full.
+##
+## The damage / fire / block / healing tallies come from the CombatManager's CombatLog —
+## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md Design B). We attach a fresh log
+## before the loop (the manager direct-writes it at each mutation site) and ingest its
+## PLAYER side at fight end; there is no per-step HP-diff reconstruction anymore. The stuck
+## guard still reads live-roster HP (its job is detecting a flat fight, not attribution).
 func _drive_fight(
     cm: CombatManager, fight_player: Actor, wall_start: int, wall_timeout_ms: int, timeout_steps: int) -> Dictionary:
   var stuck := AutoTestStuckDetector.new(seconds_to_steps(stuck_threshold_seconds))
   stuck.note(_total_hp(_live_actors(cm)))   # baseline
-  # EXACT fire counts off the bus's observation channel (replaces the old cooldown-drop
-  # heuristic, which missed double-crossings and false-flagged zero-threshold tickers).
-  # Player fires only — the contribution table is player-only.
-  cm.bus.add_listener(EventBus.Event.ITEM_FIRED,
-      func(_data, source_actor: Actor, source_item: Item) -> void:
-        if source_actor == fight_player and source_item != null:
-          logger.record_item_fire(source_item.def.name_key))
+  cm.combat_log = CombatLog.new()   # the manager logs every mutation here — our source of truth
   var steps: int = 0
   var outcome: String = ''
   while not cm.is_resolved():
@@ -252,20 +257,13 @@ func _drive_fight(
     if steps >= timeout_steps:
       outcome = 'TIMEOUT'
       break
-    # Observe over the LIVE rosters, captured at step start — allies + summon tokens are
-    # included (their damage tallies; their HP movement counts as progress for the stuck
-    # guard), and a body killed this step is still in the captured set for attribution.
-    var observed: Array = _live_actors(cm)
-    var before: Dictionary = _hp_snapshot(observed)
-    var dot_before: Dictionary = _dot_snapshot(observed)   # applier sources, pre-tick
     cm.sim_step()
     steps += 1
-    _observe_damage(cm, observed, before, dot_before)
-    _observe_support(cm, fight_player)
     if stuck.note(_total_hp(_live_actors(cm))):
       outcome = 'STUCK'
       logger.log_event('stuck', { 'flat_steps': stuck.flat_steps() })
       break
+  logger.ingest_combat_log(cm.combat_log)   # fold this fight's player-side tallies in
   return { 'steps': steps, 'outcome': outcome }
 
 
@@ -299,88 +297,7 @@ func _build_fight() -> Dictionary:
   }
 
 
-# --- per-step observation (reads handed state; writes none to the game) ------
-
-## Attribute each actor's net HP loss this step to a damage family and feed it to
-## the logger. Direct hits come from the Deliveries that landed this step; the
-## unexplained remainder is DoT, credited to the item that applied it via the
-## pre-step `dot_before` snapshot (else the generic channel). See AutoTestLogger.
-## Known limitation: attribution is net-HP-based, so a heal landing the SAME step
-## masks part of the damage (the report under-counts that step). Not corrected by
-## adding the heal back — the potion is thrown at full HP, where the heal is wasted
-## and the net is already exact; only per-application tracking would fix the edge.
-func _observe_damage(cm: CombatManager, actors: Array, before: Dictionary, dot_before: Dictionary) -> void:
-  var now: float = cm.timekeeper.sim_time
-  var direct_by_target: Dictionary = {}
-  for d in cm.deliveries():
-    # Skip visual_only DoT-tick Deliveries — that damage is attributed via dot_before.
-    if d.visual_only:
-      continue
-    if d.landed and d.kind == Delivery.Kind.DAMAGE and is_equal_approx(d.impact_time, now):
-      if not direct_by_target.has(d.target):
-        direct_by_target[d.target] = []
-      direct_by_target[d.target].append({ 'family': _family_of(d.source), 'raw': d.value })
-  for a in actors:
-    var loss: float = before[a] - a.hp
-    if loss <= 0.0:
-      continue
-    var direct: Array = direct_by_target.get(a, [])
-    for rec in AutoTestLogger.attribute_damage(loss, direct, dot_before.get(a, [])):
-      logger.record_damage(rec['family'], rec['amount'])
-
-
-func _family_of(source: Variant) -> String:
-  if source is Item and source.def != null and source.def.name_key != '':
-    return source.def.name_key
-  return 'Unknown'
-
-
-## Tally the PLAYER's defensive output this step: block applied + healing landed, per
-## source item (so the contribution table can rank block/heal items, not just damage).
-## Healing is recorded as landed (pre-cap) — overheal is not subtracted; the heal-mask
-## limitation on _observe_damage applies here in mirror.
-func _observe_support(cm: CombatManager, fight_player: Actor) -> void:
-  var now: float = cm.timekeeper.sim_time
-  for d in cm.deliveries():
-    if d.visual_only or not d.landed or not is_equal_approx(d.impact_time, now):
-      continue
-    if not (d.source is Item) or d.source.owner != fight_player:
-      continue
-    if d.kind == Delivery.Kind.APPLY_STATUS and d.status_id == 'block':
-      logger.record_item_block(d.source.def.name_key, d.value)
-    elif d.kind == Delivery.Kind.HEAL:
-      logger.record_item_healing(d.source.def.name_key, d.value)
-
-
-## Snapshot each actor's DoT-applying statuses BEFORE a step, so the post-step
-## remainder can be credited to the item that applied the poison — even if its last
-## tick removed the status. `label` = the applier item's name (else the status name,
-## e.g. 'Poison', for a source-less DoT); `weight` = its potential tick damage
-## (count × damage_per_tick), used to split a remainder between multiple appliers.
-## Note: two appliers of the SAME type merge into one Status (keeping the first
-## source — StatusManager.apply), so the split only separates DIFFERENT DoT types;
-## same-type poison from two items is all credited to the first applier.
-func _dot_snapshot(actors: Array) -> Dictionary:
-  var snap: Dictionary = {}
-  for fight_actor in actors:
-    snap[fight_actor] = _dot_sources_of(fight_actor)
-  return snap
-
-
-func _dot_sources_of(actor: Actor) -> Array:
-  var out: Array = []
-  for st in actor.statuses:
-    var weight: float = st.dot_tick_weight()   # 0 unless a damaging DoT (count × per-tick)
-    if weight > 0.0:
-      out.append({ 'label': _dot_label(st), 'weight': weight })
-  return out
-
-
-func _dot_label(st: StatusEffect) -> String:
-  if st.source is Item and st.source.def != null and st.source.def.name_key != '':
-    return st.source.def.name_key
-  return st.name_key   # source-less DoT keeps the status-name channel (e.g. 'Poison')
-
+# --- per-beat labels + roster reads (the source of truth is the CombatLog) ---
 
 ## A label for the per-encounter table: the (first) enemy's name for a fight, else the
 ## location frame.
@@ -404,13 +321,6 @@ func _player_item_names(player: Actor) -> Array:
   for it in player.board:
     names.append(it.def.name_key)
   return names
-
-
-func _hp_snapshot(actors: Array) -> Dictionary:
-  var snap: Dictionary = {}
-  for fight_actor in actors:
-    snap[fight_actor] = fight_actor.hp
-  return snap
 
 
 func _total_hp(actors: Array) -> float:

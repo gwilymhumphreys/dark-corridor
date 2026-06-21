@@ -1,23 +1,21 @@
 class_name AutoTestLogger
 extends RefCounted
 ## The structured-event + summary sink (autotest.md). It is HANDED state by
-## AutoTestMode — actor HP, the landed-Delivery set, the outcome — and reads it
-## into events, a damage-by-family tally, and a printable / writable summary.
-## It writes no game state (the same discipline as the VFX wall it shadows).
+## AutoTestMode — the per-fight CombatLog, actor HP, the outcome — and folds it into
+## events, per-item tallies, and a printable / writable summary. It writes no game
+## state (the same discipline as the VFX wall it shadows).
 ##
-## Damage-by-family is built per sim-step from net HP loss + the Deliveries that
-## landed that step (see `attribute_damage`): direct hits attribute to their
-## source item's family; the unexplained remainder is DoT (poison ticks land no
-## Delivery), credited to the item that applied it via a pre-step status snapshot
-## (`dot_sources`) — so Venom Fang's poison shows under "Venom Fang", not a lump.
-
-## The fallback channel for DoT HP-loss whose applier is unknown (a source-less or
-## enemy-supplied DoT). When the applier IS known, its item name is used instead —
-## that's the per-applier attribution the snapshot provides.
-const DOT_FAMILY: String = 'Poison'
+## SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md Design B): the damage / fire /
+## block / healing numbers come from the CombatManager's CombatLog — the manager
+## logs each at its mutation site — not from per-step HP-diff reconstruction. The old
+## `attribute_damage` / `_split_remainder` HP-diff helper (and its proportional
+## multi-DoT weight-split) is GONE: direct emission credits each DoT tick to its own
+## applier EXACTLY, so the per-applier split is no longer an estimate. The logger
+## ingests one fight's player-side tallies via `ingest_combat_log`.
 
 var events: Array = []                 # Array[Dictionary] — { type, data }
-var damage_by_family: Dictionary = {}  # family name -> total damage attributed
+var damage_by_family: Dictionary = {}  # item name_key -> total damage dealt (player side; each
+                                       # DoT applier is its own channel — no generic lump)
 var total_damage: float = 0.0
 # Phase 5 (tune machinery): per-encounter breakdown + per-item fire counts.
 var encounters: Array = []             # Array[Dictionary] — one per resolved beat
@@ -25,95 +23,40 @@ var fires_by_item: Dictionary = {}     # item name_key -> times it fired (player
 # Defensive-item value (tune): block applied + healing landed per player item, so a
 # block/heal item can be RANKED, not just cleared of the trap flag by firing.
 var block_by_item: Dictionary = {}     # item name_key -> total block applied
-var healing_by_item: Dictionary = {}   # item name_key -> total healing landed (pre-cap;
-                                       # overheal is not subtracted — see _observe_support)
-
-
-## Net HP loss for ONE actor in ONE sim-step, split into damage records by family.
-## Pure (no game objects) so it is unit-testable on synthetic input.
-##   loss   — net HP the actor lost this step (>= 0; healing is not damage)
-##   direct — Array of { 'family': String, 'raw': float }, one per DAMAGE Delivery
-##            that landed on this actor this step
-##   dot_sources — the actor's DoT-applying statuses snapshotted BEFORE the step:
-##            Array of { 'label': String, 'weight': float } (label = the applier
-##            item's name; weight = its potential tick damage). The DoT remainder is
-##            split among them by weight; empty / zero-weight → the DOT_FAMILY channel.
-## Returns Array of { 'family': String, 'amount': float }. Direct hits take their
-## proportional share of the net loss (so block-absorbed damage is excluded);
-## anything left over is the DoT remainder, credited to its applier(s). With no block
-## and a single source the split is exact — the common case.
-static func attribute_damage(loss: float, direct: Array, dot_sources: Array = []) -> Array:
-  var out: Array = []
-  if loss <= 0.0:
-    return out
-  var direct_raw: float = 0.0
-  for hit in direct:
-    direct_raw += hit['raw']
-  var to_direct: float = minf(loss, direct_raw)
-  if direct_raw > 0.0 and to_direct > 0.0:
-    for hit in direct:
-      out.append({
-        'family': hit['family'],
-        'amount': hit['raw'] / direct_raw * to_direct,
-      })
-  var remainder: float = loss - to_direct
-  if remainder > 0.0001:
-    out.append_array(_split_remainder(remainder, dot_sources))
-  return out
-
-
-## Split the DoT remainder among the snapshotted applier sources by weight. No known
-## source (empty list or zero total weight) → the generic DOT_FAMILY channel (the old
-## behaviour, for a source-less or enemy-supplied DoT).
-static func _split_remainder(remainder: float, dot_sources: Array) -> Array:
-  var total_weight: float = 0.0
-  for s in dot_sources:
-    total_weight += s['weight']
-  if dot_sources.is_empty() or total_weight <= 0.0:
-    return [{ 'family': DOT_FAMILY, 'amount': remainder }]
-  var out: Array = []
-  for s in dot_sources:
-    out.append({ 'family': s['label'], 'amount': s['weight'] / total_weight * remainder })
-  return out
+var healing_by_item: Dictionary = {}   # item name_key -> total healing done (post-cap, from
+                                       # Actor.heal's return — honest, no overheal)
 
 
 func log_event(type: String, data: Dictionary = {}) -> void:
   events.append({ 'type': type, 'data': data })
 
 
-## Accumulate one damage record into the family tally + the running total.
-func record_damage(family: String, amount: float) -> void:
-  if amount <= 0.0:
+## Fold one fight's PLAYER-SIDE CombatLog tallies into the running totals — the single
+## source of truth (Design B). Called at each fight's end with the CombatManager's log.
+## Player side only: the contribution table + the run total are player-only (a colorless
+## item on both sides is kept separate by the log's side-keying). `damage_by_family` is
+## now per ITEM (each DoT applier its own channel — direct emission, no weight-split).
+func ingest_combat_log(log: CombatLog) -> void:
+  if log == null:
     return
-  damage_by_family[family] = damage_by_family.get(family, 0.0) + amount
-  total_damage += amount
+  var side: int = CombatLog.Side.PLAYER
+  for row in log.summary(side):
+    var name: String = row['name']
+    if row['fires'] > 0:
+      fires_by_item[name] = int(fires_by_item.get(name, 0)) + int(row['fires'])
+    if float(row['damage']) > 0.0:
+      damage_by_family[name] = float(damage_by_family.get(name, 0.0)) + float(row['damage'])
+    if float(row['block']) > 0.0:
+      block_by_item[name] = float(block_by_item.get(name, 0.0)) + float(row['block'])
+    if float(row['healing']) > 0.0:
+      healing_by_item[name] = float(healing_by_item.get(name, 0.0)) + float(row['healing'])
+  total_damage += float(log.total_damage_dealt.get(side, 0.0))
 
 
 ## Record one resolved beat (a fight or rest) for the per-encounter table. `rec` =
 ## { beat, type, name, duration, hp_before, hp_after, outcome }.
 func record_encounter(rec: Dictionary) -> void:
   encounters.append(rec)
-
-
-## Count one fire of a player item (by name_key) — the "did it do anything" signal a
-## trap pick fails. Block/heal items fire without dealing damage, so fires (not damage)
-## is what distinguishes a working defensive item from an idle trap.
-func record_item_fire(name: String) -> void:
-  fires_by_item[name] = int(fires_by_item.get(name, 0)) + 1
-
-
-## Accumulate block applied by a player item (a landed 'block' APPLY_STATUS Delivery).
-func record_item_block(name: String, amount: float) -> void:
-  if amount <= 0.0:
-    return
-  block_by_item[name] = float(block_by_item.get(name, 0.0)) + amount
-
-
-## Accumulate healing landed by a player item (a landed HEAL Delivery, pre-cap).
-func record_item_healing(name: String, amount: float) -> void:
-  if amount <= 0.0:
-    return
-  healing_by_item[name] = float(healing_by_item.get(name, 0.0)) + amount
 
 
 ## Fold the handed run `result` together with the accumulated tallies into a flat
@@ -201,7 +144,7 @@ func write_report(path: String, summary: Dictionary) -> void:
   for e in summary['enemies']:
     lines.append('- %s: %.1f / %.1f' % [e['name'], e['hp'], e['max_hp']])
   lines.append('')
-  lines.append('## Damage by family')
+  lines.append('## Damage by item')
   lines.append('')
   if summary['damage_by_family'].is_empty():
     lines.append('- (none)')
