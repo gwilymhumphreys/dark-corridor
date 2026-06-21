@@ -351,6 +351,22 @@ msgstr "Deals less damage while it lasts."
 msgid "Ally"
 msgstr "Ally"
 
+#: src/scenes/combat/combat_stats_readout.gd
+msgid "Dealt {0}"
+msgstr "Dealt {0}"
+
+#: src/scenes/combat/combat_stats_readout.gd
+msgid "Taken {0}"
+msgstr "Taken {0}"
+
+#: src/scenes/combat/combat_stats_readout.tscn
+msgid "Dealt 0"
+msgstr "Dealt 0"
+
+#: src/scenes/combat/combat_stats_readout.tscn
+msgid "Taken 0"
+msgstr "Taken 0"
+
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "Potions"
 msgstr "Potions"
@@ -414,6 +430,54 @@ msgstr "Item"
 #: src/scenes/screens/choice_overlay.tscn
 msgid "Choose your path"
 msgstr "Choose your path"
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} fires"
+msgstr "{0}  {1} fires"
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} → {2}  {3}"
+msgstr "{0}  {1} → {2}  {3}"
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} → {2}  +{3}"
+msgstr "{0}  {1} → {2}  +{3}"
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} → {2}  +{3} block"
+msgstr "{0}  {1} → {2}  +{3} block"
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  threw {1}"
+msgstr "{0}  threw {1}"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Combat Report"
+msgstr "Combat Report"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Your items"
+msgstr "Your items"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Fires"
+msgstr "Fires"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Damage"
+msgstr "Damage"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Healing"
+msgstr "Healing"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Event log"
+msgstr "Event log"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Continue"
+msgstr "Continue"
 
 #: src/scenes/screens/draft_card.gd
 msgid "{0} — {1}\nvalue {2} · every {3}s"
@@ -524,10 +588,6 @@ msgid "Summon {0}"
 msgstr "Summon {0}"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Create {0}"
-msgstr "Create {0}"
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "When {0} is applied"
 msgstr "When {0} is applied"
 
@@ -562,10 +622,6 @@ msgstr "the enemy"
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "an ally"
 msgstr "an ally"
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "an item"
-msgstr "an item"
 
 #: src/scenes/ui/tooltip/tooltip_panel.tscn
 msgid "Every 1s"

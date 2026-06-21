@@ -1,0 +1,134 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/scenes/screens/combat_summary.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
+
+[node name="CombatSummary" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -840.0
+offset_top = -500.0
+offset_right = 840.0
+offset_bottom = 500.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"PanelFramed"
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 56
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 56
+theme_override_constants/margin_bottom = 40
+
+[node name="Body" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="Title" type="Label" parent="Panel/Margin/Body"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Combat Report"
+horizontal_alignment = 1
+
+[node name="Columns" type="HBoxContainer" parent="Panel/Margin/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 56
+
+[node name="Report" type="VBoxContainer" parent="Panel/Margin/Body/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="ReportTitle" type="Label" parent="Panel/Margin/Body/Columns/Report"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Your items"
+
+[node name="RowsScroll" type="ScrollContainer" parent="Panel/Margin/Body/Columns/Report"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="GridContainer" parent="Panel/Margin/Body/Columns/Report/RowsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 5
+theme_override_constants/h_separation = 36
+theme_override_constants/v_separation = 10
+
+[node name="HItem" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]
+layout_mode = 2
+text = "Item"
+
+[node name="HFires" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Fires"
+horizontal_alignment = 2
+
+[node name="HDamage" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Damage"
+horizontal_alignment = 2
+
+[node name="HBlock" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Block"
+horizontal_alignment = 2
+
+[node name="HHealing" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Healing"
+horizontal_alignment = 2
+
+[node name="Log" type="VBoxContainer" parent="Panel/Margin/Body/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="LogTitle" type="Label" parent="Panel/Margin/Body/Columns/Log"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Event log"
+
+[node name="EventsScroll" type="ScrollContainer" parent="Panel/Margin/Body/Columns/Log"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Events" type="VBoxContainer" parent="Panel/Margin/Body/Columns/Log/EventsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Footer" type="HBoxContainer" parent="Panel/Margin/Body"]
+layout_mode = 2
+alignment = 1
+
+[node name="ContinueButton" type="Button" parent="Panel/Margin/Body/Footer"]
+custom_minimum_size = Vector2(360, 96)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 40
+text = "Continue"
+
+[node name="Juice" type="Node" parent="Panel/Margin/Body/Footer/ContinueButton"]
+script = ExtResource("2")

@@ -351,6 +351,22 @@ msgstr ""
 msgid "Ally"
 msgstr ""
 
+#: src/scenes/combat/combat_stats_readout.gd
+msgid "Dealt {0}"
+msgstr ""
+
+#: src/scenes/combat/combat_stats_readout.gd
+msgid "Taken {0}"
+msgstr ""
+
+#: src/scenes/combat/combat_stats_readout.tscn
+msgid "Dealt 0"
+msgstr ""
+
+#: src/scenes/combat/combat_stats_readout.tscn
+msgid "Taken 0"
+msgstr ""
+
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "Potions"
 msgstr ""
@@ -413,6 +429,54 @@ msgstr ""
 
 #: src/scenes/screens/choice_overlay.tscn
 msgid "Choose your path"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} fires"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} → {2}  {3}"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} → {2}  +{3}"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} → {2}  +{3} block"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.gd
+msgid "{0}  threw {1}"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Combat Report"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Your items"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Fires"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Damage"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Healing"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Event log"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Continue"
 msgstr ""
 
 #: src/scenes/screens/draft_card.gd
@@ -524,10 +588,6 @@ msgid "Summon {0}"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Create {0}"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "When {0} is applied"
 msgstr ""
 
@@ -561,10 +621,6 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "an ally"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "an item"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_panel.tscn

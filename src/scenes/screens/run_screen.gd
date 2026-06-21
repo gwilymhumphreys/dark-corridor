@@ -15,20 +15,23 @@ extends Control
 ## it can safely tear the fight down and advance.
 
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
+const COMBAT_SUMMARY: PackedScene = preload('res://src/scenes/screens/combat_summary.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
 const CHOICE_OVERLAY: PackedScene = preload('res://src/scenes/screens/choice_overlay.tscn')
 const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 
-enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING }
+enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, SUMMARY, DRAFTING }
 
 var _run: RunManager
 var _cm: CombatManager
 var _view: CombatView   # the swappable surface — framed today, full-screen drops in here
+var _log: CombatLog     # the live fight's observation log; retained past teardown for the summary
 var _draft: DraftOverlay
 var _choice: ChoiceOverlay
 var _event: EventOverlay
+var _summary: CombatSummary
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
@@ -36,6 +39,7 @@ var _pause_menu: PauseMenu = null
 var _settings: SettingsScreen = null
 
 @onready var _map: MapStrip = $HUD/MapStrip
+@onready var _stats: CombatStatsReadout = $HUD/StatsReadout
 
 
 func _ready() -> void:
@@ -159,6 +163,8 @@ func _begin_approach() -> void:
 func _arrive() -> void:
   _view.set_enemy_depth(0.0)
   _view.set_gliding(false)
+  _stats.update_from(_log)   # seed at 0 before the first tick
+  _stats.show()              # the live Dealt / Taken readout is up only during the fight
   _state = State.FIGHTING   # boards activate — the clock starts ticking next frame
 
 
@@ -181,10 +187,19 @@ func _physics_process(delta: float) -> void:
         return
       if _cm.is_resolved():
         _cm.request_slowmo(false)   # drop any hover slow-mo left set when the fight resolved
+        _stats.hide()
+        var won: bool = _cm.player_won()
         _state = State.IDLE
-        _after_beat()
+        # On a WON fight that isn't the run's last beat, show the post-fight summary before the
+        # draft (it parks the FSM, like the draft/event overlays). On a loss — or the final
+        # win — the run has ended; skip straight on (Game swaps to the death/win screen).
+        if won and not _run.is_ended():
+          _show_summary()
+        else:
+          _after_beat()
       else:
         _cm.tick(delta)
+        _stats.update_from(_log)
 
 
 # Battle-speed (a Game session preference) sets the fight clock's BASE scale; the
@@ -300,6 +315,23 @@ func _after_beat() -> void:
     _advance()
 
 
+# The post-fight summary (docs/systems/combat_log.md): raise the damage report + event log
+# and park until Continue. Reads the retained _log (the CombatManager may already be torn
+# down — our ref keeps the data alive). Only reached on a won, non-final fight.
+func _show_summary() -> void:
+  _state = State.SUMMARY
+  _summary = COMBAT_SUMMARY.instantiate()
+  add_child(_summary)   # on top of the combat view
+  _summary.continue_pressed.connect(_on_summary_continued)
+  _summary.setup(_log)
+
+
+func _on_summary_continued() -> void:
+  _summary.queue_free()
+  _summary = null
+  _after_beat()
+
+
 # The draft is a player choice (a draft-pick intent): raise the 1-of-3 overlay and
 # wait. The loop is paused in DRAFTING until a card is picked.
 func _show_draft() -> void:
@@ -327,6 +359,10 @@ func _advance() -> void:
 # --- combat view lifetime ----------------------------------------------------
 
 func _build_combat_view() -> void:
+  # Attach a fresh observation log to the fight (docs/systems/combat_log.md). We hold our own
+  # ref so the post-fight summary can read it after the CombatManager teardown nulls its side.
+  _log = CombatLog.new()
+  _cm.combat_log = _log
   _view = COMBAT_VIEW.instantiate()
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
@@ -344,6 +380,8 @@ func _on_potion_thrown(index: int) -> void:
 
 
 func _teardown_combat_view() -> void:
+  _stats.hide()
+  _log = null   # drop our ref; the summary (if any) is done, so the log can free
   if _view != null:
     _view.release()      # stop the VFX wall reading the CombatManager we're about to free
     _view.queue_free()   # deferred — the view holds render resources (CLAUDE.md)

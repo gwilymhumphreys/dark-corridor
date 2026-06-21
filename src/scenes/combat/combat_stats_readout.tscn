@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scenes/combat/combat_stats_readout.gd" id="1"]
+
+[node name="CombatStatsReadout" type="PanelContainer"]
+theme_type_variation = &"PanelSmall"
+script = ExtResource("1")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 14
+
+[node name="Rows" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DealtLabel" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+text = "Dealt 0"
+
+[node name="TakenLabel" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+text = "Taken 0"

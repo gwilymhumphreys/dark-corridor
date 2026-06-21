@@ -23,6 +23,8 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
     if screen._event != null:
       screen._on_event_picked(0)    # the event's binary choice
+    elif screen._summary != null:
+      screen._on_summary_continued()   # dismiss the post-fight summary (a won fight parks here)
     elif screen._draft != null:
       screen._on_draft_picked(0)    # stand in for the player picking the first card
     else:
@@ -34,6 +36,20 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   # Fight beats granted drafts (picked via the overlay), so the board grew past 3.
   assert_gt(Game.run.player.board.size(), 3, 'drafted picks landed on the board')
 
+  screen.free()
+
+
+func test_a_won_fight_raises_the_post_fight_summary() -> void:
+  # On a won (non-final) fight the screen parks in SUMMARY before the draft; Continue dismisses it.
+  var screen := _mount_into_fight(1)
+  var guard: int = 0
+  while screen._summary == null and Game.phase == GameManagerAutoload.Phase.RUN and guard < 400:
+    screen._physics_process(1.0)
+    guard += 1
+  assert_not_null(screen._summary, 'a won fight raises the post-fight summary')
+  assert_eq(screen._state, RunScreen.State.SUMMARY, 'the FSM parks in SUMMARY')
+  screen._on_summary_continued()
+  assert_null(screen._summary, 'Continue dismisses the summary')
   screen.free()
 
 

@@ -93,11 +93,22 @@ is correctly excluded: no fight is live.)
 
 ---
 
-## Deferred (not built here)
+## Presentation (built)
 
-- **Live HUD readout** (a *Dealt · Taken* totals widget reading the live log each frame).
-- **Post-fight screen** (the per-item damage report + the event-log timeline + a continue
-  button, parked into the run-screen FSM before the draft).
+Both surfaces read the live log; the run screen owns its lifetime (`run_screen.gd` creates a
+`CombatLog` per fight, assigns it to the live `CombatManager.combat_log`, and retains a ref so
+the summary can read it after the manager's teardown nulls its side). See
+[run_screen.md](run_screen.md).
+
+- **Live HUD readout** — `combat_stats_readout.tscn` on the run-screen HUD: the player's
+  running *Dealt · Taken* (net) this fight, refreshed each tick. Shown only while FIGHTING.
+- **Post-fight summary** — `combat_summary.tscn`, a `SUMMARY` FSM state parked before the draft
+  on a **won, non-final** fight (a loss / final win ends the run → the outcome screen instead).
+  Shows the player per-item damage report (Item · Fires · Damage · Block · Healing, from
+  `summary(PLAYER)`) + the ordered event-log timeline (from `events`), with a Continue button.
+
+## Deferred / cut
+
 - **Replay / scrub** — cut deliberately (combat effects reach into run-state; a faithful
-  re-sim is disproportionately complex). The `events` timeline is captured + shown, but the
-  fight is not re-runnable.
+  re-sim is disproportionately complex). The `events` timeline is captured + shown as the
+  event log, but the fight is not re-runnable.

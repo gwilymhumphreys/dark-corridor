@@ -41,7 +41,7 @@ screen is the one real-time client: each `_physics_process` it calls
 ```
 IDLE → enter beat (auto-rolled or fixed — a live encounter already) → begin beat
                     begin:  event?  EVENTING (await option pick) → after-beat
-                            fight?  APPROACHING → FIGHTING ─(resolved)→ after-beat
+                            fight?  APPROACHING → FIGHTING ─(resolved)→ [won & run continues? SUMMARY (await Continue)] → after-beat
                             rest?   resolves on begin → after-beat
 after-beat: pending draft? DRAFTING (await pick) ; else advance → enter beat
 run_ended → Game → outcome screen
@@ -58,6 +58,16 @@ It **polls `cm.is_resolved()`** (never reacts inside the `resolved` signal), so 
 fight is torn down + advanced safely — the run fulfils the outcome (reward / run-end)
 via its own signal chain *during* the resolving tick. Slow-mo-on-hover is a
 `cm.request_slowmo` intent, only while FIGHTING.
+
+**Combat log surfaces** (the watchable read of [combat_log.md](combat_log.md)). On building the
+fight the screen creates a `CombatLog` and assigns it to the live `CombatManager.combat_log`,
+keeping its own ref (`_log`) so the summary survives the manager's teardown. A small
+`combat_stats_readout.tscn` on the HUD shows the player's running **Dealt · Taken** (net),
+refreshed each tick, visible only while FIGHTING. On a **won, non-final** fight the FSM parks in
+**SUMMARY** — `combat_summary.tscn` (the per-item damage report from `summary(PLAYER)` + the
+event-log timeline from `events` + a Continue button) — *before* the draft; **Continue** resumes
+to `after-beat`. A loss or the **final** win ends the run instead (the outcome screen), so the
+summary is skipped there.
 
 **Battle-speed + pause (the player's clock controls).** Both are presentation-only —
 the headless autotest mounts none of this:
@@ -165,7 +175,8 @@ registered in `project.godot`) — see [localization](localization.md).
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
-draft_card · map_strip · speed_button · pause_menu); `src/autoloads/prefs.gd`; `src/scenes/combat/`
-(combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell); `src/vfx/vfx_driver.gd`;
+draft_card · map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
+`src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell ·
+combat_stats_readout); `src/vfx/vfx_driver.gd`;
 the occupant law on `src/scenes/corridors/corridor_scaled.gd` (`axis_scale`). Tests in
 `tests/ui/`.
