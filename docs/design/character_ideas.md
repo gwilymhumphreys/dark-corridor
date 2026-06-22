@@ -282,7 +282,9 @@ status-identity engine (spores), not warrior/mage/rogue.
   Copy is placeholder.
 - **Bleed fusion (owner, 2026-06-22):** carving attacks can double as bleed appliers — one swing =
   damage + a chunk (your fuel) + bleed (enemy attrition). Watch: damage + chunk + bleed on a single
-  common is a lot — rarity-gate the triple, keep commons to two effects.
+  common is a lot — rarity-gate the triple, keep commons to two effects. **First authored:** **Bone
+  Spear** (6s, damage + 3 bleed, unblockable) — damage + bleed only (no chunk), holding the two-effect
+  line; bleed is now built ([`mechanic_ideas.md`](mechanic_ideas.md)).
 - **The engine (owner, 2026-06-16): it fills two mechanical spaces fused into one
   loop — mid-fight item creation *and* HP-as-resource:**
   - **Spend HP → make fleshy items** (cut off a piece of yourself; it becomes a thing on the

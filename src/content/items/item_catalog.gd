@@ -29,6 +29,7 @@ const FLESH_BONE_SAW := 'flesh_bone_maul'
 const FLESH_EXPLOSION := 'flesh_explosion'
 const FLESH_FLENSING_HOOK := 'flesh_flensing_hook'
 const FLESH_SKIN_GRAFT := 'flesh_skin_graft'
+const FLESH_BONE_SPEAR := 'flesh_bone_spear'
 
 static var _defs: Dictionary = {}
 
@@ -66,6 +67,7 @@ static func _build() -> void:
   _defs[FLESH_EXPLOSION] = _flesh_explosion()
   _defs[FLESH_FLENSING_HOOK] = _flesh_flensing_hook()
   _defs[FLESH_SKIN_GRAFT] = _flesh_skin_graft()
+  _defs[FLESH_BONE_SPEAR] = _flesh_bone_spear()
 
 
 static func _weapon() -> ItemDef:
@@ -575,6 +577,35 @@ static func _flesh_skin_graft() -> ItemDef:
   heal.color = Colours.HEAL
   d.effects = [heal]
   d.panel_color = heal.color
+  return d
+
+
+## Bone Spear (owner) — the Fleshmancer's first BLEED applier (docs/design/mechanic_ideas.md -> Bleed;
+## the carve-as-bleed-applier fusion in character_ideas.md). A slow attack that deals damage AND applies
+## bleed to the struck enemy. Bleed is UNBLOCKABLE so the enemy's own block can't soak the self-damage
+## the wound bites on its activations. Single-target (the bleed piles on one enemy). COMMON. Numbers ->
+## Balance (placeholders).
+static func _flesh_bone_spear() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_BONE_SPEAR
+  d.name_key = 'Bone Spear'            # owner's name
+  d.cooldown = Balance.FLESH_BONE_SPEAR_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.FLESH_BONE_SPEAR_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  var bleed := ItemEffect.new()
+  bleed.kind = Delivery.Kind.APPLY_STATUS
+  bleed.status_id = 'bleed'
+  bleed.value = Balance.FLESH_BONE_SPEAR_BLEED
+  bleed.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  bleed.travel = Balance.WEAPON_TRAVEL
+  bleed.flags = Delivery.Flag.UNBLOCKABLE    # the enemy's own block must not soak the wound
+  bleed.color = Colours.DAMAGE               # applier shares the (placeholder) bleed colour
+  d.effects = [hit, bleed]
+  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
   return d
 
 

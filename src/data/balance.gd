@@ -151,6 +151,13 @@ const FLESH_SKIN_GRAFT_COOLDOWN: float = 4.0
 const FLESH_SKIN_GRAFT_HEAL_PER_CHUNK: float = 4.0
 const FLESH_SKIN_GRAFT_CONSUME: int = 1
 
+# Bone Spear (owner) — the Fleshmancer's first BLEED applier (docs/design/mechanic_ideas.md -> Bleed;
+# the carve-as-bleed-applier fusion). A slow attack: damage + apply bleed to the enemy (UNBLOCKABLE,
+# so its own block can't soak the wound it bites itself for on its activations). PLACEHOLDER — /tune.
+const FLESH_BONE_SPEAR_COOLDOWN: float = 6.0
+const FLESH_BONE_SPEAR_DAMAGE: float = 6.0
+const FLESH_BONE_SPEAR_BLEED: float = 3.0   # enemy bleeds 3+2+1 = 6 over its next three activations
+
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks

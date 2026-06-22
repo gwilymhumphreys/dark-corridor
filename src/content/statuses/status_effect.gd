@@ -72,6 +72,13 @@ func on_holder_fired(item, ctx) -> void:
   pass
 
 
+## Called on an ACTOR-targeted status when one of that actor's items FIRES — the actor-level twin of
+## on_holder_fired (which fires for the one item the status sits ON). Bleed cashes out here. Returns
+## true when the status has expired (the Combat manager removes it + runs on_expire); default no-op.
+func on_owner_item_fired(actor, ctx) -> bool:
+  return false
+
+
 # --- modifiers (PULL — the engine queries these at the pipeline stage, in statuses-list order,
 #     so composition stays deterministic (#24) and amplify-before-absorb holds (#6)). ---
 

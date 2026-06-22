@@ -81,3 +81,35 @@ func test_decay_reapply_tops_up_charges() -> void:
   d.setup(2.0, 0.0, null, 0)
   d.reapply(2.0, 0.0, null, 0)
   assert_almost_eq(d.count, 4.0, 0.0001, 'reapply STACKS — charges add (top-up is reapply)')
+
+
+# --- Bleed (docs/design/mechanic_ideas.md → Bleed) -----------------------------------------
+# An enemy-applied wound: each of the holder's item activations bites it for the current stack
+# count, then loses a stack; removed at zero. Drained by the holder FIRING (the actor twin of Decay).
+
+func test_registry_builds_a_bleed_status_for_its_id() -> void:
+  var b := StatusRegistry.create('bleed')
+  assert_not_null(b, 'the registry knows the bleed id')
+  assert_eq(b.id, 'bleed', 'and builds a BleedStatus carrying that id')
+
+
+func test_bleed_bites_the_holder_per_activation_and_pays_itself_down() -> void:
+  var actor := Actor.new(100.0)
+  var b := StatusRegistry.create('bleed')
+  b.setup(3.0, 0.0, null, 0)
+  actor.statuses.append(b)
+  var expired: bool = b.on_owner_item_fired(actor, null)
+  assert_almost_eq(actor.hp, 97.0, 0.0001, 'bleed 3 bites 3 on the first activation')
+  assert_almost_eq(b.count, 2.0, 0.0001, 'and loses a stack')
+  assert_false(expired, 'still bleeding while stacks remain')
+  b.on_owner_item_fired(actor, null)             # bites 2 -> 95
+  expired = b.on_owner_item_fired(actor, null)   # bites 1 -> 94, drained
+  assert_almost_eq(actor.hp, 94.0, 0.0001, 'triangular total 3+2+1 = 6 over three activations')
+  assert_true(expired, 'expires when the last stack is spent')
+
+
+func test_bleed_reapply_stacks() -> void:
+  var b := StatusRegistry.create('bleed')
+  b.setup(3.0, 0.0, null, 0)
+  b.reapply(2.0, 0.0, null, 0)
+  assert_almost_eq(b.count, 5.0, 0.0001, 'reapply STACKS — bleed adds')

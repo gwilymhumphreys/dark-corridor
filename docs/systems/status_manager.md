@@ -84,7 +84,7 @@ Every status — actor- **or** item-targeted — lives only for the fight: creat
 
 A subclass overrides only what it does; every hook is a no-op / identity by default. Two kinds:
 
-- **Active (push)** — the status acts via `ctx`: `on_apply`, `on_expire`, `on_step(target, ctx) -> expired`, `on_holder_fired(item, ctx)` (an **item-targeted** status acts when its holder item fires — Decay drains here, [`item_creation_and_decay.md`](item_creation_and_decay.md)), `setup` / `reapply` (lifecycle + stacking). `on_expire` runs at every **natural** removal — timed expiry, consumed-to-zero, spent-removal after a damage pass — but **not** at combat teardown (the fight ending is a clear, not an expiry).
+- **Active (push)** — the status acts via `ctx`: `on_apply`, `on_expire`, `on_step(target, ctx) -> expired`, `on_holder_fired(item, ctx)` (an **item-targeted** status acts when its holder item fires — Decay drains here, [`item_creation_and_decay.md`](item_creation_and_decay.md)), `on_owner_item_fired(actor, ctx) -> expired` (the **actor-targeted** twin — acts when one of that actor's items fires; Bleed cashes out here, [`mechanic_ideas.md`](../design/mechanic_ideas.md)), `setup` / `reapply` (lifecycle + stacking). `on_expire` runs at every **natural** removal — timed expiry, consumed-to-zero, spent-removal after a damage pass — but **not** at combat teardown (the fight ending is a clear, not an expiry).
 - **Modifiers (pull)** — the engine queries at a pipeline stage, in list order: `modify_outgoing`, `modify_incoming`, `absorb(amount, flags, …) -> remaining`, `gates_fire`, `causes_evasion`. Plus `is_fuel` / `consume` (Mass), `is_spent` (pool removal), and presentation fields.
 
 **Thrown consumables are exempt from the holder's combat modifiers** (decision #30): a potion's payload skips `modify_outgoing` (Weak) and `has_evasion` (Blind) — potions are the reserve, not the engine, so debuffs that degrade the board don't degrade the panic button. A deliberate asymmetry with the item fire pipeline, not an accident.
@@ -106,7 +106,7 @@ Distinct icon + per-effect colour per type (the design's colour vocabulary). Pre
 ## Built
 
 - The polymorphic `StatusEffect` hierarchy + `StatusRegistry` (id → creator).
-- Eight statuses across the shapes: **block** (pool), **poison** (periodic DoT), **weak** / **vulnerable** / **blind** (timed), **silence** (static gate), **spores** (inert counter / Mass fuel), **decay** (item-targeted use-status — drained by the holder's fire, removes the item at 0; [`item_creation_and_decay.md`](item_creation_and_decay.md)).
+- Nine statuses across the shapes: **block** (pool), **poison** (periodic DoT), **weak** / **vulnerable** / **blind** (timed), **silence** (static gate), **spores** (inert counter / Mass fuel), **decay** (item-targeted use-status — drained by the holder's fire, removes the item at 0; [`item_creation_and_decay.md`](item_creation_and_decay.md)), **bleed** (actor-targeted — drained by the holder's *own* item fires for a self-paying-down wound; an enemy-applied debuff, [`mechanic_ideas.md`](../design/mechanic_ideas.md)).
 - `apply` (per-application duration + class-decided stacking) and `resolve_incoming_damage` (amplify → absorb).
 - Tie-ins: Combat-manager stepping of time-driven statuses; `Actor.take_damage` through the pipeline.
 

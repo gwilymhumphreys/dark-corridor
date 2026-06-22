@@ -208,6 +208,10 @@ msgid "Skin Graft"
 msgstr "Skin Graft"
 
 #: src/content/items/item_catalog.gd
+msgid "Bone Spear"
+msgstr "Bone Spear"
+
+#: src/content/items/item_catalog.gd
 msgid "Claw"
 msgstr "Claw"
 
@@ -286,6 +290,14 @@ msgstr "Vital Charm"
 #: src/content/relics/relic_catalog.gd
 msgid "Iron Idol"
 msgstr "Iron Idol"
+
+#: src/content/statuses/bleed_status.gd
+msgid "Bleed"
+msgstr "Bleed"
+
+#: src/content/statuses/bleed_status.gd
+msgid "Each time the bleeding side acts, it takes damage and loses a stack."
+msgstr "Each time the bleeding side acts, it takes damage and loses a stack."
 
 #: src/content/statuses/blind_status.gd
 msgid "Blind"

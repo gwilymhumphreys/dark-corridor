@@ -116,6 +116,7 @@ static func _fleshmancer() -> CharacterDef:
     ItemCatalog.FLESH_EXPLOSION,
     ItemCatalog.FLESH_FLENSING_HOOK,
     ItemCatalog.FLESH_SKIN_GRAFT,
+    ItemCatalog.FLESH_BONE_SPEAR,
   ]
   d.starting_item_ids = [ItemCatalog.FLESH_CLEAVER]
   d.starting_relic_id = ''                          # no signature relic yet (the owner's to design)

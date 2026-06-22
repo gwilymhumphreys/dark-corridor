@@ -16,6 +16,7 @@ static func _build() -> void:
   _creators[BlindStatus.ID] = func() -> StatusEffect: return BlindStatus.new()
   _creators[SporesStatus.ID] = func() -> StatusEffect: return SporesStatus.new()
   _creators[DecayStatus.ID] = func() -> StatusEffect: return DecayStatus.new()
+  _creators[BleedStatus.ID] = func() -> StatusEffect: return BleedStatus.new()
 
 
 static func create(id: String) -> StatusEffect:

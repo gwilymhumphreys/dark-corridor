@@ -17,7 +17,7 @@
 
 ---
 
-## Bleed — *parked (source: grail, 2026-06-21)*
+## Bleed — *built (source: grail, 2026-06-21)*
 
 - **Rule as seen:** each time an item activates, the holder takes damage equal to **bleed**, then
   bleed is reduced by 1. A stacking value that pays itself down as the board fires.
@@ -42,17 +42,18 @@
   - **Payoffs / cares-about-bleeding** — items that key off the enemy *being* bled or off a bleed
     tick ("+X vs. a bleeding enemy"; "when it bleeds, gain block") — the distinct-status-cares
     mechanism, like the Spore Druid's spread cards.
-- **Engine cost — small, not free-wired.** `EventBus.Event.ITEM_FIRED` already carries source
-  identity, and there's a per-fire hook for *item*-targeted statuses (`on_holder_fired`, used by
-  Decay). Bleed needs the actor-level twin: a `StatusEffect` hook the Combat manager calls when the
-  holder actor's items activate + one call site. Bleed damage routes through `take_damage` (publishes
-  DAMAGE_DEALT), so payoff items can subscribe. Ordering: the hit + decrement after the payload
-  resolves (#24).
-- **Open:** which character / pool owns it — now being weighed as the **Fleshmancer's** offense
-  layer (the carving theme cuts both ways; see its entry in
-  [`character_ideas.md`](character_ideas.md)), uncommitted; whether the enemy's block soaks its own
-  bleed (a lever); starting magnitude (small — the triangular total grows fast); confirm the tempo
-  reading is the holder's items only.
+- **Built (2026-06-22).** `BleedStatus` + the actor-level `on_owner_item_fired(actor, ctx)` hook (the
+  twin of Decay's `on_holder_fired`): the Combat manager drains the firing actor's bleed in
+  `_fire_item` after the payload spawns (deterministic, #24). The bite goes through `take_damage`
+  carrying the applier's flags, so an UNBLOCKABLE bleed bypasses the holder's own block (#5); it shows
+  a DoT-style wall visual + a combat-log line — like a poison tick, it publishes **no** bus event, so
+  a future bleed *payoff* would read a hook, not a subscription. First applier: **Bone Spear**
+  (Fleshmancer pool; 6s, damage + 3 bleed, unblockable). Tempo reading confirmed = the holder's *own*
+  item fires.
+- **Open / tune:** the **Fleshmancer** is its tentative home but uncommitted (see
+  [`character_ideas.md`](character_ideas.md)); Bone Spear's numbers are placeholders (`/tune`); bleed
+  defaults **unblockable** via the applier flag (a blockable applier could omit it — the lever is
+  per-effect); no dedicated bleed colour yet (reuses DAMAGE — owner's tint).
 
 ---
 
