@@ -8,6 +8,7 @@ const CHARACTER_IDS: Array = [
   CharacterCatalog.DEFAULT,
   CharacterCatalog.DUELIST,
   CharacterCatalog.SPORE_DRUID,
+  CharacterCatalog.FLESHMANCER,
 ]
 
 const ENCOUNTER_IDS: Array = [

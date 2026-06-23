@@ -30,6 +30,9 @@ const FLESH_EXPLOSION := 'flesh_explosion'
 const FLESH_FLENSING_HOOK := 'flesh_flensing_hook'
 const FLESH_SKIN_GRAFT := 'flesh_skin_graft'
 const FLESH_BONE_SPEAR := 'flesh_bone_spear'
+const FLESH_RIB := 'flesh_rib'
+const FLESH_FEMUR := 'flesh_femur'
+const FLESH_SKULL := 'flesh_skull'
 
 static var _defs: Dictionary = {}
 
@@ -68,6 +71,9 @@ static func _build() -> void:
   _defs[FLESH_FLENSING_HOOK] = _flesh_flensing_hook()
   _defs[FLESH_SKIN_GRAFT] = _flesh_skin_graft()
   _defs[FLESH_BONE_SPEAR] = _flesh_bone_spear()
+  _defs[FLESH_RIB] = _flesh_rib()
+  _defs[FLESH_FEMUR] = _flesh_femur()
+  _defs[FLESH_SKULL] = _flesh_skull()
 
 
 static func _weapon() -> ItemDef:
@@ -606,6 +612,57 @@ static func _flesh_bone_spear() -> ItemDef:
   bleed.color = Colours.DAMAGE               # applier shares the (placeholder) bleed colour
   d.effects = [hit, bleed]
   d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  return d
+
+
+## Bone block spread (owner) — the Fleshmancer's self-block FLOOR: plain self-block on a cooldown curve
+## (Rib fast/taxed · Femur baseline · Skull slow/rewarded), the bone twin of the Leather spread. Block
+## protects the HP-spend engine while you bleed yourself (character_ideas.md). COMMON. Numbers -> Balance.
+static func _flesh_rib() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_RIB
+  d.name_key = 'Rib'                   # owner's name
+  d.cooldown = Balance.FLESH_RIB_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = Balance.FLESH_RIB_BLOCK
+  blk.shape = ItemEffect.Shape.SELF
+  blk.color = Colours.STATUS_BLOCK
+  d.effects = [blk]
+  d.panel_color = blk.color
+  return d
+
+
+static func _flesh_femur() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_FEMUR
+  d.name_key = 'Femur'                 # owner's name
+  d.cooldown = Balance.FLESH_FEMUR_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = Balance.FLESH_FEMUR_BLOCK
+  blk.shape = ItemEffect.Shape.SELF
+  blk.color = Colours.STATUS_BLOCK
+  d.effects = [blk]
+  d.panel_color = blk.color
+  return d
+
+
+static func _flesh_skull() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = FLESH_SKULL
+  d.name_key = 'Skull'                 # owner's name
+  d.cooldown = Balance.FLESH_SKULL_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.kind = Delivery.Kind.APPLY_STATUS
+  blk.status_id = 'block'
+  blk.value = Balance.FLESH_SKULL_BLOCK
+  blk.shape = ItemEffect.Shape.SELF
+  blk.color = Colours.STATUS_BLOCK
+  d.effects = [blk]
+  d.panel_color = blk.color
   return d
 
 

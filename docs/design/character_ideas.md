@@ -292,7 +292,8 @@ status-identity engine (spores), not warrior/mage/rogue.
     "flesh as crafting substrate, necromancy meets sculpture"* (a blessed HP-home; see the
     resource+theme screen in [Cross-cutting](#cross-cutting--resource-economies)).
   - **Block to stay alive** while you voluntarily bleed HP — block *protects the engine* (a
-    distinct use from the Spiked Shield's block-as-intake; only one ships anyway).
+    distinct use from the Spiked Shield's block-as-intake; only one ships anyway). *Authored: the
+    bone block spread — **Rib / Femur / Skull**, plain self-block on the Leather fast/mid/slow curve.*
   - **Healing is double-duty** — survival **and** refilling the HP you spend (heal = reload). This
     dissolves the usual "healing items are boring" problem: here lifegain *is* an engine piece.
   - **Ramp-up-over-time** scaling character: the board of fleshy items compounds; the ramp is gated

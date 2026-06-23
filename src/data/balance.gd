@@ -158,6 +158,16 @@ const FLESH_BONE_SPEAR_COOLDOWN: float = 6.0
 const FLESH_BONE_SPEAR_DAMAGE: float = 6.0
 const FLESH_BONE_SPEAR_BLEED: float = 3.0   # enemy bleeds 3+2+1 = 6 over its next three activations
 
+# Bone block spread (owner) — the Fleshmancer's self-block: the survival FLOOR that protects the
+# HP-spend engine while you voluntarily bleed yourself (character_ideas.md). The bone twin of the
+# Leather spread, same fast/mid/slow curve (Rib taxed, Femur baseline, Skull rewarded). PLACEHOLDER.
+const FLESH_RIB_COOLDOWN: float = 1.0       # fast, taxed — 3 block/sec
+const FLESH_RIB_BLOCK: float = 3.0
+const FLESH_FEMUR_COOLDOWN: float = 2.0     # baseline — 4 block/sec
+const FLESH_FEMUR_BLOCK: float = 8.0
+const FLESH_SKULL_COOLDOWN: float = 3.0     # slow, rewarded — 5 block/sec
+const FLESH_SKULL_BLOCK: float = 15.0
+
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks

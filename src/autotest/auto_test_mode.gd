@@ -36,6 +36,7 @@ var stuck_threshold_seconds: float = 10.0   # flat total-HP this long = stuck (p
 var strategy: String = 'first-viable'
 var single_fight: bool = false              # --single-fight: the Phase-2 one-fight path
 var encounters: int = 0                     # --encounters N: cap beats (0 = play the whole map)
+var character: String = CharacterCatalog.DEFAULT   # --character <id>: who to play (run mode only)
 # Run artifacts default into a project-local, git-ignored dir (autotest_results/)
 # so they're easy to find but never committed; --log / --report override.
 var log_path: String = OUTPUT_DIR + '/autotest_log.txt'
@@ -62,8 +63,8 @@ func _ready() -> void:
   if Engine.is_editor_hint():
     return
   _parse_args()
-  print('[AutoTest] start — mode=%s seed=%d speed=%.1fx timeout=%.0fs wall=%.0fs strategy=%s (nosave+notutorial forced)' % [
-    'single-fight' if single_fight else 'run', seed_value, speed, timeout_seconds, wall_timeout_seconds, strategy,
+  print('[AutoTest] start — mode=%s seed=%d speed=%.1fx timeout=%.0fs wall=%.0fs strategy=%s character=%s (nosave+notutorial forced)' % [
+    'single-fight' if single_fight else 'run', seed_value, speed, timeout_seconds, wall_timeout_seconds, strategy, character,
   ])
   var result: Dictionary = run_once() if single_fight else run_full()
   _report(result)
@@ -132,9 +133,9 @@ func run_full() -> Dictionary:
   Save.disabled = nosave   # honour the forced nosave: never clobber the real run slot
   logger = AutoTestLogger.new()
   driver = AutoTestDriver.new(strategy, seed_value)
-  Game.start_run(seed_value)
+  Game.start_run(seed_value, character)
   var run: RunManager = Game.run
-  logger.log_event('run_started', { 'seed': seed_value })
+  logger.log_event('run_started', { 'seed': seed_value, 'character': character })
 
   var wall_start: int = Time.get_ticks_msec()
   var wall_timeout_ms: int = int(wall_timeout_seconds * 1000.0)
@@ -385,6 +386,12 @@ func _parse_args() -> void:
       i += 1
     elif arg == '--encounters':
       encounters = int(_value(args, i))
+      i += 1
+    elif arg == '--character':
+      character = _value(args, i)
+      if not CharacterCatalog.has(character):
+        push_warning('[AutoTest] unknown --character "%s" — falling back to %s' % [character, CharacterCatalog.DEFAULT])
+        character = CharacterCatalog.DEFAULT
       i += 1
     elif arg == '--single-fight':
       single_fight = true

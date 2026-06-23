@@ -21,15 +21,24 @@ static func get_def(id: String) -> CharacterDef:
   return _defs[id]
 
 
-## The roster ids in display order — the character-select screen enumerates this. DEFAULT
-## leads (the first card / the autostart character). SPORE_DRUID is authored (in _defs) but
-## intentionally NOT listed yet — its pool is too thin for a non-degenerate 1-of-3 draft;
-## add it here once the Spore Druid pool is deep enough to play. FLESHMANCER is held out the
-## same way (its pool is the three chunk-creating attacks — degenerate until it's deepened).
+## True if `id` is an AUTHORED character (rostered or not — the autotest's --character validates
+## here so it can drive a not-yet-listed character for tuning). Lazily builds, like the catalogs.
+static func has(id: String) -> bool:
+  if _defs.is_empty():
+    _build()
+  return _defs.has(id)
+
+
+## The roster ids in display order — the character-select screen enumerates this. DEFAULT leads
+## (the first card / the autostart character + the autotest baseline — keep it). FLESHMANCER is now
+## LIVE: its pool is deep enough (10 items) for a non-degenerate 1-of-3 draft, replacing the Duelist
+## placeholder (numbers are still placeholders to /tune). SPORE_DRUID + DUELIST stay authored (in
+## _defs) but unlisted — the Spore Druid pool is still too thin to draft; the Duelist is the dormant
+## placeholder. Add an id here once its pool is deep enough to play.
 static func ids() -> Array:
   if _defs.is_empty():
     _build()
-  return [DEFAULT, DUELIST]
+  return [DEFAULT, FLESHMANCER]
 
 
 static func _build() -> void:
@@ -80,9 +89,10 @@ static func _spore_druid() -> CharacterDef:
   return d
 
 
-## PLACEHOLDER second character — proves the select screen + per-character start kit with a
-## visibly distinct loadout (blade-forward, no relic / potion). Reuses the prototype item pool;
-## the owner replaces this with a real character (its own pool, signature relic, identity).
+## DORMANT placeholder — the Fleshmancer replaced it on the live roster (ids()), so it no longer
+## shows in character select. Kept in _defs: it still proves the per-character start kit (a distinct
+## blade-forward loadout sharing the prototype pool) and is a run-manager test fixture (a non-default
+## character start). Delete once a second real character lands and nothing references it.
 static func _duelist() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = DUELIST
@@ -99,11 +109,11 @@ static func _duelist() -> CharacterDef:
 ## Fleshmancer (PLACEHOLDER name — owner's to rename; character_ideas.md → Flesh Golem / Meat) — an
 ## item-economy character: its attacks create Chunks of Flesh on the player's OWN board, which decay
 ## after a couple of activations (the CREATE_ITEM + Decay seams, item_creation_and_decay.md). SCAFFOLD
-## — holds the first three chunk-creating attack commons (the pool below is the authority) + the chunk
-## they spawn; numbers + names are PLACEHOLDERS to tune / rename (a Vermis display-name later). Still
-## the owner's to fill: the HP-spend cost line (the real item economy), block commons, the signature
-## relic, the real select-screen blurb, a deeper pool, and flipping it into ids() once it's
-## non-degenerate to draft. Starts with the mid Cleaver (cf. the Druid starting with Druid Staff).
+## — the pool below is the authority (chunk-creating attacks, the self-harm producer + consumer, the
+## Reclaim payoff, a bleed applier, and the bone block spread); numbers + names are PLACEHOLDERS to
+## tune / rename (a Vermis display-name later). Still the owner's to fill: the signature relic, the
+## real select-screen blurb, more pool depth, and flipping it into ids() once it's non-degenerate to
+## draft. Starts with the mid Cleaver (cf. the Druid starting with Druid Staff).
 static func _fleshmancer() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = FLESHMANCER
@@ -117,6 +127,9 @@ static func _fleshmancer() -> CharacterDef:
     ItemCatalog.FLESH_FLENSING_HOOK,
     ItemCatalog.FLESH_SKIN_GRAFT,
     ItemCatalog.FLESH_BONE_SPEAR,
+    ItemCatalog.FLESH_RIB,
+    ItemCatalog.FLESH_FEMUR,
+    ItemCatalog.FLESH_SKULL,
   ]
   d.starting_item_ids = [ItemCatalog.FLESH_CLEAVER]
   d.starting_relic_id = ''                          # no signature relic yet (the owner's to design)

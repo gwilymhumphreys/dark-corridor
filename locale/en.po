@@ -212,6 +212,18 @@ msgid "Bone Spear"
 msgstr "Bone Spear"
 
 #: src/content/items/item_catalog.gd
+msgid "Rib"
+msgstr "Rib"
+
+#: src/content/items/item_catalog.gd
+msgid "Femur"
+msgstr "Femur"
+
+#: src/content/items/item_catalog.gd
+msgid "Skull"
+msgstr "Skull"
+
+#: src/content/items/item_catalog.gd
 msgid "Claw"
 msgstr "Claw"
 
