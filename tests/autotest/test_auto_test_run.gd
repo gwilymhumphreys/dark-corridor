@@ -105,9 +105,10 @@ func test_run_full_report_has_per_encounter_and_contribution() -> void:
   assert_eq(s['strategy'], 'first-viable', 'the strategy is recorded')
 
 
-func test_run_full_credits_poison_to_its_applier_in_the_contribution_table() -> void:
-  # The starting board holds Venom Fang; its poison ticks must show as ITS damage in
-  # the contribution table — not lumped under a generic Poison channel (it read 0 before).
+func test_run_full_buckets_poison_by_status_and_keeps_its_applier_off_the_trap_list() -> void:
+  # Venom Fang only APPLIES poison: its tick damage is bucketed by status (damage_by_status), not
+  # credited to the item. It still fires, so it must not be mis-flagged a trap, and the poison
+  # damage must show up under its status bucket.
   var m := _mode(1)
   var r := m.run_full()
   var venom: Dictionary = {}
@@ -115,8 +116,23 @@ func test_run_full_credits_poison_to_its_applier_in_the_contribution_table() -> 
     if row['name'] == 'Venom Fang':
       venom = row
   assert_false(venom.is_empty(), 'Venom Fang is on the board')
-  assert_gt(float(venom['damage']), 0.0, 'its poison damage is credited to it')
-  assert_false(venom['trap'], 'so a working poison item is never mis-flagged a trap')
+  assert_false(venom['trap'], 'a firing applier is never mis-flagged a trap')
+  assert_gt(float(r['summary']['damage_by_status'].get('Poison', 0.0)), 0.0,
+      'its poison damage is bucketed under the status')
+
+
+func test_driver_defaults_to_never_skip() -> void:
+  # The autotest Driver never skips a draft by default (docs decision #33) — so every existing
+  # headless run draws the run RNG identically and baselines stay byte-identical.
+  var driver := AutoTestDriver.new('first-viable', 1)
+  assert_false(driver.should_skip_draft([], []), 'the driver never skips by default')
+
+
+func test_default_run_banks_no_gold() -> void:
+  # Consequence of never-skip: a full default descent takes every draft, so no gold is ever
+  # banked — the skip path (which draws the RNG) is never taken.
+  _mode(1).run_full()
+  assert_eq(Game.run.gold, 0, 'a never-skip run banks no gold')
 
 
 func test_run_full_honors_nosave_writes_nothing() -> void:

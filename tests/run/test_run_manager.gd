@@ -521,8 +521,8 @@ func test_rehydrate_refuses_a_truncated_snapshot() -> void:
 
 
 func test_advance_past_an_unconsumed_draft_drops_the_offer() -> void:
-  # The no-skip invariant: a caller that advances past a pending draft has a flow bug —
-  # the offer is dropped (loudly) rather than carried unsaved into the next beat.
+  # The consume-before-advance invariant: a caller that advances past a pending draft has a flow
+  # bug — the offer is dropped (loudly) rather than carried unsaved into the next beat.
   var run := _run()
   run.start(3)
   run.begin_current()
@@ -534,3 +534,54 @@ func test_advance_past_an_unconsumed_draft_drops_the_offer() -> void:
   assert_false(run.has_pending_draft(), 'the stale offer was dropped, not carried')
   assert_eq(run.player.board.size(), board_size, 'nothing was silently added to the board')
   assert_eq(run.position, 1, 'the run still advanced')
+
+
+# --- draft skip → bank gold (docs decision #33) ------------------------------
+
+func test_skip_banks_gold_and_clears_offer() -> void:
+  # Skipping the draft banks a small random amount of gold (40..60) instead of taking a card,
+  # leaves the board untouched, clears the offer, and lets the run advance.
+  var run := _run()
+  run.start(1)
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  assert_true(run.has_pending_draft(), 'a fight win offers a draft')
+  var board_size: int = run.player.board.size()
+  run.apply_draft_skip()
+  assert_false(run.has_pending_draft(), 'the offer cleared')
+  assert_eq(run.player.board.size(), board_size, 'skipping adds no item to the board')
+  assert_between(run.gold, Balance.GOLD_SKIP_MIN, Balance.GOLD_SKIP_MAX, 'gold banked in the placeholder band')
+  run.advance()
+  assert_eq(run.position, 1, 'the run advances after a skip (the offer was consumed)')
+
+
+func test_gold_survives_save_and_resume() -> void:
+  # Gold rides the snapshot and restores exactly; a pre-gold snapshot rehydrates to 0 (no migration).
+  var run := _run()
+  run.start(1)
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  run.apply_draft_skip()
+  var banked: int = run.gold
+  assert_gt(banked, 0, 'the skip banked some gold')
+  var snap: Dictionary = run.snapshot()
+  assert_eq(int(snap['gold']), banked, 'gold is written into the snapshot')
+  var run_b := _run()
+  run_b.rehydrate(snap)
+  assert_eq(run_b.gold, banked, 'and is restored exactly on resume (no save-scum)')
+  snap.erase('gold')
+  var run_c := _run()
+  run_c.rehydrate(snap)
+  assert_eq(run_c.gold, 0, 'a pre-gold snapshot rehydrates to 0 (forward-compatible, no migration)')
+
+
+func test_skip_is_deterministic_for_a_seed() -> void:
+  # The gold is drawn on the run RNG (seeded), so the same seed + the same skip banks the same
+  # amount — a skip is a legitimate decision, not a save-scummable re-roll.
+  var run_a := _run()
+  run_a.start(99)
+  run_a._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  run_a.apply_draft_skip()
+  var run_b := _run()
+  run_b.start(99)
+  run_b._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  run_b.apply_draft_skip()
+  assert_eq(run_a.gold, run_b.gold, 'same seed + same skip banks the same gold')

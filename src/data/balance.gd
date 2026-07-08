@@ -216,6 +216,11 @@ const POTION_HEAL: float = 20.0
 
 # ── Run loop (HP economy + map; docs/systems/run_manager.md) ─────────────────────────────
 const REST_HEAL_FRACTION: float = 0.3       # an in-act rest restores this fraction of max HP
+# Draft skip → bank gold (docs decision #33). Skipping the 1-of-3 draft banks a small random
+# amount of gold instead of taking an item — a run-state resource (source built, no sink yet).
+# Drawn on the run RNG (seeded, resume-stable). Placeholder band — the owner tunes it.
+const GOLD_SKIP_MIN: int = 40
+const GOLD_SKIP_MAX: int = 60
 # Placeholder event outcomes (#1) — the owner tunes/authors real event content.
 const EVENT_SHRINE_HEAL_FRACTION: float = 0.4
 const EVENT_SHRINE_MAX_HP: float = 15.0

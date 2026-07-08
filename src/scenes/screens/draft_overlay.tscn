@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/draft_overlay.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
 
 [node name="DraftOverlay" type="Control"]
 layout_mode = 3
@@ -46,8 +47,30 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 140.0
-offset_bottom = -40.0
+offset_bottom = -120.0
 grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 theme_override_constants/separation = 40
+
+[node name="SkipButton" type="Button" parent="Panel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -96.0
+offset_right = 180.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Skip for gold"
+
+[node name="Juice" type="Node" parent="Panel/SkipButton"]
+script = ExtResource("2")
+
+[connection signal="pressed" from="Panel/SkipButton" to="." method="_on_skip_pressed"]

@@ -15,7 +15,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `UI`](a
 Items are the game; the UI is how the player parses a 30-item cascade and makes the draft decision off it (design). Two jobs:
 
 - **Screen composition** — lay out the corridor/combat scene, the item boards (player + enemy), potions, the portrait + HP, and the out-of-combat screens (choice layer, draft, the 1D progress map).
-- **Input (intents)** — capture player commands and emit **intents**; logic interprets them. The UI **never mutates game state directly** (architecture). The intents: timescale (hover slow-mo), **battle-speed** (×1/×2/×3 dial — a `Game` session preference applied to the fight's `Timekeeper` base scale), throw-potion, draft-pick, choice-point pick, event-option pick, and **pause** (a run-screen gate, not a `Game` phase).
+- **Input (intents)** — capture player commands and emit **intents**; logic interprets them. The UI **never mutates game state directly** (architecture). The intents: timescale (hover slow-mo), **battle-speed** (×1/×2/×3 dial — a `Game` session preference applied to the fight's `Timekeeper` base scale), throw-potion, draft-pick, **draft-skip** (bank gold, decision #33), choice-point pick, event-option pick, and **pause** (a run-screen gate, not a `Game` phase).
 
 What it **is not**: not game logic (it emits intents — the `Combat manager` / `Run manager` / `Encounter` interpret them); not the combat wall (`VFX driver`); not the corridor renderer (`docs/systems/corridors/`) — it composes *with* it.
 
@@ -63,7 +63,7 @@ Hover anything important (own items, enemy items, potions, enemies) → time slo
 ## The out-of-combat screens
 
 - **Choice layer** — the 2–3 location options at a choice point (two-tier: pick a location, then the within-choice); telegraphs the *category* (first-run legible — design). The pick is a **choice-point intent** → `Run manager`.
-- **Draft** — the 1-of-3 reward; tooltips on hover; the pick is a **draft-pick intent**. (Enchant-target / potion-drop sub-choices — Draft PRD.)
+- **Draft** — the 1-of-3 reward; tooltips on hover; the pick is a **draft-pick intent**, and a **Skip button** is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A minimal **gold HUD counter** displays the banked total (placeholder placement; no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
 - **1D progress map** — the act's beats + the player's position (boss at the end, relic at midpoint); forward visibility on a linear track, not a route map (design).
 
 ## Localization

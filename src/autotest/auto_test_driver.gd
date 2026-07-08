@@ -31,7 +31,7 @@ func _init(strategy_name: String = 'first-viable', seed_value: int = 0) -> void:
 
 
 ## 1-of-N reward draft. Scores each candidate by the strategy + the current board and
-## returns the best index. No skip exists, so a pick always resolves (docs/systems/draft.md).
+## returns the best index (the pick path; skipping is a separate decision — should_skip_draft).
 func choose_draft(candidates: Array, board: Array = []) -> int:
   if candidates.is_empty():
     return -1
@@ -47,6 +47,13 @@ func choose_draft(candidates: Array, board: Array = []) -> int:
       # candidate whose primary effect family matches; fall back to index 0 on a tie.
       var family: String = _strategy_family(strategy)
       return _best_by(candidates, func(d): return 1.0 if _family_of(d) == family else 0.0)
+
+
+## Whether to SKIP this draft and bank gold instead of taking a card (docs decision #33).
+## Defaults to NEVER skip so every existing headless run draws the run RNG identically →
+## byte-identical baselines. Skip is opt-in — a skipping strategy/test overrides this.
+func should_skip_draft(_candidates: Array, _board: Array = []) -> bool:
+  return false
 
 
 ## Argmax over candidates by `score` (a Callable def -> float); ties keep the lowest

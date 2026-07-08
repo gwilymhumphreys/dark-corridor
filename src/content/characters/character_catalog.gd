@@ -113,7 +113,8 @@ static func _duelist() -> CharacterDef:
 ## Reclaim payoff, a bleed applier, and the bone block spread); numbers + names are PLACEHOLDERS to
 ## tune / rename (a Vermis display-name later). Still the owner's to fill: the signature relic, the
 ## real select-screen blurb, more pool depth, and flipping it into ids() once it's non-degenerate to
-## draft. Starts with the mid Cleaver (cf. the Druid starting with Druid Staff).
+## draft. Starts with a 3-item kit that seeds the loop + a survival floor: Cleaver (producer),
+## Femur (block), Carving Knife (fast producer) — the other characters' 3-item start floor.
 static func _fleshmancer() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = FLESHMANCER
@@ -131,7 +132,7 @@ static func _fleshmancer() -> CharacterDef:
     ItemCatalog.FLESH_FEMUR,
     ItemCatalog.FLESH_SKULL,
   ]
-  d.starting_item_ids = [ItemCatalog.FLESH_CLEAVER]
+  d.starting_item_ids = [ItemCatalog.FLESH_CLEAVER, ItemCatalog.FLESH_FEMUR, ItemCatalog.FLESH_CARVING_KNIFE]
   d.starting_relic_id = ''                          # no signature relic yet (the owner's to design)
   d.starting_potion_ids = []
   d.starting_enchants = []

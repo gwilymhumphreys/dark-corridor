@@ -504,6 +504,14 @@ msgid "Healing"
 msgstr "Healing"
 
 #: src/scenes/screens/combat_summary.tscn
+msgid "Status damage"
+msgstr "Status damage"
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Status"
+msgstr "Status"
+
+#: src/scenes/screens/combat_summary.tscn
 msgid "Event log"
 msgstr "Event log"
 
@@ -530,6 +538,10 @@ msgstr "Common"
 #: src/scenes/screens/draft_overlay.tscn
 msgid "Choose a reward"
 msgstr "Choose a reward"
+
+#: src/scenes/screens/draft_overlay.tscn
+msgid "Skip for gold"
+msgstr "Skip for gold"
 
 #: src/scenes/screens/map_strip.gd
 msgid "Act {0}"
@@ -567,6 +579,14 @@ msgstr "Settings"
 msgid "Quit to Menu"
 msgstr "Quit to Menu"
 
+#: src/scenes/screens/run_screen.gd
+msgid "Gold: {0}"
+msgstr "Gold: {0}"
+
+#: src/scenes/screens/run_screen.tscn
+msgid "Gold: 0"
+msgstr "Gold: 0"
+
 #: src/scenes/screens/settings_screen.tscn
 msgid "Master volume"
 msgstr "Master volume"
@@ -578,6 +598,26 @@ msgstr "Music volume"
 #: src/scenes/screens/settings_screen.tscn
 msgid "Effects volume"
 msgstr "Effects volume"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Font"
+msgstr "Font"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Smooth"
+msgstr "Smooth"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Pixel"
+msgstr "Pixel"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Fullscreen"
+msgstr "Fullscreen"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Mute when unfocused"
+msgstr "Mute when unfocused"
 
 #: src/scenes/screens/speed_button.tscn
 msgid "1x"

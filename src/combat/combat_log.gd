@@ -19,9 +19,10 @@ extends RefCounted
 
 enum Side { PLAYER, ENEMY }
 
-# The fallback bucket for a source-less DoT (a tick whose status carries no applier
-# item — e.g. an enemy-supplied or item-less poison). Replaces AutoTestLogger's old
-# DOT_FAMILY constant; per-applier attribution credits the item directly when known.
+# The fallback bucket for a source-less DIRECT hit — a damage Delivery with no source
+# item (a thrown consumable's hit, whose actor identity rides source_actor). Status (DoT)
+# damage is NOT bucketed here: it keys by the status's OWN name_key via on_status_damage,
+# so it never needs a source-item fallback.
 const SOURCELESS: String = 'Poison'
 
 # The ordered event timeline (append order = sim order) — the post-fight event log.
@@ -39,6 +40,14 @@ var gross_by_item: Dictionary = {}      # name_key -> total GROSS damage dealt (
 var healing_by_item: Dictionary = {}    # name_key -> total healing done
 var block_by_item: Dictionary = {}      # name_key -> total block (shield) applied
 var statuses_by_item: Dictionary = {}   # name_key -> count of OTHER statuses applied
+
+# Per-STATUS damage, side-aware (side -> status name_key -> total NET damage that status dealt).
+# DoT / cash-out (Bleed) damage is bucketed by the STATUS, NOT credited to the applier item:
+# appliers of the same status MERGE into one instance (the first applier is kept as `source`), so
+# per-item DoT attribution was a fiction the moment a second item fed the pool. The honest split is
+# "the item applied the status N times" (statuses_by_item) + "the status dealt N damage overall"
+# (here). Folds into the side totals too — only the per-item breakdown is replaced.
+var damage_by_status: Dictionary = {}
 
 # Totals, split by side (Dictionary[int side -> float]). `_dealt` is damage this side
 # DEALT to opponents; `_taken` is damage this side RECEIVED.
@@ -76,6 +85,25 @@ func on_damage(source_name: String, source_side: int, target_name: String, targe
     total_damage_dealt[source_side] = float(total_damage_dealt.get(source_side, 0.0)) + net
     total_damage_taken[target_side] = float(total_damage_taken.get(target_side, 0.0)) + net
   _record(t, 'damage', source_name, source_side, target_name, net, '')
+
+
+## Damage dealt by a STATUS (a DoT tick or a cash-out like Bleed), bucketed by the status's own
+## `status_name` — NOT credited to the applier item (see `damage_by_status`). `source_side` is the
+## dealer's side (the status source's side), `target_side` the holder's; `net` is the effective HP
+## lost; `status_id` rides the event `data`. Still folds into the side TOTALS (so total damage +
+## incoming pressure stay complete) and the timeline — only the per-item breakdown becomes
+## per-status. `raw` defaults to net (a tick has no pre-block value to hand).
+func on_status_damage(status_name: String, source_side: int, target_name: String, target_side: int, net: float, t: float, status_id: String, raw: float = -1.0) -> void:
+  if raw < 0.0:
+    raw = net
+  if raw <= 0.0:
+    return
+  total_gross[source_side] = float(total_gross.get(source_side, 0.0)) + raw
+  if net > 0.0:
+    _bump(damage_by_status, source_side, status_name, net)
+    total_damage_dealt[source_side] = float(total_damage_dealt.get(source_side, 0.0)) + net
+    total_damage_taken[target_side] = float(total_damage_taken.get(target_side, 0.0)) + net
+  _record(t, 'damage', status_name, source_side, target_name, net, status_id)
 
 
 ## Healing done. `amount` is the EFFECTIVE HP restored (Actor.heal's return).
@@ -128,6 +156,18 @@ func summary(side: int) -> Array:
       'block': _value(block_by_item, side, name),
       'healing': _value(healing_by_item, side, name),
       'statuses': int(_value(statuses_by_item, side, name)),
+    })
+  return rows
+
+
+## One side's per-status damage rows: [{ name, damage }] — the "status damage" report section,
+## the DoT / cash-out output the per-item table no longer carries. Views tr(name) at draw.
+func status_damage(side: int) -> Array:
+  var rows: Array = []
+  for name in damage_by_status.get(side, {}).keys():
+    rows.append({
+      'name': name,
+      'damage': _value(damage_by_status, side, name),
     })
   return rows
 

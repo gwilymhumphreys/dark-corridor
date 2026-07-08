@@ -200,9 +200,16 @@ func run_full() -> Dictionary:
       break
     if run.has_pending_draft():
       var offer: Array = run.pending_draft()
-      var pick: int = driver.choose_draft(offer, run.player.board)
-      logger.log_event('draft', { 'beat': run.position, 'picked': offer[pick].name_key, 'strategy': strategy })
-      run.apply_draft_pick(pick)
+      # Skip is checked first (docs decision #33): the Driver defaults to never-skip, so this
+      # branch is inert for existing runs → the run RNG advances identically (byte-identical
+      # baselines). A skipping strategy banks gold instead of taking a card.
+      if driver.should_skip_draft(offer, run.player.board):
+        logger.log_event('draft', { 'beat': run.position, 'action': 'skip', 'strategy': strategy })
+        run.apply_draft_skip()
+      else:
+        var pick: int = driver.choose_draft(offer, run.player.board)
+        logger.log_event('draft', { 'beat': run.position, 'picked': offer[pick].name_key, 'strategy': strategy })
+        run.apply_draft_pick(pick)
     beats_cleared += 1
     run.advance()
 

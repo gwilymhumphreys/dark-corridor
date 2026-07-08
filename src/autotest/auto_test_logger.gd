@@ -9,13 +9,20 @@ extends RefCounted
 ## block / healing numbers come from the CombatManager's CombatLog — the manager
 ## logs each at its mutation site — not from per-step HP-diff reconstruction. The old
 ## `attribute_damage` / `_split_remainder` HP-diff helper (and its proportional
-## multi-DoT weight-split) is GONE: direct emission credits each DoT tick to its own
-## applier EXACTLY, so the per-applier split is no longer an estimate. The logger
-## ingests one fight's player-side tallies via `ingest_combat_log`.
+## multi-DoT weight-split) is GONE. DIRECT-hit damage is credited per item; STATUS (DoT
+## / cash-out) damage is bucketed by the STATUS, not the applier (merged appliers make
+## per-item DoT attribution a fiction) — so `damage_by_family` is direct-hit-only and
+## `damage_by_status` carries the DoT output. The logger ingests one fight's tallies
+## via `ingest_combat_log`.
 
 var events: Array = []                 # Array[Dictionary] — { type, data }
-var damage_by_family: Dictionary = {}  # item name_key -> total damage dealt (player side; each
-                                       # DoT applier is its own channel — no generic lump)
+var damage_by_family: Dictionary = {}  # item name_key -> total DIRECT damage dealt (player side;
+                                       # status/DoT damage is bucketed in damage_by_status, not here)
+# Status (DoT / cash-out) damage, bucketed by the STATUS — not the applier item (merged appliers
+# make per-item DoT attribution a fiction). Player side = the status output the build produced;
+# enemy side = incoming status pressure (Bleed / enemy poison), kept attributable per status.
+var damage_by_status: Dictionary = {}  # status name_key -> total damage the PLAYER's statuses dealt
+var incoming_by_status: Dictionary = {} # status name_key -> total damage the ENEMY's statuses dealt
 var total_damage: float = 0.0
 # Phase 5 (tune machinery): per-encounter breakdown + per-item fire counts.
 var encounters: Array = []             # Array[Dictionary] — one per resolved beat
@@ -38,9 +45,10 @@ func log_event(type: String, data: Dictionary = {}) -> void:
 
 ## Fold one fight's PLAYER-SIDE CombatLog tallies into the running totals — the single
 ## source of truth (Design B). Called at each fight's end with the CombatManager's log.
-## Player side only: the contribution table + the run total are player-only (a colorless
-## item on both sides is kept separate by the log's side-keying). `damage_by_family` is
-## now per ITEM (each DoT applier its own channel — direct emission, no weight-split).
+## Player side only for the contribution table + run total (a colorless item on both sides is kept
+## separate by the log's side-keying). `damage_by_family` is per ITEM, DIRECT hits only; status
+## (DoT / cash-out) damage is bucketed by the STATUS in `damage_by_status` (the applier merge makes
+## per-item DoT attribution a fiction).
 func ingest_combat_log(log: CombatLog) -> void:
   if log == null:
     return
@@ -55,6 +63,13 @@ func ingest_combat_log(log: CombatLog) -> void:
       block_by_item[name] = float(block_by_item.get(name, 0.0)) + float(row['block'])
     if float(row['healing']) > 0.0:
       healing_by_item[name] = float(healing_by_item.get(name, 0.0)) + float(row['healing'])
+  # Status (DoT / cash-out) damage, bucketed by status — the player's output + the enemy's incoming.
+  for row in log.status_damage(side):
+    if float(row['damage']) > 0.0:
+      damage_by_status[row['name']] = float(damage_by_status.get(row['name'], 0.0)) + float(row['damage'])
+  for row in log.status_damage(CombatLog.Side.ENEMY):
+    if float(row['damage']) > 0.0:
+      incoming_by_status[row['name']] = float(incoming_by_status.get(row['name'], 0.0)) + float(row['damage'])
   total_damage += float(log.total_damage_dealt.get(side, 0.0))
   # Incoming pressure = the enemy side's GROSS output (it lands on the player side). Gross, not
   # net, so a hit the player fully blocked still registers as threat.
@@ -90,8 +105,10 @@ func summarize(result: Dictionary) -> Dictionary:
     'board_size': result.get('board_size', 0),         # run mode only
     'total_damage': total_damage,
     'damage_by_family': damage_by_family.duplicate(),
+    'damage_by_status': damage_by_status.duplicate(),
     'total_incoming': total_incoming,
     'incoming_by_enemy': incoming_by_enemy.duplicate(),
+    'incoming_by_status': incoming_by_status.duplicate(),
     'encounters': encounters.duplicate(true),           # run mode only
     'fires_by_item': fires_by_item.duplicate(),
     'block_by_item': block_by_item.duplicate(),
@@ -120,9 +137,13 @@ func format_summary(summary: Dictionary) -> PackedStringArray:
   lines.append('Total damage dealt: %.1f' % summary['total_damage'])
   for family in _sorted_families(summary['damage_by_family']):
     lines.append('  %s: %.1f' % [family, summary['damage_by_family'][family]])
+  for status in _sorted_families(summary['damage_by_status']):
+    lines.append('  [status] %s: %.1f' % [status, summary['damage_by_status'][status]])
   lines.append('Incoming (gross, pre-block): %.1f' % summary['total_incoming'])
   for src in _sorted_families(summary['incoming_by_enemy']):
     lines.append('  %s: %.1f' % [src, summary['incoming_by_enemy'][src]])
+  for status in _sorted_families(summary['incoming_by_status']):
+    lines.append('  [status] %s: %.1f' % [status, summary['incoming_by_status'][status]])
   return lines
 
 
@@ -171,6 +192,18 @@ func write_report(path: String, summary: Dictionary) -> void:
   lines.append('')
   lines.append('Total damage dealt: **%.1f**' % summary['total_damage'])
 
+  # Damage by status — DoT / cash-out (Bleed) output bucketed by the STATUS, not the applier item
+  # (merged appliers make per-item DoT attribution a fiction). The item's contribution is its
+  # application COUNT in the contribution table below; this is what those applications produced.
+  lines.append('')
+  lines.append('## Damage by status')
+  lines.append('')
+  if summary['damage_by_status'].is_empty():
+    lines.append('- (none)')
+  else:
+    for status in _sorted_families(summary['damage_by_status']):
+      lines.append('- %s: %.1f' % [status, summary['damage_by_status'][status]])
+
   # Incoming pressure (the difficulty lens) — GROSS enemy output, total + per enemy item. Gross
   # (pre-block) so a block-heavy build doesn't hide enemy threat; net HP loss is the per-encounter
   # attrition below. This is what a tune pass reads to judge whether an enemy hits too hard.
@@ -182,6 +215,11 @@ func write_report(path: String, summary: Dictionary) -> void:
   else:
     for src in _sorted_families(summary['incoming_by_enemy']):
       lines.append('- %s: %.1f' % [src, summary['incoming_by_enemy'][src]])
+  # Enemy status pressure (Bleed / enemy poison) — bucketed by status, the incoming twin of the
+  # player's "Damage by status". Folded into total incoming already; broken out so it's attributable.
+  if not summary['incoming_by_status'].is_empty():
+    for status in _sorted_families(summary['incoming_by_status']):
+      lines.append('- [status] %s: %.1f' % [status, summary['incoming_by_status'][status]])
   lines.append('')
   lines.append('Total incoming (gross, pre-block): **%.1f**' % summary['total_incoming'])
 

@@ -53,14 +53,16 @@ func test_run_once_is_deterministic() -> void:
 
 
 func test_run_once_attributes_damage_per_player_item() -> void:
-  # Sourced from the CombatLog (Design B): damage_by_family is now per ITEM and
-  # PLAYER-SIDE only (the contribution table is player-only), each DoT applier its own
-  # channel. So the enemy Claw is NOT here, and there is no generic Poison lump.
+  # Sourced from the CombatLog (Design B): damage_by_family is per ITEM, DIRECT hits only, and
+  # PLAYER-SIDE only. Status (DoT) damage is NOT here — it is bucketed by status in
+  # damage_by_status. So the weapon's hits show per item, the poison shows under its status, and
+  # the enemy Claw (enemy side) is excluded.
   var r := _mode().run_once()
   var fam: Dictionary = r['summary']['damage_by_family']
-  assert_true(fam.has('Rusted Blade'), 'weapon damage credited to the player item')
-  assert_true(fam.has('Venom Fang'), 'poison DoT credited to its applier item, not a generic channel')
-  assert_false(fam.has('Poison'), 'no generic Poison lump once the applier is known')
+  var by_status: Dictionary = r['summary']['damage_by_status']
+  assert_true(fam.has('Rusted Blade'), 'direct weapon damage credited to the player item')
+  assert_false(fam.has('Venom Fang'), 'a pure applier deals no DIRECT damage — not in the per-item table')
+  assert_true(by_status.has('Poison'), 'poison DoT bucketed under its status')
   assert_false(fam.has('Claw'), 'the enemy claw is enemy-side — excluded from the player-only tally')
   assert_gt(r['summary']['total_damage'], 0.0, 'some player damage was dealt')
 

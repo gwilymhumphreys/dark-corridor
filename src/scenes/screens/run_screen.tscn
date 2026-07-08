@@ -41,3 +41,15 @@ offset_left = 24.0
 offset_top = 24.0
 offset_right = 280.0
 offset_bottom = 120.0
+
+[node name="GoldReadout" type="Label" parent="HUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -68.0
+offset_right = 320.0
+offset_bottom = -20.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 36
+text = "Gold: 0"
+vertical_alignment = 1

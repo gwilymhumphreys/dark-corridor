@@ -26,3 +26,5 @@ Don't fit a clean role breakdown; come after the commons exist and the archetype
 ## Archetypes — tagged, not quota'd
 
 Build cards, let the counts emerge, then watch: is each thread deep enough to carry a run on its own, and does the cross-cutting commons layer keep any single thread from becoming the only concern?
+
+**Aim for ~3 overlapping archetypes per character (goal, held loosely — owner, 2026-07-04).** This is *not* the quota the caution above warns against: the point is the **overlap** — ~3 synergy threads that *interweave*, where one card can serve two — so it's a breadth signal, not forced authoring for a thread that has no good ideas yet. (Armourer: spend-armour + two simple threads, tbd. Spore Druid runs two crossing pillars instead — "~3" is a target, not a floor.)

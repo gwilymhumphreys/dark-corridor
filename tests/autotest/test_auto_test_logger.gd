@@ -32,16 +32,28 @@ func test_ingest_folds_player_side_fires_and_damage() -> void:
   assert_almost_eq(log.total_damage, 12.0, 0.0001, 'player-side dealt total folded in')
 
 
-func test_ingest_credits_dot_to_its_applier_not_a_lump() -> void:
-  # Direct emission credits each DoT tick to its own applier — no generic Poison lump.
+func test_ingest_buckets_dot_by_status_not_the_applier() -> void:
+  # Status (DoT) damage is bucketed by the STATUS in damage_by_status — never credited to an
+  # applier item in damage_by_family (merged appliers make per-item DoT attribution a fiction).
   var clog := CombatLog.new()
-  clog.on_damage('Venom Fang', PLAYER, 'Grunt', ENEMY, 3.0, 0.5)
-  clog.on_damage('Venom Fang', PLAYER, 'Grunt', ENEMY, 3.0, 1.0)
+  clog.on_status_damage('Poison', PLAYER, 'Grunt', ENEMY, 3.0, 0.5, 'poison')
+  clog.on_status_damage('Poison', PLAYER, 'Grunt', ENEMY, 3.0, 1.0, 'poison')
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
-  assert_almost_eq(log.damage_by_family['Venom Fang'], 6.0, 0.0001, 'poison credited to its applier')
-  assert_false(log.damage_by_family.has(CombatLog.SOURCELESS),
-      'no generic lump when the applier is known')
+  assert_almost_eq(log.damage_by_status['Poison'], 6.0, 0.0001, 'DoT damage bucketed by status')
+  assert_true(log.damage_by_family.is_empty(), 'not credited to any applier item')
+  assert_almost_eq(log.total_damage, 6.0, 0.0001, 'still folds into the player dealt total')
+
+
+func test_ingest_records_enemy_status_pressure_by_status() -> void:
+  # Enemy DoT (Bleed / poison) is incoming pressure, bucketed by status in incoming_by_status —
+  # not per enemy item. It still folds into total incoming via the gross total.
+  var clog := CombatLog.new()
+  clog.on_status_damage('Bleed', ENEMY, 'Player', PLAYER, 4.0, 0.3, 'bleed')
+  var log := AutoTestLogger.new()
+  log.ingest_combat_log(clog)
+  assert_almost_eq(log.incoming_by_status['Bleed'], 4.0, 0.0001, 'enemy status damage bucketed by status')
+  assert_almost_eq(log.total_incoming, 4.0, 0.0001, 'and folds into total incoming (gross)')
 
 
 func test_ingest_folds_block_and_healing() -> void:

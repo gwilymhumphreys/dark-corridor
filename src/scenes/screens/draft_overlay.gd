@@ -2,10 +2,12 @@ class_name DraftOverlay
 extends Control
 ## The draft overlay (docs/systems/ui_layout.md / docs/systems/draft.md): the 1-of-3 reward offer shown after a
 ## fight, as DraftCards on an opaque panel. The pick emits `picked(index)` — a draft-pick
-## intent the run screen forwards to RunManager.apply_draft_pick. No skip (a pick always
-## resolves). Reads the candidate defs; writes nothing.
+## intent the run screen forwards to RunManager.apply_draft_pick. The Skip button emits
+## `skipped` instead (bank gold; docs decision #33) → RunManager.apply_draft_skip. Reads the
+## candidate defs; writes nothing.
 
 signal picked(index: int)
+signal skipped()
 
 const DRAFT_CARD: PackedScene = preload('res://src/scenes/screens/draft_card.tscn')
 
@@ -22,3 +24,7 @@ func setup(candidates: Array) -> void:
 
 func _on_card_pressed(index: int) -> void:
   picked.emit(index)
+
+
+func _on_skip_pressed() -> void:
+  skipped.emit()

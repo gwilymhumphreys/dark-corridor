@@ -110,8 +110,9 @@ func _scan_gd(path: String) -> void:
 func _scan_tscn(path: String) -> void:
   var text: String = FileAccess.get_file_as_string(path)
   var label: String = path.replace('res://', '')
-  # Control text + tooltip serialize as `... = "..."`.
-  _match_all(text, "(?m)^(?:text|tooltip_text) = \"([^\"]*)\"", label)
+  # Control text + tooltip serialize as `... = "..."`; OptionButton/menu items serialize as
+  # `popup/item_<n>/text = "..."` (static dropdown items, auto-translated at runtime).
+  _match_all(text, "(?m)^(?:text|tooltip_text|popup/item_\\d+/text) = \"([^\"]*)\"", label)
 
 
 ## Collect a def field whose value may be a multi-segment single-quoted concatenation

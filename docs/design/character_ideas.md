@@ -22,6 +22,11 @@
 > The three also ladder in complexity — druid (bespoke status engine, most to learn) ·
 > elementalist (the on-ramp) · mech (legible fiction, but the heat economy is a new concept) —
 > a portfolio, not three competitors for one slot.
+>
+> **Update (owner, 2026-07-04): the Armourer (promoted — [`armourer.md`](armourer.md)) takes the
+> low-load on-ramp slot; the Elementalist leans *into* summon-interaction complexity.** So the
+> "elementalist = the on-ramp" read above is superseded — the on-ramp is a *legibility-load* role,
+> now the Armourer's. See [Complexity vs. distinctness](#cross-cutting--resource-economies).
 
 ---
 
@@ -33,8 +38,26 @@ status-identity engine (spores), not warrior/mage/rogue.
 
 ---
 
+## Armourer — **promoted (2026-07-04)**
+
+Has its own working file: [`armourer.md`](armourer.md). The roster's **on-ramp / starter** — the
+low-load anchor (successor to the `wanderer` placeholder). Block **stack/spend** ("armour is ammo"),
+one clean engine + two simple threads (weapon synergy / strength, tbd). Deliberately the *legible*
+character: obvious-home block taken on purpose (the Ironclad slot), highest theme→mechanic affordance
+on the roster. Its mechanical ancestor is *Spiked Shield / Retributive Block* below — the Armourer is
+the **simple** use of block, that entry the spicy retributive one (only one block character likely
+ships).
+
+---
+
 ## Wizard / Elementalist — *parked (resource-economy character; direction chosen 2026-06-12)*
 
+- **Update (owner, 2026-07-04): no longer the on-ramp — leans *into* complexity.** The Armourer
+  (promoted — [`armourer.md`](armourer.md)) takes the low-load anchor slot; the Elementalist has
+  "more room" to get complex via **summon interactions** (the mana × summons coupling, its open
+  purchase/durable/few/invested corner). The "deliberately-legible on-ramp" framing throughout this
+  entry is downgraded accordingly — legible *fiction* still, but no longer the roster's *simplest*
+  character.
 - **Concept:** a wizard of some sort with a **mana** mechanic. Owner's reframing: card games
   spend cards/energy as resources; we don't have those — we inherit **time** (cooldowns) as our
   one natural resource. So a mana layer isn't a duplicate clock, it's a *second, added* resource
@@ -189,6 +212,11 @@ status-identity engine (spores), not warrior/mage/rogue.
 
 ## Spiked Shield / Retributive Block — *parked (new 2026-06-16; engine found, fiction open)*
 
+- **Update (owner, 2026-07-04): the block-character slot is now the Armourer** (promoted —
+  [`armourer.md`](armourer.md)), which takes the **simple** stack/spend use of block as the roster's
+  on-ramp. This entry is the **spicier** use — thorns / charge off *absorbed-damage flow* (needs the
+  unbuilt on-absorb seam noted below). Only one block character likely ships; kept here as salvageable
+  (a relic / item / later variant), not pursued as its own character for now.
 - **Concept (owner, 2026-06-16):** an armoured figure with a big spiked shield — **block-themed**,
   damage reflection (thorns), shield bash.
 - **Identity (the engine): turns the enemy's aggression into its own fuel.** Block stops being
@@ -389,7 +417,7 @@ board through an economy (one item's output is another's fuel) in a way flow can
 | Mana | savings | player pool | combat | generators | new pool |
 | Heat | pressure (ceiling) | player pool | combat | venters | light–med (**check**) |
 | Ammo | depletion (floor) | per-item | combat | reloaders | med (HEX_BOLT path + gate) |
-| Gold | savings → spend | run-state | **run / meta** | shop sink + generators | **heavy** (subsystem) |
+| Gold | savings → spend | run-state | **run / meta** | shop sink + generators | **heavy** (subsystem); **source built (draft skip, #33); sink TBD** |
 | HP | depletion (**death**) | the Actor | **both** | lifegain | **~free** (exists) |
 | Allies | build + attrition | roster *(object)* | combat / run if persistent | healers, death-payoffs | summon mechanism **built**; costs board space |
 | Items / potions | build → consume | board *(object)* | combat | the item-makers | mid-fight board mutation (**check**) + loop guard |
@@ -435,7 +463,9 @@ corner is purchase/durable/few/invested.
   run-state — a *game-structure* decision above the character layer (mind the Battledraft scope
   trap, [`per_character_pools.md`](per_character_pools.md)). But **if** that economy exists for
   everyone, a "greed" character is cheap: a pool of gold-**generators** (trade power → cached
-  gold) + gold-**spenders** (gold as in-fight ammo — spicy, can death-spiral).
+  gold) + gold-**spenders** (gold as in-fight ammo — spicy, can death-spiral). *(Started 2026-07-08,
+  decision #33: **gold now exists in run-state** and has a first **source** — skipping a draft banks
+  it. Still **no sink** — the shop/economy half is unbuilt, so this is plumbing, not the economy.)*
 - **HP is gold's inverse — nearly free, highest-stakes.** Reuses the Actor's life total +
   heal/regen/max-HP, no new pool; double-booked as both the resource *and* the lose-condition —
   which is the tension. It's the druid's masochist Self sub-line ([`spore_druid.md`](spore_druid.md))
@@ -470,6 +500,23 @@ A resource isn't one move — it's a **space**. A character's pool fills with ma
 resource different ways: spend it (several ways), generate it, convert it, or just **manage** it
 (heat). The design work is populating that space across a pool, not pinning the character to a
 single signature action.
+
+**Complexity vs. distinctness — two separate budgets (owner, 2026-07-04).** How much a character
+makes you *learn* (new-concept / legibility load) is independent of how *weird* it looks and reads
+(fictional distinctness). A character can be mechanically light but tonally strange (the **Armourer**:
+one clean stack/spend engine, a fused-plates fiction), or mechanically deep but legible (the
+**Elementalist**). The **on-ramp** is a *load* choice, not a *weirdness* choice — so "have a simple
+starter" does **not** mean "have a generic one." Pick the anchor by load; keep its fiction distinct.
+
+**The affordance screen — theme → mechanic (owner, 2026-07-04).** Companion to the `resource + theme`
+screen. The test: *could a player guess what a new item does from its name + art alone?* If yes, the
+affordance holds. This is what **licenses** weirdness: recombination already requires *both halves
+stay recognisable* — that recognisability **is** the affordance, and it's what keeps a strange
+character learnable. The danger zone isn't weirdness; it's weird fiction bolted to a mechanic the
+theme doesn't telegraph. Naming-layer note: an oblique **Vermis** display-name (which by design does
+*not* telegraph the mechanic) doesn't break this — the affordance lives in the **art + item design +
+keywords**, not the proper noun — but going oblique **shifts the teaching load** onto art + starting
+kit, so those must carry the read harder.
 
 ---
 

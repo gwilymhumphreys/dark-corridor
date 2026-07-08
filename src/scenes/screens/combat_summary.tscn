@@ -99,6 +99,31 @@ size_flags_horizontal = 3
 text = "Healing"
 horizontal_alignment = 2
 
+[node name="StatusDamage" type="VBoxContainer" parent="Panel/Margin/Body/Columns/Report"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StatusTitle" type="Label" parent="Panel/Margin/Body/Columns/Report/StatusDamage"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Status damage"
+
+[node name="StatusRows" type="GridContainer" parent="Panel/Margin/Body/Columns/Report/StatusDamage"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 36
+theme_override_constants/v_separation = 10
+
+[node name="HStatus" type="Label" parent="Panel/Margin/Body/Columns/Report/StatusDamage/StatusRows"]
+layout_mode = 2
+text = "Status"
+
+[node name="HSDamage" type="Label" parent="Panel/Margin/Body/Columns/Report/StatusDamage/StatusRows"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Damage"
+horizontal_alignment = 2
+
 [node name="Log" type="VBoxContainer" parent="Panel/Margin/Body/Columns"]
 layout_mode = 2
 size_flags_horizontal = 3

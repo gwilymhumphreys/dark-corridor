@@ -20,7 +20,9 @@
 > Latest 2026-06-21: the **combat item tooltip** (#31, 2026-06-19) and the **combat log** — a
 > combat-scoped observation sink that is the **single source of truth** for damage / heal / block
 > numbers (the autotest reads it instead of reconstructing from HP diffs), with a live HUD
-> *Dealt · Taken* readout + a post-fight summary screen.
+> *Dealt · Taken* readout + a post-fight summary screen. 2026-06-22: the **UI theme / pixel-scale /
+> font** model (#32) — `Consts.UI_SCALE`, the integer-at-rest rule, and a locale-gated vector↔pixel
+> font toggle wired in `Prefs` ([ui_theme.md](systems/ui_theme.md); pixel font asset + settings UI still pending).
 > **334 GUT tests green** on Godot 4.7; the run is watchable end-to-end and the autotest plays +
 > reports builds.
 >
@@ -226,9 +228,11 @@ test-first + its own green commit, with the headless autotest as the regression 
 3. **Settings / pause + battle-speed — DONE.** The ×1/×2/×3 **battle-speed dial** + in-run
    **pause** (2026-06-06), and now (2026-06-09) the **settings screen** itself — audio volume
    sliders (Master / Music / Effects) bound to a new **`Prefs`** autoload (a `ConfigFile` at
-   `user://`, separate from the run `Save`), opened from the title and the pause menu. Still
-   open *here*: video / accessibility settings as they're wanted. [game_manager](systems/game_manager.md) ·
-   [ui_layout](systems/ui_layout.md) · [run_screen](systems/run_screen.md).
+   `user://`, separate from the run `Save`), opened from the title and the pause menu. A
+   **UI font-style preference** (vector↔pixel, locale-gated) is also wired in `Prefs` but has **no
+   control yet** (reminder in `settings_screen.gd`). Still open *here*: the font dropdown + video /
+   accessibility settings as they're wanted. [game_manager](systems/game_manager.md) ·
+   [ui_layout](systems/ui_layout.md) · [run_screen](systems/run_screen.md) · [ui_theme](systems/ui_theme.md).
 4. **Combat view — DONE; relaid out to the corridor-forward mockup (2026-06-09).** The framed
    `CombatView` renders a per-actor widget: the **corridor large top-left** with **one occupant
    sprite per enemy** (side by side, shrunk by count) and an **`enemy_hud` pinned above each**
@@ -269,9 +273,11 @@ test-first + its own green commit, with the headless autotest as the regression 
 
 **Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
 **HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a
-bar). *(The **timescale replace-vs-multiply** open is now resolved → replace, with the
-battle-speed dial — item 3 above.)* Decision-AI: the Driver's **potion / choice / event**
-policies stay stubs until those beats exist.
+bar); the **UI pixel-scale rework** ([ui_theme.md](systems/ui_theme.md), #32) — author chrome on
+the `UI_SCALE` (×4) grid (e.g. the item cell at 128px with a 64px icon) + round computed rest
+offsets, and add the **pixel font asset** so the wired font toggle goes live. *(The **timescale
+replace-vs-multiply** open is now resolved → replace, with the battle-speed dial — item 3 above.)*
+Decision-AI: the Driver's **potion / choice / event** policies stay stubs until those beats exist.
 
 **Run / watch:** `<exe> --path . res://src/scenes/main.tscn` → Start Run; append
 `-- --autostart --shot [--shot-delay s]` to capture a frame. **Autotest:** `<exe>

@@ -1,7 +1,7 @@
 class_name RunManager
 extends Node
 ## The descent (docs/systems/run_manager.md) — one run, instanced/owned by the Game manager.
-## Owns the map, the player run-state { actor, relics, potions, position, rng },
+## Owns the map, the player run-state { actor, relics, potions, position, gold, rng },
 ## the HP-economy, the sequencing cycle, and the run snapshot. Signals
 ## `run_ended(outcome)` up to Game on a death / final win.
 ##
@@ -42,6 +42,9 @@ var allies: Array[Actor] = []        # run-scoped (persistent) player-side allie
 var relics: Array[Relic] = []
 var potions: Array[Consumable] = []
 var position: int = 0
+# Banked gold — a run-state resource (docs decision #33). The ONLY source today is skipping a
+# draft (apply_draft_skip); there is NO sink yet (shops are out of scope). Persists in the snapshot.
+var gold: int = 0
 var rng: RandomNumberGenerator
 var character: CharacterDef    # the chosen character (#27) — its item pool feeds the draft
 
@@ -79,6 +82,7 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   for enchant_spec in character.starting_enchants:
     apply_enchant(Enchantment.new(EnchantCatalog.get_def(enchant_spec['enchant_id'])), enchant_spec['item_index'])
   position = 0
+  gold = 0
   _ended = false
   _pending_offer = []
   _current_def_id = ''
@@ -237,12 +241,24 @@ func pending_draft() -> Array:
 
 
 ## Apply the player's draft pick (a draft-pick intent) — add the chosen item to the
-## board, clear the offer. No skip (docs/systems/draft.md): a pick always resolves.
+## board, clear the offer. Skipping instead banks gold — apply_draft_skip.
 func apply_draft_pick(index: int) -> void:
   if _pending_offer.is_empty():
     return
   var picked: ItemDef = _pending_offer[clampi(index, 0, _pending_offer.size() - 1)]
   player.board.append(Item.new(picked, player))
+  _pending_offer = []
+
+
+## Skip the pending draft (a draft-skip intent, the sibling of apply_draft_pick): bank a small
+## random amount of gold instead of taking an item, then clear the offer. The escape hatch from
+## an anti-synergy draft (docs decision #33 — reverses #17's no-skip). The gold is drawn on the
+## run RNG (seeded, resume-stable): a skip draws one, a pick draws none, so skipping is a
+## legitimate choice that diverges the run's future.
+func apply_draft_skip() -> void:
+  if _pending_offer.is_empty():
+    return
+  gold += rng.randi_range(Balance.GOLD_SKIP_MIN, Balance.GOLD_SKIP_MAX)
   _pending_offer = []
 
 
@@ -322,9 +338,9 @@ func advance() -> void:
   if _ended:
     return
   if not _pending_offer.is_empty():
-    # The no-skip invariant: a draft must be consumed before advancing. A caller that
-    # advances past one has a flow bug — drop the offer loudly rather than carry it
-    # unsaved into the next beat (the run RNG already advanced; resume would diverge).
+    # The consume-before-advance invariant: a draft must be resolved — by a pick OR a skip
+    # (docs decision #33) — before advancing. A caller that advances past one has a flow bug —
+    # drop the offer loudly rather than carry it unsaved into the next beat.
     push_error('RunManager.advance: advancing past an unconsumed draft offer — dropping it')
     _pending_offer = []
   _teardown_current()
@@ -451,6 +467,7 @@ func snapshot() -> Dictionary:
     'relics': relic_ids,
     'potions': potion_ids,
     'position': position,
+    'gold': gold,   # banked run-state (decision #33); optional on read (.get) — no migration
     # The current beat's resolution: the rolled/fixed encounter id (resume re-enters it, never
     # re-rolled) + the COMBAT/EVENT streak so the NEXT beat's roll reproduces on resume.
     'current_def_id': _current_def_id,
@@ -495,6 +512,7 @@ func rehydrate(snap: Dictionary) -> bool:
   for potion_id in snap['potions']:
     potions.append(Consumable.new(ConsumableCatalog.get_def(str(potion_id))))
   position = int(snap['position'])
+  gold = int(snap.get('gold', 0))   # absent in pre-gold snapshots → 0 (forward-compatible, no migration)
   rng = RandomNumberGenerator.new()
   rng.seed = int(snap['rng']['seed'])
   rng.state = int(snap['rng']['state'])

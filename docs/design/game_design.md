@@ -215,7 +215,7 @@ Stack independently. Two of the same item = effect fires twice. Reinforces the c
 ### Item count targets
 
 - Launch pool goal: ~100 items was the *single-shared-pool* figure; under **per-character item pools** (decision #27) the target is a small, coherent pool **per character** — smaller individually, with the total across the roster as the content multiplier to watch. Refine via prototype.
-- Run end-state: ~20-25 items in inventory by final boss. (Capped by draft count — with no skip, you take at most one item per draft, and not every encounter is a draft.)
+- Run end-state: ~20-25 items in inventory by final boss. (Capped by draft count — you take at most one item per draft, fewer if you skip some for gold (decision #33), and not every encounter is a draft.)
 ### Progression arc — damage, block, scaling
 
 Every build needs three things across a run: damage, block, and scaling. They aren't sequential phases — you want all three working most of the time. There's only a soft, natural tilt over the course of a run:
@@ -311,9 +311,10 @@ Tactical consumable reserve, consumed on use. Potions are the canonical consumab
 
 Reward draft is 1-of-3. Each slot is usually an item; each slot has a low chance (exact % TBD) of instead offering an enchant or a potion.
 
-- Player picks one of the three. No skip — there's no penalty for taking more items, so taking one is always correct. The decision is which of the three, judged on synergy.
+- Player picks one of the three, **or skips to bank gold** (decision #33). Originally no-skip (no penalty for taking more items, so taking one was always correct); but that *forced* an anti-synergy card on a focused build, so a **Skip** option now banks a small amount of **gold** instead — the escape hatch. The decision is which of the three (judged on synergy) vs. skip-for-gold.
 - A potion taken when potion slots are full means dropping one to make room.
 - An enchant taken is immediately applied to a chosen item (one enchant per item).
+- **Gold is a nascent run-state resource.** Skipping a draft is its first **source**; there is **no sink yet** (shops don't exist). It accumulates and displays for now — the economy (shops, spending) is deferred. See [`character_ideas.md`](character_ideas.md) (the Gold row) for the resource-economy framing.
 ### Items vs potions
 
 Risk: potions become "consumable items" in player perception and the distinction collapses. Frame around: items are your engine, potions are your reserve for moments the engine can't handle. Separation has to land in UI (distinct presentation, slow-mo activation), acquisition pacing (rarer than items), and tone (tools you reach for vs. machinery you've built).

@@ -37,7 +37,7 @@ GDScript — decision #23 — not data files):
 | Source | Holds |
 |--------|-------|
 | `.gd` — `tr('...')` / `tr("...")` literals | code-built UI, formatted strings, the map/rarity/outcome labels |
-| `.tscn` — `text` / `tooltip_text` | static scene UI (menus, titles, buttons) |
+| `.tscn` — `text` / `tooltip_text` / `popup/item_<n>/text` | static scene UI (menus, titles, buttons, OptionButton / menu items) |
 | `.gd` — `name_key = '...'` literals | item / enemy / status / encounter / relic / enchant / consumable names (shown via `tr(def.name_key)`) |
 
 Dev / throwaway hosts are excluded (see `EXCLUDE_FILES` in `tools/extract_pot.gd`):
@@ -61,3 +61,10 @@ dependency). Then translate the empty `msgstr` entries in non-English `.po`s, an
 ```bash
 godot --headless --path . --import --exit
 ```
+
+## Fonts per locale
+
+The vector font is the universal default and must cover every shipped locale (it
+relies on `allow_system_fallback` + optional bundled Noto fallbacks). The optional
+**pixel font is Latin-only** and is locale-gated, so non-Latin locales always render
+vector and never tofu. Full architecture: [ui_theme.md](ui_theme.md#localization-vector-is-the-safe-default-pixel-is-latin-only).

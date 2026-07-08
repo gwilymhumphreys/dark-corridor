@@ -29,9 +29,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -620.0
-offset_top = -340.0
+offset_top = -380.0
 offset_right = 620.0
-offset_bottom = 340.0
+offset_bottom = 380.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_type_variation = &"PanelFramed"
@@ -54,10 +54,10 @@ horizontal_alignment = 1
 layout_mode = 1
 anchors_preset = 0
 offset_left = 90.0
-offset_top = 160.0
+offset_top = 150.0
 offset_right = 1150.0
-offset_bottom = 460.0
-theme_override_constants/separation = 40
+offset_bottom = 620.0
+theme_override_constants/separation = 32
 
 [node name="MasterRow" type="HBoxContainer" parent="Panel/Rows"]
 layout_mode = 2
@@ -109,6 +109,71 @@ custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
+
+[node name="FontRow" type="HBoxContainer" parent="Panel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="Label" type="Label" parent="Panel/Rows/FontRow"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Font"
+vertical_alignment = 1
+
+[node name="Option" type="OptionButton" parent="Panel/Rows/FontRow"]
+custom_minimum_size = Vector2(360, 48)
+layout_mode = 2
+size_flags_vertical = 1
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+item_count = 2
+selected = 0
+popup/item_0/text = "Smooth"
+popup/item_0/id = 0
+popup/item_1/text = "Pixel"
+popup/item_1/id = 1
+
+[node name="Juice" type="Node" parent="Panel/Rows/FontRow/Option"]
+script = ExtResource("2")
+
+[node name="FullscreenRow" type="HBoxContainer" parent="Panel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="Label" type="Label" parent="Panel/Rows/FullscreenRow"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Fullscreen"
+vertical_alignment = 1
+
+[node name="Check" type="CheckButton" parent="Panel/Rows/FullscreenRow"]
+layout_mode = 2
+size_flags_vertical = 1
+focus_mode = 0
+
+[node name="Juice" type="Node" parent="Panel/Rows/FullscreenRow/Check"]
+script = ExtResource("2")
+
+[node name="MuteRow" type="HBoxContainer" parent="Panel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="Label" type="Label" parent="Panel/Rows/MuteRow"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Mute when unfocused"
+vertical_alignment = 1
+
+[node name="Check" type="CheckButton" parent="Panel/Rows/MuteRow"]
+layout_mode = 2
+size_flags_vertical = 1
+focus_mode = 0
+
+[node name="Juice" type="Node" parent="Panel/Rows/MuteRow/Check"]
+script = ExtResource("2")
 
 [node name="BackButton" type="Button" parent="Panel"]
 layout_mode = 1

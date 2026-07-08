@@ -49,6 +49,13 @@ func _name_of(side: int, log: CombatLog) -> Dictionary:
   return by
 
 
+func _status_of(side: int, log: CombatLog) -> Dictionary:
+  var by := {}
+  for r in log.status_damage(side):
+    by[r['name']] = r
+  return by
+
+
 # --- the six sites + throw, end-to-end --------------------------------------
 
 func test_a_full_fight_logs_fires_damage_block_and_dot() -> void:
@@ -73,8 +80,12 @@ func test_a_full_fight_logs_fires_damage_block_and_dot() -> void:
   # Shield (site 5) — Iron Guard's block, by BlockStatus.ID (not a literal).
   assert_gt(float(player_rows['Iron Guard']['block']), 0.0, 'block logged to the guard')
 
-  # DoT damage (site 3) — Venom Fang's poison ticks credited to it directly.
-  assert_gt(float(player_rows['Venom Fang']['damage']), 0.0, 'DoT damage credited to its applier')
+  # DoT damage (site 3) — poison ticks are bucketed by the STATUS, not credited to the applier
+  # (merged appliers make per-item DoT attribution a fiction). Venom Fang only APPLIES poison, so
+  # its per-item damage stays 0; the tick damage shows under the 'Poison' status bucket.
+  assert_eq(float(player_rows['Venom Fang']['damage']), 0.0, 'no per-item DoT credit to the applier')
+  assert_gt(float(_status_of(PLAYER, log).get('Poison', {}).get('damage', 0.0)), 0.0,
+      'poison tick damage is bucketed under the status')
 
   # Other status (site 6) — poison APPLIED is counted (separate from its tick damage).
   assert_gt(player_rows['Venom Fang']['statuses'], 0, 'the poison application is counted')

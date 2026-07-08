@@ -12,7 +12,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Draft`
 
 ## Purpose
 
-`Draft` answers one question: *given the pool and where the run is, what are the candidates to offer?* It is the **1-of-3 reward** mechanism (design): three slots, each usually an item, each with a low chance of an enchant or potion instead; the player picks one (no skip). It owns the **draw** — slot composition, depth-weighting, and the seeded pull from the pool — and nothing else.
+`Draft` answers one question: *given the pool and where the run is, what are the candidates to offer?* It is the **1-of-3 reward** mechanism (design): three slots, each usually an item, each with a low chance of an enchant or potion instead; the player takes one **or skips to bank gold** (decision #33). It owns the **draw** — slot composition, depth-weighting, and the seeded pull from the pool — and nothing else. (The skip decision + the gold live in the [Run manager](run_manager.md), not here — `Draft` only produces candidates.)
 
 What it **is not**:
 
@@ -33,9 +33,9 @@ The `Run manager` calls `Draft` with the pool, the run-state, and the run RNG; `
 
 The offer is `Draftable`-generic — it draws item / enchant / potion definitions the same way; the subtype only matters at *application* (below).
 
-## No skip, no hidden weighting (two design constraints)
+## Skip for gold, no hidden weighting (two design constraints)
 
-- **No skip.** The player must take one of the three — no cap and no penalty for taking more, so taking one is always correct; the decision is *which*, judged on synergy (design). The draft always resolves to a pick.
+- **Skip → bank gold (decision #33, reverses the original no-skip).** The player may take one of the three **or skip the offer to bank a small random amount of gold** instead. Originally the draft was no-skip (no cap → taking one is always correct); that *forced* an anti-synergy card on a focused build, so skip is the escape hatch and gold a small consolation (the first **source** of a future gold economy — no sink yet). **The skip is the Run manager's, not `Draft`'s:** `Draft` still just produces candidates; `RunManager.apply_draft_skip()` (a sibling of `apply_draft_pick()`) resolves the pending offer, banking `rng.randi_range(Balance.GOLD_SKIP_MIN, GOLD_SKIP_MAX)` on the **run RNG** (a pick draws no RNG; a skip draws one — deterministic + resume-stable, not save-scummable). The draft still always **resolves** — by a pick or a skip.
 - **No hidden weighting toward the build/archetype.** Weighting is **depth/rarity only** — never the player's current board or a character archetype. Hidden pool-reweighting toward "what you already have" is rejected (design: it collapses the synergy decision, hides mechanics, punishes experimentation). Guided drafting, if ever wanted, is a *visible* milestone choice — never an opaque reweight. *(Note: the **pool itself** being character-scoped — #27 — is the pool's **contents**, not weighting. Per-character pools are the chosen alternative to hidden archetype weighting — focus comes from which pool you draw, not from biasing the draw — so they're consistent with this constraint, not an exception to it.)*
 
 ## The pick & its application
@@ -54,7 +54,7 @@ The player picks one candidate (a `draft pick` intent — architecture); the **`
 ## Prototype scope
 
 - A `draw` that returns **3 item candidates** from a small pool, **seeded** by the run RNG (so an offer is fixed per run-state).
-- The **pick** routed through the `Run manager` → added to the board (no skip).
+- The **pick** routed through the `Run manager` → added to the board; **or a skip** → `RunManager.apply_draft_skip()` banks gold and clears the offer (decision #33).
 - Slot composition + depth-weighting stubbed minimally (mostly items; the enchant/potion roll + rarity odds are tuning).
 
 **Not** in scope: the enchant/potion slot chances, full rarity-by-depth weighting, the enchant-target / potion-drop sub-choices, relic offers.

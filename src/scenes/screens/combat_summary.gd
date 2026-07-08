@@ -8,6 +8,8 @@ extends Control
 signal continue_pressed
 
 @onready var _rows: GridContainer = $Panel/Margin/Body/Columns/Report/RowsScroll/Rows
+@onready var _status_section: VBoxContainer = $Panel/Margin/Body/Columns/Report/StatusDamage
+@onready var _status_rows: GridContainer = $Panel/Margin/Body/Columns/Report/StatusDamage/StatusRows
 @onready var _events: VBoxContainer = $Panel/Margin/Body/Columns/Log/EventsScroll/Events
 @onready var _continue: Button = $Panel/Margin/Body/Footer/ContinueButton
 
@@ -21,27 +23,42 @@ func setup(log: CombatLog) -> void:
   if log == null:
     return
   _fill_report(log)
+  _fill_status_damage(log)
   _fill_log(log)
 
 
-# The player per-item contribution: Item · Fires · Damage · Block · Healing. The header
-# cells are static in the .tscn (auto-translated); data cells are appended after them.
+# The player per-item contribution: Item · Fires · Damage · Block · Healing. Damage is
+# DIRECT hits only — status (DoT / cash-out) damage is bucketed by status (see
+# _fill_status_damage), not credited to the applier. The header cells are static in the
+# .tscn (auto-translated); data cells are appended after them.
 func _fill_report(log: CombatLog) -> void:
   for row in log.summary(CombatLog.Side.PLAYER):
-    _add_cell(tr(row['name']), false)
-    _add_cell('%d' % int(row['fires']), true)
-    _add_cell('%.0f' % float(row['damage']), true)
-    _add_cell('%.0f' % float(row['block']), true)
-    _add_cell('%.0f' % float(row['healing']), true)
+    _add_cell(_rows, tr(row['name']), false)
+    _add_cell(_rows, '%d' % int(row['fires']), true)
+    _add_cell(_rows, '%.0f' % float(row['damage']), true)
+    _add_cell(_rows, '%.0f' % float(row['block']), true)
+    _add_cell(_rows, '%.0f' % float(row['healing']), true)
 
 
-func _add_cell(text: String, numeric: bool) -> void:
+# The player's status damage, bucketed by status (Poison / Bleed / …) — the DoT / cash-out
+# output the per-item table no longer carries. Hidden when no status dealt damage.
+func _fill_status_damage(log: CombatLog) -> void:
+  var rows: Array = log.status_damage(CombatLog.Side.PLAYER)
+  if rows.is_empty():
+    _status_section.hide()
+    return
+  for row in rows:
+    _add_cell(_status_rows, tr(row['name']), false)
+    _add_cell(_status_rows, '%.0f' % float(row['damage']), true)
+
+
+func _add_cell(grid: GridContainer, text: String, numeric: bool) -> void:
   var label := Label.new()
   label.text = text
   if numeric:
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-  _rows.add_child(label)
+  grid.add_child(label)
 
 
 # The ordered timeline — one line per event, with its sim-time stamp.

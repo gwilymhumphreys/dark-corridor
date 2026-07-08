@@ -40,6 +40,7 @@ var _settings: SettingsScreen = null
 
 @onready var _map: MapStrip = $HUD/MapStrip
 @onready var _stats: CombatStatsReadout = $HUD/StatsReadout
+@onready var _gold: Label = $HUD/GoldReadout
 
 
 func _ready() -> void:
@@ -51,6 +52,7 @@ func _ready() -> void:
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
   _seed_demo_allies()   # dev hook (`--allies N`): populate the ally slots for inspection
   _map.setup(RunMap.TOTAL_BEATS, _run.position)
+  _refresh_gold()       # seed the HUD from run-state (covers a resumed run's banked gold)
   _enter_beat()
 
 
@@ -339,6 +341,7 @@ func _show_draft() -> void:
   _draft = DRAFT_OVERLAY.instantiate()
   add_child(_draft)   # on top of the combat view
   _draft.picked.connect(_on_draft_picked)
+  _draft.skipped.connect(_on_draft_skipped)
   _draft.setup(_run.pending_draft())
 
 
@@ -347,6 +350,22 @@ func _on_draft_picked(index: int) -> void:
   _draft = null
   _run.apply_draft_pick(index)
   _advance()
+
+
+# Skip the draft (a draft-skip intent, docs decision #33): bank gold instead of an item, refresh
+# the HUD, then advance — the sibling of _on_draft_picked.
+func _on_draft_skipped() -> void:
+  _draft.queue_free()
+  _draft = null
+  _run.apply_draft_skip()
+  _refresh_gold()
+  _advance()
+
+
+# The banked-gold HUD readout (docs decision #33). Localizable, updated from run-state on entry
+# (covers resume) and after each skip. Placeholder placement — the owner can relocate / juice it.
+func _refresh_gold() -> void:
+  _gold.text = tr('Gold: {0}').format([_run.gold])
 
 
 func _advance() -> void:

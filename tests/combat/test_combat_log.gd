@@ -150,15 +150,48 @@ func test_summary_returns_only_the_requested_side() -> void:
   assert_false(player_names.has('Enemy Claw'), 'enemy item absent from the player summary')
 
 
-# --- source-less DoT fallback -----------------------------------------------
+# --- source-less DIRECT hit (a thrown consumable) ---------------------------
 
-func test_sourceless_dot_falls_to_the_generic_bucket() -> void:
-  # A DoT whose applier item is unknown is credited under the SOURCELESS bucket.
+func test_sourceless_direct_hit_keeps_the_generic_bucket() -> void:
+  # A DIRECT hit with no source item (a thrown consumable) is credited under SOURCELESS.
   var log := CombatLog.new()
   log.on_damage(CombatLog.SOURCELESS, ENEMY, 'Player', PLAYER, 3.0, 0.5)
   var rows := _by_name(log.summary(ENEMY))
-  assert_true(rows.has(CombatLog.SOURCELESS), 'a source-less DoT keeps the generic bucket')
+  assert_true(rows.has(CombatLog.SOURCELESS), 'a source-less direct hit keeps the generic bucket')
   assert_almost_eq(rows[CombatLog.SOURCELESS]['damage'], 3.0, 0.0001)
+
+
+# --- status (DoT / cash-out) damage — bucketed by STATUS, not the applier ---
+
+func test_status_damage_buckets_by_status_not_the_applier() -> void:
+  var log := CombatLog.new()
+  # Two ticks of the same status accumulate under the STATUS bucket (regardless of applier).
+  log.on_status_damage('Poison', PLAYER, 'Grunt', ENEMY, 4.0, 0.3, 'poison')
+  log.on_status_damage('Poison', PLAYER, 'Grunt', ENEMY, 6.0, 0.5, 'poison')
+  var by_status := _by_name(log.status_damage(PLAYER))
+  assert_almost_eq(by_status['Poison']['damage'], 10.0, 0.0001, 'status damage accumulates per status')
+  # It does NOT land in the per-ITEM table…
+  assert_true(log.summary(PLAYER).is_empty(), 'status damage is not credited to any item row')
+  # …but it DOES fold into the side totals, so total damage stays complete.
+  assert_almost_eq(float(log.total_damage_dealt[PLAYER]), 10.0, 0.0001, 'folds into the dealt total')
+  assert_almost_eq(float(log.total_damage_taken[ENEMY]), 10.0, 0.0001, 'folds into the taken total')
+
+
+func test_status_damage_records_an_event_carrying_the_status_id() -> void:
+  var log := CombatLog.new()
+  log.on_status_damage('Bleed', ENEMY, 'Player', PLAYER, 5.0, 0.7, 'bleed')
+  assert_eq(log.events.size(), 1)
+  assert_eq(log.events[0]['type'], 'damage', 'a status tick is a damage event')
+  assert_eq(log.events[0]['source'], 'Bleed', 'the status is the event source')
+  assert_eq(log.events[0]['data'], 'bleed', 'the status id rides the event data')
+  assert_almost_eq(log.events[0]['amount'], 5.0, 0.0001)
+
+
+func test_status_damage_of_zero_is_ignored() -> void:
+  var log := CombatLog.new()
+  log.on_status_damage('Poison', PLAYER, 'Grunt', ENEMY, 0.0, 0.3, 'poison')
+  assert_true(log.status_damage(PLAYER).is_empty(), 'zero status damage records nothing')
+  assert_eq(log.events.size(), 0, 'and appends no timeline event')
 
 
 # --- helpers ----------------------------------------------------------------

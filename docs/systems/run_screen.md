@@ -43,7 +43,7 @@ IDLE → enter beat (auto-rolled or fixed — a live encounter already) → begi
                     begin:  event?  EVENTING (await option pick) → after-beat
                             fight?  APPROACHING → FIGHTING ─(resolved)→ [won & run continues? SUMMARY (await Continue)] → after-beat
                             rest?   resolves on begin → after-beat
-after-beat: pending draft? DRAFTING (await pick) ; else advance → enter beat
+after-beat: pending draft? DRAFTING (await pick OR skip-for-gold) ; else advance → enter beat
 run_ended → Game → outcome screen
 ```
 
@@ -85,10 +85,12 @@ the headless autotest mounts none of this:
   panel, returning to it on Close. Quit-to-menu routes through `Game.return_to_title()`
   (which **keeps** the save, so Title's Resume re-enters the beat).
 
-**Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Effects)
-bound to the **`Prefs`** autoload, which applies each level to its AudioServer bus and
-persists it to `user://` (a ConfigFile, **separate** from the run `Save`). Opened from the
-title and the pause menu; Close emits `closed` and the opener frees it. See
+**Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Effects), a
+mute-when-unfocused toggle, a UI font dropdown (Smooth / Pixel — see `ui_theme.md`), and a
+fullscreen toggle, all bound to the **`Prefs`** autoload, which applies each change (bus
+level / window mode / theme font / focus-mute) and persists it to `user://` (a ConfigFile,
+**separate** from the run `Save`). Opened from the title and the pause menu; Close emits
+`closed` and the opener frees it. See
 [audio](audio.md).
 
 ## The framed combat view
@@ -151,7 +153,12 @@ the demon walks into full view. Constants in `src/data/balance.gd`.
 ## Overlays
 
 - **Draft** — `draft_overlay.tscn` raises 3 `draft_card.tscn`s after a fight; a pick
-  emits `picked(index)` → `RunManager.apply_draft_pick`. No skip.
+  emits `picked(index)` → `RunManager.apply_draft_pick`. A themed **Skip button** (with a
+  `UIJuice` node) emits `skipped` → `RunManager.apply_draft_skip` instead, banking gold and
+  refreshing the gold HUD before advancing (decision #33). Both paths then advance.
+- **Gold HUD** — a minimal `GoldReadout` label on the HUD (`tr('Gold: {0}')`), seeded from
+  run-state on entry (covers a resumed run's banked gold) and refreshed after each skip.
+  Placeholder placement — the owner can relocate / juice it.
 - **Map** — `map_strip.tscn` draws the run's beats as a line of colour-coded dots (cleared
   solid, upcoming rings, the current beat haloed) with an "Act N" label and edge chevrons
   for off-screen beats; `mark_position` on each advance.

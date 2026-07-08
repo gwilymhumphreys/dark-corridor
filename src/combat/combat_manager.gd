@@ -304,13 +304,12 @@ func _advance_statuses_on(target) -> void:
       if dealt > 0.0:
         _deliveries.append(_dot_visual(st, target, dealt))
         # The DoT damage is logged HERE — the bus publishes no event for a tick, so this is the
-        # only place the log catches it. `st.source` may be an Item (→ its name + owner side), an
-        # Actor (→ SOURCELESS + that actor's side), or null (→ SOURCELESS, credited to the
-        # target's opponent). The single source of truth (docs/systems/combat_log.md Design B):
-        # this credits each tick to its own status's source exactly.
+        # only place the log catches it. Bucketed by the STATUS (its name_key + id), not the applier
+        # item: merged appliers make per-item DoT attribution a fiction (docs/systems/combat_log.md
+        # Design B). `_status_source_side` still resolves the DEALER side (the status's source).
         if combat_log != null:
-          combat_log.on_damage(_status_source_name(st), _status_source_side(st, target),
-              target.display_name, _side_of(target), dealt, timekeeper.sim_time)
+          combat_log.on_status_damage(st.name_key, _status_source_side(st, target),
+              target.display_name, _side_of(target), dealt, timekeeper.sim_time, st.id)
   for st in spent:
     st.on_expire(target, null)   # the natural-removal hook (every removal site calls it)
     target.statuses.erase(st)
@@ -401,8 +400,8 @@ func _drain_actor_fire_statuses(actor: Actor) -> void:
     if dealt > 0.0:
       _deliveries.append(_dot_visual(st, actor, dealt))
       if combat_log != null:
-        combat_log.on_damage(_status_source_name(st), _status_source_side(st, actor),
-            actor.display_name, _side_of(actor), dealt, timekeeper.sim_time)
+        combat_log.on_status_damage(st.name_key, _status_source_side(st, actor),
+            actor.display_name, _side_of(actor), dealt, timekeeper.sim_time, st.id)
   for st in spent:
     st.on_expire(actor, null)
     actor.statuses.erase(st)
@@ -570,14 +569,6 @@ func _target_side(target) -> int:
   if target is Item:
     return _side_of(target.owner)
   return _side_of(target)
-
-
-## A DoT status's applier name_key — the applier item's name when known, else SOURCELESS
-## (an Actor-applied or item-less DoT; the old DOT_FAMILY fallback moves to the log).
-func _status_source_name(st: StatusEffect) -> String:
-  if st.source is Item and st.source.def != null:
-    return st.source.def.name_key
-  return CombatLog.SOURCELESS
 
 
 ## A DoT status's dealer side — the applier item's owner side, an applier Actor's side, or
