@@ -23,7 +23,7 @@ What it **is not**:
 
 ## Definition vs. instance
 
-- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity tier), `cooldown`, one-or-more `ItemEffect`s (each a payload kind + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`. (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
+- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`. (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
 - **Item instance** — runtime, on a board: a definition + live `Ticker` state + its one enchant (if any) + its item-targeted statuses. **Duplicates stack independently** — two of the same definition are two instances, each its own Ticker, firing twice (design).
 
 ---
@@ -97,6 +97,18 @@ Synergy is the core decision mechanism (design). The item side:
 - **Rarity** (common / uncommon / rare → bronze / silver / gold border) — a *complexity* tier, **not** a power multiplier (design: power ~flat; numeric scaling is enchants). Common = simple/single-purpose; uncommon = conditional/interactive; rare = build-anchor / may combine multiple effects.
 - **Size** — a *tempo* tag coupling cooldown ↔ per-hit value (bigger = slower = bigger hit; DPS roughly flat), ~2–3 sizes. Reads as rhythm, not power; distinct from rarity (border) and build-anchor (a separate glow channel). *A leaning from the art doc, to test — count and whether it ships are open.*
 - **Damage-shape** (single-target / AOE) — a per-damage-effect tag; feeds the target-shape.
+
+---
+
+## Item type tags
+
+`ItemDef.types` is an **array of type-tag string ids** (a Bazaar-style tag set) drawn from **five tags** — `weapon` · `armour` · `skill` · `spell` · `trinket` (the `ItemType` consts). The axis is the **source / vessel of the effect** (weapon = an attack; armour = self-block; skill = an active ability; spell = a cast effect; trinket = a passive / utility bearer).
+
+- **Inert labels — no inherent gameplay effect (yet).** Nothing keys off a tag today; they exist so a **future synergy** can read tag membership ("your next *weapon* attack", "*spells* deal +2"). The fire pipeline never consults `types`.
+- **An array, not a single field** — most items carry exactly one tag; the array just lets a rare carry more later. A synergy checks `types.has('weapon')`.
+- **Items only.** Tags live on `ItemDef`; **Relic / Enchantment / Consumable are separate `Draftable` categories** (#21) and stay untagged.
+
+Decision + rationale: [decision_log.md #34](../decision_log.md).
 
 ---
 

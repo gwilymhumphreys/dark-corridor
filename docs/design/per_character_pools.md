@@ -34,5 +34,5 @@ A shared neutral pool of workhorse commons (StS colorless model) + per-character
 
 ## Watch
 
-- **Directions per character is a starting peg, not a number.** Too few → drafts forced; too many → dilution returns inside one character. Interacts with no-skip / no-cap in ways paper can’t predict — resolve in prototype.
+- **Directions per character is a starting peg, not a number.** Too few → drafts forced; too many → dilution returns inside one character. Interacts with skip-for-gold (#33) / no-cap in ways paper can’t predict — resolve in prototype.
 - **Hold the line on what gets split.** Per-character *item pools* — yes. The pull toward per-character *everything* (relics, enemies, bespoke commons) is exactly the Battledraft scope trap (design.md). Enemies stay a shared pool; only the layer that actually needs depth gets split.

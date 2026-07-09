@@ -79,6 +79,7 @@ static func _build() -> void:
 static func _weapon() -> ItemDef:
   var d := ItemDef.new()
   d.id = WEAPON
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Rusted Blade'
   d.cooldown = Balance.WEAPON_COOLDOWN
   var hit := ItemEffect.new()
@@ -95,6 +96,7 @@ static func _weapon() -> ItemDef:
 static func _armor() -> ItemDef:
   var d := ItemDef.new()
   d.id = ARMOR
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Iron Guard'
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
@@ -111,6 +113,7 @@ static func _armor() -> ItemDef:
 static func _poison_dagger() -> ItemDef:
   var d := ItemDef.new()
   d.id = POISON_DAGGER
+  d.types = [ItemType.WEAPON]   # dagger vessel; applies poison rather than direct damage (owner: confirm)
   d.name_key = 'Venom Fang'
   d.cooldown = Balance.POISON_APPLIER_COOLDOWN
   var pois := ItemEffect.new()
@@ -128,6 +131,7 @@ static func _poison_dagger() -> ItemDef:
 static func _avenger() -> ItemDef:
   var d := ItemDef.new()
   d.id = AVENGER
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Spite Ward'
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
@@ -154,6 +158,7 @@ static func _avenger() -> ItemDef:
 static func _hex_bolt() -> ItemDef:
   var d := ItemDef.new()
   d.id = HEX_BOLT
+  d.types = [ItemType.SPELL]   # arcane hex/silence (owner: confirm spell vs skill)
   d.name_key = 'Hex Bolt'
   d.cooldown = Balance.HEX_BOLT_COOLDOWN
   var hex := ItemEffect.new()
@@ -174,6 +179,7 @@ static func _hex_bolt() -> ItemDef:
 static func _sunder() -> ItemDef:
   var d := ItemDef.new()
   d.id = SUNDER
+  d.types = [ItemType.SKILL]   # martial debuff (Vulnerable) — owner: confirm skill vs spell vs weapon
   d.name_key = 'Sundering Bolt'
   d.cooldown = Balance.SUNDER_COOLDOWN
   var hit := ItemEffect.new()
@@ -198,6 +204,7 @@ static func _sunder() -> ItemDef:
 static func _pocket_shrooms() -> ItemDef:
   var d := ItemDef.new()
   d.id = POCKET_SHROOMS
+  d.types = [ItemType.WEAPON]   # damage-primary attack (also blinds); thematically shrooms (owner: confirm)
   d.name_key = 'Pocket Shrooms'
   d.rarity = ItemDef.Rarity.RARE
   d.cooldown = Balance.POCKET_SHROOMS_COOLDOWN
@@ -228,6 +235,7 @@ static func _pocket_shrooms() -> ItemDef:
 static func _druid_staff() -> ItemDef:
   var d := ItemDef.new()
   d.id = DRUID_STAFF
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Druid Staff'
   d.cooldown = Balance.DRUID_STAFF_COOLDOWN
   var hit := ItemEffect.new()
@@ -255,6 +263,7 @@ static func _druid_staff() -> ItemDef:
 static func _spore_spitter() -> ItemDef:
   var d := ItemDef.new()
   d.id = SPORE_SPITTER
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Spore Spitter'         # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.SPORE_SPITTER_COOLDOWN
   var hit := ItemEffect.new()
@@ -281,6 +290,7 @@ static func _spore_spitter() -> ItemDef:
 static func _capped_cudgel() -> ItemDef:
   var d := ItemDef.new()
   d.id = CAPPED_CUDGEL
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Capped Cudgel'         # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.CAPPED_CUDGEL_COOLDOWN
   var hit := ItemEffect.new()
@@ -300,6 +310,7 @@ static func _capped_cudgel() -> ItemDef:
 static func _bloomhammer() -> ItemDef:
   var d := ItemDef.new()
   d.id = BLOOMHAMMER
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Bloomhammer'           # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.BLOOMHAMMER_COOLDOWN
   var hit := ItemEffect.new()
@@ -328,6 +339,7 @@ static func _bloomhammer() -> ItemDef:
 static func _wilt_frond() -> ItemDef:
   var d := ItemDef.new()
   d.id = WILT_FROND
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Wilt Frond'             # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.WILT_FROND_COOLDOWN
   var hit := ItemEffect.new()
@@ -355,6 +367,7 @@ static func _wilt_frond() -> ItemDef:
 static func _leather_gloves() -> ItemDef:
   var d := ItemDef.new()
   d.id = LEATHER_GLOVES
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Leather Gloves'
   d.cooldown = Balance.LEATHER_GLOVES_COOLDOWN
   var blk := ItemEffect.new()
@@ -371,6 +384,7 @@ static func _leather_gloves() -> ItemDef:
 static func _leather_trews() -> ItemDef:
   var d := ItemDef.new()
   d.id = LEATHER_TREWS
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Leather Trews'
   d.cooldown = Balance.LEATHER_TREWS_COOLDOWN
   var blk := ItemEffect.new()
@@ -387,6 +401,7 @@ static func _leather_trews() -> ItemDef:
 static func _leather_breastplate() -> ItemDef:
   var d := ItemDef.new()
   d.id = LEATHER_BREASTPLATE
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Leather Breastplate'
   d.cooldown = Balance.LEATHER_BREASTPLATE_COOLDOWN
   var blk := ItemEffect.new()
@@ -408,6 +423,7 @@ static func _leather_breastplate() -> ItemDef:
 static func _flesh_chunk() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_CHUNK
+  d.types = [ItemType.WEAPON]   # created token that auto-attacks for damage (owner: confirm)
   d.name_key = 'Chunk of Flesh'        # owner's term — rename if desired
   d.cooldown = Balance.FLESH_CHUNK_COOLDOWN
   d.starting_uses = Balance.FLESH_CHUNK_USES   # decays after this many fires (the Decay use-status seed)
@@ -430,6 +446,7 @@ static func _flesh_chunk() -> ItemDef:
 static func _flesh_carving_knife() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_CARVING_KNIFE
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Carving Knife'
   d.cooldown = Balance.FLESH_CARVING_KNIFE_COOLDOWN
   var hit := ItemEffect.new()
@@ -454,6 +471,7 @@ static func _flesh_carving_knife() -> ItemDef:
 static func _flesh_cleaver() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_CLEAVER
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Cleaver'               # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.FLESH_CLEAVER_COOLDOWN
   var hit := ItemEffect.new()
@@ -479,6 +497,7 @@ static func _flesh_cleaver() -> ItemDef:
 static func _flesh_bone_saw() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_BONE_SAW
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Bone Saw'             # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.FLESH_BONE_SAW_COOLDOWN
   var hit := ItemEffect.new()
@@ -511,6 +530,7 @@ static func _flesh_bone_saw() -> ItemDef:
 static func _flesh_explosion() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_EXPLOSION
+  d.types = [ItemType.SPELL]   # AOE detonation payoff, not a hand weapon (owner: confirm spell vs weapon)
   d.name_key = 'Flesh Explosion'       # owner's name
   d.rarity = ItemDef.Rarity.UNCOMMON
   d.cooldown = Balance.FLESH_EXPLOSION_COOLDOWN
@@ -539,6 +559,7 @@ static func _flesh_explosion() -> ItemDef:
 static func _flesh_flensing_hook() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_FLENSING_HOOK
+  d.types = [ItemType.SKILL]   # active self-harm flesh producer, no enemy attack (owner: confirm)
   d.name_key = 'Flensing Hook'         # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.FLESH_FLENSING_HOOK_COOLDOWN
   var hurt := ItemEffect.new()
@@ -571,6 +592,7 @@ static func _flesh_flensing_hook() -> ItemDef:
 static func _flesh_skin_graft() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_SKIN_GRAFT
+  d.types = [ItemType.SKILL]   # active self-heal / flesh consumer (no heal tag exists) (owner: confirm)
   d.name_key = 'Skin Graft'            # PLACEHOLDER name — owner's to rename
   d.cooldown = Balance.FLESH_SKIN_GRAFT_COOLDOWN
   var heal := ItemEffect.new()
@@ -594,6 +616,7 @@ static func _flesh_skin_graft() -> ItemDef:
 static func _flesh_bone_spear() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_BONE_SPEAR
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Bone Spear'            # owner's name
   d.cooldown = Balance.FLESH_BONE_SPEAR_COOLDOWN
   var hit := ItemEffect.new()
@@ -621,6 +644,7 @@ static func _flesh_bone_spear() -> ItemDef:
 static func _flesh_rib() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_RIB
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Rib'                   # owner's name
   d.cooldown = Balance.FLESH_RIB_COOLDOWN
   var blk := ItemEffect.new()
@@ -637,6 +661,7 @@ static func _flesh_rib() -> ItemDef:
 static func _flesh_femur() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_FEMUR
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Femur'                 # owner's name
   d.cooldown = Balance.FLESH_FEMUR_COOLDOWN
   var blk := ItemEffect.new()
@@ -653,6 +678,7 @@ static func _flesh_femur() -> ItemDef:
 static func _flesh_skull() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_SKULL
+  d.types = [ItemType.ARMOUR]
   d.name_key = 'Skull'                 # owner's name
   d.cooldown = Balance.FLESH_SKULL_COOLDOWN
   var blk := ItemEffect.new()
@@ -669,6 +695,7 @@ static func _flesh_skull() -> ItemDef:
 static func _enemy_claw() -> ItemDef:
   var d := ItemDef.new()
   d.id = ENEMY_CLAW
+  d.types = [ItemType.WEAPON]
   d.name_key = 'Claw'
   d.cooldown = Balance.WEAPON_COOLDOWN
   var hit := ItemEffect.new()

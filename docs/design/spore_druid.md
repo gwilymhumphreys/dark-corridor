@@ -37,7 +37,7 @@ The working concept label stays **Spore Druid**; internal id / file stay `spore_
 
 ## Structure — two pillars (not four threads)
 
-The character is **one identity, several strategies** (the StS Defect model: orbs are the signature engine, but 0-cost/claw is a distinct non-orb line, with crossover). Spores are the signature engine; summon is a second pillar beside it so the character isn't one-dimensional. **Cap at two pillars** — each new pillar is a real synergy direction the no-skip 1-of-3 draft has to feed; two engines that cross over beats four that compete and go thin.
+The character is **one identity, several strategies** (the StS Defect model: orbs are the signature engine, but 0-cost/claw is a distinct non-orb line, with crossover). Spores are the signature engine; summon is a second pillar beside it so the character isn't one-dimensional. **Cap at two pillars** — each new pillar is a real synergy direction the 1-of-3 draft has to feed; two engines that cross over beats four that compete and go thin.
 
 ### Pillar 1 — Spores (signature engine)
 

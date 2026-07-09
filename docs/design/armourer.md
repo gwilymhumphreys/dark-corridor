@@ -43,19 +43,24 @@ overlapping plates stay pure visual flavour; no horror needed.
 ## Structure — 3 overlapping archetypes (goal, held loosely)
 
 Aim for **~3 archetypes that overlap** (a card can serve two) — the pool-breadth goal, not a quota
-(see [`card_pool_targets.md`](card_pool_targets.md)). Only one is decided:
+(see [`card_pool_targets.md`](card_pool_targets.md)). Two are decided:
 
 1. **Spend armour (decided).** The signature engine: build block (armour), then spend it — an attack
    or effect that **consumes block** for its payoff. Block stops being only defence and becomes
    *ammo*, with a real decision baked in: **spending it trades away your safety** (offense vs.
    defence on one resource — not win-more).
-2. **TBD — candidate: weapon synergies.** A simple weapons thread (owner floated this) — nothing
-   bespoke, the legible half of a legible character.
+2. **Big slow weapons + the empower payoff (decided 2026-07-09).** The signature weapons thread: a
+   ladder of **big, slow weapons** (5s / 6s / 7s cooldowns, *similar* DPS) whose payoff is an
+   **empower** skill that doubles the next **weapon attack**. Because per-hit size (not DPS) is what
+   the empower rewards, the three form a **per-hit ladder** — at equal DPS the slowest has the
+   biggest single hit, so it's the best thing to double. This *inverts* "slow = weak": the slowest
+   weapon is the most prized. Clean role that falls out: big doubled hits **overkill** small enemies,
+   so the build is **boss/elite-focused, soft vs. swarms**. See *The empower engine* below.
 3. **TBD — candidate: a strength / scaling line.** A basic damage-scaling idea (owner floated this).
 
-Candidates 2–3 stay open — "weapon synergies or strength or something, tbd" (owner). Keep them
-**simple**: this is the low-load character, so its non-signature threads should be the kind a player
-reasons about at a glance.
+Candidate 3 stays open — "strength or something, tbd" (owner). Keep the non-signature threads
+**simple**: this is the low-load character, so they should be the kind a player reasons about at a
+glance.
 
 ## Engine seam — block-as-fuel is nearly free (verified 2026-07-04)
 
@@ -71,6 +76,40 @@ reasons about at a glance.
   which *is* the intended tradeoff.
 - **Block generators are a solved pattern.** Plain self-block items already exist (the Fleshmancer's
   bone spread — Rib / Femur / Skull); the Armourer's armour pieces follow the same shape.
+
+## The empower engine — the weapons payoff (decided 2026-07-09)
+
+**Mighty Blow** *(placeholder name — owner's to rename)* — a **skill** (an action, not an object: the
+Armourer's "do something" slot, the martial twin of the Elementalist's spells). It **charges** and
+applies a self-buff: **double the next weapon attack**.
+
+- **Weapon-scoped** (owner) — only a *weapon* attack is doubled; a spell/skill attack wouldn't
+  benefit. That scoping is exactly what the `weapon` tag is for.
+- **Stacks by proc count** (owner — "the default for triggered effects like this"): a **consumed
+  counter** (like block / spores — no timer, persists until spent), so banking N charges doubles the
+  next N weapon attacks, one charge per attack *(consume rate: assumption, confirm)*.
+- **The auto-combat twist that makes the archetype:** you can't *choose* which attack is "next" — it
+  lands on whatever weapon is off cooldown first. So **board composition is the control**: few, big
+  weapons ⇒ "next weapon attack" is reliably a big hit. Bad with fast weapons, great with big ones —
+  that emergent constraint *is* the deckbuilding identity.
+- **Open:** what "charges" means (a plain cooldown that fires the buff vs. a build-up trigger like
+  Flesh Explosion); the consume rate above.
+
+**Terminology (settled):** *"attack"* = the act of dealing damage; *"weapon attack"* = an attack from
+a weapon-typed item. No bespoke jargon.
+
+**Type tags:** the game-wide item-type taxonomy (decision #34 / [`../systems/item.md`](../systems/item.md))
+— inert synergy labels `weapon / armour / spell / skill / trinket`, an array per item. The Armourer
+surfaces **weapon** + **skill** (kept lean — it's the on-ramp).
+
+**Engine seam the empower needs** (verified 2026-07-09): the doubling happens at fire time
+(`Item._resolve_effect` → `StatusManager.modify_outgoing`), but that hook gets only the **actor**, not
+the firing item — so the item's `types` must be threaded in to tell a weapon attack from a spell
+attack. And `modify_outgoing` doubles as the **read-only tooltip preview** (`Item.display_value`), so
+it must stay pure — the **consume** (spend a charge) belongs on the real-fire hook
+`on_owner_item_fired` (Bleed uses it), not in the modifier. Weak dodges this (blanket, no scope, no
+consume); this is the first type-scoped one-shot synergy, so build the seam cleanly — future
+"your weapons / skills…" effects reuse it.
 
 ## Watch / open
 
@@ -88,7 +127,8 @@ reasons about at a glance.
 
 ## Authored so far
 
-Nothing in code yet — concept + engine plan only. No `CharacterCatalog.ARMOURER` def, no item pool,
-no items. Next small step (offered): the **core one-liner** (build block → spend it for damage) + a
-**starting 3-item kit** (a block generator, a block-spending attack, a plain weapon or second armour
-piece — the 3-item floor the other characters get).
+No Armourer content in code yet — no `CharacterCatalog.ARMOURER` def, no item pool, no items. The
+game-wide **item-type taxonomy** (decision #34) is being added as a shared prerequisite (weapon +
+skill are the Armourer's tags). Still to build: the 3 big weapons, the Mighty Blow empower (+ its
+fire-pipeline seam above), and the character def / starting 3-item kit (a block generator, a
+block-spending attack, a weapon — the floor the other characters get).

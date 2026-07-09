@@ -12,6 +12,11 @@ var name_key: String = ''         # source English; displayed via tr()
 # mechanical lines in the tooltip; tr()'d. Empty = generated lines only.
 var description_key: String = ''
 var rarity: int = Rarity.COMMON
+# Item-type tags (docs/systems/item.md) — synergy labels only, NO inherent gameplay effect: a future
+# synergy reads tag membership (e.g. "your next weapon attack"), nothing keys off them today. An array
+# (Bazaar-style tag set); most items carry exactly one. Values are ItemType consts. Items only —
+# relics / consumables / enchants are separate Draftable categories and stay untagged.
+var types: Array[String] = []
 var cooldown: float = 1.0          # seconds -> Ticker threshold
 var effects: Array[ItemEffect] = []   # one usually; rares combine
 # Array[{ event:int (EventBus.Event), amount:float, filter:Variant (a status string id),
