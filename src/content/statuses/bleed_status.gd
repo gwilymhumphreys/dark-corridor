@@ -21,9 +21,10 @@ func _init() -> void:
 
 ## One of the holder's items just fired: bite the holder for the current stack count, then lose a
 ## stack; return true when drained (the Combat manager removes it). Passes `flags`, so an unblockable
-## bleed bypasses the holder's own block per bite (#5). Actors only — items have no HP (a bleed
-## authored onto an item ticks down harmlessly, cf. PeriodicStatus).
-func on_owner_item_fired(actor, _ctx) -> bool:
+## bleed bypasses the holder's own block per bite (#5). Bites on ANY fire — it ignores the firing
+## `item` (unlike the weapon-scoped empower). Actors only — items have no HP (a bleed authored onto an
+## item ticks down harmlessly, cf. PeriodicStatus).
+func on_owner_item_fired(actor, _item, _ctx) -> bool:
   if actor is Actor:
     actor.take_damage(count, flags)
   count -= 1.0

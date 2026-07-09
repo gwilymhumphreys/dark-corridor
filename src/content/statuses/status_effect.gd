@@ -73,16 +73,23 @@ func on_holder_fired(item, ctx) -> void:
 
 
 ## Called on an ACTOR-targeted status when one of that actor's items FIRES — the actor-level twin of
-## on_holder_fired (which fires for the one item the status sits ON). Bleed cashes out here. Returns
-## true when the status has expired (the Combat manager removes it + runs on_expire); default no-op.
-func on_owner_item_fired(actor, ctx) -> bool:
+## on_holder_fired (which fires for the one item the status sits ON). Receives the firing `item`, so a
+## status can scope to a weapon attack (the Armourer empower consumes a charge here; Bleed ignores it
+## and bites on any fire). This is the REAL-fire path (not the tooltip preview), so consuming state
+## belongs here, not in modify_outgoing. Returns true when the status has expired (the Combat manager
+## removes it + runs on_expire); default no-op.
+func on_owner_item_fired(actor, item, ctx) -> bool:
   return false
 
 
 # --- modifiers (PULL — the engine queries these at the pipeline stage, in statuses-list order,
 #     so composition stays deterministic (#24) and amplify-before-absorb holds (#6)). ---
 
-func modify_outgoing(amount: float, target, ctx) -> float:
+## Scale an outgoing DAMAGE value at fire time. Receives the firing `item` (optional, default null),
+## so a status can scope to a weapon attack (the Armourer empower doubles a weapon's damage; Weak
+## scales any). MUST stay PURE — it also runs on the read-only tooltip-preview path (Item.display_value),
+## so nothing here may mutate status state (the charge-spend lives on on_owner_item_fired).
+func modify_outgoing(amount: float, target, item = null, ctx = null) -> float:
   return amount
 
 

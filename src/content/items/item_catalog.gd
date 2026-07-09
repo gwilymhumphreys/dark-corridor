@@ -33,6 +33,10 @@ const FLESH_BONE_SPEAR := 'flesh_bone_spear'
 const FLESH_RIB := 'flesh_rib'
 const FLESH_FEMUR := 'flesh_femur'
 const FLESH_SKULL := 'flesh_skull'
+const MIGHTY_BLOW := 'mighty_blow'
+const ARMOURER_BROADAXE := 'armourer_broadaxe'
+const ARMOURER_WARHAMMER := 'armourer_warhammer'
+const ARMOURER_GREATSWORD := 'armourer_greatsword'
 
 static var _defs: Dictionary = {}
 
@@ -74,6 +78,10 @@ static func _build() -> void:
   _defs[FLESH_RIB] = _flesh_rib()
   _defs[FLESH_FEMUR] = _flesh_femur()
   _defs[FLESH_SKULL] = _flesh_skull()
+  _defs[MIGHTY_BLOW] = _mighty_blow()
+  _defs[ARMOURER_BROADAXE] = _armourer_broadaxe()
+  _defs[ARMOURER_WARHAMMER] = _armourer_warhammer()
+  _defs[ARMOURER_GREATSWORD] = _armourer_greatsword()
 
 
 static func _weapon() -> ItemDef:
@@ -689,6 +697,84 @@ static func _flesh_skull() -> ItemDef:
   blk.color = Colours.STATUS_BLOCK
   d.effects = [blk]
   d.panel_color = blk.color
+  return d
+
+
+## Mighty Blow (PLACEHOLDER name — owner's to rename) — the Armourer's empower SKILL (docs/design/
+## armourer.md → The empower engine): a plain-cooldown metronome that on each fire applies the
+## 'empowered' status to SELF (banks one charge — it stacks). Each charge doubles the next WEAPON
+## attack (EmpoweredStatus consumes one charge per weapon fire). AUTHORED BUT UN-POOLED — the Armourer
+## character isn't built yet, so this isn't in any item_pool. COMMON.
+static func _mighty_blow() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = MIGHTY_BLOW
+  d.types = [ItemType.SKILL]
+  d.name_key = 'Mighty Blow'           # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.MIGHTY_BLOW_COOLDOWN
+  var buff := ItemEffect.new()
+  buff.kind = Delivery.Kind.APPLY_STATUS
+  buff.status_id = 'empowered'
+  buff.value = Balance.MIGHTY_BLOW_CHARGES   # banks one empower charge per fire (reapply stacks)
+  buff.shape = ItemEffect.Shape.SELF         # the buff lands on the firer
+  buff.color = Colours.STATUS_EMPOWERED
+  d.effects = [buff]
+  d.panel_color = buff.color
+  return d
+
+
+## Armourer big slow weapons (PLACEHOLDER names — owner's to rename) — the empower-payoff ladder
+## (docs/design/armourer.md): three heavy single-target attacks on 5s/6s/7s cooldowns with similar DPS
+## but a rising PER-HIT, so the slowest is the prime target for Mighty Blow's double. Plain weapons
+## (no rider) — the identity is the per-hit ladder, not extra effects. AUTHORED BUT UN-POOLED (no
+## Armourer character yet). COMMON. Numbers -> Balance (placeholders for /tune).
+static func _armourer_broadaxe() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = ARMOURER_BROADAXE
+  d.types = [ItemType.WEAPON]
+  d.name_key = 'Broadaxe'              # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.ARMOURER_BROADAXE_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.ARMOURER_BROADAXE_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  d.effects = [hit]
+  d.panel_color = hit.color
+  return d
+
+
+static func _armourer_warhammer() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = ARMOURER_WARHAMMER
+  d.types = [ItemType.WEAPON]
+  d.name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.ARMOURER_WARHAMMER_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.ARMOURER_WARHAMMER_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  d.effects = [hit]
+  d.panel_color = hit.color
+  return d
+
+
+static func _armourer_greatsword() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = ARMOURER_GREATSWORD
+  d.types = [ItemType.WEAPON]
+  d.name_key = 'Greatsword'           # PLACEHOLDER name — owner's to rename
+  d.cooldown = Balance.ARMOURER_GREATSWORD_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = Balance.ARMOURER_GREATSWORD_DAMAGE
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = Balance.WEAPON_TRAVEL
+  hit.color = Colours.DAMAGE
+  d.effects = [hit]
+  d.panel_color = hit.color
   return d
 
 

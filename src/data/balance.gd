@@ -168,6 +168,23 @@ const FLESH_FEMUR_BLOCK: float = 8.0
 const FLESH_SKULL_COOLDOWN: float = 3.0     # slow, rewarded — 5 block/sec
 const FLESH_SKULL_BLOCK: float = 15.0
 
+# Armourer big slow weapons (PLACEHOLDER numbers — /tune's job; docs/design/armourer.md → The empower
+# engine). A ladder of heavy single-target attacks on 5s/6s/7s cooldowns with SIMILAR DPS but a rising
+# PER-HIT (DPS ≈ cooldown + 3): the slowest lands the biggest single hit, so it is the best target for
+# the Mighty Blow empower's double. Authored but UN-POOLED (the Armourer character isn't built yet).
+const ARMOURER_BROADAXE_COOLDOWN: float = 5.0      # fast pole — DPS 8, per-hit 40 (doubled 80)
+const ARMOURER_BROADAXE_DAMAGE: float = 40.0
+const ARMOURER_WARHAMMER_COOLDOWN: float = 6.0     # mid — DPS 9, per-hit 54 (doubled 108)
+const ARMOURER_WARHAMMER_DAMAGE: float = 54.0
+const ARMOURER_GREATSWORD_COOLDOWN: float = 7.0    # slow pole — DPS 10, per-hit 70 (doubled 140, the boss-breaker)
+const ARMOURER_GREATSWORD_DAMAGE: float = 70.0
+
+# Mighty Blow (PLACEHOLDER — /tune) — the empower skill: a plain-cooldown metronome that banks a
+# charge to double the next weapon attack (docs/design/armourer.md). Cooldown is the uptime knob
+# (slower rations the empower, faster banks charges). Charges-per-fire stacks by proc count (#default).
+const MIGHTY_BLOW_COOLDOWN: float = 5.0
+const MIGHTY_BLOW_CHARGES: float = 1.0             # empower charges banked per fire (count on the counter)
+
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks
@@ -181,6 +198,10 @@ const STATUS_WEAK_DAMAGE_MULT: float = 0.75       # Weak: holder deals 25% less 
 const STATUS_WEAK_DURATION: float = 2.0           # global to all Weak appliers (duration lives on the status, not the item)
 const STATUS_VULNERABLE_DAMAGE_MULT: float = 1.5  # Vulnerable: holder takes 50% more
 const STATUS_VULNERABLE_DURATION: float = 5.0
+# Empowered (docs/design/armourer.md → The empower engine) — the Armourer's Mighty Blow buff scales a
+# WEAPON attack's damage by this each charge spent. 2.0 = "double the next weapon attack" (PLACEHOLDER
+# — /tune). One charge per weapon attack (the consume rate is in EmpoweredStatus, not tunable here).
+const EMPOWER_MULT: float = 2.0
 # Blind (docs/systems/spore_engine.md Cap 2) — a timed evasion status; the holder's attacks whiff for
 # this long. 2s = the Spore Druid's blinding spore as designed (spore_druid.md), applied by
 # Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).

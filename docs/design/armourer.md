@@ -80,20 +80,34 @@ glance.
 ## The empower engine — the weapons payoff (decided 2026-07-09)
 
 **Mighty Blow** *(placeholder name — owner's to rename)* — a **skill** (an action, not an object: the
-Armourer's "do something" slot, the martial twin of the Elementalist's spells). It **charges** and
-applies a self-buff: **double the next weapon attack**.
+Armourer's "do something" slot, the martial twin of the Elementalist's spells). It **charges** (a
+plain cooldown — a metronome, decided 2026-07-09) and each fire applies a self-buff: **double the
+next weapon attack**.
 
 - **Weapon-scoped** (owner) — only a *weapon* attack is doubled; a spell/skill attack wouldn't
   benefit. That scoping is exactly what the `weapon` tag is for.
 - **Stacks by proc count** (owner — "the default for triggered effects like this"): a **consumed
-  counter** (like block / spores — no timer, persists until spent), so banking N charges doubles the
-  next N weapon attacks, one charge per attack *(consume rate: assumption, confirm)*.
+  counter** (like block / spores — no timer, persists until spent). **Consume rate (decided):** one
+  charge per weapon attack — banking N charges doubles the next N weapon attacks (not all-charges-on-
+  one-hit, which would be a spiky ×2ⁿ nuke).
 - **The auto-combat twist that makes the archetype:** you can't *choose* which attack is "next" — it
   lands on whatever weapon is off cooldown first. So **board composition is the control**: few, big
   weapons ⇒ "next weapon attack" is reliably a big hit. Bad with fast weapons, great with big ones —
   that emergent constraint *is* the deckbuilding identity.
-- **Open:** what "charges" means (a plain cooldown that fires the buff vs. a build-up trigger like
-  Flesh Explosion); the consume rate above.
+**Starting numbers** *(placeholder — `/tune`'s job; names are the owner's)*. Following the built DPS
+curve `DPS ≈ cooldown + 3` — the mild ascent that keeps DPS "similar" while per-hit climbs:
+
+| Cooldown | DPS | Per-hit | Doubled |
+|---|---|---|---|
+| 5s | 8 | 40 | 80 |
+| 6s | 9 | 54 | 108 |
+| 7s | 10 | 70 | **140** |
+
+Per-hit climbs while DPS stays close, so the 7s is the prime empower target and a doubled 7s (~140)
+is the boss-breaker that defines the build. **Mighty Blow's cooldown** starts ~5s — the uptime knob
+(slower rations the empower, faster banks charges).
+
+- **Open:** the three weapons' + Mighty Blow's names (owner's); final numbers + Mighty Blow cadence → `/tune`.
 
 **Terminology (settled):** *"attack"* = the act of dealing damage; *"weapon attack"* = an attack from
 a weapon-typed item. No bespoke jargon.
@@ -102,7 +116,7 @@ a weapon-typed item. No bespoke jargon.
 — inert synergy labels `weapon / armour / spell / skill / trinket`, an array per item. The Armourer
 surfaces **weapon** + **skill** (kept lean — it's the on-ramp).
 
-**Engine seam the empower needs** (verified 2026-07-09): the doubling happens at fire time
+**Engine seam the empower needs** (verified 2026-07-09; **BUILT — decision #35, see *Authored so far***): the doubling happens at fire time
 (`Item._resolve_effect` → `StatusManager.modify_outgoing`), but that hook gets only the **actor**, not
 the firing item — so the item's `types` must be threaded in to tell a weapon attack from a spell
 attack. And `modify_outgoing` doubles as the **read-only tooltip preview** (`Item.display_value`), so
@@ -127,8 +141,24 @@ consume); this is the first type-scoped one-shot synergy, so build the seam clea
 
 ## Authored so far
 
-No Armourer content in code yet — no `CharacterCatalog.ARMOURER` def, no item pool, no items. The
-game-wide **item-type taxonomy** (decision #34) is being added as a shared prerequisite (weapon +
-skill are the Armourer's tags). Still to build: the 3 big weapons, the Mighty Blow empower (+ its
-fire-pipeline seam above), and the character def / starting 3-item kit (a block generator, a
-block-spending attack, a weapon — the floor the other characters get).
+**The empower engine + the 3 big weapons are BUILT (2026-07-09) — authored but UN-POOLED.** The
+fire-pipeline **seam is in** (decision #35): the firing `Item` is threaded into `modify_outgoing`
+(kept pure — it also runs the tooltip preview) and `on_owner_item_fired` (the real-fire consume), so
+a status can scope to a weapon attack via `item.def.types.has(ItemType.WEAPON)`.
+
+- **`EmpoweredStatus`** (`src/content/statuses/empowered_status.gd`, id `empowered`) — a consumed
+  counter: `modify_outgoing` doubles a `weapon`-tagged DAMAGE payload while a charge is banked (pure,
+  ×2 of ONE attack); `on_owner_item_fired` spends exactly one charge per weapon attack (banking N
+  doubles the next N). Registered in `StatusRegistry`. `EMPOWER_MULT` = 2.0 (`Balance`, placeholder).
+- **Mighty Blow** (`mighty_blow`, `[skill]`) — a plain-cooldown metronome that applies `empowered`
+  to self on fire (banks 1 charge, stacks). Cooldown `Balance.MIGHTY_BLOW_COOLDOWN` (placeholder).
+- **The 3 big weapons** (`armourer_broadaxe` / `armourer_warhammer` / `armourer_greatsword`, all
+  `[weapon]`) — single-target, opponent-leftmost, 5s/6s/7s, 40/54/70 damage (all `Balance` consts,
+  placeholders for `/tune`). PLACEHOLDER names (owner's to rename).
+
+All four are authored in `ItemCatalog` (+ registered in `_build()`) but deliberately **NOT in any
+item pool or the colorless pool** (per-character pools, #27) — there is no Armourer character yet, so
+they are drafted by nothing. **Still to build:** the `CharacterCatalog.ARMOURER` def + its starting
+3-item kit (a block generator, a block-spending attack, a weapon — the floor the other characters
+get), and the block-spend archetype (block made fuel-eligible + spender items — the "nearly free"
+seam above).

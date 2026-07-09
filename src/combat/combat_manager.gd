@@ -371,8 +371,9 @@ func _fire_item(it: Item, arrived: Array) -> void:
   # pipeline): decay spends one activation, so the final fire still lands, then removes the item at 0.
   _drain_uses(it)
   # Bleed (and any actor-level fire-status) cashes out on the OWNER's activation — the actor twin of
-  # the item-use drain above (docs/design/mechanic_ideas.md -> Bleed). After the payload spawned.
-  _drain_actor_fire_statuses(it.owner)
+  # the item-use drain above (docs/design/mechanic_ideas.md -> Bleed). The firing item is threaded in
+  # so a status can scope to a weapon attack (the Armourer empower spends a charge). After the payload.
+  _drain_actor_fire_statuses(it.owner, it)
 
 
 ## After an item fires, advance its item-targeted use-statuses (Decay): each spends one activation
@@ -383,18 +384,19 @@ func _drain_uses(it: Item) -> void:
     s.on_holder_fired(it, _ctx)
 
 
-## After an item fires, drain its OWNER's actor-level fire-statuses (Bleed) — the actor twin of
-## _drain_uses (which drains the fired item's own use-statuses). Each takes its bite of the holder
-## and decays; a drained one is removed. Mirrors the DoT-tick path (a wall visual + a combat-log
-## entry, since neither take_damage nor the bus reports a status's own damage). Iterate a COPY: a
-## bite can kill / remove statuses mid-pass.
-func _drain_actor_fire_statuses(actor: Actor) -> void:
+## After an item fires, drain its OWNER's actor-level fire-statuses (Bleed / empower) — the actor twin
+## of _drain_uses (which drains the fired item's own use-statuses). Each takes its bite of the holder /
+## spends its charge, and decays; a drained one is removed. The firing `item` is passed so a status can
+## scope to a weapon attack (empower). Mirrors the DoT-tick path (a wall visual + a combat-log entry,
+## since neither take_damage nor the bus reports a status's own damage). Iterate a COPY: a bite can
+## kill / remove statuses mid-pass.
+func _drain_actor_fire_statuses(actor: Actor, item: Item) -> void:
   if actor == null:
     return
   var spent: Array[StatusEffect] = []
   for st in actor.statuses.duplicate():
     var hp_before: float = actor.hp
-    if st.on_owner_item_fired(actor, _ctx):
+    if st.on_owner_item_fired(actor, item, _ctx):
       spent.append(st)
     var dealt: float = hp_before - actor.hp
     if dealt > 0.0:

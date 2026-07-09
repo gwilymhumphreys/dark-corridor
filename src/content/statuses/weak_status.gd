@@ -15,5 +15,5 @@ func _init() -> void:
   color = Colours.STATUS_WEAK
 
 
-func modify_outgoing(amount: float, target, ctx) -> float:
-  return amount * Balance.STATUS_WEAK_DAMAGE_MULT
+func modify_outgoing(amount: float, target, item = null, ctx = null) -> float:
+  return amount * Balance.STATUS_WEAK_DAMAGE_MULT   # blanket — no item/type scope (unlike the empower)

@@ -63,7 +63,7 @@ func is_gated() -> bool:
 func display_value(effect: ItemEffect) -> float:
   var v: float = base_value(effect)
   if effect.kind == Delivery.Kind.DAMAGE and owner != null:
-    v = StatusManager.modify_outgoing(owner, v)   # pure (Weak etc.)
+    v = StatusManager.modify_outgoing(owner, v, self)   # pure (Weak, empower — scoped by this item's types)
   return v
 
 
@@ -86,7 +86,7 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   # Outgoing-damage stat-status seam (#6): scale DAMAGE by the owner's modifiers AT FIRE
   # TIME (e.g. Weak). A % multiplier, so it's locked into the payload here, cascade-safe.
   if effect.kind == Delivery.Kind.DAMAGE and owner != null:
-    p.value = StatusManager.modify_outgoing(owner, p.value)
+    p.value = StatusManager.modify_outgoing(owner, p.value, self)
   # Status-stack consume (docs/systems/spore_engine.md Cap 1): SELF-fuel resolves now (the
   # owner is known) by spending its stacks + scaling. OPPONENT-fuel (Mass) rides the
   # payload's consume declaration to the Combat manager, which knows the resolved target.

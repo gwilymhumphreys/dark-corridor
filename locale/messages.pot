@@ -224,6 +224,22 @@ msgid "Skull"
 msgstr ""
 
 #: src/content/items/item_catalog.gd
+msgid "Mighty Blow"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Broadaxe"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Warhammer"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Greatsword"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
 msgid "Claw"
 msgstr ""
 
@@ -333,6 +349,14 @@ msgstr ""
 
 #: src/content/statuses/decay_status.gd
 msgid "The affected item is destroyed after a number of uses."
+msgstr ""
+
+#: src/content/statuses/empowered_status.gd
+msgid "Empowered"
+msgstr ""
+
+#: src/content/statuses/empowered_status.gd
+msgid "Doubles your next weapon attack."
 msgstr ""
 
 #: src/content/statuses/poison_status.gd

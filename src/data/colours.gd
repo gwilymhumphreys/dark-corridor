@@ -17,6 +17,7 @@ const STATUS_BLIND := Color(0.9, 0.9, 0.55)
 const STATUS_SILENCE := Color(0.5, 0.5, 0.5)
 const STATUS_SPORES := Color(0.45, 0.8, 0.7)     # placeholder fungal teal — owner re-tints
 const STATUS_DECAY := Color(0.55, 0.4, 0.35)     # placeholder rot brown — owner re-tints
+const STATUS_EMPOWERED := Color(0.95, 0.75, 0.2) # placeholder might gold (Armourer empower) — owner re-tints
 
 # ── Combat payloads / item panels ────────────────────────────────────────────
 const DAMAGE := Color(0.9, 0.2, 0.2)             # the generic attack red

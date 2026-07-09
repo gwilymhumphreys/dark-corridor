@@ -46,7 +46,7 @@ When the item's `Ticker` crosses — its accumulator filled step-by-step, plus a
 
 1. **Gate check** — item-targeted gate statuses (e.g. *silence*) can suppress the fire (`StatusManager`). A gated item's cooldown **freezes** (decision #30): the Combat manager skips its accrual while a gate status sits on it, so a lifting gate never releases a banked burst — the first fire lands one full cooldown after the lift. (The in-`fire()` gate check stays as a backstop.)
 2. **Fire** — reset the cooldown; play the fire-emote (recoil / flash — combat_model.md). The fire is an event others can trigger off.
-3. **Resolve payload(s)** — for each of the item's effects, apply value modifiers (item-targeted statuses like *+2 damage* or *triggers-twice*, via `StatusManager`) and enchant hooks → a **payload** `(kind, value)`, plus its target-shape and `travel_time`.
+3. **Resolve payload(s)** — for each of the item's effects, apply value modifiers (item-targeted statuses like *+2 damage* or *triggers-twice*, via `StatusManager`) and enchant hooks → a **payload** `(kind, value)`, plus its target-shape and `travel_time`. The outgoing-damage modifier stage receives **the firing item itself** (`StatusManager.modify_outgoing(owner, value, self)`, #35) so an actor-targeted status can scope to a weapon attack — the Armourer empower doubles only `weapon`-tagged damage; Weak scales any. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns.
 4. **Hand them up** — the item returns its payload(s) + shape + travel to the `Combat manager`, which resolves the shape and spawns a `combat_model.md` **Delivery** per target. The item never calls up.
 
 A fire may yield several payloads (a rare combining damage + heal); each becomes its own Delivery (fire-rate and travel are decoupled — combat_model.md).
@@ -104,7 +104,7 @@ Synergy is the core decision mechanism (design). The item side:
 
 `ItemDef.types` is an **array of type-tag string ids** (a Bazaar-style tag set) drawn from **five tags** — `weapon` · `armour` · `skill` · `spell` · `trinket` (the `ItemType` consts). The axis is the **source / vessel of the effect** (weapon = an attack; armour = self-block; skill = an active ability; spell = a cast effect; trinket = a passive / utility bearer).
 
-- **Inert labels — no inherent gameplay effect (yet).** Nothing keys off a tag today; they exist so a **future synergy** can read tag membership ("your next *weapon* attack", "*spells* deal +2"). The fire pipeline never consults `types`.
+- **Mostly-inert labels.** The fire pipeline itself never branches on `types`; a tag has no *inherent* effect. But a **status can now read tag membership** — the firing item is threaded into the outgoing-damage / actor-fire hooks (#35), and the Armourer empower (`EmpoweredStatus`) uses `types.has(ItemType.WEAPON)` to double only weapon attacks. Tags remain the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2"); the empower is the first to key off one.
 - **An array, not a single field** — most items carry exactly one tag; the array just lets a rare carry more later. A synergy checks `types.has('weapon')`.
 - **Items only.** Tags live on `ItemDef`; **Relic / Enchantment / Consumable are separate `Draftable` categories** (#21) and stay untagged.
 
