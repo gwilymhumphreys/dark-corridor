@@ -1,0 +1,20 @@
+GIMP Palette
+Name: world-moss-16
+Columns: 16
+# Environment ramp, moss tint (placeholder name). Black to mid-grey in 16 even steps.
+  0   0   0	moss 0
+ 10  11  10	moss 1
+ 20  22  19	moss 2
+ 31  32  29	moss 3
+ 41  43  39	moss 4
+ 51  54  48	moss 5
+ 61  65  58	moss 6
+ 71  76  67	moss 7
+ 81  86  77	moss 8
+ 92  97  87	moss 9
+102 108  96	moss 10
+112 119 106	moss 11
+122 129 116	moss 12
+133 140 126	moss 13
+143 151 137	moss 14
+154 161 147	moss 15

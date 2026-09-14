@@ -1,0 +1,17 @@
+Downloaded from the Lospec palette list (via the elm-lospec scraped copy, 2021).
+
+grayscale-16: GRAYSCALE 16 by Ádám Szieberth, 16 colours, https://lospec.com/palette-list/grayscale-16
+qualm12: QUALM12 by mtk, 12 colours, https://lospec.com/palette-list/qualm12
+cave6: Cave6 by Alpha6, 6 colours, https://lospec.com/palette-list/cave6
+nyx8: Nyx8 by unknown, 8 colours, https://lospec.com/palette-list/nyx8
+gothic-winter-gb: Gothic Winter (GB) by Brennan Patrick, 4 colours, https://lospec.com/palette-list/gothic-winter-gb
+red-horns: red horns by polyphrog, 5 colours, https://lospec.com/palette-list/red-horns
+jeepers12: Jeepers12 by beachboogeyman, 12 colours, https://lospec.com/palette-list/jeepers12
+kadabura4: Kadabura4 by PureAsbestos, 4 colours, https://lospec.com/palette-list/kadabura4
+besalt: Besalt by Zant, 5 colours, https://lospec.com/palette-list/besalt
+hollow: Hollow by Poltergasm, 4 colours, https://lospec.com/palette-list/hollow
+dstnr48: DSTNR48 by Connor Roberts, 48 colours, https://lospec.com/palette-list/dstnr48
+chee48: Chee48 by IAmCheeseman, 48 colours, https://lospec.com/palette-list/chee48
+lacking64: LACKING64 by Archimare, 64 colours, https://lospec.com/palette-list/lacking64
+darkpastel-36: DarkPastel-36 by s0nny_devin, 36 colours, https://lospec.com/palette-list/darkpastel-36
+desolate-guest: Desolate Guest by Zero, 128 colours, https://lospec.com/palette-list/desolate-guest

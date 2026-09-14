@@ -54,6 +54,7 @@ func test_finds_the_bundled_palettes() -> void:
   var groups: Dictionary = PaletteLoader.find_palettes('res://assets/palettes')
   assert_true(groups.has(''), 'top-level files are grouped under an empty folder name')
   assert_true(groups.has('good'), 'subfolders are their own groups')
+  assert_true(groups.has('new/world'), 'nested subfolders are found, named by their path')
   for folder: String in groups:
     for path: String in groups[folder]:
       assert_gt(PaletteLoader.load_palette(path).size(), 0, 'every bundled palette loads: ' + path)

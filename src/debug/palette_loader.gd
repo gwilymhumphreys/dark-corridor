@@ -24,20 +24,26 @@ static func load_palette(path: String) -> PackedColorArray:
 
 
 ## Every palette file under `root`, as paths. Files directly in `root` come first, then each
-## subfolder's files under that subfolder's name. Returns {folder name: Array[String]}, with ''
-## for `root` itself; keys are in display order.
+## subfolder's files under its path relative to `root` (for example 'new/world'), at any depth.
+## Returns {folder path: Array[String]}, with '' for `root` itself; keys are in display order.
 static func find_palettes(root: String) -> Dictionary:
   var groups: Dictionary = {'': _palette_files_in(root)}
-  var dir: DirAccess = DirAccess.open(root)
+  _add_subfolders(root, '', groups)
+  return groups
+
+
+static func _add_subfolders(root: String, relative: String, groups: Dictionary) -> void:
+  var dir: DirAccess = DirAccess.open(root.path_join(relative))
   if dir == null:
-    return groups
+    return
   var folders: PackedStringArray = dir.get_directories()
   folders.sort()
   for folder: String in folders:
-    var files: Array[String] = _palette_files_in(root.path_join(folder))
+    var path: String = relative.path_join(folder) if relative != '' else folder
+    var files: Array[String] = _palette_files_in(root.path_join(path))
     if not files.is_empty():
-      groups[folder] = files
-  return groups
+      groups[path] = files
+    _add_subfolders(root, path, groups)
 
 
 static func _palette_files_in(folder: String) -> Array[String]:

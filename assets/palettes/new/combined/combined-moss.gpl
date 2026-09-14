@@ -1,0 +1,59 @@
+GIMP Palette
+Name: combined-moss
+Columns: 16
+# world ramp + effects-muted + ui-muted, for the single full-screen clamp. Placeholder.
+  0   0   0	moss 0
+ 10  11  10	moss 1
+ 20  22  19	moss 2
+ 31  32  29	moss 3
+ 41  43  39	moss 4
+ 51  54  48	moss 5
+ 61  65  58	moss 6
+ 71  76  67	moss 7
+ 81  86  77	moss 8
+ 92  97  87	moss 9
+102 108  96	moss 10
+112 119 106	moss 11
+122 129 116	moss 12
+133 140 126	moss 13
+143 151 137	moss 14
+154 161 147	moss 15
+225 136 129	attack light
+154  80  75	attack dark
+209 150 109	vulnerable light
+141  92  57	vulnerable dark
+188 161 105	empowered light
+124 102  53	empowered dark
+169 167 131	blind light
+108 107  76	blind dark
+152 175 112	poison light
+ 94 113  59	poison dark
+124 180 143	heal light
+ 69 117  87	heal dark
+110 179 174	spores light
+ 56 117 113	spores dark
+122 170 212	block light
+ 68 109 144	block dark
+163 155 218	arcane light
+104  97 148	arcane dark
+190 149 186	weak light
+126  92 122	weak dark
+184 159 140	decay light
+121 100  84	decay dark
+164 164 164	silence light
+105 105 105	silence dark
+222 222 222	flash
+ 16  12  10	panel darkest
+ 29  26  23	panel dark
+ 45  40  36	panel
+ 65  60  56	panel edge
+115 110 105	text dim
+181 176 169	text
+122  92  72	bronze
+130 135 140	silver
+157 138  98	gold
+133  75  70	enemy red
+ 87 125  88	health green
+ 75 109 138	block blue
+ 69  43  40	enemy red dark
+ 43  62  43	health green dark

@@ -1,0 +1,20 @@
+GIMP Palette
+Name: world-iron-16
+Columns: 16
+# Environment ramp, iron tint (placeholder name). Black to mid-grey in 16 even steps.
+  0   0   0	iron 0
+ 10  11  12	iron 1
+ 20  21  23	iron 2
+ 29  32  35	iron 3
+ 39  43  47	iron 4
+ 49  53  58	iron 5
+ 58  64  70	iron 6
+ 68  75  82	iron 7
+ 78  85  93	iron 8
+ 88  96 105	iron 9
+ 98 107 116	iron 10
+107 117 128	iron 11
+118 128 139	iron 12
+128 139 150	iron 13
+138 149 161	iron 14
+148 160 172	iron 15

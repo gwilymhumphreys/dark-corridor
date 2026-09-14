@@ -1,0 +1,20 @@
+GIMP Palette
+Name: world-bone-16
+Columns: 16
+# Environment ramp, bone tint (placeholder name). Black to mid-grey in 16 even steps.
+  0   0   0	bone 0
+ 11  10   9	bone 1
+ 22  21  19	bone 2
+ 34  31  28	bone 3
+ 45  42  37	bone 4
+ 56  52  46	bone 5
+ 67  63  55	bone 6
+ 79  73  64	bone 7
+ 90  84  74	bone 8
+101  94  83	bone 9
+112 104  92	bone 10
+123 115 102	bone 11
+134 125 112	bone 12
+145 136 122	bone 13
+156 146 132	bone 14
+166 157 142	bone 15

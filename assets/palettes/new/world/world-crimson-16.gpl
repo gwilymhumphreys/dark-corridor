@@ -1,0 +1,20 @@
+GIMP Palette
+Name: world-crimson-16
+Columns: 16
+# Environment ramp, crimson tint (placeholder name). Black to mid-grey in 16 even steps.
+  0   0   0	crimson 0
+ 12  10  10	crimson 1
+ 24  20  20	crimson 2
+ 36  30  29	crimson 3
+ 48  40  39	crimson 4
+ 60  50  49	crimson 5
+ 72  60  59	crimson 6
+ 84  70  68	crimson 7
+ 96  80  78	crimson 8
+108  90  88	crimson 9
+120 100  98	crimson 10
+132 110 108	crimson 11
+143 120 118	crimson 12
+154 131 128	crimson 13
+166 141 139	crimson 14
+176 152 149	crimson 15

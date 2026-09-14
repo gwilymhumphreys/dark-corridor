@@ -1,0 +1,29 @@
+GIMP Palette
+Name: effects-muted
+Columns: 16
+# One muted hue per effect family (light and dark shade) plus a flash colour. Placeholder.
+225 136 129	attack light
+154  80  75	attack dark
+209 150 109	vulnerable light
+141  92  57	vulnerable dark
+188 161 105	empowered light
+124 102  53	empowered dark
+169 167 131	blind light
+108 107  76	blind dark
+152 175 112	poison light
+ 94 113  59	poison dark
+124 180 143	heal light
+ 69 117  87	heal dark
+110 179 174	spores light
+ 56 117 113	spores dark
+122 170 212	block light
+ 68 109 144	block dark
+163 155 218	arcane light
+104  97 148	arcane dark
+190 149 186	weak light
+126  92 122	weak dark
+184 159 140	decay light
+121 100  84	decay dark
+164 164 164	silence light
+105 105 105	silence dark
+222 222 222	flash

@@ -1,0 +1,18 @@
+GIMP Palette
+Name: ui-muted
+Columns: 16
+# Muted interface colours: panels, text, rarity metals, health and block. Placeholder.
+ 16  12  10	panel darkest
+ 29  26  23	panel dark
+ 45  40  36	panel
+ 65  60  56	panel edge
+115 110 105	text dim
+181 176 169	text
+122  92  72	bronze
+130 135 140	silver
+157 138  98	gold
+133  75  70	enemy red
+ 87 125  88	health green
+ 75 109 138	block blue
+ 69  43  40	enemy red dark
+ 43  62  43	health green dark

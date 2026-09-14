@@ -1,0 +1,20 @@
+GIMP Palette
+Name: world-ash-16
+Columns: 16
+# Environment ramp, ash tint (placeholder name). Black to mid-grey in 16 even steps.
+  0   0   0	ash 0
+ 11  11  11	ash 1
+ 21  21  21	ash 2
+ 32  32  32	ash 3
+ 42  42  42	ash 4
+ 53  53  53	ash 5
+ 63  63  63	ash 6
+ 74  74  74	ash 7
+ 84  84  84	ash 8
+ 95  95  95	ash 9
+105 105 105	ash 10
+116 116 116	ash 11
+126 126 126	ash 12
+137 137 137	ash 13
+148 148 148	ash 14
+158 158 158	ash 15

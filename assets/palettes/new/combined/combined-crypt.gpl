@@ -1,0 +1,59 @@
+GIMP Palette
+Name: combined-crypt
+Columns: 16
+# world ramp + effects-muted + ui-muted, for the single full-screen clamp. Placeholder.
+  0   0   0	crypt 0
+ 11  10  11	crypt 1
+ 21  21  23	crypt 2
+ 32  31  35	crypt 3
+ 43  41  46	crypt 4
+ 54  51  58	crypt 5
+ 64  62  70	crypt 6
+ 75  72  82	crypt 7
+ 86  82  93	crypt 8
+ 96  93 105	crypt 9
+107 103 116	crypt 10
+118 113 127	crypt 11
+128 124 139	crypt 12
+139 134 150	crypt 13
+150 145 161	crypt 14
+160 155 171	crypt 15
+225 136 129	attack light
+154  80  75	attack dark
+209 150 109	vulnerable light
+141  92  57	vulnerable dark
+188 161 105	empowered light
+124 102  53	empowered dark
+169 167 131	blind light
+108 107  76	blind dark
+152 175 112	poison light
+ 94 113  59	poison dark
+124 180 143	heal light
+ 69 117  87	heal dark
+110 179 174	spores light
+ 56 117 113	spores dark
+122 170 212	block light
+ 68 109 144	block dark
+163 155 218	arcane light
+104  97 148	arcane dark
+190 149 186	weak light
+126  92 122	weak dark
+184 159 140	decay light
+121 100  84	decay dark
+164 164 164	silence light
+105 105 105	silence dark
+222 222 222	flash
+ 16  12  10	panel darkest
+ 29  26  23	panel dark
+ 45  40  36	panel
+ 65  60  56	panel edge
+115 110 105	text dim
+181 176 169	text
+122  92  72	bronze
+130 135 140	silver
+157 138  98	gold
+133  75  70	enemy red
+ 87 125  88	health green
+ 75 109 138	block blue
+ 69  43  40	enemy red dark
+ 43  62  43	health green dark

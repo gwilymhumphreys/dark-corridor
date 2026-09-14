@@ -30,7 +30,8 @@ The OKLab conversion exists twice, in `PaletteLoader.to_oklab` and in the shader
 ## Palettes
 
 `assets/palettes/` keeps the owner's `good/`, `maybe/` and `na/` subfolders from the design folder. Loose
-`.gpl` files sit at the top.
+`.gpl` files sit at the top. `new/` holds candidates for separate world, effects and interface
+palettes (see [`../plans/separate_palettes.md`](../plans/separate_palettes.md)).
 
 `PaletteLoader.load_palette(path)` reads two formats with `FileAccess` (works in debug runs, not in
 exported builds):
@@ -40,7 +41,8 @@ exported builds):
 | Lospec PNG strip | Square swatches in one row; swatch size = image height; each swatch's centre pixel is its colour |
 | GIMP `.gpl` | Lines of `R G B name`; header lines and `#` comments are skipped |
 
-`PaletteLoader.find_palettes(root)` lists palette files grouped by subfolder, for the panel dropdown.
+`PaletteLoader.find_palettes(root)` lists palette files grouped by subfolder at any depth (groups are
+named by path, for example `new/world`), for the panel dropdown.
 
 ## Screenshots
 
