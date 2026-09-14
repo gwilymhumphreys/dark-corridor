@@ -23,6 +23,9 @@ docs/archive/
 
 _temp/
 
+# Local screenshot comparison pages (not shipped)
+comparisons/
+
 .claude/worktrees/
 .claude/cache/
 
