@@ -53,3 +53,10 @@ example, with the corridor testbed's `--shot`:
 ```
 
 Tests: `tests/utils/test_palette_loader.gd`.
+
+## Known issue
+
+In about 1 in 12 screenshot runs the palette loaded without a warning but the screenshot showed no
+clamp. It happened only while other Godot processes were running at the same time, and did not
+happen in 16 repeated runs on their own. The cause is not known. When screenshotting palettes, check
+each image (for example, the potion slot should not keep its original green).
