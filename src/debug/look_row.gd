@@ -1,14 +1,14 @@
 class_name LookRow
 extends HBoxContainer
 ## One setting in the look panel (docs/systems/corridor_look.md): a label and one control. The
-## same script drives three scenes: a slider (`Slider`), a switch (`Check`) or a colour button
-## (`Colour`).
+## same script drives four scenes: a slider (`Slider`), a dropdown (`Option`), a switch (`Check`) or
+## a colour button (`Colour`).
 
 signal value_changed(value: Variant)
 
 
-## Set the label, value and slider limits ([min, max, step]; ignored by switches and colours). Call
-## before adding the row to the tree.
+## Set the label, value and `limits`: [min, max, step] for a slider, the option names for a dropdown,
+## ignored by switches and colours. Call before adding the row to the tree.
 func setup(label_text: String, value: Variant, limits: Array) -> void:
   ($Label as Label).text = label_text
   if has_node('Slider'):
@@ -24,6 +24,12 @@ func setup(label_text: String, value: Variant, limits: Array) -> void:
     var check: CheckButton = $Check
     check.set_pressed_no_signal(value)
     check.toggled.connect(func(on: bool) -> void: value_changed.emit(on))
+  elif has_node('Option'):
+    var option: OptionButton = $Option
+    for option_name: Variant in limits:
+      option.add_item(str(option_name))
+    option.select(value)
+    option.item_selected.connect(func(index: int) -> void: value_changed.emit(index))
   elif has_node('Colour'):
     var colour: ColorPickerButton = $Colour
     colour.color = value

@@ -39,7 +39,31 @@ func test_defaults_are_read_from_the_shader_code() -> void:
   assert_eq(defaults['warp_on'], false, 'a switch')
   assert_almost_eq(defaults['warp_amount'], 0.08, 0.0001, 'a number')
   assert_eq(defaults['grade_tint'], Color(1.0, 1.0, 1.0), 'a colour')
-  assert_false(defaults.has('colour_count'), 'the palette clamp uniforms are not look settings')
+  assert_eq(defaults['dither_pattern'], 0, 'a choice, read from the palette clamp include')
+  assert_false(defaults.has('colour_count'), 'the palette uniforms set from the F1 panel are not look settings')
+  assert_false(defaults.has('dithering'), 'the shared dithering switch is not a look setting')
+
+
+func _section(title: String) -> LookSection:
+  for section: Node in _panel().get_node('Rows/Scroll/Sections').get_children():
+    if (section.get_node('Header/Title') as Button).text == title:
+      return section as LookSection
+  return null
+
+
+func test_dithering_section_switch_and_pattern_dropdown() -> void:
+  _panel().rebuild()
+  var dithering: LookSection = _section('Dithering')
+  assert_not_null(dithering, 'the palette clamp has its own section')
+  (dithering.get_node('Header/Switch') as CheckButton).button_pressed = true
+  assert_true(DebugPanels.is_dithering(), 'the header switch turns dithering on for both clamps')
+  var pattern: LookRow = dithering.get_node('Rows').get_child(0) as LookRow
+  var option: OptionButton = pattern.get_node('Option') as OptionButton
+  assert_eq(option.item_count, 4, 'every dither pattern is listed')
+  option.select(2)
+  option.item_selected.emit(2)
+  assert_eq(DebugPanels.world_material.get_shader_parameter('dither_pattern'), 2, 'the dropdown sets the pattern')
+  assert_not_null(DebugPanels.world_material.get_shader_parameter('dither_noise'), 'the blue noise texture is set')
 
 
 func test_panel_has_a_section_per_effect_plus_light_and_environment() -> void:
@@ -57,7 +81,7 @@ func test_panel_has_a_section_per_effect_plus_light_and_environment() -> void:
 func test_a_slider_changes_the_shader_setting() -> void:
   var panel: LookPanel = _panel()
   panel.rebuild()
-  var warp: LookSection = panel.get_node('Rows/Scroll/Sections').get_child(0) as LookSection
+  var warp: LookSection = _section('Warp')
   (warp.get_node('Header/Switch') as CheckButton).button_pressed = true
   assert_eq(DebugPanels.world_material.get_shader_parameter('warp_on'), true, 'the header switch turns the effect on')
   var row: LookRow = warp.get_node('Rows').get_child(0) as LookRow

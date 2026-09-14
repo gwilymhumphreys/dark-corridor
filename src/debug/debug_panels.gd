@@ -15,6 +15,11 @@ const SHORTLIST_DIR: String = 'res://assets/palettes/shortlist'
 const LOOK_DIR: String = 'res://assets/looks'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
+const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
+const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
+## Palette clamp uniforms set from the F1 panel and the palette section of a look file, so they are
+## not look settings.
+const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'dithering']
 
 ## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the look
 ## panel and look files. Corridors apply them when built.
@@ -50,12 +55,15 @@ func _ready() -> void:
   _panel_layer.visible = false
   _look_layer.visible = false
   world_material.shader = LOOK_SHADER
+  world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
+  _clamp_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_palette(world_material, PackedColorArray())
   _palette_option.item_selected.connect(_on_palette_selected)
   _world_option.item_selected.connect(_on_world_palette_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _dithering_check.toggled.connect(_on_dithering_toggled)
+  _dithering_check.toggled.connect(func(_on: bool) -> void: _look_panel.refresh())
   _sync_controls()
   _apply_command_line()
 
@@ -194,16 +202,20 @@ func reset_settings() -> void:
   _look_panel.refresh()
 
 
-## Every look shader uniform with a default in the shader code (uniform name -> value). The palette
-## clamp uniforms live in the include file, so they are not listed.
+## Every look shader uniform with a default in the shader code or its palette clamp include (uniform
+## name -> value), except `PALETTE_UNIFORMS`.
 func look_defaults() -> Dictionary:
   if _look_defaults.is_empty():
     var pattern: RegEx = RegEx.create_from_string('uniform\\s+(\\w+)\\s+(\\w+)[^=;]*=\\s*([^;]+);')
-    for found: RegExMatch in pattern.search_all(LOOK_SHADER.code):
+    for found: RegExMatch in pattern.search_all(LOOK_SHADER.code + '\n' + PALETTE_INCLUDE.code):
       var text: String = found.get_string(3).strip_edges()
+      if found.get_string(2) in PALETTE_UNIFORMS:
+        continue
       match found.get_string(1):
         'bool':
           _look_defaults[found.get_string(2)] = text == 'true'
+        'int':
+          _look_defaults[found.get_string(2)] = text.to_int()
         'float':
           _look_defaults[found.get_string(2)] = text.to_float()
         'vec3':
@@ -229,6 +241,16 @@ func reset_look() -> void:
   if _palettes_scanned:
     _world_option.select(0)
   _sync_controls()
+
+
+## Turn dithering on or off for both clamps, keeping the F1 panel's switch in step.
+func set_dithering(on: bool) -> void:
+  _on_dithering_toggled(on)
+  _sync_controls()
+
+
+func is_dithering() -> bool:
+  return _dithering
 
 
 ## Apply `corridor_settings` and `environment_settings` to every corridor on screen.

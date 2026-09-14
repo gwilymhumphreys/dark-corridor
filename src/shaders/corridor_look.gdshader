@@ -7,10 +7,8 @@ render_mode unshaded;
 //
 // Each effect is a uniform group whose first uniform is `<group>_on`. The debug look panel builds
 // one section per group and one control per uniform, so a new uniform here gets a control with no
-// panel changes. Effects run in the order they appear below. The palette clamp step
-// (palette_clamp.gdshaderinc) is controlled by the main debug panel.
-
-#include "res://src/shaders/palette_clamp.gdshaderinc"
+// panel changes. Effects run in the order they appear below. The dithering group is the palette
+// clamp (palette_clamp.gdshaderinc); its palette and colour matching are set from the F1 panel.
 
 group_uniforms warp;
 uniform bool warp_on = false;
@@ -127,6 +125,10 @@ group_uniforms posterize;
 uniform bool posterize_on = false;
 // Brightness steps per colour channel.
 uniform float posterize_levels : hint_range(2.0, 32.0, 1.0) = 6.0;
+group_uniforms;
+
+group_uniforms dithering;
+#include "res://src/shaders/palette_clamp.gdshaderinc"
 group_uniforms;
 
 group_uniforms scanlines;

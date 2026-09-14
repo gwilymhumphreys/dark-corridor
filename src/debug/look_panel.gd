@@ -9,6 +9,7 @@ const SECTION_SCENE: PackedScene = preload('res://src/debug/look_section.tscn')
 const SLIDER_ROW_SCENE: PackedScene = preload('res://src/debug/look_slider_row.tscn')
 const CHECK_ROW_SCENE: PackedScene = preload('res://src/debug/look_check_row.tscn')
 const COLOUR_ROW_SCENE: PackedScene = preload('res://src/debug/look_colour_row.tscn')
+const OPTION_ROW_SCENE: PackedScene = preload('res://src/debug/look_option_row.tscn')
 const CORRIDOR_SCENE: String = 'res://src/scenes/corridors/corridor_3d.tscn'
 
 ## Corridor exports shown in the Light section: property -> [min, max, step] ([] for a switch).
@@ -108,7 +109,13 @@ func _build_shader_sections() -> void:
       group = uniform
       section = _add_section(group.capitalize())
       continue
-    if section == null or not defaults.has(uniform):
+    if section == null:
+      continue
+    # The palette clamp's switch is shared with the F1 panel and the full-screen clamp.
+    if uniform == 'dithering':
+      section.set_switch(DebugPanels.is_dithering(), DebugPanels.set_dithering)
+      continue
+    if not defaults.has(uniform):
       continue
     var value: Variant = look_material.get_shader_parameter(uniform)
     if value == null:
@@ -122,6 +129,8 @@ func _build_shader_sections() -> void:
     if entry['type'] == TYPE_FLOAT:
       for part: String in (entry['hint_string'] as String).split(','):
         limits.append(part.to_float())
+    elif entry['type'] == TYPE_INT and entry['hint'] == PROPERTY_HINT_ENUM:
+      limits = Array((entry['hint_string'] as String).split(','))
     section.add_row(_make_row(label, value, limits, set_value))
 
 
@@ -142,10 +151,13 @@ func _add_section(title: String) -> LookSection:
   return section
 
 
-# A slider for a number, a switch for a bool, a colour button for a colour.
+# A slider for a number, a dropdown for a choice (an int with option names in `limits`), a switch for
+# a bool, a colour button for a colour.
 func _make_row(label: String, value: Variant, limits: Array, changed: Callable) -> LookRow:
   var scene: PackedScene = SLIDER_ROW_SCENE
-  if value is bool:
+  if value is int:
+    scene = OPTION_ROW_SCENE
+  elif value is bool:
     scene = CHECK_ROW_SCENE
   elif value is Color:
     scene = COLOUR_ROW_SCENE

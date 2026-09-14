@@ -118,6 +118,9 @@ Things to check while building:
 - Seeded autotest unchanged (report and log identical to the previous commit); GUT suite passes.
 - The 3D corridor is now lit by one light at the camera; the shader light and the wall lights are gone
   ([corridor_3d.md](../systems/corridors/corridor_3d.md#light)).
+- The world clamp is now part of the [corridor look](../systems/corridor_look.md) shader. Look work
+  (effects, example looks, dithering in motion) continues in
+  [`corridor_look_handoff.md`](corridor_look_handoff.md).
 
 ## Presenting results
 

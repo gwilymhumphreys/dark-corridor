@@ -61,6 +61,7 @@ For example, a real fight under a palette:
 | `look_defaults() -> Dictionary` | Look shader uniform defaults, read from the shader code |
 | `save_look(path) -> Error`, `load_look(path) -> bool`, `reset_look()` | [Look files](corridor_look.md#look-files) and the look defaults |
 | `toggle_look_panel()` | Show or hide the look panel |
+| `set_dithering(on)`, `is_dithering()` | The dithering switch for both clamps, kept in step with the panel |
 | `set_world_palette(path: String)` | Clamp the combat corridor to this palette file; `''` turns it off |
 | `toggle_panel()` | Show or hide the panel |
 | `cycle_palette(step: int)` | Select the next (`1`) or previous (`-1`) full-screen palette |

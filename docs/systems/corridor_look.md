@@ -14,10 +14,11 @@ a look file.
 - `DebugPanels.world_material` runs `corridor_look.gdshader`. It is the material of the combat corridor's
   `SubViewportContainer` and of the testbed corridor's `Display` sprite, so it reads the corridor image
   only; the interface, enemy HUDs and VFX are not affected.
-- It includes `palette_clamp.gdshaderinc`, so the [world palette clamp](palette_clamp.md#world-clamp) is
-  one step of it, set from the F1 panel.
+- It includes `palette_clamp.gdshaderinc` inside a `dithering` group, so the
+  [world palette clamp](palette_clamp.md#world-clamp) is one step of it. The palette and colour matching
+  are set from the F1 panel.
 - Each effect is a `group_uniforms` block whose first uniform is `<group>_on`. Effects run in the order of
-  the groups in the file; the palette clamp runs after posterize and before scanlines.
+  the groups in the file.
 - Distances (line spacing, dot size, bloom radius) are in screen pixels.
 
 | Group | Does |
@@ -34,17 +35,21 @@ a look file.
 | Vignette | Darkens towards the edges |
 | Grain | Animated noise |
 | Posterize | Fewer brightness steps per channel |
+| Dithering | The world palette clamp, with its dither pattern, dot size and 2x supersample ([palette_clamp.md](palette_clamp.md#how-it-works)) |
 | Scanlines | Dark horizontal lines and optional red, green and blue vertical stripes |
 
 ## The panel
 
 - F2 toggles it, in debug builds. It is built the first time it opens.
 - One section per shader group, built from `Shader.get_shader_uniform_list(true)`: the header switch sets
-  `<group>_on`, a float gets a slider using its `hint_range`, a bool a switch, a `source_color` a colour
-  button. Adding a uniform to a group adds its control with no panel changes. A section starts expanded
+  `<group>_on`, a float gets a slider using its `hint_range`, an int with `hint_enum` a dropdown, a bool a
+  switch, a `source_color` a colour button. Adding a uniform to a group adds its control with no panel
+  changes. The Dithering header switch is the shared `dithering` switch (`DebugPanels.set_dithering`), so
+  it and the F1 panel stay in step. A section starts expanded
   when its effect is on; clicking the title shows or hides it.
-- Defaults come from the shader code (`DebugPanels.look_defaults()`), because the rendering server does not
-  report them when running headless.
+- Defaults come from the shader and include code (`DebugPanels.look_defaults()`), because the rendering
+  server does not report them when running headless. `PALETTE_UNIFORMS` (colour count, matching, the
+  dithering switch) are left out; the F1 panel and a look file's `palette` section set them.
 - Two more sections set the corridor: **Light** (`Corridor3D` exports) and **Environment** (properties of
   the corridor camera's `Environment`, including Godot's glow and fog). Their lists are
   `CORRIDOR_PROPERTIES` and `ENVIRONMENT_PROPERTIES` in `look_panel.gd`. Changes go into
