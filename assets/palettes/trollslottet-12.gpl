@@ -1,0 +1,16 @@
+GIMP Palette
+Name: trollslottet-12
+Columns: 12
+# Greyscale and red, taken from a cassette cover (placeholder name). 8 greys, 4 reds.
+  0   0   0	Black
+ 31  31  31	Grey 1
+ 61  61  61	Grey 2
+ 92  92  92	Grey 3
+122 122 122	Grey 4
+153 153 153	Grey 5
+183 183 183	Grey 6
+214 214 214	Grey 7
+ 78  12  20	Dark red
+118  28  42	Muted red
+162  45  66	Rose red
+209  16  48	Red

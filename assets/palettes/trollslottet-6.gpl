@@ -1,0 +1,10 @@
+GIMP Palette
+Name: trollslottet-6
+Columns: 6
+# Greyscale and red, taken from a cassette cover (placeholder name). 4 greys, 2 reds.
+  0   0   0	Black
+ 71  71  71	Dark grey
+143 143 143	Grey
+214 214 214	Light grey
+100  22  33	Dark red
+203  20  51	Red
