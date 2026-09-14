@@ -159,7 +159,8 @@ resolution.
   everywhere so UI never steals the arrow keys.
 - **Dev hooks**: `--perspective` / `-- --3d` start on that renderer; `-- --monster`
   spawns a monster for the shot; `--shot` captures
-  a mid-glide frame then quits (`--still` = stopped frame). Output → `user://shot.png`,
+  a mid-glide frame then quits (`--still` = stopped frame, `--shot-delay=SECONDS` waits
+  longer). `-- --set=property=value` sets any renderer export. Output → `user://shot.png`,
   path printed as `SHOT_SAVED:...`.
 
 ## Running

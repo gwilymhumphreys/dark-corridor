@@ -55,5 +55,6 @@ func _material_for(texture: Texture2D) -> StandardMaterial3D:
   material.uv1_scale = Vector3(uv_repeat.x, uv_repeat.y, 1.0)
   material.cull_mode = BaseMaterial3D.CULL_DISABLED   # visible from inside whatever the winding
   material.metallic_specular = 0.0
+  material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED   # Corridor3D's light overlay darkens it
   _materials[texture] = material
   return material

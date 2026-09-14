@@ -1,30 +1,58 @@
 class_name Corridor3D
 extends CorridorRenderer
 ## A real 3D corridor (docs/systems/corridors/corridor_3d.md). A SubViewport with its own 3D world
-## holds the camera, a light at the camera and the corridor sections; its image is drawn at
-## `view_size`, centred on this node's origin (the vanishing point), like the 2D renderers.
+## holds the camera and the corridor sections; its image is drawn at `view_size`, centred on this
+## node's origin (the vanishing point), like the 2D renderers.
 ##
-## The camera and light stay at the origin. Each frame the sections are placed from `player_z`,
-## so positions stay small however long the run is. One cell of the 2D renderers is one section
+## The camera stays at the origin. Each frame the sections are placed from `player_z`, so
+## positions stay small however long the run is. One cell of the 2D renderers is one section
 ## here. Sections are created ahead up to the light's reach and removed behind.
+##
+## The light at the camera is drawn by `corridor_light.gdshader`, set as the material overlay on
+## every piece. The pieces themselves show their full colours (unshaded, or lit by white ambient
+## light), and the overlay darkens them with distance.
+
+const LIGHT_SHADER: Shader = preload('res://src/shaders/corridor_light.gdshader')
 
 ## Where the section pieces come from. Any CorridorPieceSource can be used.
 @export var piece_source: CorridorPieceSource
 ## The camera's vertical field of view, in degrees.
 @export var fov: float = 70.0
-## How far the light reaches, in metres. Nothing is built beyond it.
-@export var light_range: float = 24.0
-@export var light_energy: float = 1.5
-## The light's falloff curve (OmniLight3D.omni_attenuation).
-@export var light_attenuation: float = 1.0
+
+@export_group('Light')
+## The distance from the camera, in metres, where the light reaches black. Sections are built a
+## little past it, so the end of the corridor is always in darkness.
+@export var light_range: float = 4.0
+## Brightness at the camera, 0 to 1. 1 shows the textures' own colours.
+@export_range(0.0, 1.0) var light_energy: float = 1.0
+## The shape of the fade to black. 1 fades evenly with distance; higher values darken sooner.
+@export_range(0.1, 4.0) var light_falloff: float = 1.5
+## How much darker surfaces are when they face away from the light. 0 ignores the angle.
+@export_range(0.0, 1.0) var angle_shading: float = 0.5
+## 0 fades smoothly. Above 0, the light level is rounded up to this many equal steps, so the
+## last step ends in a hard edge to black at `light_range`.
+@export_range(0, 16) var light_bands: int = 0
+## Measure distance straight along the corridor instead of from the camera, so the fade and the
+## band edges form square rings instead of curves on the walls.
+@export var measure_along_corridor: bool = false
+## How much the light dims at the bottom of a flicker, 0 to 1. 0 is a steady light.
+@export_range(0.0, 1.0) var flicker_amount: float = 0.0
+## How fast the flicker changes. Higher is faster.
+@export var flicker_speed: float = 8.0
 
 var _sections: Dictionary = {}   # absolute section index -> Node3D
+var _light_material: ShaderMaterial = ShaderMaterial.new()
+var _flicker_noise: FastNoiseLite = FastNoiseLite.new()
+var _flicker_time: float = 0.0
 
 @onready var _viewport: SubViewport = $SubViewport
 @onready var _camera: Camera3D = $SubViewport/Camera
-@onready var _light: OmniLight3D = $SubViewport/Light
 @onready var _section_root: Node3D = $SubViewport/Sections
 @onready var _display: Sprite2D = $Display
+
+
+func _init() -> void:
+  _flicker_noise.frequency = 1.0
 
 
 func _exit_tree() -> void:
@@ -38,13 +66,38 @@ func _build() -> void:
   _viewport.size = Vector2i(maxi(int(view_size.x), 1), maxi(int(view_size.y), 1))
   _camera.fov = fov
   _camera.far = light_range + piece_source.section_length
-  _light.omni_range = light_range
-  _light.light_energy = light_energy
-  _light.omni_attenuation = light_attenuation
+  _light_material.shader = LIGHT_SHADER
+  _apply_light()
   _display.texture = _viewport.get_texture()
   _display.centered = true
   _display.position = Vector2.ZERO
   _layout(0.0)
+
+
+func _process(delta: float) -> void:
+  super(delta)
+  _flicker_time += delta
+  _light_material.set_shader_parameter('flicker', flicker_level(_flicker_time))
+
+
+## Push the light exports to the shader. Call after changing them at runtime.
+func _apply_light() -> void:
+  _light_material.set_shader_parameter('light_range', light_range)
+  _light_material.set_shader_parameter('light_energy', light_energy)
+  _light_material.set_shader_parameter('light_falloff', light_falloff)
+  _light_material.set_shader_parameter('angle_shading', angle_shading)
+  _light_material.set_shader_parameter('light_bands', light_bands)
+  _light_material.set_shader_parameter('measure_along_corridor', measure_along_corridor)
+  _light_material.set_shader_parameter('flicker', flicker_level(_flicker_time))
+
+
+## The flicker's brightness multiplier at `time` seconds: between 1 - `flicker_amount` and 1.
+func flicker_level(time: float) -> float:
+  if flicker_amount <= 0.0:
+    return 1.0
+  # Simplex noise mostly stays within about -0.6..0.6, so it is stretched to reach the full dip.
+  var wave: float = clampf(_flicker_noise.get_noise_1d(time * flicker_speed) * 0.8 + 0.5, 0.0, 1.0)
+  return 1.0 - flicker_amount * wave
 
 
 func _layout(_frac: float) -> void:
@@ -59,10 +112,18 @@ func _layout(_frac: float) -> void:
   for index in range(first, last + 1):
     if not _sections.has(index):
       var section: Node3D = piece_source.build_section(index)
+      _set_light_overlay(section)
       _section_root.add_child(section)
       _sections[index] = section
     # Section `index` has its near edge (index - player_z) sections past depth 0.
     (_sections[index] as Node3D).position = Vector3(0.0, 0.0, -(depth_zero_distance() + (float(index) - player_z) * length))
+
+
+func _set_light_overlay(node: Node) -> void:
+  if node is GeometryInstance3D:
+    (node as GeometryInstance3D).material_overlay = _light_material
+  for child: Node in node.get_children():
+    _set_light_overlay(child)
 
 
 func _wall_nodes() -> Array:

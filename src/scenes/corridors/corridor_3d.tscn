@@ -15,7 +15,8 @@ uv_repeat = Vector2(1.2, 1.2)
 [sub_resource type="Environment" id="Environment_dark"]
 background_mode = 1
 background_color = Color(0, 0, 0, 1)
-ambient_light_source = 1
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
 reflected_light_source = 1
 
 [node name="Corridor3D" type="Node2D"]
@@ -33,10 +34,6 @@ render_target_update_mode = 4
 environment = SubResource("Environment_dark")
 current = true
 fov = 70.0
-
-[node name="Light" type="OmniLight3D" parent="SubViewport"]
-light_energy = 1.5
-omni_range = 24.0
 
 [node name="Sections" type="Node3D" parent="SubViewport"]
 

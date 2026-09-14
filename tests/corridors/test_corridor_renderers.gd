@@ -50,6 +50,37 @@ func test_corridor_3d_builds_sections_around_the_player() -> void:
     assert_lte(index, 40 + corridor._sections_ahead(), 'no section is built beyond the light')
 
 
+func test_corridor_3d_lights_every_piece_and_builds_past_the_light() -> void:
+  var corridor: Corridor3D = SCENES[2].instantiate()
+  corridor.input_enabled = false
+  add_child(corridor)
+  _nodes.append(corridor)
+  for section: Node3D in corridor._sections.values():
+    for piece: GeometryInstance3D in section.get_children():
+      assert_eq(piece.material_overlay, corridor._light_material, piece.name + ' is darkened by the light')
+  var last_index: int = corridor._sections.keys().max()
+  var far_edge: float = corridor.depth_zero_distance() + float(last_index + 1) * corridor.piece_source.section_length
+  assert_gt(far_edge, corridor.light_range, 'the last section ends beyond where the light reaches black')
+
+
+func test_corridor_3d_flicker_stays_within_its_amount() -> void:
+  var corridor: Corridor3D = SCENES[2].instantiate()
+  corridor.input_enabled = false
+  add_child(corridor)
+  _nodes.append(corridor)
+  assert_eq(corridor.flicker_level(1.23), 1.0, 'no flicker by default')
+  corridor.flicker_amount = 0.5
+  var lowest: float = 1.0
+  var highest: float = 0.0
+  for step in range(200):
+    var level: float = corridor.flicker_level(float(step) * 0.05)
+    lowest = minf(lowest, level)
+    highest = maxf(highest, level)
+  assert_gte(lowest, 0.5, 'never dimmer than 1 - flicker_amount')
+  assert_lte(highest, 1.0, 'never brighter than full')
+  assert_gt(highest - lowest, 0.25, 'the light visibly changes over ten seconds')
+
+
 func test_code_built_pieces_stay_within_their_section() -> void:
   var source: CodeBuiltPieceSource = CodeBuiltPieceSource.new()
   var section: Node3D = source.build_section(7)

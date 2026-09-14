@@ -69,6 +69,12 @@ func _apply_view_override(c: CorridorRenderer) -> void:
         c.auto_view_size = false
         c.view_size = Vector2(float(parts[0]), float(parts[1]))
         c.position = c.view_size * 0.5
+  # Dev hook: `-- --set=property=value` sets any renderer export, e.g. `--set=light_bands=4`.
+  for arg in OS.get_cmdline_user_args():
+    if arg.begins_with('--set='):
+      var pair: PackedStringArray = arg.substr(6).split('=')
+      if pair.size() == 2 and pair[0] in c:
+        c.set(pair[0], str_to_var(pair[1]))
 
 
 func _toggle_mode() -> void:
@@ -137,7 +143,12 @@ func _auto_shot() -> void:
     _set_forward(true)  # engage motion so the filter shows
   if '--monster' in OS.get_cmdline_user_args():
     _spawn_monster()
-  await get_tree().create_timer(0.6).timeout
+  # `--shot-delay=SECONDS` waits longer, e.g. for the monster to finish walking in.
+  var delay: float = 0.6
+  for arg in OS.get_cmdline_user_args():
+    if arg.begins_with('--shot-delay='):
+      delay = float(arg.substr(13))
+  await get_tree().create_timer(delay).timeout
   await RenderingServer.frame_post_draw
   var img: Image = get_viewport().get_texture().get_image()
   var path: String = 'user://shot.png'

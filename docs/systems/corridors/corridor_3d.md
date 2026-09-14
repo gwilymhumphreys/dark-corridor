@@ -8,15 +8,46 @@ A real 3D corridor renderer, usable wherever a 2D renderer is. It is an alternat
 ## How it fits the base class
 
 - Extends `CorridorRenderer`. It owns a `SubViewport` with its own 3D world (`own_world_3d`, so two
-  corridors on screen do not share one scene) holding a `Camera3D`, an `OmniLight3D` at the camera and
-  the sections. A `Sprite2D` draws the viewport's image at `view_size`, centred on the node origin.
+  corridors on screen do not share one scene) holding a `Camera3D` and the sections. A `Sprite2D` draws
+  the viewport's image at `view_size`, centred on the node origin.
 - `_build` resizes the `SubViewport` to `view_size`, so the base class's resize handling works as for the
   2D renderers.
 - Movement (`player_z`, `velocity`, held flags, `input_enabled`) comes from the base class.
 - `set_blur` and `sharp_bilinear.gdshader` do nothing for it; `_wall_nodes` returns no nodes. Distant
   walls use mipmapped textures instead (`test_wall.png` imports with mipmaps).
-- The camera environment has a black background and no ambient light, so the only light is the one at
-  the camera. Light reach, energy and falloff are exports.
+
+## Light
+
+The only light is a light at the camera, drawn by `src/shaders/corridor_light.gdshader` rather than a
+Godot light node, so it can fade, band and flicker the same way in the Compatibility renderer.
+
+- `_set_light_overlay` sets one shared `ShaderMaterial` as the `material_overlay` of every piece in a
+  new section. The overlay uses a multiply blend: it scales the colour already drawn by the light level
+  (0 to 1), so it works with any piece source. It adds no transparency.
+- The pieces show their full colours underneath. Code-built materials are unshaded; kit models are lit
+  by the environment's white ambient light. The background is black.
+- Light level: `(1 - distance / light_range) ^ light_falloff`, then darkened by the angle between the
+  surface and the camera (`angle_shading`), times `light_energy` and the flicker level. With
+  `light_bands` above 0 the level is rounded up to that many steps, so the last step ends in a hard edge
+  to black at `light_range`.
+- Sections are built past `light_range`, so the end of the geometry is always in darkness.
+- The flicker is 1D simplex noise (`flicker_level(time)`), sampled each frame in `_process` and sent to
+  the shader. The level stays between `1 - flicker_amount` and 1.
+- `_apply_light()` sends the exports to the shader; call it after changing them at runtime.
+
+| Export | Controls |
+|---|---|
+| `light_range` | Distance in metres where the light reaches black; also how far sections are built |
+| `light_energy` | Brightness at the camera; 1 shows the textures' own colours |
+| `light_falloff` | Shape of the fade; higher values darken sooner |
+| `angle_shading` | How much darker surfaces facing away from the camera are |
+| `light_bands` | 0 is a smooth fade; above 0, the number of brightness steps |
+| `measure_along_corridor` | Measure distance along the corridor, so fades and band edges are square rings instead of curves on the walls |
+| `flicker_amount`, `flicker_speed` | How deep and how fast the flicker is; 0 amount is a steady light |
+
+Painted enemy images are 2D sprites drawn over the corridor image and are not lit. Their black
+backgrounds only merge into the corridor when the walls around the sprite are dark, which depends on
+`light_range` (and, with bands, on where the last band ends).
 
 ## Sections
 
@@ -52,6 +83,7 @@ A real 3D corridor renderer, usable wherever a 2D renderer is. It is an alternat
 ## Testing it
 
 - Corridor testbed: M cycles to 3D, or start with `-- --3d`. N walks a random painted monster in (see
-  [common.md](common.md#host-extras-corridor_testbedgd)).
+  [common.md](common.md#host-extras-corridor_testbedgd)). `-- --set=light_bands=4` (any export) and
+  `--shot-delay=SECONDS` help compare lighting in screenshots.
 - In a run: F1 → Corridor → 3D, applied from the next fight.
 - Tests: `tests/corridors/test_corridor_renderers.gd`.
