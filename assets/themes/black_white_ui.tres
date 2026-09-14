@@ -66,11 +66,17 @@ texture_margin_right = 6.0
 texture_margin_bottom = 6.0
 
 [resource]
-Button/styles/disabled = SubResource("sb_btn_normal")
-Button/styles/focus = SubResource("sb_btn_normal")
-Button/styles/hover = SubResource("sb_btn_normal")
-Button/styles/normal = SubResource("sb_btn_normal")
-Button/styles/pressed = SubResource("sb_btn_pressed")
+Button/colors/font_color = Color(0.75, 0.75, 0.75, 1)
+Button/colors/font_disabled_color = Color(0.35, 0.35, 0.35, 1)
+Button/colors/font_focus_color = Color(0.75, 0.75, 0.75, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_pressed_color = Color(0.5, 0.5, 0.5, 1)
+Button/colors/font_pressed_color = Color(0.5, 0.5, 0.5, 1)
+Button/styles/disabled = SubResource("sb_btn_wide")
+Button/styles/focus = SubResource("sb_btn_wide")
+Button/styles/hover = SubResource("sb_btn_wide")
+Button/styles/normal = SubResource("sb_btn_wide")
+Button/styles/pressed = SubResource("sb_btn_wide")
 CheckBox/icons/checked = ExtResource("8_checked")
 CheckBox/icons/radio_checked = ExtResource("8_checked")
 CheckBox/icons/radio_unchecked = ExtResource("7_unchecked")

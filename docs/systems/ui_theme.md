@@ -17,6 +17,13 @@ A `Theme` resource of `StyleBoxTexture` 9-slices over the pack's PNGs
 | `PanelFramed` | the tooltip panel (`tooltip_panel.tscn`) |
 | `PanelFlat` / `PanelSmall` / `PanelDetail` | general panels |
 
+**Buttons.** Every Button state uses the pack's black button art
+(`btn-large-0.png`). The art is pure black, so a stylebox tint cannot lighten it;
+the hover, pressed and disabled states are shown by the theme's `Button/colors/font_*`
+text colours instead. Hover feedback comes only from this colour change, because
+[UIJuice](ui_juice.md) does not resize on hover. The grey squares
+(`btn-unpressed-0.png` / `btn-pressed-0.png`) are the checkbox icons.
+
 Style UI through this theme (per `CLAUDE.md` "theme over code"); reserve runtime
 `add_theme_*_override` for genuinely per-instance **data** (e.g. a `value_pill`'s
 effect-colour fill), not static styling.
@@ -53,7 +60,7 @@ only matter if the global filter were Linear). Likewise use the 64px icons, not
 a Control's **resting** position/size lands on whole pixels — `round()` any
 *computed* rest offset (e.g. a centred row's `-size.y * 0.5`). **Animations are
 free to move sub-pixel**: `offset_transform_*` is visual-only and returns to the
-integer rest pose, so hover bounces / slides glide smoothly without disturbing
+integer rest pose, so press squashes / slides glide smoothly without disturbing
 layout.
 
 ## Fonts: vector ↔ pixel toggle
