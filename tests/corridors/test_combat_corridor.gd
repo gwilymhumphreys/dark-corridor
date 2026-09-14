@@ -75,6 +75,14 @@ func test_cut_out_images_are_the_default() -> void:
   assert_eq(original._enemies[0].texture.resource_path.get_base_dir(), MonsterImages.FOLDER, 'the originals are still available')
 
 
+func test_forced_monster_image_is_used_and_cleared_on_reset() -> void:
+  MonsterImages.forced_path = 'res://assets/monsters/cut_out/bone_golem.png'
+  var corridor: CombatCorridor = _host()
+  assert_eq(corridor._enemies[0].texture.resource_path, MonsterImages.forced_path, 'the forced image is used')
+  DebugPanels.reset_settings()
+  assert_eq(MonsterImages.forced_path, '', 'resetting the debug panel clears it')
+
+
 func test_cut_out_tool_makes_black_transparent_without_a_dark_edge() -> void:
   var tool_script: GDScript = load('res://tools/cut_out_monsters.gd')
   var image: Image = Image.create(3, 1, false, Image.FORMAT_RGB8)

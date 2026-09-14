@@ -44,7 +44,8 @@ exported builds):
 
 ## Screenshots
 
-`DebugPanels` reads user arguments at start-up: `--palette=<res path>`, `--perceptual`, `--dither`. For
+`DebugPanels` reads user arguments at start-up: `--palette=<res path>`, `--perceptual`, `--dither`, plus
+`--corridor=` and `--monster-image=` (see [debug_panel.md](debug_panel.md#start-up-arguments)). For
 example, with the corridor testbed's `--shot`:
 
 ```

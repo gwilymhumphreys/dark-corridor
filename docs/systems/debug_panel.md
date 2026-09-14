@@ -28,6 +28,19 @@ as the `DebugPanels` autoload.
 | Corridor | Scaled, perspective or 3D (`corridor_kind`). Applies from the next fight. | `CombatCorridor` via `DebugPanels.corridor_scene()` |
 | Enemy images | Painted samples, painted samples cut out of their black background (default), or the pixel sprite (`enemy_images`). Applies from the next fight. | `CombatCorridor`, the corridor testbed |
 
+## Start-up arguments
+
+Read once at start-up from the user arguments (after `--`), for screenshots and comparisons:
+
+| Argument | Effect |
+|---|---|
+| `--palette=<res path>`, `--perceptual`, `--dither` | Palette clamp settings ([palette_clamp.md](palette_clamp.md)) |
+| `--corridor=scaled\|perspective\|3d` | Sets `corridor_kind` |
+| `--monster-image=<res path>` | Every painted enemy uses this image (`MonsterImages.forced_path`) |
+
+For example, a real fight in 3D under a palette:
+`<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --corridor=3d --palette=res://assets/palettes/good/waldgeist-32x.png`
+
 ## Public API
 
 | Member | Use |

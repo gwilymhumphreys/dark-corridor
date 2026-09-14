@@ -97,10 +97,6 @@ func _spawn_monster() -> void:
     _monster.texture = null
     _monster.queue_free()
   var texture: Texture2D = MonsterImages.random_texture(MonsterImages.folder_for_choice())
-  # Dev hook: `-- --monster-image=res://...` always uses that image, to compare like with like.
-  for arg in OS.get_cmdline_user_args():
-    if arg.begins_with('--monster-image='):
-      texture = load(arg.substr(16)) as Texture2D
   if texture == null:
     return
   _monster = Sprite2D.new()

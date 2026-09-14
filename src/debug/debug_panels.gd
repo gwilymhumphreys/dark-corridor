@@ -58,6 +58,11 @@ func _apply_command_line() -> void:
   for arg: String in args:
     if arg.begins_with('--palette='):
       set_palette(PaletteLoader.load_palette(arg.substr(10)))
+    elif arg.begins_with('--corridor='):
+      var kinds: Dictionary = { 'scaled': CorridorKind.SCALED, 'perspective': CorridorKind.PERSPECTIVE, '3d': CorridorKind.THREE_D }
+      corridor_kind = kinds.get(arg.substr(11), corridor_kind)
+    elif arg.begins_with('--monster-image='):
+      MonsterImages.forced_path = arg.substr(16)
   if '--perceptual' in args:
     _on_matching_selected(1)
   if '--dither' in args:
@@ -92,6 +97,7 @@ func corridor_scene() -> PackedScene:
 func reset_settings() -> void:
   corridor_kind = CorridorKind.SCALED
   enemy_images = EnemyImages.CUT_OUT
+  MonsterImages.forced_path = ''
   set_palette(PackedColorArray())
   _on_matching_selected(0)
   _on_dithering_toggled(false)

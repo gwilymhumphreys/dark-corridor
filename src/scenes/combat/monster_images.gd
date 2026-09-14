@@ -9,6 +9,10 @@ const FOLDER: String = 'res://assets/monsters'
 ## Copies with the black background made transparent, written by tools/cut_out_monsters.gd.
 const CUT_OUT_FOLDER: String = 'res://assets/monsters/cut_out'
 
+## When set, every painted enemy uses this image instead of a random one (the debug panel's
+## `--monster-image=` argument, for comparing screenshots).
+static var forced_path: String = ''
+
 static var _rng: RandomNumberGenerator = null
 static var _paths: Dictionary = {}   # folder -> PackedStringArray, each scanned once
 
@@ -30,6 +34,8 @@ static func paths(folder: String = FOLDER) -> PackedStringArray:
 
 ## A random image from `folder`, or null if it is empty.
 static func random_texture(folder: String = FOLDER) -> Texture2D:
+  if forced_path != '':
+    return load(forced_path) as Texture2D
   var all: PackedStringArray = paths(folder)
   if all.is_empty():
     return null
