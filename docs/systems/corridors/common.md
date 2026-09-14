@@ -103,6 +103,9 @@ it never touches the geometry. Run it directly (it's not the main scene):
   depth, 1 at depth 0 and smaller deeper. Each renderer implements its own law
   (`CorridorScaled`: `depth_ratio^depth`; `CorridorPerspective`: `1 / (1 + depth)`;
   `Corridor3D`: see its doc). The combat corridor scales enemies with it.
+- **`enemy_brightness(depth_cells)`**: colour multiplier (0 to 1) for an enemy image at that
+  depth. 1 for the 2D renderers; `Corridor3D` follows its light. The combat corridor and the
+  testbed monster set it as the sprite's `modulate`.
 - The blur/filter model applies to the 2D renderers only; `Corridor3D` ignores it.
 
 ### Subclass contract (virtuals)

@@ -44,8 +44,11 @@ Godot light node, so it can fade, band and flicker the same way in the Compatibi
 | `light_bands` | 0 is a smooth fade; above 0, the number of brightness steps |
 | `measure_along_corridor` | Measure distance along the corridor, so fades and band edges are square rings instead of curves on the walls |
 | `flicker_amount`, `flicker_speed` | How deep and how fast the flicker is; 0 amount is a steady light |
+| `enemy_arrived_brightness` | An enemy image's brightness at depth 0; it darkens with the light further away |
 
-Painted enemy images are 2D sprites drawn over the corridor image and are not lit. Their black
+Enemy images are 2D sprites drawn over the corridor image, so the shader does not reach them.
+`enemy_brightness(depth_cells)` gives the colour multiplier the host sets on them: the same fade, bands
+and flicker, scaled so an arrived enemy (depth 0) is at `enemy_arrived_brightness`. Their black
 backgrounds only merge into the corridor when the walls around the sprite are dark, which depends on
 `light_range` (and, with bands, on where the last band ends).
 

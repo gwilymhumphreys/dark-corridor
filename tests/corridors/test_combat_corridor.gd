@@ -45,6 +45,16 @@ func test_hosts_each_renderer_kind() -> void:
     assert_lt(corridor._enemies[0].scale.x, corridor._arrived_scale(corridor._enemies[0], 1), 'deeper is smaller')
 
 
+func test_enemies_darken_with_the_3d_corridor_light() -> void:
+  DebugPanels.corridor_kind = DebugPanelsAutoload.CorridorKind.THREE_D
+  var corridor: CombatCorridor = _host()
+  corridor.set_enemy_depth(1.0)
+  var expected: float = corridor.renderer().enemy_brightness(1.0)
+  assert_lt(expected, 1.0, 'one cell deep is darker than full')
+  assert_almost_eq(corridor._enemies[0].modulate.r, expected, 0.0001, 'the image colour follows the light')
+  assert_eq(corridor._enemies[0].modulate.a, 1.0, 'no transparency is added')
+
+
 func test_enemy_anchor_uses_the_sprite_image_height() -> void:
   var corridor: CombatCorridor = _host()
   var sprite: Sprite2D = corridor._enemies[0]

@@ -126,6 +126,12 @@ func axis_scale(_depth_cells: float) -> float:
   return 1.0
 
 
+## Colour multiplier (0 to 1) for an enemy image on the central axis at `depth_cells` deep, so it
+## darkens with the corridor's light. Renderers without a light return 1.
+func enemy_brightness(_depth_cells: float) -> float:
+  return 1.0
+
+
 # --- Shared interface (driven by corridor_testbed.gd) ------------------------
 
 func set_forward_held(v: bool) -> void:

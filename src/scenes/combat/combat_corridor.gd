@@ -33,6 +33,10 @@ func _ready() -> void:
   set_enemy_count(1)
 
 
+func _process(_delta: float) -> void:
+  _apply_brightness()   # every frame, so a flickering light reaches the enemies
+
+
 func _exit_tree() -> void:
   # CLAUDE.md runtime cleanup: release the occupant textures before free.
   for s in _enemies:
@@ -103,6 +107,15 @@ func _arrange() -> void:
     var s: float = _arrived_scale(sprite, n) * depth_scale
     sprite.position = Vector2(_offset_x(i, n), 0.0)
     sprite.scale = Vector2(s, s)
+  _apply_brightness()
+
+
+# Darken the enemy images with the corridor's light at their depth (a colour multiply; the black
+# backgrounds stay black).
+func _apply_brightness() -> void:
+  var level: float = _corridor.enemy_brightness(_depth)
+  for sprite: Sprite2D in _enemies:
+    sprite.modulate = Color(level, level, level)
 
 
 # A sprite's scale when arrived (depth 0) with `n` occupants: its full size, shrunk as the count

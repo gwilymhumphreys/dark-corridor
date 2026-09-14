@@ -81,6 +81,23 @@ func test_corridor_3d_flicker_stays_within_its_amount() -> void:
   assert_gt(highest - lowest, 0.25, 'the light visibly changes over ten seconds')
 
 
+func test_enemy_brightness_follows_the_corridor_light() -> void:
+  for scene in SCENES:
+    var corridor: CorridorRenderer = scene.instantiate()
+    corridor.input_enabled = false
+    add_child(corridor)
+    _nodes.append(corridor)
+    if not corridor is Corridor3D:
+      assert_eq(corridor.enemy_brightness(3.0), 1.0, 'renderers without a light leave enemies at full brightness')
+      continue
+    var lit: Corridor3D = corridor
+    lit.enemy_arrived_brightness = 0.8
+    assert_almost_eq(lit.enemy_brightness(0.0), 0.8, 0.0001, 'arrived enemies use enemy_arrived_brightness')
+    assert_lt(lit.enemy_brightness(0.5), 0.8, 'deeper enemies are darker')
+    var past_light: float = lit.light_range / lit.piece_source.section_length
+    assert_eq(lit.enemy_brightness(past_light), 0.0, 'enemies beyond light_range are black')
+
+
 func test_code_built_pieces_stay_within_their_section() -> void:
   var source: CodeBuiltPieceSource = CodeBuiltPieceSource.new()
   var section: Node3D = source.build_section(7)

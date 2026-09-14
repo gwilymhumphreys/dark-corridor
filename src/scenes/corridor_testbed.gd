@@ -120,6 +120,8 @@ func _place_monster(depth_cells: float) -> void:
   var full: float = Balance.ENEMY_PAINTED_HEIGHT / float(_monster.texture.get_height())
   var s: float = full * _corridor.axis_scale(depth_cells)
   _monster.scale = Vector2(s, s)
+  var level: float = _corridor.enemy_brightness(depth_cells)
+  _monster.modulate = Color(level, level, level)
 
 
 func _set_forward(v: bool) -> void:

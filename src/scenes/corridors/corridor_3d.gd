@@ -39,6 +39,9 @@ const LIGHT_SHADER: Shader = preload('res://src/shaders/corridor_light.gdshader'
 @export_range(0.0, 1.0) var flicker_amount: float = 0.0
 ## How fast the flicker changes. Higher is faster.
 @export var flicker_speed: float = 8.0
+## An enemy image's brightness once it has arrived at depth 0. Further away it darkens in step
+## with the corridor's light, reaching black at `light_range`.
+@export_range(0.0, 1.0) var enemy_arrived_brightness: float = 1.0
 
 var _sections: Dictionary = {}   # absolute section index -> Node3D
 var _light_material: ShaderMaterial = ShaderMaterial.new()
@@ -98,6 +101,26 @@ func flicker_level(time: float) -> float:
   # Simplex noise mostly stays within about -0.6..0.6, so it is stretched to reach the full dip.
   var wave: float = clampf(_flicker_noise.get_noise_1d(time * flicker_speed) * 0.8 + 0.5, 0.0, 1.0)
   return 1.0 - flicker_amount * wave
+
+
+## See CorridorRenderer.enemy_brightness. The same fade, bands and flicker as the walls, scaled so
+## the enemy is at `enemy_arrived_brightness` at depth 0. An on-axis image faces the camera, so
+## `angle_shading` does not apply.
+func enemy_brightness(depth_cells: float) -> float:
+  var arrived: float = _light_curve(depth_zero_distance())
+  if arrived <= 0.0:
+    return 0.0
+  var distance: float = depth_zero_distance() + depth_cells * piece_source.section_length
+  var level: float = _light_curve(distance) / arrived * enemy_arrived_brightness
+  level = clampf(level * flicker_level(_flicker_time), 0.0, 1.0)
+  if light_bands > 0:
+    level = ceilf(level * float(light_bands)) / float(light_bands)
+  return level
+
+
+# The fade with distance before energy, angle and flicker, as in corridor_light.gdshader.
+func _light_curve(distance: float) -> float:
+  return pow(clampf(1.0 - distance / light_range, 0.0, 1.0), light_falloff)
 
 
 func _layout(_frac: float) -> void:

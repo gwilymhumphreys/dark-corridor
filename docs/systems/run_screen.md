@@ -148,7 +148,8 @@ same law). `CombatCorridor` instances the renderer chosen in the F1 [debug panel
 Enemy images default to a random painted sample from `assets/monsters/` (`MonsterImages`, its own
 RNG, so seeded runs are unchanged), drawn with a mipmapped Linear filter and sized to
 `Balance.ENEMY_PAINTED_HEIGHT`. The debug panel can switch back to the pixel sprite at
-`ENEMY_FULL_SCALE`. `enemy_anchor` uses each sprite's own image height, so the HUDs and the VFX aimed
+`ENEMY_FULL_SCALE`. Each frame the sprites' colour is set from the renderer's `enemy_brightness(depth)`,
+so in the 3D corridor they emerge from the dark on the approach (no transparency). `enemy_anchor` uses each sprite's own image height, so the HUDs and the VFX aimed
 at them follow either image. The renderer is 1:1 with the panel (origin = panel centre), so a sprite's local x
 offset is its on-screen x offset — which is how `enemy_anchor(i)` finds each HUD's spot. The
 **approach** (`run_screen`
