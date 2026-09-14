@@ -188,7 +188,6 @@ The existing corridor testbed (`src/scenes/corridor_testbed.tscn`) is reused:
 
 No asset may use generative AI. Check the "AI Disclosure" row on each itch.io page before buying; only
 "No generative AI was used" passes, and a missing row counts as unknown. "AI Assisted" does not pass.
-CC-BY assets need an attribution in the game's credits.
 
 Candidate kits (all state "No generative AI was used", checked 2026-09-14):
 
@@ -214,7 +213,7 @@ Rejected: [100 Stylized Wall Textures](https://kalponic-studio.itch.io/stylized-
    the testbed.
 6. Painted enemy images in `CombatCorridor`: random pick, Linear filter, target height, anchor. Add the
    enemy image control to the debug panel and the N key to the testbed.
-7. Buy the kit (after confirming ceilings, piece count and licence), import it, and add
+7. Buy the kit (after confirming it has ceilings and enough pieces), import it, and add
    `KitPieceSource`.
 
 ## Tests
@@ -238,8 +237,6 @@ unchanged results.
   while a 3D camera shrinks things in proportion to distance. `APPROACH_DEPTH_START`, the camera's
   field of view and distance to depth 0, and the target enemy height may need tuning for the 3D
   renderer.
-- The OrcPoweredGames kit's licence, which its page does not state.
-
 ## Out of scope
 
 - Cutting monsters out of their backgrounds.
