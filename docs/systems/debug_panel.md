@@ -27,7 +27,6 @@ as the `DebugPanels` autoload.
 | Colour matching | RGB or perceptual (OKLab), for both clamps. Applies immediately. | Palette clamp |
 | Dithering | On or off, for both clamps. Applies immediately. | Palette clamp |
 | Corridor | Scaled, perspective or 3D (`corridor_kind`). Applies from the next fight. | `CombatCorridor` via `DebugPanels.corridor_scene()` |
-| 3D light | Shader or wall lights (`corridor_light`). Applies from the next fight. | `CombatCorridor` sets `Corridor3D.light_mode` |
 | Enemy images | Painted samples, painted samples cut out of their black background (default), or the pixel sprite (`enemy_images`). Applies from the next fight. | `CombatCorridor`, the corridor testbed |
 
 ## Start-up arguments
@@ -39,7 +38,6 @@ Read once at start-up from the user arguments (after `--`), for screenshots and 
 | `--palette=<res path>`, `--perceptual`, `--dither` | Palette clamp settings ([palette_clamp.md](palette_clamp.md)) |
 | `--world-palette=<res path>` | World clamp palette |
 | `--corridor=scaled\|perspective\|3d` | Sets `corridor_kind` |
-| `--corridor-light=shader\|walls` | Sets `corridor_light` |
 | `--corridor-set=property=value` | Sets any export on the fight's corridor renderer, before it is built (`corridor_settings`). Repeatable |
 | `--monster-image=<res path>` | Every painted enemy uses this image (`MonsterImages.forced_path`) |
 

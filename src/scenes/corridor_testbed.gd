@@ -69,7 +69,7 @@ func _apply_view_override(c: CorridorRenderer) -> void:
         c.auto_view_size = false
         c.view_size = Vector2(float(parts[0]), float(parts[1]))
         c.position = c.view_size * 0.5
-  # Dev hook: `-- --set=property=value` sets any renderer export, e.g. `--set=light_bands=4`.
+  # Dev hook: `-- --set=property=value` sets any renderer export, e.g. `--set=light_energy=0.2`.
   for arg in OS.get_cmdline_user_args():
     if arg.begins_with('--set='):
       var pair: PackedStringArray = arg.substr(6).split('=')

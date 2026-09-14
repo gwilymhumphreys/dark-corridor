@@ -50,45 +50,36 @@ func test_corridor_3d_builds_sections_around_the_player() -> void:
     assert_lte(index, 40 + corridor._sections_ahead(), 'no section is built beyond the light')
 
 
-func test_corridor_3d_lights_every_piece_and_builds_past_the_light() -> void:
+func test_corridor_3d_lit_pieces_and_builds_past_the_light() -> void:
   var corridor: Corridor3D = SCENES[2].instantiate()
   corridor.input_enabled = false
   add_child(corridor)
   _nodes.append(corridor)
+  var environment: Environment = (corridor.get_node('SubViewport/Camera') as Camera3D).environment
+  assert_eq(environment.ambient_light_source, Environment.AMBIENT_SOURCE_DISABLED, 'only the lights light the corridor')
   for section: Node3D in corridor._sections.values():
-    for piece: GeometryInstance3D in section.get_children():
-      assert_eq(piece.material_overlay, corridor._light_material, piece.name + ' is darkened by the light')
+    for piece: MeshInstance3D in section.get_children():
+      var material: StandardMaterial3D = piece.material_override
+      assert_ne(material.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED, piece.name + ' is lit by the lights')
   var last_index: int = corridor._sections.keys().max()
   var far_edge: float = corridor.depth_zero_distance() + float(last_index + 1) * corridor.piece_source.section_length
   assert_gt(far_edge, corridor.light_range, 'the last section ends beyond where the light reaches black')
 
 
-func test_corridor_3d_wall_lights_replace_the_shader_light() -> void:
+func test_corridor_3d_light_is_one_light_at_the_camera() -> void:
   var corridor: Corridor3D = SCENES[2].instantiate()
   corridor.input_enabled = false
-  corridor.light_mode = Corridor3D.LightMode.WALL_LIGHTS
+  corridor.light_range = 6.0
+  corridor.light_attenuation = 0.5
   add_child(corridor)
   _nodes.append(corridor)
-  assert_eq(corridor._wall_lights.size(), 4, 'one light for each wall, the floor and the ceiling')
-  for light: OmniLight3D in corridor._wall_lights:
-    assert_eq(light.omni_range, corridor.light_range, 'the lights reach as far as the shader light')
-    assert_eq(light.position.z, 0.0, 'level with the camera')
-  for section: Node3D in corridor._sections.values():
-    for piece: MeshInstance3D in section.get_children():
-      assert_null(piece.material_overlay, piece.name + ' has no shader light')
-      var material: StandardMaterial3D = piece.material_override
-      assert_ne(material.shading_mode, BaseMaterial3D.SHADING_MODE_UNSHADED, piece.name + ' is lit by the lights')
-  corridor.enemy_arrived_brightness = 0.8
-  assert_almost_eq(corridor.enemy_brightness(0.0), 0.8, 0.0001, 'enemy images still use the shader formula')
-
-
-func test_combat_corridor_passes_the_debug_light_choice() -> void:
-  DebugPanels.corridor_kind = DebugPanelsAutoload.CorridorKind.THREE_D
-  DebugPanels.corridor_light = Corridor3D.LightMode.WALL_LIGHTS
-  var corridor: CombatCorridor = load('res://src/scenes/combat/combat_corridor.tscn').instantiate()
-  add_child(corridor)
-  _nodes.append(corridor)
-  assert_eq((corridor.renderer() as Corridor3D).light_mode, Corridor3D.LightMode.WALL_LIGHTS, 'fights use the chosen light')
+  var lights: Array[Node] = corridor.get_node('SubViewport').find_children('*', 'OmniLight3D')
+  assert_eq(lights.size(), 1, 'a single light')
+  var light: OmniLight3D = lights[0]
+  assert_eq(light.position, Vector3.ZERO, 'at the camera')
+  assert_eq(light.omni_range, 6.0, 'reaches light_range')
+  assert_eq(light.omni_attenuation, 0.5, 'uses light_attenuation')
+  assert_almost_eq(light.light_energy, corridor.light_energy, 0.0001, 'uses light_energy')
 
 
 func test_corridor_3d_flicker_stays_within_its_amount() -> void:

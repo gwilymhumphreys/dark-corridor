@@ -95,9 +95,8 @@ Things to check while building:
 - **Colour count.** With no fixed count, the per-pixel loop may get slow. A lookup texture built when
   the palette is chosen would make the cost the same for any palette size; confirm that
   Compatibility supports the texture type used.
-- **Light interaction.** `Corridor3D` already darkens the world in steps (`light_bands`) and darkens
-  enemy images (`enemy_brightness`). A world ramp and banded light both create steps; check they look
-  right together.
+- **Light interaction.** `Corridor3D`'s lights make smooth fades, which a world ramp cuts into steps
+  (dithering hides them), and `enemy_brightness` darkens enemy images. Check they look right together.
 - **Tests and autotest.** The full GUT suite must pass and the seeded autotest (`--seed 1 --nosave
   --notutorial`) must give unchanged results. Palette work is presentation-only, so it should not
   affect the autotest.
@@ -117,8 +116,8 @@ Things to check while building:
   on the `CombatCorridor` container, choosing any palette file in the debug panel. The owner still has to
   judge the screenshots.
 - Seeded autotest unchanged (report and log identical to the previous commit); GUT suite passes.
-- The 3D corridor's lighting work (wall lights chosen over the shader light, a centre light to try next)
-  continues in [`corridor_3d_lights.md`](corridor_3d_lights.md).
+- The 3D corridor is now lit by one light at the camera; the shader light and the wall lights are gone
+  ([corridor_3d.md](../systems/corridors/corridor_3d.md#light)).
 
 ## Presenting results
 

@@ -22,8 +22,6 @@ const CORRIDOR_SCENES: Dictionary = {
 
 ## The renderer `CombatCorridor` instances. Read when a fight's combat view is built.
 var corridor_kind: CorridorKind = CorridorKind.SCALED
-## How the 3D corridor is lit: its shader light or four wall lights. Read per fight.
-var corridor_light: Corridor3D.LightMode = Corridor3D.LightMode.SHADER
 ## Renderer exports set from `--corridor-set=property=value` arguments (property -> value). The
 ## combat corridor applies them before its renderer enters the tree.
 var corridor_settings: Dictionary = {}
@@ -48,7 +46,6 @@ var _dithering: bool = false
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/MatchingRow/Option
 @onready var _dithering_check: CheckButton = $PanelLayer/Panel/Rows/DitheringRow/Check
 @onready var _corridor_option: OptionButton = $PanelLayer/Panel/Rows/CorridorRow/Option
-@onready var _light_option: OptionButton = $PanelLayer/Panel/Rows/LightRow/Option
 @onready var _enemy_option: OptionButton = $PanelLayer/Panel/Rows/EnemyRow/Option
 
 
@@ -62,7 +59,6 @@ func _ready() -> void:
   _matching_option.item_selected.connect(_on_matching_selected)
   _dithering_check.toggled.connect(_on_dithering_toggled)
   _corridor_option.item_selected.connect(_on_corridor_selected)
-  _light_option.item_selected.connect(_on_light_selected)
   _enemy_option.item_selected.connect(_on_enemy_selected)
   _sync_controls()
   _apply_command_line()
@@ -85,9 +81,6 @@ func _apply_command_line() -> void:
       var pair: PackedStringArray = arg.substr(15).split('=')
       if pair.size() == 2:
         corridor_settings[pair[0]] = str_to_var(pair[1])
-    elif arg.begins_with('--corridor-light='):
-      var modes: Dictionary = { 'shader': Corridor3D.LightMode.SHADER, 'walls': Corridor3D.LightMode.WALL_LIGHTS }
-      corridor_light = modes.get(arg.substr(17), corridor_light)
     elif arg.begins_with('--monster-image='):
       MonsterImages.forced_path = arg.substr(16)
   if '--perceptual' in args:
@@ -123,7 +116,6 @@ func corridor_scene() -> PackedScene:
 ## Back to the defaults: both clamps off, scaled corridor, painted enemies. Used between tests.
 func reset_settings() -> void:
   corridor_kind = CorridorKind.SCALED
-  corridor_light = Corridor3D.LightMode.SHADER
   corridor_settings.clear()
   enemy_images = EnemyImages.CUT_OUT
   MonsterImages.forced_path = ''
@@ -195,7 +187,6 @@ func _scan_palettes() -> void:
 
 func _sync_controls() -> void:
   _corridor_option.select(corridor_kind)
-  _light_option.select(corridor_light)
   _enemy_option.select(enemy_images)
   _matching_option.select(1 if _perceptual else 0)
   _dithering_check.set_pressed_no_signal(_dithering)
@@ -229,10 +220,6 @@ func _on_dithering_toggled(on: bool) -> void:
 
 func _on_corridor_selected(index: int) -> void:
   corridor_kind = index as CorridorKind
-
-
-func _on_light_selected(index: int) -> void:
-  corridor_light = index as Corridor3D.LightMode
 
 
 func _on_enemy_selected(index: int) -> void:

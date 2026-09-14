@@ -34,8 +34,6 @@ func _ready() -> void:
   material = DebugPanels.world_material
   _corridor = DebugPanels.corridor_scene().instantiate() as CorridorRenderer
   _corridor.input_enabled = false   # the view drives the glide; W/S must not scroll the fight
-  if _corridor is Corridor3D:
-    (_corridor as Corridor3D).light_mode = DebugPanels.corridor_light
   for property: String in DebugPanels.corridor_settings:
     if property in _corridor:
       _corridor.set(property, DebugPanels.corridor_settings[property])

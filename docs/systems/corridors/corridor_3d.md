@@ -18,51 +18,37 @@ A real 3D corridor renderer, usable wherever a 2D renderer is. It is an alternat
 
 ## Light
 
-The only light is a light at the camera, drawn by `src/shaders/corridor_light.gdshader` rather than a
-Godot light node, so it can fade, band and flicker the same way in the Compatibility renderer.
+The corridor is lit by one Godot `OmniLight3D`, the `SubViewport/Light` node in `corridor_3d.tscn`, at
+the camera (the origin of the 3D scene). The owner chose it over four lights on the walls, floor and
+ceiling, which looked almost the same (2026-09-15).
 
-- `_set_light_overlay` sets one shared `ShaderMaterial` as the `material_overlay` of every piece in a
-  new section. The overlay uses a multiply blend: it scales the colour already drawn by the light level
-  (0 to 1), so it works with any piece source. It adds no transparency.
-- The pieces show their full colours underneath. Code-built materials are unshaded; kit models are lit
-  by the environment's white ambient light. The background is black.
-- Light level: `(1 - distance / light_range) ^ light_falloff`, then darkened by the angle between the
-  surface and the camera (`angle_shading`), times `light_energy` and the flicker level. With
-  `light_bands` above 0 the level is rounded up to that many steps, so the last step ends in a hard edge
-  to black at `light_range`.
+- The environment has no ambient light and a black background, so everything past `light_range` is
+  black. Code-built materials are shaded; kit models are lit the same way.
+- Godot's omni light drops sharply to zero just before its range, so with a short `light_range` the fade
+  to black looks abrupt.
+- Raising `light_attenuation` above 1 makes the nearest surface brighter, not darker.
 - Sections are built past `light_range`, so the end of the geometry is always in darkness.
-- The flicker is 1D simplex noise (`flicker_level(time)`), sampled each frame in `_process` and sent to
-  the shader. The level stays between `1 - flicker_amount` and 1.
-- `_apply_light()` sends the exports to the shader; call it after changing them at runtime.
+- The flicker is 1D simplex noise (`flicker_level(time)`), sampled each frame in `_process`; the light's
+  energy is `light_energy` times that level, which stays between `1 - flicker_amount` and 1.
+- `_apply_light()` copies the exports to the light node when the corridor is built; call it after
+  changing them at runtime.
 
 | Export | Controls |
 |---|---|
-| `light_range` | Distance in metres where the light reaches black; also how far sections are built |
-| `light_energy` | Brightness at the camera; 1 shows the textures' own colours |
-| `light_falloff` | Shape of the fade; higher values darken sooner |
-| `angle_shading` | How much darker surfaces facing away from the camera are |
-| `light_bands` | 0 is a smooth fade; above 0, the number of brightness steps |
-| `measure_along_corridor` | Measure distance along the corridor, so fades and band edges are square rings instead of curves on the walls |
+| `light_range` | The light's `omni_range`: where it reaches black; also how far sections are built |
+| `light_energy` | The light's `light_energy` |
+| `light_attenuation` | The light's `omni_attenuation` |
 | `flicker_amount`, `flicker_speed` | How deep and how fast the flicker is; 0 amount is a steady light |
-| `enemy_arrived_brightness` | An enemy image's brightness at depth 0; it darkens with the light further away |
-| `light_mode` | `SHADER` (above) or `WALL_LIGHTS` (below). Set before the corridor enters the tree |
-| `wall_light_inset`, `wall_light_attenuation` | Wall lights only: how far each light sits in from its surface, and its `omni_attenuation` |
+| `enemy_arrived_brightness` | An enemy image's brightness at depth 0; it darkens further away |
+| `light_falloff` | Enemy images only: the shape of their fade; higher values darken sooner |
 
-### Wall lights
+### Enemy images
 
-With `light_mode = WALL_LIGHTS` the overlay is not used. Four `OmniLight3D` nodes sit level with the
-camera, one in the middle of each wall, the floor and the ceiling, so the corners where surfaces meet are
-darker. Code-built pieces switch to shaded materials (`CodeBuiltPieceSource.unshaded`), and ambient light
-is turned off so everything past `light_range` is black. The lights use `light_range`, `light_energy`
-and the flicker; they ignore `light_falloff`, `angle_shading`, `light_bands` and
-`measure_along_corridor`. Enemy images keep using the shader formula in `enemy_brightness`. In fights
-the mode comes from the debug panel's "3D light" choice.
-
-Enemy images are 2D sprites drawn over the corridor image, so the shader does not reach them.
-`enemy_brightness(depth_cells)` gives the colour multiplier the host sets on them: the same fade, bands
-and flicker, scaled so an arrived enemy (depth 0) is at `enemy_arrived_brightness`. Their black
-backgrounds only merge into the corridor when the walls around the sprite are dark, which depends on
-`light_range` (and, with bands, on where the last band ends).
+Enemy images are 2D sprites drawn over the corridor image, so the lights do not reach them.
+`enemy_brightness(depth_cells)` gives the colour multiplier the host sets on them:
+`(1 - distance / light_range) ^ light_falloff` times the flicker, scaled so an arrived enemy (depth 0)
+is at `enemy_arrived_brightness`. Their black backgrounds only merge
+into the corridor when the walls around the sprite are dark, which depends on `light_range`.
 
 ## Sections
 
@@ -98,7 +84,11 @@ backgrounds only merge into the corridor when the walls around the sprite are da
 ## Testing it
 
 - Corridor testbed: M cycles to 3D, or start with `-- --3d`. N walks a random painted monster in (see
-  [common.md](common.md#host-extras-corridor_testbedgd)). `-- --set=light_bands=4` (any export) and
+  [common.md](common.md#host-extras-corridor_testbedgd)). `-- --set=light_energy=0.2` (any export) and
   `--shot-delay=SECONDS` help compare lighting in screenshots.
-- In a run: F1 → Corridor → 3D, applied from the next fight.
+- Light settings: edit the root node's "Light" exports in `corridor_3d.tscn`, save, then run the
+  testbed and press M until it shows the 3D corridor. The testbed builds its 3D corridor from that scene.
+- In a run: F1 → Corridor → 3D, applied from the next fight. For screenshots of a real fight,
+  `--corridor=3d --corridor-set=light_energy=<value>`
+  ([debug_panel.md](../debug_panel.md#start-up-arguments)).
 - Tests: `tests/corridors/test_corridor_renderers.gd`.
