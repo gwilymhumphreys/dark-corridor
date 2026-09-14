@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://kng6uc12hw2r"
-path="res://.godot/imported/harristhoth-12-32x.png-00b2eade76ace9db70eee6d0cb51ce13.ctex"
+uid="uid://dr4imt8qc5jjs"
+path="res://.godot/imported/ty-taikoncolor-24-32x.png-093358f4be9c2527690576d5fb660eab.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/palettes/harristhoth-12-32x.png"
-dest_files=["res://.godot/imported/harristhoth-12-32x.png-00b2eade76ace9db70eee6d0cb51ce13.ctex"]
+source_file="res://assets/palettes/unsorted/ty-taikoncolor-24-32x.png"
+dest_files=["res://.godot/imported/ty-taikoncolor-24-32x.png-093358f4be9c2527690576d5fb660eab.ctex"]
 
 [params]
 
