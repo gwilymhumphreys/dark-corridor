@@ -66,6 +66,29 @@ func test_enemy_anchor_uses_the_sprite_image_height() -> void:
   assert_almost_eq(half_h * 2.0, Balance.ENEMY_PAINTED_HEIGHT, 0.01, 'a painted image is sized to the target height')
 
 
+func test_cut_out_images_are_the_default() -> void:
+  var corridor: CombatCorridor = _host()
+  var path: String = corridor._enemies[0].texture.resource_path
+  assert_true(path.begins_with(MonsterImages.CUT_OUT_FOLDER), 'fights use the cut-out copies by default')
+  DebugPanels.enemy_images = DebugPanelsAutoload.EnemyImages.PAINTED
+  var original: CombatCorridor = _host()
+  assert_eq(original._enemies[0].texture.resource_path.get_base_dir(), MonsterImages.FOLDER, 'the originals are still available')
+
+
+func test_cut_out_tool_makes_black_transparent_without_a_dark_edge() -> void:
+  var tool_script: GDScript = load('res://tools/cut_out_monsters.gd')
+  var image: Image = Image.create(3, 1, false, Image.FORMAT_RGB8)
+  image.set_pixel(0, 0, Color8(3, 2, 4))       # background with compression noise
+  image.set_pixel(1, 0, Color8(20, 10, 5))     # a soft edge, partly faded into the black
+  image.set_pixel(2, 0, Color8(200, 150, 90))  # the figure
+  tool_script.cut_out(image, 0.04, 0.12)
+  assert_eq(image.get_pixel(0, 0).a, 0.0, 'near-black is fully transparent')
+  var edge: Color = image.get_pixel(1, 0)
+  assert_between(edge.a, 0.05, 0.95, 'a soft edge is partly transparent')
+  assert_gt(edge.r8, 20, 'a partly transparent pixel is brightened, so there is no dark outline')
+  assert_eq(image.get_pixel(2, 0), Color8(200, 150, 90), 'bright pixels are unchanged and opaque')
+
+
 func test_pixel_sprite_option_keeps_the_original_sprite() -> void:
   DebugPanels.enemy_images = DebugPanelsAutoload.EnemyImages.PIXEL
   var corridor: CombatCorridor = _host()

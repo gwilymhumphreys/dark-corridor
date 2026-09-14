@@ -26,7 +26,7 @@ as the `DebugPanels` autoload.
 | Colour matching | RGB or perceptual (OKLab). Applies immediately. | Palette clamp |
 | Dithering | On or off. Applies immediately. | Palette clamp |
 | Corridor | Scaled, perspective or 3D (`corridor_kind`). Applies from the next fight. | `CombatCorridor` via `DebugPanels.corridor_scene()` |
-| Enemy images | Painted samples (default) or the pixel sprite (`enemy_images`). Applies from the next fight. | `CombatCorridor` |
+| Enemy images | Painted samples, painted samples cut out of their black background (default), or the pixel sprite (`enemy_images`). Applies from the next fight. | `CombatCorridor`, the corridor testbed |
 
 ## Public API
 

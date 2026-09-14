@@ -145,10 +145,15 @@ side-to-side and shrinks them by count), scaled by the renderer's `axis_scale(de
 same law). `CombatCorridor` instances the renderer chosen in the F1 [debug panel](debug_panel.md)
 (scaled, perspective or 3D) when the combat view is built.
 
-Enemy images default to a random painted sample from `assets/monsters/` (`MonsterImages`, its own
-RNG, so seeded runs are unchanged), drawn with a mipmapped Linear filter and sized to
-`Balance.ENEMY_PAINTED_HEIGHT`. The debug panel can switch back to the pixel sprite at
-`ENEMY_FULL_SCALE`. Each frame the sprites' colour is set from the renderer's `enemy_brightness(depth)`,
+Enemy images default to a random painted sample from `assets/monsters/cut_out/` (`MonsterImages`, its
+own RNG, so seeded runs are unchanged), drawn with a mipmapped Linear filter and sized to
+`Balance.ENEMY_PAINTED_HEIGHT`. The debug panel can switch to the uncut originals in
+`assets/monsters/` or back to the pixel sprite at `ENEMY_FULL_SCALE`.
+
+The cut-out copies are made by `tools/cut_out_monsters.gd` (usage in its header): a pixel's opacity
+comes from its brightest colour channel, partly transparent pixels are brightened so edges have no
+dark outline, and each image is cropped to its visible part. Dark areas inside a figure become
+see-through too. Re-run the tool after adding or changing an image in `assets/monsters/`. Each frame the sprites' colour is set from the renderer's `enemy_brightness(depth)`,
 so in the 3D corridor they emerge from the dark on the approach (no transparency). `enemy_anchor` uses each sprite's own image height, so the HUDs and the VFX aimed
 at them follow either image. The renderer is 1:1 with the panel (origin = panel centre), so a sprite's local x
 offset is its on-screen x offset — which is how `enemy_anchor(i)` finds each HUD's spot. The

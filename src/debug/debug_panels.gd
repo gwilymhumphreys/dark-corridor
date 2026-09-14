@@ -8,7 +8,7 @@ extends Node
 ## English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
 
 enum CorridorKind { SCALED, PERSPECTIVE, THREE_D }
-enum EnemyImages { PAINTED, PIXEL }
+enum EnemyImages { PAINTED, PIXEL, CUT_OUT }
 
 const PALETTE_ROOT: String = 'res://assets/palettes'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshader
@@ -20,8 +20,9 @@ const CORRIDOR_SCENES: Dictionary = {
 
 ## The renderer `CombatCorridor` instances. Read when a fight's combat view is built.
 var corridor_kind: CorridorKind = CorridorKind.SCALED
-## Whether enemies use a random painted sample or the original pixel sprite. Read per fight.
-var enemy_images: EnemyImages = EnemyImages.PAINTED
+## Whether enemies use a random painted sample (with or without its black background) or the
+## original pixel sprite. Read per fight.
+var enemy_images: EnemyImages = EnemyImages.CUT_OUT
 
 var _palette_paths: Array[String] = []   # OptionButton item id - 1 -> palette path (id 0 = Off)
 var _palettes_scanned: bool = false
@@ -90,7 +91,7 @@ func corridor_scene() -> PackedScene:
 ## Back to the defaults: clamp off, scaled corridor, painted enemies. Used between tests.
 func reset_settings() -> void:
   corridor_kind = CorridorKind.SCALED
-  enemy_images = EnemyImages.PAINTED
+  enemy_images = EnemyImages.CUT_OUT
   set_palette(PackedColorArray())
   _on_matching_selected(0)
   _on_dithering_toggled(false)

@@ -239,9 +239,16 @@ unchanged results.
   while a 3D camera shrinks things in proportion to distance. `APPROACH_DEPTH_START`, the camera's
   field of view and distance to depth 0, and the target enemy height may need tuning for the 3D
   renderer.
+
+## Added after the first build
+
+- The 3D corridor's light became a shader with range, banded falloff and flicker exports; enemy
+  images darken with it (see [`../systems/corridors/corridor_3d.md`](../systems/corridors/corridor_3d.md)).
+- Cutting monsters out of their black backgrounds, requested by the owner: `tools/cut_out_monsters.gd`
+  writes cropped copies with transparent backgrounds to `assets/monsters/cut_out/`, used by default.
+
 ## Out of scope
 
-- Cutting monsters out of their backgrounds.
 - Choosing the final palette, kit or monster images (owner's decisions).
 - An image field on `EnemyDef`.
 - Palette loading in exported builds.

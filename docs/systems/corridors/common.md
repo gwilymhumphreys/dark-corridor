@@ -163,7 +163,8 @@ resolution.
 - **Dev hooks**: `--perspective` / `-- --3d` start on that renderer; `-- --monster`
   spawns a monster for the shot; `--shot` captures
   a mid-glide frame then quits (`--still` = stopped frame, `--shot-delay=SECONDS` waits
-  longer). `-- --set=property=value` sets any renderer export. Output → `user://shot.png`,
+  longer). `-- --set=property=value` sets any renderer export; `-- --monster-image=res://...`
+  always uses that image. Output → `user://shot.png`,
   path printed as `SHOT_SAVED:...`.
 
 ## Running

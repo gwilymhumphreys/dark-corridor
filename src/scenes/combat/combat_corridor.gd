@@ -11,8 +11,9 @@ extends SubViewportContainer
 ## renderer is 1:1 with the panel (origin = panel centre), so a sprite's local x offset is its
 ## on-screen x offset.
 ##
-## Enemy images: a random painted sample by default (scaled to `Balance.ENEMY_PAINTED_HEIGHT`,
-## mipmapped Linear filter), or the original pixel sprite (scaled by `enemy_full_scale`).
+## Enemy images: a random painted sample, cut out of its black background by default (scaled to
+## `Balance.ENEMY_PAINTED_HEIGHT`, mipmapped Linear filter), or the original pixel sprite (scaled
+## by `enemy_full_scale`).
 
 const ENEMY_SPRITE: Texture2D = preload('res://assets/sprites/enemies/thorn-demon.png')
 const HUD_GAP: float = 36.0    # gap between a sprite's top and the bottom of its HUD
@@ -26,7 +27,7 @@ var _depth: float = 0.0
 
 
 func _ready() -> void:
-  _painted = DebugPanels.enemy_images == DebugPanelsAutoload.EnemyImages.PAINTED
+  _painted = DebugPanels.enemy_images != DebugPanelsAutoload.EnemyImages.PIXEL
   _corridor = DebugPanels.corridor_scene().instantiate() as CorridorRenderer
   _corridor.input_enabled = false   # the view drives the glide; W/S must not scroll the fight
   $SubViewport.add_child(_corridor)
@@ -56,7 +57,7 @@ func set_enemy_count(n: int) -> void:
   n = maxi(n, 0)
   while _enemies.size() < n:
     var s := Sprite2D.new()
-    var texture: Texture2D = MonsterImages.random_texture() if _painted else null
+    var texture: Texture2D = MonsterImages.random_texture(MonsterImages.folder_for_choice()) if _painted else null
     if texture != null:
       s.texture = texture
       s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
