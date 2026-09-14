@@ -78,6 +78,43 @@ example, with the corridor testbed's `--shot`:
 
 Tests: `tests/utils/test_palette_loader.gd`.
 
+## Dithering in motion (research)
+
+The dither pattern is fixed to the screen, so when the corridor glides or an enemy approaches, the image
+moves under a still pattern, and the light flicker flips dithered pixels even when nothing moves. The
+pattern, size and supersample options above are the cheap fixes; they have not been judged in motion
+yet. The research behind them, so it does not need repeating:
+
+**Return of the Obra Dinn** (Lucas Pope; [forum post](https://forums.tigsource.com/index.php?topic=40832.msg1363742#msg1363742),
+[translation with detail](https://sudonull.com/post/64811-The-effect-of-dithering-in-a-three-dimensional-game)).
+The game renders greyscale and converts to 1-bit in a post-process by comparing each pixel with a
+tiling pattern: an 8x8 Bayer pattern for smooth gradients on some objects, a 128x128 blue noise pattern
+for most geometry.
+
+| Approach | Result |
+|---|---|
+| Pattern in each object's texture space | Failed: texels change size with distance, so resampling to the screen distorts the dots |
+| Warping the pattern each frame to follow the motion | Failed: dots need their neighbours, and warping opened gaps |
+| Screen pattern shifted by camera rotation (`offset = screen size * rotation / field of view`) | Kept as the game's "digital" mode: stays 1:1 with screen pixels, follows rotation only |
+| Pattern mapped to the inside of a sphere around the camera, turning with it but not moving | Kept as the "analogue" mode: sticks to the scene when the camera turns; moire where texels nearly match pixels |
+| That sphere dithering done at 2x resolution, then scaled down | Removes the moire; dots grow towards the screen edges and output is no longer strictly 1-bit |
+
+Pope also raised the resolution from 640x360 to 800x450. None of his fixes handle the camera moving
+rather than turning, which he accepted for a slow-moving game. This corridor's camera never turns, so
+only the pattern choice and the 2x supersampling carry over.
+
+**Surface-stable fractal dithering** (Rune Skovbo Johansen; [article](https://runevision.com/tech/dither3d/),
+[source](https://github.com/runevision/Dither3D), MPL-2.0, Unity built-in pipeline). It handles a moving
+and zooming camera. The pattern is fixed to each surface's UVs, stored as a 3D texture of Bayer dot
+patterns at several scales, and screen-space derivatives pick the scale so dots keep a constant screen
+size, adding or removing dots as the surface gets nearer or further. It is per-material shader code, so
+it looks portable to a Godot spatial shader. Blue noise does not fit its self-similar scaling.
+
+Applying it here would move the dither decision out of the look shader and into the wall and enemy
+sprite materials. Those would need the colour after lighting, so they would compute the one omni light
+themselves (no ambient light makes this simple), or a second viewport would render only the per-surface
+threshold for the look shader to read instead of its screen pattern.
+
 ## Known issue
 
 In about 1 in 12 screenshot runs the palette loaded without a warning but the screenshot showed no
