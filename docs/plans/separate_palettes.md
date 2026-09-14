@@ -102,14 +102,23 @@ Things to check while building:
   --notutorial`) must give unchanged results. Palette work is presentation-only, so it should not
   affect the autotest.
 
-## Open questions for the owner
+## Owner's answers (2026-09-14)
 
-Ask before deciding these; show options as screenshots where it helps.
-- What is an environment for tinting: an act, a beat type, or something else not yet in the game?
-- Do enemy images take the world palette (and lose their own colour), or keep some colour?
-- Are item icons world art or interface?
-- Are damage numbers effects or interface?
-- Does the effects palette stay the same in every environment?
+- An environment is an act: one world tint per act. Switching tints between acts is not a priority;
+  the current work is trying looks to find a good visual style.
+- Enemy images take the world palette.
+- Item icons are interface.
+- Damage numbers are effects.
+- The effects palette is the same in every act.
+
+## Progress
+
+- **Approach 1 is built as a debug setting**: the [world clamp](../systems/palette_clamp.md#world-clamp)
+  on the `CombatCorridor` container, choosing any palette file in the debug panel. The owner still has to
+  judge the screenshots.
+- Seeded autotest unchanged (report and log identical to the previous commit); GUT suite passes.
+- The 3D corridor's lighting work (wall lights chosen over the shader light, a centre light to try next)
+  continues in [`corridor_3d_lights.md`](corridor_3d_lights.md).
 
 ## Presenting results
 

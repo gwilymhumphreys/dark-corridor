@@ -14,6 +14,9 @@ extends SubViewportContainer
 ## Enemy images: a random painted sample, cut out of its black background by default (scaled to
 ## `Balance.ENEMY_PAINTED_HEIGHT`, mipmapped Linear filter), or the original pixel sprite (scaled
 ## by `enemy_full_scale`).
+##
+## The container is drawn through `DebugPanels.world_material`, the world palette clamp, which
+## covers the walls and enemy images only. It passes colours through while no world palette is set.
 
 const ENEMY_SPRITE: Texture2D = preload('res://assets/sprites/enemies/thorn-demon.png')
 const HUD_GAP: float = 36.0    # gap between a sprite's top and the bottom of its HUD
@@ -28,8 +31,14 @@ var _depth: float = 0.0
 
 func _ready() -> void:
   _painted = DebugPanels.enemy_images != DebugPanelsAutoload.EnemyImages.PIXEL
+  material = DebugPanels.world_material
   _corridor = DebugPanels.corridor_scene().instantiate() as CorridorRenderer
   _corridor.input_enabled = false   # the view drives the glide; W/S must not scroll the fight
+  if _corridor is Corridor3D:
+    (_corridor as Corridor3D).light_mode = DebugPanels.corridor_light
+  for property: String in DebugPanels.corridor_settings:
+    if property in _corridor:
+      _corridor.set(property, DebugPanels.corridor_settings[property])
   $SubViewport.add_child(_corridor)
   set_enemy_count(1)
 
@@ -44,6 +53,7 @@ func _exit_tree() -> void:
     if is_instance_valid(s):
       s.texture = null
   _enemies.clear()
+  material = null
 
 
 ## The hosted renderer (whichever kind the debug panel chose).

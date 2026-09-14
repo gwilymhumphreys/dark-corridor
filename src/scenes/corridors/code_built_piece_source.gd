@@ -11,7 +11,11 @@ extends CorridorPieceSource
 ## How many times each texture repeats across one section (along the corridor, across it).
 @export var uv_repeat: Vector2 = Vector2.ONE
 
-var _materials: Dictionary = {}   # Texture2D -> StandardMaterial3D, shared by every section
+## True shows each texture's own colours, for Corridor3D's shader light. Corridor3D sets it to false
+## when light nodes light the corridor.
+var unshaded: bool = true
+
+var _materials: Dictionary = {}   # 'texture id:unshaded' -> StandardMaterial3D, shared by every section
 
 
 func build_section(_index: int) -> Node3D:
@@ -46,8 +50,9 @@ func _add_quad(parent: Node3D, piece_name: String, texture: Texture2D, quad_size
 
 
 func _material_for(texture: Texture2D) -> StandardMaterial3D:
-  if _materials.has(texture):
-    return _materials[texture]
+  var key: String = '%d:%s' % [texture.get_instance_id(), unshaded]
+  if _materials.has(key):
+    return _materials[key]
   var material: StandardMaterial3D = StandardMaterial3D.new()
   material.albedo_texture = texture
   material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
@@ -55,6 +60,7 @@ func _material_for(texture: Texture2D) -> StandardMaterial3D:
   material.uv1_scale = Vector3(uv_repeat.x, uv_repeat.y, 1.0)
   material.cull_mode = BaseMaterial3D.CULL_DISABLED   # visible from inside whatever the winding
   material.metallic_specular = 0.0
-  material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED   # Corridor3D's light overlay darkens it
-  _materials[texture] = material
+  if unshaded:
+    material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED   # Corridor3D's light overlay darkens it
+  _materials[key] = material
   return material

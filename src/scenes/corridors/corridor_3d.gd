@@ -8,9 +8,12 @@ extends CorridorRenderer
 ## positions stay small however long the run is. One cell of the 2D renderers is one section
 ## here. Sections are created ahead up to the light's reach and removed behind.
 ##
-## The light at the camera is drawn by `corridor_light.gdshader`, set as the material overlay on
-## every piece. The pieces themselves show their full colours (unshaded, or lit by white ambient
-## light), and the overlay darkens them with distance.
+## With `light_mode` SHADER, the light at the camera is drawn by `corridor_light.gdshader`, set as
+## the material overlay on every piece. The pieces themselves show their full colours (unshaded, or
+## lit by white ambient light), and the overlay darkens them with distance. With WALL_LIGHTS, four
+## OmniLight3D nodes light the pieces instead. Enemy images use the shader's formula in both modes.
+
+enum LightMode { SHADER, WALL_LIGHTS }
 
 const LIGHT_SHADER: Shader = preload('res://src/shaders/corridor_light.gdshader')
 
@@ -20,6 +23,11 @@ const LIGHT_SHADER: Shader = preload('res://src/shaders/corridor_light.gdshader'
 @export var fov: float = 70.0
 
 @export_group('Light')
+## SHADER: the corridor_light.gdshader overlay. WALL_LIGHTS: four OmniLight3D nodes level with the
+## camera, one in the middle of each wall, the floor and the ceiling, so corners are darker. Wall
+## lights ignore `light_falloff`, `angle_shading`, `light_bands` and `measure_along_corridor`. Set
+## before the corridor enters the tree.
+@export var light_mode: LightMode = LightMode.SHADER
 ## The distance from the camera, in metres, where the light reaches black. Sections are built a
 ## little past it, so the end of the corridor is always in darkness.
 @export var light_range: float = 4.0
@@ -42,8 +50,14 @@ const LIGHT_SHADER: Shader = preload('res://src/shaders/corridor_light.gdshader'
 ## An enemy image's brightness once it has arrived at depth 0. Further away it darkens in step
 ## with the corridor's light, reaching black at `light_range`.
 @export_range(0.0, 1.0) var enemy_arrived_brightness: float = 1.0
+## WALL_LIGHTS only: how far each light sits in from its surface, in metres. Closer gives a
+## brighter spot on the surface in front of it.
+@export var wall_light_inset: float = 0.3
+## WALL_LIGHTS only: the lights' `omni_attenuation`. Higher values fade sooner.
+@export var wall_light_attenuation: float = 1.0
 
 var _sections: Dictionary = {}   # absolute section index -> Node3D
+var _wall_lights: Array[OmniLight3D] = []
 var _light_material: ShaderMaterial = ShaderMaterial.new()
 var _flicker_noise: FastNoiseLite = FastNoiseLite.new()
 var _flicker_time: float = 0.0
@@ -61,15 +75,20 @@ func _init() -> void:
 func _exit_tree() -> void:
   _display.texture = null
   _clear_sections()
+  _wall_lights.clear()
 
 
 func _build() -> void:
   if piece_source == null:
     piece_source = CodeBuiltPieceSource.new()
+  if piece_source is CodeBuiltPieceSource:
+    (piece_source as CodeBuiltPieceSource).unshaded = light_mode == LightMode.SHADER
   _viewport.size = Vector2i(maxi(int(view_size.x), 1), maxi(int(view_size.y), 1))
   _camera.fov = fov
   _camera.far = light_range + piece_source.section_length
   _light_material.shader = LIGHT_SHADER
+  if light_mode == LightMode.WALL_LIGHTS:
+    _build_wall_lights()
   _apply_light()
   _display.texture = _viewport.get_texture()
   _display.centered = true
@@ -80,10 +99,13 @@ func _build() -> void:
 func _process(delta: float) -> void:
   super(delta)
   _flicker_time += delta
-  _light_material.set_shader_parameter('flicker', flicker_level(_flicker_time))
+  var flicker: float = flicker_level(_flicker_time)
+  _light_material.set_shader_parameter('flicker', flicker)
+  for light: OmniLight3D in _wall_lights:
+    light.light_energy = light_energy * flicker
 
 
-## Push the light exports to the shader. Call after changing them at runtime.
+## Push the light exports to the shader and the wall lights. Call after changing them at runtime.
 func _apply_light() -> void:
   _light_material.set_shader_parameter('light_range', light_range)
   _light_material.set_shader_parameter('light_energy', light_energy)
@@ -92,6 +114,36 @@ func _apply_light() -> void:
   _light_material.set_shader_parameter('light_bands', light_bands)
   _light_material.set_shader_parameter('measure_along_corridor', measure_along_corridor)
   _light_material.set_shader_parameter('flicker', flicker_level(_flicker_time))
+  for light: OmniLight3D in _wall_lights:
+    light.omni_range = light_range
+    light.omni_attenuation = wall_light_attenuation
+    light.light_energy = light_energy * flicker_level(_flicker_time)
+
+
+# WALL_LIGHTS: one light in the middle of each wall, the floor and the ceiling, level with the
+# camera, and no ambient light, so everything past `light_range` is black.
+func _build_wall_lights() -> void:
+  for light: OmniLight3D in _wall_lights:
+    light.free()
+  _wall_lights.clear()
+  var half_w: float = piece_source.section_width * 0.5 - wall_light_inset
+  var half_h: float = piece_source.section_height * 0.5 - wall_light_inset
+  var positions: Array[Vector3] = [
+    Vector3(-half_w, 0.0, 0.0),
+    Vector3(half_w, 0.0, 0.0),
+    Vector3(0.0, half_h, 0.0),
+    Vector3(0.0, -half_h, 0.0),
+  ]
+  for at: Vector3 in positions:
+    var light: OmniLight3D = OmniLight3D.new()
+    light.position = at
+    light.light_specular = 0.0
+    light.shadow_enabled = false
+    _viewport.add_child(light)
+    _wall_lights.append(light)
+  var environment: Environment = _camera.environment.duplicate()
+  environment.ambient_light_source = Environment.AMBIENT_SOURCE_DISABLED
+  _camera.environment = environment
 
 
 ## The flicker's brightness multiplier at `time` seconds: between 1 - `flicker_amount` and 1.
@@ -103,9 +155,9 @@ func flicker_level(time: float) -> float:
   return 1.0 - flicker_amount * wave
 
 
-## See CorridorRenderer.enemy_brightness. The same fade, bands and flicker as the walls, scaled so
-## the enemy is at `enemy_arrived_brightness` at depth 0. An on-axis image faces the camera, so
-## `angle_shading` does not apply.
+## See CorridorRenderer.enemy_brightness. The shader light's fade, bands and flicker, scaled so
+## the enemy is at `enemy_arrived_brightness` at depth 0, in both light modes. An on-axis image
+## faces the camera, so `angle_shading` does not apply.
 func enemy_brightness(depth_cells: float) -> float:
   var arrived: float = _light_curve(depth_zero_distance())
   if arrived <= 0.0:
@@ -135,7 +187,8 @@ func _layout(_frac: float) -> void:
   for index in range(first, last + 1):
     if not _sections.has(index):
       var section: Node3D = piece_source.build_section(index)
-      _set_light_overlay(section)
+      if light_mode == LightMode.SHADER:
+        _set_light_overlay(section)
       _section_root.add_child(section)
       _sections[index] = section
     # Section `index` has its near edge (index - player_z) sections past depth 0.

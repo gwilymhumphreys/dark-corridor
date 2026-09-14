@@ -1,10 +1,11 @@
 # Palette clamp
 
-A full-screen shader that replaces each pixel on screen with the nearest colour in a chosen palette, so
-art from different sources can be judged as one game. It is a dev tool, switched from the
-[debug panel](debug_panel.md); off by default.
+Shaders that replace each pixel with the nearest colour in a chosen palette, so art from different
+sources can be judged as one game. The full-screen clamp covers everything; the world clamp covers only
+the combat corridor. Both are dev tools, switched from the [debug panel](debug_panel.md); off by default.
 
-**Location:** `src/shaders/palette_clamp.gdshader`, the `ClampLayer` in `src/debug/debug_panels.tscn`,
+**Location:** `src/shaders/palette_clamp.gdshaderinc` (the matching, shared), `palette_clamp.gdshader`
+(full screen), `world_clamp.gdshader` (corridor), the `ClampLayer` in `src/debug/debug_panels.tscn`,
 `src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.
 
 ## How it works
@@ -15,8 +16,9 @@ art from different sources can be judged as one game. It is a dev tool, switched
 - `DebugPanels.set_palette(colours)` writes the palette into two one-row textures (sRGB colours, and the
   same colours in OKLab as a float texture) plus a colour count. Switching palettes does not recompile
   the shader. An empty array hides the layer.
-- The shader handles up to `MAX_COLOURS` colours, which must match between the shader and
-  `DebugPanelsAutoload`. The largest bundled palettes fit.
+- The shaders handle up to `MAX_COLOURS` colours, which must match between `palette_clamp.gdshaderinc`
+  and `DebugPanelsAutoload`. The largest bundled palettes fit. Each pixel is compared with every
+  palette colour, so larger palettes cost more per pixel.
 - Because the interface is clamped too, a palette is only usable if the effect colours (attack red,
   block blue, status colours) stay distinct under it.
 
@@ -25,7 +27,20 @@ art from different sources can be judged as one game. It is a dev tool, switched
 | Colour matching | Nearest in RGB, or nearest in OKLab (a perceptual colour space) |
 | Dithering | Off, or a 4x4 ordered dot pattern choosing between the two nearest colours by how far the pixel lies between them |
 
-The OKLab conversion exists twice, in `PaletteLoader.to_oklab` and in the shader; change both together.
+The OKLab conversion exists twice, in `PaletteLoader.to_oklab` and in `palette_clamp.gdshaderinc`; change
+both together.
+
+## World clamp
+
+- `world_clamp.gdshader` is the material of the combat corridor's `SubViewportContainer`
+  (`CombatCorridor`). It reads the container's own texture, not the screen, so it clamps the corridor
+  walls and enemy images and nothing drawn outside the container (enemy HUDs, VFX, interface).
+- Every combat corridor uses the one `DebugPanels.world_material`, so a change in the panel applies to
+  the fight on screen. With no palette set it passes colours through.
+- Colour matching and dithering apply to both clamps. The `new/world` ramps are nearly grey, so OKLab
+  matching picks almost only by lightness, while RGB matching can map saturated colours to other steps.
+- The corridor testbed and `corridor_panel_example` do not use `CombatCorridor`, so the world clamp does
+  not reach them.
 
 ## Palettes
 
@@ -46,7 +61,7 @@ named by path, for example `new/world`), for the panel dropdown.
 
 ## Screenshots
 
-`DebugPanels` reads user arguments at start-up: `--palette=<res path>`, `--perceptual`, `--dither`, plus
+`DebugPanels` reads user arguments at start-up: `--palette=<res path>`, `--world-palette=<res path>`, `--perceptual`, `--dither`, plus
 `--corridor=` and `--monster-image=` (see [debug_panel.md](debug_panel.md#start-up-arguments)). For
 example, with the corridor testbed's `--shot`:
 

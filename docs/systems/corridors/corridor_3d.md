@@ -45,6 +45,18 @@ Godot light node, so it can fade, band and flicker the same way in the Compatibi
 | `measure_along_corridor` | Measure distance along the corridor, so fades and band edges are square rings instead of curves on the walls |
 | `flicker_amount`, `flicker_speed` | How deep and how fast the flicker is; 0 amount is a steady light |
 | `enemy_arrived_brightness` | An enemy image's brightness at depth 0; it darkens with the light further away |
+| `light_mode` | `SHADER` (above) or `WALL_LIGHTS` (below). Set before the corridor enters the tree |
+| `wall_light_inset`, `wall_light_attenuation` | Wall lights only: how far each light sits in from its surface, and its `omni_attenuation` |
+
+### Wall lights
+
+With `light_mode = WALL_LIGHTS` the overlay is not used. Four `OmniLight3D` nodes sit level with the
+camera, one in the middle of each wall, the floor and the ceiling, so the corners where surfaces meet are
+darker. Code-built pieces switch to shaded materials (`CodeBuiltPieceSource.unshaded`), and ambient light
+is turned off so everything past `light_range` is black. The lights use `light_range`, `light_energy`
+and the flicker; they ignore `light_falloff`, `angle_shading`, `light_bands` and
+`measure_along_corridor`. Enemy images keep using the shader formula in `enemy_brightness`. In fights
+the mode comes from the debug panel's "3D light" choice.
 
 Enemy images are 2D sprites drawn over the corridor image, so the shader does not reach them.
 `enemy_brightness(depth_cells)` gives the colour multiplier the host sets on them: the same fade, bands

@@ -105,6 +105,22 @@ func test_pixel_sprite_option_keeps_the_original_sprite() -> void:
   assert_almost_eq(sprite.scale.x, Balance.ENEMY_FULL_SCALE, 0.0001, 'at the original full scale')
 
 
+func test_corridor_is_drawn_through_the_world_clamp() -> void:
+  var corridor: CombatCorridor = _host()
+  assert_eq(corridor.material, DebugPanels.world_material, 'the corridor uses the world clamp material')
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 0, 'the world clamp is off by default')
+  var path: String = 'res://assets/palettes/new/world/world-ash-16.gpl'
+  DebugPanels.set_world_palette(path)
+  var colours: PackedColorArray = PaletteLoader.load_palette(path)
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), colours.size(),
+    'a chosen palette file is loaded into the world clamp')
+  var texture: Texture2D = DebugPanels.world_material.get_shader_parameter('palette_rgb')
+  var last: int = colours.size() - 1
+  assert_eq(texture.get_image().get_pixel(last, 0).to_rgba32(), colours[last].to_rgba32(), 'with the palette colours')
+  DebugPanels.reset_settings()
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 0, 'resetting turns the world clamp off')
+
+
 func test_random_image_pick_leaves_the_run_rng_untouched() -> void:
   var run := RunManager.new()
   run.start(1234)

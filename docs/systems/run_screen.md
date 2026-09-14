@@ -143,7 +143,8 @@ the central axis always projects to the vanishing point** — only its scale cha
 So each enemy is a child of the renderer near the origin (`CombatCorridor` offsets them
 side-to-side and shrinks them by count), scaled by the renderer's `axis_scale(depth)` (the
 same law). `CombatCorridor` instances the renderer chosen in the F1 [debug panel](debug_panel.md)
-(scaled, perspective or 3D) when the combat view is built.
+(scaled, perspective or 3D) when the combat view is built. The container is drawn through the
+[world clamp](palette_clamp.md#world-clamp).
 
 Enemy images default to a random painted sample from `assets/monsters/cut_out/` (`MonsterImages`, its
 own RNG, so seeded runs are unchanged), drawn with a mipmapped Linear filter and sized to
