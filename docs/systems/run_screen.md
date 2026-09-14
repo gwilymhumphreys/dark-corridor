@@ -103,7 +103,7 @@ later compare (extend the base, swap one preload). The **corridor-forward** layo
 mockup), composition:
 
 - **Corridor large, top-left** — `combat_corridor.tscn` (`SubViewportContainer` →
-  `SubViewport` → `CorridorScaled` → the **enemy sprite as a central-axis occupant**).
+  `SubViewport` → the chosen corridor renderer → the **enemy sprite as a central-axis occupant**).
   Resizeable; the SubViewportContainer clips it. See *Enemy-in-corridor* below.
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
   a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
@@ -140,9 +140,16 @@ wall's `cm` ref before teardown.
 The corridor is a perspective law: a tile at depth `e` cells scales by
 **`depth_ratio^e`** about the vanishing point (the renderer origin). An object **on
 the central axis always projects to the vanishing point** — only its scale changes.
-So each enemy is a child of `CorridorScaled` near the origin (`CombatCorridor` offsets them
-side-to-side and shrinks them by count), scaled by `CorridorScaled.axis_scale(depth)` (the
-same law). The renderer is 1:1 with the panel (origin = panel centre), so a sprite's local x
+So each enemy is a child of the renderer near the origin (`CombatCorridor` offsets them
+side-to-side and shrinks them by count), scaled by the renderer's `axis_scale(depth)` (the
+same law). `CombatCorridor` instances the renderer chosen in the F1 [debug panel](debug_panel.md)
+(scaled, perspective or 3D) when the combat view is built.
+
+Enemy images default to a random painted sample from `assets/monsters/` (`MonsterImages`, its own
+RNG, so seeded runs are unchanged), drawn with a mipmapped Linear filter and sized to
+`Balance.ENEMY_PAINTED_HEIGHT`. The debug panel can switch back to the pixel sprite at
+`ENEMY_FULL_SCALE`. `enemy_anchor` uses each sprite's own image height, so the HUDs and the VFX aimed
+at them follow either image. The renderer is 1:1 with the panel (origin = panel centre), so a sprite's local x
 offset is its on-screen x offset — which is how `enemy_anchor(i)` finds each HUD's spot. The
 **approach** (`run_screen`
 APPROACHING state) tweens depth `APPROACH_DEPTH_START → 0` over `APPROACH_DURATION`
@@ -185,5 +192,5 @@ registered in `project.godot`) — see [localization](localization.md).
 draft_card · map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
 `src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell ·
 combat_stats_readout); `src/vfx/vfx_driver.gd`;
-the occupant law on `src/scenes/corridors/corridor_scaled.gd` (`axis_scale`). Tests in
-`tests/ui/`.
+`src/scenes/combat/monster_images.gd`; the occupant law is `axis_scale` on each corridor renderer.
+Tests in `tests/ui/` and `tests/corridors/`.

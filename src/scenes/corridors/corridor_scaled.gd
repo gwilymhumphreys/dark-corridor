@@ -111,11 +111,6 @@ func _wall_nodes() -> Array:
   return nodes
 
 
-## Scale multiplier for an object sitting on the corridor's central axis at
-## `depth_cells` deep — the SAME perspective law the walls use (`depth_ratio^e`).
-## An on-axis object always projects to the vanishing point (the node origin), so
-## only its scale changes with depth: `0` = at the mouth / full size, larger =
-## deeper / smaller. The combat view uses this to scale the enemy occupant on the
-## approach, keeping it locked to the wall perspective. See docs/history/phase4_plan.md.
+## The same perspective law the walls use (`depth_ratio^e`). See CorridorRenderer.axis_scale.
 func axis_scale(depth_cells: float) -> float:
   return pow(depth_ratio, depth_cells)

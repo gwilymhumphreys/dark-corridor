@@ -12,3 +12,4 @@ static func reset_all_managers() -> void:
   Game.reset()
   Save.disabled = false   # an autotest run may have set it (nosave); clear for the next test
   Prefs.disabled = true   # tests never write the prefs file to disk (in-memory + bus only)
+  DebugPanels.reset_settings()   # clamp off, scaled corridor, painted enemies

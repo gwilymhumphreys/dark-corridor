@@ -23,7 +23,7 @@
 > *Dealt · Taken* readout + a post-fight summary screen. 2026-06-22: the **UI theme / pixel-scale /
 > font** model (#32) — `Consts.UI_SCALE`, the integer-at-rest rule, and a locale-gated vector↔pixel
 > font toggle wired in `Prefs` ([ui_theme.md](systems/ui_theme.md); pixel font asset + settings UI still pending).
-> **334 GUT tests green** on Godot 4.7; the run is watchable end-to-end and the autotest plays +
+> **379 GUT tests green** on Godot 4.7; the run is watchable end-to-end and the autotest plays +
 > reports builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
@@ -60,7 +60,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
 
 ## Where things stand (what's built)
 
-**Phases 1–5 are complete, committed, 334 GUT tests green, feel gate passed.**
+**Phases 1–5 are complete, committed, 379 GUT tests green, feel gate passed.**
 See `git log` (each step is its own green commit); the dated build chronology is
 [`history/build_log.md`](history/build_log.md), with the original phase plans
 beside it in `docs/history/`. Most of

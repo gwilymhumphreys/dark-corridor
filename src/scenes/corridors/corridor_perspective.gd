@@ -130,3 +130,9 @@ func _wall_nodes() -> Array:
   nodes.append_array(_left)
   nodes.append_array(_right)
   return nodes
+
+
+## The wall's on-screen distance at `depth_cells` divided by its distance at depth 0. Depth 0 is
+## the near plane (d = 1), so this is `1 / (1 + depth_cells)`. See CorridorRenderer.axis_scale.
+func axis_scale(depth_cells: float) -> float:
+  return _wall_x(1.0 + depth_cells) / _wall_x(1.0)

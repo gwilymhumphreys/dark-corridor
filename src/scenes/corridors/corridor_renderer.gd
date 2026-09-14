@@ -117,6 +117,15 @@ func _wall_nodes() -> Array:
   return []
 
 
+## Scale multiplier for an object on the corridor's central axis at `depth_cells` deep. An
+## on-axis object always projects to the vanishing point (the node origin), so only its scale
+## changes with depth: `0` = at the mouth / full size (returns 1), larger = deeper / smaller.
+## Each renderer implements its own perspective law. The combat corridor uses this to scale the
+## enemy on the approach, keeping it locked to the walls.
+func axis_scale(_depth_cells: float) -> float:
+  return 1.0
+
+
 # --- Shared interface (driven by corridor_testbed.gd) ------------------------
 
 func set_forward_held(v: bool) -> void:

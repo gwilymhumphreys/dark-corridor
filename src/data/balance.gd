@@ -250,8 +250,11 @@ const EVENT_WANDERER_DECLINE_HEAL_FRACTION: float = 0.15   # the "walk on alone"
 
 # ── Presentation — the framed combat view (docs/systems/ui_layout.md; docs/history/phase4_plan.md) ───────
 # The enemy occupant's on-screen scale when arrived (depth 0) inside the corridor
-# SubViewport; the approach scales it from depth via CorridorScaled.axis_scale.
+# SubViewport; the approach scales it from depth via CorridorRenderer.axis_scale.
 const ENEMY_FULL_SCALE: float = 3.0
+# Painted sample images vary in size, so they are scaled to this on-screen height (px, inside the
+# corridor SubViewport) when arrived, instead of ENEMY_FULL_SCALE.
+const ENEMY_PAINTED_HEIGHT: float = 640.0
 # The approach (docs/history/phase4_plan.md Step 7): the enemy starts this many corridor cells deep
 # (a speck at the vanishing point) and walks to depth 0 (full size) over this many
 # seconds; the boards activate / combat begins on arrival.

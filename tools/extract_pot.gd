@@ -28,6 +28,8 @@ const Q2: String = "(?:[^\"\\\\]|\\\\.)*"   # double-quoted body
 
 # Dev / throwaway hosts never ship to players — their text stays English.
 const EXCLUDE_FILES: Array[String] = ['corridor_testbed', 'corridor_panel_example', 'combat_sandbox', 'tooltip_demo']
+# Dev-only folders (the debug panel): skipped entirely, so their labels stay out of the catalogs.
+const EXCLUDE_DIRS: Array[String] = ['res://src/debug']
 # Format specifiers / placeholders that aren't real copy.
 const EXCLUDE_IDS: Array[String] = []
 
@@ -79,7 +81,7 @@ func _walk(dir_path: String, out: Array[String]) -> void:
   while name != '':
     var full: String = dir_path + '/' + name
     if dir.current_is_dir():
-      if not name.begins_with('.'):
+      if not name.begins_with('.') and full not in EXCLUDE_DIRS:
         _walk(full, out)
     elif name.ends_with('.gd') or name.ends_with('.tscn'):
       out.append(full)

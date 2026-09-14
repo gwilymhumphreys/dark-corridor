@@ -1,10 +1,11 @@
 # Corridors — shared base & host
 
-Both corridor renderers extend a common base and run inside a shared host. Read
+All corridor renderers extend a common base and run inside a shared host. Read
 this once; the per-renderer docs only cover what's unique.
 
-The corridor is **pseudo-3D**: perspective is computed by hand and drawn with 2D
-nodes. No `Camera3D`, meshes, or depth buffer.
+The two 2D renderers are **pseudo-3D**: perspective is computed by hand and drawn
+with 2D nodes, with no `Camera3D`, meshes, or depth buffer. `Corridor3D` is a real 3D
+scene drawn through a `SubViewport`.
 
 ## Which renderer?
 
@@ -14,13 +15,20 @@ nodes. No `Camera3D`, meshes, or depth buffer.
 - **Toggle — `CorridorPerspective`** ([perspective_quad.md](perspective_quad.md)):
   fully parametric perspective (tune FOV freely) with any flat wall texture; side
   walls only (floor/ceiling = backdrop).
+- **Alternative — `Corridor3D`** ([corridor_3d.md](corridor_3d.md)): a real 3D
+  corridor of modular sections lit by one light at the camera; code-built pieces or
+  a bought kit. Being compared against the 2D look.
+
+In fights, `CombatCorridor` instances whichever renderer the F1
+[debug panel](../debug_panel.md) chose (scaled by default).
 
 (A third "nested-frames" prototype was removed — `CorridorScaled` does the same
 more flexibly via per-side textures.)
 
 **Bundled texture:** `assets/sprites/test_wall.png` (52×192) — the default
 side-wall tile for `CorridorScaled` (all four sides) and the placeholder for
-`CorridorPerspective`'s wall + backdrop.
+`CorridorPerspective`'s wall + backdrop. `Corridor3D` uses
+`assets/textures/castle_wall_slates.png` (1024×1024 stone, mipmapped).
 
 ## Architecture
 
@@ -33,6 +41,8 @@ corridor_renderer.gd       Base class CorridorRenderer. Movement, velocity ramp,
                            blur/filter model, shared material, set_*/blur interface.
 corridor_scaled.gd         Default renderer (extends CorridorRenderer).
 corridor_perspective.gd    Toggle renderer (extends CorridorRenderer).
+corridor_3d.gd             3D renderer (extends CorridorRenderer).
+*_piece_source.gd          Section builders for corridor_3d.
 corridor_*.tscn            Each renderer's node tree (root carries position/scale).
 sharp_bilinear.gdshader    Antialiased-nearest canvas shader (aa_strength uniform).
 ```
@@ -89,6 +99,11 @@ it never touches the geometry. Run it directly (it's not the main scene):
   `_apply_filter()` flips them to **LINEAR** only while moving (sharp-bilinear
   needs the bilinear fetch). Only touches nodes on a state change.
 - **Interface**: `set_forward_held(bool)`, `set_back_held(bool)`, `set_blur(float)`.
+- **`axis_scale(depth_cells)`**: the scale of an object on the centre line at that
+  depth, 1 at depth 0 and smaller deeper. Each renderer implements its own law
+  (`CorridorScaled`: `depth_ratio^depth`; `CorridorPerspective`: `1 / (1 + depth)`;
+  `Corridor3D`: see its doc). The combat corridor scales enemies with it.
+- The blur/filter model applies to the 2D renderers only; `Corridor3D` ignores it.
 
 ### Subclass contract (virtuals)
 - `_build()` — spawn nodes; assign each `_mat`; start at NEAREST filter.
@@ -134,11 +149,16 @@ resolution.
 
 ## Host extras (`corridor_testbed.gd`)
 
-- **Toggle**: M key or Mode button cycles the renderers in `CORRIDOR_SCENES`.
+- **Toggle**: M key or Mode button cycles the renderers in `CORRIDOR_SCENES`
+  (scaled, perspective, 3D).
+- **Monster check**: N places a random painted sample from `assets/monsters/` at
+  `APPROACH_DEPTH_START` and walks it to depth 0 with the renderer's `axis_scale`, to
+  check it grows with the walls.
 - **Buttons**: Back/Forward use `button_down`/`button_up` → `_set_*` which forward
   to the current renderer (so the wiring survives a toggle). `focus_mode = 0`
   everywhere so UI never steals the arrow keys.
-- **Dev hooks**: `--perspective` starts on the toggle renderer; `--shot` captures
+- **Dev hooks**: `--perspective` / `-- --3d` start on that renderer; `-- --monster`
+  spawns a monster for the shot; `--shot` captures
   a mid-glide frame then quits (`--still` = stopped frame). Output → `user://shot.png`,
   path printed as `SHOT_SAVED:...`.
 

@@ -1,17 +1,21 @@
 extends Node2D
 ## Window host: instances the active corridor renderer into CorridorHolder, wires
-## the UI (Forward/Back buttons, blur slider, mode switch) to it, and toggles
-## between the scale-and-place (default) and perspective scenes. Both renderers
-## share the CorridorRenderer interface, so the UI wiring is identical for either.
+## the UI (Forward/Back buttons, blur slider, mode switch) to it, and cycles
+## between the scale-and-place (default), perspective and 3D scenes. All renderers
+## share the CorridorRenderer interface, so the UI wiring is identical for each.
+## N walks a random painted sample monster from the approach start to depth 0.
 
 const CORRIDOR_SCENES: Array[PackedScene] = [
   preload('res://src/scenes/corridors/corridor_scaled.tscn'),
   preload('res://src/scenes/corridors/corridor_perspective.tscn'),
+  preload('res://src/scenes/corridors/corridor_3d.tscn'),
 ]
-const MODE_NAMES: Array[String] = ['Scale-and-place', 'Perspective-quad']
+const MODE_NAMES: Array[String] = ['Scale-and-place', 'Perspective-quad', '3D']
 
 var _mode: int = 0
 var _corridor: CorridorRenderer
+var _monster: Sprite2D = null
+var _monster_elapsed: float = 0.0
 
 
 func _ready() -> void:
@@ -25,8 +29,12 @@ func _ready() -> void:
   $UILayer/SwitchButton.pressed.connect(_toggle_mode)
   $UILayer/BlurSlider.value_changed.connect(func(v: float) -> void: _set_blur(v))
 
-  # Default to scale-and-place; `--perspective` starts on the toggle (dev/testing).
-  var start_mode: int = 1 if '--perspective' in OS.get_cmdline_args() else 0
+  # Default to scale-and-place; `--perspective` / `--3d` start on another renderer (dev/testing).
+  var start_mode: int = 0
+  if '--perspective' in OS.get_cmdline_args():
+    start_mode = 1
+  elif '--3d' in OS.get_cmdline_args() or '--3d' in OS.get_cmdline_user_args():
+    start_mode = 2
   _load_corridor(start_mode)
 
   # Verification helper: `--shot` captures a mid-glide frame then quits.
@@ -34,9 +42,16 @@ func _ready() -> void:
     _auto_shot()
 
 
+func _exit_tree() -> void:
+  if _monster != null and is_instance_valid(_monster):
+    _monster.texture = null
+  _monster = null
+
+
 func _load_corridor(mode: int) -> void:
   if _corridor:
     _corridor.queue_free()
+  _monster = null   # freed with the old corridor
   _mode = mode
   _corridor = CORRIDOR_SCENES[mode].instantiate() as CorridorRenderer
   _apply_view_override(_corridor)   # before add_child so _build reads it
@@ -61,8 +76,44 @@ func _toggle_mode() -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-  if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_M:
+  if not (event is InputEventKey and event.pressed and not event.echo):
+    return
+  if event.keycode == KEY_M:
     _toggle_mode()
+  elif event.keycode == KEY_N:
+    _spawn_monster()
+
+
+## Place a random sample monster at the approach start; _process walks it to depth 0 using the
+## renderer's axis_scale, to check it grows with the walls and stops at full size.
+func _spawn_monster() -> void:
+  if _monster != null and is_instance_valid(_monster):
+    _monster.texture = null
+    _monster.queue_free()
+  var texture: Texture2D = MonsterImages.random_texture()
+  if texture == null:
+    return
+  _monster = Sprite2D.new()
+  _monster.texture = texture
+  _monster.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+  _monster.z_index = 100
+  _corridor.add_child(_monster)
+  _monster_elapsed = 0.0
+  _place_monster(Balance.APPROACH_DEPTH_START)
+
+
+func _process(delta: float) -> void:
+  if _monster == null or not is_instance_valid(_monster):
+    return
+  _monster_elapsed += delta
+  var t: float = clampf(_monster_elapsed / Balance.APPROACH_DURATION, 0.0, 1.0)
+  _place_monster(lerpf(Balance.APPROACH_DEPTH_START, 0.0, t))
+
+
+func _place_monster(depth_cells: float) -> void:
+  var full: float = Balance.ENEMY_PAINTED_HEIGHT / float(_monster.texture.get_height())
+  var s: float = full * _corridor.axis_scale(depth_cells)
+  _monster.scale = Vector2(s, s)
 
 
 func _set_forward(v: bool) -> void:
@@ -84,6 +135,8 @@ func _auto_shot() -> void:
   # `--still` captures a stopped frame (no motion) to check the resting filter.
   if not ('--still' in OS.get_cmdline_args() or '--still' in OS.get_cmdline_user_args()):
     _set_forward(true)  # engage motion so the filter shows
+  if '--monster' in OS.get_cmdline_user_args():
+    _spawn_monster()
   await get_tree().create_timer(0.6).timeout
   await RenderingServer.frame_post_draw
   var img: Image = get_viewport().get_texture().get_image()

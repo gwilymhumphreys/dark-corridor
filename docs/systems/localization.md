@@ -42,6 +42,7 @@ GDScript — decision #23 — not data files):
 
 Dev / throwaway hosts are excluded (see `EXCLUDE_FILES` in `tools/extract_pot.gd`):
 the corridor testbed, the panel example, the combat sandbox — their text stays English.
+The whole `src/debug/` folder (the [debug panel](debug_panel.md)) is skipped too (`EXCLUDE_DIRS`).
 
 ## Regenerating the catalog
 

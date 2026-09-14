@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/scenes/corridors/corridor_3d.gd" id="1"]
+[ext_resource type="Script" path="res://src/scenes/corridors/code_built_piece_source.gd" id="2"]
+[ext_resource type="Texture2D" path="res://assets/textures/castle_wall_slates.png" id="3"]
+
+[sub_resource type="Resource" id="Resource_pieces"]
+script = ExtResource("2")
+tex_left = ExtResource("3")
+tex_right = ExtResource("3")
+tex_ceiling = ExtResource("3")
+tex_floor = ExtResource("3")
+uv_repeat = Vector2(1.2, 1.2)
+
+[sub_resource type="Environment" id="Environment_dark"]
+background_mode = 1
+background_color = Color(0, 0, 0, 1)
+ambient_light_source = 1
+reflected_light_source = 1
+
+[node name="Corridor3D" type="Node2D"]
+position = Vector2(1280, 720)
+script = ExtResource("1")
+piece_source = SubResource("Resource_pieces")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(1280, 1280)
+render_target_update_mode = 4
+
+[node name="Camera" type="Camera3D" parent="SubViewport"]
+environment = SubResource("Environment_dark")
+current = true
+fov = 70.0
+
+[node name="Light" type="OmniLight3D" parent="SubViewport"]
+light_energy = 1.5
+omni_range = 24.0
+
+[node name="Sections" type="Node3D" parent="SubViewport"]
+
+[node name="Display" type="Sprite2D" parent="."]

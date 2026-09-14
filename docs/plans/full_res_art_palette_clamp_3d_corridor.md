@@ -1,7 +1,9 @@
 # Plan: Full-Resolution Art, Palette Clamp and 3D Corridor
 
-> Status: planned, not built. All parts are built on one branch, `full-res-art-3d-corridor`. Plans are
-> not catalogued in the index; this graduates to `systems/` docs if it ships.
+> Status: built on branch `full-res-art-3d-corridor` (steps 1–6, plus `KitPieceSource` without a kit;
+> buying and importing the kit is still to do). As-built docs: `systems/corridors/corridor_3d.md`,
+> `systems/palette_clamp.md`, `systems/debug_panel.md`. The design doc and decision log wait for the
+> owner to judge the look.
 
 This plan tests three changes together: painted monster art at full resolution, a full-screen palette
 clamp that makes art from different sources look like one game, and a real 3D corridor as an
