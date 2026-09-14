@@ -34,8 +34,8 @@ The window is a **true 2560×1440 canvas** (`stretch/mode = canvas_items`,
 `default_texture_filter = Nearest`). There is **no low-res framebuffer** — the UI
 is *designed* to read as ~360p (a notional `Consts.UI_BASE_RESOLUTION` = 640×360
 upscaled by `Consts.UI_SCALE` = 4 = 1440), but rendered at full resolution so
-**fonts can stay smooth** (`docs/systems/corridors/common.md` covers the corridor's
-opposite trade — fractional scale for smooth scrolling).
+**fonts can stay smooth**. The corridor is a 3D scene drawn at full resolution
+([corridor_3d.md](corridors/corridor_3d.md)).
 
 This is the idiomatic Godot path when smooth fonts matter; the alternative
 (`stretch/mode = viewport` + integer scale) renders the whole scene — text

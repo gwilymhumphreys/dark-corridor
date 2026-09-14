@@ -5,7 +5,7 @@ sources can be judged as one game. The full-screen clamp covers everything; the 
 the combat corridor. Both are dev tools, switched from the [debug panel](debug_panel.md); off by default.
 
 **Location:** `src/shaders/palette_clamp.gdshaderinc` (the matching, shared), `palette_clamp.gdshader`
-(full screen), `world_clamp.gdshader` (corridor), the `ClampLayer` in `src/debug/debug_panels.tscn`,
+(full screen), `corridor_look.gdshader` (corridor), the `ClampLayer` in `src/debug/debug_panels.tscn`,
 `src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.
 
 ## How it works
@@ -32,20 +32,20 @@ both together.
 
 ## World clamp
 
-- `world_clamp.gdshader` is the material of the combat corridor's `SubViewportContainer`
-  (`CombatCorridor`). It reads the container's own texture, not the screen, so it clamps the corridor
-  walls and enemy images and nothing drawn outside the container (enemy HUDs, VFX, interface).
-- Every combat corridor uses the one `DebugPanels.world_material`, so a change in the panel applies to
-  the fight on screen. With no palette set it passes colours through.
+- The world clamp is one step of the [corridor look shader](corridor_look.md), the material of the
+  combat corridor's `SubViewportContainer` and of the testbed corridor's image. It reads that image, not
+  the screen, so it clamps the corridor walls and enemy images and nothing else (enemy HUDs, VFX,
+  interface).
+- Every corridor uses the one `DebugPanels.world_material`, so a change in the panel applies to the
+  corridor on screen. With no palette set it passes colours through.
 - Colour matching and dithering apply to both clamps. The `new/world` ramps are nearly grey, so OKLab
   matching picks almost only by lightness, while RGB matching can map saturated colours to other steps.
-- The corridor testbed and `corridor_panel_example` do not use `CombatCorridor`, so the world clamp does
-  not reach them.
 
 ## Palettes
 
-`assets/palettes/` keeps the owner's `good/`, `maybe/` and `na/` subfolders from the design folder. Loose
-`.gpl` files sit at the top. `new/` holds candidates for separate world, effects and interface
+`assets/palettes/` keeps the owner's `good/`, `maybe/`, `na/`, `unsorted/` and dated (for example
+`2026_09_15/`) subfolders. `shortlist/` collects palettes moved there with the debug panel's `'` key.
+`new/` holds candidates for separate world, effects and interface
 palettes (see [`../plans/separate_palettes.md`](../plans/separate_palettes.md)).
 
 `PaletteLoader.load_palette(path)` reads two formats with `FileAccess` (works in debug runs, not in
@@ -62,7 +62,7 @@ named by path, for example `new/world`), for the panel dropdown.
 ## Screenshots
 
 `DebugPanels` reads user arguments at start-up: `--palette=<res path>`, `--world-palette=<res path>`, `--perceptual`, `--dither`, plus
-`--corridor=` and `--monster-image=` (see [debug_panel.md](debug_panel.md#start-up-arguments)). For
+`--corridor-set=` and `--monster-image=` (see [debug_panel.md](debug_panel.md#start-up-arguments)). For
 example, with the corridor testbed's `--shot`:
 
 ```

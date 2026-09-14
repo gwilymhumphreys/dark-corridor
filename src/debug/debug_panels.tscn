@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/debug/debug_panels.gd" id="1"]
 [ext_resource type="Shader" path="res://src/shaders/palette_clamp.gdshader" id="2"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="3"]
+[ext_resource type="PackedScene" path="res://src/debug/look_panel.tscn" id="4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_clamp"]
 shader = ExtResource("2")
@@ -35,7 +36,7 @@ visible = false
 offset_left = 24.0
 offset_top = 24.0
 offset_right = 824.0
-offset_bottom = 552.0
+offset_bottom = 424.0
 
 [node name="Rows" type="VBoxContainer" parent="PanelLayer/Panel"]
 layout_mode = 2
@@ -130,54 +131,8 @@ focus_mode = 0
 [node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/DitheringRow/Check"]
 script = ExtResource("3")
 
-[node name="CorridorRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
+[node name="LookLayer" type="CanvasLayer" parent="."]
+layer = 127
+visible = false
 
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/CorridorRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Corridor (next fight)"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/CorridorRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 3
-selected = 0
-popup/item_0/text = "Scaled"
-popup/item_0/id = 0
-popup/item_1/text = "Perspective"
-popup/item_1/id = 1
-popup/item_2/text = "3D"
-popup/item_2/id = 2
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/CorridorRow/Option"]
-script = ExtResource("3")
-
-[node name="EnemyRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/EnemyRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Enemy images (next fight)"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/EnemyRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 3
-selected = 2
-popup/item_0/text = "Painted samples"
-popup/item_0/id = 0
-popup/item_1/text = "Pixel sprite"
-popup/item_1/id = 1
-popup/item_2/text = "Painted samples, cut out"
-popup/item_2/id = 2
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/EnemyRow/Option"]
-script = ExtResource("3")
+[node name="LookPanel" parent="LookLayer" instance=ExtResource("4")]

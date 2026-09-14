@@ -103,12 +103,12 @@ later compare (extend the base, swap one preload). The **corridor-forward** layo
 mockup), composition:
 
 - **Corridor large, top-left** — `combat_corridor.tscn` (`SubViewportContainer` →
-  `SubViewport` → the chosen corridor renderer → the **enemy sprite as a central-axis occupant**).
-  Resizeable; the SubViewportContainer clips it. See *Enemy-in-corridor* below.
+  `SubViewport` → `Corridor3D`, with each enemy a `Sprite3D` inside its 3D scene).
+  Resizeable; the SubViewportContainer clips it. See *Enemies in the corridor* below.
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
   a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
-  The corridor renders **one occupant sprite per enemy**, arranged side by side and shrunk by
-  count (`CombatCorridor.set_enemy_count`); the view pins each HUD's bottom-centre just above
+  The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
+  count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`. The HUD / ally-slot item cells
   are smaller than the player's board (`ItemCell.set_cell_size`). The view **reconciles** its
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
@@ -135,34 +135,39 @@ The view `bind(cm, player, potions)`s the live fight (it reads the rosters off t
 and exposes `item_pos` / `actor_pos` / `target_pos` to the wall; `release()` nulls the
 wall's `cm` ref before teardown.
 
-### Enemy-in-corridor occupant (the approach)
+### Enemies in the corridor (the approach)
 
-The corridor is a perspective law: a tile at depth `e` cells scales by
-**`depth_ratio^e`** about the vanishing point (the renderer origin). An object **on
-the central axis always projects to the vanishing point** — only its scale changes.
-So each enemy is a child of the renderer near the origin (`CombatCorridor` offsets them
-side-to-side and shrinks them by count), scaled by the renderer's `axis_scale(depth)` (the
-same law). `CombatCorridor` instances the renderer chosen in the F1 [debug panel](debug_panel.md)
-(scaled, perspective or 3D) when the combat view is built. The container is drawn through the
+`CombatCorridor` instances `corridor_3d.tscn` and adds one `Sprite3D` per enemy through the
+corridor's enemy methods ([corridor_3d.md](corridors/corridor_3d.md#enemies)). The sprites are lit by
+the corridor light, so they come out of the dark on the approach. The container is drawn through the
 [world clamp](palette_clamp.md#world-clamp).
 
-Enemy images default to a random painted sample from `assets/monsters/cut_out/` (`MonsterImages`, its
-own RNG, so seeded runs are unchanged), drawn with a mipmapped Linear filter and sized to
-`Balance.ENEMY_PAINTED_HEIGHT`. The debug panel can switch to the uncut originals in
-`assets/monsters/` or back to the pixel sprite at `ENEMY_FULL_SCALE`.
+- **One sprite per enemy:** the view passes the enemy roster to `set_enemies` each frame. An enemy
+  keeps its sprite and image while it stays in the fight; a reaped enemy's sprite is freed and a new
+  enemy (a summon) gets its own. The sprite shown during the approach, before the fight is bound, is
+  taken over by the first enemy.
+- **Placement:** `CombatCorridor` decides the spread (`SPREAD`) and shrink by count
+  (`_count_shrink`). Each sprite is sized to `Balance.ENEMY_PAINTED_HEIGHT` screen pixels at depth 0
+  and placed at the shared depth, offset sideways by `_offset_x`. Perspective makes deeper sprites
+  smaller.
+- **Several enemies** share one depth, each `DEPTH_STEP` metres further than the one before, so
+  overlapping sprites are never drawn at the same distance.
+- **HUD anchor:** `enemy_anchor(i)` unprojects the top centre of sprite `i` at its arrived depth and
+  adds `HUD_GAP`. It does not move during the approach. The corridor image is 1:1 with the container,
+  so the unprojected point plus the container's centre is the global screen point. Projectiles and
+  damage numbers aim at the HUDs (`actor_pos`).
+- **Images:** a random cut-out sample from `assets/monsters/cut_out/` (`MonsterImages`, its own RNG,
+  so seeded runs are unchanged).
 
 The cut-out copies are made by `tools/cut_out_monsters.gd` (usage in its header): a pixel's opacity
 comes from its brightest colour channel, partly transparent pixels are brightened so edges have no
 dark outline, and each image is cropped to its visible part. Dark areas inside a figure become
-see-through too. Re-run the tool after adding or changing an image in `assets/monsters/`. Each frame the sprites' colour is set from the renderer's `enemy_brightness(depth)`,
-so in the 3D corridor they emerge from the dark on the approach (no transparency). `enemy_anchor` uses each sprite's own image height, so the HUDs and the VFX aimed
-at them follow either image. The renderer is 1:1 with the panel (origin = panel centre), so a sprite's local x
-offset is its on-screen x offset — which is how `enemy_anchor(i)` finds each HUD's spot. The
-**approach** (`run_screen`
-APPROACHING state) tweens depth `APPROACH_DEPTH_START → 0` over `APPROACH_DURATION`
-(off `_physics_process`, so the headless test walks it), gliding the corridor for
-parallax; the **fight clock is not ticked until arrival**, so combat is frozen while
-the demon walks into full view. Constants in `src/data/balance.gd`.
+see-through too. Re-run the tool after adding or changing an image in `assets/monsters/`.
+
+The **approach** (`run_screen` APPROACHING state) tweens depth `APPROACH_DEPTH_START → 0` over
+`APPROACH_DURATION` (off `_physics_process`, so the headless test walks it), gliding the corridor for
+parallax; the **fight clock is not ticked until arrival**, so combat is frozen while the enemy walks
+into view. Constants in `src/data/balance.gd`.
 
 ## Overlays
 
@@ -199,5 +204,5 @@ registered in `project.godot`) — see [localization](localization.md).
 draft_card · map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
 `src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell ·
 combat_stats_readout); `src/vfx/vfx_driver.gd`;
-`src/scenes/combat/monster_images.gd`; the occupant law is `axis_scale` on each corridor renderer.
+`src/scenes/combat/monster_images.gd`; the corridor is `src/scenes/corridors/corridor_3d.gd`.
 Tests in `tests/ui/` and `tests/corridors/`.

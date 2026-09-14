@@ -1,6 +1,5 @@
 extends GutTest
-## Phase 4 Step 2 — the framed combat view components: the corridor occupant scale
-## law (CorridorScaled.axis_scale), the board strip building one cell per board item
+## Phase 4 Step 2 — the framed combat view components: the board strip building one cell per board item
 ## and tracking HP, and the framed view binding a fight without error. Presentation
 ## reads logic + writes nothing; these confirm the bind wiring, not the visuals (those
 ## are the `--shot` check).
@@ -37,16 +36,6 @@ func _host(node: Node) -> Node:
   add_child(node)
   _nodes.append(node)
   return node
-
-
-func test_axis_scale_matches_the_wall_perspective() -> void:
-  # The occupant scales by the SAME law the walls use (depth_ratio^depth), so the
-  # enemy stays locked to the corridor perspective on the approach.
-  var corridor := CorridorScaled.new()
-  assert_almost_eq(corridor.axis_scale(0.0), 1.0, 0.0001, 'depth 0 = full scale (arrived)')
-  assert_almost_eq(corridor.axis_scale(1.0), corridor.depth_ratio, 0.0001, 'one cell deep = depth_ratio')
-  assert_lt(corridor.axis_scale(5.0), corridor.axis_scale(1.0), 'deeper = smaller')
-  corridor.free()
 
 
 func test_enemy_hud_builds_one_cell_per_item() -> void:

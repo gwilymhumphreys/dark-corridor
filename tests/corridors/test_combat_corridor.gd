@@ -1,7 +1,7 @@
 extends GutTest
-## CombatCorridor hosts whichever renderer the debug panel chose, sizes enemy HUD anchors from
-## each sprite's own image, and picks painted images without touching the run RNG
-## (docs/systems/run_screen.md, "Enemy-in-corridor occupant").
+## CombatCorridor hosts the 3D corridor, places enemy sprites in it, pins HUD anchors above them,
+## and picks images without touching the run RNG (docs/systems/run_screen.md, "Enemies in the
+## corridor").
 
 const COMBAT_CORRIDOR: PackedScene = preload('res://src/scenes/combat/combat_corridor.tscn')
 
@@ -28,51 +28,59 @@ func _host() -> CombatCorridor:
   return corridor
 
 
-func test_hosts_each_renderer_kind() -> void:
-  var expected: Dictionary = {
-    DebugPanelsAutoload.CorridorKind.SCALED: 'CorridorScaled',
-    DebugPanelsAutoload.CorridorKind.PERSPECTIVE: 'CorridorPerspective',
-    DebugPanelsAutoload.CorridorKind.THREE_D: 'Corridor3D',
-  }
-  for kind: int in expected:
-    DebugPanels.corridor_kind = kind
-    var corridor: CombatCorridor = _host()
-    var renderer: CorridorRenderer = corridor.renderer()
-    assert_not_null(renderer, 'a renderer is hosted')
-    assert_eq(renderer.get_script().get_global_name(), expected[kind], 'the chosen renderer kind')
-    assert_false(renderer.input_enabled, 'W/S cannot scroll the fight corridor')
-    corridor.set_enemy_depth(3.0)   # the approach works on every renderer
-    assert_lt(corridor._enemies[0].scale.x, corridor._arrived_scale(corridor._enemies[0], 1), 'deeper is smaller')
-
-
-func test_enemies_darken_with_the_3d_corridor_light() -> void:
-  DebugPanels.corridor_kind = DebugPanelsAutoload.CorridorKind.THREE_D
+func test_hosts_the_3d_corridor_with_an_enemy_sprite() -> void:
   var corridor: CombatCorridor = _host()
-  corridor.set_enemy_depth(1.0)
-  var expected: float = corridor.renderer().enemy_brightness(1.0)
-  assert_lt(expected, 1.0, 'one cell deep is darker than full')
-  assert_almost_eq(corridor._enemies[0].modulate.r, expected, 0.0001, 'the image colour follows the light')
-  assert_eq(corridor._enemies[0].modulate.a, 1.0, 'no transparency is added')
+  var corridor_3d: Corridor3D = corridor.corridor()
+  assert_not_null(corridor_3d, 'a 3D corridor is hosted')
+  assert_false(corridor_3d.input_enabled, 'W/S cannot scroll the fight corridor')
+  var sprite: Sprite3D = corridor._enemies[0]
+  assert_eq(sprite.get_parent(), corridor_3d.get_node('SubViewport/Enemies'), 'the enemy is a sprite in the 3D scene')
+  assert_true(sprite.texture.resource_path.begins_with(MonsterImages.CUT_OUT_FOLDER), 'fights use the cut-out images')
+  var arrived_z: float = sprite.position.z
+  corridor.set_enemy_depth(3.0)
+  assert_lt(sprite.position.z, arrived_z, 'a deeper enemy is further from the camera')
 
 
-func test_enemy_anchor_uses_the_sprite_image_height() -> void:
+func test_enemy_anchor_sits_above_the_sprite() -> void:
   var corridor: CombatCorridor = _host()
-  var sprite: Sprite2D = corridor._enemies[0]
-  var centre_y: float = corridor.global_position.y + corridor.size.y * 0.5
-  var half_h: float = float(sprite.texture.get_height()) * corridor._arrived_scale(sprite, 1) * 0.5
-  assert_almost_eq(corridor.enemy_anchor(0).y, centre_y - half_h - CombatCorridor.HUD_GAP, 0.01,
-    'the HUD sits above this sprite\'s own image')
-  assert_ne(sprite.texture, CombatCorridor.ENEMY_SPRITE, 'painted samples are the default')
-  assert_almost_eq(half_h * 2.0, Balance.ENEMY_PAINTED_HEIGHT, 0.01, 'a painted image is sized to the target height')
+  var sprite: Sprite3D = corridor._enemies[0]
+  var top: Vector3 = sprite.position + Vector3(0.0, sprite.pixel_size * float(sprite.texture.get_height()) * 0.5, 0.0)
+  var top_on_screen: Vector2 = corridor.global_position + corridor.size * 0.5 + corridor.corridor().unproject(top)
+  var anchor: Vector2 = corridor.enemy_anchor(0)
+  assert_almost_eq(anchor.x, top_on_screen.x, 0.5, 'centred on the sprite')
+  assert_almost_eq(anchor.y, top_on_screen.y - CombatCorridor.HUD_GAP, 0.5, 'just above the sprite top')
+  corridor.set_enemy_depth(3.0)
+  assert_eq(corridor.enemy_anchor(0), anchor, 'the anchor stays put during the approach')
 
 
-func test_cut_out_images_are_the_default() -> void:
+func test_each_enemy_keeps_its_own_sprite() -> void:
   var corridor: CombatCorridor = _host()
-  var path: String = corridor._enemies[0].texture.resource_path
-  assert_true(path.begins_with(MonsterImages.CUT_OUT_FOLDER), 'fights use the cut-out copies by default')
-  DebugPanels.enemy_images = DebugPanelsAutoload.EnemyImages.PAINTED
-  var original: CombatCorridor = _host()
-  assert_eq(original._enemies[0].texture.resource_path.get_base_dir(), MonsterImages.FOLDER, 'the originals are still available')
+  var placeholder: Sprite3D = corridor._enemies[0]
+  var left: RefCounted = RefCounted.new()
+  var right: RefCounted = RefCounted.new()
+  corridor.set_enemies([left, right])
+  assert_eq(corridor._enemies[0], placeholder, 'the first enemy takes over the sprite shown during the approach')
+  var right_sprite: Sprite3D = corridor._enemies[1]
+  var right_texture: Texture2D = right_sprite.texture
+  corridor.set_enemies([right])   # the left enemy died
+  assert_eq(corridor._enemies.size(), 1, 'the dead enemy\'s sprite is removed')
+  assert_eq(corridor._enemies[0], right_sprite, 'the surviving enemy keeps its sprite')
+  assert_eq(right_sprite.texture, right_texture, 'and its image')
+  assert_null(placeholder.texture, 'the dead enemy\'s sprite released its image')
+  var summon: RefCounted = RefCounted.new()
+  corridor.set_enemies([right, summon])
+  assert_eq(corridor._enemies[0], right_sprite, 'a summon joining does not change existing sprites')
+  assert_ne(corridor._enemies[1], right_sprite, 'the summon gets its own sprite')
+
+
+func test_enemies_at_one_depth_have_distinct_distances() -> void:
+  var corridor: CombatCorridor = _host()
+  corridor.set_enemies([RefCounted.new(), RefCounted.new(), RefCounted.new()])
+  var distances: Array = []
+  for sprite: Sprite3D in corridor._enemies:
+    assert_false(sprite.position.z in distances, 'no two enemies are drawn at the same distance')
+    distances.append(sprite.position.z)
+  assert_lt(corridor._enemies[0].position.x, corridor._enemies[2].position.x, 'arranged left to right')
 
 
 func test_forced_monster_image_is_used_and_cleared_on_reset() -> void:
@@ -95,14 +103,6 @@ func test_cut_out_tool_makes_black_transparent_without_a_dark_edge() -> void:
   assert_between(edge.a, 0.05, 0.95, 'a soft edge is partly transparent')
   assert_gt(edge.r8, 20, 'a partly transparent pixel is brightened, so there is no dark outline')
   assert_eq(image.get_pixel(2, 0), Color8(200, 150, 90), 'bright pixels are unchanged and opaque')
-
-
-func test_pixel_sprite_option_keeps_the_original_sprite() -> void:
-  DebugPanels.enemy_images = DebugPanelsAutoload.EnemyImages.PIXEL
-  var corridor: CombatCorridor = _host()
-  var sprite: Sprite2D = corridor._enemies[0]
-  assert_eq(sprite.texture, CombatCorridor.ENEMY_SPRITE, 'the pixel sprite is used')
-  assert_almost_eq(sprite.scale.x, Balance.ENEMY_FULL_SCALE, 0.0001, 'at the original full scale')
 
 
 func test_corridor_is_drawn_through_the_world_clamp() -> void:

@@ -237,7 +237,7 @@ main.tscn  (Main, Node)                 main_controller swaps screens off Game.p
 └─ ScreenHolder
    ├─ title_screen.tscn
    ├─ run_screen.tscn      reads Game.run (+ the live Combat manager); emits intents
-   │   ├─ CorridorLayer     corridor_panel.tscn (mood + the approach-from-depth)
+   │   ├─ CorridorLayer     combat_corridor.tscn → corridor_3d.tscn (mood + the approach-from-depth)
    │   ├─ CombatView         combat_view_framed.tscn (full-screen variant deferred — see below)
    │   │     ├─ VfxDriver        reads the Delivery set + render_time()
    │   │     ├─ Player/EnemyBoardView

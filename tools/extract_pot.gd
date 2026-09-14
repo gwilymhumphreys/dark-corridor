@@ -27,7 +27,7 @@ const Q1: String = "(?:[^'\\\\]|\\\\.)*"    # single-quoted body
 const Q2: String = "(?:[^\"\\\\]|\\\\.)*"   # double-quoted body
 
 # Dev / throwaway hosts never ship to players — their text stays English.
-const EXCLUDE_FILES: Array[String] = ['corridor_testbed', 'corridor_panel_example', 'combat_sandbox', 'tooltip_demo']
+const EXCLUDE_FILES: Array[String] = ['corridor_testbed','combat_sandbox', 'tooltip_demo']
 # Dev-only folders (the debug panel): skipped entirely, so their labels stay out of the catalogs.
 const EXCLUDE_DIRS: Array[String] = ['res://src/debug']
 # Format specifiers / placeholders that aren't real copy.

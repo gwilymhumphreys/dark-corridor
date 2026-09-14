@@ -7,7 +7,7 @@ palettes and the tools listed under "What exists".
 Read `CLAUDE.md` first and follow it. Then read, in this order:
 [`../systems/palette_clamp.md`](../systems/palette_clamp.md),
 [`../systems/debug_panel.md`](../systems/debug_panel.md),
-[`../systems/run_screen.md`](../systems/run_screen.md) ("Enemy-in-corridor occupant"),
+[`../systems/run_screen.md`](../systems/run_screen.md) ("Enemies in the corridor"),
 [`../systems/vfx_driver.md`](../systems/vfx_driver.md),
 [`../systems/corridors/corridor_3d.md`](../systems/corridors/corridor_3d.md) ("Light"), and
 `src/data/colours.gd`. [`../design/art_audio.md`](../design/art_audio.md) is the owner's doc: read it
@@ -60,11 +60,11 @@ placeholders:
 The owner has seen the made palettes' swatches and accepted their current brightness.
 
 **Tools for comparing looks.**
-- `DebugPanels` start-up arguments: `--palette=`, `--perceptual`, `--dither`, `--corridor=3d`,
+- `DebugPanels` start-up arguments: `--palette=`, `--perceptual`, `--dither`, `--corridor-set=`,
   `--monster-image=` ([`debug_panel.md`](../systems/debug_panel.md#start-up-arguments)).
 - A real fight screenshot:
-  `<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --corridor=3d --monster-image=res://assets/monsters/cut_out/bone_golem.png --palette=<path>`.
-  The Godot exe path is in [`../systems/corridors/common.md`](../systems/corridors/common.md).
+  `<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --monster-image=res://assets/monsters/cut_out/bone_golem.png --palette=<path>`.
+  The Godot exe path is in [`../handoff.md`](../handoff.md).
 - The clamp sometimes fails to show in a screenshot
   ([known issue](../systems/palette_clamp.md#known-issue)). Check each image; the potion slot keeping
   its original green means the clamp was missing.
@@ -96,7 +96,7 @@ Things to check while building:
   the palette is chosen would make the cost the same for any palette size; confirm that
   Compatibility supports the texture type used.
 - **Light interaction.** `Corridor3D`'s lights make smooth fades, which a world ramp cuts into steps
-  (dithering hides them), and `enemy_brightness` darkens enemy images. Check they look right together.
+  (dithering hides them), and the same light darkens the enemy sprites. Check they look right together.
 - **Tests and autotest.** The full GUT suite must pass and the seeded autotest (`--seed 1 --nosave
   --notutorial`) must give unchanged results. Palette work is presentation-only, so it should not
   affect the autotest.

@@ -7,7 +7,7 @@
 > **Last updated:** 2026-06-21 — **ally acquisition** (a recruit Event grants a run-scoped ally,
 > 4-slot cap), a **character-select** screen + a **settings** screen (audio-volume `Prefs`
 > persisted to `user://`), and a **combat-view relayout** (corridor-forward: the corridor large
-> top-left with an `enemy_hud` pinned above each occupant sprite, the player portrait + HP
+> top-left with an `enemy_hud` pinned above each enemy sprite, the player portrait + HP
 > centre-bottom, its board a column down the right edge, allies in flanking slots) + a **compact
 > windowed map**. Earlier 2026-06-08: the **multi-act run** + **choice layer** + **Event** type
 > (#1), **reward routing** (#2), the **spore-engine seams** (Cap 1+2) + **mid-fight roster
@@ -23,7 +23,9 @@
 > *Dealt · Taken* readout + a post-fight summary screen. 2026-06-22: the **UI theme / pixel-scale /
 > font** model (#32) — `Consts.UI_SCALE`, the integer-at-rest rule, and a locale-gated vector↔pixel
 > font toggle wired in `Prefs` ([ui_theme.md](systems/ui_theme.md); pixel font asset + settings UI still pending).
-> **379 GUT tests green** on Godot 4.7; the run is watchable end-to-end and the autotest plays +
+> 2026-09-15: the corridor is a real 3D scene (`Corridor3D`, the only corridor) with enemies as lit
+> `Sprite3D` nodes in it (#36, [corridor_3d.md](systems/corridors/corridor_3d.md)).
+> **390 GUT tests green** on Godot 4.7; the run is watchable end-to-end and the autotest plays +
 > reports builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
@@ -60,7 +62,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
 
 ## Where things stand (what's built)
 
-**Phases 1–5 are complete, committed, 379 GUT tests green, feel gate passed.**
+**Phases 1–5 are complete, committed, 390 GUT tests green, feel gate passed.**
 See `git log` (each step is its own green commit); the dated build chronology is
 [`history/build_log.md`](history/build_log.md), with the original phase plans
 beside it in `docs/history/`. Most of
@@ -87,7 +89,7 @@ the character system #23/#27). See the per-item status in "Your task" below.
   **Consumable** (Healing Draught, thrown self-heal). Each proves its path end-to-end.
 - **Phase 4 — real UI / the run screen** (`src/scenes/main.tscn` + `main_controller.gd`,
   `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title (→ **character
-  select**) → **framed run** (corridor large top-left with an `enemy_hud` above each occupant
+  select**) → **framed run** (corridor large top-left with an `enemy_hud` above each enemy
   sprite, the player portrait + HP centre-bottom, its items down the right edge, allies in
   flanking slots, the VFX wall) → **approach** (the enemy scales from depth) → fight
   (slow-mo-on-hover, the **potion-throw UI**) → **draft overlay** → advance along a **map
@@ -234,7 +236,7 @@ test-first + its own green commit, with the headless autotest as the regression 
    accessibility settings as they're wanted. [game_manager](systems/game_manager.md) ·
    [ui_layout](systems/ui_layout.md) · [run_screen](systems/run_screen.md) · [ui_theme](systems/ui_theme.md).
 4. **Combat view — DONE; relaid out to the corridor-forward mockup (2026-06-09).** The framed
-   `CombatView` renders a per-actor widget: the **corridor large top-left** with **one occupant
+   `CombatView` renders a per-actor widget: the **corridor large top-left** with **one
    sprite per enemy** (side by side, shrunk by count) and an **`enemy_hud` pinned above each**
    (name + status + HP + items); the **player portrait + HP centre-bottom** with its board a
    **column down the right edge** (potions above it); run-scoped allies / combat-scoped tokens in

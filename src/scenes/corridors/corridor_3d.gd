@@ -1,17 +1,33 @@
 class_name Corridor3D
-extends CorridorRenderer
-## A real 3D corridor (docs/systems/corridors/corridor_3d.md). A SubViewport with its own 3D world
-## holds the camera and the corridor sections; its image is drawn at `view_size`, centred on this
-## node's origin (the vanishing point), like the 2D renderers.
+extends Node2D
+## The corridor (docs/systems/corridors/corridor_3d.md). A SubViewport with its own 3D world holds
+## the camera, the light, the corridor sections and the enemy sprites; its image is drawn at
+## `view_size`, centred on this node's origin.
 ##
 ## The camera stays at the origin. Each frame the sections are placed from `player_z`, so
-## positions stay small however long the run is. One cell of the 2D renderers is one section
-## here. Sections are created ahead up to the light's reach and removed behind.
+## positions stay small however long the run is. Sections are created ahead up to the light's
+## reach and removed behind.
 ##
-## One OmniLight3D at the camera lights the pieces, and there is no ambient light, so everything
-## past `light_range` is black. Enemy images are 2D sprites the light does not reach;
-## `enemy_brightness` darkens them with its own formula.
+## One OmniLight3D at the camera lights the pieces and the enemy sprites, and there is no ambient
+## light, so everything past `light_range` is black.
 
+## Every built corridor is in this group, so the debug look panel can change the ones on screen.
+const GROUP: StringName = &'corridors'
+
+## When true (default), `view_size` is set to the size of the viewport this corridor is in (the
+## main viewport, or a SubViewport sized by its container), and re-synced on resize. Turn off to
+## set `view_size` yourself. Requires this node's parent to sit at the viewport origin.
+@export var auto_view_size: bool = true
+## The on-screen rectangle the corridor fills, in local pixels, centred on this node's origin.
+@export var view_size: Vector2 = Vector2(1280.0, 1280.0)
+## Sections per second at full glide.
+@export var speed: float = 1.2
+## Seconds to ease the speed in and out.
+@export var ramp_time: float = 0.3
+## Whether the corridor polls the move_forward / move_back actions itself (the testbed). Hosts
+## that drive the corridor (the combat view) turn this off, or W/S would scroll the fight's
+## corridor at any time.
+@export var input_enabled: bool = true
 ## Where the section pieces come from. Any CorridorPieceSource can be used.
 @export var piece_source: CorridorPieceSource
 ## The camera's vertical field of view, in degrees.
@@ -30,12 +46,15 @@ extends CorridorRenderer
 @export_range(0.0, 1.0) var flicker_amount: float = 0.0
 ## How fast the flicker changes. Higher is faster.
 @export var flicker_speed: float = 8.0
-## An enemy image's brightness once it has arrived at depth 0. Further away it darkens, reaching
-## black at `light_range`.
-@export_range(0.0, 1.0) var enemy_arrived_brightness: float = 1.0
-## Enemy images only: the shape of their fade to black. 1 fades evenly with distance; higher
-## values darken sooner.
-@export_range(0.1, 4.0) var light_falloff: float = 1.5
+
+@export_group('Enemies')
+## Enemy image pixels with an alpha below this are not drawn; the rest are drawn fully opaque.
+@export_range(0.0, 1.0) var alpha_scissor_threshold: float = 0.1
+
+var player_z: float = 0.0               ## continuous forward position, in sections
+var velocity: float = 0.0               ## eased sections per second; ramps over ramp_time
+var forward_held: bool = false
+var back_held: bool = false
 
 var _sections: Dictionary = {}   # absolute section index -> Node3D
 var _flicker_noise: FastNoiseLite = FastNoiseLite.new()
@@ -45,6 +64,7 @@ var _flicker_time: float = 0.0
 @onready var _camera: Camera3D = $SubViewport/Camera
 @onready var _light: OmniLight3D = $SubViewport/Light
 @onready var _section_root: Node3D = $SubViewport/Sections
+@onready var _enemy_root: Node3D = $SubViewport/Enemies
 @onready var _display: Sprite2D = $Display
 
 
@@ -52,9 +72,41 @@ func _init() -> void:
   _flicker_noise.frequency = 1.0
 
 
+func _ready() -> void:
+  add_to_group(GROUP)
+  # Each corridor gets its own copy, so changing one corridor's environment does not change the
+  # scene resource the others share.
+  _camera.environment = _camera.environment.duplicate()
+  if auto_view_size:
+    _sync_view_size()
+    get_viewport().size_changed.connect(_on_viewport_resized)
+  _build()
+
+
 func _exit_tree() -> void:
+  if auto_view_size and get_viewport().size_changed.is_connected(_on_viewport_resized):
+    get_viewport().size_changed.disconnect(_on_viewport_resized)
   _display.texture = null
+  for sprite: Sprite3D in _enemy_root.get_children():
+    sprite.texture = null
   _clear_sections()
+
+
+# Fill (and centre in) the current viewport. The parent must be at the origin.
+func _sync_view_size() -> void:
+  var size: Vector2 = get_viewport_rect().size
+  view_size = size
+  position = size * 0.5
+
+
+func _on_viewport_resized() -> void:
+  _sync_view_size()
+  rebuild()
+
+
+## Rebuild after a `view_size` change.
+func rebuild() -> void:
+  _build()
 
 
 func _build() -> void:
@@ -67,13 +119,51 @@ func _build() -> void:
   _display.texture = _viewport.get_texture()
   _display.centered = true
   _display.position = Vector2.ZERO
-  _layout(0.0)
+  _layout()
 
 
 func _process(delta: float) -> void:
-  super(delta)
+  var direction: float = 0.0
+  if forward_held or (input_enabled and Input.is_action_pressed('move_forward')):
+    direction += 1.0
+  if back_held or (input_enabled and Input.is_action_pressed('move_back')):
+    direction -= 1.0
+  # Ease the velocity toward the target over ramp_time, so starting and stopping do not snap.
+  var acceleration: float = speed / maxf(ramp_time, 0.001)
+  velocity = move_toward(velocity, direction * speed, acceleration * delta)
+  player_z += velocity * delta
+
   _flicker_time += delta
   _light.light_energy = light_energy * flicker_level(_flicker_time)
+  _layout()
+
+
+func set_forward_held(held: bool) -> void:
+  forward_held = held
+
+
+func set_back_held(held: bool) -> void:
+  back_held = held
+
+
+## Set corridor exports (`corridor_values`: property -> value) and properties of the camera's
+## Environment (`environment_values`: property -> value), then rebuild. Names that do not exist are
+## skipped. Used by the debug look panel and its saved looks.
+func apply_settings(corridor_values: Dictionary, environment_values: Dictionary) -> void:
+  for property: String in corridor_values:
+    if property in self:
+      set(property, corridor_values[property])
+  for property: String in environment_values:
+    if property in _camera.environment:
+      _camera.environment.set(property, environment_values[property])
+  for sprite: Sprite3D in _enemy_root.get_children():
+    sprite.alpha_scissor_threshold = alpha_scissor_threshold
+  _build()
+
+
+## The camera's Environment (this corridor's own copy).
+func environment() -> Environment:
+  return _camera.environment
 
 
 ## Push the light exports to the light. Call after changing them at runtime.
@@ -92,24 +182,7 @@ func flicker_level(time: float) -> float:
   return 1.0 - flicker_amount * wave
 
 
-## See CorridorRenderer.enemy_brightness. A fade to black at `light_range` shaped by
-## `light_falloff`, times the flicker, scaled so the enemy is at `enemy_arrived_brightness` at
-## depth 0.
-func enemy_brightness(depth_cells: float) -> float:
-  var arrived: float = _light_curve(depth_zero_distance())
-  if arrived <= 0.0:
-    return 0.0
-  var distance: float = depth_zero_distance() + depth_cells * piece_source.section_length
-  var level: float = _light_curve(distance) / arrived * enemy_arrived_brightness
-  return clampf(level * flicker_level(_flicker_time), 0.0, 1.0)
-
-
-# The enemy images' fade with distance from the camera, before the flicker.
-func _light_curve(distance: float) -> float:
-  return pow(clampf(1.0 - distance / light_range, 0.0, 1.0), light_falloff)
-
-
-func _layout(_frac: float) -> void:
+func _layout() -> void:
   var length: float = piece_source.section_length
   var base_index: int = floori(player_z)
   var first: int = base_index - _sections_behind()
@@ -127,23 +200,58 @@ func _layout(_frac: float) -> void:
     (_sections[index] as Node3D).position = Vector3(0.0, 0.0, -(depth_zero_distance() + (float(index) - player_z) * length))
 
 
-func _wall_nodes() -> Array:
-  return []
-
-
-## The camera's distance to depth 0: where the corridor's height exactly fills the view, the 3D
-## match for the 2D renderers' near tile reaching the view edge.
+## The camera's distance to depth 0: where the corridor's height exactly fills the view.
 func depth_zero_distance() -> float:
   var height: float = piece_source.section_height if piece_source != null else 3.0
   return (height * 0.5) / tan(deg_to_rad(fov) * 0.5)
 
 
-## The camera's distance to depth 0 divided by its distance to the point `depth_cells` sections
-## further. See CorridorRenderer.axis_scale.
-func axis_scale(depth_cells: float) -> float:
-  var length: float = piece_source.section_length if piece_source != null else 3.0
-  var near: float = depth_zero_distance()
-  return near / (near + depth_cells * length)
+# --- Enemies ------------------------------------------------------------------
+
+## Add a lit enemy sprite showing `texture` under the Enemies node. Size it with `size_enemy` and
+## place it with `enemy_position`; free it with `remove_enemy`.
+func add_enemy(texture: Texture2D) -> Sprite3D:
+  var sprite: Sprite3D = Sprite3D.new()
+  sprite.texture = texture
+  sprite.shaded = true
+  sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+  sprite.alpha_scissor_threshold = alpha_scissor_threshold
+  sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+  _enemy_root.add_child(sprite)
+  return sprite
+
+
+func remove_enemy(sprite: Sprite3D) -> void:
+  if not is_instance_valid(sprite):
+    return
+  sprite.texture = null
+  sprite.queue_free()
+
+
+## Size `sprite` so that at depth 0 it is `height_pixels` tall on screen.
+func size_enemy(sprite: Sprite3D, height_pixels: float) -> void:
+  if sprite.texture == null or sprite.texture.get_height() <= 0:
+    return
+  sprite.pixel_size = pixels_to_metres(height_pixels) / float(sprite.texture.get_height())
+
+
+## The 3D position of an enemy centred `depth_cells` sections past depth 0, `offset_pixels` to the
+## right of the view's centre (measured at depth 0).
+func enemy_position(depth_cells: float, offset_pixels: float) -> Vector3:
+  var distance: float = depth_zero_distance() + depth_cells * piece_source.section_length
+  return Vector3(pixels_to_metres(offset_pixels), 0.0, -distance)
+
+
+## A screen distance at depth 0 in metres. The corridor's height fills the view's height there.
+func pixels_to_metres(pixels: float) -> float:
+  var height: float = piece_source.section_height if piece_source != null else 3.0
+  return pixels / maxf(view_size.y, 1.0) * height
+
+
+## Where the 3D `point` appears on screen, in this node's local coordinates (origin at the view's
+## centre).
+func unproject(point: Vector3) -> Vector2:
+  return _camera.unproject_position(point) - Vector2(_viewport.size) * 0.5
 
 
 # Sections behind depth 0 still in front of the camera (plus one so the nearest is never missing).

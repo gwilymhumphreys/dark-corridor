@@ -35,7 +35,6 @@ var _player: Actor
 var _enemy_huds: Dictionary = {}    # Actor -> EnemyHud
 var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
-var _enemy_sprite_count: int = -1   # last count handed to the corridor (re-arrange only on change)
 var _cluster: TooltipCluster = null   # the floating item tooltip (its own CanvasLayer, layer 50)
 
 
@@ -91,10 +90,8 @@ func _sync_rosters() -> void:
   # run-scoped ally stays in player_side (kept on the roster), so its slot survives (shown dimmed).
   _drop_missing(_enemy_huds, enemies)
   _drop_missing(_ally_slots, player_side)
-  # One corridor occupant sprite per enemy — re-arranged only when the count changes.
-  if enemies.size() != _enemy_sprite_count:
-    _corridor.set_enemy_count(enemies.size())
-    _enemy_sprite_count = enemies.size()
+  # One corridor sprite per enemy, kept with its enemy (the corridor does nothing if the roster is unchanged).
+  _corridor.set_enemies(enemies)
   for e in enemies:
     if not _enemy_huds.has(e):
       var hud: EnemyHud = ENEMY_HUD.instantiate()

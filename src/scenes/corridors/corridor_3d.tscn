@@ -42,4 +42,6 @@ omni_attenuation = 1.5
 
 [node name="Sections" type="Node3D" parent="SubViewport"]
 
+[node name="Enemies" type="Node3D" parent="SubViewport"]
+
 [node name="Display" type="Sprite2D" parent="."]

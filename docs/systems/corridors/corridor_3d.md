@@ -1,35 +1,49 @@
-# `Corridor3D` — the 3D corridor
+# `Corridor3D` — the corridor
 
-A real 3D corridor renderer, usable wherever a 2D renderer is. It is an alternative to
-`CorridorScaled` for judging the look in game; see [common.md](common.md) for the shared base.
+The first-person corridor behind every fight: a real 3D scene of corridor sections, lit by one light at
+the camera, with the enemies drawn as lit sprites inside it.
 
-**Location:** `src/scenes/corridors/corridor_3d.gd` + `.tscn`, piece sources beside it.
+**Location:** `src/scenes/corridors/corridor_3d.gd` + `.tscn`, piece sources beside it. Hosts:
+`CombatCorridor` in fights ([run_screen.md](../run_screen.md#enemies-in-the-corridor)) and the corridor
+testbed (`src/scenes/corridor_testbed.tscn`).
 
-## How it fits the base class
+## Structure
 
-- Extends `CorridorRenderer`. It owns a `SubViewport` with its own 3D world (`own_world_3d`, so two
-  corridors on screen do not share one scene) holding a `Camera3D` and the sections. A `Sprite2D` draws
-  the viewport's image at `view_size`, centred on the node origin.
-- `_build` resizes the `SubViewport` to `view_size`, so the base class's resize handling works as for the
-  2D renderers.
-- Movement (`player_z`, `velocity`, held flags, `input_enabled`) comes from the base class.
-- `set_blur` and `sharp_bilinear.gdshader` do nothing for it; `_wall_nodes` returns no nodes. Distant
-  walls use mipmapped textures instead (`test_wall.png` imports with mipmaps).
+- A `Node2D` that owns a `SubViewport` with its own 3D world (`own_world_3d`, so two corridors on screen
+  do not share one scene). The viewport holds `Camera`, `Light`, `Sections` and `Enemies`. A `Sprite2D`
+  (`Display`) draws the viewport's image at `view_size`, centred on the node's origin.
+- `auto_view_size` (default on) sets `view_size` to the size of the viewport the corridor is in and
+  re-syncs it on resize, so sizing the container sizes the corridor. The parent must sit at the viewport
+  origin. Turn it off to set `view_size` yourself.
+- Exports set before the corridor enters the tree are used by the first build (the testbed's `--set=`).
+  After that, `apply_settings(corridor_values, environment_values)` sets exports and camera `Environment`
+  properties and rebuilds; `CombatCorridor` and the testbed call it with the
+  [look panel](../corridor_look.md) settings.
+- Each corridor duplicates its camera's `Environment` in `_ready`, so changing one does not change the
+  others, and joins the `Corridor3D.GROUP` group so the look panel can reach the corridors on screen.
+- Both hosts draw the corridor image through `DebugPanels.world_material` (the
+  [corridor look shader](../corridor_look.md)).
+
+## Movement
+
+- `set_forward_held` / `set_back_held`, or the `move_forward` / `move_back` actions while `input_enabled`
+  is on. `CombatCorridor` turns input off so W/S cannot scroll a fight.
+- `velocity` eases toward `speed` over `ramp_time`; `player_z` is the position in sections.
+- The camera and light never move. Each frame `_layout` places section `i` with its near edge
+  `i - player_z` sections past depth 0, which keeps positions small however long the run is.
 
 ## Light
 
-The corridor is lit by one Godot `OmniLight3D`, the `SubViewport/Light` node in `corridor_3d.tscn`, at
-the camera (the origin of the 3D scene). The owner chose it over four lights on the walls, floor and
-ceiling, which looked almost the same (2026-09-15).
+The corridor is lit by one Godot `OmniLight3D`, the `SubViewport/Light` node, at the camera. The owner
+chose it over four lights on the walls, floor and ceiling, which looked almost the same (2026-09-15).
 
 - The environment has no ambient light and a black background, so everything past `light_range` is
-  black. Code-built materials are shaded; kit models are lit the same way.
+  black. Code-built materials, kit models and enemy sprites are all lit by it.
 - Godot's omni light drops sharply to zero just before its range, so with a short `light_range` the fade
   to black looks abrupt.
 - Raising `light_attenuation` above 1 makes the nearest surface brighter, not darker.
-- Sections are built past `light_range`, so the end of the geometry is always in darkness.
-- The flicker is 1D simplex noise (`flicker_level(time)`), sampled each frame in `_process`; the light's
-  energy is `light_energy` times that level, which stays between `1 - flicker_amount` and 1.
+- The flicker is 1D simplex noise (`flicker_level(time)`), sampled each frame; the light's energy is
+  `light_energy` times that level, which stays between `1 - flicker_amount` and 1.
 - `_apply_light()` copies the exports to the light node when the corridor is built; call it after
   changing them at runtime.
 
@@ -39,27 +53,36 @@ ceiling, which looked almost the same (2026-09-15).
 | `light_energy` | The light's `light_energy` |
 | `light_attenuation` | The light's `omni_attenuation` |
 | `flicker_amount`, `flicker_speed` | How deep and how fast the flicker is; 0 amount is a steady light |
-| `enemy_arrived_brightness` | An enemy image's brightness at depth 0; it darkens further away |
-| `light_falloff` | Enemy images only: the shape of their fade; higher values darken sooner |
-
-### Enemy images
-
-Enemy images are 2D sprites drawn over the corridor image, so the lights do not reach them.
-`enemy_brightness(depth_cells)` gives the colour multiplier the host sets on them:
-`(1 - distance / light_range) ^ light_falloff` times the flicker, scaled so an arrived enemy (depth 0)
-is at `enemy_arrived_brightness`. Their black backgrounds only merge
-into the corridor when the walls around the sprite are dark, which depends on `light_range`.
+| `alpha_scissor_threshold` | Enemy sprite pixels below this alpha are not drawn |
 
 ## Sections
 
-- The corridor is a row of equal-length sections. One 2D cell equals one section, so depths in cells mean
-  the same distance in every renderer.
-- The camera and light never move. Each frame `_layout` reads `player_z` and places section `i` with its
-  near edge `i - player_z` sections past depth 0. This keeps positions small however long the run is.
-- Sections are built from a little behind the camera to the light's reach, and freed once outside that
-  range.
+- The corridor is a row of equal-length sections, built from a little behind the camera to past the
+  light's reach and freed once outside that range, so the end of the geometry is always in darkness.
 - **Depth 0** is `depth_zero_distance()`: the distance at which the corridor's height fills the view.
-- `axis_scale(depth)` is `depth_zero_distance / (depth_zero_distance + depth * section_length)`.
+  Depths elsewhere (the enemy approach, `Balance.APPROACH_DEPTH_START`) are counted in sections past it.
+
+## Enemies
+
+Enemies are `Sprite3D` nodes under `SubViewport/Enemies`. The host decides how many there are and where
+they go; the corridor creates, sizes and places them.
+
+| Method | Use |
+|---|---|
+| `add_enemy(texture) -> Sprite3D` | A lit sprite with alpha scissor, linear mipmapped filtering |
+| `size_enemy(sprite, height_pixels)` | Sets `pixel_size` so the sprite is that tall on screen at depth 0 |
+| `enemy_position(depth_cells, offset_pixels) -> Vector3` | The centre of a sprite at that depth, offset sideways by screen pixels measured at depth 0 |
+| `pixels_to_metres(pixels)` | A screen distance at depth 0 in metres: `pixels / view_size.y * section_height` |
+| `unproject(point) -> Vector2` | Where a 3D point appears, in the node's local coordinates (origin at the view centre) |
+| `remove_enemy(sprite)` | Clears the texture and frees the sprite |
+
+- `shaded` is on, so the light and its flicker darken a sprite with distance; there is no separate
+  brightness formula.
+- Transparency is alpha scissor (`ALPHA_CUT_DISCARD`), not blending: a pixel is either drawn opaque or
+  not drawn. The cut-out images' soft glows lose their faintest outer part. The default threshold was
+  picked from screenshots as the lowest tried value that shows no dark fringe.
+- No billboard: the camera never rotates, so a sprite facing the camera's axis always faces it.
+- Perspective sizes the sprites with depth, so no scale is set during the approach.
 
 ## Piece sources
 
@@ -76,19 +99,31 @@ into the corridor when the walls around the sprite are dark, which depends on `l
 - Kits whose textures share an atlas cannot tile across a flat rectangle, so they go through
   `KitPieceSource`. Each kit places its model pivots differently; the per-side offsets correct for that.
 - Code-built materials disable back-face culling, so wall winding does not matter, and ignore alpha:
-  transparent pixels in a texture draw as their stored colour, which is why `test_wall.png` shows jagged
-  dark edges in 3D.
+  transparent pixels in a texture draw as their stored colour, which is why `test_wall.png` (the
+  `CodeBuiltPieceSource` default texture) shows jagged dark edges.
 - The scene's code-built source uses `assets/textures/castle_wall_slates.png` (Poly Haven, Rob Tuytel)
   on all four sides. Textures used in 3D need mipmaps enabled in their import settings.
 
+## Project configuration (`project.godot`)
+
+- Window 2560×1440, `stretch/mode = canvas_items`, `aspect = keep`; the renderer is Compatibility.
+- `default_texture_filter = Nearest` (the UI's pixel look); the corridor sets its own filters.
+- Input map: `move_forward` = W + Up, `move_back` = S + Down.
+- `main_scene` is `main.tscn`; the corridor testbed runs directly.
+
 ## Testing it
 
-- Corridor testbed: M cycles to 3D, or start with `-- --3d`. N walks a random painted monster in (see
-  [common.md](common.md#host-extras-corridor_testbedgd)). `-- --set=light_energy=0.2` (any export) and
-  `--shot-delay=SECONDS` help compare lighting in screenshots.
-- Light settings: edit the root node's "Light" exports in `corridor_3d.tscn`, save, then run the
-  testbed and press M until it shows the 3D corridor. The testbed builds its 3D corridor from that scene.
-- In a run: F1 → Corridor → 3D, applied from the next fight. For screenshots of a real fight,
-  `--corridor=3d --corridor-set=light_energy=<value>`
-  ([debug_panel.md](../debug_panel.md#start-up-arguments)).
-- Tests: `tests/corridors/test_corridor_renderers.gd`.
+- Corridor testbed: `<godot> --path . res://src/scenes/corridor_testbed.tscn`. Forward/Back buttons
+  glide; N walks a random cut-out monster in from `APPROACH_DEPTH_START`.
+- Testbed arguments (after `--`): `--set=property=value` sets any corridor export; `--monster` spawns a
+  monster for the shot; `--shot` saves `user://shot.png` mid-glide and quits (`--still` for a stopped
+  frame, `--shot-delay=SECONDS` to wait longer), printing `SHOT_SAVED:<path>`. `--view=WIDTHxHEIGHT`
+  (before `--`) forces a fixed `view_size`. The debug panel's `--monster-image=` and `--palette=` also
+  apply.
+- A real fight: `<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial
+  --corridor-set=light_energy=<value>` ([debug_panel.md](../debug_panel.md#start-up-arguments)).
+- Light settings: edit the root node's "Light" exports in `corridor_3d.tscn`; fights and the testbed both
+  build from that scene.
+- Headless reimport after adding or replacing textures: `<godot> --headless --path . --import`.
+- The Godot exe path is in [`../../handoff.md`](../../handoff.md).
+- Tests: `tests/corridors/test_corridor_renderers.gd`, `tests/corridors/test_combat_corridor.gd`.
