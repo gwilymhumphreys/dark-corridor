@@ -84,6 +84,9 @@ the headless autotest mounts none of this:
   *inside* the pause menu's CanvasLayer (layer 100) so its opaque screen covers the paused
   panel, returning to it on Close. Quit-to-menu routes through `Game.return_to_title()`
   (which **keeps** the save, so Title's Resume re-enters the beat).
+  **Space** (the `toggle_pause` action) pauses and resumes without the menu, showing a small
+  **Paused** panel at the top centre of the HUD (`HUD/PausedPanel`). Escape during a Space pause
+  raises the menu over it (still paused); Space does nothing while the menu is up.
 
 **Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Effects), a
 mute-when-unfocused toggle, a UI font dropdown (Smooth / Pixel — see `ui_theme.md`), and a

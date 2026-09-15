@@ -105,7 +105,7 @@ the character system #23/#27). See the per-item status in "Your task" below.
   things `tune` needed. Doc: [`systems/autotest.md`](systems/autotest.md).
 - **Settings/pause + battle-speed (non-content backlog #3)** — the **×1/×2/×3 battle-speed
   dial** (a `Game` session preference + an always-visible HUD `speed_button`, applied to
-  each fight's `Timekeeper` base scale) + in-run **pause** (`ui_cancel` → `pause_menu`:
+  each fight's `Timekeeper` base scale) + in-run **pause** (Space → a small Paused panel, no menu; `ui_cancel` → `pause_menu`:
   Resume / Quit-to-menu — a run-screen gate, *not* a `Game` phase; the save is preserved
   so Title's Resume re-enters the beat). Resolved the **timescale replace-vs-multiply**
   open → **replace** (absolute slow-mo). Doc: [`systems/run_screen.md`](systems/run_screen.md).

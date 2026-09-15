@@ -36,6 +36,7 @@ var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
 var _pause_menu: PauseMenu = null
+@onready var _paused_panel: PanelContainer = $HUD/PausedPanel   # shown while paused with Space (no menu)
 var _settings: SettingsScreen = null
 
 @onready var _map: MapStrip = $HUD/MapStrip
@@ -233,11 +234,24 @@ func _process(_delta: float) -> void:
 
 
 # Pause is a run-screen presentation gate (NOT a Game phase): Escape (ui_cancel) toggles
-# it during a beat, freezing the screen's tick and raising the pause menu. The autotest
-# never mounts this screen, so pause is invisible to the headless path.
+# it during a beat, freezing the screen's tick and raising the pause menu. Space (toggle_pause)
+# pauses and resumes without the menu, showing the small Paused panel; Escape during that raises
+# the menu, and Space does nothing while the menu is up. The autotest never mounts this screen, so
+# pause is invisible to the headless path.
 func _unhandled_input(event: InputEvent) -> void:
-  if event.is_action_pressed('ui_cancel') and _can_pause():
-    _toggle_pause()
+  if not _can_pause():
+    return
+  if event.is_action_pressed('ui_cancel'):
+    if _paused and _pause_menu == null:
+      _show_pause_menu()
+    else:
+      _toggle_pause()
+    get_viewport().set_input_as_handled()
+  elif event.is_action_pressed('toggle_pause') and _pause_menu == null:
+    if _paused:
+      _resume()
+    else:
+      _pause(false)
     get_viewport().set_input_as_handled()
 
 
@@ -255,12 +269,21 @@ func _toggle_pause() -> void:
     _pause()
 
 
-func _pause() -> void:
+## Pause the run, raising the pause menu, or with `show_menu` false only the small Paused panel.
+func _pause(show_menu: bool = true) -> void:
   _paused = true
   # The corridor renderer self-animates (the one allowed cosmetic _process), so the
   # paused approach must also halt the treadmill — not just the depth lerp.
   if _view != null and _state == State.APPROACHING:
     _view.set_gliding(false)
+  if show_menu:
+    _show_pause_menu()
+  else:
+    _paused_panel.show()
+
+
+func _show_pause_menu() -> void:
+  _paused_panel.hide()
   _pause_menu = PAUSE_MENU.instantiate()
   add_child(_pause_menu)
   _pause_menu.resume_pressed.connect(_resume)
@@ -270,6 +293,7 @@ func _pause() -> void:
 
 func _resume() -> void:
   _paused = false
+  _paused_panel.hide()
   if _view != null and _state == State.APPROACHING:
     _view.set_gliding(true)   # the treadmill resumes with the walk
   _close_settings()

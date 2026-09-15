@@ -124,6 +124,40 @@ func test_escape_toggles_pause_during_a_fight() -> void:
   screen.free()
 
 
+func test_space_pauses_without_the_menu_and_shows_the_paused_panel() -> void:
+  var screen := _mount_into_fight(1)
+  for _i in 4:
+    screen._physics_process(1.0)
+  screen._unhandled_input(_space())
+  assert_true(screen._paused, 'Space pauses')
+  assert_null(screen._pause_menu, 'without the pause menu')
+  assert_true(screen._paused_panel.visible, 'the Paused panel shows')
+  var frozen: float = screen._cm.timekeeper.sim_time
+  screen._physics_process(1.0)
+  assert_almost_eq(screen._cm.timekeeper.sim_time, frozen, 0.00001, 'the fight clock is frozen')
+  screen._unhandled_input(_space())
+  assert_false(screen._paused, 'Space again resumes')
+  assert_false(screen._paused_panel.visible, 'the Paused panel hides')
+  screen.free()
+
+
+func test_escape_during_a_space_pause_raises_the_menu_and_stays_paused() -> void:
+  var screen := _mount_into_fight(1)
+  for _i in 4:
+    screen._physics_process(1.0)
+  screen._unhandled_input(_space())
+  screen._unhandled_input(_escape())
+  assert_true(screen._paused, 'still paused')
+  assert_not_null(screen._pause_menu, 'Escape raises the pause menu')
+  assert_false(screen._paused_panel.visible, 'the menu replaces the Paused panel')
+  screen._unhandled_input(_space())
+  assert_not_null(screen._pause_menu, 'Space does nothing while the menu is up')
+  screen._pause_menu.resume_pressed.emit()
+  assert_false(screen._paused, 'Resume unpauses')
+  assert_false(screen._paused_panel.visible, 'and no panel is left showing')
+  screen.free()
+
+
 func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
   var screen := _mount_into_fight(1)
   for _i in 4:
@@ -213,5 +247,12 @@ func test_pause_available_during_an_event() -> void:
 func _escape() -> InputEventAction:
   var ev := InputEventAction.new()
   ev.action = 'ui_cancel'
+  ev.pressed = true
+  return ev
+
+
+func _space() -> InputEventAction:
+  var ev := InputEventAction.new()
+  ev.action = 'toggle_pause'
   ev.pressed = true
   return ev
