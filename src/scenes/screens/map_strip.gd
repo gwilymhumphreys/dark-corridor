@@ -17,7 +17,14 @@ var _font: Font
 
 
 func _ready() -> void:
-  _font = ThemeDB.fallback_font
+  _font = get_theme_default_font()
+
+
+# The theme's default font changes when the font style (or a debug font) is applied.
+func _notification(what: int) -> void:
+  if what == NOTIFICATION_THEME_CHANGED:
+    _font = get_theme_default_font()
+    queue_redraw()
 
 
 func setup(total_beats: int, pos: int) -> void:

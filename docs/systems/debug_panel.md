@@ -31,6 +31,7 @@ as the `DebugPanels` autoload.
 |---|---|---|
 | Palette | "Off", then every palette under `assets/palettes/`, grouped by subfolder. Applies immediately. | [Palette clamp](palette_clamp.md) |
 | World palette (corridor) | "Off", then every palette. Applies immediately. | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
+| Font | "Game default" (the `Prefs` font), then every font file in `assets/fonts/candidates/`. Applies immediately. | The project theme's default font ([ui_theme.md](ui_theme.md#font-candidates)) |
 | Colour matching | RGB or perceptual (OKLab), for both clamps. Applies immediately. | Palette clamp |
 | Dithering | On or off, for both clamps. Applies immediately. | Palette clamp |
 
@@ -46,6 +47,7 @@ Read once at start-up from the user arguments (after `--`), for screenshots and 
 | `--look-panel` | Opens the look panel |
 | `--corridor-set=property=value` | Sets any `Corridor3D` export (`corridor_settings`). Repeatable |
 | `--monster-image=<res path>` | Every enemy uses this image (`MonsterImages.forced_path`) |
+| `--font=<res path>` | The project theme's default font becomes this font file, replacing the one `Prefs` set ([ui_theme.md](ui_theme.md#font-candidates)) |
 
 For example, a real fight under a palette:
 `<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial --palette=res://assets/palettes/good/waldgeist-32x.png`
@@ -56,6 +58,7 @@ For example, a real fight under a palette:
 |---|---|
 | `corridor_settings`, `environment_settings` | Corridor exports and corridor camera Environment properties (property -> value), applied when a corridor is built |
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
+| `set_ui_font(path: String)`, `ui_font` | Use this font file as the project theme's default font; `ui_font` is that path, or `''` for the game's default font |
 | `set_palette(colours: PackedColorArray)` | Clamp to these colours; empty turns the clamp off |
 | `world_palette`, `world_material` | The world clamp palette path (`''` when off) and the corridor look material corridors are drawn through |
 | `look_defaults() -> Dictionary` | Look shader uniform defaults, read from the shader code |

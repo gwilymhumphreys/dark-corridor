@@ -21,13 +21,13 @@ enum FontStyle { VECTOR, PIXEL }
 # to every Control using it.
 const THEME_PATH: String = 'res://assets/themes/black_white_ui.tres'
 
-# Font resource per style. '' = the engine built-in font (a smooth vector font — fine for VECTOR
-# until a custom one is chosen). The PIXEL asset doesn't exist yet: add a pixel font there (with
+# Font resource per style. '' = the engine built-in font. VECTOR is Rakkas, chosen from the font
+# comparison (docs/systems/ui_theme.md). The PIXEL asset doesn't exist yet: add a pixel font there (with
 # FontFile.oversampling = 1.0 + antialiasing/subpixel Disabled, see ui_theme.md) to enable the
 # option — until then PIXEL falls back to the built-in font with a warning, so the wiring is inert
 # but harmless.
 const FONT_PATHS: Dictionary = {
-  FontStyle.VECTOR: '',
+  FontStyle.VECTOR: 'res://assets/fonts/rakkas.ttf',
   FontStyle.PIXEL: 'res://assets/fonts/ui_pixel.ttf',
 }
 

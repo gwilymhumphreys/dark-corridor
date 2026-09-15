@@ -13,6 +13,7 @@ extends Node
 const PALETTE_ROOT: String = 'res://assets/palettes'
 const SHORTLIST_DIR: String = 'res://assets/palettes/shortlist'
 const LOOK_DIR: String = 'res://assets/looks'
+const FONT_DIR: String = 'res://assets/fonts/candidates'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
@@ -32,8 +33,11 @@ var world_palette: String = ''
 ## The material every corridor is drawn through (corridor_look.gdshader). Its palette follows
 ## `world_palette`.
 var world_material: ShaderMaterial = ShaderMaterial.new()
+## The font file chosen in the panel or with `--font=`, or '' for the game's default font.
+var ui_font: String = ''
 
 var _palette_paths: Array[String] = []   # item id - 1 -> palette path, in both palette options (id 0 = Off)
+var _font_paths: Array[String] = []   # item id - 1 -> font path in the font option (id 0 = game default)
 var _palettes_scanned: bool = false
 var _perceptual: bool = false
 var _dithering: bool = false
@@ -46,6 +50,7 @@ var _look_defaults: Dictionary = {}   # look shader uniform -> default value, re
 @onready var _panel_layer: CanvasLayer = $PanelLayer
 @onready var _palette_option: OptionButton = $PanelLayer/Panel/Rows/PaletteRow/Option
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/WorldPaletteRow/Option
+@onready var _font_option: OptionButton = $PanelLayer/Panel/Rows/FontRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/MatchingRow/Option
 @onready var _dithering_check: CheckButton = $PanelLayer/Panel/Rows/DitheringRow/Check
 
@@ -61,6 +66,7 @@ func _ready() -> void:
   _write_palette(world_material, PackedColorArray())
   _palette_option.item_selected.connect(_on_palette_selected)
   _world_option.item_selected.connect(_on_world_palette_selected)
+  _font_option.item_selected.connect(_on_font_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _dithering_check.toggled.connect(_on_dithering_toggled)
   _dithering_check.toggled.connect(func(_on: bool) -> void: _look_panel.refresh())
@@ -71,7 +77,8 @@ func _ready() -> void:
 ## Dev hooks for screenshots: `--palette=<res path>` starts with that palette clamped,
 ## `--world-palette=<res path>` sets the world clamp, `--perceptual` and `--dither` set
 ## the matching and dithering, `--look=<res path>` loads a saved look (applied first, so the other
-## arguments can override it), `--look-panel` opens the look panel.
+## arguments can override it), `--look-panel` opens the look panel, `--font=<res path>` sets the UI
+## font.
 func _apply_command_line() -> void:
   var args: PackedStringArray = OS.get_cmdline_user_args()
   for arg: String in args:
@@ -88,6 +95,8 @@ func _apply_command_line() -> void:
         corridor_settings[pair[0]] = str_to_var(pair[1])
     elif arg.begins_with('--monster-image='):
       MonsterImages.forced_path = arg.substr(16)
+    elif arg.begins_with('--font='):
+      set_ui_font(arg.substr(7))
   if '--perceptual' in args:
     _on_matching_selected(1)
   if '--dither' in args:
@@ -99,6 +108,7 @@ func _apply_command_line() -> void:
 
 func _exit_tree() -> void:
   _palette_paths.clear()
+  _font_paths.clear()
 
 
 func _input(event: InputEvent) -> void:
@@ -129,6 +139,8 @@ func _input(event: InputEvent) -> void:
 func toggle_panel() -> void:
   if not _palettes_scanned:
     _scan_palettes()
+  if _font_option.item_count <= 1:
+    _scan_fonts()
   _panel_layer.visible = not _panel_layer.visible
 
 
@@ -197,6 +209,10 @@ func reset_settings() -> void:
   reset_look()
   MonsterImages.forced_path = ''
   set_palette(PackedColorArray())
+  if ui_font != '':
+    ui_font = ''
+    Prefs.apply_font_style()
+  _font_option.select(0)
   if _palettes_scanned:
     _palette_option.select(0)
   _look_panel.refresh()
@@ -313,6 +329,17 @@ func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
   return file.get_section_keys(section) if file.has_section(section) else PackedStringArray()
 
 
+## Use the font file at `path` as the project theme's default font, for comparing fonts. It replaces
+## the font `Prefs` applied, until `Prefs` applies its font again.
+func set_ui_font(path: String) -> void:
+  var font: Font = load(path) as Font
+  if font == null:
+    push_warning('[DebugPanels] could not load font %s' % path)
+    return
+  (load(Prefs.THEME_PATH) as Theme).set_default_font(font)
+  ui_font = path
+
+
 ## Clamp the screen to `colours`, or turn the clamp off with an empty array.
 func set_palette(colours: PackedColorArray) -> void:
   _clamp_layer.visible = _write_palette(_clamp_material, colours)
@@ -385,6 +412,30 @@ func _on_palette_selected(index: int) -> void:
 func _on_world_palette_selected(index: int) -> void:
   var id: int = _world_option.get_item_id(index)
   set_world_palette('' if id <= 0 else _palette_paths[id - 1])
+
+
+# The font folder is scanned when the panel first opens, like the palettes. Deleting a font file
+# removes its option.
+func _scan_fonts() -> void:
+  _font_option.clear()
+  _font_paths.clear()
+  _font_option.add_item('Game default', 0)
+  if DirAccess.dir_exists_absolute(FONT_DIR):
+    for file: String in DirAccess.get_files_at(FONT_DIR):
+      if file.get_extension().to_lower() in ['ttf', 'otf']:
+        _font_paths.append(FONT_DIR.path_join(file))
+        _font_option.add_item(file.get_basename(), _font_paths.size())
+  _font_option.select(maxi(_font_option.get_item_index(_font_paths.find(ui_font) + 1), 0))
+
+
+# "Game default" (id 0) puts back the font `Prefs` applies.
+func _on_font_selected(index: int) -> void:
+  var id: int = _font_option.get_item_id(index)
+  if id <= 0:
+    ui_font = ''
+    Prefs.apply_font_style()
+    return
+  set_ui_font(_font_paths[id - 1])
 
 
 # Matching and dithering apply to both clamps.

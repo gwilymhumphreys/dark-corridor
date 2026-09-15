@@ -37,7 +37,7 @@ palette colour for every pixel, so raising the limit costs time per pixel.
 |---|---|---|
 | Corridor walls and enemy images | `CombatViewFramed/CorridorPanel` (the `combat_corridor.tscn` `SubViewportContainer`); enemy `Sprite2D`s are children of the renderer inside its `SubViewport` | World |
 | Enemy HUDs, potions, item grid, player portrait and health, ally slots | `CombatViewFramed` children `EnemyArea`, `RightPanel`, `BottomBar` | Interface (see open questions for item icons) |
-| Projectiles and damage numbers | `CombatViewFramed/VfxWall` (`VfxDriver`, a `Node2D` drawing circles in each delivery's colour and text with the fallback font); drawn after the panels, so above them | Effects |
+| Projectiles and damage numbers | `CombatViewFramed/VfxWall` (`VfxDriver`, a `Node2D` drawing circles in each delivery's colour and text with the project theme's default font); drawn after the panels, so above them | Effects |
 | Map strip, speed button, gold and stats readouts | `RunScreen/HUD` CanvasLayer (default layer 1) | Interface |
 | Draft, choice and event overlays | `Control`s under the run screen, no layer of their own | Interface |
 | Item tooltip | `TooltipCluster` CanvasLayer, layer 50 | Interface |

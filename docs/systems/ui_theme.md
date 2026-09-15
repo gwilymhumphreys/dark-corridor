@@ -72,8 +72,9 @@ walk). Owned by `Prefs` (`src/autoloads/prefs.gd`):
 - `Prefs.FontStyle` = `{ VECTOR, PIXEL }`; `Prefs.font_style()` / `set_font_style()`
   (persisted to `user://`, `display` section); `apply_font_style()` runs at boot.
 - `apply_font_style()` loads the cached theme (`THEME_PATH`) and calls
-  `theme.set_default_font(...)`. `null` = the engine built-in (a smooth vector
-  font), so VECTOR works today with no asset.
+  `theme.set_default_font(...)`. `null` = the engine built-in font.
+- VECTOR uses **Rakkas** (`assets/fonts/rakkas.ttf`, a free Google Font), chosen
+  from a screenshot comparison of candidate fonts.
 - `FONT_PATHS` maps each style to a resource. PIXEL points at
   `assets/fonts/ui_pixel.ttf` **which does not exist yet** — until it's added,
   selecting PIXEL warns and falls back to the built-in font (the wiring is inert
@@ -126,6 +127,13 @@ per-locale `default_font_size` if needed.
 So: vector = the universal, broad-coverage default for all locales; pixel = an
 opt-in Latin-only flourish that the locale gate confines to covered locales.
 
+### Font candidates
+
+`assets/fonts/candidates/` holds the other shortlisted free fonts (all from Google Fonts): Alegreya
+SC, Cinzel, Eczar and Germania One. Try one in game with the F1 debug panel's Font dropdown or the
+start-up argument `--font=<res path>` ([debug_panel.md](debug_panel.md)), which replace Rakkas for
+that session. None is wired into `Prefs.FONT_PATHS`. Delete the folder once the choice is final.
+
 ### Font import settings (when adding the assets)
 
 Godot 4.7, so per-font/per-viewport oversampling applies (`FontFile.oversampling`).
@@ -143,7 +151,7 @@ Godot 4.7, so per-font/per-viewport oversampling applies (`FontFile.oversampling
 ## Status
 
 - **Built:** `Consts.UI_SCALE` / `UI_BASE_RESOLUTION`; the `Prefs` font-style
-  wiring (persist + apply at boot, VECTOR active) incl. the locale gate
+  wiring (persist + apply at boot, VECTOR active with Rakkas) incl. the locale gate
   (`PIXEL_FONT_LOCALES` / `_effective_style` / re-apply on locale change); the
   settings-menu Font dropdown (`settings_screen.tscn`).
 - **Pending:** the pixel font asset + its import settings; reworking existing UI

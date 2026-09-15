@@ -16,7 +16,6 @@ var _font: Font
 func setup(cm: CombatManager, layout_source: CombatView) -> void:
   combat = cm
   layout = layout_source
-  _font = ThemeDB.fallback_font
 
 
 func _process(_delta: float) -> void:
@@ -26,6 +25,9 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
   if combat == null or combat.timekeeper == null:
     return
+  # The project theme's font, so damage numbers follow the font style.
+  var theme: Theme = ThemeDB.get_project_theme()
+  _font = theme.default_font if theme != null and theme.default_font != null else ThemeDB.fallback_font
   var now: float = combat.timekeeper.render_time()
   for d in combat.deliveries():
     if d.fizzled:
