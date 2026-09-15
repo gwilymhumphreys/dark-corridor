@@ -1,0 +1,64 @@
+GIMP Palette
+Name: ui-demichrome
+Columns: 8
+# Placeholder. Slate panels and bone text built around the demichrome corridor look's four colours
+# (#211e20 #555568 #a0a08b #e9efec), with desaturated effect hues. See docs/systems/interface_palette.md.
+# Interface
+ 26  24  25	ui background
+ 85  85 100	ui background wear
+160 160 139	ui background wear light
+ 14  13  14	ui panel shadow
+ 33  30  32	ui panel
+ 64  64  80	ui panel edge
+110 110 124	ui panel light
+ 85  85 100	ui text disabled
+120 120 112	ui text pressed
+160 160 139	ui text dim
+200 204 196	ui text button
+233 239 236	ui text
+# Combat view
+ 70  78 104	portrait player
+ 74  80  98	portrait ally
+108  66  70	portrait enemy
+ 30  30  36	hp bar bg
+128 150 118	hp bar fill
+ 40  28  30	enemy hp bar bg
+158  86  84	enemy hp bar fill
+110 140 118	potion
+233 239 236	cooldown ring
+120 120 112	ally downed
+# Tooltip
+200 204 196	rarity common
+184 200 214	rarity uncommon
+214 190 120	rarity rare
+214 190 120	tooltip changed
+# Effect families (shared with projectiles and damage numbers)
+178  88  82	damage
+124 164 128	heal
+130 108 162	arcane
+176 118  72	enemy claw
+106 134 172	status block
+136 156  96	status poison
+148 122 150	status weak
+184 130  84	status vulnerable
+192 186 132	status blind
+132 132 128	status silence
+108 156 148	status spores
+140 112  98	status decay
+204 170  96	status empowered
+# Relics
+110 122 136	relic stone ward
+138  94  98	relic vital charm
+118 118 126	relic iron idol
+# Beats and map strip
+140 110 160	beat boss
+190 166 106	beat relic
+112 150 116	beat rest
+110 126 160	beat event
+160 100  96	beat combat
+ 85  85 100	map track
+233 239 236	map current halo
+160 160 139	map cleared
+120 120 112	map arrow
+200 204 196	map label
+150 110 106	map rolled beat

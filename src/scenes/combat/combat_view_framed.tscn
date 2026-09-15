@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/combat_view_framed.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/combat_corridor.tscn" id="2"]
 [ext_resource type="Script" path="res://src/vfx/vfx_driver.gd" id="4"]
+[ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="5"]
 
 [node name="CombatViewFramed" type="Control"]
 layout_mode = 3
@@ -55,7 +56,7 @@ offset_left = 20.0
 offset_top = 2.0
 offset_right = 800.0
 offset_bottom = 40.0
-theme_override_colors/font_color = Color(0.6, 0.6, 0.66, 1)
+theme_type_variation = &"LabelDim"
 theme_override_font_sizes/font_size = 26
 text = "Potions"
 
@@ -75,7 +76,7 @@ offset_left = 20.0
 offset_top = 188.0
 offset_right = 800.0
 offset_bottom = 226.0
-theme_override_colors/font_color = Color(0.6, 0.6, 0.66, 1)
+theme_type_variation = &"LabelDim"
 theme_override_font_sizes/font_size = 26
 text = "Items"
 
@@ -122,6 +123,8 @@ alignment = 1
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
 color = Color(0.2, 0.3, 0.5, 1)
+script = ExtResource("5")
+colour_name = "PORTRAIT_PLAYER"
 
 [node name="HP" type="Control" parent="BottomBar/PlayerPortrait"]
 custom_minimum_size = Vector2(200, 30)
@@ -135,6 +138,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.1, 0.12, 1)
+script = ExtResource("5")
+colour_name = "HP_BAR_BG"
 
 [node name="Fill" type="ColorRect" parent="BottomBar/PlayerPortrait/HP"]
 layout_mode = 1
@@ -144,6 +149,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.4, 0.75, 0.4, 1)
+script = ExtResource("5")
+colour_name = "HP_BAR_FILL"
 
 [node name="Label" type="Label" parent="BottomBar/PlayerPortrait/HP"]
 layout_mode = 1

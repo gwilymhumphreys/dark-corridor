@@ -36,6 +36,24 @@ is the owner's doc: read it for intent, do not edit it.
   dithering in motion (Obra Dinn, surface-stable dithering) is in
   [`palette_clamp.md`](../systems/palette_clamp.md#dithering-in-motion-research); do not repeat it.
 - **The full-screen clamp** (F1 "Palette") still clamps everything, interface included, to one palette.
+- **The interface palette** ([`interface_palette.md`](../systems/interface_palette.md)): F1 "Interface
+  palette" or `--ui-palette=`, recolouring `Colours` and the theme from a named `.gpl` file. First
+  comparison page (private to the owner): https://claude.ai/artifact/62suHYJCvWuJgJ8LbWdLCL, saved in
+  `comparisons/interface_palette_plates/`.
+- **Background wear** ([`background_wear.md`](../systems/background_wear.md)): print wear on the screen
+  background, from a record sleeve the owner liked (worn edges, specks, bends). Settings in F2.
+  Comparison page (private to the owner): https://claude.ai/artifact/LfmcUdSUhiV2fbXoDkhMC1, saved in
+  `comparisons/background_wear_plates/`.
+
+## The owner's direction on the interface (2026-09-15)
+
+- The interface palette has more hues than the corridor palette.
+- The interface is split into groups. Panels, buttons, text, tooltip, menus, map strip and readouts
+  take a palette only, with no shaders or post-processing, so text stays legible. The border around
+  the play area (not built yet), portraits and item cells and icons may also get shaders to experiment
+  with. Health bars, value badges, cooldown sweep, potions, status swatches and the enemy name are
+  undecided. This replaces the earlier idea of one full-screen pass over the interface.
+- Fonts are being chosen in a separate session. Panel frames will come from whichever UI theme is used.
 
 Screenshot commands (Godot exe path in [`../handoff.md`](../handoff.md)):
 

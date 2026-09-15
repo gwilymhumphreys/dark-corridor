@@ -31,6 +31,7 @@ as the `DebugPanels` autoload.
 |---|---|---|
 | Palette | "Off", then every palette under `assets/palettes/`, grouped by subfolder. Applies immediately. | [Palette clamp](palette_clamp.md) |
 | World palette (corridor) | "Off", then every palette. Applies immediately. | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
+| Interface palette | "Off", then every `.gpl` palette. Applies to screens and items built afterwards. | [Interface palette](interface_palette.md) |
 | Font | "Game default" (the `Prefs` font), then every font file in `assets/fonts/candidates/`. Applies immediately. | The project theme's default font ([ui_theme.md](ui_theme.md#font-candidates)) |
 | Colour matching | RGB or perceptual (OKLab), for both clamps. Applies immediately. | Palette clamp |
 | Dithering | On or off, for both clamps. Applies immediately. | Palette clamp |
@@ -48,6 +49,8 @@ Read once at start-up from the user arguments (after `--`), for screenshots and 
 | `--corridor-set=property=value` | Sets any `Corridor3D` export (`corridor_settings`). Repeatable |
 | `--monster-image=<res path>` | Every enemy uses this image (`MonsterImages.forced_path`) |
 | `--font=<res path>` | The project theme's default font becomes this font file, replacing the one `Prefs` set ([ui_theme.md](ui_theme.md#font-candidates)) |
+| `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
+| `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
 
 For example, a real fight under a palette:
 `<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial --palette=res://assets/palettes/good/waldgeist-32x.png`
@@ -60,7 +63,9 @@ For example, a real fight under a palette:
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
 | `set_ui_font(path: String)`, `ui_font` | Use this font file as the project theme's default font; `ui_font` is that path, or `''` for the game's default font |
 | `set_palette(colours: PackedColorArray)` | Clamp to these colours; empty turns the clamp off |
+| `set_interface_palette(path: String)`, `interface_palette` | Apply an interface palette file; `''` goes back to the default colours |
 | `world_palette`, `world_material` | The world clamp palette path (`''` when off) and the corridor look material corridors are drawn through |
+| `background_material`, `background_defaults() -> Dictionary` | The [background wear](background_wear.md) material every screen background is drawn through, and its uniform defaults |
 | `look_defaults() -> Dictionary` | Look shader uniform defaults, read from the shader code |
 | `save_look(path) -> Error`, `load_look(path) -> bool`, `reset_look()` | [Look files](corridor_look.md#look-files) and the look defaults |
 | `toggle_look_panel()` | Show or hide the look panel |
@@ -70,4 +75,4 @@ For example, a real fight under a palette:
 | `cycle_palette(step: int)` | Select the next (`1`) or previous (`-1`) full-screen palette |
 | `shortlist_palette()` | Move the selected full-screen palette into `SHORTLIST_DIR` |
 | `move_palette_file(path, folder) -> String` (static) | Move a palette file and its `.import` file; returns the new path or `''` |
-| `reset_settings()` | Back to defaults |
+| `reset_settings()` | Back to defaults, including the interface palette |

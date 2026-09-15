@@ -118,6 +118,9 @@ Things to check while building:
 - Seeded autotest unchanged (report and log identical to the previous commit); GUT suite passes.
 - The 3D corridor is now lit by one light at the camera; the shader light and the wall lights are gone
   ([corridor_3d.md](../systems/corridors/corridor_3d.md#light)).
+- **Approach 3 is built as a debug setting**: the [interface palette](../systems/interface_palette.md)
+  sets `Colours` and recolours the theme from a named `.gpl` file (`new/ui/`). Effect colours stay
+  shared between item badges and projectiles for now (owner, 2026-09-15).
 - The world clamp is now part of the [corridor look](../systems/corridor_look.md) shader. Look work
   (effects, example looks, dithering in motion) continues in
   [`corridor_look_handoff.md`](corridor_look_handoff.md).

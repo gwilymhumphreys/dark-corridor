@@ -16,6 +16,13 @@ A `Theme` resource of `StyleBoxTexture` 9-slices over the pack's PNGs
 | `PanelSlot` | item cells (`item_cell.tscn`) — the item-slot frame |
 | `PanelFramed` | the tooltip panel (`tooltip_panel.tscn`) |
 | `PanelFlat` / `PanelSmall` / `PanelDetail` | general panels |
+| `PanelPause` | the pause menu panel (a `StyleBoxFlat`) |
+| `LabelDim` | dimmer section labels ("Potions", "Items") |
+
+The theme's colours and images can be recoloured at runtime by an
+[interface palette](interface_palette.md); its default `UI_PANEL_*` and `UI_TEXT_*`
+colours in `colours.gd` are the greys the theme uses, so keep them in step when
+the theme's greys change.
 
 **Buttons.** Every Button state uses the pack's black button art
 (`btn-large-0.png`). The art is pure black, so a stylebox tint cannot lighten it;

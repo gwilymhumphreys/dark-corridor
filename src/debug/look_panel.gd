@@ -2,8 +2,9 @@ class_name LookPanel
 extends PanelContainer
 ## The look panel (docs/systems/corridor_look.md), toggled with F2 by `DebugPanels`. One section
 ## per effect in corridor_look.gdshader, built from the shader's uniform groups, then sections for
-## the corridor's light and its camera Environment. Every change applies at once to the corridor on
-## screen. Looks are saved to and loaded from `DebugPanelsAutoload.LOOK_DIR`.
+## the corridor's light and its camera Environment, then one section per group in
+## background_wear.gdshader. Every change applies at once to what is on screen. Looks are saved to
+## and loaded from `DebugPanelsAutoload.LOOK_DIR`.
 
 const SECTION_SCENE: PackedScene = preload('res://src/debug/look_section.tscn')
 const SLIDER_ROW_SCENE: PackedScene = preload('res://src/debug/look_slider_row.tscn')
@@ -90,17 +91,16 @@ func refresh() -> void:
 func rebuild() -> void:
   _built = true
   _clear_sections()
-  _build_shader_sections()
+  _build_shader_sections(DebugPanels.world_material, DebugPanels.look_defaults())
   var values: Array[Dictionary] = scene_values()
   _build_property_section('Light', CORRIDOR_PROPERTIES, values[0], DebugPanels.corridor_settings)
   _build_property_section('Environment', ENVIRONMENT_PROPERTIES, values[1], DebugPanels.environment_settings)
+  _build_shader_sections(DebugPanels.background_material, DebugPanels.background_defaults())
 
 
-# One section per uniform group; uniforms outside a group (the palette clamp's) are skipped, as the
-# main debug panel sets them.
-func _build_shader_sections() -> void:
-  var look_material: ShaderMaterial = DebugPanels.world_material
-  var defaults: Dictionary = DebugPanels.look_defaults()
+# One section per uniform group; uniforms before the first group, or missing from `defaults` (the
+# palette clamp's, the background mark colours), are skipped, as other code sets them.
+func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary) -> void:
   var section: LookSection = null
   var group: String = ''
   for entry: Dictionary in look_material.shader.get_shader_uniform_list(true):

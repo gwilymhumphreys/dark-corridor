@@ -1,18 +1,64 @@
 GIMP Palette
 Name: ui-muted
-Columns: 16
-# Muted interface colours: panels, text, rarity metals, health and block. Placeholder.
- 16  12  10	panel darkest
- 29  26  23	panel dark
- 45  40  36	panel
- 65  60  56	panel edge
-115 110 105	text dim
-181 176 169	text
-122  92  72	bronze
-130 135 140	silver
-157 138  98	gold
-133  75  70	enemy red
- 87 125  88	health green
- 75 109 138	block blue
- 69  43  40	enemy red dark
- 43  62  43	health green dark
+Columns: 8
+# Placeholder. Warm dark-brown panels, bone text, muted effect hues from new/effects/effects-muted.gpl,
+# bronze, silver and gold rarity. See docs/systems/interface_palette.md.
+# Interface
+ 16  12  10	ui background
+ 58  52  46	ui background wear
+150 142 130	ui background wear light
+  8   6   5	ui panel shadow
+ 29  26  23	ui panel
+ 50  45  40	ui panel edge
+120 113 104	ui panel light
+ 80  76  72	ui text disabled
+115 110 105	ui text pressed
+140 133 124	ui text dim
+181 176 169	ui text button
+214 206 192	ui text
+# Combat view
+ 64  86 108	portrait player
+ 70  84  96	portrait ally
+108  62  58	portrait enemy
+ 26  32  26	hp bar bg
+ 87 125  88	hp bar fill
+ 40  25  23	enemy hp bar bg
+133  75  70	enemy hp bar fill
+ 69 117  87	potion
+214 206 192	cooldown ring
+110 106 100	ally downed
+# Tooltip
+170 130  95	rarity common
+150 158 166	rarity uncommon
+190 160 100	rarity rare
+188 161 105	tooltip changed
+# Effect families (shared with projectiles and damage numbers)
+154  80  75	damage
+ 69 117  87	heal
+104  97 148	arcane
+141  92  57	enemy claw
+ 68 109 144	status block
+ 94 113  59	status poison
+126  92 122	status weak
+141  92  57	status vulnerable
+169 167 131	status blind
+105 105 105	status silence
+ 56 117 113	status spores
+121 100  84	status decay
+124 102  53	status empowered
+# Relics
+100 112 124	relic stone ward
+128  80  84	relic vital charm
+108 108 114	relic iron idol
+# Beats and map strip
+128  92 150	beat boss
+176 150  92	beat relic
+ 98 140 100	beat rest
+ 98 116 150	beat event
+150  88  82	beat combat
+ 90  86  80	map track
+206 190 130	map current halo
+120 108  76	map cleared
+128 122 114	map arrow
+196 188 176	map label
+140  96  90	map rolled beat

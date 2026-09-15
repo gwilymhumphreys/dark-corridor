@@ -16,6 +16,9 @@ const LOOK_DIR: String = 'res://assets/looks'
 const FONT_DIR: String = 'res://assets/fonts/candidates'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
+const BACKGROUND_SHADER: Shader = preload('res://src/shaders/background_wear.gdshader')
+## Background wear uniforms set from `Colours` by `ScreenBackground`, so they are not look settings.
+const BACKGROUND_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_colour']
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
 const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
 ## Palette clamp uniforms set from the F1 panel and the palette section of a look file, so they are
@@ -33,15 +36,21 @@ var world_palette: String = ''
 ## The material every corridor is drawn through (corridor_look.gdshader). Its palette follows
 ## `world_palette`.
 var world_material: ShaderMaterial = ShaderMaterial.new()
+## The material every screen background is drawn through (background_wear.gdshader).
+var background_material: ShaderMaterial = ShaderMaterial.new()
+## The interface palette file applied to `Colours` and the theme, or '' when none is.
+var interface_palette: String = ''
 ## The font file chosen in the panel or with `--font=`, or '' for the game's default font.
 var ui_font: String = ''
 
 var _palette_paths: Array[String] = []   # item id - 1 -> palette path, in both palette options (id 0 = Off)
+var _interface_palette_paths: Array[String] = []   # item id - 1 -> `.gpl` path in the interface palette option
 var _font_paths: Array[String] = []   # item id - 1 -> font path in the font option (id 0 = game default)
 var _palettes_scanned: bool = false
 var _perceptual: bool = false
 var _dithering: bool = false
 var _look_defaults: Dictionary = {}   # look shader uniform -> default value, read from its code
+var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
 
 @onready var _clamp_layer: CanvasLayer = $ClampLayer
 @onready var _look_layer: CanvasLayer = $LookLayer
@@ -50,6 +59,7 @@ var _look_defaults: Dictionary = {}   # look shader uniform -> default value, re
 @onready var _panel_layer: CanvasLayer = $PanelLayer
 @onready var _palette_option: OptionButton = $PanelLayer/Panel/Rows/PaletteRow/Option
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/WorldPaletteRow/Option
+@onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/InterfacePaletteRow/Option
 @onready var _font_option: OptionButton = $PanelLayer/Panel/Rows/FontRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/MatchingRow/Option
 @onready var _dithering_check: CheckButton = $PanelLayer/Panel/Rows/DitheringRow/Check
@@ -60,12 +70,14 @@ func _ready() -> void:
   _panel_layer.visible = false
   _look_layer.visible = false
   world_material.shader = LOOK_SHADER
+  background_material.shader = BACKGROUND_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _clamp_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_palette(world_material, PackedColorArray())
   _palette_option.item_selected.connect(_on_palette_selected)
   _world_option.item_selected.connect(_on_world_palette_selected)
+  _interface_option.item_selected.connect(_on_interface_palette_selected)
   _font_option.item_selected.connect(_on_font_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _dithering_check.toggled.connect(_on_dithering_toggled)
@@ -78,7 +90,8 @@ func _ready() -> void:
 ## `--world-palette=<res path>` sets the world clamp, `--perceptual` and `--dither` set
 ## the matching and dithering, `--look=<res path>` loads a saved look (applied first, so the other
 ## arguments can override it), `--look-panel` opens the look panel, `--font=<res path>` sets the UI
-## font.
+## font, `--ui-palette=<res path>` applies an interface palette, `--background-set=uniform=value` sets a
+## background wear setting.
 func _apply_command_line() -> void:
   var args: PackedStringArray = OS.get_cmdline_user_args()
   for arg: String in args:
@@ -97,6 +110,12 @@ func _apply_command_line() -> void:
       MonsterImages.forced_path = arg.substr(16)
     elif arg.begins_with('--font='):
       set_ui_font(arg.substr(7))
+    elif arg.begins_with('--ui-palette='):
+      set_interface_palette(arg.substr(13))
+    elif arg.begins_with('--background-set='):
+      var setting: PackedStringArray = arg.substr(17).split('=')
+      if setting.size() == 2 and background_defaults().has(setting[0]):
+        background_material.set_shader_parameter(setting[0], str_to_var(setting[1]))
   if '--perceptual' in args:
     _on_matching_selected(1)
   if '--dither' in args:
@@ -108,7 +127,9 @@ func _apply_command_line() -> void:
 
 func _exit_tree() -> void:
   _palette_paths.clear()
+  _interface_palette_paths.clear()
   _font_paths.clear()
+  InterfacePalette.reset()
 
 
 func _input(event: InputEvent) -> void:
@@ -203,18 +224,20 @@ static func move_palette_file(path: String, folder: String) -> String:
   return new_path
 
 
-## Back to the defaults: both clamps off, every look effect off, no corridor settings, random enemy
-## images. Used between tests.
+## Back to the defaults: both clamps off, no interface palette, every look effect off, no corridor
+## settings, random enemy images. Used between tests.
 func reset_settings() -> void:
   reset_look()
   MonsterImages.forced_path = ''
   set_palette(PackedColorArray())
+  set_interface_palette('')
   if ui_font != '':
     ui_font = ''
     Prefs.apply_font_style()
   _font_option.select(0)
   if _palettes_scanned:
     _palette_option.select(0)
+    _interface_option.select(0)
   _look_panel.refresh()
 
 
@@ -222,26 +245,43 @@ func reset_settings() -> void:
 ## name -> value), except `PALETTE_UNIFORMS`.
 func look_defaults() -> Dictionary:
   if _look_defaults.is_empty():
-    var pattern: RegEx = RegEx.create_from_string('uniform\\s+(\\w+)\\s+(\\w+)[^=;]*=\\s*([^;]+);')
-    for found: RegExMatch in pattern.search_all(LOOK_SHADER.code + '\n' + PALETTE_INCLUDE.code):
-      var text: String = found.get_string(3).strip_edges()
-      if found.get_string(2) in PALETTE_UNIFORMS:
-        continue
-      match found.get_string(1):
-        'bool':
-          _look_defaults[found.get_string(2)] = text == 'true'
-        'int':
-          _look_defaults[found.get_string(2)] = text.to_int()
-        'float':
-          _look_defaults[found.get_string(2)] = text.to_float()
-        'vec3':
-          var parts: PackedStringArray = text.trim_prefix('vec3(').trim_suffix(')').split(',')
-          _look_defaults[found.get_string(2)] = Color(parts[0].to_float(), parts[1].to_float(), parts[2].to_float())
+    _look_defaults = _uniform_defaults(LOOK_SHADER.code + '\n' + PALETTE_INCLUDE.code, PALETTE_UNIFORMS)
   return _look_defaults
 
 
-## Every look effect back to its shader default, no corridor or environment settings, world palette
-## off, RGB matching, no dithering. Corridors on screen go back to their scene values.
+## Every background wear uniform with a default in the shader code (uniform name -> value), except
+## `BACKGROUND_COLOUR_UNIFORMS`.
+func background_defaults() -> Dictionary:
+  if _background_defaults.is_empty():
+    _background_defaults = _uniform_defaults(BACKGROUND_SHADER.code, BACKGROUND_COLOUR_UNIFORMS)
+  return _background_defaults
+
+
+# Reads `uniform <type> <name> ... = <value>;` defaults from shader code, because the rendering server
+# does not report them when running headless.
+static func _uniform_defaults(code: String, skip: Array[String]) -> Dictionary:
+  var defaults: Dictionary = {}
+  var pattern: RegEx = RegEx.create_from_string('uniform\\s+(\\w+)\\s+(\\w+)[^=;]*=\\s*([^;]+);')
+  for found: RegExMatch in pattern.search_all(code):
+    var text: String = found.get_string(3).strip_edges()
+    if found.get_string(2) in skip:
+      continue
+    match found.get_string(1):
+      'bool':
+        defaults[found.get_string(2)] = text == 'true'
+      'int':
+        defaults[found.get_string(2)] = text.to_int()
+      'float':
+        defaults[found.get_string(2)] = text.to_float()
+      'vec3':
+        var parts: PackedStringArray = text.trim_prefix('vec3(').trim_suffix(')').split(',')
+        defaults[found.get_string(2)] = Color(parts[0].to_float(), parts[1].to_float(), parts[2].to_float())
+  return defaults
+
+
+## Every look effect and background wear effect back to its shader default, no corridor or environment
+## settings, world palette off, RGB matching, no dithering. Corridors on screen go back to their scene
+## values.
 func reset_look() -> void:
   _write_look_defaults()
   corridor_settings.clear()
@@ -275,12 +315,14 @@ func apply_corridor_settings() -> void:
     corridor.apply_settings(corridor_settings, environment_settings)
 
 
-## Save the current look to a text file at `path`: the look shader settings, the corridor and
-## environment settings, the world palette, matching and dithering.
+## Save the current look to a text file at `path`: the look shader settings, the background wear
+## settings, the corridor and environment settings, the world palette, matching and dithering.
 func save_look(path: String) -> Error:
   var file: ConfigFile = ConfigFile.new()
   for uniform: String in look_defaults():
     file.set_value('shader', uniform, world_material.get_shader_parameter(uniform))
+  for uniform: String in background_defaults():
+    file.set_value('background', uniform, background_material.get_shader_parameter(uniform))
   for property: String in corridor_settings:
     file.set_value('corridor', property, corridor_settings[property])
   for property: String in environment_settings:
@@ -304,6 +346,10 @@ func load_look(path: String) -> bool:
   for uniform: String in _section_keys(file, 'shader'):
     if defaults.has(uniform):
       world_material.set_shader_parameter(uniform, file.get_value('shader', uniform))
+  var background: Dictionary = background_defaults()
+  for uniform: String in _section_keys(file, 'background'):
+    if background.has(uniform):
+      background_material.set_shader_parameter(uniform, file.get_value('background', uniform))
   for property: String in _section_keys(file, 'corridor'):
     corridor_settings[property] = file.get_value('corridor', property)
   for property: String in _section_keys(file, 'environment'):
@@ -318,11 +364,14 @@ func load_look(path: String) -> bool:
   return true
 
 
-# Every look uniform is set explicitly, so a saved look lists every one of them.
+# Every look and background uniform is set explicitly, so a saved look lists every one of them.
 func _write_look_defaults() -> void:
   var defaults: Dictionary = look_defaults()
   for uniform: String in defaults:
     world_material.set_shader_parameter(uniform, defaults[uniform])
+  var background: Dictionary = background_defaults()
+  for uniform: String in background:
+    background_material.set_shader_parameter(uniform, background[uniform])
 
 
 func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
@@ -338,6 +387,16 @@ func set_ui_font(path: String) -> void:
     return
   (load(Prefs.THEME_PATH) as Theme).set_default_font(font)
   ui_font = path
+
+
+## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
+## colours with ''. Screens and items already built keep their colours.
+func set_interface_palette(path: String) -> void:
+  interface_palette = path
+  if path == '':
+    InterfacePalette.reset()
+  else:
+    InterfacePalette.apply(path)
 
 
 ## Clamp the screen to `colours`, or turn the clamp off with an empty array.
@@ -379,9 +438,12 @@ func _scan_palettes() -> void:
   _palettes_scanned = true
   _palette_option.clear()
   _world_option.clear()
+  _interface_option.clear()
   _palette_paths.clear()
+  _interface_palette_paths.clear()
   _palette_option.add_item('Off', 0)
   _world_option.add_item('Off', 0)
+  _interface_option.add_item('Off', 0)
   var groups: Dictionary = PaletteLoader.find_palettes(PALETTE_ROOT)
   for folder: String in groups:
     if folder != '':
@@ -392,8 +454,13 @@ func _scan_palettes() -> void:
       var palette_name: String = path.get_file().get_basename()
       _palette_option.add_item(palette_name, _palette_paths.size())
       _world_option.add_item(palette_name, _palette_paths.size())
+      # Only `.gpl` files name their colours, so only they can be interface palettes.
+      if path.get_extension().to_lower() == 'gpl':
+        _interface_palette_paths.append(path)
+        _interface_option.add_item(folder.path_join(palette_name), _interface_palette_paths.size())
   _palette_option.select(0)
   _world_option.select(0)
+  _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))
 
 
 func _sync_controls() -> void:
@@ -412,6 +479,11 @@ func _on_palette_selected(index: int) -> void:
 func _on_world_palette_selected(index: int) -> void:
   var id: int = _world_option.get_item_id(index)
   set_world_palette('' if id <= 0 else _palette_paths[id - 1])
+
+
+func _on_interface_palette_selected(index: int) -> void:
+  var id: int = _interface_option.get_item_id(index)
+  set_interface_palette('' if id <= 0 else _interface_palette_paths[id - 1])
 
 
 # The font folder is scanned when the panel first opens, like the palettes. Deleting a font file

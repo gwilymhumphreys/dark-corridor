@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/ally_slot.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="2"]
 
 [node name="AllySlot" type="HBoxContainer"]
 theme_override_constants/separation = 14
@@ -15,6 +16,8 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(110, 110)
 layout_mode = 2
 color = Color(0.22, 0.28, 0.4, 1)
+script = ExtResource("2")
+colour_name = "PORTRAIT_ALLY"
 
 [node name="HP" type="Control" parent="Left"]
 custom_minimum_size = Vector2(110, 24)
@@ -28,6 +31,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.1, 0.12, 1)
+script = ExtResource("2")
+colour_name = "HP_BAR_BG"
 
 [node name="Fill" type="ColorRect" parent="Left/HP"]
 layout_mode = 1
@@ -36,7 +41,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.4, 0.72, 0.4, 1)
+color = Color(0.4, 0.75, 0.4, 1)
+script = ExtResource("2")
+colour_name = "HP_BAR_FILL"
 
 [node name="Label" type="Label" parent="Left/HP"]
 layout_mode = 1

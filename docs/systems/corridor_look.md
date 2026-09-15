@@ -55,13 +55,16 @@ a look file.
   `CORRIDOR_PROPERTIES` and `ENVIRONMENT_PROPERTIES` in `look_panel.gd`. Changes go into
   `DebugPanels.corridor_settings` and `environment_settings` and are applied to every corridor in the
   `Corridor3D.GROUP` group; corridors built later apply them too.
+- After Light and Environment, one section per group in `background_wear.gdshader`
+  ([background_wear.md](background_wear.md)), built the same way from `DebugPanels.background_material`.
 - Save writes `assets/looks/<name>.cfg`; the dropdown loads one; Reset all returns every effect, the
   corridor, the world palette, matching and dithering to their defaults.
 
 ## Look files
 
-A `ConfigFile` with sections `shader` (every look uniform), `corridor` and `environment` (only settings that
-were changed), and `palette` (`world_palette`, `perceptual`, `dithering`). Loading starts from the defaults.
+A `ConfigFile` with sections `shader` (every look uniform), `background` (every background wear uniform),
+`corridor` and `environment` (only settings that were changed), and `palette` (`world_palette`,
+`perceptual`, `dithering`). Loading starts from the defaults.
 
 For a screenshot of a saved look (arguments in [debug_panel.md](debug_panel.md#start-up-arguments)):
 

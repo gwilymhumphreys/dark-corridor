@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/enemy_hud.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="2"]
 
 [node name="EnemyHud" type="VBoxContainer"]
 theme_override_constants/separation = 10
@@ -35,6 +36,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.12, 0.06, 0.06, 1)
+script = ExtResource("2")
+colour_name = "ENEMY_HP_BAR_BG"
 
 [node name="Fill" type="ColorRect" parent="HpRow/HP"]
 layout_mode = 1
@@ -44,6 +47,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.72, 0.22, 0.22, 1)
+script = ExtResource("2")
+colour_name = "ENEMY_HP_BAR_FILL"
 
 [node name="Label" type="Label" parent="HpRow/HP"]
 layout_mode = 1

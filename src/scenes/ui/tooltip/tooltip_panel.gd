@@ -10,25 +10,28 @@ const KEYWORD_CHIP: PackedScene = preload('res://src/scenes/ui/tooltip/keyword_c
 const PANEL_WIDTH: float = 360.0
 const BODY_MARGIN: float = 20.0
 
-# PLACEHOLDER rarity tint — the colour treatment is the owner's call (tooltips.md).
-const RARITY_TINT: Dictionary = {
-  ItemDef.Rarity.COMMON: Color.WHITE,
-  ItemDef.Rarity.UNCOMMON: Color(0.6, 0.85, 1.0),
-  ItemDef.Rarity.RARE: Color(1.0, 0.85, 0.4),
-}
-# PLACEHOLDER changed-value accent — a single accent + a direction glyph (the B&W theme makes
-# literal green/red clash, so direction reads off the ▲/▼, not the colour). Owner's to refine.
-const CHANGED_ACCENT := Color(0.95, 0.92, 0.55)
+# The rarity tint and the changed-value accent are Colours.RARITY_* and Colours.TOOLTIP_CHANGED
+# (placeholders, the owner's call). The accent is a single colour plus a direction glyph (the B&W
+# theme makes literal green/red clash, so direction reads off the ▲/▼, not the colour).
 
 
 func set_content(content: Dictionary) -> void:
   custom_minimum_size.x = PANEL_WIDTH
   var title: Label = $Margin/Body/Title
   title.text = content['title']
-  title.add_theme_color_override('font_color', RARITY_TINT.get(content['rarity'], Color.WHITE))
+  title.add_theme_color_override('font_color', _rarity_tint(content['rarity']))
   _build_lines(content['lines'])
   _set_flavor(content['flavor'])
   _set_stats(content['stat_lines'])
+
+
+func _rarity_tint(rarity: int) -> Color:
+  match rarity:
+    ItemDef.Rarity.UNCOMMON:
+      return Colours.RARITY_UNCOMMON
+    ItemDef.Rarity.RARE:
+      return Colours.RARITY_RARE
+  return Colours.RARITY_COMMON
 
 
 func _build_lines(lines: Array) -> void:
@@ -73,7 +76,7 @@ func _value_label(seg: Dictionary) -> Label:
   var text: String = seg['s']
   if seg['changed']:
     text += ' ▲' if seg['dir'] > 0 else ' ▼'
-    label.add_theme_color_override('font_color', CHANGED_ACCENT)
+    label.add_theme_color_override('font_color', Colours.TOOLTIP_CHANGED)
   label.text = text
   label.mouse_filter = Control.MOUSE_FILTER_IGNORE
   label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

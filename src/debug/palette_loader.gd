@@ -73,20 +73,39 @@ static func _load_png_strip(path: String) -> PackedColorArray:
   var swatch: int = image.get_height()
   if swatch <= 0:
     return colours
-  var count: int = image.get_width() / swatch
+  var count: int = floori(float(image.get_width()) / swatch)
+  var centre: int = floori(swatch * 0.5)
   for i in count:
-    var colour: Color = image.get_pixel(i * swatch + swatch / 2, swatch / 2)
+    var colour: Color = image.get_pixel(i * swatch + centre, centre)
     colour.a = 1.0
     colours.append(colour)
   return colours
 
 
+## The named colours in the `.gpl` file at `path` (name -> colour), in file order. Unnamed colours
+## are skipped; a repeated name keeps its last colour. Used by `InterfacePalette`.
+static func load_named_colours(path: String) -> Dictionary:
+  var named: Dictionary = {}
+  for entry: Array in _read_gpl(path):
+    if entry[1] != '':
+      named[entry[1]] = entry[0]
+  return named
+
+
 static func _load_gpl(path: String) -> PackedColorArray:
   var colours: PackedColorArray = PackedColorArray()
+  for entry: Array in _read_gpl(path):
+    colours.append(entry[0])
+  return colours
+
+
+# [colour, name] for each colour line of a `.gpl` file; the name is '' when the line has none.
+static func _read_gpl(path: String) -> Array[Array]:
+  var entries: Array[Array] = []
   var file: FileAccess = FileAccess.open(path, FileAccess.READ)
   if file == null:
     push_warning('[PaletteLoader] cannot read ' + path)
-    return colours
+    return entries
   while not file.eof_reached():
     var line: String = file.get_line().strip_edges()
     if line.is_empty() or line.begins_with('#'):
@@ -96,8 +115,9 @@ static func _load_gpl(path: String) -> PackedColorArray:
       continue
     if not (fields[0].is_valid_int() and fields[1].is_valid_int() and fields[2].is_valid_int()):
       continue   # header lines: 'GIMP Palette', 'Name: ...', 'Columns: ...'
-    colours.append(Color8(fields[0].to_int(), fields[1].to_int(), fields[2].to_int()))
-  return colours
+    var colour: Color = Color8(fields[0].to_int(), fields[1].to_int(), fields[2].to_int())
+    entries.append([colour, ' '.join(fields.slice(3))])
+  return entries
 
 
 ## `colour` in the OKLab perceptual colour space (lightness, green-red, blue-yellow). The palette

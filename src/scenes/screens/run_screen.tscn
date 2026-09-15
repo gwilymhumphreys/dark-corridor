@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/run_screen.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/screen_background.gd" id="named_colour"]
 [ext_resource type="PackedScene" path="res://src/scenes/screens/map_strip.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://src/scenes/screens/speed_button.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/combat_stats_readout.tscn" id="4"]
@@ -21,7 +22,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.03, 0.03, 0.04, 1)
+color = Color(0.04, 0.04, 0.05, 1)
+script = ExtResource("named_colour")
+colour_name = "UI_BACKGROUND"
 
 [node name="HUD" type="CanvasLayer" parent="."]
 

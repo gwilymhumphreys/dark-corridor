@@ -66,16 +66,42 @@ func test_dithering_section_switch_and_pattern_dropdown() -> void:
   assert_not_null(DebugPanels.world_material.get_shader_parameter('dither_noise'), 'the blue noise texture is set')
 
 
-func test_panel_has_a_section_per_effect_plus_light_and_environment() -> void:
-  var panel: LookPanel = _panel()
-  panel.rebuild()
+func _group_count(shader: Shader) -> int:
   var groups: int = 0
-  for entry: Dictionary in DebugPanels.world_material.shader.get_shader_uniform_list(true):
+  for entry: Dictionary in shader.get_shader_uniform_list(true):
     if entry['usage'] & PROPERTY_USAGE_GROUP:
       groups += 1
+  return groups
+
+
+func test_panel_has_a_section_per_effect_plus_light_environment_and_background() -> void:
+  var panel: LookPanel = _panel()
+  panel.rebuild()
+  var groups: int = _group_count(DebugPanels.world_material.shader)
+  var background_groups: int = _group_count(DebugPanels.background_material.shader)
   var sections: Node = panel.get_node('Rows/Scroll/Sections')
-  assert_gt(groups, 0, 'the shader has effect groups')
-  assert_eq(sections.get_child_count(), groups + 2, 'one section per effect, then Light and Environment')
+  assert_gt(groups, 0, 'the look shader has effect groups')
+  assert_gt(background_groups, 0, 'the background wear shader has effect groups')
+  assert_eq(sections.get_child_count(), groups + 2 + background_groups,
+    'one section per effect, then Light and Environment, then one per background wear group')
+  assert_not_null(_section('Background Specks'), 'background wear sections are titled by group')
+
+
+func test_background_defaults_leave_out_the_mark_colours() -> void:
+  var defaults: Dictionary = DebugPanels.background_defaults()
+  assert_eq(defaults['background_specks_on'], false, 'every wear effect is off by default')
+  assert_eq(defaults['background_specks_colour'], 1, 'a choice')
+  assert_false(defaults.has('wear_dark_colour'), 'the mark colours come from Colours, not look files')
+
+
+func test_screen_background_draws_through_the_background_material() -> void:
+  var background: ScreenBackground = ScreenBackground.new()
+  background.colour_name = 'UI_BACKGROUND'
+  add_child(background)
+  _nodes.append(background)
+  assert_eq(background.material, DebugPanels.background_material, 'uses the shared material')
+  assert_eq(DebugPanels.background_material.get_shader_parameter('wear_light_colour'), Colours.UI_BACKGROUND_WEAR_LIGHT,
+    'the light mark colour comes from Colours')
 
 
 func test_a_slider_changes_the_shader_setting() -> void:
@@ -105,6 +131,7 @@ func test_save_then_load_restores_the_look() -> void:
   DebugPanels.world_material.set_shader_parameter('grade_tint', Color(0.5, 0.25, 0.1))
   DebugPanels.corridor_settings['light_range'] = 12.0
   DebugPanels.environment_settings['fog_enabled'] = true
+  DebugPanels.background_material.set_shader_parameter('background_creases_on', true)
   assert_eq(DebugPanels.save_look(LOOK_PATH), OK, 'the look is saved')
   DebugPanels.reset_settings()
   assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), false, 'reset turns the effect off')
@@ -115,6 +142,8 @@ func test_save_then_load_restores_the_look() -> void:
   assert_eq(DebugPanels.world_material.get_shader_parameter('grade_tint'), Color(0.5, 0.25, 0.1), 'colour restored')
   assert_eq(DebugPanels.corridor_settings.get('light_range'), 12.0, 'corridor setting restored')
   assert_eq(DebugPanels.environment_settings.get('fog_enabled'), true, 'environment setting restored')
+  assert_eq(DebugPanels.background_material.get_shader_parameter('background_creases_on'), true,
+    'background wear setting restored')
 
 
 func test_loading_applies_to_corridors_on_screen() -> void:
