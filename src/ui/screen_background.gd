@@ -5,13 +5,33 @@ extends NamedColourRect
 ## from `Colours`. With every wear effect off it draws the plain colour
 ## (docs/systems/background_wear.md).
 
+## True on the run screen. Folds are drawn only while a background with this set is in the tree, so
+## menus opened from the title screen have none and the settings screen opened during a run keeps them.
+@export var folds_shown: bool = false
+
+static var _fold_backgrounds: int = 0
+
+
+func _enter_tree() -> void:
+  super()
+  if folds_shown:
+    _fold_backgrounds += 1
+  DebugPanels.background_material.set_shader_parameter('folds_shown', _fold_backgrounds > 0)
+
 
 func _ready() -> void:
-  super()
   material = DebugPanels.background_material
-  material.set_shader_parameter('wear_dark_colour', Colours.UI_BACKGROUND_WEAR)
-  material.set_shader_parameter('wear_light_colour', Colours.UI_BACKGROUND_WEAR_LIGHT)
+
+
+func _copy_colour() -> void:
+  super()
+  DebugPanels.background_material.set_shader_parameter('wear_dark_colour', Colours.UI_BACKGROUND_WEAR)
+  DebugPanels.background_material.set_shader_parameter('wear_light_colour', Colours.UI_BACKGROUND_WEAR_LIGHT)
 
 
 func _exit_tree() -> void:
+  super()
+  if folds_shown:
+    _fold_backgrounds -= 1
+  DebugPanels.background_material.set_shader_parameter('folds_shown', _fold_backgrounds > 0)
   material = null

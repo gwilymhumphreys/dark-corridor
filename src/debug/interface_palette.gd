@@ -5,9 +5,9 @@ extends RefCounted
 ## recoloured: every grey in its images and panel colours is mapped onto the UI_PANEL_* colours, and
 ## every font colour onto the UI_TEXT_* colours, by brightness. A dev tool, like the palette clamp.
 ##
-## Colours are copied when things are built (item definitions, scene colour rectangles), so a palette
-## applied mid-run reaches only what is built afterwards. A start-up argument applies it before
-## anything is built.
+## Colours are copied when things are built. Cached content definitions are recoloured here;
+## `DebugPanels.set_interface_palette` also recolours statuses in the current fight and tells scene
+## colour rectangles through its `interface_palette_changed` signal.
 
 ## Theme colours are mapped onto these `Colours` variables, dark to light.
 const PANEL_COLOURS: Array[String] = ['UI_PANEL_SHADOW', 'UI_PANEL', 'UI_PANEL_EDGE', 'UI_PANEL_LIGHT']

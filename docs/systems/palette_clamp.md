@@ -1,26 +1,21 @@
 # Palette clamp
 
-Shaders that replace each pixel with the nearest colour in a chosen palette, so art from different
-sources can be judged as one game. The full-screen clamp covers everything; the world clamp covers only
-the combat corridor. Both are dev tools, switched from the [debug panel](debug_panel.md); off by default.
+A shader step that replaces each pixel of the combat corridor with the nearest colour in a chosen
+palette, so art from different sources can be judged as one game. It is a dev tool, switched from the
+[debug panel](debug_panel.md); off by default. The interface takes its own colours from the
+[interface palette](interface_palette.md) instead.
 
-**Location:** `src/shaders/palette_clamp.gdshaderinc` (the matching, shared), `palette_clamp.gdshader`
-(full screen), `corridor_look.gdshader` (corridor), the `ClampLayer` in `src/debug/debug_panels.tscn`,
-`src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.
+**Location:** `src/shaders/palette_clamp.gdshaderinc` (the matching), `corridor_look.gdshader` (which
+includes it), `src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.
 
 ## How it works
 
-- A full-screen `ColorRect` on a `CanvasLayer` in the `DebugPanels` autoload reads the screen with
-  `hint_screen_texture`. Its layer is above every game layer (HUD, tooltips, pause menu), so everything
-  is clamped. Only the debug panel is above it.
-- `DebugPanels.set_palette(colours)` writes the palette into two one-row textures (sRGB colours, and the
-  same colours in OKLab as a float texture) plus a colour count. Switching palettes does not recompile
-  the shader. An empty array hides the layer.
-- The shaders handle up to `MAX_COLOURS` colours, which must match between `palette_clamp.gdshaderinc`
+- `DebugPanels.set_world_palette(path)` writes the palette into two one-row textures (sRGB colours, and
+  the same colours in OKLab as a float texture) plus a colour count. Switching palettes does not
+  recompile the shader. `''` sets the count to 0, which passes colours through.
+- The shader handles up to `MAX_COLOURS` colours, which must match between `palette_clamp.gdshaderinc`
   and `DebugPanelsAutoload`. The largest bundled palettes fit. Each pixel is compared with every
   palette colour, so larger palettes cost more per pixel.
-- Because the interface is clamped too, a palette is only usable if the effect colours (attack red,
-  block blue, status colours) stay distinct under it.
 
 | Setting | Options |
 |---|---|
@@ -31,8 +26,7 @@ the combat corridor. Both are dev tools, switched from the [debug panel](debug_p
 | Supersample (`dither_supersample`) | Dither at twice the resolution and average each 2x2, the fix Obra Dinn uses against moire; the output mixes palette colours |
 
 Matching and the dithering switch are set from the F1 panel; the pattern, size and supersample are set
-from the look panel's Dithering section and reach the world clamp only (the full-screen clamp keeps the
-defaults).
+from the look panel's Dithering section.
 
 The OKLab conversion exists twice, in `PaletteLoader.to_oklab` and in `palette_clamp.gdshaderinc`; change
 both together.
@@ -45,7 +39,7 @@ both together.
   interface).
 - Every corridor uses the one `DebugPanels.world_material`, so a change in the panel applies to the
   corridor on screen. With no palette set it passes colours through.
-- Colour matching and dithering apply to both clamps. The `new/world` ramps are nearly grey, so OKLab
+- The `new/world` ramps are nearly grey, so OKLab
   matching picks almost only by lightness, while RGB matching can map saturated colours to other steps.
 
 ## Palettes
@@ -68,12 +62,12 @@ named by path, for example `new/world`), for the panel dropdown.
 
 ## Screenshots
 
-`DebugPanels` reads user arguments at start-up: `--palette=<res path>`, `--world-palette=<res path>`, `--perceptual`, `--dither`, plus
+`DebugPanels` reads user arguments at start-up: `--world-palette=<res path>`, `--perceptual`, `--dither`, plus
 `--corridor-set=` and `--monster-image=` (see [debug_panel.md](debug_panel.md#start-up-arguments)). For
 example, with the corridor testbed's `--shot`:
 
 ```
-<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --palette=res://assets/palettes/good/waldgeist-32x.png
+<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --world-palette=res://assets/palettes/good/waldgeist-32x.png
 ```
 
 Tests: `tests/utils/test_palette_loader.gd`.
@@ -114,10 +108,3 @@ Applying it here would move the dither decision out of the look shader and into 
 sprite materials. Those would need the colour after lighting, so they would compute the one omni light
 themselves (no ambient light makes this simple), or a second viewport would render only the per-surface
 threshold for the look shader to read instead of its screen pattern.
-
-## Known issue
-
-In about 1 in 12 screenshot runs the palette loaded without a warning but the screenshot showed no
-clamp. It happened only while other Godot processes were running at the same time, and did not
-happen in 16 repeated runs on their own. The cause is not known. When screenshotting palettes, check
-each image (for example, the potion slot should not keep its original green).

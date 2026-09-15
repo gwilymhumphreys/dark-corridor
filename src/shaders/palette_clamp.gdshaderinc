@@ -1,5 +1,5 @@
-// Nearest palette colour matching (docs/systems/palette_clamp.md), shared by
-// palette_clamp.gdshader (the whole screen) and corridor_look.gdshader (the corridor image).
+// Nearest palette colour matching (docs/systems/palette_clamp.md), used by corridor_look.gdshader
+// (the corridor image).
 // The palette arrives as one-row textures plus a count, so switching palettes does not recompile
 // the shader.
 

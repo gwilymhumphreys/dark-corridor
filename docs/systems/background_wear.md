@@ -16,6 +16,9 @@ the owner's saved print look, `assets/print_looks/default.cfg`.
   the panel applies to every background at once.
 - The same wear can be drawn over the combat corridor with the same settings
   ([print_frame.md](print_frame.md)).
+- Folds are drawn only during a run. The run screen's background sets `folds_shown`, and folds show
+  while that background is in the tree, including on the settings screen opened from the pause menu.
+  The title screen and the menus opened from it have no folds.
 - The pattern is fixed to the screen and does not animate.
 - Each mark takes one of two solid colours, `Colours.UI_BACKGROUND_WEAR` and
   `UI_BACKGROUND_WEAR_LIGHT`, which an [interface palette](interface_palette.md) can set.

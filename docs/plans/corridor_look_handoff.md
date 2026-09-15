@@ -36,7 +36,8 @@ is the owner's doc: read it for intent, do not edit it.
 - **Dither options** (pattern, size, 2x supersample) for judging dithering in motion. The research on
   dithering in motion (Obra Dinn, surface-stable dithering) is in
   [`palette_clamp.md`](../systems/palette_clamp.md#dithering-in-motion-research); do not repeat it.
-- **The full-screen clamp** (F1 "Palette") still clamps everything, interface included, to one palette.
+- **The full-screen clamp was removed** (owner, 2026-09-16): the world and interface palettes replace it,
+  and the `[`, `]` and `'` keys now act on the F1 World palette list.
 - **The interface palette** ([`interface_palette.md`](../systems/interface_palette.md)): F1 "Interface
   palette" or `--ui-palette=`, recolouring `Colours` and the theme from a named `.gpl` file. First
   comparison page (private to the owner): https://claude.ai/artifact/62suHYJCvWuJgJ8LbWdLCL, saved in
@@ -78,8 +79,8 @@ is the owner's doc: read it for intent, do not edit it.
 Screenshot commands (Godot exe path in [`../handoff.md`](../handoff.md)):
 
 ```
-# A real fight under a look and a full-screen palette
-<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --monster-image=res://assets/monsters/cut_out/bone_golem.png --look=res://assets/looks/<name>.cfg --palette=<path>
+# A real fight under a look and a world palette
+<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --monster-image=res://assets/monsters/cut_out/bone_golem.png --look=res://assets/looks/<name>.cfg --world-palette=<path>
 ```
 
 ## Next task: palettes and effects on the interface
@@ -100,13 +101,8 @@ the owner's answers (item icons are interface, damage numbers are effects), the 
   (HUD, tooltip, pause menu), so a pass that skips the corridor would need the interface in its own
   viewport, or a full-screen pass with the corridor area masked out. Both are larger changes; check the
   cost before building. A full-screen pass over everything is simpler: the corridor look shader's effects
-  could be reused in a screen-reading version (like `palette_clamp.gdshader` reads the screen), with its
+  could be reused in a version that reads the screen with `hint_screen_texture`, with its
   own settings in the look panel, so effects can differ between corridor and interface.
 - Keep each option as a debug setting, screenshot the same real fight with each, and publish one page.
   Pair interface palettes with a corridor look the owner liked (for example `demichrome`) so they are
   judged together.
-
-## Known issues
-
-- The palette clamp sometimes fails to show in a screenshot when other Godot processes run at the same
-  time ([palette_clamp.md](../systems/palette_clamp.md#known-issue)). Take screenshots one at a time.

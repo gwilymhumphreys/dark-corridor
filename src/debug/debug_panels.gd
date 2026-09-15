@@ -1,17 +1,25 @@
 class_name DebugPanelsAutoload
 extends Node
-## Dev-only debug panel + the full-screen palette clamp (docs/systems/debug_panel.md,
-## docs/systems/palette_clamp.md). Registered as the `DebugPanels` autoload so the panel and the
-## clamp cover every screen, the corridor testbed and the combat sandbox. It also owns the world
-## material that the corridor is drawn through: the corridor look shader, with its world palette
-## clamp (docs/systems/corridor_look.md).
+## Dev-only debug panel (docs/systems/debug_panel.md). Registered as the `DebugPanels` autoload so the
+## panel covers every screen, the corridor testbed and the combat sandbox. It owns the world material
+## that the corridor is drawn through: the corridor look shader, with its world palette clamp
+## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
 ##
 ## F1 toggles the panel, F2 the look panel and F3 the print panel, in debug builds only. Choices last for the session
-## only, unless saved as a look file. Panel text is English on purpose: `tools/extract_pot.gd` skips
-## `src/debug/`.
+## only, unless saved as a look file or palette combo. Panel text is English on purpose:
+## `tools/extract_pot.gd` skips `src/debug/`.
+
+## Emitted after an interface palette is applied or reset, so nodes that copied `Colours` when built
+## can copy them again.
+signal interface_palette_changed
 
 const PALETTE_ROOT: String = 'res://assets/palettes'
 const SHORTLIST_DIR: String = 'res://assets/palettes/shortlist'
+const PALETTE_COMBO_DIR: String = 'res://assets/palette_combos'
+## Remembers the palette combo loaded at start-up, on this computer only.
+const START_UP_PATH: String = 'user://debug_start_up.cfg'
+## Start-up arguments that set palettes; any of them stops the start-up palette combo loading.
+const PALETTE_ARGUMENTS: Array[String] = ['--world-palette=', '--ui-palette=', '--look=', '--palette-combo=']
 const LOOK_DIR: String = 'res://assets/looks'
 const PRINT_LOOK_DIR: String = 'res://assets/print_looks'
 const FONT_DIR: String = 'res://assets/fonts/candidates'
@@ -21,9 +29,14 @@ const BACKGROUND_SHADER: Shader = preload('res://src/shaders/background_wear.gds
 const PRINT_WEAR_INCLUDE: ShaderInclude = preload('res://src/shaders/print_wear.gdshaderinc')
 const BORDER_SHADER: Shader = preload('res://src/shaders/print_border.gdshader')
 const OVERLAY_SHADER: Shader = preload('res://src/shaders/corridor_overlay.gdshader')
-## Background wear uniforms set from `Colours` by `ScreenBackground`, or from the layout by
-## `PrintFrame`, so they are not look settings.
-const BACKGROUND_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_colour', 'print_corridor_rect']
+## Background wear uniforms set from `Colours` or the current screen by `ScreenBackground`, or from the
+## layout by `PrintFrame`, so they are not look settings.
+const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
+  'wear_dark_colour',
+  'wear_light_colour',
+  'print_corridor_rect',
+  'folds_shown',
+]
 ## Border and corridor overlay uniforms set by `PrintFrame`, so they are not look settings.
 const PRINT_FRAME_UNIFORMS: Array[String] = ['border_colour', 'border_wear_colour', 'rect_size', 'paper_colour']
 ## Print frame settings that are not shader uniforms (setting -> default), from the print panel, look
@@ -61,7 +74,7 @@ var interface_palette: String = ''
 ## The font file chosen in the panel or with `--font=`, or '' for the game's default font.
 var ui_font: String = ''
 
-var _palette_paths: Array[String] = []   # item id - 1 -> palette path, in both palette options (id 0 = Off)
+var _palette_paths: Array[String] = []   # item id - 1 -> palette path in the world palette option (id 0 = Off)
 var _interface_palette_paths: Array[String] = []   # item id - 1 -> `.gpl` path in the interface palette option
 var _font_paths: Array[String] = []   # item id - 1 -> font path in the font option (id 0 = game default)
 var _palettes_scanned: bool = false
@@ -71,23 +84,23 @@ var _look_defaults: Dictionary = {}   # look shader uniform -> default value, re
 var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
 var _print_defaults: Dictionary = {}   # border and corridor overlay uniform -> default value
 
-@onready var _clamp_layer: CanvasLayer = $ClampLayer
 @onready var _look_layer: CanvasLayer = $LookLayer
 @onready var _look_panel: LookPanel = $LookLayer/LookPanel
 @onready var _print_layer: CanvasLayer = $PrintLayer
 @onready var _print_panel: PrintPanel = $PrintLayer/PrintPanel
-@onready var _clamp_material: ShaderMaterial = $ClampLayer/ClampRect.material
 @onready var _panel_layer: CanvasLayer = $PanelLayer
-@onready var _palette_option: OptionButton = $PanelLayer/Panel/Rows/PaletteRow/Option
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/WorldPaletteRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/InterfacePaletteRow/Option
 @onready var _font_option: OptionButton = $PanelLayer/Panel/Rows/FontRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/MatchingRow/Option
 @onready var _dithering_check: CheckButton = $PanelLayer/Panel/Rows/DitheringRow/Check
+@onready var _combo_name_edit: LineEdit = $PanelLayer/Panel/Rows/ComboSaveRow/NameEdit
+@onready var _combo_save_button: Button = $PanelLayer/Panel/Rows/ComboSaveRow/SaveButton
+@onready var _combo_option: OptionButton = $PanelLayer/Panel/Rows/ComboLoadRow/Option
+@onready var _start_up_option: OptionButton = $PanelLayer/Panel/Rows/StartUpRow/Option
 
 
 func _ready() -> void:
-  _clamp_layer.visible = false
   _panel_layer.visible = false
   _look_layer.visible = false
   _print_layer.visible = false
@@ -96,25 +109,27 @@ func _ready() -> void:
   border_material.shader = BORDER_SHADER
   overlay_material.shader = OVERLAY_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
-  _clamp_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_print_defaults()
   _write_palette(world_material, PackedColorArray())
-  _palette_option.item_selected.connect(_on_palette_selected)
   _world_option.item_selected.connect(_on_world_palette_selected)
   _interface_option.item_selected.connect(_on_interface_palette_selected)
   _font_option.item_selected.connect(_on_font_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _dithering_check.toggled.connect(_on_dithering_toggled)
   _dithering_check.toggled.connect(func(_on: bool) -> void: _look_panel.refresh())
+  _combo_save_button.pressed.connect(_on_combo_save_pressed)
+  _combo_option.item_selected.connect(_on_combo_selected)
+  _start_up_option.item_selected.connect(_on_start_up_selected)
   _sync_controls()
+  _apply_start_up_palette_combo()
   _apply_command_line()
 
 
-## Dev hooks for screenshots: `--palette=<res path>` starts with that palette clamped,
-## `--world-palette=<res path>` sets the world clamp, `--perceptual` and `--dither` set
+## Dev hooks for screenshots: `--world-palette=<res path>` sets the world clamp, `--perceptual` and `--dither` set
 ## the matching and dithering, `--look=<res path>` loads a saved look (applied first, so the other
-## arguments can override it), `--print-look=<res path>` loads a saved print look (also first),
+## arguments can override it), `--print-look=<res path>` loads a saved print look and
+## `--palette-combo=<res path>` a saved palette combo (also first),
 ## `--look-panel` opens the look panel, `--font=<res path>` sets the UI
 ## font, `--ui-palette=<res path>` applies an interface palette, `--background-set=uniform=value` sets a
 ## background wear setting, `--print-set=name=value` sets a border, corridor overlay or layout setting,
@@ -126,10 +141,10 @@ func _apply_command_line() -> void:
       load_look(arg.substr(7))
     elif arg.begins_with('--print-look='):
       load_print_look(arg.substr(13))
+    elif arg.begins_with('--palette-combo='):
+      load_palette_combo(arg.substr(16))
   for arg: String in args:
-    if arg.begins_with('--palette='):
-      set_palette(PaletteLoader.load_palette(arg.substr(10)))
-    elif arg.begins_with('--world-palette='):
+    if arg.begins_with('--world-palette='):
       set_world_palette(arg.substr(16))
     elif arg.begins_with('--corridor-set='):
       var pair: PackedStringArray = arg.substr(15).split('=')
@@ -173,7 +188,7 @@ func _input(event: InputEvent) -> void:
   var key: InputEventKey = event as InputEventKey
   if key == null or not key.pressed or key.echo:
     return
-  # Typing a look name must not trigger the palette keys.
+  # Typing a look or palette combo name must not trigger the palette keys.
   if get_viewport().gui_get_focus_owner() is LineEdit and key.keycode not in [KEY_F1, KEY_F2, KEY_F3]:
     return
   match key.keycode:
@@ -187,7 +202,11 @@ func _input(event: InputEvent) -> void:
       cycle_palette(-1)
     KEY_BRACKETRIGHT:
       cycle_palette(1)
+    KEY_SEMICOLON:
+      cycle_interface_palette(-1)
     KEY_APOSTROPHE:
+      cycle_interface_palette(1)
+    KEY_BACKSLASH:
       shortlist_palette()
     _:
       return
@@ -200,6 +219,8 @@ func toggle_panel() -> void:
   if _font_option.item_count <= 1:
     _scan_fonts()
   _panel_layer.visible = not _panel_layer.visible
+  if _panel_layer.visible:
+    _list_palette_combos()
 
 
 ## Show or hide the look panel. Its controls are built the first time it opens.
@@ -216,27 +237,38 @@ func toggle_print_panel() -> void:
     _print_panel.open()
 
 
-## Select the next (`step` 1) or previous (`step` -1) entry in the full-screen palette list,
-## skipping folder headings and wrapping through "Off". Bound to ] and [.
+## Select the next (`step` 1) or previous (`step` -1) entry in the world palette list. Bound to ] and [.
 func cycle_palette(step: int) -> void:
+  _on_world_palette_selected(_step_option(_world_option, step))
+
+
+## Select the next (`step` 1) or previous (`step` -1) entry in the interface palette list. Bound to '
+## and ;.
+func cycle_interface_palette(step: int) -> void:
+  _on_interface_palette_selected(_step_option(_interface_option, step))
+
+
+# Selects the next or previous entry in a palette option, skipping folder headings and wrapping
+# through "Off". Returns the new index.
+func _step_option(option: OptionButton, step: int) -> int:
   if not _palettes_scanned:
     _scan_palettes()
-  var count: int = _palette_option.item_count
-  var index: int = _palette_option.selected
+  var count: int = option.item_count
+  var index: int = option.selected
   for i in count:
     index = posmod(index + step, count)
-    if not _palette_option.is_item_separator(index):
+    if not option.is_item_separator(index):
       break
-  _palette_option.select(index)
-  _on_palette_selected(index)
+  option.select(index)
+  return index
 
 
-## Move the selected full-screen palette into `SHORTLIST_DIR`, then rescan and keep it selected at
-## its new path. Does nothing when "Off" is selected or the palette is already there. Bound to '.
+## Move the selected world palette into `SHORTLIST_DIR`, then rescan and keep it selected at its new
+## path. Does nothing when "Off" is selected or the palette is already there. Bound to \.
 func shortlist_palette() -> void:
   if not _palettes_scanned:
     return
-  var id: int = _palette_option.get_selected_id()
+  var id: int = _world_option.get_selected_id()
   if id <= 0:
     return
   var old_path: String = _palette_paths[id - 1]
@@ -248,8 +280,8 @@ func shortlist_palette() -> void:
   _scan_palettes()
   var new_id: int = _palette_paths.find(new_path) + 1
   if new_id > 0:
-    _palette_option.select(_palette_option.get_item_index(new_id))
-    _on_palette_selected(_palette_option.selected)
+    _world_option.select(_world_option.get_item_index(new_id))
+    _on_world_palette_selected(_world_option.selected)
 
 
 ## Move a palette file, and its `.import` file if there is one, into `folder`. Returns the new path,
@@ -268,21 +300,127 @@ static func move_palette_file(path: String, folder: String) -> String:
   return new_path
 
 
-## Back to the defaults: both clamps off, no interface palette, every look effect off, no corridor
+## Save the palette choices to a text file at `path`: the world and interface palettes, colour
+## matching and dithering.
+func save_palette_combo(path: String) -> Error:
+  var file: ConfigFile = ConfigFile.new()
+  file.set_value('palettes', 'world_palette', world_palette)
+  file.set_value('palettes', 'interface_palette', interface_palette)
+  file.set_value('palettes', 'perceptual', _perceptual)
+  file.set_value('palettes', 'dithering', _dithering)
+  DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+  return file.save(path)
+
+
+## Apply a palette combo saved by `save_palette_combo`. Returns false if the file cannot be read.
+func load_palette_combo(path: String) -> bool:
+  var file: ConfigFile = ConfigFile.new()
+  if file.load(path) != OK:
+    push_warning('[DebugPanels] could not read palette combo file %s' % path)
+    return false
+  set_world_palette(file.get_value('palettes', 'world_palette', ''))
+  set_interface_palette(file.get_value('palettes', 'interface_palette', ''))
+  _on_matching_selected(1 if file.get_value('palettes', 'perceptual', false) else 0)
+  _on_dithering_toggled(file.get_value('palettes', 'dithering', false))
+  _sync_controls()
+  _look_panel.refresh()
+  return true
+
+
+## The file a palette combo named `combo_name` is saved in.
+static func palette_combo_path(combo_name: String) -> String:
+  return PALETTE_COMBO_DIR.path_join(combo_name + '.cfg')
+
+
+## The name of the palette combo chosen in "Load at start-up", or '' for none.
+static func start_up_palette_combo() -> String:
+  var file: ConfigFile = ConfigFile.new()
+  if file.load(START_UP_PATH) != OK:
+    return ''
+  return file.get_value('start_up', 'palette_combo', '')
+
+
+## Load the palette combo named `combo_name` at start-up from now on, or none with ''.
+static func set_start_up_palette_combo(combo_name: String) -> void:
+  var file: ConfigFile = ConfigFile.new()
+  file.load(START_UP_PATH)
+  file.set_value('start_up', 'palette_combo', combo_name)
+  file.save(START_UP_PATH)
+
+
+## Whether the start-up palette combo may load. It does not in headless runs (tests, autotest),
+## screenshot runs (`--shot`), or when an argument in `PALETTE_ARGUMENTS` sets the palettes, so those
+## runs stay predictable.
+static func start_up_combo_allowed(args: PackedStringArray, headless: bool) -> bool:
+  if headless or '--shot' in args:
+    return false
+  for arg: String in args:
+    for prefix: String in PALETTE_ARGUMENTS:
+      if arg.begins_with(prefix):
+        return false
+  return true
+
+
+func _apply_start_up_palette_combo() -> void:
+  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
+  if not OS.is_debug_build() or not start_up_combo_allowed(args, DisplayServer.get_name() == 'headless'):
+    return
+  var combo_name: String = start_up_palette_combo()
+  if combo_name != '':
+    load_palette_combo(palette_combo_path(combo_name))
+
+
+# Saved palette combos are listed each time the panel opens, in both the load and start-up options.
+func _list_palette_combos() -> void:
+  _combo_option.clear()
+  _start_up_option.clear()
+  _combo_option.add_item('Load a combo...')
+  _start_up_option.add_item('None')
+  var start_up: String = start_up_palette_combo()
+  if DirAccess.dir_exists_absolute(PALETTE_COMBO_DIR):
+    for file: String in DirAccess.get_files_at(PALETTE_COMBO_DIR):
+      if file.get_extension() != 'cfg':
+        continue
+      _combo_option.add_item(file.get_basename())
+      _start_up_option.add_item(file.get_basename())
+      if file.get_basename() == start_up:
+        _start_up_option.select(_start_up_option.item_count - 1)
+  _combo_option.select(0)
+
+
+func _on_combo_save_pressed() -> void:
+  var combo_name: String = _combo_name_edit.text.strip_edges().to_snake_case().validate_filename()
+  if combo_name == '':
+    return
+  save_palette_combo(palette_combo_path(combo_name))
+  _combo_name_edit.release_focus()
+  _list_palette_combos()
+
+
+func _on_combo_selected(index: int) -> void:
+  if index <= 0:
+    return
+  var combo_name: String = _combo_option.get_item_text(index)
+  if load_palette_combo(palette_combo_path(combo_name)):
+    _combo_name_edit.text = combo_name
+
+
+func _on_start_up_selected(index: int) -> void:
+  set_start_up_palette_combo('' if index <= 0 else _start_up_option.get_item_text(index))
+
+
+## Back to the defaults: world clamp off, no interface palette, every look effect off, no corridor
 ## settings, random enemy images. Used between tests.
 func reset_settings() -> void:
   reset_look()
   reset_print_look()
   MonsterImages.forced_path = ''
-  set_palette(PackedColorArray())
   set_interface_palette('')
   if ui_font != '':
     ui_font = ''
     Prefs.apply_font_style()
   _font_option.select(0)
-  if _palettes_scanned:
-    _palette_option.select(0)
-    _interface_option.select(0)
+  _sync_controls()
   _look_panel.refresh()
   _print_panel.refresh()
 
@@ -367,12 +505,10 @@ func reset_look() -> void:
   set_world_palette('')
   _on_matching_selected(0)
   _on_dithering_toggled(false)
-  if _palettes_scanned:
-    _world_option.select(0)
   _sync_controls()
 
 
-## Turn dithering on or off for both clamps, keeping the F1 panel's switch in step.
+## Turn dithering on or off for the world clamp, keeping the F1 panel's switch in step.
 func set_dithering(on: bool) -> void:
   _on_dithering_toggled(on)
   _sync_controls()
@@ -465,8 +601,6 @@ func load_look(path: String) -> bool:
   set_world_palette(file.get_value('palette', 'world_palette', ''))
   _on_matching_selected(1 if file.get_value('palette', 'perceptual', false) else 0)
   _on_dithering_toggled(file.get_value('palette', 'dithering', false))
-  if _palettes_scanned:
-    _world_option.select(maxi(_world_option.get_item_index(_palette_paths.find(world_palette) + 1), 0))
   _sync_controls()
   return true
 
@@ -503,18 +637,32 @@ func set_ui_font(path: String) -> void:
 
 
 ## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
-## colours with ''. Screens and items already built keep their colours.
+## colours with ''. Statuses in the current fight are recoloured, and `interface_palette_changed` tells
+## nodes that copied colours when built.
 func set_interface_palette(path: String) -> void:
   interface_palette = path
   if path == '':
     InterfacePalette.reset()
   else:
     InterfacePalette.apply(path)
+  _recolour_fight_statuses()
+  interface_palette_changed.emit()
 
 
-## Clamp the screen to `colours`, or turn the clamp off with an empty array.
-func set_palette(colours: PackedColorArray) -> void:
-  _clamp_layer.visible = _write_palette(_clamp_material, colours)
+# Statuses copy their colour from `Colours` when created, so each one in the current fight takes the
+# colour a new status of its class would have.
+func _recolour_fight_statuses() -> void:
+  if Game.run == null or Game.run.combat_manager() == null:
+    return
+  var fight: CombatManager = Game.run.combat_manager()
+  for actor: Actor in [fight.player] + fight.enemies + fight.allies:
+    if actor == null:
+      continue
+    var statuses: Array[StatusEffect] = actor.statuses.duplicate()
+    for item: Item in actor.board:
+      statuses.append_array(item.statuses)
+    for status: StatusEffect in statuses:
+      status.color = ((status.get_script() as GDScript).new() as StatusEffect).color
 
 
 ## Clamp the combat corridor to the palette file at `path`, or turn the world clamp off with ''.
@@ -549,44 +697,34 @@ func _write_palette(material: ShaderMaterial, colours: PackedColorArray) -> bool
 # runs do no extra work.
 func _scan_palettes() -> void:
   _palettes_scanned = true
-  _palette_option.clear()
   _world_option.clear()
   _interface_option.clear()
   _palette_paths.clear()
   _interface_palette_paths.clear()
-  _palette_option.add_item('Off', 0)
   _world_option.add_item('Off', 0)
   _interface_option.add_item('Off', 0)
   var groups: Dictionary = PaletteLoader.find_palettes(PALETTE_ROOT)
   for folder: String in groups:
     if folder != '':
-      _palette_option.add_separator(folder)
       _world_option.add_separator(folder)
     for path: String in groups[folder]:
       _palette_paths.append(path)
       var palette_name: String = path.get_file().get_basename()
-      _palette_option.add_item(palette_name, _palette_paths.size())
       _world_option.add_item(palette_name, _palette_paths.size())
       # Only `.gpl` files name their colours, so only they can be interface palettes.
       if path.get_extension().to_lower() == 'gpl':
         _interface_palette_paths.append(path)
         _interface_option.add_item(folder.path_join(palette_name), _interface_palette_paths.size())
-  _palette_option.select(0)
-  _world_option.select(0)
-  _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))
+  _sync_controls()
 
 
+# Shows the current choices in the panel's controls, without applying anything.
 func _sync_controls() -> void:
   _matching_option.select(1 if _perceptual else 0)
   _dithering_check.set_pressed_no_signal(_dithering)
-
-
-func _on_palette_selected(index: int) -> void:
-  var id: int = _palette_option.get_item_id(index)
-  if id <= 0:
-    set_palette(PackedColorArray())
-    return
-  set_palette(PaletteLoader.load_palette(_palette_paths[id - 1]))
+  if _palettes_scanned:
+    _world_option.select(maxi(_world_option.get_item_index(_palette_paths.find(world_palette) + 1), 0))
+    _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))
 
 
 func _on_world_palette_selected(index: int) -> void:
@@ -623,14 +761,11 @@ func _on_font_selected(index: int) -> void:
   set_ui_font(_font_paths[id - 1])
 
 
-# Matching and dithering apply to both clamps.
 func _on_matching_selected(index: int) -> void:
   _perceptual = index == 1
-  _clamp_material.set_shader_parameter('perceptual', _perceptual)
   world_material.set_shader_parameter('perceptual', _perceptual)
 
 
 func _on_dithering_toggled(on: bool) -> void:
   _dithering = on
-  _clamp_material.set_shader_parameter('dithering', _dithering)
   world_material.set_shader_parameter('dithering', _dithering)

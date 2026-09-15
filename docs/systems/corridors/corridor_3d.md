@@ -147,7 +147,7 @@ look setting, kept until the effects pass decides on hit visuals.
 - Testbed arguments (after `--`): `--set=property=value` sets any corridor export; `--monster` spawns a
   monster for the shot; `--shot` saves `user://shot.png` mid-glide and quits (`--still` for a stopped
   frame, `--shot-delay=SECONDS` to wait longer), printing `SHOT_SAVED:<path>`. `--view=WIDTHxHEIGHT`
-  (before `--`) forces a fixed `view_size`. The debug panel's `--monster-image=` and `--palette=` also
+  (before `--`) forces a fixed `view_size`. The debug panel's `--monster-image=` and `--world-palette=` also
   apply.
 - A real fight: `<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial
   --corridor-set=light_energy=<value>` ([debug_panel.md](../debug_panel.md#start-up-arguments)).

@@ -38,12 +38,15 @@ against the desaturated corridor.
 
 ## Limits
 
-- Item, relic and potion definitions and keyword cards copy `Colours` when built, so applying or
-  resetting a palette copies the new colours onto the cached definitions (`refresh_colours()` on each
-  catalog). Items already on a board change straight away.
-- Other colours are copied when things are built and do not change until rebuilt: `NamedColourRect`
-  nodes when added, colours set in code such as the board portraits, statuses already on an actor, and
-  projectiles already in flight. The `--ui-palette=` start-up argument applies before anything is built.
+- Things that copy `Colours` when built are updated when a palette is applied or reset, so it can be
+  switched mid-fight:
+  - Item, relic and potion definitions and keyword cards: `refresh_colours()` on each catalog.
+  - `NamedColourRect` nodes (and `ScreenBackground`): `DebugPanels.interface_palette_changed`.
+  - Statuses in the current fight: `DebugPanels.set_interface_palette` gives each the colour a new
+    status of its class would have.
+- Still not updated until rebuilt: the combat sandbox's `BoardView` portraits, combat-scoped summons'
+  statuses, and projectiles already in flight. The `--ui-palette=` start-up argument applies before
+  anything is built.
 - Item icons, enemy images and the corridor are not changed. Text colours set in code as per-instance
   overrides (the value badge text and outline) are not changed.
 - Reads files with `FileAccess`, so debug runs only, like the [palette clamp](palette_clamp.md).
@@ -56,6 +59,6 @@ against the desaturated corridor.
 | `InterfacePalette.reset()` | Back to the default colours and theme |
 | `InterfacePalette.variable_name(colour_name) -> String` | `'hp bar fill'` -> `'HP_BAR_FILL'` |
 | `PaletteLoader.load_named_colours(path) -> Dictionary` | Name -> colour for a `.gpl` file |
-| `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets |
+| `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets. The `'` and `;` keys step through the palettes, and [palette combos](debug_panel.md#behaviour) save one with a world palette |
 
 Tests: `tests/debug/test_interface_palette.gd`.

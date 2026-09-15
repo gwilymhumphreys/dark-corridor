@@ -13,6 +13,8 @@ uniform vec3 wear_light_colour : source_color = vec3(0.48, 0.47, 0.47);
 // The corridor's rectangle on screen in screen pixels (x, y, width, height), set by PrintFrame while a
 // fight is on screen; zero width when there is none. Folds can line up with it.
 uniform vec4 print_corridor_rect = vec4(0.0);
+// False on menu screens, so folds are only drawn during a run. Set by ScreenBackground.
+uniform bool folds_shown = true;
 
 group_uniforms background_pattern;
 // Screen pixels per pattern pixel: 1 for full resolution, 4 for the interface pixel grid.
@@ -270,7 +272,7 @@ vec3 print_wear(vec3 base, vec2 frag, vec2 screen_size) {
   if (background_faded_areas_on) {
     colour = mix(colour, wear_dark_colour, faded_areas(seeded));
   }
-  if (background_folds_on) {
+  if (background_folds_on && folds_shown) {
     vec4 rect = print_corridor_rect / background_pattern_pixel_size;
     bool follow = background_folds_follow_layout && rect.z > 0.0;
     vec2 across = nearest_fold(p.x, background_folds_across, grid_size.x, follow ? rect.x * 2.0 + rect.z : -1.0);

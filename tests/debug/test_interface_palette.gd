@@ -114,3 +114,14 @@ func test_named_colour_rect_takes_its_colour_when_added() -> void:
   rect.colour_name = 'POTION'
   add_child_autofree(rect)
   assert_eq(rect.color, Color8(0, 0, 200))
+
+
+func test_named_colour_rect_follows_a_palette_applied_after_it_was_added() -> void:
+  var rect: NamedColourRect = NamedColourRect.new()
+  rect.colour_name = 'POTION'
+  add_child_autofree(rect)
+  var default_colour: Color = rect.color
+  DebugPanels.set_interface_palette(_write_palette('live.gpl', ['0 0 200 potion']))
+  assert_eq(rect.color, Color8(0, 0, 200), 'took the new colour straight away')
+  DebugPanels.set_interface_palette('')
+  assert_eq(rect.color, default_colour, 'back to the default on reset')

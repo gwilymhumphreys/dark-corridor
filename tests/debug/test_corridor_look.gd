@@ -101,6 +101,24 @@ func test_screen_background_draws_through_the_background_material() -> void:
   assert_eq(DebugPanels.background_material.get_shader_parameter('wear_light_colour'), Colours.UI_BACKGROUND_WEAR_LIGHT,
     'the light mark colour comes from Colours')
 
+
+func test_folds_are_shown_only_while_a_run_screen_background_is_in_the_tree() -> void:
+  var menu: ScreenBackground = ScreenBackground.new()
+  menu.colour_name = 'UI_BACKGROUND'
+  add_child(menu)
+  _nodes.append(menu)
+  assert_eq(DebugPanels.background_material.get_shader_parameter('folds_shown'), false, 'no folds on a menu')
+  var run: ScreenBackground = ScreenBackground.new()
+  run.colour_name = 'UI_BACKGROUND'
+  run.folds_shown = true
+  add_child(run)
+  assert_eq(DebugPanels.background_material.get_shader_parameter('folds_shown'), true, 'folds during a run')
+  remove_child(run)
+  run.free()
+  assert_eq(DebugPanels.background_material.get_shader_parameter('folds_shown'), false, 'none after the run screen leaves')
+  assert_false(DebugPanels.background_defaults().has('folds_shown'), 'not a look setting')
+
+
 func test_a_slider_changes_the_shader_setting() -> void:
   var panel: LookPanel = _panel()
   panel.rebuild()

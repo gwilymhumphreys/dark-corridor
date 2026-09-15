@@ -20,16 +20,15 @@ for intent, but do not edit it.
 - **Effects** (projectiles, impacts, damage numbers): stand out against the world by hue and
   brightness, without needing strong saturation.
 - **Interface**: its own muted palette.
-- No fixed colour count. `art_audio.md` still says one shared palette of 32–64 colours; the owner has
-  moved on from that and will update his doc himself.
+- No fixed colour count, and no single shared palette (recorded in `art_audio.md`, 2026-09-16).
 
 ## What exists
 
-**The clamp.** One full-screen pass: the `ClampLayer` CanvasLayer (layer 126) in the `DebugPanels`
-autoload holds a `ColorRect` running `src/shaders/palette_clamp.gdshader`, which reads the screen and
-snaps every pixel to one palette. It is dev-only and clamps everything drawn below it.
-`MAX_COLOURS` (64) is duplicated in the shader and `DebugPanelsAutoload`; the shader loops over every
-palette colour for every pixel, so raising the limit costs time per pixel.
+**The clamp.** The world clamp in the corridor look shader snaps the corridor to one palette. The
+full-screen clamp that covered everything was removed on 2026-09-16; the interface uses the
+[interface palette](../systems/interface_palette.md). `MAX_COLOURS` is duplicated in
+`palette_clamp.gdshaderinc` and `DebugPanelsAutoload`; the shader loops over every palette colour for
+every pixel, so raising the limit costs time per pixel.
 
 **Where the combat screen draws.** All in the root canvas unless a layer is given:
 
@@ -54,20 +53,17 @@ placeholders:
 | `world/` | Six 16-step ramps from black to mid-grey, evenly spaced in screen value, each with a slight tint: ash, iron, moss, crimson, bone, crypt |
 | `effects/` | `effects-muted.gpl`: one muted hue per effect family in `colours.gd`, a light and a dark shade each, plus a flash grey. Hues are spread so heal, poison, spores and blind no longer share a colour |
 | `ui/` | `ui-muted.gpl`: dark panels, text, rarity bronze, silver and gold, health, block and enemy colours |
-| `combined/` | Each world ramp plus the effects and interface colours in one file, for the current single clamp |
+| `combined/` | Each world ramp plus the effects and interface colours in one file, made for the full-screen clamp (since removed) |
 | `downloaded/` | Lospec palettes (greyscale, tinted and desaturated), credited in `sources.txt` |
 
 The owner has seen the made palettes' swatches and accepted their current brightness.
 
 **Tools for comparing looks.**
-- `DebugPanels` start-up arguments: `--palette=`, `--perceptual`, `--dither`, `--corridor-set=`,
+- `DebugPanels` start-up arguments: `--world-palette=`, `--perceptual`, `--dither`, `--corridor-set=`,
   `--monster-image=` ([`debug_panel.md`](../systems/debug_panel.md#start-up-arguments)).
 - A real fight screenshot:
-  `<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --monster-image=res://assets/monsters/cut_out/bone_golem.png --palette=<path>`.
+  `<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --monster-image=res://assets/monsters/cut_out/bone_golem.png --world-palette=<path>`.
   The Godot exe path is in [`../handoff.md`](../handoff.md).
-- The clamp sometimes fails to show in a screenshot
-  ([known issue](../systems/palette_clamp.md#known-issue)). Check each image; the potion slot keeping
-  its original green means the clamp was missing.
 - Earlier comparison pages and full-size screenshots are saved locally in `comparisons/` (ignored by
   git). See "Presenting results" below.
 
@@ -88,8 +84,8 @@ begin with. These can be mixed.
 3. **Interface: choose colours at the source.** Set the theme and the interface constants in
    `colours.gd` from the interface palette. Clamping the interface with a shader would mean moving it
    into its own viewport, which is a large change.
-4. **Keep the single clamp as a comparison mode.** The `combined/` palettes let the owner judge the
-   combined look before any of the above is built.
+4. **Keep the single clamp as a comparison mode.** Dropped: the owner removed the full-screen clamp
+   on 2026-09-16 once the world and interface palettes were in use.
 
 Things to check while building:
 - **Colour count.** With no fixed count, the per-pixel loop may get slow. A lookup texture built when

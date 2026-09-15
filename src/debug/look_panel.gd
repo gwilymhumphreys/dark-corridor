@@ -116,7 +116,7 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
       continue
     if group == '':
       continue
-    # The palette clamp's switch is shared with the F1 panel and the full-screen clamp.
+    # The palette clamp's switch is shared with the F1 panel.
     if uniform == 'dithering':
       section = section if section != null else _add_section(group.capitalize())
       section.set_switch(DebugPanels.is_dithering(), DebugPanels.set_dithering)
