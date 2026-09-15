@@ -18,13 +18,20 @@ group_uniforms;
 
 group_uniforms background_specks;
 uniform bool background_specks_on = false;
-// The chance that each cell holds a speck.
-uniform float background_specks_density : hint_range(0.0, 1.0, 0.01) = 0.2;
-// Cell size in pattern pixels; specks are spaced at roughly this distance.
+// The average chance that each cell holds a speck.
+uniform float background_specks_density : hint_range(0.0, 1.0, 0.01) = 0.02;
+// Cell size in pattern pixels; specks are spaced at roughly this distance where they are densest.
 uniform float background_specks_cell : hint_range(2.0, 64.0, 1.0) = 14.0;
 // Largest speck radius in pattern pixels.
-uniform float background_specks_size : hint_range(0.5, 6.0, 0.1) = 1.2;
-uniform int background_specks_colour : hint_enum("Dark", "Light") = 1;
+uniform float background_specks_size : hint_range(0.5, 6.0, 0.1) = 1.6;
+// 0 keeps every speck near the largest size; 1 makes most specks tiny with a few large ones.
+uniform float background_specks_size_variation : hint_range(0.0, 1.0, 0.01) = 0.7;
+// 0 spreads specks evenly; 1 gathers them into clumps with clear areas between.
+uniform float background_specks_clumping : hint_range(0.0, 1.0, 0.01) = 0.75;
+// Size of the clumps and clear areas, in pattern pixels.
+uniform float background_specks_clump_size : hint_range(20.0, 1000.0, 1.0) = 260.0;
+// Mixed makes the larger specks and about a third of the rest light, and the others dark.
+uniform int background_specks_colour : hint_enum("Dark", "Light", "Mixed") = 2;
 group_uniforms;
 
 group_uniforms background_scratches;
@@ -62,6 +69,7 @@ uniform float background_creases_amount : hint_range(0.0, 1.0, 0.01) = 0.35;
 uniform float background_creases_angle : hint_range(0.0, 180.0, 1.0) = 90.0;
 group_uniforms;
 
+// Marks in drawing order: a higher mark covers a lower one.
 const int MARK_NONE = 0;
 const int MARK_DARK = 1;
 const int MARK_LIGHT = 2;
@@ -103,22 +111,40 @@ float fbm(vec2 p) {
 }
 
 
+// Chance multiplier for clumped marks: about three times inside clumps and near zero between them,
+// from a large-scale noise with a sharp threshold, keeping the average near 1.
+float clump_factor(vec2 position, float clump_size, float clumping) {
+  vec2 clump_position = position / clump_size;
+  float clump_noise = value_noise(clump_position) * 0.7 + value_noise(clump_position * 2.3 + 5.1) * 0.3;
+  return mix(1.0, smoothstep(0.5, 0.65, clump_noise) * 3.0, clumping);
+}
+
+
 int specks(vec2 p) {
   vec2 base = floor(p / background_specks_cell);
   for (int y = -1; y <= 1; y++) {
     for (int x = -1; x <= 1; x++) {
       vec2 cell = base + vec2(float(x), float(y));
-      if (hash12(cell + 0.5) >= background_specks_density) {
+      // A large-scale noise with a sharp threshold makes clumps at about three times the density and
+      // near-empty areas between them, keeping the average near the density.
+      float chance = background_specks_density
+        * clump_factor(cell * background_specks_cell, background_specks_clump_size, background_specks_clumping);
+      if (hash12(cell + 0.5) >= chance) {
         continue;
       }
       vec2 centre = (cell + hash22(cell)) * background_specks_cell;
-      float radius = background_specks_size * (0.4 + 0.6 * hash12(cell + 7.7));
+      float size_roll = hash12(cell + 7.7);
+      float radius = max(background_specks_size * mix(1.0, size_roll * size_roll * size_roll, background_specks_size_variation), 0.6);
       // Squash each speck a little in a random direction so they are not all round.
       vec2 offset = p + 0.5 - centre;
       vec2 stretch = normalize(hash22(cell + 3.3) - 0.5 + 0.001);
       offset += stretch * dot(offset, stretch) * (hash12(cell + 1.9) - 0.3);
       if (length(offset) < radius) {
-        return background_specks_colour + 1;
+        if (background_specks_colour < 2) {
+          return background_specks_colour + MARK_DARK;
+        }
+        bool light = radius > background_specks_size * 0.6 || hash12(cell + 4.4) < 0.35;
+        return light ? MARK_LIGHT : MARK_DARK;
       }
     }
   }
@@ -144,7 +170,7 @@ int scratches(vec2 p) {
       float distance_to_line = length(offset - direction * along);
       // Gaps along the scratch so it reads as broken, not ruled.
       if (distance_to_line < background_scratches_width * 0.5 + 0.25 && value_noise(p * 0.35 + cell) > 0.3) {
-        return background_scratches_colour + 1;
+        return background_scratches_colour + MARK_DARK;
       }
     }
   }

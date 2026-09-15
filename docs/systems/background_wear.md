@@ -15,12 +15,13 @@ text, panels, icons and the corridor are unchanged. Every effect is off by defau
 - The pattern is fixed to the screen and does not animate.
 - Each mark takes one of two solid colours, `Colours.UI_BACKGROUND_WEAR` and
   `UI_BACKGROUND_WEAR_LIGHT`, which an [interface palette](interface_palette.md) can set.
-  `ScreenBackground` passes them to the shader when it enters the tree. Nothing is blended.
+  `ScreenBackground` passes them to the shader when it enters the tree. Nothing is blended; light
+  marks cover dark ones.
 
 | Group | Does |
 |---|---|
 | Background Pattern | Pixel size (1 draws at full resolution, 4 snaps marks to the interface pixel grid) and a seed that rearranges the marks |
-| Background Specks | Small solid dots, one chance per cell; density, cell size, speck size, dark or light colour |
+| Background Specks | Small solid dots, one chance per cell. Clumping gathers them into patches with clear areas between; size variation makes most tiny with a few large; colour is dark, light or mixed (the default) |
 | Background Scratches | Short broken lines at an angle with a random spread; density, cell size, length, width, colour |
 | Background Edge Wear | Patchy rubbed wear along the screen edges, heavier at the corners; light at the heaviest, dark around it |
 | Background Creases | One to four faint bands across the screen at an angle, broken up by noise |

@@ -90,7 +90,7 @@ func test_panel_has_a_section_per_effect_plus_light_environment_and_background()
 func test_background_defaults_leave_out_the_mark_colours() -> void:
   var defaults: Dictionary = DebugPanels.background_defaults()
   assert_eq(defaults['background_specks_on'], false, 'every wear effect is off by default')
-  assert_eq(defaults['background_specks_colour'], 1, 'a choice')
+  assert_eq(defaults['background_specks_colour'], 2, 'a choice')
   assert_false(defaults.has('wear_dark_colour'), 'the mark colours come from Colours, not look files')
 
 
@@ -102,7 +102,6 @@ func test_screen_background_draws_through_the_background_material() -> void:
   assert_eq(background.material, DebugPanels.background_material, 'uses the shared material')
   assert_eq(DebugPanels.background_material.get_shader_parameter('wear_light_colour'), Colours.UI_BACKGROUND_WEAR_LIGHT,
     'the light mark colour comes from Colours')
-
 
 func test_a_slider_changes_the_shader_setting() -> void:
   var panel: LookPanel = _panel()
