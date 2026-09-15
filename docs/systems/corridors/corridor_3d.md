@@ -42,7 +42,8 @@ chose it over four lights on the walls, floor and ceiling, which looked almost t
 - Godot's omni light drops sharply to zero just before its range, so with a short `light_range` the fade
   to black looks abrupt.
 - Raising `light_attenuation` above 1 makes the nearest surface brighter, not darker.
-- The flicker is 1D simplex noise (`flicker_level(time)`), sampled each frame; the light's energy is
+- The light does not flicker (owner, 2026-09-15): `flicker_amount` is 0 by default and in the scene. The
+  flicker stays as a look panel setting. It is 1D simplex noise (`flicker_level(time)`), sampled each frame; the light's energy is
   `light_energy` times that level, which stays between `1 - flicker_amount` and 1.
 - `_apply_light()` copies the exports to the light node when the corridor is built; call it after
   changing them at runtime.
@@ -76,7 +77,7 @@ they go; the corridor creates, sizes and places them.
 | `unproject(point) -> Vector2` | Where a 3D point appears, in the node's local coordinates (origin at the view centre) |
 | `remove_enemy(sprite)` | Clears the texture and frees the sprite |
 
-- `shaded` is on, so the light and its flicker darken a sprite with distance; there is no separate
+- `shaded` is on, so the light darkens a sprite with distance; there is no separate
   brightness formula.
 - Transparency is alpha scissor (`ALPHA_CUT_DISCARD`), not blending: a pixel is either drawn opaque or
   not drawn. The cut-out images' soft glows lose their faintest outer part. The default threshold was
