@@ -50,6 +50,23 @@ static func get_def(id: String) -> ItemDef:
   return _defs[id]
 
 
+## Copy the colours of freshly built definitions onto the cached ones, so items and draft offers
+## that already hold a definition show the current `Colours` (docs/systems/interface_palette.md).
+static func refresh_colours() -> void:
+  if _defs.is_empty():
+    return
+  var cached: Dictionary = _defs
+  _defs = {}
+  _build()
+  for id: String in cached:
+    var old_def: ItemDef = cached[id]
+    var new_def: ItemDef = _defs[id]
+    old_def.panel_color = new_def.panel_color
+    for i in old_def.effects.size():
+      (old_def.effects[i] as ItemEffect).color = (new_def.effects[i] as ItemEffect).color
+  _defs = cached
+
+
 static func _build() -> void:
   _defs[WEAPON] = _weapon()
   _defs[ARMOR] = _armor()

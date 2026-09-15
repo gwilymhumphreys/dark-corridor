@@ -119,8 +119,11 @@ Things to check while building:
 - The 3D corridor is now lit by one light at the camera; the shader light and the wall lights are gone
   ([corridor_3d.md](../systems/corridors/corridor_3d.md#light)).
 - **Approach 3 is built as a debug setting**: the [interface palette](../systems/interface_palette.md)
-  sets `Colours` and recolours the theme from a named `.gpl` file (`new/ui/`). Effect colours stay
-  shared between item badges and projectiles for now (owner, 2026-09-15).
+  sets `Colours` and recolours the theme from a named `.gpl` file (`new/ui/`).
+- **Effects take the interface palette, not their own** (owner, 2026-09-15). Projectiles and damage
+  numbers share their colours with item badges and status swatches, which keeps them coherent with the
+  interface, and interface colours stand out enough against the desaturated corridor. This replaces
+  approach 2 and the separate effects palette; `effects/effects-muted.gpl` is not used by any setting.
 - The world clamp is now part of the [corridor look](../systems/corridor_look.md) shader. Look work
   (effects, example looks, dithering in motion) continues in
   [`corridor_look_handoff.md`](corridor_look_handoff.md).

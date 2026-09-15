@@ -31,13 +31,19 @@ not set them leaves the theme unchanged. `InterfacePalette.reset()` restores the
 images and the theme colours.
 
 Effect colours (`DAMAGE`, `STATUS_*` and so on) are shared by item value badges, status swatches,
-projectiles and damage numbers, so an interface palette changes all of them.
+projectiles, damage numbers and the corridor's [hit lights](corridors/corridor_3d.md#hit-lights), so an
+interface palette changes all of them. Effects have no palette of
+their own (owner, 2026-09-15): interface colours keep them coherent with the interface and stand out
+against the desaturated corridor.
 
 ## Limits
 
-- Colours are copied when things are built: item and status definitions when their catalog is first
-  used, `NamedColourRect` nodes when added. A palette chosen in the F1 panel mid-run reaches only what
-  is built afterwards. The `--ui-palette=` start-up argument applies it before anything is built.
+- Item, relic and potion definitions and keyword cards copy `Colours` when built, so applying or
+  resetting a palette copies the new colours onto the cached definitions (`refresh_colours()` on each
+  catalog). Items already on a board change straight away.
+- Other colours are copied when things are built and do not change until rebuilt: `NamedColourRect`
+  nodes when added, colours set in code such as the board portraits, statuses already on an actor, and
+  projectiles already in flight. The `--ui-palette=` start-up argument applies before anything is built.
 - Item icons, enemy images and the corridor are not changed. Text colours set in code as per-instance
   overrides (the value badge text and outline) are not changed.
 - Reads files with `FileAccess`, so debug runs only, like the [palette clamp](palette_clamp.md).

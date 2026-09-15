@@ -81,6 +81,12 @@ static func _build() -> void:
   }
 
 
+## Rebuild the mechanic cards on next use, so they take the current `Colours`
+## (docs/systems/interface_palette.md). Status cards read the status class each time.
+static func refresh_colours() -> void:
+  _mechanics.clear()
+
+
 ## True if `id` resolves to a card. Statuses defer to the registry; mechanic ids must be authored
 ## above. An unknown id (catalog-gated out) returns false — no chip card, silently.
 static func has(id: String) -> bool:

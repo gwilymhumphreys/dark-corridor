@@ -47,6 +47,7 @@ static func apply(path: String) -> int:
     matched += 1
   _applied = true
   _recolour_theme(load(Prefs.THEME_PATH) as Theme)
+  _refresh_catalogs()
   return matched
 
 
@@ -73,6 +74,15 @@ static func reset() -> void:
   _original_textures.clear()
   _original_flat_colours.clear()
   _applied = false
+  _refresh_catalogs()
+
+
+# Content definitions copy `Colours` when built; recolour the cached ones.
+static func _refresh_catalogs() -> void:
+  ItemCatalog.refresh_colours()
+  RelicCatalog.refresh_colours()
+  ConsumableCatalog.refresh_colours()
+  KeywordCatalog.refresh_colours()
 
 
 static func _recolour_theme(theme: Theme) -> void:

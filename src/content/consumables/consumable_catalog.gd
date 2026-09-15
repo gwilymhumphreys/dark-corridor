@@ -16,6 +16,22 @@ static func get_def(id: String) -> ConsumableDef:
   return _defs[id]
 
 
+## Copy the colours of freshly built definitions onto the cached ones, so potions that already hold
+## a definition show the current `Colours` (docs/systems/interface_palette.md).
+static func refresh_colours() -> void:
+  if _defs.is_empty():
+    return
+  var cached: Dictionary = _defs
+  _defs = {}
+  _build()
+  for id: String in cached:
+    var old_def: ConsumableDef = cached[id]
+    var new_def: ConsumableDef = _defs[id]
+    for i in old_def.effects.size():
+      (old_def.effects[i] as ItemEffect).color = (new_def.effects[i] as ItemEffect).color
+  _defs = cached
+
+
 static func _build() -> void:
   _defs[HEALING_DRAUGHT] = _healing_draught()
 

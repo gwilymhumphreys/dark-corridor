@@ -23,6 +23,19 @@ static func get_def(id: String) -> RelicDef:
   return _defs[id]
 
 
+## Copy the colours of freshly built definitions onto the cached ones, so relics that already hold a
+## definition show the current `Colours` (docs/systems/interface_palette.md).
+static func refresh_colours() -> void:
+  if _defs.is_empty():
+    return
+  var cached: Dictionary = _defs
+  _defs = {}
+  _build()
+  for id: String in cached:
+    (cached[id] as RelicDef).panel_color = (_defs[id] as RelicDef).panel_color
+  _defs = cached
+
+
 static func _build() -> void:
   _defs[STONE_WARD] = _stone_ward()
   _defs[VITAL_CHARM] = _vital_charm()

@@ -89,6 +89,25 @@ func test_panel_and_text_colours_recolour_the_theme_until_reset() -> void:
   assert_eq(_theme().get_color('font_color', 'Label'), label_text, 'reset restores the label colour')
 
 
+func test_definitions_already_built_take_the_palette_until_reset() -> void:
+  var weapon: ItemDef = ItemCatalog.get_def(ItemCatalog.WEAPON)
+  var potion: ConsumableDef = ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)
+  var relic: RelicDef = RelicCatalog.get_def(RelicCatalog.STONE_WARD)
+  var default_damage: Color = weapon.effects[0].color
+  InterfacePalette.apply(_write_palette('catalogs.gpl', [
+    '10 20 30 damage',
+    '40 50 60 heal',
+    '70 80 90 relic stone ward',
+  ]))
+  assert_eq(ItemCatalog.get_def(ItemCatalog.WEAPON), weapon, 'the cached definition is kept')
+  assert_eq(weapon.effects[0].color, Color8(10, 20, 30))
+  assert_eq(weapon.panel_color, Color8(10, 20, 30))
+  assert_eq(potion.effects[0].color, Color8(40, 50, 60))
+  assert_eq(relic.panel_color, Color8(70, 80, 90))
+  InterfacePalette.reset()
+  assert_eq(weapon.effects[0].color, default_damage, 'reset restores the default')
+
+
 func test_named_colour_rect_takes_its_colour_when_added() -> void:
   InterfacePalette.apply(_write_palette('rect.gpl', ['0 0 200 potion']))
   var rect: NamedColourRect = NamedColourRect.new()
