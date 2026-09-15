@@ -1,32 +1,13 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/debug/debug_panels.gd" id="1"]
-[ext_resource type="Shader" path="res://src/shaders/palette_clamp.gdshader" id="2"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="3"]
 [ext_resource type="PackedScene" path="res://src/debug/look_panel.tscn" id="4"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_clamp"]
-shader = ExtResource("2")
-shader_parameter/colour_count = 0
-shader_parameter/perceptual = false
-shader_parameter/dithering = false
+[ext_resource type="PackedScene" path="res://src/debug/print_panel.tscn" id="5"]
 
 [node name="DebugPanels" type="Node"]
 process_mode = 3
 script = ExtResource("1")
-
-[node name="ClampLayer" type="CanvasLayer" parent="."]
-layer = 126
-visible = false
-
-[node name="ClampRect" type="ColorRect" parent="ClampLayer"]
-material = SubResource("ShaderMaterial_clamp")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
 
 [node name="PanelLayer" type="CanvasLayer" parent="."]
 layer = 127
@@ -45,28 +26,6 @@ theme_override_constants/separation = 16
 [node name="Title" type="Label" parent="PanelLayer/Panel/Rows"]
 layout_mode = 2
 text = "Debug (F1)"
-
-[node name="PaletteRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/PaletteRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Palette"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/PaletteRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 1
-selected = 0
-popup/item_0/text = "Off"
-popup/item_0/id = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/PaletteRow/Option"]
-script = ExtResource("3")
 
 [node name="WorldPaletteRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
 layout_mode = 2
@@ -180,3 +139,9 @@ layer = 127
 visible = false
 
 [node name="LookPanel" parent="LookLayer" instance=ExtResource("4")]
+
+[node name="PrintLayer" type="CanvasLayer" parent="."]
+layer = 127
+visible = false
+
+[node name="PrintPanel" parent="PrintLayer" instance=ExtResource("5")]

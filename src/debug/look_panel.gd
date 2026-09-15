@@ -2,9 +2,9 @@ class_name LookPanel
 extends PanelContainer
 ## The look panel (docs/systems/corridor_look.md), toggled with F2 by `DebugPanels`. One section
 ## per effect in corridor_look.gdshader, built from the shader's uniform groups, then sections for
-## the corridor's light and its camera Environment, then one section per group in
-## background_wear.gdshader. Every change applies at once to what is on screen. Looks are saved to
-## and loaded from `DebugPanelsAutoload.LOOK_DIR`.
+## the corridor's light and its camera Environment. The background wear is in the F3 print panel
+## (`PrintPanel`, which extends this). Every change applies at once to what is on screen. Looks are
+## saved to and loaded from `DebugPanelsAutoload.LOOK_DIR`.
 
 const SECTION_SCENE: PackedScene = preload('res://src/debug/look_section.tscn')
 const SLIDER_ROW_SCENE: PackedScene = preload('res://src/debug/look_slider_row.tscn')
@@ -95,11 +95,11 @@ func rebuild() -> void:
   var values: Array[Dictionary] = scene_values()
   _build_property_section('Light', CORRIDOR_PROPERTIES, values[0], DebugPanels.corridor_settings)
   _build_property_section('Environment', ENVIRONMENT_PROPERTIES, values[1], DebugPanels.environment_settings)
-  _build_shader_sections(DebugPanels.background_material, DebugPanels.background_defaults())
 
 
-# One section per uniform group; uniforms before the first group, or missing from `defaults` (the
-# palette clamp's, the background mark colours), are skipped, as other code sets them.
+# One section per uniform group that has a setting in `defaults`; uniforms before the first group, or
+# missing from `defaults` (the palette clamp's, the mark colours, an included shader's settings shown
+# elsewhere), are skipped, as other code sets them. A group with no settings gets no section.
 func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary) -> void:
   var section: LookSection = null
   var group: String = ''
@@ -107,16 +107,18 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
     var uniform: String = entry['name']
     if entry['usage'] & PROPERTY_USAGE_GROUP:
       group = uniform
-      section = _add_section(group.capitalize())
+      section = null
       continue
-    if section == null:
+    if group == '':
       continue
     # The palette clamp's switch is shared with the F1 panel and the full-screen clamp.
     if uniform == 'dithering':
+      section = section if section != null else _add_section(group.capitalize())
       section.set_switch(DebugPanels.is_dithering(), DebugPanels.set_dithering)
       continue
     if not defaults.has(uniform):
       continue
+    section = section if section != null else _add_section(group.capitalize())
     var value: Variant = look_material.get_shader_parameter(uniform)
     if value == null:
       value = defaults[uniform]
@@ -177,10 +179,28 @@ func _clear_sections() -> void:
     section.free()
 
 
+# The folder this panel's saved looks live in, and how it saves, loads and resets them. The print panel
+# overrides these, so the two panels keep separate saved looks.
+func _look_dir() -> String:
+  return DebugPanelsAutoload.LOOK_DIR
+
+
+func _save_look(path: String) -> void:
+  DebugPanels.save_look(path)
+
+
+func _load_look(path: String) -> bool:
+  return DebugPanels.load_look(path)
+
+
+func _reset_look() -> void:
+  DebugPanels.reset_look()
+
+
 func _list_looks() -> void:
   _load_option.clear()
   _load_option.add_item('Load a look...')
-  var dir: DirAccess = DirAccess.open(DebugPanelsAutoload.LOOK_DIR)
+  var dir: DirAccess = DirAccess.open(_look_dir())
   if dir == null:
     return
   for file: String in dir.get_files():
@@ -193,7 +213,7 @@ func _on_save_pressed() -> void:
   var look_name: String = _name_edit.text.strip_edges().to_snake_case().validate_filename()
   if look_name == '':
     return
-  DebugPanels.save_look(DebugPanelsAutoload.LOOK_DIR.path_join(look_name + '.cfg'))
+  _save_look(_look_dir().path_join(look_name + '.cfg'))
   _name_edit.release_focus()
   _list_looks()
 
@@ -202,11 +222,11 @@ func _on_look_selected(index: int) -> void:
   if index <= 0:
     return
   var look_name: String = _load_option.get_item_text(index)
-  if DebugPanels.load_look(DebugPanelsAutoload.LOOK_DIR.path_join(look_name + '.cfg')):
+  if _load_look(_look_dir().path_join(look_name + '.cfg')):
     _name_edit.text = look_name
     rebuild()
 
 
 func _on_reset_pressed() -> void:
-  DebugPanels.reset_look()
+  _reset_look()
   rebuild()

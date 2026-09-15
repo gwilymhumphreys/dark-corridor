@@ -104,7 +104,9 @@ mockup), composition:
 
 - **Corridor large, top-left** — `combat_corridor.tscn` (`SubViewportContainer` →
   `SubViewport` → `Corridor3D`, with each enemy a `Sprite3D` inside its 3D scene).
-  Resizeable; the SubViewportContainer clips it. See *Enemies in the corridor* below.
+  Resizeable; the SubViewportContainer clips it. See *Enemies in the corridor* below. `PrintFrame`
+  moves it in from its scene rectangle by the corridor margin and draws the optional border and overlay
+  ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
   a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
   The corridor renders **one sprite per enemy**, arranged side by side and shrunk by

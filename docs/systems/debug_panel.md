@@ -2,14 +2,15 @@
 
 A dev-only panel for comparing looks in game: the full-screen and world palette clamps, plus start-up
 arguments for screenshots of real fights. It is on every screen, including the corridor testbed and combat
-sandbox. The same autoload holds the F2 [look panel](corridor_look.md).
+sandbox. The same autoload holds the F2 [look panel](corridor_look.md) and the F3
+[print panel](print_frame.md).
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
 as the `DebugPanels` autoload.
 
 ## Behaviour
 
-- F1 toggles the panel and F2 the look panel, only in debug builds (`OS.is_debug_build()`). The autoload
+- F1 toggles the panel, F2 the look panel and F3 the print panel, only in debug builds (`OS.is_debug_build()`). The autoload
   processes while the game is paused.
 - The palette keys below are ignored while a text field (the look name) has focus.
 - `]` and `[` select the next and previous entry in the full-screen Palette list, with the panel open or
@@ -51,6 +52,9 @@ Read once at start-up from the user arguments (after `--`), for screenshots and 
 | `--font=<res path>` | The project theme's default font becomes this font file, replacing the one `Prefs` set ([ui_theme.md](ui_theme.md#font-candidates)) |
 | `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
+| `--print-look=<path>` | Loads a [print look](print_frame.md#print-looks) before the other arguments, so they can override it |
+| `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay or layout setting. Repeatable |
+| `--print-panel` | Opens the print panel |
 
 For example, a real fight under a palette:
 `<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial --palette=res://assets/palettes/good/waldgeist-32x.png`
@@ -69,6 +73,7 @@ For example, a real fight under a palette:
 | `look_defaults() -> Dictionary` | Look shader uniform defaults, read from the shader code |
 | `save_look(path) -> Error`, `load_look(path) -> bool`, `reset_look()` | [Look files](corridor_look.md#look-files) and the look defaults |
 | `toggle_look_panel()` | Show or hide the look panel |
+| `border_material`, `overlay_material`, `print_settings`, `print_setting()`, `set_print_value()`, `print_defaults()`, `save_print_look()`, `load_print_look()`, `reset_print_look()`, `toggle_print_panel()` | The [print frame](print_frame.md#public-api) |
 | `set_dithering(on)`, `is_dithering()` | The dithering switch for both clamps, kept in step with the panel |
 | `set_world_palette(path: String)` | Clamp the combat corridor to this palette file; `''` turns it off |
 | `toggle_panel()` | Show or hide the panel |

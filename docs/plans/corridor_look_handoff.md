@@ -42,11 +42,28 @@ is the owner's doc: read it for intent, do not edit it.
   comparison page (private to the owner): https://claude.ai/artifact/62suHYJCvWuJgJ8LbWdLCL, saved in
   `comparisons/interface_palette_plates/`.
 - **Background wear** ([`background_wear.md`](../systems/background_wear.md)): print wear on the screen
-  background, from a record sleeve the owner liked (worn edges, specks, bends). Settings in F2.
+  background, from a record sleeve the owner liked (worn edges, specks, bends). Settings in F3.
   Comparison page (private to the owner): https://claude.ai/artifact/LfmcUdSUhiV2fbXoDkhMC1, saved in
   `comparisons/background_wear_plates/`. The owner's verdict: the rubbed edges and creases are good;
   specks are not needed but can stay if sparse (the current defaults); mottling and faint flecks were
-  tried and rejected. Scratches have not been judged on their own.
+  tried and rejected.
+- **Faded areas** in the background wear, from a second sleeve the owner linked
+  (https://f4.bcbits.com/img/a2053539252_10.jpg): a few large soft patches, a smooth blend (owner's
+  choice), kept subtle (owner). After the first page the owner asked for about a quarter of the
+  coverage and a much lower amount; version 2 shows that at three amounts (private to the owner):
+  https://claude.ai/artifact/GBEJbeVgES2Tpp7MfnzFDV, saved in `comparisons/faded_areas_plates/`. The
+  owner chose amount 0.15 with the quarter coverage, then asked for patch size and amount to be halved
+  again; the halved values are the shader defaults.
+- **Background wear is on by default** (owner, 2026-09-15): faded areas, specks, rubbed edges and two
+  creases, as in the screenshots. Scratches were shown (off, dark, light, then fewer, longer and
+  thinner) and removed at the owner's request. Scratch page (private to the owner):
+  https://claude.ai/artifact/MNrs75MUvoAvsDtC1yjfsr, saved in `comparisons/scratch_plates/`.
+- **Print frame** ([`print_frame.md`](../systems/print_frame.md)): the owner asked for every idea for
+  making the corridor fit the sleeve style as a switch in a new F3 panel, and agreed the corridor moves
+  in to make room for a border. Border, wear over the corridor, worn corridor edge, folds (the owner's
+  folded-paper idea) and two red two-ink looks. Comparison page (private to the owner):
+  https://claude.ai/artifact/CnNGoUSLqHvGx5QvauKNtB, saved in `comparisons/print_frame_plates/`. Not
+  judged yet.
 
 ## The owner's direction on the interface (2026-09-15)
 

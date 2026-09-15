@@ -74,22 +74,20 @@ func _group_count(shader: Shader) -> int:
   return groups
 
 
-func test_panel_has_a_section_per_effect_plus_light_environment_and_background() -> void:
+func test_panel_has_a_section_per_effect_plus_light_and_environment() -> void:
   var panel: LookPanel = _panel()
   panel.rebuild()
   var groups: int = _group_count(DebugPanels.world_material.shader)
-  var background_groups: int = _group_count(DebugPanels.background_material.shader)
   var sections: Node = panel.get_node('Rows/Scroll/Sections')
   assert_gt(groups, 0, 'the look shader has effect groups')
-  assert_gt(background_groups, 0, 'the background wear shader has effect groups')
-  assert_eq(sections.get_child_count(), groups + 2 + background_groups,
-    'one section per effect, then Light and Environment, then one per background wear group')
-  assert_not_null(_section('Background Specks'), 'background wear sections are titled by group')
+  assert_eq(sections.get_child_count(), groups + 2, 'one section per effect, then Light and Environment')
+  assert_null(_section('Background Specks'), 'the background wear is in the print panel')
 
 
 func test_background_defaults_leave_out_the_mark_colours() -> void:
   var defaults: Dictionary = DebugPanels.background_defaults()
-  assert_eq(defaults['background_specks_on'], false, 'every wear effect is off by default')
+  assert_eq(defaults['background_faded_areas_on'], true, 'the wear the owner kept is on by default')
+  assert_false(defaults.has('background_scratches_on'), 'scratches were removed')
   assert_eq(defaults['background_specks_colour'], 2, 'a choice')
   assert_false(defaults.has('wear_dark_colour'), 'the mark colours come from Colours, not look files')
 
@@ -130,8 +128,9 @@ func test_save_then_load_restores_the_look() -> void:
   DebugPanels.world_material.set_shader_parameter('grade_tint', Color(0.5, 0.25, 0.1))
   DebugPanels.corridor_settings['light_range'] = 12.0
   DebugPanels.environment_settings['fog_enabled'] = true
-  DebugPanels.background_material.set_shader_parameter('background_creases_on', true)
+  DebugPanels.background_material.set_shader_parameter('background_creases_on', false)
   assert_eq(DebugPanels.save_look(LOOK_PATH), OK, 'the look is saved')
+  DebugPanels.background_material.set_shader_parameter('background_creases_on', true)
   DebugPanels.reset_settings()
   assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), false, 'reset turns the effect off')
   assert_true(DebugPanels.corridor_settings.is_empty(), 'reset clears the corridor settings')
@@ -142,7 +141,7 @@ func test_save_then_load_restores_the_look() -> void:
   assert_eq(DebugPanels.corridor_settings.get('light_range'), 12.0, 'corridor setting restored')
   assert_eq(DebugPanels.environment_settings.get('fog_enabled'), true, 'environment setting restored')
   assert_eq(DebugPanels.background_material.get_shader_parameter('background_creases_on'), true,
-    'background wear setting restored')
+    'a corridor look does not hold the background wear, which belongs to print looks')
 
 
 func test_loading_applies_to_corridors_on_screen() -> void:
