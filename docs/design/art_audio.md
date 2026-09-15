@@ -3,13 +3,23 @@
 This is a working doc, not a settled spec. Almost everything here is a current leaning to test in prototype, not a decision. Treat it that way — argue with it freely.
 
 Companion to the design snapshot. This is the living capture of the look-and-feel thinking — art direction, visual readability, audio. Add to it as the vibes evolve.
-Date: 2026-05-30, revised 2026-06-01. Pre-prototype, gated on AMTKAG.
+Date: 2026-05-30, revised 2026-06-01 and 2026-09-16. The prototype is playable; the look is being explored in game.
+
+Direction (exploring, 2026-09)
+
+The chunky pixel-art direction is set aside. The goal is a distinctive look that fits the dark-fantasy theme, made with the assets and skills we have. That means existing art (the monster collection, icon packs, textures, UI packs), shaders, post-processing and palettes, not drawing or commissioning art. Nothing in the look is chosen yet.
+Work order: get the corridor and enemies looking good first, then build the rest of the look around them.
+Full-screen effects are welcome, for example CRT, colour treatments, bloom, and the post-processing in Slots & Daggers.
+How options are judged: each option is built as a debug setting, screenshotted in the same real fight, and shown on one comparison page. The owner picks; options are not ranked for him.
+
 
 Rendering & corridor
 
-Godot 4. The corridor is a real 3D scene (decided 2026-09-15, decision #36): a row of modular corridor sections seen from a fixed camera, lit by one flickering light at the camera and fading to black. Walls are textured quads or a bought modular kit. Enemies are flat sprites inside that 3D scene, lit by the same light, so they come out of the dark on the approach. They use hard-edged transparency (alpha scissor), not blended edges. The 2D scaling-tile corridors were built, compared and removed.
-Resolution approach: the UI and effects are authored at ~360p pixel-art scale and drawn at full monitor resolution, scaling the art up (nearest-neighbour) into a native-res canvas rather than rendering into a low-res viewport and upscaling the whole frame. The 3D corridor and its enemy sprites render at full resolution with mipmapped filtering.
-Movement feel: smooth-but-controlled advance, footfall audio, light flicker. Each advance should read as walking forward, not as the scene rearranging itself. Discrete-step (Eye of the Beholder style) considered and set aside — the auto-advance design doesn’t give the player the causal hook that made discrete movement work in classic blobbers. (Camera bob: now that the movement is framed as a walk rather than a glide, a subtle bob is coherent — a true continuous glide and footfall bob don’t really coexist. Whether to keep the bob is a feel question for prototype.)
+Godot 4. The corridor is a real 3D scene (decision #36): a row of modular corridor sections seen from a fixed camera. One steady light at the camera lights it, fading gradually to black. The light does not flicker; flicker remains only as a look setting. Walls are a tiling stone texture on code-built sections for now; a bought modular kit can replace them.
+Enemies are flat painted images inside the 3D scene, lit by the same light, so they come out of the dark on the approach. They use hard-edged transparency (alpha scissor), not blended edges.
+Hit lights: when a hit lands on an enemy, a short light in the effect's colour shows on it. On by default and subtle, kept until the effects are designed.
+Resolution: everything renders at full monitor resolution. The corridor is not rendered at a low resolution; the Pixelate look setting keeps that available to try.
+Movement feel: smooth-but-controlled advance, footfall audio. Each advance should read as walking forward, not as the scene rearranging itself. Discrete-step (Eye of the Beholder style) considered and set aside — the auto-advance design doesn’t give the player the causal hook that made discrete movement work in classic blobbers. (Camera bob: now that the movement is framed as a walk rather than a glide, a subtle bob is coherent — a true continuous glide and footfall bob don’t really coexist. Whether to keep the bob is a feel question for prototype.)
 
 
 Visual style & tone
@@ -19,23 +29,38 @@ Tone resolution: atmosphere is dread, mechanics are juicy. The corridor and walk
 Failure mode to avoid: dread-without-juice — oppressive and miserable, no payoff. The dread baseline only works if the cascade punch lands against it. Target the games that nail the balance (Mörk Borg, Darkest Dungeon); plenty of indie horror doesn’t.
 
 
-Resolution & asset style (open)
+Art sources (exploring)
 
-Leaning: chunky pixel art, ~360p authoring scale. Will test against candidate packs. Not locked.
-Two distinct looks that both read as “pixel” at a glance, and they’re different markets. Chunky native pixel = hand-placed pixels, a specific aesthetic, smaller/more style-specific asset market. Downscaled-painted (the earlier Dragon Ruins reference + palette-clamp pipeline) = painted/rendered art crushed to low res — different pipeline, different feel. Worth being honest about which one a given reference is actually doing. (E.g. Underkeep, an appealing reference, turns out to be hand-painted speed-painting crushed to low res — downscaled-painted, not chunky-pixel. So liking Underkeep is a pull toward the painted direction, and that look is also real art labour, easier for a studio than a solo asset-driven pipeline.)
-Source in the right order: lead with the look, not the number. Find monster art authored at the target scale; let the art’s native size inform the resolution. Picking a number first and hunting for packs that survive being crushed into it is what made the earlier pack mush at 360p (it wasn’t authored for it).
-Consequences if going chunky-pixel:
+Monsters: painted images from the monster collection in ../dark-corridor-design/monsters/, used at their original resolution and cut out of their black backgrounds. The game has a sample of nine in assets/monsters/cut_out/. Fights pick one at random; which enemy uses which image is not content yet.
+Corridor walls: one tiling stone texture for now. Candidate PSX-style modular kits are listed in docs/plans/full_res_art_palette_clamp_3d_corridor.md.
+Item icons: the current icons are pixel art. Whether icons stay pixel art or become painted, to sit with the painted enemies, is open. Candidate packs are listed under Asset sources.
+Interface frame: the Black and White UI pack, pixel art drawn at a ~360p scale on the full-resolution screen (decision #32). Panel frames will come from whichever UI theme is used.
+Font: Rakkas, a smooth font, chosen from a screenshot comparison. Other shortlisted fonts can be tried from the debug panel. No pixel font by default.
+No generative-AI assets.
 
-Monster variety gets harder — native chunky-pixel packs are rarer/smaller and unforgiving to mix across hands.
-Corridor-tile commission gets easier/cheaper — pixel tiles are simpler than painted, and pixel artists are easier to reverse-source on itch.
+
+Colour (exploring)
+
+The world, the interface and the effects each have their own colours. There is no fixed colour count and no single shared palette.
+
+World (corridor walls and enemy images): black and white, greyscale or very desaturated. Each act could have its own tint, but switching tints between acts is not a priority. A palette is applied to the corridor image only.
+Interface: its own palette, with more hues than the world palette. A palette file recolours the theme and the game's named colours.
+Effects (projectiles, damage numbers, hit lights): use the interface's effect colours rather than a palette of their own. This keeps them matching the item value badges and status swatches. They stand out against the desaturated corridor by hue and brightness, without needing strong saturation.
+Readability limits: text and item icons must stay readable. Panels, buttons, text, tooltips, menus, the map strip and readouts take a palette only, with no shaders. The border around the play area, portraits, item cells and icons may also get shaders. Health bars, value badges, the cooldown sweep, potions, status swatches and the enemy name are undecided.
 
 
+Looks being tried
+
+Corridor look (F2 panel): post-processing on the corridor image only. It covers grade, colour ramp, halftone, hatching, edge lines, bloom, warp, scanlines, grain, vignette, posterize, pixelate, and the world palette with dithering, plus fog and glow. Example looks are saved in assets/looks/; their names are placeholders. Dithering in motion is one of the things being judged.
+Printed record sleeve (F3 panel): the screen background is drawn like a worn printed sleeve the owner liked. Rubbed edges, creases, subtle faded areas and sparse specks are on by default. Mottling, faint flecks and scratches were tried and removed.
+The same print wear can be carried over the corridor, with its edge worn away, and the corridor moved in from the screen edges. The owner's saved defaults have both on. A rough border around the corridor and folds across the sheet are available but not judged yet. Two red two-ink corridor looks go with this style.
+Interface palettes: candidate palette files, saved together with a world palette as palette combos, so the corridor and interface are judged together.
 
 
 VFX
 
-Custom-built to fit the palette. Default Godot smooth particles fight the pixel aesthetic. Want pixel-snapped particles, palette-clamped via shader, banded light falloff (no smooth gradients), pixel-font damage numbers — all sharing a tight 32–64 colour palette across the whole game. (Note: if the chunky-pixel direction holds, this VFX spec is consistent; if the direction drifts back toward downscaled-painted, revisit whether pixel-snapping still fits.)
-Existing 2D pixel-VFX asset libraries (itch, paid packs) cover most needs, recolour to palette. Already know this market from AMTKAG.
+Effects are flat placeholder shapes and text for now, in the interface's effect colours (see Colour). Their final style is open. The earlier plan was pixel-snapped particles, banded light falloff and pixel-font damage numbers, and it belonged to the pixel-art direction. It needs rethinking for full-resolution painted art and post-processing.
+Existing 2D VFX asset libraries (itch, paid packs) may cover most needs, recoloured to fit. Already know this market from AMTKAG.
 
 
 Cascade / activation readability (the hardest open problem)
@@ -78,6 +103,7 @@ Item arrangement (open): type-zoned grid, or a loose arc around the character. E
 Items zoned by type. Effect family is carried by a colour-coded value panel at the top of each item, extruding over the edge (red attack, blue block, green heal, per-effect colours for status applicators); the number on the panel is the effect value. Borders are spoken for by rarity — bronze / silver / gold for common / uncommon / rare. Items bigger than feels comfortable, so activations stay legible in a cascade.
 Cooldown meters Bazaar-style (filling overlay), on enemy items too — mutual cooldowns visible on both boards is the visible-race feel.
 Player portrait separate from the scene; HP shown as the portrait getting progressively more beaten-up at low HP, with the value as text. No frame.
+Buttons: hovering does not change a button's size; hover is shown by the text colour only. Pressing squashes the button.
 
 
 Audio
@@ -96,27 +122,33 @@ Doubles as the second readability channel (see cascade readability above) — pe
 
 Cohesion across mixed asset sources
 
-Cohesion comes from a spec, not single authorship. Palette (32–64), resolution, line weight, lighting assumption, detail level. Hold every asset to it and multiple hands read as one. (Already conceded in principle — the monster pack isn’t made by the frame artist and is expected to cohere via the clamp.)
-Darkness does coherence work. Single flickering point light, hard falloff to black washes out mismatched baked lighting and imposes one lighting read. Lean on it deliberately — not just mood.
+Cohesion comes from a spec, not single authorship: colours, lighting, post-processing and detail level. Hold every asset to it and multiple hands read as one. The monster images, wall textures, icons and interface pack all come from different sources and are expected to cohere through the world palette, the corridor look and the interface palette.
+Darkness does coherence work. One light at the camera fading to black gives walls and enemy images one lighting read and hides mismatched lighting painted into the art.
 
 
 Open items (prototype / mockup work)
 
 Screen layout: full-screen scene vs. small framed window. Mock up one of each; decide on feel (cramped vs. breathing).
 Item arrangement: type-zoned grid vs. arc-around-character. Fixed positions + hover-tilt either way. Try both with placeholder items.
-UI implementation in Godot (when building): the frame wants Control nodes (anchoring, text tools); items want transform-driven nodes for free tilt/recoil. Items needing to travel over the frame is the constraint that picks the approach — cleanest options are all-2D (z-order, no viewport), or items-in-3D needing a single shared SubViewport to layer above a 2D frame, or rendering a 2D-authored frame to a viewport-texture on a 3D quad. At low res with flat pixel art these probably converge visually; deciding factor is which is least annoying to author 60 items inside. Build 3 placeholder items in the simplest (all-2D) first.
-Light/lighting shader specifics — banded falloff, flicker math.
-Palette pick (32–64 colours) — comes with the monster-pack survey.
-Asset pack selection — first thing post-AMTKAG; lead with the look, let it inform the resolution.
+UI implementation in Godot (when building): the frame wants Control nodes (anchoring, text tools); items want transform-driven nodes for free tilt/recoil. Items needing to travel over the frame is the constraint that picks the approach — cleanest options are all-2D (z-order, no viewport), or items-in-3D needing a single shared SubViewport to layer above a 2D frame, or rendering a 2D-authored frame to a viewport-texture on a 3D quad. These may look the same on screen; deciding factor is which is least annoying to author 60 items inside. Build 3 placeholder items in the simplest (all-2D) first.
+Corridor look: which effects, world palette and dithering, including how dithering looks in motion.
+Print style: whether the worn record-sleeve style carries on to the corridor border, folds and the rest of the interface.
+Interface: which palette, and which interface parts take shaders.
+Item icons and interface frame: stay pixel art, or change to fit the painted enemies.
+Corridor walls: textures or a bought modular kit.
+Effects style at full resolution with post-processing.
 One item firing against black — does it feel good? (Atomic readability test.)
 One item on screen — idle-motion vs. cooldown-fill readability collision.
-Walk pacing — can’t be dead time; atmosphere noises, environmental cues, occasional telegraph. Design once the asset style is settled.
+Walk pacing — can’t be dead time; atmosphere noises, environmental cues, occasional telegraph. Design once the look is settled.
 
 
 Asset sources (candidate packs)
 
-- https://clockworkraven.itch.io/raven-fantasy-icons
+- Monster collection (painted): ../dark-corridor-design/monsters/
+- 6000 Fantasy Icons (painted, 256px; armour, weapons, skills, professions, character portraits): ../dark-corridor-design/6000FantasyIcons/
+- https://clockworkraven.itch.io/raven-fantasy-icons (pixel art)
 - https://toffeecraft.itch.io/ui
+- Corridor kits: see docs/plans/full_res_art_palette_clamp_3d_corridor.md
 
 
-End of vibes capture. Ongoing — add to it. The committed-at-the-family-level bits (2D, Godot, dungeon synth) are about as firm as anything here gets; everything else is a current leaning to test.
+End of vibes capture. Ongoing — add to it. The firmest bits are Godot, the 3D corridor and dungeon synth; the look itself is still being explored.

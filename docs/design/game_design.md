@@ -95,10 +95,10 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 
 *Full art direction, palette, tone, VFX, and audio live in the **Art Direction & Audio** doc. This section captures only what the mechanics depend on. Keep it short; depth goes in the other doc.*
 
-- **2D, Godot 4.** Scaling tile-segments form the corridor — split into separate wall / floor / ceiling tiles (mix-and-match), same concentric-scaling model as the original frame-segment description. Enemies are 2D sprites, not billboards. Authored at ~360p pixel scale but rendered at full monitor res (sprites scaled up, not a low-res viewport) to avoid integer-scaling shimmer. *(Supersedes the old "3D corridor + 2D billboarded sprites" line.)*
+- **Godot 4, a 3D corridor.** The corridor is a real 3D scene of modular sections seen from a fixed camera (decision #36). Enemies are flat painted images lit inside it. Everything renders at full monitor resolution. The art style itself is being explored (see the art doc).
 - **Items dominate the screen; the corridor view is mood/feedback.** Whether combat sits in a small framed window or a full-screen scene is open (see UI/Layout) — either way the items are the game, which is what the UI/Layout section is built around.
 - **Color vocabulary is the readability mechanism** (red attack, blue block, green heal, per-effect status colors) — mechanically required to parse a 30-item cascade, not a cosmetic choice. Carried on both player and enemy boards.
-- **Lighting = single flickering point light, hard falloff to black.** Hides art weaknesses and does coherence work across mixed asset sources. Relevant to mechanics only insofar as it sets the dark baseline the cascade punches through.
+- **Lighting = one steady light at the camera, fading to black.** Hides art weaknesses and does coherence work across mixed asset sources. Relevant to mechanics only insofar as it sets the dark baseline the cascade punches through.
 - **Tone in one line:** atmosphere is dread, mechanics are juicy; the cascade punches through the dark. The mechanical consequence is that activations must read against a dark baseline (see UI/Layout and the art doc's cascade-readability section).
 ## Audio — mechanical note only
 
@@ -108,7 +108,7 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 
 **Decision status (open):** Two live approaches — small-game-area + large-UI dungeon-crawler frame (Wizardry / Eye of the Beholder / Bard's Tale family), or a full-screen scene (Topdeck Automat-style) with the character on-screen and items arranged around them. Not attached to the framed window; the full-screen option is genuinely on the table. Specific arrangement TBD pending mockups. (Layout depth and the cramped-feel tradeoff live in the art doc.)
 
-- First-person-style view, monsters approaching from depth (2D, not a 3D scene). Items are the game; the corridor view is mood and feedback.
+- First-person-style view, monsters approaching from depth in the 3D corridor. Items are the game; the corridor view is mood and feedback.
 - Items dominate the screen. Arranged in zones by effect family (weapon / armor / heal / status-applier have distinct regions). Auto-arranged, synergy groups visually clustered (poison items glow together when one fires).
 - Items need to be bigger than feels comfortable. With huge inventory and cascade combat, individual activations get lost if items are tiny. Err toward "busier than seems right" so activations stay legible.
 - Cooldown meters Bazaar-style: filling overlay on each active item. Applies to enemy items too — mutual cooldowns visible on both boards is what creates the visible-race feel.
