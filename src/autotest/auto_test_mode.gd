@@ -121,6 +121,7 @@ func run_once() -> Dictionary:
 
   cm.teardown()
   cm.free()
+  player.dissolve()   # this player lives for one fight only; teardown keeps the player side intact
   return result
 
 

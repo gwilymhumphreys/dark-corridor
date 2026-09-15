@@ -31,6 +31,7 @@ func _spawn(max_hp: float, item_ids: Array, name: String = '') -> Actor:
   a.display_name = name
   for id in item_ids:
     a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  TestCleanup.dissolve_at_reset(a)   # teardown keeps the player side; dissolve it after the test
   return a
 
 

@@ -192,9 +192,11 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
   cap), `1` = it didn't (stuck / timeout) — not who wins (that's `tune`'s job later).
 - **VFX = opaque placeholders only** (no alpha — ask before adding opacity; user
   preference + CLAUDE.md).
-- **Benign at-exit noise:** "N resources still in use" / "ObjectDB leaked" =
-  the static catalog `_defs` caches + GDScript Script resources, NOT a game leak
-  (the real Actor/Item leak was fixed — see `Actor.dissolve()`).
+- **"N resources still in use at exit" means a leaked Actor<->Item cycle** (the Actor, Item,
+  Ticker and definition scripts stay loaded while an instance lives). A player or ally built
+  outside a `RunManager` (a test, the autotest's single fight, the sandbox) must be dissolved by
+  whoever built it, because `CombatManager.teardown()` keeps the player side intact. Tests register
+  such actors with `TestCleanup.dissolve_at_reset(actor)`.
 
 A project memory also banks the status-lifetime + cycle gotchas (auto-surfaced).
 

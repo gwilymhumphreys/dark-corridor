@@ -50,9 +50,9 @@ func _create_player() -> void:
   _poly_player.stream = poly
   if AudioServer.get_bus_index(BUS_EFFECTS) != -1:
     _poly_player.bus = BUS_EFFECTS
-  _poly_player.autoplay = true
+  # Not autoplayed: the first play() starts it (_ensure_poly_playing). A playback started with
+  # nothing to play is never released under the headless dummy audio driver and leaks at exit.
   add_child(_poly_player)
-  _poly_playback = _poly_player.get_stream_playback() as AudioStreamPlaybackPolyphonic
 
 
 func _load_ui_bank() -> void:
@@ -107,10 +107,11 @@ func play_ui_press() -> void:
 func _ensure_poly_playing() -> void:
   if _poly_player == null:
     return
+  # Each play() makes a new playback, so fetch the handle every time the player starts; a handle
+  # kept from before a stop would play nothing. Also fetch it if it is still missing.
   if not _poly_player.playing:
     _poly_player.play()
-  # At boot get_stream_playback() can return null while autoplay is still
-  # starting; re-fetch whenever the handle is missing so SFX aren't silenced.
+    _poly_playback = null
   if _poly_playback == null:
     _poly_playback = _poly_player.get_stream_playback() as AudioStreamPlaybackPolyphonic
 

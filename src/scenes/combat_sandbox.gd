@@ -79,10 +79,18 @@ func _restart() -> void:
   if _cm != null:
     _cm.teardown()
     _cm.queue_free()
+  _player.dissolve()   # the sandbox player lives for one fight; teardown keeps the player side intact
   _player_board.queue_free()
   _enemy_board.queue_free()
   _vfx.queue_free()
   _build_fight()
+
+
+func _exit_tree() -> void:
+  if _player != null:
+    _player.dissolve()
+  _player = null
+  _enemy = null
 
 
 # --- layout lookups the VFX wall reads --------------------------------------

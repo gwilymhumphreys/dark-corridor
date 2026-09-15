@@ -108,8 +108,5 @@ the owner's answers (item icons are interface, damage numbers are effects), the 
 
 ## Known issues
 
-- Every GUT run ends with "6 resources still in use at exit" (Actor, Item, Ticker and definition
-  scripts), probably the Actor and Item link not being broken in combat tests. It predates this work and
-  the owner has not said whether to fix it.
 - The palette clamp sometimes fails to show in a screenshot when other Godot processes run at the same
   time ([palette_clamp.md](../systems/palette_clamp.md#known-issue)). Take screenshots one at a time.

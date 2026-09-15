@@ -41,6 +41,10 @@ overlapping sounds, cheap). Routes to the **Effects** bus.
 - **Graceful no-op** — every `play_*` helper does nothing when its stream is
   missing, so callers (e.g. [UIJuice](ui_juice.md)) work before any audio
   assets exist.
+- **Starts on first play** — the player is not autoplayed; the first real `play`
+  starts it. A playback started with nothing to play is never released under the
+  headless dummy audio driver and is reported as leaked at exit. Each start makes a
+  new playback, so the playback handle is fetched again every time the player starts.
 
 API:
 

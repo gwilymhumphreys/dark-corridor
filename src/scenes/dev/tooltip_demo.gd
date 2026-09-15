@@ -42,6 +42,12 @@ func _process(_delta: float) -> void:
   _cluster.update_target({'item': _item, 'rect': rect, 'side': TooltipCluster.Side.LEFT}, rect.get_center())
 
 
+func _exit_tree() -> void:
+  if _item != null and _item.owner != null:
+    _item.owner.dissolve()   # break the demo actor's Actor<->Item cycle
+  _item = null
+
+
 func _auto_shot() -> void:
   await get_tree().create_timer(1.5).timeout
   await RenderingServer.frame_post_draw

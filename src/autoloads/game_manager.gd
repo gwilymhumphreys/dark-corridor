@@ -114,3 +114,9 @@ func _clear_run() -> void:
     run.teardown()
     run.free()
     run = null
+
+
+## Quitting mid-run (window close, a --shot capture) never goes through reset(), so free the
+## live run here. The run manager is not in the scene tree, so nothing else frees it at exit.
+func _exit_tree() -> void:
+  _clear_run()

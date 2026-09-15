@@ -17,6 +17,9 @@ func after_each() -> void:
   # orphans linger past the test.
   for cm in _made:
     if is_instance_valid(cm):
+      TestCleanup.dissolve_at_reset(cm.player)   # teardown keeps the player side; dissolve it after
+      for ally in cm.allies:
+        TestCleanup.dissolve_at_reset(ally)
       cm.teardown()
       cm.free()
   _made.clear()
@@ -29,12 +32,14 @@ func _spawn(max_hp: float, item_ids: Array) -> Actor:
   var a := Actor.new(max_hp)
   for id in item_ids:
     a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  TestCleanup.dissolve_at_reset(a)
   return a
 
 
 func _manager(p: Actor, enemy_list: Array) -> CombatManager:
   var cm := CombatManager.new(p, enemy_list)
   _made.append(cm)
+  TestCleanup.dissolve_at_reset(p)
   return cm
 
 

@@ -14,6 +14,9 @@ func before_each() -> void:
 func after_each() -> void:
   for e in _encs:
     if is_instance_valid(e):
+      TestCleanup.dissolve_at_reset(e.player)   # teardown keeps the player side; dissolve it after
+      for ally in e._allies:
+        TestCleanup.dissolve_at_reset(ally)
       e.teardown()
       e.free()
   _encs.clear()
@@ -30,6 +33,7 @@ func _default_player(hp: float) -> Actor:
   var a := Actor.new(hp)
   for id in [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]:
     a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  TestCleanup.dissolve_at_reset(a)
   return a
 
 
