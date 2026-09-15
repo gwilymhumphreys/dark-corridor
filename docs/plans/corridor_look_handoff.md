@@ -29,9 +29,10 @@ is the owner's doc: read it for intent, do not edit it.
   world palette clamp with its dither options, plus the corridor light and the camera Environment
   (Godot fog and glow). Looks save to `assets/looks/*.cfg`.
 - **Thirteen example looks** in `assets/looks/`, on the owner's comparison page:
-  https://claude.ai/artifact/DiA9cHCTciHbQNobpeKjsU (private to the owner). It was built from a scratch
-  script, not the repo: real fight screenshots, 1:1 crops, a no-effects view, palette swatches and each
-  look file's settings.
+  https://claude.ai/artifact/DiA9cHCTciHbQNobpeKjsU (private to the owner), saved in
+  `comparisons/corridor_look_plates/`. It was built from a scratch script, not the repo: real fight
+  screenshots, 1:1 crops, a no-effects view, palette swatches and each look file's settings. The earlier
+  page on enemies as lit sprites in the 3D corridor is saved in `comparisons/corridor_enemy_sprites/`.
 - **Dither options** (pattern, size, 2x supersample) for judging dithering in motion. The research on
   dithering in motion (Obra Dinn, surface-stable dithering) is in
   [`palette_clamp.md`](../systems/palette_clamp.md#dithering-in-motion-research); do not repeat it.
@@ -43,7 +44,9 @@ is the owner's doc: read it for intent, do not edit it.
 - **Background wear** ([`background_wear.md`](../systems/background_wear.md)): print wear on the screen
   background, from a record sleeve the owner liked (worn edges, specks, bends). Settings in F2.
   Comparison page (private to the owner): https://claude.ai/artifact/LfmcUdSUhiV2fbXoDkhMC1, saved in
-  `comparisons/background_wear_plates/`.
+  `comparisons/background_wear_plates/`. The owner's verdict: the rubbed edges and creases are good;
+  specks are not needed but can stay if sparse (the current defaults); mottling and faint flecks were
+  tried and rejected. Scratches have not been judged on their own.
 
 ## The owner's direction on the interface (2026-09-15)
 

@@ -29,6 +29,10 @@ text, panels, icons and the corridor are unchanged. Every effect is off by defau
 Sizes and distances are in pattern pixels, so raising the pixel size also scales every mark and the edge
 wear width.
 
+A soft mottled texture and faint elongated flecks were tried in a third, barely lighter colour and
+removed: in screenshots the owner preferred the plain background with the rubbed edges, creases and
+sparse specks.
+
 ## Look files and screenshots
 
 Background wear is saved in a look file's `background` section and reset with the rest of the look
