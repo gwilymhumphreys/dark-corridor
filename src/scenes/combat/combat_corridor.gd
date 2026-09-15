@@ -110,6 +110,31 @@ func enemy_anchor(index: int) -> Vector2:
   return global_position + size * 0.5 + _corridor.unproject(top) - Vector2(0.0, HUD_GAP)
 
 
+## Light each enemy hit by a delivery that landed less than the corridor's `hit_light_duration` before
+## `now` (render time), in the delivery's colour, fading out. Each enemy gets one light, from its
+## newest hit; the newest hits come first. Hits on items or the player's side are not lit. An empty
+## array clears the lights.
+func show_hits(deliveries: Array, now: float) -> void:
+  var duration: float = maxf(_corridor.hit_light_duration, 0.001)
+  var newest: Dictionary = {}   # enemy -> [age, colour]
+  for d: Delivery in deliveries:
+    if not d.landed or d.fizzled or d.target == null or not d.target in _actors:
+      continue
+    var age: float = now - d.impact_time
+    if age < 0.0 or age >= duration:
+      continue
+    if not newest.has(d.target) or age < newest[d.target][0]:
+      newest[d.target] = [age, d.color]
+  var enemies: Array = newest.keys()
+  enemies.sort_custom(func(a: Object, b: Object) -> bool: return newest[a][0] < newest[b][0])
+  var lights: Array = []
+  for enemy: Object in enemies:
+    var sprite: Sprite3D = _enemies[_actors.find(enemy)]
+    var light_position: Vector3 = sprite.position + Vector3(0.0, 0.0, _corridor.hit_light_distance)
+    lights.append([light_position, newest[enemy][1], 1.0 - float(newest[enemy][0]) / duration])
+  _corridor.set_hit_lights(lights)
+
+
 func _arrange() -> void:
   var n: int = _enemies.size()
   for i in n:

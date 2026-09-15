@@ -47,9 +47,28 @@ const GROUP: StringName = &'corridors'
 ## How fast the flicker changes. Higher is faster.
 @export var flicker_speed: float = 8.0
 
+@export_group('Hit lights')
+## A short light at an enemy when a delivery lands on it, in the delivery's colour (so it follows the
+## interface palette). The host passes the lights each frame to `set_hit_lights`. A look setting,
+## kept until the effects pass decides on hit visuals.
+@export var hit_lights_on: bool = true
+## A hit light's `light_energy` at the moment of the hit. It fades to 0 over `hit_light_duration`.
+@export_range(0.0, 16.0) var hit_light_energy: float = 0.25
+## A hit light's `omni_range`, in metres.
+@export var hit_light_range: float = 2.0
+## Seconds of render time a hit light lasts. A landed delivery is only kept for
+## `Balance.DELIVERY_VISUAL_HOLD`, so a longer duration is cut short.
+@export var hit_light_duration: float = 0.3
+## How far in front of the enemy sprite, towards the camera, a hit light sits, in metres.
+@export var hit_light_distance: float = 0.5
+
 @export_group('Enemies')
 ## Enemy image pixels with an alpha below this are not drawn; the rest are drawn fully opaque.
 @export_range(0.0, 1.0) var alpha_scissor_threshold: float = 0.1
+
+## The most hit lights shown at once. Each extra light costs another draw of every object it reaches in
+## the Compatibility renderer.
+const MAX_HIT_LIGHTS: int = 4
 
 var player_z: float = 0.0               ## continuous forward position, in sections
 var velocity: float = 0.0               ## eased sections per second; ramps over ramp_time
@@ -65,6 +84,7 @@ var _flicker_time: float = 0.0
 @onready var _light: OmniLight3D = $SubViewport/Light
 @onready var _section_root: Node3D = $SubViewport/Sections
 @onready var _enemy_root: Node3D = $SubViewport/Enemies
+@onready var _hit_light_root: Node3D = $SubViewport/HitLights
 @onready var _display: Sprite2D = $Display
 
 
@@ -180,6 +200,26 @@ func flicker_level(time: float) -> float:
   # Simplex noise mostly stays within about -0.6..0.6, so it is stretched to reach the full dip.
   var wave: float = clampf(_flicker_noise.get_noise_1d(time * flicker_speed) * 0.8 + 0.5, 0.0, 1.0)
   return 1.0 - flicker_amount * wave
+
+
+## Show hit lights. Each entry of `lights` is [position: Vector3, colour: Color, strength from 0 to 1].
+## The first `MAX_HIT_LIGHTS` entries are shown and the rest ignored. None show while `hit_lights_on`
+## is off. Light nodes are made when first needed and hidden when unused.
+func set_hit_lights(lights: Array) -> void:
+  var count: int = mini(lights.size(), MAX_HIT_LIGHTS) if hit_lights_on else 0
+  while _hit_light_root.get_child_count() < count:
+    var new_light: OmniLight3D = OmniLight3D.new()
+    new_light.light_specular = 0.0
+    _hit_light_root.add_child(new_light)
+  for i in _hit_light_root.get_child_count():
+    var light: OmniLight3D = _hit_light_root.get_child(i) as OmniLight3D
+    light.visible = i < count
+    if i < count:
+      var entry: Array = lights[i]
+      light.position = entry[0]
+      light.light_color = entry[1]
+      light.light_energy = hit_light_energy * float(entry[2])
+      light.omni_range = hit_light_range
 
 
 func _layout() -> void:

@@ -158,6 +158,8 @@ the corridor light, so they come out of the dark on the approach. The container 
   adds `HUD_GAP`. It does not move during the approach. The corridor image is 1:1 with the container,
   so the unprojected point plus the container's centre is the global screen point. Projectiles and
   damage numbers aim at the HUDs (`actor_pos`).
+- **Hit lights:** the view passes the fight's deliveries to `show_hits` each frame and clears them on
+  `release()` ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)).
 - **Images:** a random cut-out sample from `assets/monsters/cut_out/` (`MonsterImages`, its own RNG,
   so seeded runs are unchanged).
 

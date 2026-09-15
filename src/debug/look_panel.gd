@@ -20,6 +20,11 @@ const CORRIDOR_PROPERTIES: Dictionary = {
   'light_attenuation': [0.0, 4.0, 0.01],
   'flicker_amount': [0.0, 1.0, 0.01],
   'flicker_speed': [0.0, 30.0, 0.1],
+  'hit_lights_on': [],
+  'hit_light_energy': [0.0, 16.0, 0.01],
+  'hit_light_range': [0.5, 20.0, 0.1],
+  'hit_light_duration': [0.05, Balance.DELIVERY_VISUAL_HOLD, 0.01],
+  'hit_light_distance': [0.0, 3.0, 0.01],
   'fov': [30.0, 110.0, 1.0],
   'alpha_scissor_threshold': [0.0, 1.0, 0.01],
 }

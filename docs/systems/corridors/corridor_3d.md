@@ -84,6 +84,34 @@ they go; the corridor creates, sizes and places them.
 - No billboard: the camera never rotates, so a sprite facing the camera's axis always faces it.
 - Perspective sizes the sprites with depth, so no scale is set during the approach.
 
+## Hit lights
+
+A short `OmniLight3D` at an enemy when a delivery lands on it, in the delivery's colour, fading to
+nothing. On by default and subtle (owner, 2026-09-15), with its energy near the camera light's. It is a
+look setting, kept until the effects pass decides on hit visuals.
+
+- The colour is the delivery's, which comes from the effect colours in `Colours`, so it follows the
+  [interface palette](../interface_palette.md).
+
+- `CombatCorridor.show_hits(deliveries, render_time)` runs each frame from the combat view. Each enemy
+  hit less than `hit_light_duration` ago gets one light, from its newest hit, placed
+  `hit_light_distance` in front of its sprite. Hits on items and on the player's side are not lit.
+- `set_hit_lights(lights)` shows up to `MAX_HIT_LIGHTS`, reusing hidden light nodes under
+  `SubViewport/HitLights`. The cap exists because each light costs another draw of every object it
+  reaches in the Compatibility renderer.
+- Strength is a function of render time since the hit, so slow motion slows the fade. A landed
+  delivery is dropped after `Balance.DELIVERY_VISUAL_HOLD`, which ends a longer light early.
+- The corridor look shader runs over the lit image, so a world palette snaps a light's colour to the
+  palette.
+
+| Export | Controls |
+|---|---|
+| `hit_lights_on` | Whether hit lights show |
+| `hit_light_energy` | Energy at the moment of the hit |
+| `hit_light_range` | The light's `omni_range` |
+| `hit_light_duration` | Seconds of render time to fade out |
+| `hit_light_distance` | Metres in front of the sprite |
+
 ## Piece sources
 
 `Corridor3D.piece_source` is a `CorridorPieceSource` resource with one method,

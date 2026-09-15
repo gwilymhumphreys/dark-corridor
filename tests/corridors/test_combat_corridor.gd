@@ -83,6 +83,32 @@ func test_enemies_at_one_depth_have_distinct_distances() -> void:
   assert_lt(corridor._enemies[0].position.x, corridor._enemies[2].position.x, 'arranged left to right')
 
 
+func test_hit_lights_show_in_front_of_a_hit_enemy_and_fade_out() -> void:
+  var corridor: CombatCorridor = _host()
+  var enemy: RefCounted = RefCounted.new()
+  corridor.set_enemies([enemy])
+  var corridor_3d: Corridor3D = corridor.corridor()
+  var lights: Node3D = corridor_3d.get_node('SubViewport/HitLights')
+  var hit: Delivery = Delivery.new()
+  hit.target = enemy
+  hit.landed = true
+  hit.impact_time = 1.0
+  hit.color = Color(1.0, 0.0, 0.0)
+  assert_true(corridor_3d.hit_lights_on, 'hit lights are on by default')
+  corridor_3d.hit_lights_on = false
+  corridor.show_hits([hit], 1.0)
+  assert_eq(lights.get_child_count(), 0, 'no hit lights while the setting is off')
+  corridor_3d.hit_lights_on = true
+  corridor.show_hits([hit], 1.0 + corridor_3d.hit_light_duration * 0.5)
+  var light: OmniLight3D = lights.get_child(0) as OmniLight3D
+  assert_true(light.visible, 'a hit enemy is lit')
+  assert_eq(light.light_color, hit.color, 'in the delivery colour')
+  assert_almost_eq(light.light_energy, corridor_3d.hit_light_energy * 0.5, 0.001, 'half faded halfway through')
+  assert_gt(light.position.z, corridor._enemies[0].position.z, 'in front of the sprite')
+  corridor.show_hits([hit], 1.0 + corridor_3d.hit_light_duration)
+  assert_false(light.visible, 'gone once its duration has passed')
+
+
 func test_forced_monster_image_is_used_and_cleared_on_reset() -> void:
   MonsterImages.forced_path = 'res://assets/monsters/cut_out/bone_golem.png'
   var corridor: CombatCorridor = _host()

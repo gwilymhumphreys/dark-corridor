@@ -61,6 +61,7 @@ This validates the cleanest boundary on the map at the cheapest moment.
 ## Open / deferred
 
 - **VFX content + the pixel pipeline** (palette clamp, pixel-snap, banded falloff, per-effect particles) — `art_audio.md` + a content pass.
+- **Hit lights** — a short light at a hit enemy inside the 3D corridor already exists as a look setting ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)); the effects pass keeps, changes or replaces it.
 - **Projectile density tuning** (small/fast tracers for commons vs. crisp arcs for rares) — art doc, when the cascade is real.
 - **The node split** (driver vs. leaf render nodes; all-2D vs. SubViewport) — impl, settled when the UI-layout approach is picked (`art_audio.md` UI-implementation note).
 

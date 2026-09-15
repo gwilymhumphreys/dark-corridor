@@ -57,6 +57,8 @@ func _process(_delta: float) -> void:
   _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
   _position_enemy_huds()  # keep each HUD pinned above its enemy's corridor sprite
   _refresh_player_hp()
+  if _cm != null and _vfx.combat != null and _cm.timekeeper != null:
+    _corridor.show_hits(_cm.deliveries(), _cm.timekeeper.render_time())   # debug hit lights
 
 
 func _refresh_player_hp() -> void:
@@ -179,6 +181,7 @@ func set_gliding(on: bool) -> void:
 ## freeing the view + advancing). Render resources free with the view.
 func release() -> void:
   _vfx.combat = null
+  _corridor.show_hits([], 0.0)
   # Drop the hovered Item ref BEFORE the run frees the CombatManager + its items (the Actor↔Item
   # cycle is broken at dissolve() — the cluster must not retain an Item across teardown).
   if _cluster != null:
