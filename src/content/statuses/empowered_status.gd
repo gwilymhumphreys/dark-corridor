@@ -1,7 +1,7 @@
 class_name EmpoweredStatus
 extends StatusEffect
 ## Empowered (PLACEHOLDER name — owner's to rename) — the Armourer's Mighty Blow buff (docs/design/
-## armourer.md → The empower engine). A CONSUMED COUNTER (like Spores / block — no timer, persists
+## armourer.md → The empower engine). A CONSUMED COUNTER (like Spores / shield — no timer, persists
 ## until spent): `count` is the banked charges, each of which DOUBLES one WEAPON attack. The two hooks
 ## split by path:
 ##   - modify_outgoing (PULL, PURE) — doubles a weapon-typed DAMAGE payload while a charge is banked.

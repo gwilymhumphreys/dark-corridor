@@ -289,7 +289,7 @@ func sim_step() -> void:
 ## statuses tick on the same cadence as actor statuses.
 func _advance_statuses_on(target) -> void:
   var spent: Array[StatusEffect] = []
-  # Iterate a COPY: a PERIODIC tick calls take_damage, which can erase a spent block
+  # Iterate a COPY: a PERIODIC tick calls take_damage, which can erase a spent shield
   # status from `target.statuses` mid-pass (StatusManager.resolve_incoming_damage).
   # Mutating the list being iterated would skip the status after it — so walk a
   # snapshot, apply, and erase expiries afterward.
@@ -486,8 +486,8 @@ func _land(d: Delivery) -> void:
         var dealt: float = d.target.take_damage(d.value, d.flags)
         bus.publish(EventBus.Event.DAMAGE_DEALT, null, d.source_actor, _source_item_of(d))
         if combat_log != null:
-          # `d.value` is the GROSS hit (pre-block); `dealt` is the NET HP lost — log both
-          # (gross = the threat metric, survives a full block; net = what HP actually did).
+          # `d.value` is the GROSS hit (pre-shield); `dealt` is the NET HP lost — log both
+          # (gross = the threat metric, survives a full shield; net = what HP actually did).
           combat_log.on_damage(_delivery_source_name(d), _delivery_source_side(d),
               d.target.display_name, _side_of(d.target), dealt, timekeeper.sim_time, d.value)
     Delivery.Kind.HEAL:
@@ -502,10 +502,10 @@ func _land(d: Delivery) -> void:
       if applied != null:   # an unknown id applies nothing — publish no event for it
         bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id, d.source_actor, _source_item_of(d))
         if combat_log != null:
-          # Shield (block) carries its value; every other status is a count. Use BlockStatus.ID,
+          # Shield carries its value; every other status is a count. Use ShieldStatus.ID,
           # not a literal, so the two stay in step (docs/systems/combat_log.md Cap 2 site 5).
-          if d.status_id == BlockStatus.ID:
-            combat_log.on_block(_delivery_source_name(d), _delivery_source_side(d),
+          if d.status_id == ShieldStatus.ID:
+            combat_log.on_shield(_delivery_source_name(d), _delivery_source_side(d),
                 _target_name(d.target), _target_side(d.target), d.value, timekeeper.sim_time)
           else:
             combat_log.on_status_applied(_delivery_source_name(d), _delivery_source_side(d),

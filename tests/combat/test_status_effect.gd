@@ -49,7 +49,7 @@ func test_reapply_stacks_by_extending_the_timer() -> void:
 
 
 # --- Decay use-status (docs/systems/item_creation_and_decay.md Cap 2) -----------------------
-# Block's twin: a pool of count on an ITEM, drained by the item firing, that removes the item at 0.
+# Shield's twin: a pool of count on an ITEM, drained by the item firing, that removes the item at 0.
 
 ## Records the ctx.remove_item call so the unit test can assert the host item is requested for removal.
 class _RecordingCtx:

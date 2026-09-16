@@ -41,7 +41,7 @@ var _listeners: Dictionary = {}   # Event -> Array[Callable] — the observation
 
 ## Subscribe a Ticker to an event. `data_filter` (non-null) restricts the push to events
 ## whose `data` matches — e.g. STATUS_APPLIED filtered to the 'poison' status id, so "on
-## poison applied" doesn't fire on block. `source_filter` scopes by the source's side
+## poison applied" doesn't fire on shield. `source_filter` scopes by the source's side
 ## relative to the subscriber. `subscriber` (the owning Item, when there is one) is what
 ## the gate check and the side check read.
 func subscribe(event: int, ticker: Ticker, amount: float, data_filter = null,

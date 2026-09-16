@@ -25,7 +25,7 @@ func test_every_potion_has_an_icon() -> void:
 
 
 func test_every_status_has_an_icon() -> void:
-  StatusRegistry.has(BlockStatus.ID)   # builds the registry
+  StatusRegistry.has(ShieldStatus.ID)   # builds the registry
   for id: String in StatusRegistry._creators:
     _assert_icon(StatusRegistry.create(id).icon, 'status %s' % id)
 

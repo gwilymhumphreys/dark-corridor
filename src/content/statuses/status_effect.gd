@@ -46,7 +46,7 @@ func on_apply(target, ctx) -> void:
 
 ## Called at every NATURAL removal: timed expiry (the Combat manager's status pass),
 ## consumed-to-zero (StatusManager.consume), and spent-removal after a damage pass
-## (an emptied block pool). NOT called at combat teardown — the fight ending is a
+## (an emptied shield pool). NOT called at combat teardown — the fight ending is a
 ## clear, not an expiry (an on-expire effect must not fire into a finished fight).
 func on_expire(target, ctx) -> void:
   pass
@@ -97,7 +97,7 @@ func modify_incoming(amount: float, target, ctx) -> float:
   return amount
 
 
-## Absorb from an incoming hit, returning the unabsorbed remainder (Block overrides; mutates pool).
+## Absorb from an incoming hit, returning the unabsorbed remainder (Shield overrides; mutates pool).
 func absorb(amount: float, incoming_flags: int, target, ctx) -> float:
   return amount
 
@@ -127,6 +127,6 @@ func consume(amount: float) -> float:
 
 
 ## True when this status should be removed after the incoming-damage pass — an emptied absorb
-## pool (Block). Time/stack expiry is handled by on_step / consume, not here.
+## pool (Shield). Time/stack expiry is handled by on_step / consume, not here.
 func is_spent() -> bool:
   return false

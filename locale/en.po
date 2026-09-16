@@ -292,8 +292,8 @@ msgid "Targets an enemy item rather than the enemy."
 msgstr "Targets an enemy item rather than the enemy."
 
 #: src/content/keywords/keyword_catalog.gd
-msgid "Cannot be soaked by Block."
-msgstr "Cannot be soaked by Block."
+msgid "Cannot be soaked by Shield."
+msgstr "Cannot be soaked by Shield."
 
 #: src/content/keywords/keyword_catalog.gd
 msgid "Charges faster when its condition happens."
@@ -335,14 +335,6 @@ msgstr "Blind"
 msgid "Attacks miss while it lasts."
 msgstr "Attacks miss while it lasts."
 
-#: src/content/statuses/block_status.gd
-msgid "Block"
-msgstr "Block"
-
-#: src/content/statuses/block_status.gd
-msgid "Absorbs incoming damage, then wears off."
-msgstr "Absorbs incoming damage, then wears off."
-
 #: src/content/statuses/decay_status.gd
 msgid "Decay"
 msgstr "Decay"
@@ -366,6 +358,14 @@ msgstr "Poison"
 #: src/content/statuses/poison_status.gd
 msgid "Deals damage over time, losing a stack each tick."
 msgstr "Deals damage over time, losing a stack each tick."
+
+#: src/content/statuses/shield_status.gd
+msgid "Shield"
+msgstr "Shield"
+
+#: src/content/statuses/shield_status.gd
+msgid "Absorbs incoming damage, then wears off."
+msgstr "Absorbs incoming damage, then wears off."
 
 #: src/content/statuses/silence_status.gd
 msgid "Silence"
@@ -500,8 +500,8 @@ msgid "{0}  {1} → {2}  +{3}"
 msgstr "{0}  {1} → {2}  +{3}"
 
 #: src/scenes/screens/combat_summary.gd
-msgid "{0}  {1} → {2}  +{3} block"
-msgstr "{0}  {1} → {2}  +{3} block"
+msgid "{0}  {1} → {2}  +{3} shield"
+msgstr "{0}  {1} → {2}  +{3} shield"
 
 #: src/scenes/screens/combat_summary.gd
 msgid "{0}  threw {1}"

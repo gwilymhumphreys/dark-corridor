@@ -1,7 +1,7 @@
 class_name VulnerableStatus
 extends TimedStatus
 ## Vulnerable — the incoming-damage amplifier (#6): while it sits on a holder, damage TO it is
-## scaled up in the amplifier stage, before block soaks the amplified amount. Timed; duration
+## scaled up in the amplifier stage, before shield soaks the amplified amount. Timed; duration
 ## rides the application.
 
 const ID := 'vulnerable'

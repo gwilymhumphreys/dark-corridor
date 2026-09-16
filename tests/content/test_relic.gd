@@ -16,7 +16,7 @@ func after_each() -> void:
 func test_catalog_builds_the_combat_start_relic() -> void:
   var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
   assert_eq(d.kind, RelicDef.Kind.COMBAT_START_STATUS)
-  assert_eq(d.status_id, 'block', 'Stone Ward grants block')
+  assert_eq(d.status_id, 'shield', 'Stone Ward grants shield')
   assert_gt(d.status_count, 0.0, 'with a positive amount')
   assert_eq(d.name_key, 'Stone Ward')
 
@@ -33,8 +33,8 @@ func test_applying_a_combat_start_relic_grants_the_status() -> void:
   var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
   var player := Actor.new(100.0)
   StatusManager.apply(player, d.status_id, d.status_count, d.status_duration)
-  # Block absorbs incoming damage before HP — so the relic block is live.
+  # Shield absorbs incoming damage before HP — so the relic shield is live.
   player.take_damage(d.status_count - 1.0)
-  assert_eq(player.hp, 100.0, 'relic block absorbed the hit; HP untouched')
+  assert_eq(player.hp, 100.0, 'relic shield absorbed the hit; HP untouched')
   player.take_damage(2.0)
-  assert_almost_eq(player.hp, 99.0, 0.0001, 'damage past the block pool reaches HP')
+  assert_almost_eq(player.hp, 99.0, 0.0001, 'damage past the shield pool reaches HP')

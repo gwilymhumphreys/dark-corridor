@@ -7,7 +7,7 @@ extends StatusEffect
 ## holder's item tempo while the TOTAL stays fixed. Not time-driven (no ticker) and not a pool absorb:
 ## drained by the holder FIRING — the actor-level twin of Decay's on_holder_fired (which drains on the
 ## item it sits on). Carries the applying flags, so an applier can make it UNBLOCKABLE (Bone Spear
-## does — the holder's own block then can't soak the wound; the per-effect lever, #5). Reapply STACKS.
+## does — the holder's own shield then can't soak the wound; the per-effect lever, #5). Reapply STACKS.
 
 const ID := 'bleed'
 
@@ -22,7 +22,7 @@ func _init() -> void:
 
 ## One of the holder's items just fired: bite the holder for the current stack count, then lose a
 ## stack; return true when drained (the Combat manager removes it). Passes `flags`, so an unblockable
-## bleed bypasses the holder's own block per bite (#5). Bites on ANY fire — it ignores the firing
+## bleed bypasses the holder's own shield per bite (#5). Bites on ANY fire — it ignores the firing
 ## `item` (unlike the weapon-scoped empower). Actors only — items have no HP (a bleed authored onto an
 ## item ticks down harmlessly, cf. PeriodicStatus).
 func on_owner_item_fired(actor, _item, _ctx) -> bool:

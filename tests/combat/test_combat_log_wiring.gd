@@ -1,7 +1,7 @@
 extends GutTest
 ## CombatManager → CombatLog wiring (Step 2 of docs/plans/combat_log.md): the manager
 ## direct-writes the optional combat_log at each mutation site — fire, direct damage,
-## DoT damage, heal, shield (block), other statuses, and throws — side-aware and with
+## DoT damage, heal, shield, other statuses, and throws — side-aware and with
 ## timestamps. Drives real fights with a log attached and asserts what it captured.
 
 
@@ -59,8 +59,8 @@ func _status_of(side: int, log: CombatLog) -> Dictionary:
 
 # --- the six sites + throw, end-to-end --------------------------------------
 
-func test_a_full_fight_logs_fires_damage_block_and_dot() -> void:
-  # Player: Rusted Blade (direct damage), Iron Guard (block), Venom Fang (poison DoT).
+func test_a_full_fight_logs_fires_damage_shield_and_dot() -> void:
+  # Player: Rusted Blade (direct damage), Iron Guard (shield), Venom Fang (poison DoT).
   # Enemy: Claw (direct damage to the player).
   var p := _spawn(Balance.PLAYER_START_HP,
       [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER], 'Wanderer')
@@ -78,8 +78,8 @@ func test_a_full_fight_logs_fires_damage_block_and_dot() -> void:
   # Direct damage (site 2) — the blade's hits land on the enemy.
   assert_gt(float(player_rows['Rusted Blade']['damage']), 0.0, 'direct damage logged to the blade')
 
-  # Shield (site 5) — Iron Guard's block, by BlockStatus.ID (not a literal).
-  assert_gt(float(player_rows['Iron Guard']['block']), 0.0, 'block logged to the guard')
+  # Shield (site 5) — Iron Guard's shield, by ShieldStatus.ID (not a literal).
+  assert_gt(float(player_rows['Iron Guard']['shield']), 0.0, 'shield logged to the guard')
 
   # DoT damage (site 3) — poison ticks are bucketed by the STATUS, not credited to the applier
   # (merged appliers make per-item DoT attribution a fiction). Venom Fang only APPLIES poison, so
@@ -93,7 +93,7 @@ func test_a_full_fight_logs_fires_damage_block_and_dot() -> void:
 
   # Totals split by side: the player dealt damage; the player also took the enemy's Claw.
   assert_gt(float(log.total_damage_dealt[PLAYER]), 0.0, 'player-side dealt total')
-  assert_gt(float(log.total_block[PLAYER]), 0.0, 'player-side block total')
+  assert_gt(float(log.total_shield[PLAYER]), 0.0, 'player-side shield total')
 
 
 func test_enemy_damage_is_logged_on_the_enemy_side() -> void:

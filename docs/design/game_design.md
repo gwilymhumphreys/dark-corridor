@@ -21,7 +21,7 @@ A short, draft-heavy auto-combat dungeon descent: walk forward through a single 
 - **Loot Loop** — short total runtime, single prestige layer. We take the brevity but lean away from its incremental/anti-grind ethos and toward a roguelike spine. Final boss = real ending.
 - **Bazaar** — item activation model (passives / triggers / actives), cooldown visualization.
 - **Backpack Battles** — considered for inventory model, rejected: spatial tetris puzzle is friction we don't want; slots are uniform here.
-- **Slay the Spire** — one influence among several. The parts we draw on: elites and bosses as distinct problems that take thoughtful drafting ahead of them to solve, the attack / block / scaling high-level item categories, and limited healing. The parts we don't take: branching routes, deck dilution, card removal. Used both as inspiration and as a contrast that keeps the design honest about what it trades away.
+- **Slay the Spire** — one influence among several. The parts we draw on: elites and bosses as distinct problems that take thoughtful drafting ahead of them to solve, the attack / shield / scaling high-level item categories, and limited healing. The parts we don't take: branching routes, deck dilution, card removal. Used both as inspiration and as a contrast that keeps the design honest about what it trades away.
 -----
 
 ## Core loop
@@ -97,7 +97,7 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 
 - **Godot 4, a 3D corridor.** The corridor is a real 3D scene of modular sections seen from a fixed camera (decision #36). Enemies are flat painted images lit inside it. Everything renders at full monitor resolution. The art style itself is being explored (see the art doc).
 - **Items dominate the screen; the corridor view is mood/feedback.** Whether combat sits in a small framed window or a full-screen scene is open (see UI/Layout) — either way the items are the game, which is what the UI/Layout section is built around.
-- **Color vocabulary is the readability mechanism** (red attack, blue block, green heal, per-effect status colors) — mechanically required to parse a 30-item cascade, not a cosmetic choice. Carried on both player and enemy boards.
+- **Color vocabulary is the readability mechanism** (red attack, blue shield, green heal, per-effect status colors) — mechanically required to parse a 30-item cascade, not a cosmetic choice. Carried on both player and enemy boards.
 - **Lighting = one steady light at the camera, fading to black.** Hides art weaknesses and does coherence work across mixed asset sources. Relevant to mechanics only insofar as it sets the dark baseline the cascade punches through.
 - **Tone in one line:** atmosphere is dread, mechanics are juicy; the cascade punches through the dark. The mechanical consequence is that activations must read against a dark baseline (see UI/Layout and the art doc's cascade-readability section).
 ## Audio — mechanical note only
@@ -113,7 +113,7 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 - Items need to be bigger than feels comfortable. With huge inventory and cascade combat, individual activations get lost if items are tiny. Err toward "busier than seems right" so activations stay legible.
 - Cooldown meters Bazaar-style: filling overlay on each active item. Applies to enemy items too — mutual cooldowns visible on both boards is what creates the visible-race feel.
 - **Effect value shown in a color-coded panel** at the top of each item, extruding over the edge. The panel's background color encodes the effect family; the number is the value (e.g. a red panel with the damage value for a weapon). Per-effect colors as before — poison, burn, freeze etc. each have their own color, defined per-effect, not a single shared "status" color. Usually one panel; rarely an item shows more than one (a rare combining multiple effects).
-  - Effect-family colors: red = attack / damage, blue = block, green = heal, per-effect colors for status applicators.
+  - Effect-family colors: red = attack / damage, blue = shield, green = heal, per-effect colors for status applicators.
   - Status icons (when statuses are applied to actors/items) use the same per-effect color as the panel of the item that applies them.
 - **Borders encode rarity:** bronze / silver / gold for common / uncommon / rare.
 - Color is the readability mechanism that scales. Can't parse 30 item names in 15 seconds. Can absolutely parse "lots of red on my side, mostly blue on theirs — they're tanking, I'm bursting."
@@ -167,7 +167,7 @@ Known categories so far:
 
 - **Every item is active** — a timer-based tick effect (a cooldown that fires). Subtypes:
   - Weapon (damage) — single-target or AOE tag
-  - Armor (block)
+  - Armor (shield)
   - Heal
   - Apply status (regen / poison / burn / freeze / etc) — single-target or AOE where applicable
 - **Triggers layer on top, not a separate kind** — "when X, do Y" pushes an item's cooldown toward firing; the item still ticks normally, the trigger accelerates / supplements it (the charges model).
@@ -180,7 +180,7 @@ Three tiers. Color-coded (bronze / silver / gold borders). Drop rate weighted by
 
 Item numerical power is roughly flat across tiers. Rarity varies by complexity, specificity, and build-defining-ness:
 
-- **Common:** simple, single-purpose, broadly useful (damage tick, basic block). Workhorses. Trigger-fuel for the cascade.
+- **Common:** simple, single-purpose, broadly useful (damage tick, basic shield). Workhorses. Trigger-fuel for the cascade.
 - **Uncommon:** conditional or interactive (triggers on poison applied, scales with item count, requires another item type). Connection-makers.
 - **Rare:** build-anchors. The item that turns "I have poison stuff" into "poison is my strategy." Each rare is a build-completion event.
 Why not Bazaar-style scaling rarity: if rarity meant bigger numbers, low-rarity items would become deadweight late, players would auto-take any high-rarity item regardless of synergy (rarity > fit), and the late game would collapse into the Vampire Crawlers failure mode. Power-by-complexity preserves the cascade identity — late-game rares amplify the early commons rather than replacing them.
@@ -189,7 +189,7 @@ Items that are purely "+X stronger version of common item Y" don't exist as item
 
 ### Synergies
 
-Cross-item interactions are the core decision mechanism. Example: *when you apply poison, gain 1 block. Your poison is applied twice.*
+Cross-item interactions are the core decision mechanism. Example: *when you apply poison, gain 1 shield. Your poison is applied twice.*
 
 This makes the draft decision "does this connect to what I have" rather than "is this strong" — the decision density carrier.
 
@@ -216,12 +216,12 @@ Stack independently. Two of the same item = effect fires twice. Reinforces the c
 
 - Launch pool goal: ~100 items was the *single-shared-pool* figure; under **per-character item pools** (decision #27) the target is a small, coherent pool **per character** — smaller individually, with the total across the roster as the content multiplier to watch. Refine via prototype.
 - Run end-state: ~20-25 items in inventory by final boss. (Capped by draft count — you take at most one item per draft, fewer if you skip some for gold (decision #33), and not every encounter is a draft.)
-### Progression arc — damage, block, scaling
+### Progression arc — damage, shield, scaling
 
-Every build needs three things across a run: damage, block, and scaling. They aren't sequential phases — you want all three working most of the time. There's only a soft, natural tilt over the course of a run:
+Every build needs three things across a run: damage, shield, and scaling. They aren't sequential phases — you want all three working most of the time. There's only a soft, natural tilt over the course of a run:
 
 - **Damage** matters most early, when the engine isn't running yet and raw output is what gets you through fights.
-- **Block** matters throughout — it buys time while the engine ramps and keeps mattering wherever fights last long enough for incoming damage to bite.
+- **Shield** matters throughout — it buys time while the engine ramps and keeps mattering wherever fights last long enough for incoming damage to bite.
 - **Scaling** (multipliers and cascade enablers) is worth less early because there's nothing built to multiply yet, so it naturally rises in value as the engine grows.
 The tilt is a consequence of the engine's state, not a rule that early items expire.
 
@@ -231,7 +231,7 @@ Mechanism — how the tilt gets created:
 - Escalation, not replacement. Early damage items must double as trigger-fuel the later cascade keys off. A "deal 3 on tick" item becomes the heartbeat that enchants later turn into an avalanche. One pool, early items legible/immediate, late items multiplicative on what early items do. Don't design disjoint early/late pools.
 - Item scaling-profile tags as seasoning, not the primary mechanism.
 - Prototype failure test: late in a run, can you trace an early pickup still meaningfully feeding the cascade? If yes, the arc works. If it's doing nothing, you built replacement (the bad half of Spire without the mechanism that justified it).
-- Block-specific failure mode: if mid-run fights resolve fast enough that block never matters, block items become trap picks and the arc collapses to damage→scaling. Mid-run enemy design has to demand block, not just permit it. Tuning constraint, not content.
+- Shield-specific failure mode: if mid-run fights resolve fast enough that shield never matters, shield items become trap picks and the arc collapses to damage→scaling. Mid-run enemy design has to demand shield, not just permit it. Tuning constraint, not content.
 -----
 
 ## Status System (shared primitive)
@@ -278,7 +278,7 @@ Wanting a status "enemies get often, players rarely" (e.g. strength) is a design
 
 Specific stat-statuses (strength / weak / vulnerable and kin) are **content**, authored as GD `StatusEffect` classes (decision #23 + #29) alongside items and enemies — *not* one hardcoded global rule (Weak / Vulnerable are built). Each declares its own behaviour: **flat or percentage** magnitude, **instant or timed**, and per-stack growth that either **adds magnitude** or **extends duration**. The engine provides the shapes + the two damage-modifier seams (an outgoing scale read at item fire time, the reserved incoming amplifier slot); the specific statuses + numbers come with the content, and the seams get wired when the first one is authored.
 
-The standing constraint is **authoring guidance**, not a global rule: a *flat* damage modifier applied **per fire** interacts badly with the high-trigger cascade — a +N that hits every trigger from a fast item applies ~15×/fight, from a slow item ~3×, making fast items strictly dominant. So **per-fire damage scaling should be percentage (or charge-limited)**; flat is fine for effects not applied per-fire (timed states, block-like pools, one-shot amplifiers). The author picks per status with this in mind.
+The standing constraint is **authoring guidance**, not a global rule: a *flat* damage modifier applied **per fire** interacts badly with the high-trigger cascade — a +N that hits every trigger from a fast item applies ~15×/fight, from a slow item ~3×, making fast items strictly dominant. So **per-fire damage scaling should be percentage (or charge-limited)**; flat is fine for effects not applied per-fire (timed states, shield-like pools, one-shot amplifiers). The author picks per status with this in mind.
 
 ### Shared status baseline (per character)
 
@@ -304,7 +304,7 @@ Persistent equipped effects, distinct from inventory items in presentation. A su
 Tactical consumable reserve, consumed on use. Potions are the canonical consumable. *(Subclass of Draftable — see Items.)* Adapted to auto-combat via slow-mo-on-hover.
 
 - **3 potion slots.** Found primarily in drafts. Consumed on use.
-- **Use during combat.** Click to throw. Effects are tactical: heal, instant block, freeze enemies, instant damage, apply status to all, trigger-all-items-once, etc.
+- **Use during combat.** Click to throw. Effects are tactical: heal, instant shield, freeze enemies, instant damage, apply status to all, trigger-all-items-once, etc.
 - **Slow-mo-on-hover.** When the player hovers over a potion during combat, the game slows to ~5% speed and the tooltip shows. Gives deliberation time without breaking the auto-combat thesis. Agency is opt-in.
 - **Partly answers the boss-input question.** Players naturally hoard potions for bosses; slow-mo gives bosses the deliberation space pure auto-combat lacks.
 ### Draft structure
@@ -343,11 +343,11 @@ Why this exists: a single linear corridor structurally can't give Spire's branch
 
 Elites are one encounter type, not a separate system. When the choice layer offers a path leading to an elite:
 
-- Demand is telegraphed (e.g. "high single-target burst," "block-heavy survival," "applies poison — bring cleanse"). Decision is informed.
+- Demand is telegraphed (e.g. "high single-target burst," "shield-heavy survival," "applies poison — bring cleanse"). Decision is informed.
 - Reward asymmetry: engaging an elite pays meaningfully better than a regular fight (relic, guaranteed rare item, extra enchant). Skipping (taking a different choice-layer option) is safe but gives less.
 - Real decision only if preparation is costly. If the player's draft economy gives them enough flexibility to be ready for every elite they see, elites become free rewards — no decision. The draft has to be tight enough that preparing for an elite means not preparing for something else. Tuning constraint.
 - **1-5 elite paths offered per act.** Player engages as many as they choose via the choice layer; skipping costs the elite reward but is always available.
-Why this matters: elites are where the damage-block-scaling triad becomes a live decision instead of a passive arc. The progression arc is the shape; elites are where the player commits to a position on that arc.
+Why this matters: elites are where the damage-shield-scaling triad becomes a live decision instead of a passive arc. The progression arc is the shape; elites are where the player commits to a position on that arc.
 
 ### Telegraphing
 
@@ -406,7 +406,7 @@ Meta-tree pacing must match the death curve — early runs end fast and unlock o
 1. **Onboarding.** With status engine, enchants, potions, relics, characters, elites, choice layer, AOE/single-target distinction, color vocabulary, slow-mo, cooldowns — a player parachuted into draft 1 is overwhelmed. Tutorial? Drip-feed unlocks? Genre literacy assumed? Real design question, currently absent.
 1. **Relics as items.** Open whether to collapse mechanically. Probably same underlying type with different presentation. Resolve in prototype.
 1. **Starting state — TODO.** What does the player start a run with beyond character (portrait + starting relic + 2-3 starting items)? Starting HP value? Starting potions (probably 0)? Other resources? Not yet specified.
-1. **Block vs. damage-over-time — resolved.** Whether an effect bypasses block is a **per-effect `unblockable` flag** (varies by DoT — not all DoT bypasses). Specifics are per-effect content.
+1. **Shield vs. damage-over-time — resolved.** Whether an effect bypasses shield is a **per-effect `unblockable` flag** (varies by DoT — not all DoT bypasses). Specifics are per-effect content.
 -----
 
 ## Pitfalls / self-notes

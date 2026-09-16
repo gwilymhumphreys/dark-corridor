@@ -87,10 +87,10 @@ size_flags_horizontal = 3
 text = "Damage"
 horizontal_alignment = 2
 
-[node name="HBlock" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]
+[node name="HShield" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Block"
+text = "Shield"
 horizontal_alignment = 2
 
 [node name="HHealing" type="Label" parent="Panel/Margin/Body/Columns/Report/RowsScroll/Rows"]

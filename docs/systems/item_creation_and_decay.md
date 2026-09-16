@@ -32,7 +32,7 @@ spending HP. Two seams the spine lacked:
 2. **Item decay / limited use** — remove an item after a fixed number of activations.
 
 **What needs NO engine work (author as content whenever — don't over-build):** the base **attack /
-block commons** (a `DAMAGE` effect; self-block) — the built item subtypes; the chunk's **own
+shield commons** (a `DAMAGE` effect; self-shield) — the built item subtypes; the chunk's **own
 behaviour** — a `DAMAGE` effect on a cooldown is already the built weapon subtype. Only **creating**
 the chunk and **expiring** it were new.
 
@@ -82,7 +82,7 @@ area must handle an added slot, and a created item wants an arrival tell. See
 
 > **Realized:** a `DecayStatus` (`StatusEffect` subclass, id `'decay'`) + one `StatusRegistry` line.
 > State = `count` (activations remaining); not time-driven (no ticker), not damage-consumed (not
-> block's `absorb`) — **drained by the holder item's fire**. Reapply **stacks** (the base default =
+> shield's `absorb`) — **drained by the holder item's fire**. Reapply **stacks** (the base default =
 > "top up"). `ItemDef.starting_uses: int = 0` is the authoring seed: `_seed_item_uses` applies Decay
 > with `count = starting_uses` at item birth (fight start, or `add_item` for a created chunk); 0 =
 > unlimited. **Drain in the fire pipeline:** `CombatManager._fire_item` calls `_drain_uses(it)` AFTER
@@ -101,15 +101,15 @@ Name **Decay** (the destroy-on-use status; reads on flesh *rots away* and non-fl
 flavour rides the *item* name, not the keyword).
 
 A sibling mechanic, **ammo**, would be a **separate** status (same count-drained-by-firing shape, but
-empties to **silence + reload** rather than **destroy**). Decay, ammo, and block form a family
+empties to **silence + reload** rather than **destroy**). Decay, ammo, and shield form a family
 (count-pools drained by an event, differing in drain-event and what-they-remove) — they share the
 pattern, not the status. One destroy-on-use status (Decay) is reused across characters.
 
-**The model — block's twin** (the structural parallel that made this small):
+**The model — shield's twin** (the structural parallel that made this small):
 
 | | lives on | drained by | when empty |
 |---|---|---|---|
-| **block** (built) | an Actor | incoming damage (`absorb`) | removes itself |
+| **shield** (built) | an Actor | incoming damage (`absorb`) | removes itself |
 | **decay** (this) | an Item | that item firing (`on_holder_fired`) | removes **the item** |
 
 The item-targeted half of the status system's dual Actor/Item targeting ([`status_manager.md`](status_manager.md))
@@ -128,7 +128,7 @@ the current step's cooldown pass, so it first ticks next step).
 
 **Presentation (flag — lags the engine):** the item panel / cooldown ring should show activations
 remaining ([`tooltips.md`](tooltips.md)); removal wants a dissolve tell. Decay's activations-left
-renders like block's count. Not yet drawn.
+renders like shield's count. Not yet drawn.
 
 ---
 
@@ -222,7 +222,7 @@ The chunk-of-flesh `ItemDef` (a `DAMAGE` effect, cooldown, `starting_uses`); the
 - **Activations-left display** + arrival / dissolve tells — presentation, not yet drawn.
 - **Autotest draft-strategy classification (when CREATE_ITEM content is authored):** the draft
   strategy's family classifier (`AutoTestDriver._family_of`) keys off an item's *primary* effect
-  (`effects[0]`) → `damage` / `block` / `poison` / `heal` / `status` / `other`. A `CREATE_ITEM`-*primary*
+  (`effects[0]`) → `damage` / `shield` / `poison` / `heal` / `status` / `other`. A `CREATE_ITEM`-*primary*
   item falls to `'other'`, so the family strategies won't prefer it — **parallel to SUMMON's current
   gap** (it falls to `'other'` too). A damage-attack-*with*-a-create-rider is unaffected (its primary
   effect is `DAMAGE`). When create-primary content exists, give `CREATE_ITEM` (and SUMMON) a family in

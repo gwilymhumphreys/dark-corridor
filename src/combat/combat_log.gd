@@ -28,7 +28,7 @@ const SOURCELESS: String = 'Poison'
 # The ordered event timeline (append order = sim order) — the post-fight event log.
 # Each entry: { t: float, type: String, source: String, source_side: int,
 #   target: String, amount: float, data: String }. `type` in fire / damage / heal /
-#   block / status / throw; `data` holds the status id or thrown consumable id.
+#   shield / status / throw; `data` holds the status id or thrown consumable id.
 var events: Array = []
 
 # Per-source-item tallies, side-aware: each is Dictionary[int side -> Dictionary[String
@@ -36,9 +36,9 @@ var events: Array = []
 var fires_by_item: Dictionary = {}      # name_key -> fire count
 var damage_by_item: Dictionary = {}     # name_key -> total NET damage dealt (effective HP removed)
 var gross_by_item: Dictionary = {}      # name_key -> total GROSS damage dealt (pre-mitigation, the
-                                        # threat/punch metric — meaningful even when block ate it all)
+                                        # threat/punch metric — meaningful even when shield ate it all)
 var healing_by_item: Dictionary = {}    # name_key -> total healing done
-var block_by_item: Dictionary = {}      # name_key -> total block (shield) applied
+var shield_by_item: Dictionary = {}     # name_key -> total shield applied
 var statuses_by_item: Dictionary = {}   # name_key -> count of OTHER statuses applied
 
 # Per-STATUS damage, side-aware (side -> status name_key -> total NET damage that status dealt).
@@ -55,7 +55,7 @@ var total_damage_dealt: Dictionary = {}   # side -> NET damage this side dealt
 var total_damage_taken: Dictionary = {}   # side -> NET damage this side received (HP lost)
 var total_gross: Dictionary = {}          # side -> GROSS damage this side dealt (pre-mitigation)
 var total_healing: Dictionary = {}
-var total_block: Dictionary = {}
+var total_shield: Dictionary = {}
 
 
 # --- write methods (manager-called; each takes resolved name_keys + side + sim_time) ---
@@ -69,9 +69,9 @@ func on_item_fired(source_name: String, source_side: int, t: float) -> void:
 ## Damage landed on a target. `source_name` is the dealing item's name_key (SOURCELESS
 ## when none — a source-less DoT); `source_side` the dealer's side, `target_side` the
 ## target's. `net` is the EFFECTIVE HP lost (Actor.take_damage's return); `raw` is the
-## GROSS hit before the target's mitigation (block) — omit (or pass < 0) and it defaults
-## to `net`. GROSS is recorded even when block absorbs the whole hit (net 0), so the
-## incoming-pressure tally stays meaningful against a block-heavy build; NET only accrues
+## GROSS hit before the target's mitigation (shield) — omit (or pass < 0) and it defaults
+## to `net`. GROSS is recorded even when shield absorbs the whole hit (net 0), so the
+## incoming-pressure tally stays meaningful against a shield-heavy build; NET only accrues
 ## when HP actually moved.
 func on_damage(source_name: String, source_side: int, target_name: String, target_side: int, net: float, t: float, raw: float = -1.0) -> void:
   if raw < 0.0:
@@ -92,7 +92,7 @@ func on_damage(source_name: String, source_side: int, target_name: String, targe
 ## dealer's side (the status source's side), `target_side` the holder's; `net` is the effective HP
 ## lost; `status_id` rides the event `data`. Still folds into the side TOTALS (so total damage +
 ## incoming pressure stay complete) and the timeline — only the per-item breakdown becomes
-## per-status. `raw` defaults to net (a tick has no pre-block value to hand).
+## per-status. `raw` defaults to net (a tick has no pre-shield value to hand).
 func on_status_damage(status_name: String, source_side: int, target_name: String, target_side: int, net: float, t: float, status_id: String, raw: float = -1.0) -> void:
   if raw < 0.0:
     raw = net
@@ -115,16 +115,16 @@ func on_heal(source_name: String, source_side: int, target_name: String, _target
   _record(t, 'heal', source_name, source_side, target_name, amount, '')
 
 
-## Shield (block) applied — an APPLY_STATUS land whose status id is BlockStatus.ID.
-func on_block(source_name: String, source_side: int, target_name: String, _target_side: int, amount: float, t: float) -> void:
+## Shield applied — an APPLY_STATUS land whose status id is ShieldStatus.ID.
+func on_shield(source_name: String, source_side: int, target_name: String, _target_side: int, amount: float, t: float) -> void:
   if amount <= 0.0:
     return
-  _bump(block_by_item, source_side, source_name, amount)
-  total_block[source_side] = float(total_block.get(source_side, 0.0)) + amount
-  _record(t, 'block', source_name, source_side, target_name, amount, '')
+  _bump(shield_by_item, source_side, source_name, amount)
+  total_shield[source_side] = float(total_shield.get(source_side, 0.0)) + amount
+  _record(t, 'shield', source_name, source_side, target_name, amount, '')
 
 
-## Any OTHER status applied (not block — that is on_block). `status_id` rides `data`.
+## Any OTHER status applied (not shield — that is on_shield). `status_id` rides `data`.
 func on_status_applied(source_name: String, source_side: int, target_name: String, _target_side: int, status_id: String, t: float) -> void:
   _bump(statuses_by_item, source_side, source_name, 1.0)
   _record(t, 'status', source_name, source_side, target_name, 0.0, status_id)
@@ -138,12 +138,12 @@ func on_throw(consumable_id: String, thrower_side: int, t: float) -> void:
 
 # --- read surface -----------------------------------------------------------
 
-## One side's per-item rows, flattened — Item · Fires · Damage · Block · Healing ·
+## One side's per-item rows, flattened — Item · Fires · Damage · Shield · Healing ·
 ## Statuses — keyed by name_key (the union of every item that did anything on that side).
 ## Views tr(name_key) at draw. Totals are read off the total_* dicts.
 func summary(side: int) -> Array:
   var names: Dictionary = {}
-  for tally in [fires_by_item, damage_by_item, gross_by_item, block_by_item, healing_by_item, statuses_by_item]:
+  for tally in [fires_by_item, damage_by_item, gross_by_item, shield_by_item, healing_by_item, statuses_by_item]:
     for name in tally.get(side, {}).keys():
       names[name] = true
   var rows: Array = []
@@ -153,7 +153,7 @@ func summary(side: int) -> Array:
       'fires': int(_value(fires_by_item, side, name)),
       'damage': _value(damage_by_item, side, name),
       'gross': _value(gross_by_item, side, name),
-      'block': _value(block_by_item, side, name),
+      'shield': _value(shield_by_item, side, name),
       'healing': _value(healing_by_item, side, name),
       'statuses': int(_value(statuses_by_item, side, name)),
     })

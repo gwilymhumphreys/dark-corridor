@@ -1,7 +1,7 @@
 class_name ItemCatalog
 ## The item definitions (decision #23 — authored in GDScript, keyed by Id).
-## Phase 1 pool: a weapon (single-target damage, travels), an armor (self block),
-## a poison dagger (applies poison), an avenger (ticks self-block AND triggers on
+## Phase 1 pool: a weapon (single-target damage, travels), an armor (self shield),
+## a poison dagger (applies poison), an avenger (ticks self-shield AND triggers on
 ## poison-applied), plus an enemy claw (the enemy pool stays separate by design —
 ## one catalog here for Phase 1). HEX_BOLT is the example item-targeting item (silences
 ## a RANDOM enemy item; #14/#20) — catalog-only, not pooled by default. Lazily built once.
@@ -128,10 +128,10 @@ static func _armor() -> ItemDef:
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.ARMOR_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.ARMOR_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   d.panel_color = blk.color
   return d
@@ -165,10 +165,10 @@ static func _avenger() -> ItemDef:
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.ARMOR_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.ARMOR_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   # ticks normally AND pushes its cooldown when poison is applied (charges model)
   d.trigger_subs = [{
@@ -398,7 +398,7 @@ static func _wilt_frond() -> ItemDef:
   return d
 
 
-## Leather block spread — three plain self-block items on a cooldown curve (Gloves fast/taxed,
+## Leather shield spread — three plain self-shield items on a cooldown curve (Gloves fast/taxed,
 ## Trews baseline, Breastplate slow/rewarded), mirroring the weapon DPS tax. No Spore consume yet
 ## (the consume source is an open design question — Spores land on enemies, not the wearer). COMMON.
 static func _leather_gloves() -> ItemDef:
@@ -410,10 +410,10 @@ static func _leather_gloves() -> ItemDef:
   d.cooldown = Balance.LEATHER_GLOVES_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.LEATHER_GLOVES_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.LEATHER_GLOVES_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   d.panel_color = blk.color
   return d
@@ -428,10 +428,10 @@ static func _leather_trews() -> ItemDef:
   d.cooldown = Balance.LEATHER_TREWS_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.LEATHER_TREWS_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.LEATHER_TREWS_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   d.panel_color = blk.color
   return d
@@ -446,10 +446,10 @@ static func _leather_breastplate() -> ItemDef:
   d.cooldown = Balance.LEATHER_BREASTPLATE_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.LEATHER_BREASTPLATE_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.LEATHER_BREASTPLATE_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   d.panel_color = blk.color
   return d
@@ -599,7 +599,7 @@ static func _flesh_explosion() -> ItemDef:
 ## Flensing Hook (PLACEHOLDER name — owner's to rename) — the self-harm PRODUCER (carving theme;
 ## character_ideas.md → Flesh Golem / Meat): deals UNBLOCKABLE damage to YOURSELF (shape SELF) and
 ## creates 2 Chunks of Flesh — the HP-spend identity made literal. Self-damage is UNBLOCKABLE so the
-## player's own block can't absorb the cost (a Fleshmancer runs block to survive, so a blockable cost
+## player's own shield can't absorb the cost (a Fleshmancer runs shield to survive, so a blockable cost
 ## would silently no-op). No enemy damage — pure produce-by-bleeding. COMMON. Numbers -> Balance.
 static func _flesh_flensing_hook() -> ItemDef:
   var d := ItemDef.new()
@@ -612,7 +612,7 @@ static func _flesh_flensing_hook() -> ItemDef:
   hurt.kind = Delivery.Kind.DAMAGE
   hurt.value = Balance.FLESH_FLENSING_HOOK_SELF_DAMAGE
   hurt.shape = ItemEffect.Shape.SELF          # the firer takes the hit — self-harm
-  hurt.flags = Delivery.Flag.UNBLOCKABLE      # own block must NOT absorb the cost (else the HP-spend no-ops)
+  hurt.flags = Delivery.Flag.UNBLOCKABLE      # own shield must NOT absorb the cost (else the HP-spend no-ops)
   hurt.color = Colours.DAMAGE                 # travel 0 (self, instant)
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
@@ -657,7 +657,7 @@ static func _flesh_skin_graft() -> ItemDef:
 
 ## Bone Spear (owner) — the Fleshmancer's first BLEED applier (docs/design/mechanic_ideas.md -> Bleed;
 ## the carve-as-bleed-applier fusion in character_ideas.md). A slow attack that deals damage AND applies
-## bleed to the struck enemy. Bleed is UNBLOCKABLE so the enemy's own block can't soak the self-damage
+## bleed to the struck enemy. Bleed is UNBLOCKABLE so the enemy's own shield can't soak the self-damage
 ## the wound bites on its activations. Single-target (the bleed piles on one enemy). COMMON. Numbers ->
 ## Balance (placeholders).
 static func _flesh_bone_spear() -> ItemDef:
@@ -679,15 +679,15 @@ static func _flesh_bone_spear() -> ItemDef:
   bleed.value = Balance.FLESH_BONE_SPEAR_BLEED
   bleed.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   bleed.travel = Balance.WEAPON_TRAVEL
-  bleed.flags = Delivery.Flag.UNBLOCKABLE    # the enemy's own block must not soak the wound
+  bleed.flags = Delivery.Flag.UNBLOCKABLE    # the enemy's own shield must not soak the wound
   bleed.color = Colours.DAMAGE               # applier shares the (placeholder) bleed colour
   d.effects = [hit, bleed]
   d.panel_color = hit.color                  # primary payload is damage (single-panel model)
   return d
 
 
-## Bone block spread (owner) — the Fleshmancer's self-block FLOOR: plain self-block on a cooldown curve
-## (Rib fast/taxed · Femur baseline · Skull slow/rewarded), the bone twin of the Leather spread. Block
+## Bone shield spread (owner) — the Fleshmancer's self-shield FLOOR: plain self-shield on a cooldown curve
+## (Rib fast/taxed · Femur baseline · Skull slow/rewarded), the bone twin of the Leather spread. Shield
 ## protects the HP-spend engine while you bleed yourself (character_ideas.md). COMMON. Numbers -> Balance.
 static func _flesh_rib() -> ItemDef:
   var d := ItemDef.new()
@@ -698,10 +698,10 @@ static func _flesh_rib() -> ItemDef:
   d.cooldown = Balance.FLESH_RIB_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.FLESH_RIB_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.FLESH_RIB_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   d.panel_color = blk.color
   return d
@@ -716,10 +716,10 @@ static func _flesh_femur() -> ItemDef:
   d.cooldown = Balance.FLESH_FEMUR_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.FLESH_FEMUR_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.FLESH_FEMUR_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   d.panel_color = blk.color
   return d
@@ -734,10 +734,10 @@ static func _flesh_skull() -> ItemDef:
   d.cooldown = Balance.FLESH_SKULL_COOLDOWN
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
-  blk.value = Balance.FLESH_SKULL_BLOCK
+  blk.status_id = 'shield'
+  blk.value = Balance.FLESH_SKULL_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.STATUS_BLOCK
+  blk.color = Colours.SHIELD
   d.effects = [blk]
   d.panel_color = blk.color
   return d

@@ -1,10 +1,10 @@
 class_name DecayStatus
 extends StatusEffect
-## Decay — the item-targeted use-status (docs/systems/item_creation_and_decay.md Cap 2). Block's
-## structural twin: block is a pool of count on an ACTOR drained by incoming damage that removes
+## Decay — the item-targeted use-status (docs/systems/item_creation_and_decay.md Cap 2). Shield's
+## structural twin: shield is a pool of count on an ACTOR drained by incoming damage that removes
 ## ITSELF when empty; decay is a pool of count on an ITEM drained by that item FIRING that removes
 ## the ITEM when empty. State = `count` (activations remaining). Not time-driven (no ticker) and not
-## damage-consumed (not block's absorb) — drained by the holder's fire. Reapply STACKS (adds charges
+## damage-consumed (not shield's absorb) — drained by the holder's fire. Reapply STACKS (adds charges
 ## — the base default = "top up"). Combat-scoped like every status (#26). Reads on flesh (rots away)
 ## and non-flesh (wears out) alike; flavour rides the ITEM name, not the keyword.
 

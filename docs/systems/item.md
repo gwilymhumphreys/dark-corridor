@@ -32,7 +32,7 @@ What it **is not**:
 
 Reconciling design's vocabulary with `combat_model.md`'s *composition, not inheritance* (an item owns a Ticker; no `if type ==`):
 
-- **Every item is active** — it owns a Ticker whose accumulator fills as the combat clock steps (its cooldown) and fires its effect(s) on crossing. Effect subtypes (design): Weapon (damage; single-target / AOE), Armor (block), Heal, Apply-status (poison / burn / freeze / …).
+- **Every item is active** — it owns a Ticker whose accumulator fills as the combat clock steps (its cooldown) and fires its effect(s) on crossing. Effect subtypes (design): Weapon (damage; single-target / AOE), Armor (shield), Heal, Apply-status (poison / burn / freeze / …).
 - **Triggers are an additional accrual input, not a separate type** — a triggered item *still ticks normally*; declared events **push the same accumulator** on top of the time accrual (the charges model — combat_model.md; an instant reaction is a ~100% push). Triggers accelerate / supplement firing; they don't replace the cooldown.
 - **No passive item type** — always-on / passive effects are **statuses** (`StatusManager`'s static-modifier shape), applied to actors or items and usually sourced from relics (design). An item confers a lasting effect by *applying a status*, not via a passive mechanism. (Global flat modifiers like "+10% all damage" are stat-like statuses — deferred with the stat-status problem.)
 
@@ -59,7 +59,7 @@ A fire may yield several payloads (a rare combining damage + heal); each becomes
 
 An effect declares a **relative target-shape**, not a resolved target:
 
-- **self** — the owner (the item knows its owner via board membership); block/heal/self-buff.
+- **self** — the owner (the item knows its owner via board membership); shield/heal/self-buff.
 - **opponent-leftmost** — single-target actor (deterministic leftmost).
 - **all-opponents** — AOE over actors.
 - **opponent-item-random** — one *random* item on the living opponents (e.g. silence / debuff an enemy item). Selection is **random via the seeded combat RNG**, so the fight stays deterministic / bit-reproducible. *(Random is the provisional default — may become a rule after testing. Deliberate exception to the actor-level "leftmost, never random" rule, which exists for player predictability; item-targeting trades that for variety, to validate.)*
@@ -102,7 +102,7 @@ Synergy is the core decision mechanism (design). The item side:
 
 ## Item type tags
 
-`ItemDef.types` is an **array of type-tag string ids** (a Bazaar-style tag set) drawn from **five tags** — `weapon` · `armour` · `skill` · `spell` · `trinket` (the `ItemType` consts). The axis is the **source / vessel of the effect** (weapon = an attack; armour = self-block; skill = an active ability; spell = a cast effect; trinket = a passive / utility bearer).
+`ItemDef.types` is an **array of type-tag string ids** (a Bazaar-style tag set) drawn from **five tags** — `weapon` · `armour` · `skill` · `spell` · `trinket` (the `ItemType` consts). The axis is the **source / vessel of the effect** (weapon = an attack; armour = self-shield; skill = an active ability; spell = a cast effect; trinket = a passive / utility bearer).
 
 - **Mostly-inert labels.** The fire pipeline itself never branches on `types`; a tag has no *inherent* effect. But a **status can now read tag membership** — the firing item is threaded into the outgoing-damage / actor-fire hooks (#35), and the Armourer empower (`EmpoweredStatus`) uses `types.has(ItemType.WEAPON)` to double only weapon attacks. Tags remain the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2"); the empower is the first to key off one.
 - **An array, not a single field** — most items carry exactly one tag; the array just lets a rare carry more later. A synergy checks `types.has('weapon')`.
@@ -120,7 +120,7 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 
 ## Prototype scope
 
-- One `Item` class + a handful of data-defined definitions — a **weapon** (single-target damage), an **armor** (self block), an **apply-status** (poison), all ticking — and one with a **trigger input** (ticks normally, *and* "on poison applied" pushes its accumulator).
+- One `Item` class + a handful of data-defined definitions — a **weapon** (single-target damage), an **armor** (self shield), an **apply-status** (poison), all ticking — and one with a **trigger input** (ticks normally, *and* "on poison applied" pushes its accumulator).
 - The fire pipeline (gate → fire → resolve with status/enchant modifiers → hand payloads up).
 - Tie-ins: `Combat manager` registers the cooldown Tickers (in its registry), resolves target-shapes, and routes the trigger event; `StatusManager` for item statuses + applying effects.
 

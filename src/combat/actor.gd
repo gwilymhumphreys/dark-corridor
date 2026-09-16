@@ -4,7 +4,7 @@ extends RefCounted
 ## actor-targeted status list. Deliberately dumb — a passive holder others act
 ## on. It never knows which side it's on; ordering / targeting / win-loss are the
 ## Combat manager's. `take_damage` is its one sideways call (to StatusManager, to
-## resolve block and future damage-modifier statuses).
+## resolve shield and future damage-modifier statuses).
 
 signal died
 
@@ -25,9 +25,9 @@ func is_alive() -> bool:
   return hp > 0.0
 
 
-## Run the raw amount through the target's incoming-damage modifiers (block, and
+## Run the raw amount through the target's incoming-damage modifiers (shield, and
 ## later amplifiers), then apply the remainder to HP. Dead actors ignore damage
-## (so `died` fires once). Returns the ACTUAL HP lost — post-block, capped at the
+## (so `died` fires once). Returns the ACTUAL HP lost — post-shield, capped at the
 ## remaining HP (a killing blow returns effective, not inflated raw, damage) — so
 ## the CombatLog records honest numbers with no HP-diff machinery (docs/systems/
 ## combat_log.md). Statement-callers may ignore the return.

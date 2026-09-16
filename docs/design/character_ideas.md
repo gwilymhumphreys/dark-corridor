@@ -41,11 +41,11 @@ status-identity engine (spores), not warrior/mage/rogue.
 ## Armourer — **promoted (2026-07-04)**
 
 Has its own working file: [`armourer.md`](armourer.md). The roster's **on-ramp / starter** — the
-low-load anchor (successor to the `wanderer` placeholder). Block **stack/spend** ("armour is ammo"),
+low-load anchor (successor to the `wanderer` placeholder). Shield **stack/spend** ("armour is ammo"),
 one clean engine + two simple threads (weapon synergy / strength, tbd). Deliberately the *legible*
-character: obvious-home block taken on purpose (the Ironclad slot), highest theme→mechanic affordance
-on the roster. Its mechanical ancestor is *Spiked Shield / Retributive Block* below — the Armourer is
-the **simple** use of block, that entry the spicy retributive one (only one block character likely
+character: obvious-home shield taken on purpose (the Ironclad slot), highest theme→mechanic affordance
+on the roster. Its mechanical ancestor is *Spiked Shield / Retributive Shield* below — the Armourer is
+the **simple** use of shield, that entry the spicy retributive one (only one shield character likely
 ships).
 
 ---
@@ -131,7 +131,7 @@ ships).
   crush, swallow. Note it could reuse the already-built **consume** mechanism (the spore engine's
   Mass fuel) for a "feed the void" payoff — gravity as a consumer rather than a damage type.
 - **Risk / open:** strongest tone fit of the batch; the design question is what "gravity" *does*
-  mechanically that block/damage/status don't already cover — what's the void's unique state.
+  mechanically that shield/damage/status don't already cover — what's the void's unique state.
 
 ## Mech — *front-runner (direction set 2026-06-13)*
 
@@ -210,38 +210,38 @@ ships).
   resource is genuinely **not mana** (knowledge-over-time, not a spell-points stock) — same lesson
   as nature-vs-druid.
 
-## Spiked Shield / Retributive Block — *parked (new 2026-06-16; engine found, fiction open)*
+## Spiked Shield / Retributive Shield — *parked (new 2026-06-16; engine found, fiction open)*
 
-- **Update (owner, 2026-07-04): the block-character slot is now the Armourer** (promoted —
-  [`armourer.md`](armourer.md)), which takes the **simple** stack/spend use of block as the roster's
+- **Update (owner, 2026-07-04): the shield-character slot is now the Armourer** (promoted —
+  [`armourer.md`](armourer.md)), which takes the **simple** stack/spend use of shield as the roster's
   on-ramp. This entry is the **spicier** use — thorns / charge off *absorbed-damage flow* (needs the
-  unbuilt on-absorb seam noted below). Only one block character likely ships; kept here as salvageable
+  unbuilt on-absorb seam noted below). Only one shield character likely ships; kept here as salvageable
   (a relic / item / later variant), not pursued as its own character for now.
-- **Concept (owner, 2026-06-16):** an armoured figure with a big spiked shield — **block-themed**,
+- **Concept (owner, 2026-06-16):** an armoured figure with a big spiked shield — **shield-themed**,
   damage reflection (thorns), shield bash.
-- **Identity (the engine): turns the enemy's aggression into its own fuel.** Block stops being
-  survival and becomes **intake** — signature: *weapons / charge that build when your block absorbs
+- **Identity (the engine): turns the enemy's aggression into its own fuel.** Shield stops being
+  survival and becomes **intake** — signature: *weapons / charge that build when your shield absorbs
   damage* (owner). New on the [resource table](#cross-cutting--resource-economies) as
   **adversary-driven generation**: every other character self-generates fuel (spores/mana/heat),
   this one outsources it to the opponent (the harder they hit, the more it costs them). De-trope:
   not "the tank that survives" but "the thing that punishes you for attacking it."
 - **Win-more guard (owner's catch + the fix).** Shield *bash* feels win-more because it keys off
-  **block remaining** — a stockpile, highest when you're already safe. The thorns/charge idea cures
+  **shield remaining** — a stockpile, highest when you're already safe. The thorns/charge idea cures
   it: key payoff off **damage absorbed** — a *flow*, highest under the most pressure. Same mechanic,
-  opposite economics. Rule: **tie payoffs to absorbed-damage-flow, not block-on-hand** — even a bash
-  that spends *charge earned by tanking* rather than current block stops being win-more and becomes
+  opposite economics. Rule: **tie payoffs to absorbed-damage-flow, not shield-on-hand** — even a bash
+  that spends *charge earned by tanking* rather than current shield stops being win-more and becomes
   a comeback button.
-- **The resource is a space — populate four ways:** *intake* (block-generators — block is the
+- **The resource is a space — populate four ways:** *intake* (shield-generators — shield is the
   prerequisite to have something for hits to charge through) · *spend* (charged weapons, overcharge
   payoff) · *convert/passive* (thorns auto-reflect a slice of what's absorbed — the always-on
   porcupine tax) · *manage/risk* (a masochist sub-line, cf. the druid's Self: deliberately drop
-  block / invite the hit to charge faster — eat damage on purpose for fuel).
-- **Open — engine seam:** needs an **"on-block-absorbed-damage" trigger** (block soaks a hit →
+  shield / invite the hit to charge faster — eat damage on purpose for fuel).
+- **Open — engine seam:** needs an **"on-shield-absorbed-damage" trigger** (shield soaks a hit →
   emit charge); unverified against the Ticker/activation model — check before graduating, don't
   assume wired.
-- **Risk / open — shared vocabulary + obvious home.** Block is shared vocabulary (everyone blocks,
-  like summons): own a *use* of block (the absorbed-damage engine), not block itself. And
-  block→armoured-knight is the StS Ironclad obvious home, while the Elementalist already holds the
+- **Risk / open — shared vocabulary + obvious home.** Shield is shared vocabulary (everyone blocks,
+  like summons): own a *use* of shield (the absorbed-damage engine), not shield itself. And
+  shield→armoured-knight is the StS Ironclad obvious home, while the Elementalist already holds the
   deliberate-legible slot — two obvious-home characters is a portfolio question. The thorns-engine
   de-tropes the *mechanic*; the *fiction* "armoured guy" is still generic-knight, which is where
   the obvious-home risk lives.
@@ -285,7 +285,7 @@ ships).
   now-shipped `ITEM_DESTROYED` seam. Other Mode B (consume-directly) items still to author.
 - **Self-harm / heal synergy (owner, authored):** the HP-spend identity, as a third use of the one
   `ITEM_DESTROYED` exhaust. **Flensing Hook** — deals **2 UNBLOCKABLE** self-damage + makes 2 chunks
-  (carve your own flesh; unblockable so the player's own block can't absorb the cost). **Skin Graft**
+  (carve your own flesh; unblockable so the player's own shield can't absorb the cost). **Skin Graft**
   — consume 1 chunk to heal (surgery theme); healing scales off the consumed chunk, so it routes
   through `remove_item` and *also* charges Flesh Explosion (heal + charge in one). **Consume-on-empty
   = reset** (fires, heals 0, resets — no fuel-gate; the gate model would be *less* responsive, decision
@@ -303,7 +303,7 @@ ships).
 - **Reclaim — the destroy-payoff keyword (PLACEHOLDER, owner narrowed 2026-06-22):** a labelled
   trigger that *replaces* "when one of your items is destroyed" in item text — "**Reclaim:** deal X".
   **Reclaim** is the pick (recover-your-spent-flesh read; pairs with the **Decay** status as
-  cause→payoff; flexible across heal / block / damage payoffs); *Salvage* the near-equal (more
+  cause→payoff; flexible across heal / shield / damage payoffs); *Salvage* the near-equal (more
   scrap/scavenger tone); *Recycle* set aside (modern/clinical clash with the grim register). Owner's
   to rename. **Built (2026-06-22):** `kw:reclaim` in `KeywordCatalog` (Decay-coloured); the tooltip
   routes an `ITEM_DESTROYED` trigger to it (Flesh Explosion now reads Reclaim, not generic Trigger).
@@ -319,13 +319,13 @@ ships).
     board). HP is the crafting substrate — exactly the doc's named recombination, *fleshmancer:
     "flesh as crafting substrate, necromancy meets sculpture"* (a blessed HP-home; see the
     resource+theme screen in [Cross-cutting](#cross-cutting--resource-economies)).
-  - **Block to stay alive** while you voluntarily bleed HP — block *protects the engine* (a
-    distinct use from the Spiked Shield's block-as-intake; only one ships anyway). *Authored: the
-    bone block spread — **Rib / Femur / Skull**, plain self-block on the Leather fast/mid/slow curve.*
+  - **Shield to stay alive** while you voluntarily bleed HP — shield *protects the engine* (a
+    distinct use from the Spiked Shield's shield-as-intake; only one ships anyway). *Authored: the
+    bone shield spread — **Rib / Femur / Skull**, plain self-shield on the Leather fast/mid/slow curve.*
   - **Healing is double-duty** — survival **and** refilling the HP you spend (heal = reload). This
     dissolves the usual "healing items are boring" problem: here lifegain *is* an engine piece.
   - **Ramp-up-over-time** scaling character: the board of fleshy items compounds; the ramp is gated
-    by sustain (heal/block) vs. spend. Too fast = die before payoff, too slow = out-scaled. The
+    by sustain (heal/shield) vs. spend. Too fast = die before payoff, too slow = out-scaled. The
     masochist knife-edge *is* the core loop (the doc's HP warning made into the gameplay).
 - **Threads two obvious-homes by fusing them.** Items→artificer and HP→warrior/vampire are both
   obvious homes; "a flesh-crafter who makes items from its own body" is neither (no workshop, no
@@ -442,7 +442,7 @@ an Item) spawned and consumed on the board. Three consequences:
   risk to watch. Obvious homes to avoid: allies → *necromancer*; items → *artificer / alchemist*.
 
 **Summons are shared vocabulary (owner, 2026-06-12).** More than one character can summon —
-summons are becoming a core part of the game, like weapons or block: a vocabulary everyone draws
+summons are becoming a core part of the game, like weapons or shield: a vocabulary everyone draws
 from, not one character's exclusive identity. The requirement is that each character's summons
 are **used and feel different**. Differentiation axes (a summon identity is a position on these,
 the way a resource is a position on polarity/location/timescale):

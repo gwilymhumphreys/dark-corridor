@@ -2,7 +2,7 @@ class_name KeywordCatalog
 ## The tooltip keyword catalog (docs/systems/tooltips.md): maps a keyword id to its card data
 ## `{name_key, desc_key, color, icon}`. Two kinds of id:
 ##
-##   - a STATUS id ('poison', 'block', …) → pulls its presentation straight from the StatusEffect
+##   - a STATUS id ('poison', 'shield', …) → pulls its presentation straight from the StatusEffect
 ##     subclass (name_key / desc_key / color / icon), so a status is documented in exactly one place.
 ##   - a MECHANIC id ('kw:fuel', 'kw:summon', …) → authored here. A mechanic keyword appears in a
 ##     tooltip ONLY if it has an entry below — that absence is how the owner gates a mechanic card
@@ -54,7 +54,7 @@ static func _build() -> void:
   }
   _mechanics[UNBLOCKABLE] = {
     'name_key': 'Unblockable',
-    'desc_key': 'Cannot be soaked by Block.',
+    'desc_key': 'Cannot be soaked by Shield.',
     'color': Colours.DAMAGE,
     'icon': 'res://assets/icons/keywords/skill_piercing_attack_nb.png',
   }

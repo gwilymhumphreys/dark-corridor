@@ -13,7 +13,7 @@ class_name Colours
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 # Each StatusEffect subclass AND its appliers reference the same colour (applier = status colour).
-static var STATUS_BLOCK: Color = Color(0.3, 0.6, 1.0)
+static var SHIELD: Color = Color(0.3, 0.6, 1.0)
 static var STATUS_POISON: Color = Color(0.4, 0.8, 0.2)
 static var STATUS_WEAK: Color = Color(0.6, 0.4, 0.7)
 static var STATUS_VULNERABLE: Color = Color(0.85, 0.5, 0.2)

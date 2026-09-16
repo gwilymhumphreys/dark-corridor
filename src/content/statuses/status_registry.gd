@@ -8,7 +8,7 @@ static var _creators: Dictionary = {}
 
 
 static func _build() -> void:
-  _creators[BlockStatus.ID] = func() -> StatusEffect: return BlockStatus.new()
+  _creators[ShieldStatus.ID] = func() -> StatusEffect: return ShieldStatus.new()
   _creators[PoisonStatus.ID] = func() -> StatusEffect: return PoisonStatus.new()
   _creators[WeakStatus.ID] = func() -> StatusEffect: return WeakStatus.new()
   _creators[VulnerableStatus.ID] = func() -> StatusEffect: return VulnerableStatus.new()

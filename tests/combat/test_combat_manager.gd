@@ -83,13 +83,13 @@ func test_fight_is_deterministic() -> void:
 
 
 func test_poison_trigger_fires_avenger_next_step() -> void:
-  # A custom avenger that NEVER fires on its own cooldown, so any block it grants
+  # A custom avenger that NEVER fires on its own cooldown, so any shield it grants
   # MUST come from the poison trigger.
   var avenger := ItemDef.new()
   avenger.cooldown = 9999.0
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
+  blk.status_id = 'shield'
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   avenger.effects = [blk]
@@ -112,10 +112,10 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
     cm.sim_step()
     guard += 1
   assert_true(_has_status(e, 'poison'), 'poison was applied')
-  assert_false(_has_status(p, 'block'), 'the push does NOT fire the avenger the same step')
+  assert_false(_has_status(p, 'shield'), 'the push does NOT fire the avenger the same step')
 
   cm.sim_step()
-  assert_true(_has_status(p, 'block'), 'the avenger fires one step later (loop-proof synergy)')
+  assert_true(_has_status(p, 'shield'), 'the avenger fires one step later (loop-proof synergy)')
 
 
 func test_delivery_fizzles_if_target_died() -> void:
@@ -483,25 +483,25 @@ func test_item_target_with_no_enemy_items_yields_no_targets() -> void:
   assert_eq(cm._resolve_targets(payload, p).size(), 0, 'no enemy items → no item targets')
 
 
-func test_dot_tick_through_block_does_not_skip_a_later_status() -> void:
-  # A poison tick calls take_damage, which can erase a depleted block from the SAME
+func test_dot_tick_through_shield_does_not_skip_a_later_status() -> void:
+  # A poison tick calls take_damage, which can erase a depleted shield from the SAME
   # status list the step-pass is walking. A naive in-place loop would then skip the
-  # status after block. Set up [block, poison, weak] with poison about to tick and
-  # block small enough to be fully consumed — weak must still advance this pass.
+  # status after shield. Set up [shield, poison, weak] with poison about to tick and
+  # shield small enough to be fully consumed — weak must still advance this pass.
   var p := Actor.new(100.0)
   var a := Actor.new(100.0)
   var cm := _manager(p, [a])
   cm.start()
-  StatusManager.apply(a, 'block', 1.0)          # one poison tick empties it
+  StatusManager.apply(a, 'shield', 1.0)          # one poison tick empties it
   var pois: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
   pois.ticker.accum = pois.ticker.threshold - 1.0            # fire on the next advance
   var weak: StatusEffect = StatusManager.apply(a, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)   # after poison in the list
 
   cm._advance_statuses_on(a)
 
-  assert_eq(weak.ticker.accum, 1.0, 'the status after block still advanced (no skip)')
-  assert_false(_has_status(a, 'block'), 'block was consumed and erased mid-pass')
-  assert_eq(a.hp, 98.0, 'poison dealt 3, block absorbed 1, 2 leaked to HP')
+  assert_eq(weak.ticker.accum, 1.0, 'the status after shield still advanced (no skip)')
+  assert_false(_has_status(a, 'shield'), 'shield was consumed and erased mid-pass')
+  assert_eq(a.hp, 98.0, 'poison dealt 3, shield absorbed 1, 2 leaked to HP')
 
 
 func test_dot_tick_shows_a_visual_on_the_wall() -> void:
@@ -607,14 +607,14 @@ func test_request_slowmo_sets_and_clears_the_dial() -> void:
 
 # --- Event-bus source identity (decision #30) ---
 
-## A trigger item that never fires on its own cooldown, so any block it grants MUST
+## A trigger item that never fires on its own cooldown, so any shield it grants MUST
 ## come from its trigger push. `source_filter` omitted = the OWN_SIDE content default.
 func _never_fires_avenger(source_filter: int = -1) -> ItemDef:
   var def := ItemDef.new()
   def.cooldown = 9999.0
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
+  blk.status_id = 'shield'
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   def.effects = [blk]
@@ -645,7 +645,7 @@ func test_enemy_poison_does_not_charge_own_side_trigger() -> void:
   assert_true(_has_status(p, 'poison'), 'the enemy poisoned the player')
   cm.sim_step()
   cm.sim_step()
-  assert_false(_has_status(p, 'block'), "the enemy's application charged nothing (OWN_SIDE default)")
+  assert_false(_has_status(p, 'shield'), "the enemy's application charged nothing (OWN_SIDE default)")
 
 
 func test_opponent_side_filter_inverts_the_default() -> void:
@@ -660,7 +660,7 @@ func test_opponent_side_filter_inverts_the_default() -> void:
     cm.sim_step()
     guard += 1
   cm.sim_step()
-  assert_true(_has_status(p, 'block'), "an OPPONENT_SIDE sub charges off the enemy's application")
+  assert_true(_has_status(p, 'shield'), "an OPPONENT_SIDE sub charges off the enemy's application")
 
 
 func test_summoned_token_trigger_resolves_own_side_at_event_time() -> void:
@@ -680,7 +680,7 @@ func test_summoned_token_trigger_resolves_own_side_at_event_time() -> void:
     guard += 1
   assert_true(_has_status(e, 'poison'), "the player's poison landed")
   cm.sim_step()
-  assert_true(_has_status(token, 'block'), "the player-side token's trigger charged off its own side")
+  assert_true(_has_status(token, 'shield'), "the player-side token's trigger charged off its own side")
 
 
 func test_reaped_actors_trigger_item_receives_no_pushes() -> void:
@@ -880,7 +880,7 @@ func test_status_applied_event_only_published_on_success() -> void:
   cm.bus.subscribe(EventBus.Event.STATUS_APPLIED, probe, 1.0, null)
   cm._land(_status_delivery(e, 'nonexistent_status'))
   assert_eq(probe.accum, 0.0, 'an unknown id publishes no event')
-  cm._land(_status_delivery(e, 'block'))
+  cm._land(_status_delivery(e, 'shield'))
   assert_gt(probe.accum, 0.0, 'a real apply still publishes')
 
 
@@ -1098,13 +1098,13 @@ func _chunk_consumer_def(chunk_id: String, amount: int, scale: float) -> ItemDef
 
 
 ## A reactive item that never fires on its own cooldown and charges (full push) off ITEM_DESTROYED,
-## granting itself block — so any block it grants proves it saw a destroy event. OWN_SIDE default.
+## granting itself shield — so any shield it grants proves it saw a destroy event. OWN_SIDE default.
 func _destroy_charged_avenger() -> ItemDef:
   var def := ItemDef.new()
   def.cooldown = 9999.0
   var blk := ItemEffect.new()
   blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
+  blk.status_id = 'shield'
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   def.effects = [blk]
@@ -1149,7 +1149,7 @@ func test_item_destroyed_does_not_fire_at_teardown() -> void:
 
 func test_a_trigger_item_charges_off_item_destroyed() -> void:
   # A decay item dies on fire; an avenger subscribed to ITEM_DESTROYED charges off it one step later
-  # (accrual-only, loop-proof). The avenger never fires on its own cooldown, so the block proves it.
+  # (accrual-only, loop-proof). The avenger never fires on its own cooldown, so the shield proves it.
   var p := Actor.new(1000.0)
   var dying := Item.new(_decay_weapon_def(1), p)
   var avenger := Item.new(_destroy_charged_avenger(), p)
@@ -1158,9 +1158,9 @@ func test_a_trigger_item_charges_off_item_destroyed() -> void:
   var cm := _manager(p, [Actor.new(1000.0)])
   cm.start()
   cm._fire_item(dying, [])   # decay 1 → destroyed → ITEM_DESTROYED published
-  assert_false(_has_status(p, 'block'), 'the push does NOT fire the avenger the same step')
+  assert_false(_has_status(p, 'shield'), 'the push does NOT fire the avenger the same step')
   cm.sim_step()
-  assert_true(_has_status(p, 'block'), 'the avenger charged off ITEM_DESTROYED one step later (SELF block on its owner)')
+  assert_true(_has_status(p, 'shield'), 'the avenger charged off ITEM_DESTROYED one step later (SELF shield on its owner)')
 
 
 func test_own_board_consume_counts_removes_and_scales() -> void:

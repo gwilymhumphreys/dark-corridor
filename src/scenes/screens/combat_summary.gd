@@ -27,7 +27,7 @@ func setup(log: CombatLog) -> void:
   _fill_log(log)
 
 
-# The player per-item contribution: Item · Fires · Damage · Block · Healing. Damage is
+# The player per-item contribution: Item · Fires · Damage · Shield · Healing. Damage is
 # DIRECT hits only — status (DoT / cash-out) damage is bucketed by status (see
 # _fill_status_damage), not credited to the applier. The header cells are static in the
 # .tscn (auto-translated); data cells are appended after them.
@@ -36,7 +36,7 @@ func _fill_report(log: CombatLog) -> void:
     _add_cell(_rows, tr(row['name']), false)
     _add_cell(_rows, '%d' % int(row['fires']), true)
     _add_cell(_rows, '%.0f' % float(row['damage']), true)
-    _add_cell(_rows, '%.0f' % float(row['block']), true)
+    _add_cell(_rows, '%.0f' % float(row['shield']), true)
     _add_cell(_rows, '%.0f' % float(row['healing']), true)
 
 
@@ -74,7 +74,7 @@ func _fill_log(log: CombatLog) -> void:
 func _format_event(ev: Dictionary) -> String:
   var t: String = '%.1fs' % float(ev['t'])
   var src: String = tr(ev['source']) if ev['source'] != '' else ''
-  # Damage/heal/block/status always have an actor target; the player actor carries no
+  # Damage/heal/shield/status always have an actor target; the player actor carries no
   # display_name, so an empty target there means the player → 'You'.
   var tgt: String = tr(ev['target']) if ev['target'] != '' else tr('You')
   var amount: String = '%.0f' % float(ev['amount'])
@@ -85,8 +85,8 @@ func _format_event(ev: Dictionary) -> String:
       return tr('{0}  {1} → {2}  {3}').format([t, src, tgt, amount])
     'heal':
       return tr('{0}  {1} → {2}  +{3}').format([t, src, tgt, amount])
-    'block':
-      return tr('{0}  {1} → {2}  +{3} block').format([t, src, tgt, amount])
+    'shield':
+      return tr('{0}  {1} → {2}  +{3} shield').format([t, src, tgt, amount])
     'status':
       return tr('{0}  {1} → {2}  {3}').format([t, src, tgt, tr(ev['data'])])
     'throw':

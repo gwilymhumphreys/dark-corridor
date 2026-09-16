@@ -3,7 +3,7 @@ extends RefCounted
 ## Guards the design's "a mutual engine that never resolves" failure mode
 ## (autotest.md). A fight is stuck if the combined HP of every actor doesn't
 ## change for `threshold_steps` consecutive sim-steps — i.e. nothing is making
-## progress toward a win/loss (both sides only blocking, a damage-less stall).
+## progress toward a win/loss (both sides only shielding, a damage-less stall).
 ## Fed one total-HP reading per sim-step by AutoTestMode; returns true the step
 ## the stall crosses the threshold. A fight whose HP merely oscillates (damage +
 ## heal) keeps changing total HP, so it never trips this — the game-timeout

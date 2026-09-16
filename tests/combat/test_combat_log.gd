@@ -1,6 +1,6 @@
 extends GutTest
 ## CombatLog — the per-fight observation sink (docs/systems/combat_log.md). Pure tally +
-## ordered timeline on synthetic input: fires increment per item, damage/heal/block
+## ordered timeline on synthetic input: fires increment per item, damage/heal/shield
 ## accumulate per source + in side totals, the timeline records t · type · amount in
 ## order, throws log + carry the def id, side tagging keeps the same name_key separate
 ## on each side, and a null/source-less DoT falls back to the generic bucket.
@@ -58,14 +58,14 @@ func test_gross_defaults_to_net_when_raw_omitted() -> void:
 
 
 func test_gross_is_recorded_even_when_net_is_zero() -> void:
-  # A fully-blocked hit (net 0, gross 8): gross still registers the threat; net does not move HP.
+  # A fully-shielded hit (net 0, gross 8): gross still registers the threat; net does not move HP.
   var log := CombatLog.new()
   log.on_damage('Claw', ENEMY, 'Player', PLAYER, 0.0, 0.1, 8.0)
   var rows := _by_name(log.summary(ENEMY))
-  assert_almost_eq(rows['Claw']['gross'], 8.0, 0.0001, 'gross records the pre-block hit')
-  assert_almost_eq(rows['Claw']['damage'], 0.0, 0.0001, 'net stays zero — block ate it')
+  assert_almost_eq(rows['Claw']['gross'], 8.0, 0.0001, 'gross records the pre-shield hit')
+  assert_almost_eq(rows['Claw']['damage'], 0.0, 0.0001, 'net stays zero — shield ate it')
   assert_almost_eq(float(log.total_gross[ENEMY]), 8.0, 0.0001, 'gross total accrues')
-  assert_false(log.total_damage_dealt.has(ENEMY), 'no net dealt recorded for a fully-blocked hit')
+  assert_false(log.total_damage_dealt.has(ENEMY), 'no net dealt recorded for a fully-shielded hit')
   assert_eq(log.events.size(), 1, 'still appends one timeline event (amount = net 0)')
 
 
@@ -80,15 +80,15 @@ func test_healing_accumulates_per_source_and_total() -> void:
   assert_almost_eq(float(log.total_healing[PLAYER]), 12.0, 0.0001, 'player-side healing total')
 
 
-# --- block ------------------------------------------------------------------
+# --- shield -----------------------------------------------------------------
 
-func test_block_accumulates_per_source_and_total() -> void:
+func test_shield_accumulates_per_source_and_total() -> void:
   var log := CombatLog.new()
-  log.on_block('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
-  log.on_block('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
+  log.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
+  log.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
   var rows := _by_name(log.summary(PLAYER))
-  assert_almost_eq(rows['Iron Guard']['block'], 16.0, 0.0001, 'per-item block accumulates')
-  assert_almost_eq(float(log.total_block[PLAYER]), 16.0, 0.0001, 'player-side block total')
+  assert_almost_eq(rows['Iron Guard']['shield'], 16.0, 0.0001, 'per-item shield accumulates')
+  assert_almost_eq(float(log.total_shield[PLAYER]), 16.0, 0.0001, 'player-side shield total')
 
 
 # --- statuses ---------------------------------------------------------------

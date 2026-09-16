@@ -168,13 +168,13 @@ func test_resume_mid_run_finishes_the_descent() -> void:
 
 # --- tune-report fidelity ----------------------------------------------------
 
-func test_block_is_tallied_per_item_for_the_report() -> void:
+func test_shield_is_tallied_per_item_for_the_report() -> void:
   # Defensive items must be RANKABLE, not just trap-cleared by firing: the run summary
-  # carries block-applied per item (Iron Guard is in the Wanderer's starting kit).
+  # carries shield-applied per item (Iron Guard is in the Wanderer's starting kit).
   var r := _mode(1).run_full()
   var armor_name: String = ItemCatalog.get_def(ItemCatalog.ARMOR).name_key
-  assert_gt(float(r['summary']['block_by_item'].get(armor_name, 0.0)), 0.0,
-      'the block item shows its applied block in the summary')
+  assert_gt(float(r['summary']['shield_by_item'].get(armor_name, 0.0)), 0.0,
+      'the shield item shows its applied shield in the summary')
 
 
 func test_summary_carries_seed_and_strategy() -> void:

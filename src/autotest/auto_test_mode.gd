@@ -16,7 +16,7 @@ extends Node
 ## wall-clock hang watchdog, and stuck detection, then sets the exit code (0 = resolved —
 ## won / died / capped; 1 = stuck / timed out) and quits.
 ##
-## Damage / fire / block / healing numbers come from the CombatManager's CombatLog —
+## Damage / fire / shield / healing numbers come from the CombatManager's CombatLog —
 ## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md). Each fight attaches a fresh
 ## CombatLog before its sim_step loop and ingests its player side at fight end; there is
 ## no per-step HP-diff reconstruction.
@@ -246,7 +246,7 @@ func run_full() -> Dictionary:
 ## outcome is '' when it resolved normally, else 'STUCK' / 'TIMEOUT' / 'WALL_TIMEOUT'.
 ## Shared by run_once + run_full.
 ##
-## The damage / fire / block / healing tallies come from the CombatManager's CombatLog —
+## The damage / fire / shield / healing tallies come from the CombatManager's CombatLog —
 ## the SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md). We attach a fresh log
 ## before the loop (the manager direct-writes it at each mutation site) and ingest its
 ## PLAYER side at fight end; there is no per-step HP-diff reconstruction anymore. The stuck

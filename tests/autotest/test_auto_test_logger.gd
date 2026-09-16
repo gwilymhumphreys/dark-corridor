@@ -56,14 +56,14 @@ func test_ingest_records_enemy_status_pressure_by_status() -> void:
   assert_almost_eq(log.total_incoming, 4.0, 0.0001, 'and folds into total incoming (gross)')
 
 
-func test_ingest_folds_block_and_healing() -> void:
+func test_ingest_folds_shield_and_healing() -> void:
   var clog := CombatLog.new()
-  clog.on_block('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
-  clog.on_block('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
+  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
+  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
   clog.on_heal('Salve', PLAYER, 'Player', PLAYER, 12.0, 0.3)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
-  assert_almost_eq(log.block_by_item['Iron Guard'], 16.0, 0.0001, 'block accumulates per item')
+  assert_almost_eq(log.shield_by_item['Iron Guard'], 16.0, 0.0001, 'shield accumulates per item')
   assert_almost_eq(log.healing_by_item['Salve'], 12.0, 0.0001, 'healing accumulates per item')
 
 
@@ -94,14 +94,14 @@ func test_ingest_records_incoming_gross_by_enemy() -> void:
   assert_almost_eq(log.total_damage, 9.0, 0.0001, 'total dealt stays player output')
 
 
-func test_ingest_incoming_counts_fully_blocked_hits() -> void:
-  # The point of GROSS: a hit the player fully blocked (net 0) still registers as threat,
-  # so a block-heavy build does not read as "the enemy did nothing".
+func test_ingest_incoming_counts_fully_shielded_hits() -> void:
+  # The point of GROSS: a hit the player fully shielded (net 0) still registers as threat,
+  # so a shield-heavy build does not read as "the enemy did nothing".
   var clog := CombatLog.new()
-  clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 0.0, 0.1, 8.0)   # net 0, gross 8 (all blocked)
+  clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 0.0, 0.1, 8.0)   # net 0, gross 8 (all shielded)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
-  assert_almost_eq(log.incoming_by_enemy['Claw'], 8.0, 0.0001, 'a fully-blocked hit still shows as incoming')
+  assert_almost_eq(log.incoming_by_enemy['Claw'], 8.0, 0.0001, 'a fully-shielded hit still shows as incoming')
   assert_almost_eq(log.total_incoming, 8.0, 0.0001)
 
 
@@ -210,18 +210,18 @@ func test_item_contribution_aggregates_duplicates() -> void:
   assert_eq(rows[0]['count'], 2, 'with a count')
 
 
-func test_item_contribution_carries_block_and_healing() -> void:
+func test_item_contribution_carries_shield_and_healing() -> void:
   var clog := CombatLog.new()
   clog.on_item_fired('Iron Guard', PLAYER, 0.1)
-  clog.on_block('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
-  clog.on_block('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
+  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
+  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
   clog.on_heal('Salve', PLAYER, 'Player', PLAYER, 12.0, 0.3)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
   var rows := log._item_contribution_rows(log.summarize({ 'player_items': ['Iron Guard', 'Salve'] }))
-  assert_almost_eq(float(rows[0]['block']), 16.0, 0.0001, 'block accumulates per item')
+  assert_almost_eq(float(rows[0]['shield']), 16.0, 0.0001, 'shield accumulates per item')
   assert_almost_eq(float(rows[1]['healing']), 12.0, 0.0001, 'healing accumulates per item')
-  assert_false(rows[0]['trap'], 'a firing block item is not a trap')
+  assert_false(rows[0]['trap'], 'a firing shield item is not a trap')
 
 
 func test_report_header_carries_seed_and_strategy() -> void:

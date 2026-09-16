@@ -14,7 +14,7 @@ extends RefCounted
 # (an unknown name silently behaves as first-viable, so the flag parser warns on it).
 const STRATEGIES: Array = [
   'first-viable', 'random', 'greedy-synergy',
-  'damage', 'block', 'poison', 'heal',
+  'damage', 'shield', 'poison', 'heal',
   'scaling', 'burn',   # alias to the nearest present family until their content exists
 ]
 
@@ -43,7 +43,7 @@ func choose_draft(candidates: Array, board: Array = []) -> int:
     'first-viable':
       return 0
     _:
-      # Family strategies: 'damage' / 'block' / 'poison' / 'heal' (+ aliases). Prefer a
+      # Family strategies: 'damage' / 'shield' / 'poison' / 'heal' (+ aliases). Prefer a
       # candidate whose primary effect family matches; fall back to index 0 on a tie.
       var family: String = _strategy_family(strategy)
       return _best_by(candidates, func(d): return 1.0 if _family_of(d) == family else 0.0)
@@ -70,7 +70,7 @@ func _best_by(candidates: Array, score: Callable) -> int:
 
 
 ## The effect family of an item def (its primary effect) — mirrors the colour
-## vocabulary (design): damage / block / poison / heal / status / other.
+## vocabulary (design): damage / shield / poison / heal / status / other.
 func _family_of(def: ItemDef) -> String:
   if def.effects.is_empty():
     return 'other'
@@ -82,8 +82,8 @@ func _family_of(def: ItemDef) -> String:
       return 'heal'
     Delivery.Kind.APPLY_STATUS:
       match effect.status_id:
-        'block':
-          return 'block'
+        'shield':
+          return 'shield'
         'poison':
           return 'poison'
         _:

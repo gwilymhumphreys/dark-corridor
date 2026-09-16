@@ -5,7 +5,7 @@
 Primary axis is **combat role** (attack / skill), the same way StS tracks card type. Archetype is a **tag**, never a target — quota'ing archetypes forces you to author cards a thread doesn't have good ideas for yet.
 
 - **Attack** = a damage item (primary payload is damage).
-- **Skill** = a non-damage item: block / resource / utility. (Maps to the design's armor / heal / apply-status / utility subtypes.)
+- **Skill** = a non-damage item: shield / resource / utility. (Maps to the design's armor / heal / apply-status / utility subtypes.)
 
 ## Commons (~20)
 
@@ -13,7 +13,7 @@ Primary axis is **combat role** (attack / skill), the same way StS tracks card t
   - single-target: 8–10
   - AoE: 1–2
 - **Skills (~8–10)**
-  - block: 3–4
+  - shield: 3–4
   - resource: 0–3 — *DC equivalent TBD ("stars"?). No resource economy is specced yet; bucket is a placeholder.*
   - utility / other: the remainder (status appliers, cooldown manipulation, archetype hosts)
 

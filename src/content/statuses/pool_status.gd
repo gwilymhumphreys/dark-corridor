@@ -1,6 +1,6 @@
 class_name PoolStatus
 extends StatusEffect
-## Intermediate base for absorb-pool statuses (Block) — the old StatusDef.Shape.POOL. An inert
+## Intermediate base for absorb-pool statuses (Shield) — the old StatusDef.Shape.POOL. An inert
 ## pool that soaks incoming damage until drained; no ticker, no decay. Reapply stacks the pool
 ## additively (the base default). Removed once emptied (is_spent), after the incoming-damage pass.
 

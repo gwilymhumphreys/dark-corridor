@@ -20,7 +20,7 @@ func test_starts_at_full_hp() -> void:
 func test_take_damage_reduces_hp() -> void:
   var a := Actor.new(50.0)
   a.take_damage(20.0)
-  assert_eq(a.hp, 30.0, 'damage with no block hits HP directly')
+  assert_eq(a.hp, 30.0, 'damage with no shield hits HP directly')
 
 
 func test_heal_caps_at_max() -> void:
@@ -53,14 +53,14 @@ func test_death_emits_once() -> void:
 
 func test_take_damage_returns_the_hp_lost() -> void:
   var a := Actor.new(50.0)
-  assert_almost_eq(a.take_damage(20.0), 20.0, 0.0001, 'no block: returns the raw amount lost')
+  assert_almost_eq(a.take_damage(20.0), 20.0, 0.0001, 'no shield: returns the raw amount lost')
 
 
-func test_take_damage_returns_net_after_block() -> void:
+func test_take_damage_returns_net_after_shield() -> void:
   var a := Actor.new(50.0)
-  StatusManager.apply(a, BlockStatus.ID, 8.0)   # absorbs 8 of the incoming hit
+  StatusManager.apply(a, ShieldStatus.ID, 8.0)   # absorbs 8 of the incoming hit
   var dealt := a.take_damage(20.0)
-  assert_almost_eq(dealt, 12.0, 0.0001, 'block-absorbed damage is excluded from the return')
+  assert_almost_eq(dealt, 12.0, 0.0001, 'shield-absorbed damage is excluded from the return')
   assert_eq(a.hp, 38.0, 'and only the net reached HP')
 
 

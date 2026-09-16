@@ -23,12 +23,12 @@ func test_first_viable_takes_index_0() -> void:
 
 func test_damage_strategy_prefers_a_damage_candidate() -> void:
   var driver := AutoTestDriver.new('damage', 1)
-  # ARMOR (block) at 0, WEAPON (damage) at 1 → the damage strategy takes index 1.
+  # ARMOR (shield) at 0, WEAPON (damage) at 1 → the damage strategy takes index 1.
   assert_eq(driver.choose_draft([_def(ItemCatalog.ARMOR), _def(ItemCatalog.WEAPON)], []), 1)
 
 
-func test_block_strategy_prefers_a_block_candidate() -> void:
-  var driver := AutoTestDriver.new('block', 1)
+func test_shield_strategy_prefers_a_shield_candidate() -> void:
+  var driver := AutoTestDriver.new('shield', 1)
   assert_eq(driver.choose_draft([_def(ItemCatalog.WEAPON), _def(ItemCatalog.ARMOR)], []), 1)
 
 
@@ -52,5 +52,5 @@ func test_random_is_reproducible_for_a_seed() -> void:
 func test_strategies_can_diverge() -> void:
   var offer: Array = [_def(ItemCatalog.WEAPON), _def(ItemCatalog.ARMOR)]
   var damage := AutoTestDriver.new('damage', 1)
-  var block := AutoTestDriver.new('block', 1)
-  assert_ne(damage.choose_draft(offer, []), block.choose_draft(offer, []), 'damage vs block pick differently')
+  var shield := AutoTestDriver.new('shield', 1)
+  assert_ne(damage.choose_draft(offer, []), shield.choose_draft(offer, []), 'damage vs shield pick differently')

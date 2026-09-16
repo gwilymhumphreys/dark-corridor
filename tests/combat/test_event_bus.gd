@@ -82,7 +82,7 @@ func test_data_and_side_filters_compose() -> void:
   var bus := _bus_with_sides(player_actor)
   var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
   bus.subscribe(EventBus.Event.STATUS_APPLIED, item.cooldown, 0.2, 'poison', EventBus.SourceFilter.OWN_SIDE, item)
-  bus.publish(EventBus.Event.STATUS_APPLIED, 'block', player_actor, null)
+  bus.publish(EventBus.Event.STATUS_APPLIED, 'shield', player_actor, null)
   assert_eq(item.cooldown.accum, 0.0, 'right side, wrong data — no push')
   bus.publish(EventBus.Event.STATUS_APPLIED, 'poison', player_actor, null)
   assert_gt(item.cooldown.accum, 0.0, 'matching data AND side pushes')

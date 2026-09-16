@@ -49,10 +49,10 @@ func test_sunder_applies_vulnerable_to_opponent() -> void:
     'the per-application duration rides the payload (effect → payload → delivery → apply)')
 
 
-func test_armor_applies_block_to_self() -> void:
+func test_armor_applies_shield_to_self() -> void:
   var p: Payload = _make(ItemCatalog.ARMOR).fire()[0]
   assert_eq(p.kind, Delivery.Kind.APPLY_STATUS)
-  assert_eq(p.status_id, 'block')
+  assert_eq(p.status_id, 'shield')
   assert_eq(p.shape, ItemEffect.Shape.SELF)
 
 
@@ -117,4 +117,4 @@ func test_trigger_item_declares_its_subscription() -> void:
   var d := ItemCatalog.get_def(ItemCatalog.AVENGER)
   assert_eq(d.trigger_subs.size(), 1, 'avenger declares one trigger')
   assert_eq(d.trigger_subs[0]['event'], EventBus.Event.STATUS_APPLIED)
-  assert_eq(d.trigger_subs[0]['filter'], 'poison', 'on poison applied, not block')
+  assert_eq(d.trigger_subs[0]['filter'], 'poison', 'on poison applied, not shield')
