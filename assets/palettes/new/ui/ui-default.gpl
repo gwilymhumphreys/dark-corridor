@@ -22,13 +22,11 @@ Columns: 8
 255 255 255	ui text
 # Combat view
  51  77 128	portrait player
- 56  71 102	portrait ally
 128  51  56	portrait enemy
  26  26  31	hp bar bg
 102 191 102	hp bar fill
  31  15  15	enemy hp bar bg
 184  56  56	enemy hp bar fill
- 77 179 115	potion
 242 242 242	cooldown ring
 115 115 115	ally downed
 # Tooltip

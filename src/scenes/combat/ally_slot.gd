@@ -10,6 +10,7 @@ const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
 
 var actor: Actor
 
+@onready var _portrait: TextureRect = $Left/Portrait/Image
 @onready var _hp_fill: ColorRect = $Left/HP/Fill
 @onready var _hp_label: Label = $Left/HP/Label
 @onready var _name: Label = $Left/Name
@@ -22,6 +23,8 @@ var _cells: Dictionary = {}   # Item -> ItemCell
 func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
   actor = target
   _name.text = tr(actor.display_name) if actor.display_name != '' else tr('Ally')
+  if actor.portrait != '':
+    _portrait.texture = load(actor.portrait)
   for item in actor.board:
     var cell: ItemCell = ITEM_CELL.instantiate()
     _items.add_child(cell)
@@ -32,6 +35,7 @@ func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
 
 
 func _exit_tree() -> void:
+  _portrait.texture = null
   _cells.clear()
   actor = null
 

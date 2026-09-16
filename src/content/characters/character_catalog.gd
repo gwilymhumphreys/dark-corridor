@@ -54,6 +54,7 @@ static func _wanderer() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = DEFAULT
   d.name_key = 'Wanderer'
+  d.portrait = 'res://assets/portraits/characters/archer_woman.png'   # PLACEHOLDER portrait — owner's to swap
   d.blurb_key = 'A balanced kit — blade, plate, and a creeping poison.'
   d.item_pool = DraftPool.ITEMS                  # this character's draftable pool (#27)
   d.starting_item_ids = [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]
@@ -73,6 +74,7 @@ static func _spore_druid() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = SPORE_DRUID
   d.name_key = 'Spore Druid'
+  d.portrait = 'res://assets/portraits/characters/shaman.png'   # PLACEHOLDER portrait — owner's to swap
   d.blurb_key = 'Stack Spores, then spend them.'   # PLACEHOLDER hook — owner writes the real one
   d.item_pool = [
     ItemCatalog.DRUID_STAFF,
@@ -97,6 +99,7 @@ static func _duelist() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = DUELIST
   d.name_key = 'Duelist'
+  d.portrait = 'res://assets/portraits/characters/assassin.png'   # PLACEHOLDER portrait — owner's to swap
   d.blurb_key = 'Twin blades, no safety net — all pressure, no plate.'
   d.item_pool = DraftPool.ITEMS                  # placeholder: shares the prototype pool for now
   d.starting_item_ids = [ItemCatalog.WEAPON, ItemCatalog.WEAPON, ItemCatalog.POISON_DAGGER]
@@ -119,6 +122,7 @@ static func _fleshmancer() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = FLESHMANCER
   d.name_key = 'Fleshmancer'           # PLACEHOLDER name — owner's to rename
+  d.portrait = 'res://assets/portraits/characters/monster_cannibal.png'   # PLACEHOLDER portrait — owner's to swap
   d.blurb_key = 'Carve yourself into a churning board of flesh.'   # PLACEHOLDER hook — owner writes the real one
   d.item_pool = [
     ItemCatalog.FLESH_CARVING_KNIFE,

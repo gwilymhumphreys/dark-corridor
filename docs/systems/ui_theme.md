@@ -15,8 +15,8 @@ A `Theme` resource of `StyleBoxTexture` 9-slices over the pack's PNGs
 
 | Variation | Used by |
 |---|---|
-| `PanelSlot` | item cells (`item_cell.tscn`) and keyword chips — pack art, unchanged |
-| `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it |
+| `PanelSlot` | the frame behind a picture: item cells (`item_cell.tscn`), potion slots, character portraits (combat, ally slots, character select cards) and keyword chips |
+| `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it. `PanelSlot` is the same, with smaller content margins |
 | `LabelDim` | dimmer section labels ("Potions", "Items") |
 
 `PanelFramed` is used by most overlay panels and by the tooltip panel

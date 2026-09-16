@@ -25,6 +25,8 @@ Prefs="*res://src/autoloads/prefs.gd"
 Draft="*res://src/autoloads/draft.gd"
 Game="*res://src/autoloads/game_manager.gd"
 PrintLook="*res://src/autoloads/print_look.gd"
+InterfaceLook="*res://src/autoloads/interface_look.gd"
+InterfaceGlow="*res://src/autoloads/interface_glow.gd"
 DebugPanels="*res://src/debug/debug_panels.tscn"
 
 [display]
@@ -78,3 +80,4 @@ textures/canvas_textures/default_texture_filter=3
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+viewport/hdr_2d=true

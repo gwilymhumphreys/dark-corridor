@@ -2,14 +2,14 @@
 
 A dev tool for making the combat screen look like a printed sheet: a border around the corridor, the
 background wear carried over the corridor, a worn corridor edge, and the corridor moved in from the
-screen edges to make room. Every effect is set from the F3 print panel, together with the
+screen edges to make room. Every effect is set from the F5 print panel, together with the
 [background wear](background_wear.md).
 
 **Location:** `src/ui/print_frame.gd` (class `PrintFrame`), `src/shaders/print_border.gdshader`,
 `src/shaders/corridor_overlay.gdshader`, the panel in `src/debug/print_panel.*` (class `PrintPanel`).
 The materials, settings, defaults and save/load/reset are owned by `PrintLook`
 (`src/autoloads/print_look.gd`, class `PrintLookAutoload`), alongside [background wear](background_wear.md)
-and [panel wear](panel_wear.md); `DebugPanels` keeps the F3 panel UI and the start-up arguments and
+and [panel wear](panel_wear.md); `DebugPanels` keeps the F5 panel UI and the start-up arguments and
 delegates to `PrintLook`.
 
 ## How it works
@@ -42,10 +42,10 @@ corridor and the worn corridor edge are on, and the border is off.
 
 ## The print panel
 
-- F3 toggles it, in debug builds. `PrintPanel` extends the [look panel](corridor_look.md#the-panel)
+- F5 toggles it, in debug builds. `PrintPanel` extends the [look panel](corridor_look.md#the-panel)
   and builds its sections the same way: the background wear groups, then Layout, then the border and
   overlay groups.
-- Its save, load and reset work on print looks only, so the F2 and F3 panels keep separate saved looks
+- Its save, load and reset work on print looks only, so the F2 and F5 panels keep separate saved looks
   and resetting one leaves the other unchanged.
 
 ## Print looks

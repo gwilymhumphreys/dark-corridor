@@ -99,6 +99,7 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
 ## owned here. Max HP is the global default for now (a per-character start-HP comes later).
 func _make_starting_player() -> Actor:
   var actor := Actor.new(Balance.PLAYER_START_HP)
+  actor.portrait = character.portrait
   for id in character.starting_item_ids:
     actor.board.append(Item.new(ItemCatalog.get_def(id), actor))
   return actor
@@ -305,6 +306,7 @@ func _make_ally(def_id: String) -> Actor:
   var def: EnemyDef = EnemyCatalog.get_def(def_id)
   var actor := Actor.new(def.max_hp)
   actor.display_name = def.name_key
+  actor.portrait = def.portrait
   for item_id in def.item_ids:
     actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
   return actor
@@ -495,6 +497,7 @@ func rehydrate(snap: Dictionary) -> bool:
   character = CharacterCatalog.get_def(snap.get('character', CharacterCatalog.DEFAULT))
   player = Actor.new(float(snap['max_hp']))
   player.hp = float(snap['hp'])
+  player.portrait = character.portrait
   player.board.clear()
   for entry in snap['board']:
     var item := Item.new(ItemCatalog.get_def(str(entry['id'])), player)

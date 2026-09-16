@@ -1,0 +1,89 @@
+# Interface look
+
+A dev tool for trying post-processing effects on interface images (item and potion icons, character
+portraits, HP bars, item value pills) separately from the [corridor look](corridor_look.md). Other text
+and panels, and the corridor, are not affected.
+
+**Location:** `src/shaders/interface_look.gdshader`, `src/shaders/look_effects.gdshaderinc` (the effects
+shared with the corridor look), `src/shaders/interface_look_material.tres`, `InterfaceLook`
+(`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the F3 panel in
+`src/debug/interface_look_panel.*`. Saved looks in `assets/interface_looks/`.
+
+## How it works
+
+- Every interface image node uses the same material file, `interface_look_material.tres`, set in its
+  scene. Godot shares one loaded copy of the file, and `InterfaceLook.material` holds it, so a setting
+  changed there changes every image at once.
+- The shader includes `look_effects.gdshaderinc`, which holds the effect settings and functions used by
+  both looks under the same names. That is what lets settings be copied between the two looks.
+- Each node is drawn on its own, so effects work inside the node's rectangle only. Effects that need the
+  whole screen are left out: warp, vignette and bloom (`UNUSED_GROUPS` in `interface_look.gd`), and the
+  palette dithering. Glow on specific nodes is a separate system, [interface glow](interface_glow.md).
+  Its settings are in this panel's Glow section and saved in the `glow` section of an interface look
+  file.
+- The shader keeps the node's alpha and colour (a `ColorRect`'s colour, modulate), so HP bar colours and
+  fades still work.
+- Distances are in screen pixels, as in the corridor look. Halftone dots, hatching lines and grain are laid
+  out from the node's corner, so they move with an animated node; scanlines are laid out on the screen.
+- The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the portrait palette
+  ([interface_palette.md](interface_palette.md#images)). It runs after the look effects and before picture
+  wear. Its settings are not look settings.
+- The material is also present in release builds, with every effect off.
+
+| Element | Scene and node |
+|---|---|
+| Item icons (combat boards, draft cards) | `item_cell.tscn` `Frame/Icon`, `draft_card.tscn` `Icon` |
+| Potion icons | `potion_slot.tscn` `Icon` |
+| Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` |
+| Character portraits | `combat_view_framed.tscn` player portrait `Image`, `ally_slot.tscn` `Left/Portrait/Image`, `character_card.tscn` `Portrait/Image` |
+| HP bars | `Background` and `Fill` under `HP` in `combat_view_framed.tscn`, `ally_slot.tscn`, `enemy_hud.tscn` |
+| Item value pills (the numbers on items) | `value_pill.tscn` root panel and its `Value` label |
+
+On a pill's number the shader runs on each letter as drawn from the font's texture, so dot, line and
+speck patterns are laid out from each letter rather than from the pill's corner.
+
+To add an element, set its node's `material` to `interface_look_material.tres` in the scene and add it to
+`SCENE_NODES` in the test. A node with its own material needs a child node for the image instead.
+
+## Picture wear
+
+The Picture Wear section of the panel, off by default, draws [panel wear](panel_wear.md) on the images
+themselves: faded areas, specks, edge wear and creases, without folds, in the same mark colours
+(`Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`, pushed by `InterfaceLook.push_wear_colours()` at
+start and when an interface palette changes).
+
+- It uses `print_panel_wear()` from `print_wear.gdshaderinc`, laid out in the node's own pixels as panel
+  wear is, so the same numbers give marks of the same size. Its settings (`picture_*` in
+  `interface_look.gdshader`) are separate from panel wear's and start at panel wear's defaults.
+- Marks only show where the image is opaque, so a portrait without a background wears on the figure,
+  not around it. It also applies to the HP bars.
+- The image's average colour picks the arrangement of marks, so the same picture always wears the same
+  way and its marks do not move while the node is animated.
+- The corridor look has no picture wear, so the copy buttons leave it alone.
+
+## The panel
+
+F3 toggles it, in debug builds. It is the [look panel](corridor_look.md#the-panel) built from the
+interface look shader, with its own save, load and reset, plus two buttons:
+
+| Button | Does |
+|---|---|
+| Copy from corridor look | Every interface look setting the corridor look also has takes the corridor look's value |
+| Copy to corridor look | The reverse; corridor-only settings (warp, bloom, vignette, dithering) are left alone |
+
+An interface look file is a `ConfigFile` with one `shader` section listing every setting.
+
+## Public API
+
+| Member | Use |
+|---|---|
+| `InterfaceLook.material` | The shared material |
+| `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the include code |
+| `InterfaceLook.reset()`, `save_look(path)`, `load_look(path) -> bool` | Reset, save and load |
+| `InterfaceLook.copy_from_corridor()`, `copy_to_corridor()` | Copy shared settings between the looks |
+
+Start-up arguments `--interface-look=`, `--interface-set=` and `--interface-panel` are listed in
+[debug_panel.md](debug_panel.md#start-up-arguments). `DebugPanels.reset_settings()` resets the interface
+look.
+
+Tests: `tests/debug/test_interface_look.gd`.

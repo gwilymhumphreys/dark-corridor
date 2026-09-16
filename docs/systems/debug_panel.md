@@ -2,28 +2,29 @@
 
 A dev-only panel for comparing looks in game: the world and interface palettes, plus start-up
 arguments for screenshots of real fights. It is on every screen, including the corridor testbed and combat
-sandbox. The same autoload holds the F2 [look panel](corridor_look.md) and the F3
-[print panel](print_frame.md).
+sandbox. The same autoload holds the F2 [look panel](corridor_look.md), the F5
+[print panel](print_frame.md) and the F3 [interface look panel](interface_look.md).
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
 as the `DebugPanels` autoload.
 
 ## Behaviour
 
-- F1 toggles the panel, F2 the look panel and F3 the print panel, only in debug builds (`OS.is_debug_build()`). The autoload
+- F1 toggles the panel, F2 the look panel, F3 the interface look panel and F5 the print panel, only in debug builds (`OS.is_debug_build()`). The autoload
   processes while the game is paused.
 - The palette keys below are ignored while a text field (a look or palette combo name) has focus.
-- `]` and `[` select the next and previous entry in the World palette list, and `'` and `;` in the
-  Interface palette list, with the panel open or closed, skipping folder headings and wrapping round
-  through "Off". Debug builds only.
+- `]` and `[` select the next and previous entry in the World palette list, `'` and `;` in the
+  Interface palette list and `.` and `,` in the Portrait palette list, with the panel open or closed,
+  skipping folder headings and wrapping round through "Off". Debug builds only.
 - `\` moves the selected world palette file (and its `.import` file) into
   `assets/palettes/shortlist/`, then rescans the list and keeps that palette selected. It does nothing
   on "Off", for a palette already in the shortlist, or when a file of the same name is there.
+- Backspace turns the world clamp's dithering on or off, keeping the F1 panel's Dithering switch in step.
 - Choices last for the session only, unless saved. `DebugPanels.reset_settings()` restores the
   defaults; `TestCleanup.reset_all_managers()` calls it.
-- A **palette combo** is a saved set of palette choices: world palette, interface palette, colour
-  matching and dithering. Combos are `.cfg` files in `assets/palette_combos/`, listed each time the
-  panel opens.
+- A **palette combo** is a saved set of palette choices: world palette, interface palette, portrait
+  palette, colour matching and dithering. Combos are `.cfg` files in `assets/palette_combos/`, listed
+  each time the panel opens.
 - The combo chosen in "Load at start-up" is remembered in `START_UP_PATH` (`user://`, this computer
   only) and loaded before the start-up arguments. It is skipped in headless runs (tests, autotest),
   with `--shot`, and when an argument in `PALETTE_ARGUMENTS` sets palettes, so those runs stay
@@ -40,6 +41,7 @@ as the `DebugPanels` autoload.
 |---|---|---|
 | World palette (corridor) | "Off", then every palette under `assets/palettes/`, grouped by subfolder. Applies immediately. | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
 | Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`). Applies immediately. | [Interface palette](interface_palette.md) |
+| Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file. Clamps the interface images to the chosen palette's colours. | [Interface images](interface_palette.md#images) |
 | Font | "Game default" (the `Prefs` font), then every font file in `assets/fonts/candidates/`. Applies immediately. | The project theme's default font ([ui_theme.md](ui_theme.md#font-candidates)) |
 | Colour matching | RGB or perceptual (OKLab). Applies immediately. | World clamp |
 | Dithering | On or off. Applies immediately. | World clamp |
@@ -60,12 +62,20 @@ Read once at start-up from the user arguments (after `--`), for screenshots and 
 | `--monster-image=<res path>` | Every enemy uses this image (`MonsterImages.forced_path`) |
 | `--font=<res path>` | The project theme's default font becomes this font file, replacing the one `Prefs` set ([ui_theme.md](ui_theme.md#font-candidates)) |
 | `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
+| `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
 | `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
 | `--print-look=<path>` | Loads a [print look](print_frame.md#print-looks) before the other arguments, so they can override it |
 | `--palette-combo=<path>` | Loads a palette combo before the other arguments, so they can override it |
 | `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay or layout setting. Repeatable |
 | `--print-panel` | Opens the print panel |
+| `--interface-look=<path>` | Loads an [interface look](interface_look.md) before the other arguments, so they can override it |
+| `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
+| `--interface-panel` | Opens the interface look panel |
+| `--glow-demo=<brightness>` | Every node drawn through the interface look material glows ([interface_glow.md](interface_glow.md)); read by `InterfaceGlow` |
+
+`--shot` saves into the project's gitignored `screenshots/` folder, one file per shot named with the
+date and time (`src/debug/screenshot.gd`), and prints `SHOT_SAVED:<path>`.
 
 For example, a real fight under a world palette:
 `<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial --world-palette=res://assets/palettes/good/waldgeist-32x.png`
@@ -78,6 +88,7 @@ For example, a real fight under a world palette:
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
 | `set_ui_font(path: String)`, `restore_default_font()`, `ui_font` | Use this font file as the project theme's default font, or put the theme's own font back; `ui_font` is the chosen path, or `''` when the theme's own font is in use |
 | `set_interface_palette(path: String)`, `interface_palette` | Apply an interface palette file; `''` goes back to the default colours. Also recolours statuses in the current fight |
+| `set_portrait_palette(choice: String)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path |
 | `interface_palette_changed` (signal) | Emitted after an interface palette is applied or reset; `NamedColourRect` copies its colour again |
 | `save_palette_combo(path) -> Error`, `load_palette_combo(path) -> bool`, `palette_combo_path(name)` (static) | Palette combo files |
 | `start_up_palette_combo()`, `set_start_up_palette_combo(name)`, `start_up_combo_allowed(args, headless)` (all static) | The combo loaded at start-up, and whether a run may load it |
@@ -89,7 +100,7 @@ For example, a real fight under a world palette:
 | `set_dithering(on)`, `is_dithering()` | The world clamp's dithering switch, kept in step with the panel |
 | `set_world_palette(path: String)` | Clamp the combat corridor to this palette file; `''` turns it off |
 | `toggle_panel()` | Show or hide the panel |
-| `cycle_palette(step: int)`, `cycle_interface_palette(step: int)` | Select the next (`1`) or previous (`-1`) world or interface palette |
+| `cycle_palette(step: int)`, `cycle_interface_palette(step: int)`, `cycle_portrait_palette(step: int)` | Select the next (`1`) or previous (`-1`) world, interface or portrait palette |
 | `shortlist_palette()` | Move the selected world palette into `SHORTLIST_DIR` |
 | `move_palette_file(path, folder) -> String` (static) | Move a palette file and its `.import` file; returns the new path or `''` |
 | `reset_settings()` | Back to defaults, including the interface palette |

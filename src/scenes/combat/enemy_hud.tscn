@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/enemy_hud.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="2"]
+[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 
 [node name="EnemyHud" type="VBoxContainer"]
 theme_override_constants/separation = 10
@@ -29,6 +30,7 @@ layout_mode = 2
 size_flags_vertical = 4
 
 [node name="Background" type="ColorRect" parent="HpRow/HP"]
+material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -40,6 +42,7 @@ script = ExtResource("2")
 colour_name = "ENEMY_HP_BAR_BG"
 
 [node name="Fill" type="ColorRect" parent="HpRow/HP"]
+material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

@@ -114,7 +114,7 @@ Decision + rationale: [decision_log.md #34](../decision_log.md).
 
 ## Presentation (reads, doesn't live here)
 
-Each item exposes its effect-family colour + value for the panel (usually one; rare items may show more than one), and its `Ticker` for the Bazaar-style cooldown ring. Border = rarity; build-anchor = a separate highlight (glow), never size or border. The item emits a fire-reaction (recoil/flash) the presentation plays. Items don't draw.
+Each item exposes its effect-family colour + value for the panel (usually one; rare items may show more than one), and its `Ticker` for the cooldown fill. Border = rarity; build-anchor = a separate highlight (glow), never size or border. The item emits a fire-reaction (recoil/flash) the presentation plays. Items don't draw.
 
 ---
 

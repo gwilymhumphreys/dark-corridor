@@ -43,7 +43,7 @@ is the owner's doc: read it for intent, do not edit it.
   comparison page (private to the owner): https://claude.ai/artifact/62suHYJCvWuJgJ8LbWdLCL, saved in
   `comparisons/interface_palette_plates/`.
 - **Background wear** ([`background_wear.md`](../systems/background_wear.md)): print wear on the screen
-  background, from a record sleeve the owner liked (worn edges, specks, bends). Settings in F3.
+  background, from a record sleeve the owner liked (worn edges, specks, bends). Settings in F5.
   Comparison page (private to the owner): https://claude.ai/artifact/LfmcUdSUhiV2fbXoDkhMC1, saved in
   `comparisons/background_wear_plates/`. The owner's verdict: the rubbed edges and creases are good;
   specks are not needed but can stay if sparse (the current defaults); mottling and faint flecks were
@@ -84,6 +84,11 @@ Screenshot commands (Godot exe path in [`../handoff.md`](../handoff.md)):
 ```
 
 ## Next task: palettes and effects on the interface
+
+Built since: effects on interface images only (icons, portraits, HP bars) as the
+[interface look](../systems/interface_look.md), instead of a full-screen pass, and
+[interface glow](../systems/interface_glow.md) for specific elements. The notes below are the original
+brief.
 
 The interface should look like it belongs with the corridor, so try both palettes and post-processing
 effects on it (for example grain, vignette, scanlines, colour grading, dithering, bloom, a slight warp),

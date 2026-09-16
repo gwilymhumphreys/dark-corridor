@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://dctooltipkwchip1"]
+[gd_scene load_steps=3 format=3 uid="uid://dctooltipkwchip1"]
 
 [ext_resource type="Script" path="res://src/scenes/ui/tooltip/keyword_chip.gd" id="1"]
+[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 
 [node name="KeywordChip" type="PanelContainer"]
 theme_type_variation = &"PanelSlot"
@@ -20,6 +21,7 @@ mouse_filter = 2
 theme_override_constants/separation = 6
 
 [node name="Icon" type="TextureRect" parent="Margin/Row"]
+material = ExtResource("interface_look_material")
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 size_flags_vertical = 4

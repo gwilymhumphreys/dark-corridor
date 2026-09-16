@@ -1,6 +1,6 @@
 class_name PrintPanel
 extends LookPanel
-## The print panel (docs/systems/print_frame.md, docs/systems/panel_wear.md), toggled with F3 by
+## The print panel (docs/systems/print_frame.md, docs/systems/panel_wear.md), toggled with F5 by
 ## `DebugPanels`: the printed look around the corridor and on UI panels. One section per group of the
 ## background wear, then Layout (the corridor margin), then the border and the wear over the corridor,
 ## then the panel wear groups. Its saved looks are print looks, in `DebugPanelsAutoload.PRINT_LOOK_DIR`,

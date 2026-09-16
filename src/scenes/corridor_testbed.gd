@@ -104,8 +104,5 @@ func _auto_shot() -> void:
       delay = float(arg.substr(13))
   await get_tree().create_timer(delay).timeout
   await RenderingServer.frame_post_draw
-  var img: Image = get_viewport().get_texture().get_image()
-  var path: String = 'user://shot.png'
-  img.save_png(path)
-  print('SHOT_SAVED:', ProjectSettings.globalize_path(path))
+  Screenshot.save(get_viewport(), 'corridor_shot')
   get_tree().quit()

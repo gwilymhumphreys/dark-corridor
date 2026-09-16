@@ -10,7 +10,7 @@ theme for the whole interface; the [screen background](background_wear.md) and t
 **Location:** `src/ui/worn_style_box.gd` (class `WornStyleBox`), `src/shaders/panel_wear.gdshader`,
 `src/shaders/print_wear.gdshaderinc` (the shared effect functions), `PrintLook`
 (`src/autoloads/print_look.gd`, class `PrintLookAutoload`), which owns the material, settings, defaults
-and save/load/reset for panel wear alongside background wear and the print frame. Settings are in the F3
+and save/load/reset for panel wear alongside background wear and the print frame. Settings are in the F5
 print panel ([print_frame.md](print_frame.md)).
 
 ## How it works
@@ -35,10 +35,12 @@ print panel ([print_frame.md](print_frame.md)).
   a `PrintWearSettings` struct to call the same functions. Panel wear has no folds group; folds are laid
   out for a whole screen, not a panel.
 - `assets/themes/dark_corridor.tres` wraps every panel type in a `WornStyleBox`: `Panel`, `PanelContainer`,
-  `PanelFlat`, `PanelFramed`, `PanelSmall`, `PanelDetail` and `PanelPause` each wrap a flat,
+  `PanelFlat`, `PanelFramed`, `PanelSmall`, `PanelDetail`, `PanelPause` and `PanelSlot` each wrap a flat,
   palette-following `PaletteStyleBox` ([interface_palette.md](interface_palette.md),
-  [ui_theme.md](ui_theme.md#flat-palette-following-panels)). `PanelSlot` and Godot's built-in
-  `TooltipPanel` stay unwrapped pack art.
+  [ui_theme.md](ui_theme.md#flat-palette-following-panels)). `PanelSlot` is the frame behind icons and
+  portraits. Godot's built-in `TooltipPanel` stays unwrapped pack art.
+- The picture inside a `PanelSlot` draws on top of the wear unworn. The [interface look](interface_look.md#picture-wear)
+  has a picture wear setting that draws the same wear on the picture itself.
 - An [interface palette](interface_palette.md) sets `Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`,
   the panel's two mark colours; `PrintLook` pushes them into `panel_material` at start and whenever a
   palette is applied or reset. `InterfacePalette` also recolours a `WornStyleBox`'s wrapped `base` when
@@ -53,7 +55,7 @@ print panel ([print_frame.md](print_frame.md)).
 | Panel Creases | Faint bands across the panel |
 
 The defaults are scaled down from the background's own (smaller faded areas, fewer and closer specks, a
-narrower edge) and are starting values for the owner to tune from the F3 panel.
+narrower edge) and are starting values for the owner to tune from the F5 panel.
 
 ## What is not covered
 

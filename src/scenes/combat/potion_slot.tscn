@@ -2,14 +2,14 @@
 
 [ext_resource type="Script" path="res://src/scenes/combat/potion_slot.gd" id="3"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="1"]
-[ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="2"]
+[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 
 [node name="PotionSlot" type="Button"]
 custom_minimum_size = Vector2(96, 96)
 focus_mode = 0
 script = ExtResource("3")
 
-[node name="Color" type="ColorRect" parent="."]
+[node name="Frame" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,11 +21,10 @@ offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.3, 0.7, 0.45, 1)
-script = ExtResource("2")
-colour_name = "POTION"
+theme_type_variation = &"PanelSlot"
 
 [node name="Icon" type="TextureRect" parent="."]
+material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

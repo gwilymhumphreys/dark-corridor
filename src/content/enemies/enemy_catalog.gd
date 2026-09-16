@@ -24,6 +24,7 @@ static func _build() -> void:
   var grunt := EnemyDef.new()
   grunt.id = GRUNT
   grunt.name_key = 'Corridor Grunt'
+  grunt.portrait = 'res://assets/portraits/enemies/goblin_01.png'   # PLACEHOLDER portrait — owner's to swap
   grunt.max_hp = Balance.ENEMY_PLACEHOLDER_HP
   grunt.item_ids = [ItemCatalog.ENEMY_CLAW]
   _defs[grunt.id] = grunt
@@ -32,6 +33,7 @@ static func _build() -> void:
   var brute := EnemyDef.new()
   brute.id = BRUTE
   brute.name_key = 'Corridor Brute'
+  brute.portrait = 'res://assets/portraits/enemies/gigant_06_ogre_warrior.png'   # PLACEHOLDER portrait — owner's to swap
   brute.max_hp = Balance.ENEMY_BRUTE_HP
   brute.item_ids = [ItemCatalog.ENEMY_CLAW]
   _defs[brute.id] = brute
@@ -41,6 +43,7 @@ static func _build() -> void:
   var boss := EnemyDef.new()
   boss.id = BOSS
   boss.name_key = 'Corridor Warden'
+  boss.portrait = 'res://assets/portraits/enemies/undead_07_soulhunter.png'   # PLACEHOLDER portrait — owner's to swap
   boss.max_hp = Balance.ENEMY_BOSS_HP
   boss.item_ids = [ItemCatalog.ENEMY_CLAW, ItemCatalog.ENEMY_CLAW]
   _defs[boss.id] = boss
@@ -50,6 +53,7 @@ static func _build() -> void:
   var thrall := EnemyDef.new()
   thrall.id = SPORE_THRALL
   thrall.name_key = 'Spore Thrall'
+  thrall.portrait = 'res://assets/portraits/enemies/monster_flower3.png'   # PLACEHOLDER portrait — owner's to swap
   thrall.max_hp = Balance.ENEMY_SPORE_THRALL_HP
   thrall.item_ids = [ItemCatalog.ENEMY_CLAW]
   _defs[thrall.id] = thrall

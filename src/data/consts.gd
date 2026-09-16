@@ -3,12 +3,12 @@ class_name Consts
 ## and aren't colours (those live in Colours) — the magic numbers that were floating at use sites
 ## and are shared across more than one file, gathered so they're consistent and editable in one place.
 
-# Cooldown-ring overlay, drawn identically by item_icon and item_cell (the radius offset differs
-# per host, but the arc resolution + stroke width are shared).
+# The cooldown ring item_icon draws (the combat sandbox's placeholder board view). The framed
+# combat view's ItemCell draws a cooldown fill instead (cooldown_fill.gdshader).
 const COOLDOWN_RING_SEGMENTS := 48
 const COOLDOWN_RING_WIDTH := 5.0
 
-# The black outline stroke on an item panel / cell (item_icon + item_cell).
+# The black outline stroke on an item panel (item_icon).
 const PANEL_BORDER_WIDTH := 3.0
 
 # UI pixel-scale (docs/systems/ui_theme.md). The window is a true high-res 2560x1440 canvas

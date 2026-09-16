@@ -117,6 +117,7 @@ func _spawn_token(def_id: String) -> Actor:
     return null
   var actor := Actor.new(def.max_hp)
   actor.display_name = def.name_key
+  actor.portrait = def.portrait
   for item_id in def.item_ids:
     actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
   return actor

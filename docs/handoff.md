@@ -191,9 +191,11 @@ resolution.
 | `Corridor3D`: real 3D corridor, one steady light at the camera, painted enemies as lit `Sprite3D` cut-outs, hit lights in the effect colour | [corridor_3d.md](systems/corridors/corridor_3d.md) |
 | F1 debug panel: world palette, interface palette, palette combos, font choice, start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
 | F2 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog; look files in `assets/looks/` | [corridor_look.md](systems/corridor_look.md) |
+| F3 interface look: the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look; interface looks in `assets/interface_looks/` | [interface_look.md](systems/interface_look.md) |
+| Interface glow: code makes a specific node glow (`InterfaceGlow.set_glow`, `flash`); 2D HDR is on; not used by any element yet | [interface_glow.md](systems/interface_glow.md) |
 | World palette clamp (corridor only); the full-screen clamp was removed | [palette_clamp.md](systems/palette_clamp.md) |
 | Interface palette: a named `.gpl` recolours `Colours` and the theme; effects use its effect colours | [interface_palette.md](systems/interface_palette.md) |
-| F3 print panel: worn record-sleeve background, wear over the corridor, worn corridor edge, border, folds; print looks in `assets/print_looks/` | [background_wear.md](systems/background_wear.md) · [print_frame.md](systems/print_frame.md) |
+| F5 print panel: worn record-sleeve background, wear over the corridor, worn corridor edge, border, folds; print looks in `assets/print_looks/` | [background_wear.md](systems/background_wear.md) · [print_frame.md](systems/print_frame.md) |
 | Rakkas as the interface font (smooth, not pixel) | [ui_theme.md](systems/ui_theme.md) |
 
 **Open:** the effects style, which corridor look and palettes, whether the print style spreads to the
@@ -334,7 +336,7 @@ game_manager · sfx · music) · `src/autotest/` (the harness + strategies + rep
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
 draft_card · map_strip · speed_button · pause_menu) · `src/scenes/combat/`
 (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell · potion_slot) ·
-`src/scenes/` (sandbox + corridors) · `src/debug/` (F1/F2/F3 panels, interface palette) ·
+`src/scenes/` (sandbox + corridors) · `src/debug/` (F1, F2, F3 and F5 panels, interface palette) ·
 `src/shaders/` (corridor look, palette clamp, print wear) · `src/ui/` (print frame, screen background) ·
 `assets/looks/`, `assets/print_looks/`, `assets/palettes/`, `assets/palette_combos/` · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
 + `locale/` (i18n) · `tests/` (combat · content · run · autotest · ui · smoke · utils) ·

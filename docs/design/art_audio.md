@@ -34,6 +34,7 @@ Art sources (exploring)
 Monsters: painted images from the monster collection in ../dark-corridor-design/monsters/, used at their original resolution and cut out of their black backgrounds. The game has a sample of nine in assets/monsters/cut_out/. Fights pick one at random; which enemy uses which image is not content yet.
 Corridor walls: one tiling stone texture for now. Candidate PSX-style modular kits are listed in docs/plans/full_res_art_palette_clamp_3d_corridor.md.
 Icons: painted icons from the 6000 Fantasy Icons pack for items, potions, statuses and keywords, copied into assets/icons/. The agent picked a first icon for each; every pick is a placeholder for the owner to swap.
+Portraits: painted character portraits from the same pack (the versions without backgrounds, so the worn frame shows behind the figure), copied into assets/portraits/. Each character and enemy has one, shown on the character select cards, the player's combat portrait and the ally slots. The agent picked each one; every pick is a placeholder for the owner to swap.
 Interface frame: the Black and White UI pack, pixel art drawn at a ~360p scale on the full-resolution screen (decision #32). Panel frames will come from whichever UI theme is used.
 Font: Rakkas, a smooth font, chosen from a screenshot comparison. Other shortlisted fonts can be tried from the debug panel. No pixel font by default.
 No generative-AI assets.
@@ -52,8 +53,10 @@ Readability limits: text and item icons must stay readable. Panels, buttons, tex
 Looks being tried
 
 Corridor look (F2 panel): post-processing on the corridor image only. It covers grade, colour ramp, halftone, hatching, edge lines, bloom, warp, scanlines, grain, vignette, posterize, pixelate, and the world palette with dithering, plus fog and glow. Example looks are saved in assets/looks/; their names are placeholders. Dithering in motion is one of the things being judged.
-Printed record sleeve (F3 panel): the screen background is drawn like a worn printed sleeve the owner liked. Rubbed edges, creases, subtle faded areas and sparse specks are on by default. Mottling, faint flecks and scratches were tried and removed.
+Printed record sleeve (F5 panel): the screen background is drawn like a worn printed sleeve the owner liked. Rubbed edges, creases, subtle faded areas and sparse specks are on by default. Mottling, faint flecks and scratches were tried and removed.
 The same print wear can be carried over the corridor, with its edge worn away, and the corridor moved in from the screen edges. The owner's saved defaults have both on. A rough border around the corridor and folds across the sheet are available but not judged yet. Two red two-ink corridor looks go with this style.
+Interface look (F3 panel): the corridor look's effects on item and potion icons, portraits and health bars only, never on text or panels. Settings can be copied to and from the corridor look.
+Glow: any interface element can be made to glow from code, following the image's shape, when there is a use for it (for example an item that fires). Nothing uses it yet.
 Interface palettes: candidate palette files, saved together with a world palette as palette combos, so the corridor and interface are judged together.
 
 

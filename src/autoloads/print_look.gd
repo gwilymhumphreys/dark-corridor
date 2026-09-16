@@ -2,12 +2,12 @@ class_name PrintLookAutoload
 extends Node
 ## Owns the print look (docs/systems/print_frame.md, docs/systems/panel_wear.md): background wear,
 ## panel wear, the print border and the corridor overlay — their materials, settings, defaults and
-## save/load/reset. Registered as the `PrintLook` autoload, before `DebugPanels`, which keeps the F3
+## save/load/reset. Registered as the `PrintLook` autoload, before `DebugPanels`, which keeps the F5
 ## panel UI and the `--print-look=`, `--print-set=`, `--background-set=`, `--panel-set=` start-up
 ## arguments and delegates to this autoload.
 ##
 ## Also hands out and frees the per-control canvas items `WornStyleBox` draws panel wear into, so the
-## registry survives an F3 panel rebuild and is freed in one place at exit.
+## registry survives an F5 panel rebuild and is freed in one place at exit.
 
 const BACKGROUND_SHADER: Shader = preload('res://src/shaders/background_wear.gdshader')
 const PANEL_SHADER: Shader = preload('res://src/shaders/panel_wear.gdshader')

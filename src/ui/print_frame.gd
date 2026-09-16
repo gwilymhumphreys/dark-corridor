@@ -1,6 +1,6 @@
 class_name PrintFrame
 extends Control
-## The printed frame around the combat corridor (docs/systems/print_frame.md), set from the F3 print
+## The printed frame around the combat corridor (docs/systems/print_frame.md), set from the F5 print
 ## panel. It moves the corridor in from its place in the scene by the corridor margin, sizes the border
 ## behind the corridor and the overlay on top of it, and tells the background wear where the corridor
 ## is on screen so folds can line up with it. The border and the overlay are hidden while their effects

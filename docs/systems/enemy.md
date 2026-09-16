@@ -19,7 +19,7 @@ What it **is not**: not a subclass of `Actor`; not a new combat mechanism; not t
 
 ## Enemy definition (data)
 
-An enemy is authored as an `EnemyDef` (#23): **HP** (max), a `name_key`, and an **ordered board** of Item ids (`item_ids`). `Encounter` instantiates an `Actor` from the def and gives it the Items. **Tier / signature / portrait** are authoring conventions, not yet `EnemyDef` fields.
+An enemy is authored as an `EnemyDef` (#23): **HP** (max), a `name_key`, and an **ordered board** of Item ids (`item_ids`). `Encounter` instantiates an `Actor` from the def and gives it the Items. `portrait` is the image an ally slot shows for the Actor (enemies in the corridor use the monster images instead). **Tier / signature** are authoring conventions, not yet `EnemyDef` fields.
 
 ---
 

@@ -43,14 +43,13 @@ static var BEAT_COMBAT: Color = Color(0.7, 0.35, 0.35)
 
 # ── Combat view (portraits, HP bars, cooldown ring, ally state) ──────────────
 static var PORTRAIT_PLAYER: Color = Color(0.2, 0.3, 0.5)
-static var PORTRAIT_ALLY: Color = Color(0.22, 0.28, 0.4)
 static var PORTRAIT_ENEMY: Color = Color(0.5, 0.2, 0.22)
 static var HP_BAR_BG: Color = Color(0.1, 0.1, 0.12)
 static var HP_BAR_FILL: Color = Color(0.4, 0.75, 0.4)
 static var ENEMY_HP_BAR_BG: Color = Color(0.12, 0.06, 0.06)
 static var ENEMY_HP_BAR_FILL: Color = Color(0.72, 0.22, 0.22)
-static var POTION: Color = Color(0.3, 0.7, 0.45)            # the potion slot swatch
-static var COOLDOWN_RING: Color = Color(0.95, 0.95, 0.95)
+static var COOLDOWN_RING: Color = Color(0.95, 0.95, 0.95)      # the line along the top of an item's cooldown fill
+static var COOLDOWN_FILL: Color = Color(0.95, 0.95, 0.95, 0.28) # the recharged part of the cell, under that line
 static var ALLY_DOWNED: Color = Color(0.45, 0.45, 0.45)     # darken a downed (dead) ally — alpha 1, not transparency
 
 # ── Map strip (1D progress map) ──────────────────────────────────────────────

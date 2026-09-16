@@ -80,16 +80,38 @@ func test_interface_palette_keys_step_and_wrap_through_off() -> void:
   assert_eq(DebugPanels.interface_palette, '', 'back on "Off"')
 
 
+func test_portrait_palette_same_as_corridor_follows_the_world_palette() -> void:
+  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR)
+  DebugPanels.set_world_palette(INTERFACE_PALETTE)
+  assert_gt(InterfaceLook.material.get_shader_parameter('colour_count'), 0,
+    'the interface images clamp to the world palette')
+  DebugPanels.set_world_palette('')
+  assert_eq(InterfaceLook.material.get_shader_parameter('colour_count'), 0,
+    'the clamp is off when the world palette is off')
+
+
+func test_portrait_palette_keys_step_away_from_the_default() -> void:
+  DebugPanels.cycle_portrait_palette(1)
+  assert_ne(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE,
+    'stepped off the default')
+  DebugPanels.cycle_portrait_palette(-1)
+  assert_eq(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE,
+    'back on the default')
+
+
 func test_a_saved_palette_combo_loads_the_same_choices() -> void:
   var path: String = COMBO_DIR.path_join('combo.cfg')
   DebugPanels.set_world_palette(INTERFACE_PALETTE)
   DebugPanels.set_interface_palette(INTERFACE_PALETTE)
+  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR)
   DebugPanels.set_dithering(true)
   assert_eq(DebugPanels.save_palette_combo(path), OK, 'saved')
   DebugPanels.reset_settings()
   assert_true(DebugPanels.load_palette_combo(path), 'loaded')
   assert_eq(DebugPanels.world_palette, INTERFACE_PALETTE, 'world palette restored')
   assert_eq(DebugPanels.interface_palette, INTERFACE_PALETTE, 'interface palette restored')
+  assert_eq(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR,
+    'portrait palette restored')
   assert_true(DebugPanels.is_dithering(), 'dithering restored')
   DirAccess.remove_absolute(path)
   DirAccess.remove_absolute(COMBO_DIR)

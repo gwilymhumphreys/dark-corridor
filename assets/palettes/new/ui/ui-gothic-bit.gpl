@@ -1,0 +1,66 @@
+GIMP Palette
+Name: ui-gothic-bit
+Columns: 8
+# Placeholder. Blue-grey panels and pale lavender text built around the gothic-bit palette's eight
+# colours (#0e0e12 #1a1a24 #333346 #535373 #8080a4 #a6a6bf #c1c1d2 #e6e6ec), with desaturated,
+# slightly cool effect hues. See docs/systems/interface_palette.md.
+# Interface
+ 14  14  18	ui background
+ 51  51  70	ui background wear
+128 128 164	ui background wear light
+118  52  62	ui border
+  8   8  11	ui panel shadow
+ 26  26  36	ui panel
+ 51  51  70	ui panel edge
+ 83  83 115	ui panel light
+ 51  51  70	ui panel wear
+128 128 164	ui panel wear light
+ 83  83 115	ui text disabled
+128 128 164	ui text pressed
+166 166 191	ui text dim
+193 193 210	ui text button
+230 230 236	ui text
+# Combat view
+ 70  76 112	portrait player
+104  58  72	portrait enemy
+ 26  26  36	hp bar bg
+112 150 124	hp bar fill
+ 38  24  32	enemy hp bar bg
+156  74  86	enemy hp bar fill
+230 230 236	cooldown ring
+ 83  83 115	ally downed
+# Tooltip
+193 193 210	rarity common
+160 184 220	rarity uncommon
+212 184 124	rarity rare
+212 196 150	tooltip changed
+# Effect families (shared with projectiles and damage numbers)
+184  72  84	damage
+112 170 132	heal
+136 100 176	arcane
+176 106  76	enemy claw
+100 130 190	status block
+122 160  92	status poison
+146 112 160	status weak
+182 120  88	status vulnerable
+196 190 140	status blind
+128 128 164	status silence
+100 160 160	status spores
+130 104 104	status decay
+204 168  96	status empowered
+# Relics
+104 120 150	relic stone ward
+140  86 100	relic vital charm
+114 114 136	relic iron idol
+# Beats and map strip
+144 104 176	beat boss
+190 164 110	beat relic
+108 152 124	beat rest
+104 122 172	beat event
+162  90 100	beat combat
+ 83  83 115	map track
+230 230 236	map current halo
+128 128 164	map cleared
+128 128 164	map arrow
+193 193 210	map label
+150 100 112	map rolled beat

@@ -26,6 +26,9 @@ _temp/
 # Local screenshot comparison pages (not shipped)
 comparisons/
 
+# Screenshots saved by --shot (src/debug/screenshot.gd)
+screenshots/
+
 .claude/worktrees/
 .claude/cache/
 

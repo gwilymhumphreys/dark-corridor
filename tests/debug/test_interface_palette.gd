@@ -123,19 +123,19 @@ func test_definitions_already_built_take_the_palette_until_reset() -> void:
 
 
 func test_named_colour_rect_takes_its_colour_when_added() -> void:
-  InterfacePalette.apply(_write_palette('rect.gpl', ['0 0 200 potion']))
+  InterfacePalette.apply(_write_palette('rect.gpl', ['0 0 200 hp_bar_fill']))
   var rect: NamedColourRect = NamedColourRect.new()
-  rect.colour_name = 'POTION'
+  rect.colour_name = 'HP_BAR_FILL'
   add_child_autofree(rect)
   assert_eq(rect.color, Color8(0, 0, 200))
 
 
 func test_named_colour_rect_follows_a_palette_applied_after_it_was_added() -> void:
   var rect: NamedColourRect = NamedColourRect.new()
-  rect.colour_name = 'POTION'
+  rect.colour_name = 'HP_BAR_FILL'
   add_child_autofree(rect)
   var default_colour: Color = rect.color
-  DebugPanels.set_interface_palette(_write_palette('live.gpl', ['0 0 200 potion']))
+  DebugPanels.set_interface_palette(_write_palette('live.gpl', ['0 0 200 hp_bar_fill']))
   assert_eq(rect.color, Color8(0, 0, 200), 'took the new colour straight away')
   DebugPanels.set_interface_palette('')
   assert_eq(rect.color, default_colour, 'back to the default on reset')
@@ -148,3 +148,17 @@ func test_palette_style_box_follows_an_applied_palette_and_returns_to_default_on
   assert_eq(style.bg_color, Color8(10, 20, 30), 'the flat panel fill follows its named Colours variable')
   InterfacePalette.reset()
   assert_eq(style.bg_color, default_colour, 'reset restores the fill')
+
+
+func test_interface_images_are_clamped_to_the_palette_colours_until_reset() -> void:
+  DebugPanels.set_interface_palette(_write_palette('clamp.gpl', [
+    '10 20 30 damage',
+    '10 20 30 heal',
+    '200 0 0 ui panel',
+  ]))
+  var material: ShaderMaterial = InterfaceLook.material
+  assert_eq(material.get_shader_parameter('colour_count'), 2, 'a colour named twice is one palette colour')
+  var palette: Image = (material.get_shader_parameter('palette_rgb') as Texture2D).get_image()
+  assert_true(palette.get_pixel(0, 0).is_equal_approx(Color8(10, 20, 30)), 'the first palette colour')
+  DebugPanels.set_interface_palette('')
+  assert_eq(material.get_shader_parameter('colour_count'), 0, 'no palette passes colours through')

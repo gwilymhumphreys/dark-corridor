@@ -2,8 +2,8 @@
 
 A shader step that replaces each pixel of the combat corridor with the nearest colour in a chosen
 palette, so art from different sources can be judged as one game. It is a dev tool, switched from the
-[debug panel](debug_panel.md); off by default. The interface takes its own colours from the
-[interface palette](interface_palette.md) instead.
+[debug panel](debug_panel.md); off by default. Interface images are clamped separately, to the
+[interface palette](interface_palette.md#images).
 
 **Location:** `src/shaders/palette_clamp.gdshaderinc` (the matching), `corridor_look.gdshader` (which
 includes it), `src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.

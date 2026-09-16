@@ -9,7 +9,7 @@ the owner's saved print look, `assets/print_looks/default.cfg`.
 [panel wear](panel_wear.md); the uniforms in `src/shaders/background_wear_settings.gdshaderinc`, used by
 both `src/shaders/background_wear.gdshader` and the corridor overlay
 ([print_frame.md](print_frame.md)); `src/ui/screen_background.gd` (class `ScreenBackground`);
-`PrintLook.background_material`. Settings are in the F3 print panel ([print_frame.md](print_frame.md)).
+`PrintLook.background_material`. Settings are in the F5 print panel ([print_frame.md](print_frame.md)).
 
 ## How it works
 

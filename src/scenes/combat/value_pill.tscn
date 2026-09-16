@@ -1,12 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/value_pill.gd" id="1"]
+[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 
 [node name="ValuePill" type="PanelContainer"]
+material = ExtResource("interface_look_material")
 mouse_filter = 2
 script = ExtResource("1")
 
 [node name="Value" type="Label" parent="."]
+material = ExtResource("interface_look_material")
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)

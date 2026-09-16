@@ -2,7 +2,7 @@ class_name LookPanel
 extends PanelContainer
 ## The look panel (docs/systems/corridor_look.md), toggled with F2 by `DebugPanels`. One section
 ## per effect in corridor_look.gdshader, built from the shader's uniform groups, then sections for
-## the corridor's light and its camera Environment. The background wear is in the F3 print panel
+## the corridor's light and its camera Environment. The background wear is in the F5 print panel
 ## (`PrintPanel`, which extends this). Every change applies at once to what is on screen. Looks are
 ## saved to and loaded from `DebugPanelsAutoload.LOOK_DIR`.
 
@@ -117,7 +117,7 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
     if group == '':
       continue
     # The palette clamp's switch is shared with the F1 panel.
-    if uniform == 'dithering':
+    if uniform == 'dithering' and look_material == DebugPanels.world_material:
       section = section if section != null else _add_section(group.capitalize())
       section.set_switch(DebugPanels.is_dithering(), DebugPanels.set_dithering)
       continue

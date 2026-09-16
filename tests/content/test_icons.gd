@@ -1,6 +1,7 @@
 extends GutTest
-## Every item, potion, status and mechanic keyword names an icon file that loads as a texture, so a
-## renamed or missing icon fails here instead of showing an empty cell.
+## Every item, potion, status and mechanic keyword names an icon file, and every character and enemy
+## names a portrait file, that loads as a texture, so a renamed or missing picture fails here instead
+## of showing an empty cell.
 
 
 func before_each() -> void:
@@ -32,6 +33,18 @@ func test_every_status_has_an_icon() -> void:
 func test_every_mechanic_keyword_has_an_icon() -> void:
   for id: String in KeywordCatalog.MECHANIC_ORDER:
     _assert_icon(KeywordCatalog.get_entry(id)['icon'], 'keyword %s' % id)
+
+
+func test_every_character_has_a_portrait() -> void:
+  CharacterCatalog.has(CharacterCatalog.DEFAULT)   # builds the catalog
+  for id: String in CharacterCatalog._defs:
+    _assert_icon((CharacterCatalog._defs[id] as CharacterDef).portrait, 'character %s portrait' % id)
+
+
+func test_every_enemy_has_a_portrait() -> void:
+  EnemyCatalog.get_def(EnemyCatalog.GRUNT)   # builds the catalog
+  for id: String in EnemyCatalog._defs:
+    _assert_icon((EnemyCatalog._defs[id] as EnemyDef).portrait, 'enemy %s portrait' % id)
 
 
 func _assert_icon(path: String, what: String) -> void:

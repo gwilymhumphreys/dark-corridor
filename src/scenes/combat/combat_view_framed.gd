@@ -26,6 +26,7 @@ var _player: Actor
 @onready var _player_items: GridContainer = $RightPanel/PlayerItems
 @onready var _potions: HBoxContainer = $RightPanel/Potions
 @onready var _portrait: Control = $BottomBar/PlayerPortrait/Portrait
+@onready var _portrait_image: TextureRect = $BottomBar/PlayerPortrait/Portrait/Image
 @onready var _player_hp_fill: ColorRect = $BottomBar/PlayerPortrait/HP/Fill
 @onready var _player_hp_label: Label = $BottomBar/PlayerPortrait/HP/Label
 @onready var _ally_left: HBoxContainer = $BottomBar/AllyLeft
@@ -43,6 +44,8 @@ var _cluster: TooltipCluster = null   # the floating item tooltip (its own Canva
 func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _cm = cm
   _player = player
+  if player.portrait != '':
+    _portrait_image.texture = load(player.portrait)
   _build_player_items(player)
   _build_potions(potions)
   _corridor.set_enemy_depth(0.0)
@@ -194,6 +197,7 @@ func _exit_tree() -> void:
   # CLAUDE.md runtime cleanup: drop the live-fight refs + the widget maps on free.
   _cm = null
   _player = null
+  _portrait_image.texture = null
   _enemy_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()

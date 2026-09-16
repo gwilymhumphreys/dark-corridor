@@ -155,7 +155,7 @@ look setting, kept until the effects pass decides on hit visuals.
   glide; N places a random cut-out monster at `APPROACH_DEPTH_START` and walks the corridor up to
   it, overriding the buttons until the walk finishes.
 - Testbed arguments (after `--`): `--set=property=value` sets any corridor export; `--monster` spawns a
-  monster for the shot; `--shot` saves `user://shot.png` mid-glide and quits (`--still` for a stopped
+  monster for the shot; `--shot` saves `screenshots/corridor_shot_<date>_<time>.png` mid-glide and quits (`--still` for a stopped
   frame, `--shot-delay=SECONDS` to wait longer), printing `SHOT_SAVED:<path>`. `--view=WIDTHxHEIGHT`
   (before `--`) forces a fixed `view_size`. The debug panel's `--monster-image=` and `--world-palette=` also
   apply.

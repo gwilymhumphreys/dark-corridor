@@ -5,7 +5,8 @@ colour grading, a colour ramp, halftone, hatching, edge lines, bloom, screen eff
 light and camera Environment. Every shader effect is off by default. Settings last for the session unless saved as
 a look file.
 
-**Location:** `src/shaders/corridor_look.gdshader`; the panel in `src/debug/look_panel.*`,
+**Location:** `src/shaders/corridor_look.gdshader`, with most effects in `look_effects.gdshaderinc`
+(shared with the [interface look](interface_look.md)); the panel in `src/debug/look_panel.*`,
 `look_section.*`, `look_row.gd` and the three `look_*_row.tscn` scenes; save, load and reset in
 `DebugPanelsAutoload` (`src/debug/debug_panels.gd`). Saved looks in `assets/looks/`.
 
@@ -18,7 +19,7 @@ a look file.
   [world palette clamp](palette_clamp.md#world-clamp) is one step of it. The palette and colour matching
   are set from the F1 panel.
 - Each effect is a `group_uniforms` block whose first uniform is `<group>_on`. Effects run in the order of
-  the groups in the file.
+  `fragment()`, which is the order of the table below; the panel lists the Dithering section last.
 - Distances (line spacing, dot size, bloom radius) are in screen pixels.
 
 | Group | Does |
@@ -55,7 +56,7 @@ a look file.
   `CORRIDOR_PROPERTIES` and `ENVIRONMENT_PROPERTIES` in `look_panel.gd`. Changes go into
   `DebugPanels.corridor_settings` and `environment_settings` and are applied to every corridor in the
   `Corridor3D.GROUP` group; corridors built later apply them too.
-- A group with no settings gets no section. The background wear is in the F3 print panel
+- A group with no settings gets no section. The background wear is in the F5 print panel
   ([print_frame.md](print_frame.md)), which extends this panel.
 - Save writes `assets/looks/<name>.cfg`; the dropdown loads one; Reset all returns every effect, the
   corridor, the world palette, matching and dithering to their defaults.
@@ -64,7 +65,7 @@ a look file.
 
 A `ConfigFile` with sections `shader` (every look uniform), `corridor` and `environment` (only settings
 that were changed), and `palette` (`world_palette`, `perceptual`, `dithering`). Loading starts from the
-defaults. The background wear and print frame are saved separately, as print looks from the F3 panel
+defaults. The background wear and print frame are saved separately, as print looks from the F5 panel
 ([print_frame.md](print_frame.md#print-looks)); loading or resetting a look leaves them unchanged.
 
 For a screenshot of a saved look (arguments in [debug_panel.md](debug_panel.md#start-up-arguments)):

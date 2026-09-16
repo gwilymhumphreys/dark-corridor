@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/draft_card.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
+[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 
 [node name="DraftCard" type="Button"]
 custom_minimum_size = Vector2(280, 380)
@@ -19,6 +20,7 @@ mouse_filter = 2
 color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="Icon" type="TextureRect" parent="."]
+material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 0
 offset_left = 58.0

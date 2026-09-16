@@ -69,8 +69,5 @@ func _shot_delay() -> float:
 func _auto_shot() -> void:
   await get_tree().create_timer(_shot_delay()).timeout   # mid-fight when paired with --autostart
   await RenderingServer.frame_post_draw
-  var image: Image = get_viewport().get_texture().get_image()
-  var path: String = 'user://run_shot.png'
-  image.save_png(path)
-  print('SHOT_SAVED:', ProjectSettings.globalize_path(path))
+  Screenshot.save(get_viewport(), 'run_shot')
   get_tree().quit()

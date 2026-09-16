@@ -2,7 +2,6 @@
 
 [ext_resource type="Texture2D" uid="uid://cjn4qyow2r4lk" path="res://assets/ui/btn-large-0.png" id="1_btn"]
 [ext_resource type="Texture2D" uid="uid://bxqxuwn6qow0c" path="res://assets/ui/panel-2-0.png" id="2_panel2"]
-[ext_resource type="Texture2D" uid="uid://45ki40ol2lge" path="res://assets/ui/panel-item-0.png" id="3_item"]
 [ext_resource type="Texture2D" uid="uid://bamuejnex628w" path="res://assets/ui/btn-unpressed-0.png" id="4_unchecked"]
 [ext_resource type="Texture2D" uid="uid://cdd1vvlcx7itj" path="res://assets/ui/btn-pressed-0.png" id="5_checked"]
 [ext_resource type="Script" path="res://src/ui/worn_style_box.gd" id="6_worn_style_box"]
@@ -15,13 +14,6 @@ texture_margin_left = 10.0
 texture_margin_top = 10.0
 texture_margin_right = 10.0
 texture_margin_bottom = 10.0
-
-[sub_resource type="StyleBoxTexture" id="sb_item"]
-texture = ExtResource("3_item")
-texture_margin_left = 5.0
-texture_margin_top = 5.0
-texture_margin_right = 5.0
-texture_margin_bottom = 5.0
 
 [sub_resource type="StyleBoxTexture" id="sb_btn_wide"]
 texture = ExtResource("1_btn")
@@ -95,6 +87,19 @@ content_margin_bottom = 10.0
 script = ExtResource("6_worn_style_box")
 base = SubResource("pb_framed")
 
+[sub_resource type="StyleBoxFlat" id="pb_slot"]
+script = ExtResource("7_palette_style_box")
+colour_name = "UI_BACKGROUND"
+bg_color = Color(0.04, 0.04, 0.05, 1)
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBox" id="pb_slot_worn"]
+script = ExtResource("6_worn_style_box")
+base = SubResource("pb_slot")
+
 [resource]
 default_font = ExtResource("8_font")
 Button/colors/font_color = Color(0.75, 0.75, 0.75, 1)
@@ -126,7 +131,7 @@ PanelFramed/styles/panel = SubResource("pb_framed_worn")
 PanelPause/base_type = &"PanelContainer"
 PanelPause/styles/panel = SubResource("pb_pause_worn")
 PanelSlot/base_type = &"PanelContainer"
-PanelSlot/styles/panel = SubResource("sb_item")
+PanelSlot/styles/panel = SubResource("pb_slot_worn")
 PanelSmall/base_type = &"PanelContainer"
 PanelSmall/styles/panel = SubResource("pb_small_worn")
 TooltipLabel/colors/font_color = Color(1, 1, 1, 1)

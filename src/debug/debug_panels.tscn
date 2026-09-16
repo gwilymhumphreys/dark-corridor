@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/debug/debug_panels.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="3"]
 [ext_resource type="PackedScene" path="res://src/debug/look_panel.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://src/debug/print_panel.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://src/debug/interface_look_panel.tscn" id="6"]
 
 [node name="DebugPanels" type="Node"]
 process_mode = 3
@@ -69,6 +70,28 @@ popup/item_0/text = "Off"
 popup/item_0/id = 0
 
 [node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/InterfacePaletteRow/Option"]
+script = ExtResource("3")
+
+[node name="PortraitPaletteRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/PortraitPaletteRow"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+text = "Portrait palette"
+vertical_alignment = 1
+
+[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/PortraitPaletteRow"]
+custom_minimum_size = Vector2(400, 48)
+layout_mode = 2
+focus_mode = 0
+item_count = 1
+selected = 0
+popup/item_0/text = "Off"
+popup/item_0/id = 0
+
+[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/PortraitPaletteRow/Option"]
 script = ExtResource("3")
 
 [node name="FontRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
@@ -205,3 +228,9 @@ layer = 127
 visible = false
 
 [node name="PrintPanel" parent="PrintLayer" instance=ExtResource("5")]
+
+[node name="InterfaceLookLayer" type="CanvasLayer" parent="."]
+layer = 127
+visible = false
+
+[node name="InterfaceLookPanel" parent="InterfaceLookLayer" instance=ExtResource("6")]

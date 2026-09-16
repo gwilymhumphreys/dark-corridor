@@ -9,6 +9,7 @@ extends RefCounted
 var id: String = ''
 var name_key: String = ''            # source English; displayed via tr() — localizable
 var blurb_key: String = ''           # one-line identity hook for the character-select screen (tr())
+var portrait: String = ''            # res:// path of the character's portrait (assets/portraits/characters/); empty = none
 var item_pool: Array = []            # this character's draftable item ids (#27); colorless is added at draw
 var starting_item_ids: Array = []    # the run-start board, left-to-right
 var starting_relic_id: String = ''   # the signature starting relic (the most build-defining — design)

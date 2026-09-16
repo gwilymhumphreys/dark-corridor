@@ -119,8 +119,5 @@ func target_pos(target) -> Vector2:
 func _auto_shot() -> void:
   await get_tree().create_timer(2.0).timeout
   await RenderingServer.frame_post_draw
-  var img: Image = get_viewport().get_texture().get_image()
-  var path: String = 'user://combat_shot.png'
-  img.save_png(path)
-  print('SHOT_SAVED:', ProjectSettings.globalize_path(path))
+  Screenshot.save(get_viewport(), 'combat_shot')
   get_tree().quit()

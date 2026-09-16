@@ -5,9 +5,9 @@ extends Node
 ## that the corridor is drawn through: the corridor look shader, with its world palette clamp
 ## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
 ##
-## F1 toggles the panel, F2 the look panel and F3 the print panel, in debug builds only. Choices last for the session
-## only, unless saved as a look file or palette combo. Panel text is English on purpose:
-## `tools/extract_pot.gd` skips `src/debug/`.
+## F1 toggles the panel, F2 the look panel, F3 the interface look panel and F5 the print panel, in
+## debug builds only. Choices last for the session only, unless saved as a look file or palette combo.
+## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
 
 ## Emitted after an interface palette is applied or reset, so nodes that copied `Colours` when built
 ## can copy them again.
@@ -19,13 +19,19 @@ const PALETTE_COMBO_DIR: String = 'res://assets/palette_combos'
 ## Remembers the palette combo loaded at start-up, on this computer only.
 const START_UP_PATH: String = 'user://debug_start_up.cfg'
 ## Start-up arguments that set palettes; any of them stops the start-up palette combo loading.
-const PALETTE_ARGUMENTS: Array[String] = ['--world-palette=', '--ui-palette=', '--look=', '--palette-combo=']
+const PALETTE_ARGUMENTS: Array[String] = ['--world-palette=', '--ui-palette=', '--portrait-palette=', '--look=', '--palette-combo=']
+## `portrait_palette` values that follow another palette instead of naming a file.
+const PORTRAIT_SAME_AS_CORRIDOR: String = 'corridor'
+const PORTRAIT_SAME_AS_INTERFACE: String = 'interface'
+## The first item id in the portrait palette option that names a palette file.
+const PORTRAIT_FIRST_FILE_ID: int = 3
 const LOOK_DIR: String = 'res://assets/looks'
 const PRINT_LOOK_DIR: String = 'res://assets/print_looks'
 const FONT_DIR: String = 'res://assets/fonts/candidates'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
+const LOOK_EFFECTS_INCLUDE: ShaderInclude = preload('res://src/shaders/look_effects.gdshaderinc')
 const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
 ## Palette clamp uniforms set from the F1 panel and the palette section of a look file, so they are
 ## not look settings.
@@ -44,6 +50,9 @@ var world_palette: String = ''
 var world_material: ShaderMaterial = ShaderMaterial.new()
 ## The interface palette file applied to `Colours` and the theme, or '' when none is.
 var interface_palette: String = ''
+## What interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR`,
+## `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path.
+var portrait_palette: String = PORTRAIT_SAME_AS_INTERFACE
 ## The font file chosen in the panel or with `--font=`, or '' for the game's default font.
 var ui_font: String = ''
 
@@ -60,9 +69,12 @@ var _look_defaults: Dictionary = {}   # look shader uniform -> default value, re
 @onready var _look_panel: LookPanel = $LookLayer/LookPanel
 @onready var _print_layer: CanvasLayer = $PrintLayer
 @onready var _print_panel: PrintPanel = $PrintLayer/PrintPanel
+@onready var _interface_look_layer: CanvasLayer = $InterfaceLookLayer
+@onready var _interface_look_panel: InterfaceLookPanel = $InterfaceLookLayer/InterfaceLookPanel
 @onready var _panel_layer: CanvasLayer = $PanelLayer
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/WorldPaletteRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/InterfacePaletteRow/Option
+@onready var _portrait_option: OptionButton = $PanelLayer/Panel/Rows/PortraitPaletteRow/Option
 @onready var _font_option: OptionButton = $PanelLayer/Panel/Rows/FontRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/MatchingRow/Option
 @onready var _dithering_check: CheckButton = $PanelLayer/Panel/Rows/DitheringRow/Check
@@ -76,12 +88,14 @@ func _ready() -> void:
   _panel_layer.visible = false
   _look_layer.visible = false
   _print_layer.visible = false
+  _interface_look_layer.visible = false
   world_material.shader = LOOK_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_palette(world_material, PackedColorArray())
   _world_option.item_selected.connect(_on_world_palette_selected)
   _interface_option.item_selected.connect(_on_interface_palette_selected)
+  _portrait_option.item_selected.connect(_on_portrait_palette_selected)
   _font_option.item_selected.connect(_on_font_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _dithering_check.toggled.connect(_on_dithering_toggled)
@@ -99,10 +113,13 @@ func _ready() -> void:
 ## arguments can override it), `--print-look=<res path>` loads a saved print look and
 ## `--palette-combo=<res path>` a saved palette combo (also first),
 ## `--look-panel` opens the look panel, `--font=<res path>` sets the UI
-## font, `--ui-palette=<res path>` applies an interface palette, `--background-set=uniform=value` sets a
+## font, `--ui-palette=<res path>` applies an interface palette, `--portrait-palette=<res path, corridor or interface>`
+## sets the portrait palette, `--background-set=uniform=value` sets a
 ## background wear setting, `--panel-set=uniform=value` sets a panel wear setting,
 ## `--print-set=name=value` sets a border, corridor overlay or layout setting, `--print-panel` opens the
-## print panel.
+## print panel, `--interface-look=<res path>` loads a saved interface look (applied first),
+## `--interface-set=uniform=value` sets an interface look setting, `--interface-panel` opens the
+## interface look panel.
 func _apply_command_line() -> void:
   var args: PackedStringArray = OS.get_cmdline_user_args()
   for arg: String in args:
@@ -112,6 +129,8 @@ func _apply_command_line() -> void:
       PrintLook.load_print_look(arg.substr(13))
     elif arg.begins_with('--palette-combo='):
       load_palette_combo(arg.substr(16))
+    elif arg.begins_with('--interface-look='):
+      InterfaceLook.load_look(arg.substr(17))
   for arg: String in args:
     if arg.begins_with('--world-palette='):
       set_world_palette(arg.substr(16))
@@ -125,6 +144,8 @@ func _apply_command_line() -> void:
       set_ui_font(arg.substr(7))
     elif arg.begins_with('--ui-palette='):
       set_interface_palette(arg.substr(13))
+    elif arg.begins_with('--portrait-palette='):
+      set_portrait_palette(arg.substr(19))
     elif arg.begins_with('--background-set='):
       var setting: PackedStringArray = arg.substr(17).split('=')
       if setting.size() == 2 and PrintLook.background_defaults().has(setting[0]):
@@ -137,6 +158,10 @@ func _apply_command_line() -> void:
       var print_pair: PackedStringArray = arg.substr(12).split('=')
       if print_pair.size() == 2:
         PrintLook.set_print_value(print_pair[0], str_to_var(print_pair[1]))
+    elif arg.begins_with('--interface-set='):
+      var interface_pair: PackedStringArray = arg.substr(16).split('=')
+      if interface_pair.size() == 2 and InterfaceLook.defaults().has(interface_pair[0]):
+        InterfaceLook.material.set_shader_parameter(interface_pair[0], str_to_var(interface_pair[1]))
   if '--perceptual' in args:
     _on_matching_selected(1)
   if '--dither' in args:
@@ -145,6 +170,8 @@ func _apply_command_line() -> void:
     toggle_look_panel()
   if '--print-panel' in args:
     toggle_print_panel()
+  if '--interface-panel' in args:
+    toggle_interface_look_panel()
   _sync_controls()
 
 
@@ -161,8 +188,8 @@ func _input(event: InputEvent) -> void:
   var key: InputEventKey = event as InputEventKey
   if key == null or not key.pressed or key.echo:
     return
-  # Typing a look or palette combo name must not trigger the palette keys.
-  if get_viewport().gui_get_focus_owner() is LineEdit and key.keycode not in [KEY_F1, KEY_F2, KEY_F3]:
+  # Typing a look or palette combo name must not trigger the palette keys (Backspace included).
+  if get_viewport().gui_get_focus_owner() is LineEdit and key.keycode not in [KEY_F1, KEY_F2, KEY_F3, KEY_F5]:
     return
   match key.keycode:
     KEY_F1:
@@ -170,6 +197,8 @@ func _input(event: InputEvent) -> void:
     KEY_F2:
       toggle_look_panel()
     KEY_F3:
+      toggle_interface_look_panel()
+    KEY_F5:
       toggle_print_panel()
     KEY_BRACKETLEFT:
       cycle_palette(-1)
@@ -179,8 +208,15 @@ func _input(event: InputEvent) -> void:
       cycle_interface_palette(-1)
     KEY_APOSTROPHE:
       cycle_interface_palette(1)
+    KEY_PERIOD:
+      cycle_portrait_palette(1)
+    KEY_COMMA:
+      cycle_portrait_palette(-1)
     KEY_BACKSLASH:
       shortlist_palette()
+    KEY_BACKSPACE:
+      set_dithering(not _dithering)
+      _look_panel.refresh()
     _:
       return
   get_viewport().set_input_as_handled()
@@ -210,6 +246,19 @@ func toggle_print_panel() -> void:
     _print_panel.open()
 
 
+## Show or hide the interface look panel. Its controls are built the first time it opens.
+func toggle_interface_look_panel() -> void:
+  _interface_look_layer.visible = not _interface_look_layer.visible
+  if _interface_look_layer.visible:
+    _interface_look_panel.open()
+
+
+## Rebuild the look panel's controls after corridor look settings change elsewhere (the interface look
+## panel's copy button).
+func refresh_look_panel() -> void:
+  _look_panel.refresh()
+
+
 ## Select the next (`step` 1) or previous (`step` -1) entry in the world palette list. Bound to ] and [.
 func cycle_palette(step: int) -> void:
   _on_world_palette_selected(_step_option(_world_option, step))
@@ -219,6 +268,12 @@ func cycle_palette(step: int) -> void:
 ## and ;.
 func cycle_interface_palette(step: int) -> void:
   _on_interface_palette_selected(_step_option(_interface_option, step))
+
+
+## Select the next (`step` 1) or previous (`step` -1) entry in the portrait palette list. Bound to .
+## and ,.
+func cycle_portrait_palette(step: int) -> void:
+  _on_portrait_palette_selected(_step_option(_portrait_option, step))
 
 
 # Selects the next or previous entry in a palette option, skipping folder headings and wrapping
@@ -273,19 +328,21 @@ static func move_palette_file(path: String, folder: String) -> String:
   return new_path
 
 
-## Save the palette choices to a text file at `path`: the world and interface palettes, colour
-## matching and dithering.
+## Save the palette choices to a text file at `path`: the world, interface and portrait palettes,
+## colour matching and dithering.
 func save_palette_combo(path: String) -> Error:
   var file: ConfigFile = ConfigFile.new()
   file.set_value('palettes', 'world_palette', world_palette)
   file.set_value('palettes', 'interface_palette', interface_palette)
+  file.set_value('palettes', 'portrait_palette', portrait_palette)
   file.set_value('palettes', 'perceptual', _perceptual)
   file.set_value('palettes', 'dithering', _dithering)
   DirAccess.make_dir_recursive_absolute(path.get_base_dir())
   return file.save(path)
 
 
-## Apply a palette combo saved by `save_palette_combo`. Returns false if the file cannot be read.
+## Apply a palette combo saved by `save_palette_combo`: the world, interface and portrait palettes,
+## colour matching and dithering. Returns false if the file cannot be read.
 func load_palette_combo(path: String) -> bool:
   var file: ConfigFile = ConfigFile.new()
   if file.load(path) != OK:
@@ -293,6 +350,7 @@ func load_palette_combo(path: String) -> bool:
     return false
   set_world_palette(file.get_value('palettes', 'world_palette', ''))
   set_interface_palette(file.get_value('palettes', 'interface_palette', ''))
+  set_portrait_palette(file.get_value('palettes', 'portrait_palette', PORTRAIT_SAME_AS_INTERFACE))
   _on_matching_selected(1 if file.get_value('palettes', 'perceptual', false) else 0)
   _on_dithering_toggled(file.get_value('palettes', 'dithering', false))
   _sync_controls()
@@ -382,26 +440,31 @@ func _on_start_up_selected(index: int) -> void:
   set_start_up_palette_combo('' if index <= 0 else _start_up_option.get_item_text(index))
 
 
-## Back to the defaults: world clamp off, no interface palette, every look effect off, no corridor
-## settings, random enemy images. Used between tests.
+## Back to the defaults: world clamp off, no interface palette, portrait palette same as interface,
+## every look and interface look effect off, no corridor settings, random enemy images. Used between
+## tests.
 func reset_settings() -> void:
   reset_look()
   PrintLook.reset_print_look()
+  InterfaceLook.reset()
   MonsterImages.forced_path = ''
   set_interface_palette('')
+  set_portrait_palette(PORTRAIT_SAME_AS_INTERFACE)
   if ui_font != '':
     restore_default_font()
   _font_option.select(0)
   _sync_controls()
   _look_panel.refresh()
   _print_panel.refresh()
+  _interface_look_panel.refresh()
 
 
-## Every look shader uniform with a default in the shader code or its palette clamp include (uniform
-## name -> value), except `PALETTE_UNIFORMS`.
+## Every look shader uniform with a default in the shader code, its shared effects include or its
+## palette clamp include (uniform name -> value), except `PALETTE_UNIFORMS`.
 func look_defaults() -> Dictionary:
   if _look_defaults.is_empty():
-    _look_defaults = _uniform_defaults(LOOK_SHADER.code + '\n' + PALETTE_INCLUDE.code, PALETTE_UNIFORMS)
+    var code: String = LOOK_SHADER.code + '\n' + LOOK_EFFECTS_INCLUDE.code + '\n' + PALETTE_INCLUDE.code
+    _look_defaults = _uniform_defaults(code, PALETTE_UNIFORMS)
   return _look_defaults
 
 
@@ -535,17 +598,40 @@ func restore_default_font() -> void:
 
 
 ## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
-## colours with ''. Statuses in the current fight are recoloured, and `interface_palette_changed` tells
-## nodes that copied colours when built.
+## colours with ''. Interface images are clamped to the portrait palette's colours through
+## `InterfaceLook.material`. Statuses in the current fight are recoloured, and
+## `interface_palette_changed` tells nodes that copied colours when built.
 func set_interface_palette(path: String) -> void:
   interface_palette = path
   if path == '':
     InterfacePalette.reset()
   else:
     InterfacePalette.apply(path)
+  _apply_portrait_palette()
   _recolour_fight_statuses()
   PrintLook.push_wear_colours()
+  InterfaceLook.push_wear_colours()
   interface_palette_changed.emit()
+
+
+## Set what interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR` for the world
+## palette, `PORTRAIT_SAME_AS_INTERFACE` for the interface palette, or a palette file path. The
+## colours are written into `InterfaceLook.material`.
+func set_portrait_palette(choice: String) -> void:
+  portrait_palette = choice
+  _apply_portrait_palette()
+
+
+# Writes the portrait palette's colours into `InterfaceLook.material`: the world palette's colours
+# for `PORTRAIT_SAME_AS_CORRIDOR`, the interface palette's for `PORTRAIT_SAME_AS_INTERFACE`, the
+# named file's otherwise, and none for ''.
+func _apply_portrait_palette() -> void:
+  var file: String = portrait_palette
+  if file == PORTRAIT_SAME_AS_CORRIDOR:
+    file = world_palette
+  elif file == PORTRAIT_SAME_AS_INTERFACE:
+    file = interface_palette
+  _write_palette(InterfaceLook.material, _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray())
 
 
 # Statuses copy their colour from `Colours` when created, so each one in the current fight takes the
@@ -564,11 +650,22 @@ func _recolour_fight_statuses() -> void:
       status.color = ((status.get_script() as GDScript).new() as StatusEffect).color
 
 
+# `colours` without repeats, in their first order. Interface palettes name the same colour for several
+# variables, and each repeat would cost the clamp another comparison per pixel.
+static func _distinct_colours(colours: PackedColorArray) -> PackedColorArray:
+  var result: PackedColorArray = PackedColorArray()
+  for colour: Color in colours:
+    if not result.has(colour):
+      result.append(colour)
+  return result
+
+
 ## Clamp the combat corridor to the palette file at `path`, or turn the world clamp off with ''.
 func set_world_palette(path: String) -> void:
   world_palette = path
   var colours: PackedColorArray = PaletteLoader.load_palette(path) if path != '' else PackedColorArray()
   _write_palette(world_material, colours)
+  _apply_portrait_palette()
 
 
 # Writes `colours` into a clamp material's palette textures. Returns false (and sets no colours)
@@ -598,18 +695,24 @@ func _scan_palettes() -> void:
   _palettes_scanned = true
   _world_option.clear()
   _interface_option.clear()
+  _portrait_option.clear()
   _palette_paths.clear()
   _interface_palette_paths.clear()
   _world_option.add_item('Off', 0)
   _interface_option.add_item('Off', 0)
+  _portrait_option.add_item('Off', 0)
+  _portrait_option.add_item('Same as corridor', 1)
+  _portrait_option.add_item('Same as interface', 2)
   var groups: Dictionary = PaletteLoader.find_palettes(PALETTE_ROOT)
   for folder: String in groups:
     if folder != '':
       _world_option.add_separator(folder)
+      _portrait_option.add_separator(folder)
     for path: String in groups[folder]:
       _palette_paths.append(path)
       var palette_name: String = path.get_file().get_basename()
       _world_option.add_item(palette_name, _palette_paths.size())
+      _portrait_option.add_item(palette_name, _palette_paths.size() + PORTRAIT_FIRST_FILE_ID - 1)
       if InterfacePalette.is_interface_palette(path):
         _interface_palette_paths.append(path)
         _interface_option.add_item(folder.path_join(palette_name), _interface_palette_paths.size())
@@ -623,6 +726,22 @@ func _sync_controls() -> void:
   if _palettes_scanned:
     _world_option.select(maxi(_world_option.get_item_index(_palette_paths.find(world_palette) + 1), 0))
     _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))
+    var portrait_id: int = _portrait_palette_id()
+    _portrait_option.select(maxi(_portrait_option.get_item_index(portrait_id), 0))
+
+
+# The item id in the portrait palette option for the current `portrait_palette`: 0 for off, 1 for
+# the corridor, 2 for the interface, or the palette file's id.
+func _portrait_palette_id() -> int:
+  match portrait_palette:
+    '':
+      return 0
+    PORTRAIT_SAME_AS_CORRIDOR:
+      return 1
+    PORTRAIT_SAME_AS_INTERFACE:
+      return 2
+  var index: int = _palette_paths.find(portrait_palette)
+  return index + PORTRAIT_FIRST_FILE_ID if index >= 0 else 0
 
 
 func _on_world_palette_selected(index: int) -> void:
@@ -633,6 +752,19 @@ func _on_world_palette_selected(index: int) -> void:
 func _on_interface_palette_selected(index: int) -> void:
   var id: int = _interface_option.get_item_id(index)
   set_interface_palette('' if id <= 0 else _interface_palette_paths[id - 1])
+
+
+func _on_portrait_palette_selected(index: int) -> void:
+  var id: int = _portrait_option.get_item_id(index)
+  match id:
+    0:
+      set_portrait_palette('')
+    1:
+      set_portrait_palette(PORTRAIT_SAME_AS_CORRIDOR)
+    2:
+      set_portrait_palette(PORTRAIT_SAME_AS_INTERFACE)
+    _:
+      set_portrait_palette(_palette_paths[id - PORTRAIT_FIRST_FILE_ID])
 
 
 # The font folder is scanned when the panel first opens, like the palettes. Deleting a font file
@@ -661,6 +793,7 @@ func _on_font_selected(index: int) -> void:
 func _on_matching_selected(index: int) -> void:
   _perceptual = index == 1
   world_material.set_shader_parameter('perceptual', _perceptual)
+  InterfaceLook.material.set_shader_parameter('perceptual', _perceptual)
 
 
 func _on_dithering_toggled(on: bool) -> void:

@@ -38,9 +38,9 @@ The corridor view is **mood + feedback**, not the focus (design) — but it carr
 
 Colour is the readability mechanism that scales (design) — you can't parse 30 names in 15s, but you can parse "lots of red on my side, blue on theirs." The board:
 
-- **Type-zoned** — items in fixed, learnable regions by effect family (weapon / armor / heal / status-applier); synergy groups cluster + glow together when one fires. Fixed positions, hover-tilt on the focused item only — *not* drifting (art doc: motion = signal; a still board that erupts on fire reads as the cascade).
+- **Type-zoned** — items in fixed, learnable regions by effect family (weapon / armor / heal / status-applier); synergy groups cluster + glow together when one fires (glow can be drawn with [interface glow](interface_glow.md); not wired yet). Fixed positions, hover-tilt on the focused item only — *not* drifting (art doc: motion = signal; a still board that erupts on fire reads as the cascade).
 - **Colour-coded value panel** per item (extruding over the top edge): the panel background = effect family (red attack, blue block, green heal, per-effect status colours), the number = the value. Usually one panel; rares may show more.
-- **Cooldown ring** (Bazaar-style filling overlay) on each active item — **on enemy items too** (mutual cooldowns = the visible race).
+- **Cooldown fill** (a filling overlay over the icon, its top edge a torn paper line) on each active item — **on enemy items too** (mutual cooldowns = the visible race). As built: `cooldown_fill.gdshader`, driven by `ItemCell` ([run_screen.md](run_screen.md)).
 - **Rarity border** (bronze / silver / gold); **build-anchor** is a separate glow channel (never the border or size); **size** = a tempo tag (if it ships — Item PRD).
 - **Bigger than feels comfortable**, so activations stay legible in a packed cascade.
 
@@ -49,6 +49,7 @@ The enemy board mirrors the player's (loadouts visible — "watch the cascades c
 ## Portrait, HP, potions
 
 - **Player portrait** separate from the scene (identity anchor); **HP** shown as the portrait getting progressively beaten-up + the value as text.
+- As built, the portrait image comes from `CharacterDef.portrait` (player) or `EnemyDef.portrait` (ally slots), copied onto `Actor.portrait` when the Actor is made. The image sits in a `PanelSlot` frame, the worn panel used behind icons ([panel_wear.md](panel_wear.md)). The character select cards show `CharacterDef.portrait` too. Beaten-up HP is not built.
 - **Potion slots** distinct from item slots (tactical reserve, not item-cousin UI); **slow-mo-on-hover** to inspect + throw.
 
 ## Slow-mo-on-hover (one verb)

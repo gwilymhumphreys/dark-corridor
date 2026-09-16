@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/ally_slot.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="2"]
+[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 
 [node name="AllySlot" type="HBoxContainer"]
 theme_override_constants/separation = 14
@@ -12,18 +13,25 @@ layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 8
 
-[node name="Portrait" type="ColorRect" parent="Left"]
+[node name="Portrait" type="PanelContainer" parent="Left"]
 custom_minimum_size = Vector2(110, 110)
 layout_mode = 2
-color = Color(0.22, 0.28, 0.4, 1)
-script = ExtResource("2")
-colour_name = "PORTRAIT_ALLY"
+mouse_filter = 2
+theme_type_variation = &"PanelSlot"
+
+[node name="Image" type="TextureRect" parent="Left/Portrait"]
+material = ExtResource("interface_look_material")
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="HP" type="Control" parent="Left"]
 custom_minimum_size = Vector2(110, 24)
 layout_mode = 2
 
 [node name="Background" type="ColorRect" parent="Left/HP"]
+material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -35,6 +43,7 @@ script = ExtResource("2")
 colour_name = "HP_BAR_BG"
 
 [node name="Fill" type="ColorRect" parent="Left/HP"]
+material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

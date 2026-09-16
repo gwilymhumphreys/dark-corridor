@@ -1,6 +1,6 @@
 extends GutTest
 ## The project theme: `dark_corridor.tres` is the default; its flat panel styles (Panel,
-## PanelContainer, PanelFlat, PanelFramed, PanelSmall, PanelDetail, PanelPause) have no border,
+## PanelContainer, PanelFlat, PanelFramed, PanelSmall, PanelDetail, PanelPause, PanelSlot) have no border,
 ## corner radius or shadow and keep the content margins the textured styles they replaced used,
 ## wrapped in `WornStyleBox` so they still read as panels (docs/systems/ui_theme.md,
 ## docs/systems/panel_wear.md).
@@ -13,6 +13,7 @@ const FLAT_PANEL_MARGINS: Dictionary = {
   'PanelSmall': Vector4(8, 8, 8, 8),
   'PanelDetail': Vector4(12, 12, 12, 12),
   'PanelPause': Vector4(60, 50, 60, 50),
+  'PanelSlot': Vector4(6, 6, 6, 6),
 }
 
 
@@ -49,6 +50,5 @@ func test_flat_panel_styles_have_no_border_and_keep_their_content_margins() -> v
     assert_eq(worn.content_margin_bottom, margins.w, '%s content margin bottom unchanged' % type)
 
 
-func test_panel_slot_and_tooltip_panel_keep_the_pack_art() -> void:
-  assert_true(_theme().get_stylebox('panel', 'PanelSlot') is StyleBoxTexture, 'PanelSlot stays textured')
+func test_tooltip_panel_keeps_the_pack_art() -> void:
   assert_true(_theme().get_stylebox('panel', 'TooltipPanel') is StyleBoxTexture, 'TooltipPanel stays textured')

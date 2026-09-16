@@ -121,8 +121,10 @@ mockup), composition:
 - **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
   "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
   a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding the item's icon (`ItemDef.icon`), a
-  centred row of effect-coloured value pills (`value_pill.tscn`, one per value-bearing effect)
-  straddling the top edge, a cooldown wipe (a horizontal line rising bottom→top) + fire recoil),
+  centred row of effect-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per value-bearing effect)
+  straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
+  semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
+  whose edge is torn like the paper edges of the print look) + fire recoil),
   with the **potion slots** (`potion_slot.tscn`, the potion's icon on the potion colour) above it.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
   + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right —
@@ -168,7 +170,8 @@ the corridor light, so they come out of the dark on the approach. The container 
   and pause holds it — and is lit ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)). The
   flinch and the light have separate durations, so shortening the light in the look panel does not
   cut the flinch short. The ring the wall draws at the landing point is a placeholder shape
-  ([vfx_driver.md](vfx_driver.md#what-is-built)), not the intended look.
+  ([vfx_driver.md](vfx_driver.md#what-is-built)), not the intended look, and each landing is nudged
+  a little off the sprite centre so hits in a burst do not stack.
 - **Images:** a random cut-out sample from `assets/monsters/cut_out/` (`MonsterImages`, its own RNG,
   so seeded runs are unchanged).
 

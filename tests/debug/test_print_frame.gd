@@ -1,5 +1,5 @@
 extends GutTest
-## The print frame: the F3 print panel, the print settings in look files, and `PrintFrame` moving the
+## The print frame: the F5 print panel, the print settings in look files, and `PrintFrame` moving the
 ## corridor and showing the border and overlay (docs/systems/print_frame.md).
 
 const COMBAT_VIEW_SCENE: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')

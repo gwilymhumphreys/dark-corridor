@@ -51,8 +51,5 @@ func _exit_tree() -> void:
 func _auto_shot() -> void:
   await get_tree().create_timer(1.5).timeout
   await RenderingServer.frame_post_draw
-  var img: Image = get_viewport().get_texture().get_image()
-  var path: String = 'user://tooltip_shot.png'
-  img.save_png(path)
-  print('SHOT_SAVED:', ProjectSettings.globalize_path(path))
+  Screenshot.save(get_viewport(), 'tooltip_shot')
   get_tree().quit()
