@@ -19,11 +19,24 @@ static var _original_colours: Array[Array] = []    # [theme type, colour name, c
 static var _original_icons: Array[Array] = []      # [theme type, icon name, texture]
 static var _original_textures: Dictionary = {}     # StyleBoxTexture -> its texture
 static var _original_flat_colours: Dictionary = {} # StyleBoxFlat -> [bg_color, border_color]
+static var _original_palette_colours: Dictionary = {} # PaletteStyleBox -> its bg_color
 
 
 ## The `Colours` variable a palette colour name refers to: 'hp bar fill' -> 'HP_BAR_FILL'.
 static func variable_name(colour_name: String) -> String:
   return colour_name.strip_edges().to_upper().replace(' ', '_').replace('-', '_')
+
+
+## Whether the palette file at `path` can recolour the interface: a `.gpl` file with at least one colour
+## named after a `Colours` variable.
+static func is_interface_palette(path: String) -> bool:
+  if path.get_extension().to_lower() != 'gpl':
+    return false
+  var colours_script: Script = Colours
+  for colour_name: String in PaletteLoader.load_named_colours(path):
+    if colours_script.get(variable_name(colour_name)) is Color:
+      return true
+  return false
 
 
 ## Apply the palette file at `path`, starting from the default colours. Returns how many of its
@@ -68,11 +81,14 @@ static func reset() -> void:
   for stylebox: StyleBoxFlat in _original_flat_colours:
     stylebox.bg_color = _original_flat_colours[stylebox][0]
     stylebox.border_color = _original_flat_colours[stylebox][1]
+  for stylebox: PaletteStyleBox in _original_palette_colours:
+    stylebox.bg_color = _original_palette_colours[stylebox]
   _defaults.clear()
   _original_colours.clear()
   _original_icons.clear()
   _original_textures.clear()
   _original_flat_colours.clear()
+  _original_palette_colours.clear()
   _applied = false
   _refresh_catalogs()
 
@@ -104,12 +120,26 @@ static func _recolour_theme(theme: Theme) -> void:
   for type: String in theme.get_stylebox_type_list():
     for stylebox_name: String in theme.get_stylebox_list(type):
       var stylebox: StyleBox = theme.get_stylebox(stylebox_name, type)
-      if stylebox is StyleBoxTexture and not _original_textures.has(stylebox):
-        var texture_box: StyleBoxTexture = stylebox as StyleBoxTexture
+      # A WornStyleBox draws its wrapped `base`, not itself, so recolour that instead.
+      var target: StyleBox = (stylebox as WornStyleBox).base if stylebox is WornStyleBox else stylebox
+      if target is PaletteStyleBox:
+        # A PaletteStyleBox follows its named Colours variable directly, not the panel brightness
+        # ramp used for the remaining pack art (docs/systems/interface_palette.md). Checked before
+        # the StyleBoxFlat case below (PaletteStyleBox extends it) so a style already classified
+        # here on an earlier type never falls through to the generic flat recolour on a repeat.
+        var palette_box: PaletteStyleBox = target as PaletteStyleBox
+        if not _original_palette_colours.has(palette_box):
+          _original_palette_colours[palette_box] = palette_box.bg_color
+          var colours_script: Script = Colours
+          var named_colour: Variant = colours_script.get(palette_box.colour_name)
+          if named_colour is Color:
+            palette_box.bg_color = named_colour
+      elif target is StyleBoxTexture and not _original_textures.has(target):
+        var texture_box: StyleBoxTexture = target as StyleBoxTexture
         _original_textures[texture_box] = texture_box.texture
         texture_box.texture = _recoloured_texture(texture_box.texture, panel_ramp, recoloured)
-      elif stylebox is StyleBoxFlat and not _original_flat_colours.has(stylebox):
-        var flat_box: StyleBoxFlat = stylebox as StyleBoxFlat
+      elif target is StyleBoxFlat and not _original_flat_colours.has(target):
+        var flat_box: StyleBoxFlat = target as StyleBoxFlat
         _original_flat_colours[flat_box] = [flat_box.bg_color, flat_box.border_color]
         flat_box.bg_color = _mapped(flat_box.bg_color, panel_ramp)
         flat_box.border_color = _mapped(flat_box.border_color, panel_ramp)

@@ -5,14 +5,16 @@ areas, specks, rubbed edges, creases and folds. Only the background rectangle be
 so text, panels, icons and the corridor are unchanged. Every effect is on by default. The defaults are
 the owner's saved print look, `assets/print_looks/default.cfg`.
 
-**Location:** the effects and settings in `src/shaders/print_wear.gdshaderinc`, used by
-`src/shaders/background_wear.gdshader`; `src/ui/screen_background.gd` (class `ScreenBackground`);
-`DebugPanels.background_material`. Settings are in the F3 print panel ([print_frame.md](print_frame.md)).
+**Location:** the effect functions in `src/shaders/print_wear.gdshaderinc`, shared with
+[panel wear](panel_wear.md); the uniforms in `src/shaders/background_wear_settings.gdshaderinc`, used by
+both `src/shaders/background_wear.gdshader` and the corridor overlay
+([print_frame.md](print_frame.md)); `src/ui/screen_background.gd` (class `ScreenBackground`);
+`PrintLook.background_material`. Settings are in the F3 print panel ([print_frame.md](print_frame.md)).
 
 ## How it works
 
 - Each screen's `Background` node is a `ScreenBackground`, a [`NamedColourRect`](interface_palette.md)
-  for `UI_BACKGROUND` that draws through the one shared `DebugPanels.background_material`. A change in
+  for `UI_BACKGROUND` that draws through the one shared `PrintLook.background_material`. A change in
   the panel applies to every background at once.
 - The same wear can be drawn over the combat corridor with the same settings
   ([print_frame.md](print_frame.md)).

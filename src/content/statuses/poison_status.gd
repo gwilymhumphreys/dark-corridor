@@ -11,5 +11,6 @@ func _init() -> void:
   name_key = 'Poison'
   desc_key = 'Deals damage over time, losing a stack each tick.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_POISON
+  icon = 'res://assets/icons/statuses/skill_poison_nb.png'
   tick_interval = Balance.POISON_TICK_INTERVAL
   damage_per_tick = Balance.POISON_DAMAGE_PER_TICK

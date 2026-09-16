@@ -11,5 +11,6 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 
 var id: String = ''
 var name_key: String = ''        # source English; displayed via tr() — localizable
+var icon: String = ''            # res:// path of the potion's picture (assets/icons/potions/); empty = none
 var rarity: int = Rarity.COMMON
 var effects: Array[ItemEffect] = []

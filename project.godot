@@ -24,6 +24,7 @@ Save="*res://src/autoloads/save.gd"
 Prefs="*res://src/autoloads/prefs.gd"
 Draft="*res://src/autoloads/draft.gd"
 Game="*res://src/autoloads/game_manager.gd"
+PrintLook="*res://src/autoloads/print_look.gd"
 DebugPanels="*res://src/debug/debug_panels.tscn"
 
 [display]
@@ -35,7 +36,13 @@ window/stretch/mode="canvas_items"
 [gui]
 
 timers/tooltip_delay_sec=0.0
-theme/custom="res://assets/themes/black_white_ui.tres"
+theme/custom="res://assets/themes/dark_corridor.tres"
+
+[importer_defaults]
+
+texture={
+"mipmaps/generate": true
+}
 
 [input]
 
@@ -67,7 +74,7 @@ locale/translations=PackedStringArray("res://locale/en.po")
 
 [rendering]
 
-textures/canvas_textures/default_texture_filter=0
+textures/canvas_textures/default_texture_filter=3
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

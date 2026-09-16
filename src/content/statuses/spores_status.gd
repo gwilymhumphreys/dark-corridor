@@ -13,6 +13,7 @@ func _init() -> void:
   name_key = 'Spores'
   desc_key = 'A stacking counter that Mass effects spend.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_SPORES
+  icon = 'res://assets/icons/statuses/aura_filth_nb.png'
 
 
 func is_fuel() -> bool:

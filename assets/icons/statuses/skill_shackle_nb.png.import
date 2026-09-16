@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://43sgpvpm8mtd"
-path="res://.godot/imported/thorn-demon.png-91a5118f4f639c756a2e045f829cb007.ctex"
+uid="uid://bxupaiatk1xfb"
+path="res://.godot/imported/skill_shackle_nb.png-9959b5f1560a436bf9b2b0752851199d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/enemies/thorn-demon.png"
-dest_files=["res://.godot/imported/thorn-demon.png-91a5118f4f639c756a2e045f829cb007.ctex"]
+source_file="res://assets/icons/statuses/skill_shackle_nb.png"
+dest_files=["res://.godot/imported/skill_shackle_nb.png-9959b5f1560a436bf9b2b0752851199d.ctex"]
 
 [params]
 

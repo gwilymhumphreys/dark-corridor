@@ -63,7 +63,7 @@ func _trigger_line(sub: Dictionary) -> Array:
   # An ITEM_DESTROYED trigger is the Reclaim keyword (the destroy-payoff; tooltips.md), not generic.
   if sub.get('event', -1) == EventBus.Event.ITEM_DESTROYED:
     return _interpolate(tr('{0} as your items are destroyed'), [{'t': 'chip', 'id': KeywordCatalog.RECLAIM}])
-  var filter = sub.get('filter', null)
+  var filter: Variant = sub.get('filter', null)
   if filter is String and filter != '':
     return _interpolate(tr('When {0} is applied'), [{'t': 'chip', 'id': filter}])
   return _interpolate(tr('On trigger'), [])
@@ -123,7 +123,7 @@ static func keyword_ids(item: Item) -> Array[String]:
     if effect.consume_id != '':
       _add_keyword(ids, effect.consume_id)
   for sub: Dictionary in item.def.trigger_subs:
-    var filter = sub.get('filter', null)
+    var filter: Variant = sub.get('filter', null)
     if filter is String:
       _add_keyword(ids, filter)
   # Then mechanics, in the catalog's fixed order — only those this item actually references.
@@ -192,7 +192,7 @@ static func _interpolate(template: String, args: Array) -> Array:
           if buf != '':
             segs.append({'t': 'text', 's': buf})
             buf = ''
-          var arg = args[int(idx_str)]
+          var arg: Variant = args[int(idx_str)]
           segs.append(arg if arg is Dictionary else {'t': 'text', 's': str(arg)})
           i = close + 1
           continue

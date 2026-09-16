@@ -1,5 +1,5 @@
 extends GutTest
-## The settings screen: three volume sliders (0..1 → 0..100), a font dropdown, and the fullscreen
+## The settings screen: three volume sliders (0..1 → 0..100) and the fullscreen
 ## + mute-when-unfocused toggles — each seeded from Prefs and writing back on change (Prefs applies
 ## + persists); Close emits `closed`. Presentation reads/writes Prefs only — these confirm the
 ## wiring, not the visuals.
@@ -46,22 +46,6 @@ func test_back_emits_closed() -> void:
   watch_signals(s)
   s.get_node('Panel/BackButton').pressed.emit()
   assert_signal_emitted(s, 'closed')
-
-
-func test_font_dropdown_seeds_from_prefs() -> void:
-  Prefs._config.set_value(PrefsAutoload.SECTION_DISPLAY, 'font_style', PrefsAutoload.FontStyle.PIXEL)
-  var s := _screen()
-  var option: OptionButton = s.get_node('Panel/Rows/FontRow/Option')
-  assert_eq(option.get_selected_id(), PrefsAutoload.FontStyle.PIXEL,
-    'the dropdown selects the item whose id is the stored font style')
-
-
-func test_choosing_a_font_writes_the_style_to_prefs() -> void:
-  var s := _screen()
-  var option: OptionButton = s.get_node('Panel/Rows/FontRow/Option')
-  option.select(option.get_item_index(PrefsAutoload.FontStyle.PIXEL))
-  option.item_selected.emit(option.selected)   # select() doesn't emit; mirror a user pick
-  assert_eq(Prefs.font_style(), PrefsAutoload.FontStyle.PIXEL, 'picking an item wrote the style to Prefs')
 
 
 func test_fullscreen_toggle_writes_to_prefs() -> void:

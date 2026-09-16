@@ -12,6 +12,7 @@ func _init() -> void:
   name_key = 'Vulnerable'
   desc_key = 'Takes more damage while it lasts.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_VULNERABLE
+  icon = 'res://assets/icons/statuses/skill_split_armor_nb.png'
 
 
 func modify_incoming(amount: float, target, ctx) -> float:

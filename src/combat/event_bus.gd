@@ -26,7 +26,7 @@ class Subscription extends RefCounted:
   var event: int = 0
   var ticker: Ticker = null
   var amount: float = 0.0
-  var data_filter = null          # Variant: non-null restricts to matching event data
+  var data_filter: Variant = null # Variant: non-null restricts to matching event data
   var source_filter: int = 0      # a SourceFilter value (set by subscribe)
   var subscriber: Item = null     # the owning Item (gate + side checks); null = a bare ticker
 

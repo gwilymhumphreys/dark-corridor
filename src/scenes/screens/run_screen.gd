@@ -152,20 +152,26 @@ func _on_event_picked(index: int) -> void:
   _after_beat()
 
 
-# The corridor approach (docs/history/phase4_plan.md Step 7): the enemy walks from depth into full
-# view while the corridor glides; the fight clock is NOT ticked yet, so combat is
-# frozen until arrival. Driven off _physics_process (not a Tween) so the headless
-# run-screen test advances it with the same manual ticks that drive the fights.
+# The corridor approach (docs/history/phase4_plan.md Step 7): the enemy stands still at
+# APPROACH_DEPTH_START and the player walks up to it, so the corridor moves past while the enemy
+# grows from a speck into full view. The fight clock is NOT ticked yet, so combat is frozen until
+# arrival. Driven off _physics_process (not a Tween) so the headless run-screen test advances it
+# with the same manual ticks that drive the fights.
 func _begin_approach() -> void:
   _state = State.APPROACHING
   _approach_elapsed = 0.0
-  _view.set_enemy_depth(Balance.APPROACH_DEPTH_START)
-  _view.set_gliding(true)
+  _walk(0.0)
+
+
+# Put the player `travelled` sections along the approach: the corridor moves that far forward and
+# the enemy, standing still, is that much less deep. At APPROACH_DEPTH_START the player has arrived.
+func _walk(travelled: float) -> void:
+  _view.set_walk_distance(travelled)
+  _view.set_enemy_depth(Balance.APPROACH_DEPTH_START - travelled)
 
 
 func _arrive() -> void:
-  _view.set_enemy_depth(0.0)
-  _view.set_gliding(false)
+  _walk(Balance.APPROACH_DEPTH_START)
   _stats.update_from(_log)   # seed at 0 before the first tick
   _stats.show()              # the live Dealt / Taken readout is up only during the fight
   _state = State.FIGHTING   # boards activate — the clock starts ticking next frame
@@ -182,7 +188,8 @@ func _physics_process(delta: float) -> void:
     State.APPROACHING:
       _approach_elapsed += delta
       var t: float = clampf(_approach_elapsed / Balance.APPROACH_DURATION, 0.0, 1.0)
-      _view.set_enemy_depth(lerpf(Balance.APPROACH_DEPTH_START, 0.0, t))
+      # Eased so the walk starts and ends softly rather than snapping into motion.
+      _walk(Balance.APPROACH_DEPTH_START * smoothstep(0.0, 1.0, t))
       if t >= 1.0:
         _arrive()
     State.FIGHTING:
@@ -272,10 +279,6 @@ func _toggle_pause() -> void:
 ## Pause the run, raising the pause menu, or with `show_menu` false only the small Paused panel.
 func _pause(show_menu: bool = true) -> void:
   _paused = true
-  # The corridor renderer self-animates (the one allowed cosmetic _process), so the
-  # paused approach must also halt the treadmill — not just the depth lerp.
-  if _view != null and _state == State.APPROACHING:
-    _view.set_gliding(false)
   if show_menu:
     _show_pause_menu()
   else:
@@ -294,8 +297,6 @@ func _show_pause_menu() -> void:
 func _resume() -> void:
   _paused = false
   _paused_panel.hide()
-  if _view != null and _state == State.APPROACHING:
-    _view.set_gliding(true)   # the treadmill resumes with the walk
   _close_settings()
   if _pause_menu != null:
     _pause_menu.queue_free()

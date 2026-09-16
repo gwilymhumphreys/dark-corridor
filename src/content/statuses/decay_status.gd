@@ -16,6 +16,7 @@ func _init() -> void:
   name_key = 'Decay'
   desc_key = 'The affected item is destroyed after a number of uses.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_DECAY
+  icon = 'res://assets/icons/statuses/skill_dead_land_nb.png'
 
 
 ## The holder item just fired and resolved its payload (so the final activation still LANDED —

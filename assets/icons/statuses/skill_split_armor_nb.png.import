@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dhtyc4hune8jb"
-path="res://.godot/imported/placeholder_item.png-c0ca0cb6b65706259f65b880d6512462.ctex"
+uid="uid://bh73thh0ncqi7"
+path="res://.godot/imported/skill_split_armor_nb.png-7b0ed138b3f4063af2d093b6ff7a9edf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/items/placeholder_item.png"
-dest_files=["res://.godot/imported/placeholder_item.png-c0ca0cb6b65706259f65b880d6512462.ctex"]
+source_file="res://assets/icons/statuses/skill_split_armor_nb.png"
+dest_files=["res://.godot/imported/skill_split_armor_nb.png-7b0ed138b3f4063af2d093b6ff7a9edf.ctex"]
 
 [params]
 

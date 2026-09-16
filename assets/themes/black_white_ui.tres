@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://45ki40ol2lge" path="res://assets/ui/panel-item-0.png" id="6_item"]
 [ext_resource type="Texture2D" uid="uid://bamuejnex628w" path="res://assets/ui/btn-unpressed-0.png" id="7_unchecked"]
 [ext_resource type="Texture2D" uid="uid://cdd1vvlcx7itj" path="res://assets/ui/btn-pressed-0.png" id="8_checked"]
+[ext_resource type="Script" path="res://src/ui/worn_style_box.gd" id="9_worn_style_box"]
 
 [sub_resource type="StyleBoxTexture" id="sb_btn_normal"]
 texture = ExtResource("7_unchecked")
@@ -43,6 +44,10 @@ texture_margin_left = 10.0
 texture_margin_top = 10.0
 texture_margin_right = 10.0
 texture_margin_bottom = 10.0
+
+[sub_resource type="StyleBox" id="sb_panel2_worn"]
+script = ExtResource("9_worn_style_box")
+base = SubResource("sb_panel2")
 
 [sub_resource type="StyleBoxTexture" id="sb_item"]
 texture = ExtResource("6_item")
@@ -107,7 +112,7 @@ PanelDetail/styles/panel = SubResource("sb_panel4")
 PanelFlat/base_type = &"PanelContainer"
 PanelFlat/styles/panel = SubResource("sb_panel1")
 PanelFramed/base_type = &"PanelContainer"
-PanelFramed/styles/panel = SubResource("sb_panel2")
+PanelFramed/styles/panel = SubResource("sb_panel2_worn")
 PanelPause/base_type = &"PanelContainer"
 PanelPause/styles/panel = SubResource("sb_pause")
 PanelSlot/base_type = &"PanelContainer"

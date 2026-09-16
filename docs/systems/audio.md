@@ -53,6 +53,8 @@ API:
 - `play_guarded(key, stream, pitch, volume_db)` — same, but cooldown-guarded by
   `key`.
 - `play_ui_hover()` / `play_ui_click()` / `play_ui_press()` — the shared UI bank.
+- `play_impact()` — a hit landing in combat, played once per landing by the
+  [VFX wall](vfx_driver.md). Guarded, so a burst of hits in the same moment makes one sound.
 
 The UI bank loads from the `UI_*_PATH` constants; drop files there and they're
 picked up automatically:
@@ -60,6 +62,10 @@ picked up automatically:
 - `assets/sound-effects/ui/hover.wav`
 - `assets/sound-effects/ui/click.wav`
 - `assets/sound-effects/ui/press.wav`
+
+The combat impact sound loads the same way from `COMBAT_IMPACT_PATH`
+(`assets/sound-effects/combat/impact.wav`). No sound file is in the project yet, so every helper is
+currently silent.
 
 Tunable constants (polyphony, cooldown, pitch range, paths) live at the top of
 `sfx_manager.gd`.

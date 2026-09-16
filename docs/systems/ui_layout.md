@@ -58,7 +58,7 @@ Hover anything important (own items, enemy items, potions, enemies) → time slo
 ## Battle-speed dial + pause (built)
 
 - **Battle-speed** — an always-visible ×1/×2/×3 HUD toggle (`speed_button.tscn`, bottom-right). A **session preference on `Game`** (`battle_speed`, never saved); the run screen applies it to each fight's `Timekeeper` **base** scale. The hover slow-mo override **replaces** the base absolutely (resolved — same readable speed at any dial), returning to it on release.
-- **Pause** — `ui_cancel` (Escape) raises `pause_menu.tscn` (Resume / Quit-to-menu) and freezes the run-screen tick (approach + fight). A **run-screen gate, not a `Game` phase**. Opaque centered panel, **no translucent scrim** (the pixel-art opacity rule). Quit-to-menu keeps the save (Title's Resume re-enters the beat). **Space** pauses and resumes without the menu, showing a small Paused panel at the top centre. See [run_screen](run_screen.md).
+- **Pause** — `ui_cancel` (Escape) raises `pause_menu.tscn` (Resume / Quit-to-menu) and freezes the run-screen tick (approach + fight). A **run-screen gate, not a `Game` phase**. Opaque centered panel, no translucent scrim. Quit-to-menu keeps the save (Title's Resume re-enters the beat). **Space** pauses and resumes without the menu, showing a small Paused panel at the top centre. See [run_screen](run_screen.md).
 
 ## The out-of-combat screens
 

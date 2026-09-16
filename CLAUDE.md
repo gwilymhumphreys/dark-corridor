@@ -52,14 +52,12 @@ var data: Dictionary = {
 }
 ```
 
-- **Files**: End with exactly one blank line
-- **Filenames**: `snake_case` per the Godot 4 style guide (e.g., `corridor_renderer.gd`, `corridor_scaled.tscn`, `sharp_bilinear.gdshader`). `class_name` and in-scene node names stay PascalCase — so `class_name CorridorRenderer` lives in `corridor_renderer.gd`.
+- **Filenames**: `snake_case` per the Godot 4 style guide (e.g., `corridor_3d.gd`, `combat_corridor.tscn`, `corridor_look.gdshader`). `class_name` and in-scene node names stay PascalCase — so `class_name CombatCorridor` lives in `combat_corridor.gd`.
 - **No preloads for `class_name` classes** — Godot makes them globally available
 - **Autoload class names**: Use `<Name>Autoload` suffix (e.g., `class_name CursorManagerAutoload`) to avoid conflict with the autoload's registered name. Access via the registered name (e.g., `CursorManager.request_hand()`).
 - **Surgical edits only** — Modify least code possible; ask before major refactors
-- **Theme over code** — Style UI via the theme resource (`assets/themes/black_white_ui.tres`, the project default), not `add_theme_*_override()` in code
+- **Theme over code** — Style UI via the theme resource (`assets/themes/dark_corridor.tres`, the project default), not `add_theme_*_override()` in code
 - **Scenes over code** — Prefer `.tscn` scene files for UI and node trees over building them programmatically in `_ready()`
-- **Opacity/transparency** — Alpha fades or semi-transparent effects can break the pixel-art aesthetic. Be careful with these and ask the user before adding any opacity.
 - **Juicy animations**: When adding new ui or visual entities, add the ui juice node to it
 - **Animate UI with `offset_transform_*`** (Godot 4.7) — When animating a Control's position/scale/rotation (hover bounces, presses, slides, shakes), set `offset_transform_enabled = true` and tween the `offset_transform_position` / `offset_transform_scale` / `offset_transform_rotation` properties (pivot via `offset_transform_pivot` / `offset_transform_pivot_ratio`) instead of the layout `position` / `scale` / `rotation`. The offset transform is visual-only (`offset_transform_visual_only` defaults true), so it does not fight container layout — use it wherever a container positions the node (the old `position`-tween caveat). Tween the layout properties only when the node is not container-managed and the animation must affect layout.
 - **Full names, not abbreviations**: Refer to game entities by their full names. Applies to code, comments, docs, run reports, tuning logs, and chat replies — abbreviations make grep harder and obscure what's being discussed.

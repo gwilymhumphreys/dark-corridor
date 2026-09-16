@@ -32,37 +32,37 @@ static func _build() -> void:
     'name_key': 'Fuel',
     'desc_key': 'Spends stacks of a status to power up the effect.',
     'color': Colours.STATUS_SPORES,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_absorbing_fire_nb.png',
   }
   _mechanics[SUMMON] = {
     'name_key': 'Summon',
     'desc_key': 'Brings an ally onto your side of the board.',
     'color': Colours.HEAL,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_summon_skeletons_nb.png',
   }
   _mechanics[AOE] = {
     'name_key': 'All Enemies',
     'desc_key': 'Hits every enemy at once.',
     'color': Colours.DAMAGE,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_sword_splash_nb.png',
   }
   _mechanics[ITEM_TARGET] = {
     'name_key': 'Item Target',
     'desc_key': 'Targets an enemy item rather than the enemy.',
     'color': Colours.ARCANE,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_mark_nb.png',
   }
   _mechanics[UNBLOCKABLE] = {
     'name_key': 'Unblockable',
     'desc_key': 'Cannot be soaked by Block.',
     'color': Colours.DAMAGE,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_piercing_attack_nb.png',
   }
   _mechanics[TRIGGER] = {
     'name_key': 'Trigger',
     'desc_key': 'Charges faster when its condition happens.',
     'color': Colours.STATUS_VULNERABLE,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_lightning_charge_nb.png',
   }
   # Reclaim — the destroy-payoff keyword (the Fleshmancer's; character_ideas.md). The labelled
   # trigger that replaces "when one of your items is destroyed". Pairs with the Decay status as
@@ -71,13 +71,13 @@ static func _build() -> void:
     'name_key': 'Reclaim',
     'desc_key': 'Charges as your own items are destroyed.',
     'color': Colours.STATUS_DECAY,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_graveyard_souls_nb.png',
   }
   _mechanics[ENCHANT] = {
     'name_key': 'Enchant',
     'desc_key': 'A permanent modifier attached to this item.',
     'color': Colours.BEAT_RELIC,
-    'icon': '',
+    'icon': 'res://assets/icons/keywords/skill_runic_weapon_nb.png',
   }
 
 

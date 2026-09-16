@@ -22,6 +22,8 @@ const PITCH_JITTER_MAX: float = 1.08
 const UI_HOVER_PATH: String = 'res://assets/sound-effects/ui/hover.wav'
 const UI_CLICK_PATH: String = 'res://assets/sound-effects/ui/click.wav'
 const UI_PRESS_PATH: String = 'res://assets/sound-effects/ui/press.wav'
+# Combat. No file is in the project yet, so play_impact() is silent until one is dropped here.
+const COMBAT_IMPACT_PATH: String = 'res://assets/sound-effects/combat/impact.wav'
 
 var _poly_player: AudioStreamPlayer
 var _poly_playback: AudioStreamPlaybackPolyphonic
@@ -30,6 +32,7 @@ var _cooldowns: Dictionary = {}
 var _ui_hover_stream: AudioStream
 var _ui_click_stream: AudioStream
 var _ui_press_stream: AudioStream
+var _impact_stream: AudioStream
 
 
 func _ready() -> void:
@@ -59,6 +62,7 @@ func _load_ui_bank() -> void:
   _ui_hover_stream = _try_load(UI_HOVER_PATH)
   _ui_click_stream = _try_load(UI_CLICK_PATH)
   _ui_press_stream = _try_load(UI_PRESS_PATH)
+  _impact_stream = _try_load(COMBAT_IMPACT_PATH)
 
 
 func _try_load(path: String) -> AudioStream:
@@ -104,6 +108,12 @@ func play_ui_press() -> void:
   play_guarded('ui_press', _ui_press_stream)
 
 
+## A hit landing in combat. Guarded, so a burst of hits in the same moment makes one sound
+## instead of a pile.
+func play_impact() -> void:
+  play_guarded('combat_impact', _impact_stream)
+
+
 func _ensure_poly_playing() -> void:
   if _poly_player == null:
     return
@@ -141,4 +151,5 @@ func _exit_tree() -> void:
   _ui_hover_stream = null
   _ui_click_stream = null
   _ui_press_stream = null
+  _impact_stream = null
   _cooldowns.clear()

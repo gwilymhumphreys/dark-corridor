@@ -11,6 +11,7 @@ func _init() -> void:
   name_key = 'Silence'
   desc_key = 'The affected item cannot fire.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_SILENCE
+  icon = 'res://assets/icons/statuses/skill_shackle_nb.png'
 
 
 func gates_fire() -> bool:

@@ -25,25 +25,6 @@ const PRINT_LOOK_DIR: String = 'res://assets/print_looks'
 const FONT_DIR: String = 'res://assets/fonts/candidates'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
-const BACKGROUND_SHADER: Shader = preload('res://src/shaders/background_wear.gdshader')
-const PRINT_WEAR_INCLUDE: ShaderInclude = preload('res://src/shaders/print_wear.gdshaderinc')
-const BORDER_SHADER: Shader = preload('res://src/shaders/print_border.gdshader')
-const OVERLAY_SHADER: Shader = preload('res://src/shaders/corridor_overlay.gdshader')
-## Background wear uniforms set from `Colours` or the current screen by `ScreenBackground`, or from the
-## layout by `PrintFrame`, so they are not look settings.
-const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
-  'wear_dark_colour',
-  'wear_light_colour',
-  'print_corridor_rect',
-  'folds_shown',
-]
-## Border and corridor overlay uniforms set by `PrintFrame`, so they are not look settings.
-const PRINT_FRAME_UNIFORMS: Array[String] = ['border_colour', 'border_wear_colour', 'rect_size', 'paper_colour']
-## Print frame settings that are not shader uniforms (setting -> default), from the print panel, look
-## files and `--print-set=`. The corridor margin is in pixels on the interface canvas.
-const PRINT_SETTING_DEFAULTS: Dictionary = {
-  'corridor_margin': 40.0,
-}
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
 const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
 ## Palette clamp uniforms set from the F1 panel and the palette section of a look file, so they are
@@ -61,14 +42,6 @@ var world_palette: String = ''
 ## The material every corridor is drawn through (corridor_look.gdshader). Its palette follows
 ## `world_palette`.
 var world_material: ShaderMaterial = ShaderMaterial.new()
-## The material every screen background is drawn through (background_wear.gdshader).
-var background_material: ShaderMaterial = ShaderMaterial.new()
-## The border around the combat corridor (print_border.gdshader), drawn by `PrintFrame`.
-var border_material: ShaderMaterial = ShaderMaterial.new()
-## The wear and worn edge drawn over the combat corridor (corridor_overlay.gdshader), by `PrintFrame`.
-var overlay_material: ShaderMaterial = ShaderMaterial.new()
-## Print frame settings changed from their defaults (setting -> value); see `print_setting()`.
-var print_settings: Dictionary = {}
 ## The interface palette file applied to `Colours` and the theme, or '' when none is.
 var interface_palette: String = ''
 ## The font file chosen in the panel or with `--font=`, or '' for the game's default font.
@@ -77,12 +50,11 @@ var ui_font: String = ''
 var _palette_paths: Array[String] = []   # item id - 1 -> palette path in the world palette option (id 0 = Off)
 var _interface_palette_paths: Array[String] = []   # item id - 1 -> `.gpl` path in the interface palette option
 var _font_paths: Array[String] = []   # item id - 1 -> font path in the font option (id 0 = game default)
+var _default_font: Font = null   # the theme's own default font, kept so the panel can put it back
 var _palettes_scanned: bool = false
 var _perceptual: bool = false
 var _dithering: bool = false
 var _look_defaults: Dictionary = {}   # look shader uniform -> default value, read from its code
-var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
-var _print_defaults: Dictionary = {}   # border and corridor overlay uniform -> default value
 
 @onready var _look_layer: CanvasLayer = $LookLayer
 @onready var _look_panel: LookPanel = $LookLayer/LookPanel
@@ -105,12 +77,8 @@ func _ready() -> void:
   _look_layer.visible = false
   _print_layer.visible = false
   world_material.shader = LOOK_SHADER
-  background_material.shader = BACKGROUND_SHADER
-  border_material.shader = BORDER_SHADER
-  overlay_material.shader = OVERLAY_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
-  _write_print_defaults()
   _write_palette(world_material, PackedColorArray())
   _world_option.item_selected.connect(_on_world_palette_selected)
   _interface_option.item_selected.connect(_on_interface_palette_selected)
@@ -132,15 +100,16 @@ func _ready() -> void:
 ## `--palette-combo=<res path>` a saved palette combo (also first),
 ## `--look-panel` opens the look panel, `--font=<res path>` sets the UI
 ## font, `--ui-palette=<res path>` applies an interface palette, `--background-set=uniform=value` sets a
-## background wear setting, `--print-set=name=value` sets a border, corridor overlay or layout setting,
-## `--print-panel` opens the print panel.
+## background wear setting, `--panel-set=uniform=value` sets a panel wear setting,
+## `--print-set=name=value` sets a border, corridor overlay or layout setting, `--print-panel` opens the
+## print panel.
 func _apply_command_line() -> void:
   var args: PackedStringArray = OS.get_cmdline_user_args()
   for arg: String in args:
     if arg.begins_with('--look='):
       load_look(arg.substr(7))
     elif arg.begins_with('--print-look='):
-      load_print_look(arg.substr(13))
+      PrintLook.load_print_look(arg.substr(13))
     elif arg.begins_with('--palette-combo='):
       load_palette_combo(arg.substr(16))
   for arg: String in args:
@@ -158,12 +127,16 @@ func _apply_command_line() -> void:
       set_interface_palette(arg.substr(13))
     elif arg.begins_with('--background-set='):
       var setting: PackedStringArray = arg.substr(17).split('=')
-      if setting.size() == 2 and background_defaults().has(setting[0]):
-        background_material.set_shader_parameter(setting[0], str_to_var(setting[1]))
+      if setting.size() == 2 and PrintLook.background_defaults().has(setting[0]):
+        PrintLook.background_material.set_shader_parameter(setting[0], str_to_var(setting[1]))
+    elif arg.begins_with('--panel-set='):
+      var panel_setting: PackedStringArray = arg.substr(12).split('=')
+      if panel_setting.size() == 2 and PrintLook.panel_defaults().has(panel_setting[0]):
+        PrintLook.panel_material.set_shader_parameter(panel_setting[0], str_to_var(panel_setting[1]))
     elif arg.begins_with('--print-set='):
       var print_pair: PackedStringArray = arg.substr(12).split('=')
       if print_pair.size() == 2:
-        set_print_value(print_pair[0], str_to_var(print_pair[1]))
+        PrintLook.set_print_value(print_pair[0], str_to_var(print_pair[1]))
   if '--perceptual' in args:
     _on_matching_selected(1)
   if '--dither' in args:
@@ -413,12 +386,11 @@ func _on_start_up_selected(index: int) -> void:
 ## settings, random enemy images. Used between tests.
 func reset_settings() -> void:
   reset_look()
-  reset_print_look()
+  PrintLook.reset_print_look()
   MonsterImages.forced_path = ''
   set_interface_palette('')
   if ui_font != '':
-    ui_font = ''
-    Prefs.apply_font_style()
+    restore_default_font()
   _font_option.select(0)
   _sync_controls()
   _look_panel.refresh()
@@ -431,41 +403,6 @@ func look_defaults() -> Dictionary:
   if _look_defaults.is_empty():
     _look_defaults = _uniform_defaults(LOOK_SHADER.code + '\n' + PALETTE_INCLUDE.code, PALETTE_UNIFORMS)
   return _look_defaults
-
-
-## Every background wear uniform with a default in the shader code or its print wear include (uniform
-## name -> value), except `BACKGROUND_COLOUR_UNIFORMS`.
-func background_defaults() -> Dictionary:
-  if _background_defaults.is_empty():
-    _background_defaults = _uniform_defaults(BACKGROUND_SHADER.code + '\n' + PRINT_WEAR_INCLUDE.code, BACKGROUND_COLOUR_UNIFORMS)
-  return _background_defaults
-
-
-## Every border and corridor overlay uniform with a default in their own shader code (uniform name ->
-## value), except `PRINT_FRAME_UNIFORMS`. The overlay's copy of the background wear settings is not
-## included.
-func print_defaults() -> Dictionary:
-  if _print_defaults.is_empty():
-    _print_defaults = _uniform_defaults(BORDER_SHADER.code + '\n' + OVERLAY_SHADER.code, PRINT_FRAME_UNIFORMS)
-  return _print_defaults
-
-
-## A print frame setting's current value: changed in `print_settings`, otherwise its default.
-func print_setting(setting: String) -> Variant:
-  return print_settings.get(setting, PRINT_SETTING_DEFAULTS[setting])
-
-
-## Set a border or corridor overlay uniform, or a print frame setting, by name. Unknown names are
-## ignored.
-func set_print_value(setting: String, value: Variant) -> void:
-  if print_defaults().has(setting):
-    _print_material(setting).set_shader_parameter(setting, value)
-  elif PRINT_SETTING_DEFAULTS.has(setting):
-    print_settings[setting] = value
-
-
-func _print_material(uniform: String) -> ShaderMaterial:
-  return border_material if uniform.begins_with('print_border') else overlay_material
 
 
 # Reads `uniform <type> <name> ... = <value>;` defaults from shader code, because the rendering server
@@ -524,46 +461,6 @@ func apply_corridor_settings() -> void:
     corridor.apply_settings(corridor_settings, environment_settings)
 
 
-## Every background wear, border and corridor overlay effect back to its shader default, and no print
-## frame settings. The corridor look is unchanged.
-func reset_print_look() -> void:
-  _write_print_defaults()
-  print_settings.clear()
-
-
-## Save the current print look to a text file at `path`: the background wear settings, the border and
-## corridor overlay settings, and the print frame settings that were changed.
-func save_print_look(path: String) -> Error:
-  var file: ConfigFile = ConfigFile.new()
-  for uniform: String in background_defaults():
-    file.set_value('background', uniform, background_material.get_shader_parameter(uniform))
-  for uniform: String in print_defaults():
-    file.set_value('print', uniform, _print_material(uniform).get_shader_parameter(uniform))
-  for setting: String in print_settings:
-    file.set_value('layout', setting, print_settings[setting])
-  DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-  return file.save(path)
-
-
-## Load a print look saved by `save_print_look`, starting from the print defaults. Returns false if the
-## file cannot be read.
-func load_print_look(path: String) -> bool:
-  var file: ConfigFile = ConfigFile.new()
-  if file.load(path) != OK:
-    push_warning('[DebugPanels] could not read print look file %s' % path)
-    return false
-  reset_print_look()
-  var background: Dictionary = background_defaults()
-  for uniform: String in _section_keys(file, 'background'):
-    if background.has(uniform):
-      background_material.set_shader_parameter(uniform, file.get_value('background', uniform))
-  for setting: String in _section_keys(file, 'print'):
-    set_print_value(setting, file.get_value('print', setting))
-  for setting: String in _section_keys(file, 'layout'):
-    set_print_value(setting, file.get_value('layout', setting))
-  return true
-
-
 ## Save the current corridor look to a text file at `path`: the look shader settings, the corridor and
 ## environment settings, the world palette, matching and dithering.
 func save_look(path: String) -> Error:
@@ -605,20 +502,11 @@ func load_look(path: String) -> bool:
   return true
 
 
-# Every uniform is set explicitly, so a saved look or print look lists every one of them.
+# Every uniform is set explicitly, so a saved look lists every one of them.
 func _write_look_defaults() -> void:
   var defaults: Dictionary = look_defaults()
   for uniform: String in defaults:
     world_material.set_shader_parameter(uniform, defaults[uniform])
-
-
-func _write_print_defaults() -> void:
-  var background: Dictionary = background_defaults()
-  for uniform: String in background:
-    background_material.set_shader_parameter(uniform, background[uniform])
-  var frame: Dictionary = print_defaults()
-  for uniform: String in frame:
-    _print_material(uniform).set_shader_parameter(uniform, frame[uniform])
 
 
 func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
@@ -626,14 +514,24 @@ func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
 
 
 ## Use the font file at `path` as the project theme's default font, for comparing fonts. It replaces
-## the font `Prefs` applied, until `Prefs` applies its font again.
+## the theme's own default font until `restore_default_font()` puts that back.
 func set_ui_font(path: String) -> void:
   var font: Font = load(path) as Font
   if font == null:
     push_warning('[DebugPanels] could not load font %s' % path)
     return
-  (load(Prefs.THEME_PATH) as Theme).set_default_font(font)
+  var theme: Theme = load(Prefs.THEME_PATH) as Theme
+  if _default_font == null:
+    _default_font = theme.default_font
+  theme.set_default_font(font)
   ui_font = path
+
+
+## Put the theme's own default font back, undoing `set_ui_font()`.
+func restore_default_font() -> void:
+  ui_font = ''
+  if _default_font != null:
+    (load(Prefs.THEME_PATH) as Theme).set_default_font(_default_font)
 
 
 ## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
@@ -646,6 +544,7 @@ func set_interface_palette(path: String) -> void:
   else:
     InterfacePalette.apply(path)
   _recolour_fight_statuses()
+  PrintLook.push_wear_colours()
   interface_palette_changed.emit()
 
 
@@ -711,8 +610,7 @@ func _scan_palettes() -> void:
       _palette_paths.append(path)
       var palette_name: String = path.get_file().get_basename()
       _world_option.add_item(palette_name, _palette_paths.size())
-      # Only `.gpl` files name their colours, so only they can be interface palettes.
-      if path.get_extension().to_lower() == 'gpl':
+      if InterfacePalette.is_interface_palette(path):
         _interface_palette_paths.append(path)
         _interface_option.add_item(folder.path_join(palette_name), _interface_palette_paths.size())
   _sync_controls()
@@ -751,12 +649,11 @@ func _scan_fonts() -> void:
   _font_option.select(maxi(_font_option.get_item_index(_font_paths.find(ui_font) + 1), 0))
 
 
-# "Game default" (id 0) puts back the font `Prefs` applies.
+# "Game default" (id 0) puts back the theme's own font.
 func _on_font_selected(index: int) -> void:
   var id: int = _font_option.get_item_id(index)
   if id <= 0:
-    ui_font = ''
-    Prefs.apply_font_style()
+    restore_default_font()
     return
   set_ui_font(_font_paths[id - 1])
 

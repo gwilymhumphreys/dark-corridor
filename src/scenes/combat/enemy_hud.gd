@@ -6,6 +6,7 @@ extends VBoxContainer
 ## frame. Reads the Actor; writes nothing. The VFX wall reads hud_centre / cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
+const STATUS_ICON: PackedScene = preload('res://src/scenes/combat/status_icon.tscn')
 
 var actor: Actor
 
@@ -59,8 +60,8 @@ func _refresh_hp() -> void:
   _hp_label.text = '%d / %d' % [int(round(actor.hp)), int(round(actor.max_hp))]
 
 
-## Status icons — one swatch per active actor-targeted status (placeholder colour; real icons
-## are content). Rebuilt each frame since statuses accrue / expire during combat.
+## Status icons — one StatusIcon (the status's icon on its colour) per active actor-targeted
+## status. Rebuilt each frame since statuses accrue / expire during combat.
 func _refresh_statuses() -> void:
   if actor == null:
     return
@@ -68,19 +69,13 @@ func _refresh_statuses() -> void:
   while _statuses.get_child_count() > want:
     # Deferred frees for nodes (CLAUDE.md) — but remove from the tree NOW so the
     # child count this loop reads actually shrinks.
-    var swatch: Node = _statuses.get_child(_statuses.get_child_count() - 1)
-    _statuses.remove_child(swatch)
-    swatch.queue_free()
+    var status_icon: Node = _statuses.get_child(_statuses.get_child_count() - 1)
+    _statuses.remove_child(status_icon)
+    status_icon.queue_free()
   while _statuses.get_child_count() < want:
-    var swatch := ColorRect.new()
-    swatch.custom_minimum_size = Vector2(28, 28)
-    _statuses.add_child(swatch)
+    _statuses.add_child(STATUS_ICON.instantiate())
   for i in want:
-    (_statuses.get_child(i) as ColorRect).color = _status_color(actor.statuses[i])
-
-
-func _status_color(status) -> Color:
-  return status.color
+    (_statuses.get_child(i) as StatusIcon).show_status(actor.statuses[i])
 
 
 func hud_centre() -> Vector2:

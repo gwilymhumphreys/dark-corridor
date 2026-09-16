@@ -13,6 +13,8 @@ Columns: 8
  31  31  31	ui panel
  51  51  51	ui panel edge
 123 120 120	ui panel light
+ 51  51  51	ui panel wear
+123 120 120	ui panel wear light
  89  89  89	ui text disabled
 128 128 128	ui text pressed
 153 153 168	ui text dim

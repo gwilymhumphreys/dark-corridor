@@ -12,12 +12,17 @@ var _id: String = ''
 
 func setup(id: String) -> void:
   _id = id
-  var name_label: Label = $Margin/Name
+  var name_label: Label = $Margin/Row/Name
+  var icon_rect: TextureRect = $Margin/Row/Icon
   var entry: Dictionary = KeywordCatalog.get_entry(id)
   if entry.is_empty():
     name_label.text = id
+    icon_rect.visible = false
     tooltip_text = ''   # no card to show → no built-in tooltip
     return
+  var icon_path: String = entry['icon']
+  icon_rect.texture = load(icon_path) as Texture2D if icon_path != '' else null
+  icon_rect.visible = icon_rect.texture != null
   name_label.text = tr(entry['name_key'])
   name_label.add_theme_color_override('font_color', entry['color'])
   tooltip_text = id   # non-empty triggers the built-in tooltip; the id IS the card lookup key

@@ -21,6 +21,7 @@ func _init() -> void:
   name_key = 'Empowered'                          # PLACEHOLDER name — owner's to rename
   desc_key = 'Doubles your next weapon attack.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_EMPOWERED
+  icon = 'res://assets/icons/statuses/aura_flex_nb.png'
 
 
 ## Double a WEAPON attack's outgoing DAMAGE while a charge is banked. PURE — no mutation (this also

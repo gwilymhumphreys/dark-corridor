@@ -28,7 +28,7 @@ The cluster shows/hides as a unit; it is opaque (a scale reveal, no fade) and
 | File | Role |
 |------|------|
 | `tooltip_cluster.gd` (+`.tscn`) | The cluster, on its own `CanvasLayer` (layer **50**, below pause's 100). Owns the main panel + keyword column, runs the hide-bridge state machine, positions/clamps, rebuilds on item change, clears its `Item` ref on hide + `_exit_tree`. |
-| `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip segments). Opaque framed stylebox. |
+| `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
 | `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content (tinted name + description). Returned bare by a chip's `_make_custom_tooltip`; wrapped in a `PanelContainer` for the column. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
 | `keyword_chip.gd` (+`.tscn`) | Inline `PanelContainer` (icon + tinted name) in the body. Sets `tooltip_text = <id>` and overrides `_make_custom_tooltip` → a frameless `keyword_card`. |
 | `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, lines, flavor, stat_lines, keyword_ids}`. **Instance** (not static) because the line templates call `tr()`. |
@@ -120,7 +120,7 @@ silently — that absence is how the owner gates a mechanic keyword.
 A chip sets a non-empty `tooltip_text` (the keyword id, the lookup key) and overrides
 `_make_custom_tooltip(for_text)` to return a **frameless** `keyword_card`. Godot wraps
 the returned node in the theme's `TooltipPanel`, so `TooltipPanel` / `TooltipLabel` are
-styled **opaque** in `black_white_ui.tres` (the theme panel is the only frame; the
+styled **opaque** in `dark_corridor.tres` (the theme panel is the only frame; the
 returned node is frameless). The column cards are NOT Godot tooltips, so they wrap the
 *same* `keyword_card` scene in their own `PanelContainer`. Unknown id →
 `_make_custom_tooltip` returns `null` (no tip); the chip still renders its name.

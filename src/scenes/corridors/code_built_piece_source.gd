@@ -51,7 +51,7 @@ func _material_for(texture: Texture2D) -> StandardMaterial3D:
     return _materials[key]
   var material: StandardMaterial3D = StandardMaterial3D.new()
   material.albedo_texture = texture
-  material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+  material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
   material.texture_repeat = true
   material.uv1_scale = Vector3(uv_repeat.x, uv_repeat.y, 1.0)
   material.cull_mode = BaseMaterial3D.CULL_DISABLED   # visible from inside whatever the winding

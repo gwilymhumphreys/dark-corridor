@@ -65,7 +65,7 @@ godot --headless --path . --import --exit
 
 ## Fonts per locale
 
-The vector font is the universal default and must cover every shipped locale (it
-relies on `allow_system_fallback` + optional bundled Noto fallbacks). The optional
-**pixel font is Latin-only** and is locale-gated, so non-Latin locales always render
-vector and never tofu. Full architecture: [ui_theme.md](ui_theme.md#localization-vector-is-the-safe-default-pixel-is-latin-only).
+There is one UI font, named as the theme's default font, and it must cover every
+shipped locale (it relies on `allow_system_fallback` plus optional bundled Noto
+fallbacks). Details, including what a second font style would need:
+[ui_theme.md](ui_theme.md#fonts).

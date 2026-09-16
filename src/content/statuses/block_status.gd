@@ -11,3 +11,4 @@ func _init() -> void:
   name_key = 'Block'
   desc_key = 'Absorbs incoming damage, then wears off.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_BLOCK
+  icon = 'res://assets/icons/statuses/skill_shield_block_nb.png'

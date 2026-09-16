@@ -12,6 +12,7 @@ func _init() -> void:
   name_key = 'Blind'
   desc_key = 'Attacks miss while it lasts.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_BLIND
+  icon = 'res://assets/icons/statuses/skill_blind_nb.png'
 
 
 func causes_evasion() -> bool:

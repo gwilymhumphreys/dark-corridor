@@ -1,0 +1,39 @@
+{
+  "standards": "CLAUDE.md",
+  "text_extensions": [
+    ".gd", ".tscn", ".tres", ".gdshader", ".md", ".json", ".cfg", ".godot",
+    ".po", ".pot", ".csv", ".txt", ".gpl", ".uid", ".import"
+  ],
+  "deny": [
+    ".git/", ".godot/", ".claude/", ".worktrees/", "autotest_results/",
+    "addons/gut/"
+  ],
+  "verify": [
+    {
+      "name": "code standards",
+      "builtin": "gdscript_style"
+    },
+    {
+      "name": "Godot parse check",
+      "command": [
+        "C:/projects/godot/godot.exe", "--headless", "--path", ".",
+        "--import", "--exit"
+      ],
+      "failure_patterns": [
+        "SCRIPT ERROR", "Parse Error", "Parser Error",
+        "Failed to load script", "Compile Error"
+      ],
+      "fail_on_exit_code": false
+    },
+    {
+      "name": "GUT suite",
+      "command": [
+        "C:/projects/godot/godot.exe", "--headless", "--path", ".",
+        "-s", "addons/gut/gut_cmdln.gd", "-gdir=res://tests/", "-gexit"
+      ],
+      "failure_patterns": [
+        "\\[Failed\\]", "Failed:", "SCRIPT ERROR", "Parse Error"
+      ]
+    }
+  ]
+}

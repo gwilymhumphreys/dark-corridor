@@ -20,12 +20,12 @@ func release() -> void:
   pass
 
 
-## Approach controls — the run screen walks the enemies in from depth.
+## Approach controls — the run screen walks the player up to the waiting enemies.
 func set_enemy_depth(_depth_cells: float) -> void:
   pass
 
 
-func set_gliding(_on: bool) -> void:
+func set_walk_distance(_sections: float) -> void:
   pass
 
 

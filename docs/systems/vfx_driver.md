@@ -20,7 +20,7 @@ What it **is not**:
 
 - **Not game logic.** The projectile arriving does **not** cause the damage — the Delivery's landing (the `Combat manager`, on the sim tick) is the damage event; the projectile is just the pretty thing in flight while that resolves. Wiring the visual to *cause* the effect is the breach to avoid.
 - **Not a second clock.** It never tracks animation progress; every visual is `f(render_time − stored_timestamp)`. (The breach: the renderer stepping its own animation state.)
-- **Not the UI / input** (a separate inbound layer — [UI PRD](ui_layout.md)) or the corridor renderer (the existing `docs/systems/corridors/` scaling-tile renderer; the `VFX driver` is the *combat* wall over it).
+- **Not the UI / input** (a separate inbound layer — [UI PRD](ui_layout.md)) or the corridor ([`Corridor3D`](corridors/corridor_3d.md); the `VFX driver` draws over it, outside the corridor look shader).
 
 ---
 
@@ -36,6 +36,23 @@ Combat decides *what happens and when*; the driver decides *where the pretty thi
 - **SFX one-shots** — triggered at `impact_time` (the sim clock), then **played at wall-clock pitch** (unslowed — slowing audio sounds bad). Same stored timestamp as the flash, read two ways: a continuous function (visual) and a fire-and-forget event (sound). *(What the SFX sound like is `art_audio.md`, not here.)*
 
 Because fire-rate and travel are decoupled (combat_model.md), many Deliveries can be in flight at once; the driver renders each independently from its own timestamps — chaos at full speed reads as "the machine went off," and under slow-mo-hover a single inspected chain resolves cleanly (art doc).
+
+## What is built
+
+`VfxDriver` (`src/vfx/vfx_driver.gd`) draws a solid projectile in flight, a ring that snaps outward
+where it lands, and a rising damage number, each in the delivery's colour. The firing item's own
+reaction is not the driver's: `item_cell.gd` punches the cell's scale off the same clock. A hit
+enemy also flinches back in the corridor and is lit ([run_screen.md](run_screen.md#enemies-in-the-corridor)).
+
+Each landing plays one sound through `SfxManager.play_impact()` ([audio.md](audio.md)), the first
+frame the delivery shows as landed — the one thing here that is an event rather than a function of
+`render_time`. The driver remembers which deliveries it has sounded and forgets them as the Combat
+manager drops them.
+
+**The circles are placeholders.** The projectile disc and the impact ring are drawn shapes standing
+in for real VFX animations, there so the timing and the causal link between firing and damage can be
+judged. They are to be replaced once proper animations exist, and their shape is not the intended
+look. The effects style is open (`art_audio.md`). Not built: a screen pulse.
 
 ## Reading the Combat manager's Delivery set
 
@@ -54,13 +71,16 @@ Per the architecture's "full VFX *path*, minimal *content*" — build the driver
 
 This validates the cleanest boundary on the map at the cheapest moment.
 
-**Not** in scope: the palette-clamp shader, pixel-snapped particles, banded light falloff, per-effect-family particle variety, the 32–64 palette pipeline — content/polish on a driver that already works (`art_audio.md`).
+**Not** in scope: the final effects style and per-effect-family particle variety — polish on a driver that already works (`art_audio.md`).
 
 ---
 
 ## Open / deferred
 
-- **VFX content + the pixel pipeline** (palette clamp, pixel-snap, banded falloff, per-effect particles) — `art_audio.md` + a content pass.
+- **Replacing the placeholder circles** — the projectile disc and the impact ring wait on real VFX
+  animations. Until those exist the drawn shapes stand in. The pass that replaces them is planned in
+  [`../plans/effects.md`](../plans/effects.md).
+- **Effects style** — open. The look is being explored with full-resolution painted art, post-processing and palettes, not pixel art. Effect colours are the interface's effect colours in `Colours` ([interface_palette.md](interface_palette.md)). See `art_audio.md`.
 - **Hit lights** — a short light at a hit enemy inside the 3D corridor already exists as a look setting ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)); the effects pass keeps, changes or replaces it.
 - **Projectile density tuning** (small/fast tracers for commons vs. crisp arcs for rares) — art doc, when the cascade is real.
 - **The node split** (driver vs. leaf render nodes; all-2D vs. SubViewport) — impl, settled when the UI-layout approach is picked (`art_audio.md` UI-implementation note).
@@ -68,4 +88,4 @@ This validates the cleanest boundary on the map at the cheapest moment.
 ## Dependencies
 
 - **Reads:** the `Combat manager`'s in-flight Delivery set (fire / impact timestamps, payload colour) + actor / item / status state; the `Timekeeper`'s `render_time()`. **Writes no game state.**
-- **Does not:** decide outcomes or timing (`Combat manager` / `combat_model.md`); hold a clock (`Timekeeper`); advance combat; capture input (`UI`); render the corridor (the `docs/systems/corridors/` renderer).
+- **Does not:** decide outcomes or timing (`Combat manager` / `combat_model.md`); hold a clock (`Timekeeper`); advance combat; capture input (`UI`); render the corridor (`Corridor3D`).

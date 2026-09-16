@@ -71,7 +71,3 @@ func test_fullscreen_defaults_off_and_stores() -> void:
   assert_false(Prefs.is_fullscreen(), 'windowed until set')
   Prefs.set_fullscreen(true)
   assert_true(Prefs.is_fullscreen(), 'the chosen display mode is stored')
-
-
-func test_font_style_defaults_to_vector() -> void:
-  assert_eq(Prefs.font_style(), PrefsAutoload.FontStyle.VECTOR, 'the default UI font is the vector style')

@@ -1,13 +1,15 @@
 extends Node2D
 ## Window host for the corridor (docs/systems/corridors/corridor_3d.md): instances `Corridor3D`
-## into CorridorHolder and wires the Forward/Back buttons to it. N walks a random monster from the
-## approach start to depth 0.
+## into CorridorHolder and wires the Forward/Back buttons to it. N places a random monster at the
+## approach start and walks the corridor up to it, as a fight does.
 
 const CORRIDOR_SCENE: PackedScene = preload('res://src/scenes/corridors/corridor_3d.tscn')
 
 var _corridor: Corridor3D
 var _monster: Sprite3D = null
 var _monster_elapsed: float = 0.0
+var _monster_walking: bool = false
+var _walk_start_z: float = 0.0
 
 
 func _ready() -> void:
@@ -58,7 +60,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
     _spawn_monster()
 
 
-## Place a random monster at the approach start; _process walks it to depth 0.
+## Place a random monster at the approach start; _process walks the corridor up to it.
 func _spawn_monster() -> void:
   if _monster != null:
     _corridor.remove_enemy(_monster)
@@ -69,15 +71,24 @@ func _spawn_monster() -> void:
   _monster = _corridor.add_enemy(texture)
   _corridor.size_enemy(_monster, Balance.ENEMY_PAINTED_HEIGHT)
   _monster_elapsed = 0.0
+  _monster_walking = true
+  _walk_start_z = _corridor.player_z
   _monster.position = _corridor.enemy_position(Balance.APPROACH_DEPTH_START, 0.0)
 
 
+# The monster stands still and the corridor moves up to it, as the run screen's approach does: the
+# player's position is driven straight from the elapsed time, so the Forward/Back buttons are
+# overridden until the walk finishes.
 func _process(delta: float) -> void:
-  if _monster == null or not is_instance_valid(_monster):
+  if not _monster_walking or _monster == null or not is_instance_valid(_monster):
     return
   _monster_elapsed += delta
   var t: float = clampf(_monster_elapsed / Balance.APPROACH_DURATION, 0.0, 1.0)
-  _monster.position = _corridor.enemy_position(lerpf(Balance.APPROACH_DEPTH_START, 0.0, t), 0.0)
+  var travelled: float = Balance.APPROACH_DEPTH_START * smoothstep(0.0, 1.0, t)
+  _corridor.player_z = _walk_start_z + travelled
+  _monster.position = _corridor.enemy_position(Balance.APPROACH_DEPTH_START - travelled, 0.0)
+  if t >= 1.0:
+    _monster_walking = false
 
 
 func _auto_shot() -> void:

@@ -15,7 +15,7 @@ var id: String = ''
 var count: float = 0.0
 var duration: float = 0.0
 var ticker: Ticker = null      # time-driven subclasses build one in setup(); inert shapes leave null
-var source = null              # the Actor/Item that applied it (source-dependent rules / attribution)
+var source: Variant = null     # the Actor/Item that applied it (source-dependent rules / attribution)
 var flags: int = 0             # Delivery.Flag bits carried from the applying effect (e.g. UNBLOCKABLE)
 
 # Presentation — set by PLAIN ASSIGNMENT in each subclass's _init (`name_key = 'Weak'`) so

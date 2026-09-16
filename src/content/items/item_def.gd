@@ -8,6 +8,7 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 
 var id: String = ''
 var name_key: String = ''         # source English; displayed via tr()
+var icon: String = ''             # res:// path of the item's picture (assets/icons/items/); empty = none
 # Optional authored flavor line (docs/systems/tooltips.md) — appended below the generated
 # mechanical lines in the tooltip; tr()'d. Empty = generated lines only.
 var description_key: String = ''

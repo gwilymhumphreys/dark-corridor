@@ -252,12 +252,12 @@ main.tscn  (Main, Node)                 main_controller swaps screens off Game.p
 - **Corridor advance** stays logic-clean: `Run manager` changes position + emits `advancing(next)`; `run_screen` animates the corridor panel and times board-activation to arrival.
 - The **framed-vs-full-screen** open (UI PRD) is isolated to the single swappable `CombatView` sub-scene — nothing else moves when it's decided.
 
-**Directory layout:** `src/combat/` (timekeeper · combat_manager · actor · item · status · delivery · ticker · event_bus), `src/run/` (run_manager · encounter), `src/content/` (kind-grouped subdirs — items/enemies/relics/consumables/enchants/encounters/statuses/characters, each a def + catalog; string ids #23), `src/vfx/`, `src/scenes/screens/` + `src/scenes/combat/`, alongside the existing `src/autoloads/`, `src/data/` (`balance.gd`), `src/scenes/corridors/`, `src/ui/`. `project.godot`'s `main_scene` flips to `main.tscn` when the spine is built (the corridor testbed stays runnable).
+**Directory layout:** `src/combat/` (timekeeper · combat_manager · actor · item · status · delivery · ticker · event_bus), `src/run/` (run_manager · encounter), `src/content/` (kind-grouped subdirs — items/enemies/relics/consumables/enchants/encounters/statuses/characters, each a def + catalog; string ids #23), `src/vfx/`, `src/scenes/screens/` + `src/scenes/combat/`, alongside the existing `src/autoloads/`, `src/data/` (`balance.gd`), `src/scenes/corridors/`, `src/ui/`, `src/debug/` (dev-only panels), `src/shaders/`. `project.godot`'s `main_scene` flips to `main.tscn` when the spine is built (the corridor testbed stays runnable).
 
 ## Prototype scope for this layer
  
 - **Full VFX *path*, minimal VFX *content*.** Build the driver and the wall (the clock's `render_time` → driver computes positions → renderer draws handed state) and prove them on a few effects: one projectile type, one fire-emote, travelling damage numbers, a screen pulse. This validates the cleanest architectural decision on the map at the cheapest moment.
-- **Not** the palette pipeline, pixel-snapping shader, banded falloff, or per-effect-family particle variety — that's content/polish on a driver that already works, and the easiest place to lose weeks. Full *path*, few *effects*.
+- **Not** the final effects style or per-effect-family particle variety — that's polish on a driver that already works, and the easiest place to lose weeks. Full *path*, few *effects*.
 - Including VFX now is justified by feel ("I want to see how it feels") *and* by testing the wall while the system is small enough to fix cheaply if the boundary is wrong.
 ---
  

@@ -29,6 +29,9 @@ testbed (`src/scenes/corridor_testbed.tscn`).
 - `set_forward_held` / `set_back_held`, or the `move_forward` / `move_back` actions while `input_enabled`
   is on. `CombatCorridor` turns input off so W/S cannot scroll a fight.
 - `velocity` eases toward `speed` over `ramp_time`; `player_z` is the position in sections.
+- A host can set `player_z` itself instead of holding a direction. `CombatCorridor.set_walk_distance`
+  does this for the fight approach ([run_screen.md](../run_screen.md#enemies-in-the-corridor)), so
+  the walk's timing comes from `Balance.APPROACH_DURATION` rather than `speed`.
 - The camera and light never move. Each frame `_layout` places section `i` with its near edge
   `i - player_z` sections past depth 0, which keeps positions small however long the run is.
 
@@ -84,6 +87,8 @@ they go; the corridor creates, sizes and places them.
   picked from screenshots as the lowest tried value that shows no dark fringe.
 - No billboard: the camera never rotates, so a sprite facing the camera's axis always faces it.
 - Perspective sizes the sprites with depth, so no scale is set during the approach.
+- During the approach an enemy keeps its place in the corridor: the host moves `player_z` forward and
+  lowers the depth by the same amount, so the sprite's world position does not change.
 
 ## Hit lights
 
@@ -132,18 +137,23 @@ look setting, kept until the effects pass decides on hit visuals.
   `CodeBuiltPieceSource` default texture) shows jagged dark edges.
 - The scene's code-built source uses `assets/textures/castle_wall_slates.png` (Poly Haven, Rob Tuytel)
   on all four sides. Textures used in 3D need mipmaps enabled in their import settings.
+- Code-built materials filter linear with mipmaps, matching enemy sprites and the project default.
+  A chunky, blocky look comes from the screen-space `pixelate_on` setting in
+  [corridor_look.md](../corridor_look.md), not from nearest filtering: the shader's blocks stay the
+  same size across the whole view, while nearest filtering would give blocks that shrink with distance.
 
 ## Project configuration (`project.godot`)
 
 - Window 2560×1440, `stretch/mode = canvas_items`, `aspect = keep`; the renderer is Compatibility.
-- `default_texture_filter = Nearest` (the UI's pixel look); the corridor sets its own filters.
+- `default_texture_filter = Linear Mipmap` ([ui_theme.md](../ui_theme.md)); the corridor sets its own filters.
 - Input map: `move_forward` = W + Up, `move_back` = S + Down.
 - `main_scene` is `main.tscn`; the corridor testbed runs directly.
 
 ## Testing it
 
 - Corridor testbed: `<godot> --path . res://src/scenes/corridor_testbed.tscn`. Forward/Back buttons
-  glide; N walks a random cut-out monster in from `APPROACH_DEPTH_START`.
+  glide; N places a random cut-out monster at `APPROACH_DEPTH_START` and walks the corridor up to
+  it, overriding the buttons until the walk finishes.
 - Testbed arguments (after `--`): `--set=property=value` sets any corridor export; `--monster` spawns a
   monster for the shot; `--shot` saves `user://shot.png` mid-glide and quits (`--still` for a stopped
   frame, `--shot-delay=SECONDS` to wait longer), printing `SHOT_SAVED:<path>`. `--view=WIDTHxHEIGHT`

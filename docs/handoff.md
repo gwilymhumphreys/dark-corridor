@@ -22,11 +22,14 @@
 > numbers (the autotest reads it instead of reconstructing from HP diffs), with a live HUD
 > *Dealt · Taken* readout + a post-fight summary screen. 2026-06-22: the **UI theme / pixel-scale /
 > font** model (#32) — `Consts.UI_SCALE`, the integer-at-rest rule, and a locale-gated vector↔pixel
-> font toggle wired in `Prefs` ([ui_theme.md](systems/ui_theme.md); pixel font asset + settings UI still pending).
+> font toggle wired in `Prefs` ([ui_theme.md](systems/ui_theme.md)).
 > 2026-09-15: the corridor is a real 3D scene (`Corridor3D`, the only corridor) with enemies as lit
 > `Sprite3D` nodes in it (#36, [corridor_3d.md](systems/corridors/corridor_3d.md)).
-> **390 GUT tests green** on Godot 4.7; the run is watchable end-to-end and the autotest plays +
-> reports builds.
+> **2026-09-16 (branch `full-res-art-3d-corridor`): pixel art is set aside and the look is being
+> explored** with the art we have, shaders, post-processing and palettes — see
+> [The look](#the-look-being-explored) below.
+> **GUT suite green** on Godot 4.7 (latest count in [build_log.md](history/build_log.md)); the run is
+> watchable end-to-end and the autotest plays + reports builds.
 >
 > **Content (items / enemies / encounters) is the project owner's domain — do NOT
 > author content unless asked.** This handoff is for the *non-content* engineering
@@ -52,7 +55,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
    `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
    self-attribution in git messages**). These OVERRIDE defaults.
 2. **[`decision_log.md`](decision_log.md)** — the canonical record: every decision
-   (numbered #1–#29) and what's still open. **Don't re-litigate anything in it.**
+   (numbered #1–#36) and what's still open. **Don't re-litigate anything in it.**
 3. **[`architecture.md`](systems/architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
 4. The per-system **PRDs** as needed (one per system in `docs/systems/`, spec +
@@ -62,7 +65,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
 
 ## Where things stand (what's built)
 
-**Phases 1–5 are complete, committed, 390 GUT tests green, feel gate passed.**
+**Phases 1–5 are complete, committed, GUT suite green, feel gate passed.**
 See `git log` (each step is its own green commit); the dated build chronology is
 [`history/build_log.md`](history/build_log.md), with the original phase plans
 beside it in `docs/history/`. Most of
@@ -153,7 +156,9 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
   (git-ignored), exit `0` = resolved / `1` = stuck-or-timeout. `--single-fight` runs
   one fight; `--encounters N` caps; flags in [`autotest.md`](systems/autotest.md).
 - **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn` → Start Run
-  (append `-- --autostart` to skip the menu; `--shot [--shot-delay s]` screenshots).
+  (append `-- --autostart` to skip the menu; `--shot [--shot-delay s]` screenshots). For look
+  screenshots of a real fight add `--autofight --nosave --notutorial` and the look arguments in
+  [debug_panel.md](systems/debug_panel.md#start-up-arguments).
   The fixed **combat sandbox** (one fight, not the run) is still there:
   `<exe> --path . res://src/scenes/combat_sandbox.tscn` (hover to slow-mo, R restarts).
 - **Discipline:** test-first; drive logic via `sim_step()` / intents in GUT (no
@@ -162,6 +167,39 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
 - **Docs:** if you change behaviour a doc describes, update that doc in the same
   change. Docs describe *systems/intent, not numbers* — point to `Balance`
   (`src/data/balance.gd`) / catalogs for tunables.
+
+## The look (being explored)
+
+On 2026-09-16 the owner set aside the chunky pixel-art direction. The goal is a distinctive dark-fantasy
+look made with the art we already have (painted monsters, icon packs, textures, the UI pack), shaders,
+post-processing and palettes, not by drawing or commissioning art. Nothing in the look is chosen yet.
+The owner's intent is in [`art_audio.md`](design/art_audio.md) (the owner's doc: read it, don't edit it
+unless asked); the working plan is [`plans/corridor_look_handoff.md`](plans/corridor_look_handoff.md).
+
+**How look work is done:** every option is a debug setting, screenshotted in the same real fight and
+published on one comparison page (saved locally in `comparisons/`, git-ignored). The owner picks; don't
+rank options. Record look choices as things being tried, not decisions, unless the owner settles one.
+
+**Rules from the pixel-art direction that no longer apply:** the ban on opacity and alpha fades (blended
+effects are allowed), pixel-snapped effects and a single 32–64 colour palette. Everything renders at full
+resolution.
+
+**Built on this branch** (all dev tooling except the font, the corridor and hit lights; details in each doc):
+
+| What | Doc |
+|---|---|
+| `Corridor3D`: real 3D corridor, one steady light at the camera, painted enemies as lit `Sprite3D` cut-outs, hit lights in the effect colour | [corridor_3d.md](systems/corridors/corridor_3d.md) |
+| F1 debug panel: world palette, interface palette, palette combos, font choice, start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
+| F2 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog; look files in `assets/looks/` | [corridor_look.md](systems/corridor_look.md) |
+| World palette clamp (corridor only); the full-screen clamp was removed | [palette_clamp.md](systems/palette_clamp.md) |
+| Interface palette: a named `.gpl` recolours `Colours` and the theme; effects use its effect colours | [interface_palette.md](systems/interface_palette.md) |
+| F3 print panel: worn record-sleeve background, wear over the corridor, worn corridor edge, border, folds; print looks in `assets/print_looks/` | [background_wear.md](systems/background_wear.md) · [print_frame.md](systems/print_frame.md) |
+| Rakkas as the interface font (smooth, not pixel) | [ui_theme.md](systems/ui_theme.md) |
+
+**Open:** the effects style, which corridor look and palettes, whether the print style spreads to the
+rest of the interface, and whether item icons and the interface frame stay pixel art. The drawn
+circles for projectiles and impacts are placeholders waiting on real VFX animations
+([vfx_driver.md](systems/vfx_driver.md)).
 
 ## Settled decisions & lessons (don't re-litigate)
 
@@ -190,8 +228,6 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
   localized via `tr(def.name_key)`. Drafts pull from the **character's pool + colorless** (#27).
 - **Exit codes** (autotest): `0` = the sim reached a clean conclusion (win OR die OR
   cap), `1` = it didn't (stuck / timeout) — not who wins (that's `tune`'s job later).
-- **VFX = opaque placeholders only** (no alpha — ask before adding opacity; user
-  preference + CLAUDE.md).
 - **"N resources still in use at exit" means a leaked Actor<->Item cycle** (the Actor, Item,
   Ticker and definition scripts stay loaded while an instance lives). A player or ally built
   outside a `RunManager` (a test, the autotest's single fight, the sandbox) must be dissolved by
@@ -233,9 +269,9 @@ test-first + its own green commit, with the headless autotest as the regression 
    **pause** (2026-06-06), and now (2026-06-09) the **settings screen** itself — audio volume
    sliders (Master / Music / Effects) bound to a new **`Prefs`** autoload (a `ConfigFile` at
    `user://`, separate from the run `Save`), opened from the title and the pause menu. A
-   **UI font-style preference** (vector↔pixel, locale-gated) is also wired in `Prefs` but has **no
-   control yet** (reminder in `settings_screen.gd`). Still open *here*: the font dropdown + video /
-   accessibility settings as they're wanted. [game_manager](systems/game_manager.md) ·
+   There is no font setting: the UI font is Rakkas, named as the theme's default font (the
+   Smooth / Pixel dropdown was removed on 2026-09-16). Still open *here*: video / accessibility
+   settings as they're wanted. [game_manager](systems/game_manager.md) ·
    [ui_layout](systems/ui_layout.md) · [run_screen](systems/run_screen.md) · [ui_theme](systems/ui_theme.md).
 4. **Combat view — DONE; relaid out to the corridor-forward mockup (2026-06-09).** The framed
    `CombatView` renders a per-actor widget: the **corridor large top-left** with **one
@@ -277,9 +313,8 @@ test-first + its own green commit, with the headless autotest as the regression 
 
 **Smaller polish:** the **draft overlay overlaps the corridor's left edge** (layout);
 **HP as a beaten-up portrait** (design wants damage-state on the portrait, not just a
-bar); the **UI pixel-scale rework** ([ui_theme.md](systems/ui_theme.md), #32) — author chrome on
-the `UI_SCALE` (×4) grid (e.g. the item cell at 128px with a 64px icon) + round computed rest
-offsets, and add the **pixel font asset** so the wired font toggle goes live. *(The **timescale
+bar). The UI pixel-scale rework and the pixel font asset ([ui_theme.md](systems/ui_theme.md), #32)
+are on hold with the pixel-art direction. *(The **timescale
 replace-vs-multiply** open is now resolved → replace, with the battle-speed dial — item 3 above.)*
 Decision-AI: the Driver's **potion / choice / event** policies stay stubs until those beats exist.
 
@@ -299,6 +334,8 @@ game_manager · sfx · music) · `src/autotest/` (the harness + strategies + rep
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
 draft_card · map_strip · speed_button · pause_menu) · `src/scenes/combat/`
 (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell · potion_slot) ·
-`src/scenes/` (sandbox + corridors) · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
+`src/scenes/` (sandbox + corridors) · `src/debug/` (F1/F2/F3 panels, interface palette) ·
+`src/shaders/` (corridor look, palette clamp, print wear) · `src/ui/` (print frame, screen background) ·
+`assets/looks/`, `assets/print_looks/`, `assets/palettes/`, `assets/palette_combos/` · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
 + `locale/` (i18n) · `tests/` (combat · content · run · autotest · ui · smoke · utils) ·
 `addons/gut/` (vendored).

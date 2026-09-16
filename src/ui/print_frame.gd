@@ -19,31 +19,31 @@ var _margin: float = -1.0
 
 func _ready() -> void:
   _scene_rect = Rect2(corridor.position, corridor.size)
-  _border.material = DebugPanels.border_material
-  overlay.material = DebugPanels.overlay_material
+  _border.material = PrintLook.border_material
+  overlay.material = PrintLook.overlay_material
   _process(0.0)
 
 
 func _exit_tree() -> void:
-  DebugPanels.background_material.set_shader_parameter('print_corridor_rect', Vector4.ZERO)
+  PrintLook.background_material.set_shader_parameter('print_corridor_rect', Vector4.ZERO)
   _border.material = null
   if is_instance_valid(overlay):
     overlay.material = null
 
 
 func _process(_delta: float) -> void:
-  var margin: float = DebugPanels.print_setting('corridor_margin')
+  var margin: float = PrintLook.print_setting('corridor_margin')
   if margin != _margin:
     _margin = margin
     corridor.position = _scene_rect.position + Vector2(margin, margin)
     corridor.size = _scene_rect.size - Vector2(margin, margin) * 2.0
   _place_border()
   _place_overlay()
-  DebugPanels.background_material.set_shader_parameter('print_corridor_rect', _screen_rect(corridor))
+  PrintLook.background_material.set_shader_parameter('print_corridor_rect', _screen_rect(corridor))
 
 
 func _place_border() -> void:
-  var border_material: ShaderMaterial = DebugPanels.border_material
+  var border_material: ShaderMaterial = PrintLook.border_material
   _border.visible = border_material.get_shader_parameter('print_border_on')
   if not _border.visible:
     return
@@ -59,15 +59,15 @@ func _place_border() -> void:
 
 # The overlay takes the background wear's settings so its marks match the background's.
 func _place_overlay() -> void:
-  var overlay_material: ShaderMaterial = DebugPanels.overlay_material
+  var overlay_material: ShaderMaterial = PrintLook.overlay_material
   overlay.visible = overlay_material.get_shader_parameter('corridor_wear_on') \
     or overlay_material.get_shader_parameter('corridor_worn_edge_on')
   if not overlay.visible:
     return
   overlay.position = corridor.position
   overlay.size = corridor.size
-  var background_material: ShaderMaterial = DebugPanels.background_material
-  for uniform: String in DebugPanels.background_defaults():
+  var background_material: ShaderMaterial = PrintLook.background_material
+  for uniform: String in PrintLook.background_defaults():
     overlay_material.set_shader_parameter(uniform, background_material.get_shader_parameter(uniform))
   overlay_material.set_shader_parameter('print_corridor_rect', _screen_rect(corridor))
   overlay_material.set_shader_parameter('rect_size', _screen_size(overlay))

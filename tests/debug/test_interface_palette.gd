@@ -34,14 +34,28 @@ func _theme() -> Theme:
 
 
 func _panel_centre_pixel() -> Color:
-  var stylebox: StyleBoxTexture = _theme().get_stylebox('panel', 'Panel') as StyleBoxTexture
+  # TooltipPanel stays textured pack art (unlike the flat panel types), so it still exercises the
+  # image brightness-ramp recolour.
+  var stylebox: StyleBoxTexture = _theme().get_stylebox('panel', 'TooltipPanel') as StyleBoxTexture
   var image: Image = stylebox.texture.get_image()
   return image.get_pixel(floori(image.get_width() * 0.5), floori(image.get_height() * 0.5))
+
+
+func _flat_panel_style() -> PaletteStyleBox:
+  var worn: WornStyleBox = _theme().get_stylebox('panel', 'PanelFlat') as WornStyleBox
+  return worn.base as PaletteStyleBox
 
 
 func test_variable_name_turns_spaces_into_underscores() -> void:
   assert_eq(InterfacePalette.variable_name(' hp bar fill '), 'HP_BAR_FILL')
   assert_eq(InterfacePalette.variable_name('ui-panel'), 'UI_PANEL')
+
+
+func test_only_gpl_files_naming_a_colours_variable_are_interface_palettes() -> void:
+  assert_true(InterfacePalette.is_interface_palette(DEFAULT_PALETTE), 'the default interface palette')
+  assert_false(InterfacePalette.is_interface_palette(_write_palette('hex.gpl', ['34 35 35\t222323'])),
+    'colour names that match no Colours variable')
+  assert_false(InterfacePalette.is_interface_palette('res://assets/palettes/good/waldgeist-32x.png'), 'a PNG strip')
 
 
 func test_named_colours_are_read_from_a_gpl_file() -> void:
@@ -77,7 +91,7 @@ func test_theme_is_unchanged_when_the_palette_sets_no_panel_or_text_colours() ->
 
 
 func test_panel_and_text_colours_recolour_the_theme_until_reset() -> void:
-  var stylebox: StyleBoxTexture = _theme().get_stylebox('panel', 'Panel') as StyleBoxTexture
+  var stylebox: StyleBoxTexture = _theme().get_stylebox('panel', 'TooltipPanel') as StyleBoxTexture
   var original_texture: Texture2D = stylebox.texture
   var label_text: Color = _theme().get_color('font_color', 'Label')
   InterfacePalette.apply(_write_palette('panel.gpl', ['200 0 0 ui panel', '0 200 0 ui text']))
@@ -125,3 +139,12 @@ func test_named_colour_rect_follows_a_palette_applied_after_it_was_added() -> vo
   assert_eq(rect.color, Color8(0, 0, 200), 'took the new colour straight away')
   DebugPanels.set_interface_palette('')
   assert_eq(rect.color, default_colour, 'back to the default on reset')
+
+
+func test_palette_style_box_follows_an_applied_palette_and_returns_to_default_on_reset() -> void:
+  var style: PaletteStyleBox = _flat_panel_style()
+  var default_colour: Color = style.bg_color
+  InterfacePalette.apply(_write_palette('flat_panel.gpl', ['10 20 30 ui background']))
+  assert_eq(style.bg_color, Color8(10, 20, 30), 'the flat panel fill follows its named Colours variable')
+  InterfacePalette.reset()
+  assert_eq(style.bg_color, default_colour, 'reset restores the fill')

@@ -39,7 +39,7 @@ as the `DebugPanels` autoload.
 | Control | Effect | Read by |
 |---|---|---|
 | World palette (corridor) | "Off", then every palette under `assets/palettes/`, grouped by subfolder. Applies immediately. | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
-| Interface palette | "Off", then every `.gpl` palette. Applies immediately. | [Interface palette](interface_palette.md) |
+| Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`). Applies immediately. | [Interface palette](interface_palette.md) |
 | Font | "Game default" (the `Prefs` font), then every font file in `assets/fonts/candidates/`. Applies immediately. | The project theme's default font ([ui_theme.md](ui_theme.md#font-candidates)) |
 | Colour matching | RGB or perceptual (OKLab). Applies immediately. | World clamp |
 | Dithering | On or off. Applies immediately. | World clamp |
@@ -61,6 +61,7 @@ Read once at start-up from the user arguments (after `--`), for screenshots and 
 | `--font=<res path>` | The project theme's default font becomes this font file, replacing the one `Prefs` set ([ui_theme.md](ui_theme.md#font-candidates)) |
 | `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
+| `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
 | `--print-look=<path>` | Loads a [print look](print_frame.md#print-looks) before the other arguments, so they can override it |
 | `--palette-combo=<path>` | Loads a palette combo before the other arguments, so they can override it |
 | `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay or layout setting. Repeatable |
@@ -75,17 +76,16 @@ For example, a real fight under a world palette:
 |---|---|
 | `corridor_settings`, `environment_settings` | Corridor exports and corridor camera Environment properties (property -> value), applied when a corridor is built |
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
-| `set_ui_font(path: String)`, `ui_font` | Use this font file as the project theme's default font; `ui_font` is that path, or `''` for the game's default font |
+| `set_ui_font(path: String)`, `restore_default_font()`, `ui_font` | Use this font file as the project theme's default font, or put the theme's own font back; `ui_font` is the chosen path, or `''` when the theme's own font is in use |
 | `set_interface_palette(path: String)`, `interface_palette` | Apply an interface palette file; `''` goes back to the default colours. Also recolours statuses in the current fight |
 | `interface_palette_changed` (signal) | Emitted after an interface palette is applied or reset; `NamedColourRect` copies its colour again |
 | `save_palette_combo(path) -> Error`, `load_palette_combo(path) -> bool`, `palette_combo_path(name)` (static) | Palette combo files |
 | `start_up_palette_combo()`, `set_start_up_palette_combo(name)`, `start_up_combo_allowed(args, headless)` (all static) | The combo loaded at start-up, and whether a run may load it |
 | `world_palette`, `world_material` | The world clamp palette path (`''` when off) and the corridor look material corridors are drawn through |
-| `background_material`, `background_defaults() -> Dictionary` | The [background wear](background_wear.md) material every screen background is drawn through, and its uniform defaults |
 | `look_defaults() -> Dictionary` | Look shader uniform defaults, read from the shader code |
 | `save_look(path) -> Error`, `load_look(path) -> bool`, `reset_look()` | [Look files](corridor_look.md#look-files) and the look defaults |
 | `toggle_look_panel()` | Show or hide the look panel |
-| `border_material`, `overlay_material`, `print_settings`, `print_setting()`, `set_print_value()`, `print_defaults()`, `save_print_look()`, `load_print_look()`, `reset_print_look()`, `toggle_print_panel()` | The [print frame](print_frame.md#public-api) |
+| `toggle_print_panel()` | Show or hide the print panel; the [print frame](print_frame.md#public-api), [background wear](background_wear.md) and [panel wear](panel_wear.md) materials and settings are owned by `PrintLook`, not `DebugPanels` |
 | `set_dithering(on)`, `is_dithering()` | The world clamp's dithering switch, kept in step with the panel |
 | `set_world_palette(path: String)` | Clamp the combat corridor to this palette file; `''` turns it off |
 | `toggle_panel()` | Show or hide the panel |

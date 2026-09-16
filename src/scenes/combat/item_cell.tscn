@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/item_cell.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://dhtyc4hune8jb" path="res://assets/sprites/items/placeholder_item.png" id="2"]
 
 [node name="ItemCell" type="Control"]
 custom_minimum_size = Vector2(120, 120)
@@ -24,9 +23,8 @@ theme_type_variation = &"PanelSlot"
 [node name="Icon" type="TextureRect" parent="Frame"]
 layout_mode = 2
 mouse_filter = 2
-texture = ExtResource("2")
 expand_mode = 1
-stretch_mode = 6
+stretch_mode = 5
 
 [node name="Pills" type="HBoxContainer" parent="."]
 layout_mode = 1

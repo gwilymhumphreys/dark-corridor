@@ -5,7 +5,7 @@ shader_type canvas_item;
 // and a rubbed edge that wears the corridor image away into the background colour. PrintFrame copies
 // the background wear settings and colours into this material.
 
-#include "res://src/shaders/print_wear.gdshaderinc"
+#include "res://src/shaders/background_wear_settings.gdshaderinc"
 
 uniform sampler2D screen_texture : hint_screen_texture, filter_nearest;
 // Set by PrintFrame: the background colour, and the rectangle's size in screen pixels.
@@ -32,7 +32,8 @@ group_uniforms;
 void fragment() {
   vec3 colour = texture(screen_texture, SCREEN_UV).rgb;
   if (corridor_wear_on) {
-    colour = print_wear(colour, FRAGCOORD.xy, 1.0 / SCREEN_PIXEL_SIZE);
+    colour = print_wear(colour, background_wear_settings(), FRAGCOORD.xy, 1.0 / SCREEN_PIXEL_SIZE,
+      wear_dark_colour, wear_light_colour, print_corridor_rect, folds_shown);
   }
   if (corridor_worn_edge_on) {
     vec2 local = UV * rect_size;

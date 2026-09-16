@@ -13,6 +13,7 @@ func _init() -> void:
   name_key = 'Weak'                          # plain assignment → localized by extract_pot
   desc_key = 'Deals less damage while it lasts.'   # PLACEHOLDER desc — owner writes
   color = Colours.STATUS_WEAK
+  icon = 'res://assets/icons/statuses/skill_loosen_the_weapon_nb.png'
 
 
 func modify_outgoing(amount: float, target, item = null, ctx = null) -> float:

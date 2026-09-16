@@ -41,6 +41,19 @@ func test_hosts_the_3d_corridor_with_an_enemy_sprite() -> void:
   assert_lt(sprite.position.z, arrived_z, 'a deeper enemy is further from the camera')
 
 
+func test_walking_forward_moves_the_player_not_the_enemy() -> void:
+  # The approach walks the player up to a standing enemy: set_walk_distance moves the corridor
+  # position, and the sprite only moves when its depth is changed.
+  var corridor: CombatCorridor = _host()
+  var corridor_3d: Corridor3D = corridor.corridor()
+  var sprite: Sprite3D = corridor._enemies[0]
+  var start_z: float = corridor_3d.player_z
+  var sprite_z: float = sprite.position.z
+  corridor.set_walk_distance(2.0)
+  assert_almost_eq(corridor_3d.player_z, start_z + 2.0, 0.0001, 'the player has walked 2 sections')
+  assert_almost_eq(sprite.position.z, sprite_z, 0.0001, 'the enemy sprite has not moved')
+
+
 func test_enemy_anchor_sits_above_the_sprite() -> void:
   var corridor: CombatCorridor = _host()
   var sprite: Sprite3D = corridor._enemies[0]
@@ -107,6 +120,56 @@ func test_hit_lights_show_in_front_of_a_hit_enemy_and_fade_out() -> void:
   assert_gt(light.position.z, corridor._enemies[0].position.z, 'in front of the sprite')
   corridor.show_hits([hit], 1.0 + corridor_3d.hit_light_duration)
   assert_false(light.visible, 'gone once its duration has passed')
+
+
+func test_enemy_centre_is_on_the_sprite_below_its_hud_anchor() -> void:
+  # Where the VFX wall lands a hit: on the creature, not on the HUD above it.
+  var corridor: CombatCorridor = _host()
+  corridor.set_enemies([RefCounted.new()])
+  var centre: Vector2 = corridor.enemy_centre(0)
+  var anchor: Vector2 = corridor.enemy_anchor(0)
+  assert_almost_eq(centre.x, anchor.x, 0.5, 'centred on the sprite, like the anchor')
+  assert_gt(centre.y, anchor.y, 'and lower down — the sprite centre, not the point above its top')
+  assert_true(Rect2(corridor.global_position, corridor.size).has_point(centre), 'inside the corridor panel')
+
+
+func test_a_hit_enemy_flinches_back_and_settles() -> void:
+  var corridor: CombatCorridor = _host()
+  var enemy: RefCounted = RefCounted.new()
+  corridor.set_enemies([enemy])
+  var sprite: Sprite3D = corridor._enemies[0]
+  var resting_z: float = sprite.position.z
+  var hit: Delivery = Delivery.new()
+  hit.target = enemy
+  hit.landed = true
+  hit.impact_time = 1.0
+  corridor.show_hits([hit], 1.0)
+  var struck_z: float = sprite.position.z
+  assert_lt(struck_z, resting_z, 'the hit knocks the sprite away from the camera')
+  corridor.show_hits([hit], 1.0 + CombatCorridor.FLINCH_DURATION * 0.5)
+  assert_gt(sprite.position.z, struck_z, 'it eases back towards its place')
+  corridor.show_hits([hit], 1.0 + CombatCorridor.FLINCH_DURATION)
+  assert_almost_eq(sprite.position.z, resting_z, 0.0001, 'and is back once the flinch is over')
+  corridor.show_hits([hit], 1.0)
+  corridor.show_hits([], 0.0)
+  assert_almost_eq(sprite.position.z, resting_z, 0.0001, 'clearing the hits puts it back too')
+
+
+func test_flinch_outlasts_a_shorter_hit_light() -> void:
+  # The flinch and the hit light are separate: a light duration set shorter than the flinch in the
+  # look panel must not cut the flinch short.
+  var corridor: CombatCorridor = _host()
+  var enemy: RefCounted = RefCounted.new()
+  corridor.set_enemies([enemy])
+  corridor.corridor().hit_light_duration = CombatCorridor.FLINCH_DURATION * 0.25
+  var sprite: Sprite3D = corridor._enemies[0]
+  var resting_z: float = sprite.position.z
+  var hit: Delivery = Delivery.new()
+  hit.target = enemy
+  hit.landed = true
+  hit.impact_time = 1.0
+  corridor.show_hits([hit], 1.0 + CombatCorridor.FLINCH_DURATION * 0.5)
+  assert_lt(sprite.position.z, resting_z, 'still flinching after the light has gone')
 
 
 func test_forced_monster_image_is_used_and_cleared_on_reset() -> void:

@@ -17,6 +17,7 @@ func _init() -> void:
   name_key = 'Bleed'
   desc_key = 'Each time the bleeding side acts, it takes damage and loses a stack.'   # PLACEHOLDER desc — owner writes
   color = Colours.DAMAGE   # PLACEHOLDER tint — no dedicated bleed colour yet (owner's to add)
+  icon = 'res://assets/icons/statuses/skill_bleeding_nb.png'
 
 
 ## One of the holder's items just fired: bite the holder for the current stack count, then lose a

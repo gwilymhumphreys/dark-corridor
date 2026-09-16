@@ -95,7 +95,7 @@ Pull for modifiers keeps the engine in control of *when and in what order* contr
 
 ## Surface (presentation reads, doesn't live here)
 
-Distinct icon + per-effect colour per type (the design's colour vocabulary). Presentation is **instance fields** (`name_key`, `color`, `icon`) set by plain assignment in each class's `_init` — which is also how `tools/extract_pot.gd` localizes the names (it scans `name_key = '...'`). The UI reads `status.color` / `status.name_key` directly; the facade does not draw.
+Distinct icon + per-effect colour per type (the design's colour vocabulary). Presentation is **instance fields** (`name_key`, `color`, `icon` — a `res://` path under `assets/icons/statuses/`) set by plain assignment in each class's `_init` — which is also how `tools/extract_pot.gd` localizes the names (it scans `name_key = '...'`). The UI reads `status.color` / `status.name_key` directly; the facade does not draw.
 
 ## Asymmetric acquisition
 

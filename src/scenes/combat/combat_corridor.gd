@@ -4,8 +4,9 @@ extends SubViewportContainer
 ## SubViewportContainer hosting a `Corridor3D`. Each enemy is a lit `Sprite3D` in the corridor's
 ## 3D scene. `set_enemies(actors)` keeps one sprite per enemy, side by side, shrinking and spacing
 ## them to fit; `enemy_anchor(i)` is the screen point just above sprite i, where the combat view pins
-## that enemy's HUD. The view drives the approach via `set_enemy_depth()`; perspective makes the
-## sprites smaller with depth and the corridor's light darkens them.
+## that enemy's HUD. The view drives the approach via `set_enemy_depth()` and `set_walk_distance()`:
+## the enemy stands still while the player walks up to it, and perspective makes the sprite grow as
+## the gap closes. The corridor's light brightens it as it comes nearer.
 ##
 ## Enemy images are random cut-out painted samples (`MonsterImages`), sized to
 ## `Balance.ENEMY_PAINTED_HEIGHT` on screen at depth 0. A sprite keeps its image for as long as its
@@ -22,6 +23,8 @@ const MIN_COUNT_SHRINK: float = 1.0 / 3.0   # the smallest fraction of full size
 ## Metres between enemies that share a depth, so overlapping sprites are never drawn at the same
 ## distance.
 const DEPTH_STEP: float = 0.05
+const FLINCH_DURATION: float = 0.18    # render-time seconds for a hit enemy to settle back
+const FLINCH_DISTANCE: float = 0.35    # metres a hit knocks the sprite away from the camera
 
 var _corridor: Corridor3D
 var _enemies: Array = []       # Array[Sprite3D], left to right
@@ -29,6 +32,8 @@ var _enemies: Array = []       # Array[Sprite3D], left to right
 ## sprite shown before a fight's enemies are known; the first enemy takes it over.
 var _actors: Array = []
 var _depth: float = 0.0
+## The corridor's `player_z` when this host was built; `set_walk_distance` is measured from it.
+var _walk_start: float = 0.0
 
 
 func _ready() -> void:
@@ -37,6 +42,7 @@ func _ready() -> void:
   _corridor.input_enabled = false   # the view drives the glide; W/S must not scroll the fight
   $SubViewport.add_child(_corridor)
   _corridor.apply_settings(DebugPanels.corridor_settings, DebugPanels.environment_settings)
+  _walk_start = _corridor.player_z
   _enemies.append(_corridor.add_enemy(MonsterImages.random_texture()))
   _actors.append(null)
   _arrange()
@@ -93,9 +99,10 @@ func set_enemy_depth(depth_cells: float) -> void:
   _arrange()
 
 
-## Glide the corridor forward (the treadmill) for parallax during the approach.
-func set_gliding(on: bool) -> void:
-  _corridor.set_forward_held(on)
+## Move the player `sections` forward from where the corridor started. The run screen drives this
+## during the approach: the enemy keeps its world position and the corridor walks past it.
+func set_walk_distance(sections: float) -> void:
+  _corridor.player_z = _walk_start + sections
 
 
 ## The global screen point just above enemy `index`'s sprite at its arrived depth, where the combat
@@ -110,22 +117,58 @@ func enemy_anchor(index: int) -> Vector2:
   return global_position + size * 0.5 + _corridor.unproject(top) - Vector2(0.0, HUD_GAP)
 
 
-## Light each enemy hit by a delivery that landed less than the corridor's `hit_light_duration` before
-## `now` (render time), in the delivery's colour, fading out. Each enemy gets one light, from its
-## newest hit; the newest hits come first. Hits on items or the player's side are not lit. An empty
-## array clears the lights.
+## The global screen point at the centre of enemy `index`'s sprite, where the VFX wall lands its
+## hits. Unlike `enemy_anchor` this follows the sprite, so it moves with the approach and the flinch.
+func enemy_centre(index: int) -> Vector2:
+  var n: int = _enemies.size()
+  if n == 0:
+    return global_position + size * 0.5
+  index = clampi(index, 0, n - 1)
+  return global_position + size * 0.5 + _corridor.unproject(_enemies[index].position)
+
+
+## Show each enemy's newest hit as of `now` (render time): the sprite flinches back, and a light in
+## the delivery's colour shows on it. Hits on items or the player's side are ignored. An empty array
+## clears both.
 func show_hits(deliveries: Array, now: float) -> void:
-  var duration: float = maxf(_corridor.hit_light_duration, 0.001)
   var newest: Dictionary = {}   # enemy -> [age, colour]
   for d: Delivery in deliveries:
     if not d.landed or d.fizzled or d.target == null or not d.target in _actors:
       continue
     var age: float = now - d.impact_time
-    if age < 0.0 or age >= duration:
+    if age < 0.0:
       continue
     if not newest.has(d.target) or age < newest[d.target][0]:
       newest[d.target] = [age, d.color]
-  var enemies: Array = newest.keys()
+  _apply_flinches(newest)
+  _apply_hit_lights(newest)
+
+
+## How far back a hit enemy sits `age` render-seconds after the hit: the full distance at the
+## moment of the hit, easing back to nothing. A negative age (no recent hit) is no flinch.
+static func flinch_offset(age: float) -> float:
+  if age < 0.0 or age >= FLINCH_DURATION:
+    return 0.0
+  return FLINCH_DISTANCE * pow(1.0 - age / FLINCH_DURATION, 2.0)
+
+
+# Place every sprite at its arranged position, pushed away from the camera by its flinch. A pure
+# function of the clock, like the rest of the wall, so slow motion slows it and pause holds it.
+func _apply_flinches(newest: Dictionary) -> void:
+  var n: int = _enemies.size()
+  for i in n:
+    var sprite: Sprite3D = _enemies[i]
+    var age: float = newest[_actors[i]][0] if newest.has(_actors[i]) else -1.0
+    sprite.position = _enemy_position(i, n, _depth) - Vector3(0.0, 0.0, flinch_offset(age))
+
+
+# One light per enemy hit within the corridor's `hit_light_duration`, fading out, newest first.
+func _apply_hit_lights(newest: Dictionary) -> void:
+  var duration: float = maxf(_corridor.hit_light_duration, 0.001)
+  var enemies: Array = []
+  for enemy: Object in newest:
+    if newest[enemy][0] < duration:
+      enemies.append(enemy)
   enemies.sort_custom(func(a: Object, b: Object) -> bool: return newest[a][0] < newest[b][0])
   var lights: Array = []
   for enemy: Object in enemies:

@@ -624,18 +624,6 @@ msgid "Effects volume"
 msgstr ""
 
 #: src/scenes/screens/settings_screen.tscn
-msgid "Font"
-msgstr ""
-
-#: src/scenes/screens/settings_screen.tscn
-msgid "Smooth"
-msgstr ""
-
-#: src/scenes/screens/settings_screen.tscn
-msgid "Pixel"
-msgstr ""
-
-#: src/scenes/screens/settings_screen.tscn
 msgid "Fullscreen"
 msgstr ""
 

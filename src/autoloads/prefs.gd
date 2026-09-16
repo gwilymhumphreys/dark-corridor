@@ -3,7 +3,7 @@ extends Node
 ## Session preferences persisted to disk (autoload `Prefs`) — SEPARATE from the run Save
 ## (that stores run-state only, and is cleared on death/win). A thin ConfigFile wrapper at
 ## user://: audio bus volumes (Master / Music / Effects, each a 0..1 linear level) + mute-when-
-## unfocused, the UI font style (vector vs pixel), and the display mode (fullscreen vs windowed).
+## unfocused, and the display mode (fullscreen vs windowed).
 ## set_*() applies the change AND writes through immediately; load + apply happen at boot.
 ## `disabled` skips the disk write — TestCleanup sets it so tests never touch user://. The owner
 ## extends this with further video / accessibility keys as settings grow.
@@ -12,32 +12,9 @@ const PATH: String = 'user://dark_corridor_prefs.cfg'
 const SECTION_AUDIO: String = 'audio'
 const SECTION_DISPLAY: String = 'display'
 
-# UI font style (docs/systems/ui_theme.md). VECTOR = smooth antialiased text (the default); PIXEL =
-# a crisp pixel font for the chunky look. The toggle swaps the project theme's default font at
-# runtime; every Control re-renders via NOTIFICATION_THEME_CHANGED (no manual walk).
-enum FontStyle { VECTOR, PIXEL }
-
-# The project UI theme (project.godot gui/theme/custom). Mutating the cached resource propagates
-# to every Control using it.
-const THEME_PATH: String = 'res://assets/themes/black_white_ui.tres'
-
-# Font resource per style. '' = the engine built-in font. VECTOR is Rakkas, chosen from the font
-# comparison (docs/systems/ui_theme.md). The PIXEL asset doesn't exist yet: add a pixel font there (with
-# FontFile.oversampling = 1.0 + antialiasing/subpixel Disabled, see ui_theme.md) to enable the
-# option — until then PIXEL falls back to the built-in font with a warning, so the wiring is inert
-# but harmless.
-const FONT_PATHS: Dictionary = {
-  FontStyle.VECTOR: 'res://assets/fonts/rakkas.ttf',
-  FontStyle.PIXEL: 'res://assets/fonts/ui_pixel.ttf',
-}
-
-# Locales whose script the PIXEL font covers (it's Latin-only — docs/systems/ui_theme.md). The
-# pixel option only applies for a locale listed here (matched on the language prefix, e.g. `en` in
-# `en_US`); any other locale renders fully in the VECTOR font even when PIXEL is selected — so an
-# Eastern / non-Latin locale is never tofu or pixel/vector-mixed. Default-deny: add a language code
-# only once the pixel font is confirmed to cover it. The stored preference is kept either way, so
-# returning to a covered locale restores pixel.
-const PIXEL_FONT_LOCALES: PackedStringArray = ['en']
+# The project UI theme (project.godot gui/theme/custom). It names the UI font as its default font
+# (docs/systems/ui_theme.md). Mutating the cached resource propagates to every Control using it.
+const THEME_PATH: String = 'res://assets/themes/dark_corridor.tres'
 
 # Each audio key → its AudioServer bus (from default_bus_layout.tres) and default 0..1 level.
 const AUDIO_BUSES: Dictionary = {
@@ -61,19 +38,13 @@ var _config: ConfigFile = ConfigFile.new()
 func _ready() -> void:
   load_prefs()
   apply_audio()
-  apply_font_style()
   apply_display()
 
 
-## Autoloads are in the tree, so they receive these notifications:
-## - TRANSLATION_CHANGED: re-apply the font (a future settings-menu language switch must drop a
-##   non-Latin locale back to the vector font). Idempotent, so the known double-fire (engine issue
-##   #89804) is harmless.
-## - APPLICATION_FOCUS_OUT / _IN: mute / unmute the Master bus when `mute_on_focus_lost` is on.
+## Autoloads are in the tree, so they receive APPLICATION_FOCUS_OUT / _IN: mute / unmute the
+## Master bus when `mute_on_focus_lost` is on.
 func _notification(what: int) -> void:
-  if what == NOTIFICATION_TRANSLATION_CHANGED:
-    apply_font_style()
-  elif what == NOTIFICATION_APPLICATION_FOCUS_OUT and mute_on_focus_lost():
+  if what == NOTIFICATION_APPLICATION_FOCUS_OUT and mute_on_focus_lost():
     _set_master_muted(true)
   elif what == NOTIFICATION_APPLICATION_FOCUS_IN and mute_on_focus_lost():
     _set_master_muted(false)
@@ -124,49 +95,6 @@ func _set_master_muted(muted: bool) -> void:
   var bus: int = AudioServer.get_bus_index(AUDIO_BUSES['master'])
   if bus >= 0:
     AudioServer.set_bus_mute(bus, muted)
-
-
-## The stored UI font style (its default — VECTOR — if unset). See FontStyle.
-func font_style() -> int:
-  return int(_config.get_value(SECTION_DISPLAY, 'font_style', FontStyle.VECTOR))
-
-
-## Set the UI font style: store it, apply it to the live theme, persist (unless disabled).
-func set_font_style(style: int) -> void:
-  _config.set_value(SECTION_DISPLAY, 'font_style', style)
-  apply_font_style()
-  save_prefs()
-
-
-## Apply the EFFECTIVE font style to the project theme's default font (called at boot, on change,
-## and on locale change). Swapping the cached theme's default font re-renders every Control via
-## NOTIFICATION_THEME_CHANGED.
-func apply_font_style() -> void:
-  var theme: Theme = load(THEME_PATH) as Theme
-  if theme == null:
-    return
-  theme.set_default_font(_font_for_style(_effective_style()))
-
-
-## The style actually used right now: PIXEL only when it's both selected AND the active locale's
-## script is covered by the pixel font; otherwise VECTOR (the safe, broad-coverage default).
-func _effective_style() -> int:
-  if font_style() != FontStyle.PIXEL:
-    return FontStyle.VECTOR
-  var lang: String = TranslationServer.get_locale().split('_')[0]
-  return FontStyle.PIXEL if lang in PIXEL_FONT_LOCALES else FontStyle.VECTOR
-
-
-## The Font for a style: null = the engine built-in (smooth vector). A configured-but-absent asset
-## (the not-yet-added pixel font) warns and falls back to built-in rather than failing.
-func _font_for_style(style: int) -> Font:
-  var path: String = FONT_PATHS.get(style, '')
-  if path == '':
-    return null
-  if not ResourceLoader.exists(path):
-    push_warning('Prefs: the font for the selected style is not in the project yet (%s); using the built-in font.' % path)
-    return null
-  return load(path) as Font
 
 
 ## The stored display mode (default windowed). One bool — fullscreen vs windowed — is all the

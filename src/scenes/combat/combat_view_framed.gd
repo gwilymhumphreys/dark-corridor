@@ -154,8 +154,9 @@ func _build_potions(potions: Array) -> void:
     _potions.remove_child(child)
     child.queue_free()
   for i in potions.size():
-    var slot: Button = POTION_SLOT.instantiate()
+    var slot: PotionSlot = POTION_SLOT.instantiate()
     _potions.add_child(slot)
+    slot.setup(potions[i])
     slot.pressed.connect(_on_potion_pressed.bind(i))
 
 
@@ -167,14 +168,15 @@ func refresh_potions(potions: Array) -> void:
   _build_potions(potions)
 
 
-## Approach controls (docs/history/phase4_plan.md Step 7) — the run screen tweens the corridor's lead occupant
-## from depth into full view (the mood; the per-actor widgets are the combat).
+## Approach controls (docs/history/phase4_plan.md Step 7) — the run screen walks the player up to the
+## waiting enemies, bringing them from a speck into full view (the mood; the per-actor widgets are
+## the combat).
 func set_enemy_depth(depth_cells: float) -> void:
   _corridor.set_enemy_depth(depth_cells)
 
 
-func set_gliding(on: bool) -> void:
-  _corridor.set_gliding(on)
+func set_walk_distance(sections: float) -> void:
+  _corridor.set_walk_distance(sections)
 
 
 ## Stop reading the live fight before it is torn down (the run screen calls this right before
@@ -269,12 +271,14 @@ func item_pos(item: Item) -> Vector2:
   return actor_pos(item.owner) if item.owner != null else actor_pos(_player)
 
 
-## An actor's on-screen point — the player at its centre-bottom portrait, every enemy at its
-## HUD over the corridor, every ally/token at its flanking slot. The VFX wall flies projectiles
-## + pops numbers here.
+## An actor's on-screen point — the player at its centre-bottom portrait, every enemy on its
+## corridor sprite, every ally/token at its flanking slot. The VFX wall flies projectiles + pops
+## numbers here, so a hit lands on the creature rather than on the readout above it.
 func actor_pos(actor) -> Vector2:
   if actor == _player:
     return _portrait.global_position + _portrait.size * 0.5
+  if actor != null and _cm != null and actor in _cm.enemies:
+    return _corridor.enemy_centre(_cm.enemies.find(actor))
   if actor != null and _enemy_huds.has(actor):
     return (_enemy_huds[actor] as EnemyHud).hud_centre()
   if actor != null and _ally_slots.has(actor):

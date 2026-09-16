@@ -89,9 +89,8 @@ the headless autotest mounts none of this:
   raises the menu over it (still paused); Space does nothing while the menu is up.
 
 **Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Effects), a
-mute-when-unfocused toggle, a UI font dropdown (Smooth / Pixel — see `ui_theme.md`), and a
-fullscreen toggle, all bound to the **`Prefs`** autoload, which applies each change (bus
-level / window mode / theme font / focus-mute) and persists it to `user://` (a ConfigFile,
+mute-when-unfocused toggle and a fullscreen toggle, all bound to the **`Prefs`** autoload, which
+applies each change (bus level / window mode / focus-mute) and persists it to `user://` (a ConfigFile,
 **separate** from the run `Save`). Opened from the title and the pause menu; Close emits
 `closed` and the opener frees it. See
 [audio](audio.md).
@@ -112,6 +111,7 @@ mockup), composition:
   ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
   a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
+  Each status shows as a `status_icon.tscn`: the status's icon on a square of its colour.
   The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
   count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`. The HUD / ally-slot item cells
@@ -120,10 +120,10 @@ mockup), composition:
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
   "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
-  a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding a placeholder item icon, a
+  a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding the item's icon (`ItemDef.icon`), a
   centred row of effect-coloured value pills (`value_pill.tscn`, one per value-bearing effect)
   straddling the top edge, a cooldown wipe (a horizontal line rising bottom→top) + fire recoil),
-  with the **potion slots** above it.
+  with the **potion slots** (`potion_slot.tscn`, the potion's icon on the potion colour) above it.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
   + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right —
   capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
@@ -159,10 +159,16 @@ the corridor light, so they come out of the dark on the approach. The container 
   overlapping sprites are never drawn at the same distance.
 - **HUD anchor:** `enemy_anchor(i)` unprojects the top centre of sprite `i` at its arrived depth and
   adds `HUD_GAP`. It does not move during the approach. The corridor image is 1:1 with the container,
-  so the unprojected point plus the container's centre is the global screen point. Projectiles and
-  damage numbers aim at the HUDs (`actor_pos`).
-- **Hit lights:** the view passes the fight's deliveries to `show_hits` each frame and clears them on
-  `release()` ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)).
+  so the unprojected point plus the container's centre is the global screen point. `enemy_centre(i)`
+  is the same unprojection of the sprite's live centre, which is where `actor_pos` sends projectiles,
+  impacts and damage numbers, so a hit lands on the creature rather than on the readout above it.
+- **Hits:** the view passes the fight's deliveries to `show_hits` each frame and clears them on
+  `release()`. Each hit enemy flinches — its sprite is knocked away from the camera by
+  `CombatCorridor.flinch_offset`, a function of render time since the hit, so slow motion slows it
+  and pause holds it — and is lit ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)). The
+  flinch and the light have separate durations, so shortening the light in the look panel does not
+  cut the flinch short. The ring the wall draws at the landing point is a placeholder shape
+  ([vfx_driver.md](vfx_driver.md#what-is-built)), not the intended look.
 - **Images:** a random cut-out sample from `assets/monsters/cut_out/` (`MonsterImages`, its own RNG,
   so seeded runs are unchanged).
 
@@ -171,14 +177,18 @@ comes from its brightest colour channel, partly transparent pixels are brightene
 dark outline, and each image is cropped to its visible part. Dark areas inside a figure become
 see-through too. Re-run the tool after adding or changing an image in `assets/monsters/`.
 
-The **approach** (`run_screen` APPROACHING state) tweens depth `APPROACH_DEPTH_START → 0` over
-`APPROACH_DURATION` (off `_physics_process`, so the headless test walks it), gliding the corridor for
-parallax; the **fight clock is not ticked until arrival**, so combat is frozen while the enemy walks
-into view. Constants in `src/data/balance.gd`.
+The **approach** (`run_screen` APPROACHING state): the enemy stands still at `APPROACH_DEPTH_START`
+and the player walks up to it over `APPROACH_DURATION`. Each frame `run_screen._walk(travelled)` sets
+the corridor's walk distance (`CombatCorridor.set_walk_distance`, which moves `player_z`) and the
+enemy's depth to `APPROACH_DEPTH_START - travelled`, so the corridor moves past while the enemy grows
+from a speck into full view. The distance is eased with `smoothstep`, so the walk starts and ends
+softly. It runs off `_physics_process` (so the headless test walks it), and the **fight clock is not
+ticked until arrival**, so combat is frozen during the walk. Constants in `src/data/balance.gd`.
 
 ## Overlays
 
-- **Draft** — `draft_overlay.tscn` raises 3 `draft_card.tscn`s after a fight; a pick
+- **Draft** — `draft_overlay.tscn` raises 3 `draft_card.tscn`s (the item's icon on its panel
+  colour, value, name, rarity) after a fight; a pick
   emits `picked(index)` → `RunManager.apply_draft_pick`. A themed **Skip button** (with a
   `UIJuice` node) emits `skipped` → `RunManager.apply_draft_skip` instead, banking gold and
   refreshing the gold HUD before advancing (decision #33). Both paths then advance.
@@ -191,10 +201,9 @@ into view. Constants in `src/data/balance.gd`.
 - **Speed button** — `speed_button.tscn` on the HUD (bottom-right): an always-visible
   ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
 - **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque
-  centered panel (no translucent scrim — the pixel-art opacity rule) + Resume / Settings /
+  centered panel (no translucent scrim) + Resume / Settings /
   Quit-to-menu; its full-rect Catcher swallows input so the paused board can't be clicked
-  through. Pausing mid-approach also halts the corridor treadmill (the renderer's cosmetic
-  self-animation), not just the depth walk.
+  through. Pausing mid-approach also halts the corridor's movement, not just the depth walk.
 
 ## Localization
 

@@ -33,7 +33,7 @@ Art sources (exploring)
 
 Monsters: painted images from the monster collection in ../dark-corridor-design/monsters/, used at their original resolution and cut out of their black backgrounds. The game has a sample of nine in assets/monsters/cut_out/. Fights pick one at random; which enemy uses which image is not content yet.
 Corridor walls: one tiling stone texture for now. Candidate PSX-style modular kits are listed in docs/plans/full_res_art_palette_clamp_3d_corridor.md.
-Item icons: the current icons are pixel art. Whether icons stay pixel art or become painted, to sit with the painted enemies, is open. Candidate packs are listed under Asset sources.
+Icons: painted icons from the 6000 Fantasy Icons pack for items, potions, statuses and keywords, copied into assets/icons/. The agent picked a first icon for each; every pick is a placeholder for the owner to swap.
 Interface frame: the Black and White UI pack, pixel art drawn at a ~360p scale on the full-resolution screen (decision #32). Panel frames will come from whichever UI theme is used.
 Font: Rakkas, a smooth font, chosen from a screenshot comparison. Other shortlisted fonts can be tried from the debug panel. No pixel font by default.
 No generative-AI assets.
@@ -134,7 +134,7 @@ UI implementation in Godot (when building): the frame wants Control nodes (ancho
 Corridor look: which effects, world palette and dithering, including how dithering looks in motion.
 Print style: whether the worn record-sleeve style carries on to the corridor border, folds and the rest of the interface.
 Interface: which palette, and which interface parts take shaders.
-Item icons and interface frame: stay pixel art, or change to fit the painted enemies.
+Interface frame: stay pixel art, or change to fit the painted enemies and icons.
 Corridor walls: textures or a bought modular kit.
 Effects style at full resolution with post-processing.
 One item firing against black — does it feel good? (Atomic readability test.)

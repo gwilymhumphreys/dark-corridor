@@ -1,7 +1,7 @@
 class_name ItemCell
 extends Control
 ## One board item in the framed combat view (docs/systems/ui_layout.md): a themed item-slot
-## frame (PanelSlot) holding a placeholder icon, a row of effect-coloured value pills straddling
+## frame (PanelSlot) holding the item's icon (`ItemDef.icon`), a row of effect-coloured value pills straddling
 ## the top edge (one per value-bearing effect), a cooldown wipe (a horizontal line rising from the
 ## bottom edge to the top as the item recharges), and a scale-punch recoil when it fires. Structure
 ## is authored in item_cell.tscn; this binds the data, builds the pills, and draws the wipe + recoil.
@@ -21,6 +21,7 @@ var item: Item
 var cell_size: Vector2 = CELL_SIZE
 
 @onready var _pills: HBoxContainer = $Pills
+@onready var _icon: TextureRect = $Frame/Icon
 
 var _timekeeper: Timekeeper = null     # the fight's clock; null = no recoil (sandbox/tests)
 var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurious recoil on bind
@@ -44,6 +45,7 @@ func _exit_tree() -> void:
   # CLAUDE.md runtime cleanup: drop the live refs on free.
   item = null
   _timekeeper = null
+  _icon.texture = null
 
 
 ## Bind to an item. Call after the cell is in the tree (so the node refs exist).
@@ -51,6 +53,7 @@ func _exit_tree() -> void:
 func setup(target_item: Item, timekeeper: Timekeeper = null) -> void:
   item = target_item
   _timekeeper = timekeeper
+  _icon.texture = load(item.def.icon) as Texture2D if item != null and item.def.icon != '' else null
   _build_pills()
   queue_redraw()
 

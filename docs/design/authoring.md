@@ -34,7 +34,9 @@ string id), and where relevant a runtime instance class (`relic.gd`, `enchantmen
    / shape / travel / `status_id` + `duration` for a status applier, the `consume_id` Mass fields,
    the `summon_*` fields). Set the item's `types` — one or more `ItemType` tags (`weapon` / `armour` /
    `skill` / `spell` / `trinket`), inert synergy labels ([item.md](../systems/item.md)). Shared numbers
-   point to `Balance`; the player-facing `name_key` is source English.
+   point to `Balance`; the player-facing `name_key` is source English. Set `icon` to a `res://` path
+   under `assets/icons/items/` (a copy from the icon pack, file name in snake_case); `tests/content/test_icons.gd`
+   fails if it is missing.
 2. **Register it.** Add it to the catalog's `_build()` — `_defs[POCKET_SHROOMS] = _pocket_shrooms()`.
 3. **Make it live.** Add the id to a character's `item_pool` in `characters/character_catalog.gd` —
    or to `items/colorless_pool.gd` if it genuinely belongs to *every* character (the exception that
@@ -55,7 +57,7 @@ for each def's fields and how it resolves.
 - A **status** is NOT a def — it's a **`StatusEffect` subclass** (`statuses/<name>_status.gd`)
   overriding the hooks it needs (`modify_outgoing`, `absorb`, `on_step`, …; default no-op),
   extending an intermediate base (`TimedStatus` / `PeriodicStatus` / `PoolStatus`) or `StatusEffect`
-  directly. Set `id` / `name_key` / `color` by plain assignment in `_init` (the `name_key = '...'`
+  directly. Set `id` / `name_key` / `color` / `icon` (under `assets/icons/statuses/`) by plain assignment in `_init` (the `name_key = '...'`
   assignment is what localizes it). Make it live with **one line** in `StatusRegistry` (`id →
   creator`). An applier (item/relic) references it by string id (`status_id = 'weak'`) and, for a
   timed status, sets `duration` (per-application). See [status PRD](../systems/status_manager.md).

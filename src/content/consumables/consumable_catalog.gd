@@ -40,6 +40,7 @@ static func _healing_draught() -> ConsumableDef:
   var d := ConsumableDef.new()
   d.id = HEALING_DRAUGHT
   d.name_key = 'Healing Draught'
+  d.icon = 'res://assets/icons/potions/alchemy_31_bigheal_flask.png'
   var heal := ItemEffect.new()
   heal.kind = Delivery.Kind.HEAL
   heal.value = Balance.POTION_HEAL

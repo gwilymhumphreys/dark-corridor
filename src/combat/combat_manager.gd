@@ -592,7 +592,7 @@ func _resolve_targets(p: Payload, owner_actor: Actor) -> Array:
     ItemEffect.Shape.SELF:
       return [owner_actor]
     ItemEffect.Shape.OPPONENT_LEFTMOST:
-      var t = _leftmost_living_opponent(owner_actor)
+      var t: Actor = _leftmost_living_opponent(owner_actor)
       return [t] if t != null else []
     ItemEffect.Shape.ALL_OPPONENTS:
       return _living_opponents(owner_actor)
@@ -659,7 +659,7 @@ func _living_opponents(actor: Actor) -> Array:
   return out
 
 
-func _leftmost_living_opponent(actor: Actor):
+func _leftmost_living_opponent(actor: Actor) -> Actor:
   for o in _opponents_of(actor):
     if o.is_alive():
       return o
