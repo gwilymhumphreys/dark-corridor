@@ -17,7 +17,8 @@ example an item that just triggered). Nothing glows unless code asks for it.
   rectangle.
 - The screen glow is switched on only while a node set through `set_glow` or `flash` is glowing, because
   the glow pass darkens the whole screen slightly even when nothing is brighter than white. Setting
-  `self_modulate` directly does not switch it on.
+  `self_modulate` directly does not switch it on. A glowing node that is freed stops counting on the
+  next frame, including one freed partway through a flash.
 - Canvas layers up to `MAX_GLOW_LAYER` glow; the debug panels are above it.
 - Nodes drawn through the [interface look](interface_look.md) material keep their extra brightness: the
   shader runs its effects on the colour up to white and multiplies the extra back in at the end.

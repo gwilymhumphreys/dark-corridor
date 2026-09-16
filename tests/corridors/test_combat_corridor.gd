@@ -198,9 +198,12 @@ func test_corridor_is_drawn_through_the_world_clamp() -> void:
   var corridor: CombatCorridor = _host()
   assert_eq(corridor.material, DebugPanels.world_material, 'the corridor uses the world clamp material')
   assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 0, 'the world clamp is off by default')
-  var path: String = 'res://assets/palettes/new/world/world-ash-16.gpl'
+  var path: String = 'res://assets/palettes/new/world/world-crypt-16.gpl'
   DebugPanels.set_world_palette(path)
   var colours: PackedColorArray = PaletteLoader.load_palette(path)
+  assert_gt(colours.size(), 0, 'the test palette file exists')
+  if colours.is_empty():
+    return
   assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), colours.size(),
     'a chosen palette file is loaded into the world clamp')
   var texture: Texture2D = DebugPanels.world_material.get_shader_parameter('palette_rgb')

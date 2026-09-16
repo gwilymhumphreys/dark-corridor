@@ -17,7 +17,8 @@ as the `DebugPanels` autoload.
   Interface palette list and `.` and `,` in the Portrait palette list, with the panel open or closed,
   skipping folder headings and wrapping round through "Off". Debug builds only.
 - `\` moves the selected world palette file (and its `.import` file) into
-  `assets/palettes/shortlist/`, then rescans the list and keeps that palette selected. It does nothing
+  `assets/palettes/shortlist/`, rewrites the palette's path in any saved look (`assets/looks/`) or palette combo that uses it,
+  then rescans the list and keeps that palette selected. It does nothing
   on "Off", for a palette already in the shortlist, or when a file of the same name is there.
 - Backspace turns the world clamp's dithering on or off, keeping the F1 panel's Dithering switch in step.
 - Choices last for the session only, unless saved. `DebugPanels.reset_settings()` restores the

@@ -57,7 +57,7 @@ frame, so an effect stays where it landed, and the projectile flies to the same 
 is what stops several hits on one creature stacking their rings and numbers in a single unreadable
 spot.
 
-Each landing plays one sound through `SfxManager.play_impact()` ([audio.md](audio.md)), the first
+Each landing that draws an impact (so not `SUMMON` or `CREATE_ITEM`) plays one sound through `SfxManager.play_impact()` ([audio.md](audio.md)), the first
 frame the delivery shows as landed — the one thing here that is an event rather than a function of
 `render_time`. The driver remembers which deliveries it has sounded and forgets them as the Combat
 manager drops them.

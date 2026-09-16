@@ -86,6 +86,20 @@ func test_each_landing_is_sounded_once() -> void:
   cm.free()
 
 
+func test_a_summon_landing_is_not_sounded() -> void:
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  var vfx: VfxDriver = _driver(cm)
+  var summon: Delivery = _landed_delivery()
+  summon.kind = Delivery.Kind.SUMMON
+  cm.deliveries().append(summon)
+  vfx._sound_new_impacts()
+  assert_eq(vfx._sounded.size(), 0, 'a summon has no impact, so it makes no impact sound')
+  cm.free()
+
+
 func test_a_delivery_in_flight_is_not_sounded() -> void:
   var p := _spawn(100.0, [ItemCatalog.WEAPON])
   var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])

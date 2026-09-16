@@ -65,6 +65,35 @@ func test_move_palette_file_moves_the_file_and_its_import_file() -> void:
     DirAccess.remove_absolute(dir)
 
 
+func test_replace_palette_path_updates_saved_looks() -> void:
+  var folder: String = 'user://test_palette_refs'
+  DirAccess.make_dir_recursive_absolute(folder)
+  var look: String = folder.path_join('look.cfg')
+  FileAccess.open(look, FileAccess.WRITE).store_string('[palettes]
+world_palette="res://old/a.gpl"
+')
+  DebugPanelsAutoload.replace_palette_path([folder], 'res://old/a.gpl', 'res://new/a.gpl')
+  assert_eq(FileAccess.get_file_as_string(look), '[palettes]
+world_palette="res://new/a.gpl"
+',
+    'the look points at the moved palette')
+  DirAccess.remove_absolute(look)
+  DirAccess.remove_absolute(folder)
+
+
+func test_saved_looks_and_combos_only_name_files_that_exist() -> void:
+  var regex: RegEx = RegEx.create_from_string('"(res://[^"]+)"')
+  for folder: String in [DebugPanelsAutoload.LOOK_DIR, DebugPanelsAutoload.PALETTE_COMBO_DIR, DebugPanelsAutoload.PRINT_LOOK_DIR, InterfaceLookAutoload.LOOK_DIR]:
+    if not DirAccess.dir_exists_absolute(folder):
+      continue
+    for file_name: String in DirAccess.get_files_at(folder):
+      if file_name.get_extension() != 'cfg':
+        continue
+      var text: String = FileAccess.get_file_as_string(folder.path_join(file_name))
+      for found: RegExMatch in regex.search_all(text):
+        assert_true(FileAccess.file_exists(found.get_string(1)), '%s names %s' % [file_name, found.get_string(1)])
+
+
 func test_every_step_skips_folder_headings() -> void:
   var option: OptionButton = _option()
   DebugPanels.cycle_palette(1)

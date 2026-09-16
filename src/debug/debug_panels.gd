@@ -305,6 +305,9 @@ func shortlist_palette() -> void:
   var new_path: String = move_palette_file(old_path, SHORTLIST_DIR)
   if new_path == '':
     return
+  replace_palette_path([LOOK_DIR, PALETTE_COMBO_DIR], old_path, new_path)
+  if portrait_palette == old_path:
+    portrait_palette = new_path
   _scan_palettes()
   var new_id: int = _palette_paths.find(new_path) + 1
   if new_id > 0:
@@ -326,6 +329,27 @@ static func move_palette_file(path: String, folder: String) -> String:
   if FileAccess.file_exists(path + '.import'):
     DirAccess.rename_absolute(path + '.import', new_path + '.import')
   return new_path
+
+
+## Rewrite `old_path` to `new_path` in every `.cfg` file in `folders`, so saved looks and palette
+## combos still find a palette after it is moved.
+static func replace_palette_path(folders: Array[String], old_path: String, new_path: String) -> void:
+  for folder: String in folders:
+    if not DirAccess.dir_exists_absolute(folder):
+      continue
+    for file_name: String in DirAccess.get_files_at(folder):
+      if file_name.get_extension() != 'cfg':
+        continue
+      var file_path: String = folder.path_join(file_name)
+      var text: String = FileAccess.get_file_as_string(file_path)
+      if not text.contains('"%s"' % old_path):
+        continue
+      var file: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
+      if file == null:
+        push_warning('[DebugPanels] could not update palette path in %s' % file_path)
+        continue
+      file.store_string(text.replace('"%s"' % old_path, '"%s"' % new_path))
+      file.close()
 
 
 ## Save the palette choices to a text file at `path`: the world, interface and portrait palettes,

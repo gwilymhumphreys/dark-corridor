@@ -51,6 +51,15 @@ func test_a_freed_item_stops_counting_as_glowing() -> void:
   assert_false(InterfaceGlow.is_enabled(), 'the freed item no longer keeps the glow on')
 
 
+func test_an_item_freed_mid_flash_turns_the_glow_off() -> void:
+  var other: ColorRect = ColorRect.new()
+  add_child(other)
+  InterfaceGlow.flash(other, 2.0, 1.0)
+  other.free()
+  await wait_process_frames(2)
+  assert_false(InterfaceGlow.is_enabled(), 'the glow does not stay on for a freed item')
+
+
 func test_glow_settings_are_saved_with_the_interface_look() -> void:
   InterfaceGlow.settings['glow_intensity'] = 4.0
   assert_eq(InterfaceLook.save_look(LOOK_PATH), OK, 'saved')

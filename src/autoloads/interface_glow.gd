@@ -44,6 +44,9 @@ func _ready() -> void:
 # `--glow-demo=<brightness>` (dev, for screenshots): every node drawn through the interface look material
 # glows, including nodes built later.
 func _process(_delta: float) -> void:
+  # A node freed mid-flash takes its tween with it, so `_on_flash_finished` never runs; drop it here.
+  if _environment.glow_enabled:
+    _update_enabled()
   if _demo_brightness <= 0.0 or Engine.get_process_frames() % 30 != 0:
     return
   for node: Node in get_tree().root.find_children('*', 'CanvasItem', true, false):

@@ -101,7 +101,8 @@ func _sound_new_impacts() -> void:
   for d in combat.deliveries():
     var id: int = d.get_instance_id()
     live[id] = true
-    if not d.landed or d.fizzled or _sounded.has(id):
+    # Summons and created items have no impact to hear, as they have none to see.
+    if not d.landed or d.fizzled or not _impact_drawers.has(d.kind) or _sounded.has(id):
       continue
     _sounded[id] = true
     SfxManager.play_impact()
