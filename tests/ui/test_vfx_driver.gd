@@ -52,10 +52,20 @@ func _landed_delivery() -> Delivery:
 
 
 func test_impact_burst_runs_for_its_duration_then_stops() -> void:
-  assert_eq(VfxDriver.impact_progress(-0.01), -1.0, 'nothing before the hit lands')
-  assert_eq(VfxDriver.impact_progress(0.0), 0.0, 'the burst starts at the moment of the hit')
-  assert_almost_eq(VfxDriver.impact_progress(VfxDriver.IMPACT_DURATION * 0.5), 0.5, 0.001, 'halfway through')
-  assert_eq(VfxDriver.impact_progress(VfxDriver.IMPACT_DURATION), -1.0, 'gone once its duration has passed')
+  var drawer := ImpactRingDrawer.new()
+  assert_eq(drawer.progress(-0.01), -1.0, 'nothing before the hit lands')
+  assert_eq(drawer.progress(0.0), 0.0, 'the burst starts at the moment of the hit')
+  assert_almost_eq(drawer.progress(ImpactRingDrawer.IMPACT_DURATION * 0.5), 0.5, 0.001, 'halfway through')
+  assert_eq(drawer.progress(ImpactRingDrawer.IMPACT_DURATION), -1.0, 'gone once its duration has passed')
+
+
+func test_a_landing_is_scattered_a_little_and_stays_put() -> void:
+  var first: Delivery = _landed_delivery()
+  var second: Delivery = _landed_delivery()
+  var offset: Vector2 = VfxDriver.scatter_offset(first)
+  assert_lt(offset.length(), VfxDriver.SCATTER_RADIUS, 'the nudge is small')
+  assert_eq(VfxDriver.scatter_offset(first), offset, 'the same landing is nudged the same way each frame')
+  assert_ne(VfxDriver.scatter_offset(second), offset, 'a second landing goes somewhere else')
 
 
 func test_each_landing_is_sounded_once() -> void:

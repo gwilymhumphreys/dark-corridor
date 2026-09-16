@@ -69,7 +69,7 @@ Each effect type becomes one file so the set can grow without `_draw()` growing.
 ## Settings for comparing looks
 
 The debug panels are the place for this, matching how the corridor look and the palettes are
-compared. F1, F2 and F3 are taken, so an effects panel takes F4. What belongs in it:
+compared. F1, F2, F3 and F5 are taken, so an effects panel takes F4. What belongs in it:
 
 - Where effects are drawn — 2D over the corridor, or inside the 3D corridor.
 - Which drawer each kind uses, once there is more than one per kind.
@@ -82,10 +82,10 @@ Saved sets follow the palette combo pattern in
 
 ## Damage numbers
 
-With impacts now landing on the creature rather than the health readout, several numbers stack in
-the same spot during a burst and cannot be read. This is a real problem visible in the current
-screenshots and it is fixed in this pass. The options to try are spreading numbers that arrive close
-together, merging a burst into one total, or moving them off the creature. None is chosen.
+Several numbers used to stack in one spot during a burst and could not be read. The owner's
+decision was to randomise the hit location a little, which is enough for now. Done: a landing is
+nudged from the target's centre by an offset derived from the delivery itself, so the ring, the
+number and the projectile's destination all move together and stay put while they play.
 
 ## Screen shake
 
@@ -103,8 +103,8 @@ not exist. A file is needed before the impact reads as a hit. Getting one is the
 
 1. Ask the owner to look at the current effect, running a fight or from screenshots.
 2. Settle the 2D-versus-3D question with a comparison page.
-3. Extract the existing disc and ring into drawers, with the tests staying green.
-4. Fix the damage numbers.
+3. Extract the existing disc and ring into drawers, with the tests staying green. **Done.**
+4. Fix the damage numbers. **Done**, by scattering the landing point.
 5. Add the missing landings: the miss tell, the death fade, and effects for `HEAL`,
    `APPLY_STATUS`, `SUMMON` and `CREATE_ITEM`.
 6. Add screen shake.
