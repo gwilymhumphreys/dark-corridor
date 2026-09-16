@@ -2,7 +2,7 @@ class_name VfxDriver
 extends Node2D
 ## The combat wall (docs/systems/vfx_driver.md), minimal and grown incrementally. Everything it
 ## draws is a pure function of the CombatManager's Delivery set + the Timekeeper's render_time():
-## projectiles in flight, a burst where each one lands, and pop-in damage numbers. The impact sound
+## projectiles in flight, a burst where each one lands, and floating damage numbers. The impact sound
 ## is the one exception — it fires once per landing at wall-clock speed. Writes no game state.
 ## The shapes are drawn by small effect classes in `src/vfx/drawers/`, one per effect.
 ##
@@ -10,15 +10,19 @@ extends Node2D
 ## the timing and the causal link can be judged. They are meant to be replaced by proper VFX
 ## animations once those exist; do not treat their shape as the intended look.
 
-const NUM_DURATION := 0.6    # seconds a damage number shows (render-time)
+signal big_hit(strength: float)   # a hit of at least BIG_HIT_DAMAGE landed; strength is 0 to 1
+
 const SCATTER_RADIUS: float = 44.0   # how far a landing point can be nudged from the target centre
+const BIG_HIT_DAMAGE: float = 200.0   # the smallest hit that pauses and shakes the screen
+const BIGGEST_HIT_DAMAGE: float = 2000.0   # the hit that pauses and shakes the most
 
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
-var _font: Font
 var _sounded: Dictionary = {}   # Delivery instance id -> true, so each landing sounds once
 var _projectile: EffectDrawer
+var _damage_number: DamageNumberDrawer
 var _impact_drawers: Dictionary = {}   # Delivery.Kind -> EffectDrawer
+var _number_kinds: Array = []   # the Delivery.Kind values that show a number
 
 
 func setup(cm: CombatManager, layout_source: CombatView) -> void:
@@ -28,10 +32,12 @@ func setup(cm: CombatManager, layout_source: CombatView) -> void:
 
 func _ready() -> void:
   _projectile = ProjectileDiscDrawer.new()
+  _damage_number = DamageNumberDrawer.new()
   var ring: ImpactRingDrawer = ImpactRingDrawer.new()
   _impact_drawers[Delivery.Kind.DAMAGE] = ring
   _impact_drawers[Delivery.Kind.HEAL] = ring
   _impact_drawers[Delivery.Kind.APPLY_STATUS] = ring
+  _number_kinds = [Delivery.Kind.DAMAGE, Delivery.Kind.HEAL]
 
 
 func _process(_delta: float) -> void:
@@ -43,7 +49,6 @@ func _exit_tree() -> void:
   # CLAUDE.md runtime cleanup: drop the live-fight refs and the sounded set on free.
   combat = null
   layout = null
-  _font = null
   _sounded.clear()
 
 
@@ -61,9 +66,6 @@ static func scatter_offset(delivery: Delivery) -> Vector2:
 func _draw() -> void:
   if combat == null or combat.timekeeper == null:
     return
-  # The project theme's font, so damage numbers follow the font style.
-  var theme: Theme = ThemeDB.get_project_theme()
-  _font = theme.default_font if theme != null and theme.default_font != null else ThemeDB.fallback_font
   var now: float = combat.timekeeper.render_time()
   for d in combat.deliveries():
     if d.fizzled:
@@ -83,17 +85,23 @@ func _draw() -> void:
     if _impact_drawers.has(d.kind):
       var drawer: EffectDrawer = _impact_drawers[d.kind]
       drawer.draw_effect(self, d, landing, now - d.impact_time)
-    if d.kind == Delivery.Kind.DAMAGE:
-      var age: float = now - d.impact_time
-      if age >= 0.0 and age < NUM_DURATION:
-        var pos: Vector2 = landing + Vector2(-24.0, -190.0 - age * 120.0)
-        draw_string(_font, pos, str(int(d.value)), HORIZONTAL_ALIGNMENT_LEFT, -1, 52, d.color)
+    if d.kind in _number_kinds:
+      _damage_number.draw_effect(self, d, landing, now - d.impact_time)
+
+
+## How big a hit is, from 0 at BIG_HIT_DAMAGE to 1 at BIGGEST_HIT_DAMAGE, or -1 for anything that
+## is not damage or is smaller than BIG_HIT_DAMAGE.
+static func big_hit_strength(delivery: Delivery) -> float:
+  if delivery.kind != Delivery.Kind.DAMAGE or delivery.value < BIG_HIT_DAMAGE:
+    return -1.0
+  return clampf((delivery.value - BIG_HIT_DAMAGE) / (BIGGEST_HIT_DAMAGE - BIG_HIT_DAMAGE), 0.0, 1.0)
 
 
 ## One sound per landing, played the first time a delivery shows as landed. Sounds are
 ## fire-and-forget at wall-clock pitch — unlike the drawing, they are not a function of
 ## render_time, because slowing audio sounds bad. Ids of deliveries the manager has dropped are
-## forgotten, so the set stays as small as the fight's live deliveries.
+## forgotten, so the set stays as small as the fight's live deliveries. A big hit also emits
+## `big_hit` here, once, so the view can pause and shake.
 func _sound_new_impacts() -> void:
   if combat == null:
     return
@@ -106,6 +114,9 @@ func _sound_new_impacts() -> void:
       continue
     _sounded[id] = true
     SfxManager.play_impact()
+    var strength: float = big_hit_strength(d)
+    if strength >= 0.0:
+      big_hit.emit(strength)
   for id: int in _sounded.keys():
     if not live.has(id):
       _sounded.erase(id)

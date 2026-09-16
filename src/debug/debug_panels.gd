@@ -12,6 +12,9 @@ extends Node
 ## Emitted after an interface palette is applied or reset, so nodes that copied `Colours` when built
 ## can copy them again.
 signal interface_palette_changed
+## Emitted with true when the first panel opens and false when the last one closes. The run screen
+## pauses on it.
+signal panels_open_changed(open: bool)
 
 const PALETTE_ROOT: String = 'res://assets/palettes'
 const SHORTLIST_DIR: String = 'res://assets/palettes/shortlist'
@@ -227,30 +230,41 @@ func toggle_panel() -> void:
     _scan_palettes()
   if _font_option.item_count <= 1:
     _scan_fonts()
-  _panel_layer.visible = not _panel_layer.visible
-  if _panel_layer.visible:
+  if _toggle_layer(_panel_layer):
     _list_palette_combos()
 
 
 ## Show or hide the look panel. Its controls are built the first time it opens.
 func toggle_look_panel() -> void:
-  _look_layer.visible = not _look_layer.visible
-  if _look_layer.visible:
+  if _toggle_layer(_look_layer):
     _look_panel.open()
 
 
 ## Show or hide the print panel. Its controls are built the first time it opens.
 func toggle_print_panel() -> void:
-  _print_layer.visible = not _print_layer.visible
-  if _print_layer.visible:
+  if _toggle_layer(_print_layer):
     _print_panel.open()
 
 
 ## Show or hide the interface look panel. Its controls are built the first time it opens.
 func toggle_interface_look_panel() -> void:
-  _interface_look_layer.visible = not _interface_look_layer.visible
-  if _interface_look_layer.visible:
+  if _toggle_layer(_interface_look_layer):
     _interface_look_panel.open()
+
+
+## True while any of the four panels is showing.
+func any_panel_open() -> bool:
+  return _panel_layer.visible or _look_layer.visible or _print_layer.visible or _interface_look_layer.visible
+
+
+# Show or hide one panel's layer, emitting `panels_open_changed` when that changes whether any panel
+# is open. Returns whether the layer is now showing.
+func _toggle_layer(layer: CanvasLayer) -> bool:
+  var was_open: bool = any_panel_open()
+  layer.visible = not layer.visible
+  if any_panel_open() != was_open:
+    panels_open_changed.emit(not was_open)
+  return layer.visible
 
 
 ## Rebuild the look panel's controls after corridor look settings change elsewhere (the interface look

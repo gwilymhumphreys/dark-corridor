@@ -251,15 +251,14 @@ func apply_draft_pick(index: int) -> void:
   _pending_offer = []
 
 
-## Skip the pending draft (a draft-skip intent, the sibling of apply_draft_pick): bank a small
-## random amount of gold instead of taking an item, then clear the offer. The escape hatch from
-## an anti-synergy draft (docs decision #33 — reverses #17's no-skip). The gold is drawn on the
-## run RNG (seeded, resume-stable): a skip draws one, a pick draws none, so skipping is a
-## legitimate choice that diverges the run's future.
+## Skip the pending draft (a draft-skip intent, the sibling of apply_draft_pick): bank a fixed
+## amount of gold (Balance.GOLD_SKIP) instead of taking an item, then clear the offer. The escape
+## hatch from an anti-synergy draft (docs decision #33 — reverses #17's no-skip). Draws no run RNG,
+## like a pick.
 func apply_draft_skip() -> void:
   if _pending_offer.is_empty():
     return
-  gold += rng.randi_range(Balance.GOLD_SKIP_MIN, Balance.GOLD_SKIP_MAX)
+  gold += Balance.GOLD_SKIP
   _pending_offer = []
 
 

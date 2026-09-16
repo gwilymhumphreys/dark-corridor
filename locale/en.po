@@ -543,29 +543,13 @@ msgstr "Event log"
 msgid "Continue"
 msgstr "Continue"
 
-#: src/scenes/screens/draft_card.gd
-msgid "{0} — {1}\nvalue {2} · every {3}s"
-msgstr "{0} — {1}\nvalue {2} · every {3}s"
-
-#: src/scenes/screens/draft_card.gd
-msgid "Uncommon"
-msgstr "Uncommon"
-
-#: src/scenes/screens/draft_card.gd
-msgid "Rare"
-msgstr "Rare"
-
-#: src/scenes/screens/draft_card.gd
-msgid "Common"
-msgstr "Common"
+#: src/scenes/screens/draft_overlay.gd
+msgid "+{0} gold"
+msgstr "+{0} gold"
 
 #: src/scenes/screens/draft_overlay.tscn
 msgid "Choose a reward"
 msgstr "Choose a reward"
-
-#: src/scenes/screens/draft_overlay.tscn
-msgid "Skip for gold"
-msgstr "Skip for gold"
 
 #: src/scenes/screens/map_strip.gd
 msgid "Act {0}"

@@ -57,7 +57,9 @@ fork-beat.)*
 It **polls `cm.is_resolved()`** (never reacts inside the `resolved` signal), so the
 fight is torn down + advanced safely — the run fulfils the outcome (reward / run-end)
 via its own signal chain *during* the resolving tick. Slow-mo-on-hover is a
-`cm.request_slowmo` intent, only while FIGHTING.
+`cm.request_slowmo` intent, only while FIGHTING. The item tooltip is fed every frame a combat view
+exists (approach, fight, summary, draft) and hidden only while the pause menu is open
+([tooltips.md](tooltips.md)).
 
 **Combat log surfaces** (the watchable read of [combat_log.md](combat_log.md)). On building the
 fight the screen creates a `CombatLog` and assigns it to the live `CombatManager.combat_log`,
@@ -87,6 +89,8 @@ the headless autotest mounts none of this:
   **Space** (the `toggle_pause` action) pauses and resumes without the menu, showing a small
   **Paused** panel at the top centre of the HUD (`HUD/PausedPanel`). Escape during a Space pause
   raises the menu over it (still paused); Space does nothing while the menu is up.
+  Opening a [debug panel](debug_panel.md) pauses the same way, and closing the last one resumes
+  unless the player paused or raised the menu in the meantime.
 
 **Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Effects), a
 mute-when-unfocused toggle and a fullscreen toggle, all bound to the **`Prefs`** autoload, which
@@ -190,10 +194,20 @@ ticked until arrival**, so combat is frozen during the walk. Constants in `src/d
 
 ## Overlays
 
-- **Draft** — `draft_overlay.tscn` raises 3 `draft_card.tscn`s (the item's icon on its panel
-  colour, value, name, rarity) after a fight; a pick
-  emits `picked(index)` → `RunManager.apply_draft_pick`. A themed **Skip button** (with a
-  `UIJuice` node) emits `skipped` → `RunManager.apply_draft_skip` instead, banking gold and
+**Reward and event panels sit in the corridor, not over the whole screen.** The run screen adds
+`draft_overlay` and `event_overlay` to the combat view's `CorridorArea` (`CombatView.corridor_area()`,
+the corridor's rectangle), and their root Controls ignore the mouse, so the board, potions, portrait,
+HUD and item tooltips keep working around them. An event beat has no fight, so the run screen still
+builds the combat view for it with no `CombatManager` (`bind(null, ...)`: the player's side, no
+enemies). When a fight resolves, the run screen calls `view.release()` at once so the last hits'
+numbers and rings don't stay frozen in the corridor under the reward panel. The choice overlay and
+the post-fight summary are still full-screen.
+
+- **Draft** — `draft_overlay.tscn` shows each reward as an `ItemCell` (the same icon and value
+  pills as the board, with a `UIJuice` node) after a fight; hovering one shows the item tooltip, and
+  clicking it emits `picked(index)` → `RunManager.apply_draft_pick`. The **gold button** in the
+  panel's bottom right (`'+{0} gold'`, the amount from `Balance.GOLD_SKIP`) emits `skipped` →
+  `RunManager.apply_draft_skip` instead, banking gold and
   refreshing the gold HUD before advancing (decision #33). Both paths then advance.
 - **Gold HUD** — a minimal `GoldReadout` label on the HUD (`tr('Gold: {0}')`), seeded from
   run-state on entry (covers a resumed run's banked gold) and refreshed after each skip.
@@ -220,7 +234,7 @@ registered in `project.godot`) — see [localization](localization.md).
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
-draft_card · map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
+map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
 `src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell ·
 combat_stats_readout); `src/vfx/vfx_driver.gd`;
 `src/scenes/combat/monster_images.gd`; the corridor is `src/scenes/corridors/corridor_3d.gd`.

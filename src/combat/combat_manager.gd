@@ -780,6 +780,14 @@ func request_slowmo(on: bool) -> void:
     timekeeper.clear_override()
 
 
+## Hit pause intent from the view on a big hit. Like slow-mo, the view asks and the manager holds
+## its Timekeeper.
+func request_hit_pause(real_seconds: float) -> void:
+  if timekeeper == null:
+    return
+  timekeeper.hold(real_seconds)
+
+
 ## Throw-potion intent: activate a thrown consumable (docs/systems/content.md). Build its
 ## effect(s) into Deliveries resolved relative to the thrower, then land any that
 ## arrive instantly — the same resolution surface as an item fire, minus the

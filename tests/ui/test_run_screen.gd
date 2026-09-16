@@ -141,6 +141,32 @@ func test_space_pauses_without_the_menu_and_shows_the_paused_panel() -> void:
   screen.free()
 
 
+func test_opening_a_debug_panel_pauses_and_closing_it_resumes() -> void:
+  var screen := _mount_into_fight(1)
+  DebugPanels.panels_open_changed.emit(true)
+  assert_true(screen._paused, 'opening a panel pauses')
+  assert_null(screen._pause_menu, 'without the pause menu')
+  assert_true(screen._paused_panel.visible, 'the Paused panel shows')
+  DebugPanels.panels_open_changed.emit(false)
+  assert_false(screen._paused, 'closing the last panel resumes')
+  screen.free()
+
+
+func test_closing_a_debug_panel_keeps_a_pause_the_player_chose() -> void:
+  var screen := _mount_into_fight(1)
+  screen._unhandled_input(_space())
+  DebugPanels.panels_open_changed.emit(true)
+  DebugPanels.panels_open_changed.emit(false)
+  assert_true(screen._paused, 'a Space pause from before the panel opened stays')
+  screen._unhandled_input(_space())
+  DebugPanels.panels_open_changed.emit(true)
+  screen._unhandled_input(_escape())
+  DebugPanels.panels_open_changed.emit(false)
+  assert_true(screen._paused, 'the pause menu raised over a panel pause stays up')
+  assert_not_null(screen._pause_menu, 'with the menu showing')
+  screen.free()
+
+
 func test_escape_during_a_space_pause_raises_the_menu_and_stays_paused() -> void:
   var screen := _mount_into_fight(1)
   for _i in 6:
@@ -233,6 +259,31 @@ func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:
   screen._on_event_picked(0)   # 'Kneel and drink' → heal a fraction of max HP
   assert_null(screen._event, 'the pick dismisses the overlay')
   assert_gt(Game.run.player.hp, 1.0, 'the chosen outcome was applied (healed)')
+  screen.free()
+
+
+func test_event_panel_sits_in_the_corridor_with_the_board_shown() -> void:
+  # The event panel is not a separate screen: it is placed in the combat view's corridor area, and
+  # the view shows the player's board around it even though there is no fight.
+  var screen := _mount_into_event(1)
+  assert_not_null(screen._view, 'an event beat shows the combat view')
+  assert_eq(screen._event.get_parent(), screen._view.corridor_area(), 'the event panel is in the corridor area')
+  assert_eq(screen._view._player_cells.size(), Game.run.player.board.size(), 'the board is shown')
+  assert_eq(screen._event.mouse_filter, Control.MOUSE_FILTER_IGNORE, 'the panel does not block the rest of the screen')
+  screen.free()
+
+
+func test_draft_rewards_are_inspectable_in_the_corridor() -> void:
+  var screen := _mount_into_event(1)
+  screen._event.queue_free()
+  screen._event = null
+  screen._run._pending_offer.assign([ItemCatalog.get_def(ItemCatalog.WEAPON)])
+  screen._show_draft()
+  await get_tree().process_frame   # let the containers place the reward icon
+  assert_eq(screen._draft.get_parent(), screen._view.corridor_area(), 'the reward panel is in the corridor area')
+  var cell: ItemCell = screen._draft.get_node('Panel/Cards').get_child(0)
+  var target: Dictionary = screen._inspection_target(cell.get_global_rect().get_center())
+  assert_eq(target.get('item'), cell.item, 'hovering a reward targets its item for the tooltip')
   screen.free()
 
 

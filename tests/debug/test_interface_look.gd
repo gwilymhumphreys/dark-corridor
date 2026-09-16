@@ -8,7 +8,6 @@ const SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/item_cell.tscn', 'Frame/Icon'],
   ['res://src/scenes/combat/value_pill.tscn', '.'],
   ['res://src/scenes/combat/value_pill.tscn', 'Value'],
-  ['res://src/scenes/screens/draft_card.tscn', 'Icon'],
   ['res://src/scenes/combat/potion_slot.tscn', 'Icon'],
   ['res://src/scenes/combat/status_icon.tscn', 'Icon'],
   ['res://src/scenes/ui/tooltip/keyword_chip.tscn', 'Margin/Row/Icon'],

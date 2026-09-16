@@ -543,28 +543,12 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
-#: src/scenes/screens/draft_card.gd
-msgid "{0} — {1}\nvalue {2} · every {3}s"
-msgstr ""
-
-#: src/scenes/screens/draft_card.gd
-msgid "Uncommon"
-msgstr ""
-
-#: src/scenes/screens/draft_card.gd
-msgid "Rare"
-msgstr ""
-
-#: src/scenes/screens/draft_card.gd
-msgid "Common"
+#: src/scenes/screens/draft_overlay.gd
+msgid "+{0} gold"
 msgstr ""
 
 #: src/scenes/screens/draft_overlay.tscn
 msgid "Choose a reward"
-msgstr ""
-
-#: src/scenes/screens/draft_overlay.tscn
-msgid "Skip for gold"
 msgstr ""
 
 #: src/scenes/screens/map_strip.gd

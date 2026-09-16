@@ -35,6 +35,7 @@ var _summary: CombatSummary
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
+var _paused_by_debug_panel: bool = false   # the current pause came from opening a debug panel
 var _pause_menu: PauseMenu = null
 @onready var _paused_panel: PanelContainer = $HUD/PausedPanel   # shown while paused with Space (no menu)
 var _settings: SettingsScreen = null
@@ -51,6 +52,7 @@ func _ready() -> void:
   # The player battle-speed dial (a Game session preference): retime the live fight
   # the instant the HUD button changes it. Each new fight also picks it up on entry.
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
+  DebugPanels.panels_open_changed.connect(_on_debug_panels_open_changed)
   _seed_demo_allies()   # dev hook (`--allies N`): populate the ally slots for inspection
   _map.setup(RunMap.TOTAL_BEATS, _run.position)
   _refresh_gold()       # seed the HUD from run-state (covers a resumed run's banked gold)
@@ -73,6 +75,8 @@ func _seed_demo_allies() -> void:
 func _exit_tree() -> void:
   if Game.battle_speed_changed.is_connected(_on_battle_speed_changed):
     Game.battle_speed_changed.disconnect(_on_battle_speed_changed)
+  if DebugPanels.panels_open_changed.is_connected(_on_debug_panels_open_changed):
+    DebugPanels.panels_open_changed.disconnect(_on_debug_panels_open_changed)
 
 
 # --- the run cycle (a polling FSM; mirrors AutoTestMode.run_full) ------------
@@ -139,8 +143,9 @@ func _begin_beat() -> void:
 # applies the chosen outcome to run-state and resolves the beat; then advance as usual.
 func _show_event(enc: Encounter) -> void:
   _state = State.EVENTING
+  _ensure_view()
   _event = EVENT_OVERLAY.instantiate()
-  add_child(_event)
+  _view.corridor_area().add_child(_event)   # in the corridor; the board, potions and HUD stay live
   _event.option_picked.connect(_on_event_picked)
   _event.setup(enc)
 
@@ -197,6 +202,9 @@ func _physics_process(delta: float) -> void:
         return
       if _cm.is_resolved():
         _cm.request_slowmo(false)   # drop any hover slow-mo left set when the fight resolved
+        # The clock stops at resolution, so the last hits' numbers and rings would stay frozen in
+        # the corridor under the reward panel. Stop drawing them now.
+        _view.release()
         _stats.hide()
         var won: bool = _cm.player_won()
         _state = State.IDLE
@@ -225,19 +233,33 @@ func _on_battle_speed_changed(speed: float) -> void:
     _cm.timekeeper.set_base_scale(speed)
 
 
-# Slow-mo-on-hover intent (docs/systems/ui_layout.md "one verb"): hovering any inspectable — a
-# board item (either side), a potion, or the enemy in the corridor — asks the Combat
-# manager to slow the clock (both sides) to read it.
+# Item tooltips are shown whenever a combat view is up: during the approach, the fight, the summary,
+# the reward draft and events (docs/systems/tooltips.md). They are hidden only while the pause menu is open.
+# Slow-mo-on-hover intent (docs/systems/ui_layout.md "one verb"): while fighting, hovering any
+# inspectable — a board item (either side) or a potion — asks the Combat manager to slow the clock
+# (both sides) to read it.
 func _process(_delta: float) -> void:
-  if _paused or _state != State.FIGHTING or _cm == null or _view == null or _cm.is_resolved():
-    # Suppressed while paused / between fights — hide the tooltip cluster (pause is also blocked by
-    # the pause menu's layer-100 Catcher, but this is the explicit off-switch). No-op if already hidden.
-    if _view != null:
-      _view.stop_inspection()
+  if _view == null:
+    return
+  if _pause_menu != null:
+    _view.stop_inspection()   # the pause menu's layer-100 Catcher covers the screen
     return
   var mouse: Vector2 = get_global_mouse_position()
-  _cm.request_slowmo(_view.mouse_over_inspectable(mouse))
-  _view.update_inspection(mouse)   # feed the cluster the current hover target (the hide-bridge ticks here)
+  _view.update_inspection(_inspection_target(mouse), mouse)   # the hide-bridge ticks here
+  if not _paused and _state == State.FIGHTING and _cm != null and not _cm.is_resolved():
+    _cm.request_slowmo(_view.mouse_over_inspectable(mouse))
+
+
+# The item the tooltip should describe: a reward icon on the draft panel first, otherwise a board
+# item — but not one hidden behind the draft panel (in the corridor area) or the summary panel.
+func _inspection_target(mouse: Vector2) -> Dictionary:
+  if _draft != null:
+    var reward: Dictionary = _draft.inspectable_at(mouse)
+    if not reward.is_empty() or _draft.covers(mouse):
+      return reward
+  if _summary != null and (_summary.get_node('Panel') as Control).get_global_rect().has_point(mouse):
+    return {}
+  return _view.inspectable_at(mouse)
 
 
 # Pause is a run-screen presentation gate (NOT a Game phase): Escape (ui_cancel) toggles
@@ -269,6 +291,18 @@ func _can_pause() -> bool:
   return _run != null
 
 
+# Opening a debug panel pauses like Space. Closing the last one resumes only if a panel caused the
+# pause and the pause menu is not up, so a pause the player chose stays.
+func _on_debug_panels_open_changed(open: bool) -> void:
+  if not _can_pause():
+    return
+  if open and not _paused:
+    _pause(false)
+    _paused_by_debug_panel = true
+  elif not open and _paused_by_debug_panel and _pause_menu == null:
+    _resume()
+
+
 func _toggle_pause() -> void:
   if _paused:
     _resume()
@@ -296,6 +330,7 @@ func _show_pause_menu() -> void:
 
 func _resume() -> void:
   _paused = false
+  _paused_by_debug_panel = false
   _paused_panel.hide()
   _close_settings()
   if _pause_menu != null:
@@ -363,8 +398,9 @@ func _on_summary_continued() -> void:
 # wait. The loop is paused in DRAFTING until a card is picked.
 func _show_draft() -> void:
   _state = State.DRAFTING
+  _ensure_view()
   _draft = DRAFT_OVERLAY.instantiate()
-  add_child(_draft)   # on top of the combat view
+  _view.corridor_area().add_child(_draft)   # in the corridor; the board, potions and HUD stay live
   _draft.picked.connect(_on_draft_picked)
   _draft.skipped.connect(_on_draft_skipped)
   _draft.setup(_run.pending_draft())
@@ -407,10 +443,21 @@ func _build_combat_view() -> void:
   # ref so the post-fight summary can read it after the CombatManager teardown nulls its side.
   _log = CombatLog.new()
   _cm.combat_log = _log
+  _mount_view(_cm)
+
+
+# A beat with no fight (an event, or a draft after one) still shows the combat view — the corridor
+# with the player's board, potions and portrait — so its panel can sit in the corridor area.
+func _ensure_view() -> void:
+  if _view == null:
+    _mount_view(null)
+
+
+func _mount_view(cm: CombatManager) -> void:
   _view = COMBAT_VIEW.instantiate()
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
-  _view.bind(_cm, _run.player, _run.potions)   # the view reads the full rosters off the CM
+  _view.bind(cm, _run.player, _run.potions)   # the view reads the full rosters off the CM (none without a fight)
   _view.potion_thrown.connect(_on_potion_thrown)
 
 

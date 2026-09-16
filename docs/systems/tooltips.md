@@ -2,9 +2,9 @@
 
 The combat item tooltip (gen 3, built). Hover a board item → a **cluster** appears
 beside it; hover a keyword **chip** inside it → a Godot built-in tooltip pops that
-keyword's card. Scope v1: board `Item`s only (player cells + enemy-HUD cells +
-ally-slot cells). Potions (Consumables, not Items) and out-of-combat draft
-tooltips are a follow-on — the builder is `Item`-typed.
+keyword's card. Scope: board `Item`s (player cells + enemy-HUD cells + ally-slot
+cells) and the reward icons on the draft overlay. Potions (Consumables, not Items)
+are a follow-on — the builder is `Item`-typed.
 
 Shipped from [`docs/plans/tooltip_system.md`](../plans/tooltip_system.md), which
 holds the design rationale, the ratified decisions, and the prior-art lineage
@@ -40,8 +40,12 @@ Supporting: `src/content/keywords/keyword_catalog.gd` (the keyword id → card m
 A **point-poll**, reusing the run screen's existing slow-mo hover (one hover
 paradigm; the hide-bridge needs a per-frame cluster-rect check anyway):
 
-1. `run_screen.gd::_process` drives `view.update_inspection(mouse)` while FIGHTING
-   and not paused; `view.stop_inspection()` otherwise (pause / fight end).
+1. `run_screen.gd::_process` drives `view.update_inspection(target, mouse)` every frame a
+   combat view exists — during the approach, the fight, the post-fight summary and the reward
+   draft — and calls `view.stop_inspection()` only while the pause menu is open. The run screen
+   picks the target: a reward icon from `DraftOverlay.inspectable_at` first; nothing when the
+   mouse is over the draft or summary panel; otherwise the view's `inspectable_at`. The view exists
+   during events too (built without a fight), so board tooltips work there as well. Slow-mo is still requested only while fighting.
 2. `combat_view_framed.gd::inspectable_at(point)` hit-tests enemy-HUD cells, ally-slot
    cells, then player cells, returning `{item, rect (global), side}` or `{}`. The rect
    is re-read each frame (enemy HUDs reposition every frame, so the cluster tracks a

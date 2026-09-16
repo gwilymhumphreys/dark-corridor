@@ -30,8 +30,12 @@ func test_overlay_lists_the_offer_and_emits_the_pick() -> void:
   assert_eq(overlay.get_node('Panel/Cards').get_child_count(), 3, 'one card per candidate')
 
   watch_signals(overlay)
-  var card: Button = overlay.get_node('Panel/Cards').get_child(1)
-  card.pressed.emit()   # the player picks the 2nd card
+  var cell: ItemCell = overlay.get_node('Panel/Cards').get_child(1)
+  assert_eq(cell.item.def, offer[1], 'each reward is shown as a board item icon')
+  var click := InputEventMouseButton.new()
+  click.button_index = MOUSE_BUTTON_LEFT
+  click.pressed = false
+  cell.gui_input.emit(click)   # the player picks the 2nd reward
   assert_signal_emitted_with_parameters(overlay, 'picked', [1])
 
 
@@ -44,5 +48,6 @@ func test_skip_button_emits_skipped() -> void:
   overlay.setup([ItemCatalog.get_def(ItemCatalog.WEAPON)])
   watch_signals(overlay)
   var skip: Button = overlay.get_node('Panel/SkipButton')
+  assert_eq(skip.text, '+%d gold' % Balance.GOLD_SKIP, 'the button shows the gold amount')
   skip.pressed.emit()
   assert_signal_emitted(overlay, 'skipped')

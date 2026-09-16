@@ -40,12 +40,19 @@ func inspectable_at(_point: Vector2) -> Dictionary:
   return {}
 
 
-## Driven each frame by the run screen while fighting — feeds the cluster the current hover target.
-func update_inspection(_point: Vector2) -> void:
+## Driven each frame by the run screen — feeds the cluster the hover target the run screen chose
+## (a board item from inspectable_at, a reward icon from the draft overlay, or {}).
+func update_inspection(_target: Dictionary, _point: Vector2) -> void:
   pass
 
 
-## Hide the cluster (pause / fight end / teardown).
+## The region the corridor occupies. The run screen places the reward and event panels here, so
+## they sit in the corridor while the board, potions and portrait stay usable around them.
+func corridor_area() -> Control:
+  return self
+
+
+## Hide the cluster (pause menu / teardown).
 func stop_inspection() -> void:
   pass
 

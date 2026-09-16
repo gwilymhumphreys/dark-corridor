@@ -17,6 +17,13 @@ const TOOLTIP_CLUSTER: PackedScene = preload('res://src/scenes/ui/tooltip/toolti
 
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
+# A big hit pauses the fight and shakes this view, both growing with VfxDriver.big_hit_strength.
+const HIT_PAUSE_MIN: float = 0.05     # real seconds
+const HIT_PAUSE_MAX: float = 0.15
+const SHAKE_DISTANCE_MIN: float = 6.0   # pixels
+const SHAKE_DISTANCE_MAX: float = 24.0
+const SHAKE_DURATION_MIN: float = 0.2   # real seconds
+const SHAKE_DURATION_MAX: float = 0.45
 
 var _cm: CombatManager
 var _player: Actor
@@ -31,16 +38,20 @@ var _player: Actor
 @onready var _player_hp_label: Label = $BottomBar/PlayerPortrait/HP/Label
 @onready var _ally_left: HBoxContainer = $BottomBar/AllyLeft
 @onready var _ally_right: HBoxContainer = $BottomBar/AllyRight
+@onready var _corridor_area: Control = $CorridorArea
 @onready var _vfx: VfxDriver = $VfxWall
 
 var _enemy_huds: Dictionary = {}    # Actor -> EnemyHud
 var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
 var _cluster: TooltipCluster = null   # the floating item tooltip (its own CanvasLayer, layer 50)
+var _shake_tween: Tween
+var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the fight's seeded one
 
 
 ## Bind the live fight: the player's portrait + HP (centre-bottom) and its board column (right),
 ## the potion slots, a HUD per enemy / a slot per ally-or-token, and the VFX wall on this layout.
+## `cm` is null outside a fight (an event beat): the player's side is shown with no enemies.
 func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _cm = cm
   _player = player
@@ -52,6 +63,7 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _sync_rosters()
   _refresh_player_hp()
   _vfx.setup(_cm, self)
+  _vfx.big_hit.connect(_on_big_hit)
   _cluster = TOOLTIP_CLUSTER.instantiate()
   add_child(_cluster)   # a CanvasLayer — renders in screen space regardless of this Control parent
 
@@ -80,7 +92,7 @@ func _build_player_items(player: Actor) -> void:
   for item in player.board:
     var cell: ItemCell = ITEM_CELL.instantiate()
     _player_items.add_child(cell)
-    cell.setup(item, _cm.timekeeper)
+    cell.setup(item, _cm.timekeeper if _cm != null else null)
     _player_cells[item] = cell
 
 
@@ -174,6 +186,10 @@ func refresh_potions(potions: Array) -> void:
 ## Approach controls (docs/history/phase4_plan.md Step 7) — the run screen walks the player up to the
 ## waiting enemies, bringing them from a speck into full view (the mood; the per-actor widgets are
 ## the combat).
+func corridor_area() -> Control:
+  return _corridor_area
+
+
 func set_enemy_depth(depth_cells: float) -> void:
   _corridor.set_enemy_depth(depth_cells)
 
@@ -195,6 +211,10 @@ func release() -> void:
 
 func _exit_tree() -> void:
   # CLAUDE.md runtime cleanup: drop the live-fight refs + the widget maps on free.
+  if _shake_tween != null:
+    _shake_tween.kill()
+  if _vfx.big_hit.is_connected(_on_big_hit):
+    _vfx.big_hit.disconnect(_on_big_hit)
   _cm = null
   _player = null
   _portrait_image.texture = null
@@ -245,9 +265,9 @@ func inspectable_at(point: Vector2) -> Dictionary:
   return {}
 
 
-func update_inspection(point: Vector2) -> void:
+func update_inspection(target: Dictionary, point: Vector2) -> void:
   if _cluster != null:
-    _cluster.update_target(inspectable_at(point), point)
+    _cluster.update_target(target, point)
 
 
 func stop_inspection() -> void:
@@ -296,3 +316,22 @@ func target_pos(target) -> Vector2:
   if target is Item:
     return item_pos(target)
   return actor_pos(target)
+
+
+## A big hit: a short pause of the fight, then a shake of this view that fades out. Both run on
+## real time, so the shake plays through the pause.
+func _on_big_hit(strength: float) -> void:
+  if _cm != null:
+    _cm.request_hit_pause(lerpf(HIT_PAUSE_MIN, HIT_PAUSE_MAX, strength))
+  var distance: float = lerpf(SHAKE_DISTANCE_MIN, SHAKE_DISTANCE_MAX, strength)
+  if _shake_tween != null:
+    _shake_tween.kill()
+  offset_transform_enabled = true
+  _shake_tween = create_tween()
+  _shake_tween.tween_method(_shake_step.bind(distance), 1.0, 0.0, lerpf(SHAKE_DURATION_MIN, SHAKE_DURATION_MAX, strength))
+  _shake_tween.tween_callback(func() -> void: offset_transform_position = Vector2.ZERO)
+
+
+func _shake_step(fade: float, distance: float) -> void:
+  var direction: Vector2 = Vector2(_shake_rng.randf_range(-1.0, 1.0), _shake_rng.randf_range(-1.0, 1.0))
+  offset_transform_position = direction * distance * fade

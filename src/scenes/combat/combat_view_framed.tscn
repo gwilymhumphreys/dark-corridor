@@ -64,6 +64,13 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="CorridorArea" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_right = 1700.0
+offset_bottom = 1150.0
+mouse_filter = 2
+
 [node name="RightPanel" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 0

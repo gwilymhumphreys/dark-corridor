@@ -152,3 +152,17 @@ func test_start_up_combo_is_skipped_for_tests_screenshots_and_palette_arguments(
   assert_false(DebugPanelsAutoload.start_up_combo_allowed(PackedStringArray(['--shot']), false), 'screenshot')
   assert_false(DebugPanelsAutoload.start_up_combo_allowed(PackedStringArray(['--ui-palette=x.gpl']), false),
     'a palette argument')
+
+
+func test_panels_open_changed_fires_on_the_first_open_and_the_last_close() -> void:
+  watch_signals(DebugPanels)
+  DebugPanels.toggle_print_panel()
+  assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [true])
+  DebugPanels.toggle_interface_look_panel()
+  DebugPanels.toggle_print_panel()
+  assert_signal_emit_count(DebugPanels, 'panels_open_changed', 1, 'a second panel opening or closing does not emit')
+  assert_true(DebugPanels.any_panel_open(), 'one panel is still open')
+  DebugPanels.toggle_interface_look_panel()
+  assert_signal_emit_count(DebugPanels, 'panels_open_changed', 2)
+  assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [false])
+  assert_false(DebugPanels.any_panel_open())

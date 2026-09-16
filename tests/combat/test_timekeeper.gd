@@ -60,3 +60,14 @@ func test_render_time_is_sim_plus_accumulator_only() -> void:
   assert_almost_eq(tk.render_time(), tk.sim_time + tk._acc, 0.000001, 'render_time = sim_time + accumulator only (no frame-varying term)')
   assert_gt(tk.render_time(), tk.sim_time, 'the sub-step accumulator glides render_time between steps')
   assert_eq(tk.render_time(), tk.render_time(), 'render_time is stable when the sim is frozen — no oscillation when paused')
+
+
+func test_hold_runs_no_steps_until_the_real_time_has_passed() -> void:
+  var tk := Timekeeper.new()
+  tk.hold(Timekeeper.STEP * 2.5)
+  assert_eq(tk.steps_due(Timekeeper.STEP), 0, 'held for the first frame')
+  var frozen: float = tk.render_time()
+  assert_eq(tk.steps_due(Timekeeper.STEP), 0, 'held for the second frame')
+  assert_eq(tk.render_time(), frozen, 'render_time stays frozen while held')
+  assert_eq(tk.steps_due(Timekeeper.STEP), 0, 'the third frame uses up the rest of the hold')
+  assert_eq(tk.steps_due(Timekeeper.STEP), 1, 'steps run again once the hold is over')

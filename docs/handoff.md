@@ -334,7 +334,7 @@ greedy-synergy --report autotest_results/r.md`. **Suite:** `<exe> --headless --p
 game_manager · sfx · music) · `src/autotest/` (the harness + strategies + report) · `src/vfx/` ·
 `src/scenes/main.tscn` + `main_controller.gd` (presentation root) · `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
-draft_card · map_strip · speed_button · pause_menu) · `src/scenes/combat/`
+map_strip · speed_button · pause_menu) · `src/scenes/combat/`
 (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell · potion_slot) ·
 `src/scenes/` (sandbox + corridors) · `src/debug/` (F1, F2, F3 and F5 panels, interface palette) ·
 `src/shaders/` (corridor look, palette clamp, print wear) · `src/ui/` (print frame, screen background) ·

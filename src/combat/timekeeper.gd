@@ -15,6 +15,7 @@ var base_scale: float = Balance.TIMESCALE_BASE
 var override_scale: float = -1.0   # < 0 = no momentary override active
 
 var _acc: float = 0.0
+var _hold: float = 0.0   # real seconds left of a hit pause
 
 
 ## The active dial: a momentary override (hover slow-mo) replaces the base while
@@ -42,6 +43,9 @@ func clear_override() -> void:
 ## drops the backlog on a hang (game-time slips, never spirals). Delta is
 ## resolved here and nowhere else.
 func steps_due(real_delta: float) -> int:
+  if _hold > 0.0:
+    _hold -= real_delta
+    return 0
   _acc += real_delta * effective_scale()
   var n: int = 0
   while _acc >= STEP and n < MAX_STEPS:
@@ -50,6 +54,13 @@ func steps_due(real_delta: float) -> int:
   if _acc > STEP:
     _acc = 0.0
   return n
+
+
+## A hit pause: run no steps for this many real seconds, so the fight and everything drawn from
+## render_time freezes briefly. It only delays steps, so results are unchanged. A longer pause
+## replaces a shorter one still running.
+func hold(real_seconds: float) -> void:
+  _hold = maxf(_hold, real_seconds)
 
 
 func advance() -> void:

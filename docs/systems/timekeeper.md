@@ -54,6 +54,8 @@ steps_due(real_delta):
   return n
 ```
 
+**Hit pause:** `hold(real_seconds)` makes `steps_due` return 0 until that much real time has passed, so the fight and `render_time()` freeze briefly on a big hit (requested by the view through the `Combat manager`; see [vfx_driver.md](vfx_driver.md)). A longer hold replaces a shorter one still running. It only delays steps, so results are unchanged.
+
 So the dial becomes a **cadence**: pause → 0 steps; slow-mo → a step every ~N frames; ×1 → one per physics tick; fast-test → many. A frame hang runs up to `MAX_STEPS`, then drops the rest — the game briefly *slows*; it never stutter-jumps or spirals. `advance()` advances `sim_time` by one `STEP` (the `Combat manager` calls it once per sim-step, then advances the components — see the Combat manager PRD).
 
 ## Two reads: `sim_time` (stepped) vs `render_time()` (continuous)

@@ -40,7 +40,19 @@ Because fire-rate and travel are decoupled (combat_model.md), many Deliveries ca
 ## What is built
 
 `VfxDriver` (`src/vfx/vfx_driver.gd`) draws a solid projectile in flight, a ring that snaps outward
-where it lands, and a rising damage number, each in the delivery's colour. The firing item's own
+where it lands, and a number for damage and healing, each in the delivery's colour. The number
+(`DamageNumberDrawer`) has a black outline. Its size grows with the amount on a logarithmic curve,
+from a fixed base size to a maximum, so it rises quickly for small amounts and slowly for large
+ones. It floats up while drifting toward the side its landing point was nudged to, then quickly
+grows and shrinks away. Heals show a '+' in front. The landed delivery is kept for
+`Balance.DELIVERY_VISUAL_HOLD`, which must be at least the number's duration.
+
+**Big hits.** A damage landing of at least `VfxDriver.BIG_HIT_DAMAGE` emits `big_hit` with a
+strength from 0 to 1 (`big_hit_strength`), once, alongside its sound. `CombatViewFramed` answers
+with a short pause of the fight (`CombatManager.request_hit_pause`, which calls `Timekeeper.hold`)
+and a shake of the whole view, both growing with the strength. The pause only delays steps, so
+results are unchanged, and the autotest has no view, so it never pauses. The shake is a tween of
+the view's `offset_transform_position` on real time, so it plays through the pause. The firing item's own
 reaction is not the driver's: `item_cell.gd` punches the cell's scale off the same clock. A hit
 enemy also flinches back in the corridor and is lit ([run_screen.md](run_screen.md#enemies-in-the-corridor)).
 
@@ -65,7 +77,7 @@ manager drops them.
 **The circles are placeholders.** The projectile disc and the impact ring are drawn shapes standing
 in for real VFX animations, there so the timing and the causal link between firing and damage can be
 judged. They are to be replaced once proper animations exist, and their shape is not the intended
-look. The effects style is open (`art_audio.md`). Not built: a screen pulse.
+look. The effects style is open (`art_audio.md`). A screen pulse for ordinary hits is not built.
 
 ## Reading the Combat manager's Delivery set
 

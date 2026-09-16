@@ -114,3 +114,36 @@ func test_a_delivery_in_flight_is_not_sounded() -> void:
   vfx._sound_new_impacts()
   assert_eq(vfx._sounded.size(), 0, 'only a landing that actually happened makes a sound')
   cm.free()
+
+
+func test_damage_number_size_grows_with_damage_up_to_a_maximum() -> void:
+  var smallest: int = DamageNumberDrawer.font_size_for(0.0)
+  var largest: int = int(DamageNumberDrawer.MAX_FONT_SIZE)
+  assert_eq(smallest, int(DamageNumberDrawer.BASE_FONT_SIZE))
+  assert_gt(DamageNumberDrawer.font_size_for(10.0), smallest)
+  var halfway: int = int(round((DamageNumberDrawer.BASE_FONT_SIZE + DamageNumberDrawer.MAX_FONT_SIZE) * 0.5))
+  assert_almost_eq(DamageNumberDrawer.font_size_for(200.0), halfway, 1)
+  assert_eq(DamageNumberDrawer.font_size_for(DamageNumberDrawer.AMOUNT_FOR_MAX_SIZE), largest)
+  assert_eq(DamageNumberDrawer.font_size_for(100000.0), largest)
+
+
+func test_damage_number_grows_then_shrinks_away_at_the_end() -> void:
+  assert_eq(DamageNumberDrawer.scale_at(0.3), 1.0)
+  var grown_at: float = DamageNumberDrawer.FLOAT_DURATION + DamageNumberDrawer.EXIT_DURATION * DamageNumberDrawer.GROW_SHARE
+  assert_almost_eq(DamageNumberDrawer.scale_at(grown_at), DamageNumberDrawer.GROW_SCALE, 0.001)
+  assert_almost_eq(DamageNumberDrawer.scale_at(DamageNumberDrawer.FLOAT_DURATION + DamageNumberDrawer.EXIT_DURATION), 0.0, 0.001)
+
+
+func test_only_damage_of_at_least_the_big_hit_amount_counts_as_a_big_hit() -> void:
+  var hit := Delivery.new()
+  hit.kind = Delivery.Kind.DAMAGE
+  hit.value = VfxDriver.BIG_HIT_DAMAGE - 1.0
+  assert_eq(VfxDriver.big_hit_strength(hit), -1.0)
+  hit.value = VfxDriver.BIG_HIT_DAMAGE
+  assert_eq(VfxDriver.big_hit_strength(hit), 0.0)
+  hit.value = VfxDriver.BIGGEST_HIT_DAMAGE * 3.0
+  assert_eq(VfxDriver.big_hit_strength(hit), 1.0)
+  var heal := Delivery.new()
+  heal.kind = Delivery.Kind.HEAL
+  heal.value = VfxDriver.BIGGEST_HIT_DAMAGE
+  assert_eq(VfxDriver.big_hit_strength(heal), -1.0)

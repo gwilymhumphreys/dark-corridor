@@ -539,7 +539,7 @@ func test_advance_past_an_unconsumed_draft_drops_the_offer() -> void:
 # --- draft skip → bank gold (docs decision #33) ------------------------------
 
 func test_skip_banks_gold_and_clears_offer() -> void:
-  # Skipping the draft banks a small random amount of gold (40..60) instead of taking a card,
+  # Skipping the draft banks a fixed amount of gold (Balance.GOLD_SKIP) instead of taking a card,
   # leaves the board untouched, clears the offer, and lets the run advance.
   var run := _run()
   run.start(1)
@@ -549,7 +549,7 @@ func test_skip_banks_gold_and_clears_offer() -> void:
   run.apply_draft_skip()
   assert_false(run.has_pending_draft(), 'the offer cleared')
   assert_eq(run.player.board.size(), board_size, 'skipping adds no item to the board')
-  assert_between(run.gold, Balance.GOLD_SKIP_MIN, Balance.GOLD_SKIP_MAX, 'gold banked in the placeholder band')
+  assert_eq(run.gold, Balance.GOLD_SKIP, 'the fixed gold amount is banked')
   run.advance()
   assert_eq(run.position, 1, 'the run advances after a skip (the offer was consumed)')
 
@@ -573,15 +573,11 @@ func test_gold_survives_save_and_resume() -> void:
   assert_eq(run_c.gold, 0, 'a pre-gold snapshot rehydrates to 0 (forward-compatible, no migration)')
 
 
-func test_skip_is_deterministic_for_a_seed() -> void:
-  # The gold is drawn on the run RNG (seeded), so the same seed + the same skip banks the same
-  # amount — a skip is a legitimate decision, not a save-scummable re-roll.
-  var run_a := _run()
-  run_a.start(99)
-  run_a._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
-  run_a.apply_draft_skip()
-  var run_b := _run()
-  run_b.start(99)
-  run_b._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
-  run_b.apply_draft_skip()
-  assert_eq(run_a.gold, run_b.gold, 'same seed + same skip banks the same gold')
+func test_skip_draws_no_run_rng() -> void:
+  # The gold is a fixed amount, so a skip leaves the run RNG where a pick would.
+  var run := _run()
+  run.start(99)
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  var state_before: int = run.rng.state
+  run.apply_draft_skip()
+  assert_eq(run.rng.state, state_before, 'skipping does not advance the run RNG')

@@ -12,6 +12,10 @@ as the `DebugPanels` autoload.
 
 - F1 toggles the panel, F2 the look panel, F3 the interface look panel and F5 the print panel, only in debug builds (`OS.is_debug_build()`). The autoload
   processes while the game is paused.
+- Opening any panel during a run pauses it, like Space, and closing the last one resumes it
+  (`panels_open_changed`, handled by the run screen). Closing does not resume a pause the player
+  chose with Space or Escape before or while the panel was open. A panel opened by a start-up
+  argument does not pause, so screenshot runs keep playing.
 - The palette keys below are ignored while a text field (a look or palette combo name) has focus.
 - `]` and `[` select the next and previous entry in the World palette list, `'` and `;` in the
   Interface palette list and `.` and `,` in the Portrait palette list, with the panel open or closed,

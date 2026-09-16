@@ -32,7 +32,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`, `Int
 
 | Element | Scene and node |
 |---|---|
-| Item icons (combat boards, draft cards) | `item_cell.tscn` `Frame/Icon`, `draft_card.tscn` `Icon` |
+| Item icons (combat boards, draft rewards) | `item_cell.tscn` `Frame/Icon` |
 | Potion icons | `potion_slot.tscn` `Icon` |
 | Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` |
 | Character portraits | `combat_view_framed.tscn` player portrait `Image`, `ally_slot.tscn` `Left/Portrait/Image`, `character_card.tscn` `Portrait/Image` |

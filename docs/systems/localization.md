@@ -24,9 +24,9 @@ title (`Choose a reward`), the outcome buttons, the `You` portrait label. Set
 when the string is built at runtime, formatted, or comes from data — auto-translate
 can't help there. Examples: item/enemy names via `tr(def.name_key)`, the map labels
 (`tr('Fight')`…), the rarity labels, the outcome title (`tr('Victory')`), the draft
-tooltip template (`tr('{0} — {1}…').format(...)`). **Put the literal inside `tr()`**,
+gold button (`tr('+{0} gold').format(...)`). **Put the literal inside `tr()`**,
 not behind a variable — `tr('Common')`, not `tr(rarity_var)` — so the extractor sees
-it (see `draft_card._rarity_name`). **Avoid** `node.text = tr('...')` for *static*
+it. **Avoid** `node.text = tr('...')` for *static*
 text: it stores the translated string and won't re-translate on a live locale switch.
 
 ## String sources & the catalog

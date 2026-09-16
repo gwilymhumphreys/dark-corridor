@@ -64,7 +64,7 @@ Hover anything important (own items, enemy items, potions, enemies) → time slo
 ## The out-of-combat screens
 
 - **Choice layer** — the 2–3 location options at a choice point (two-tier: pick a location, then the within-choice); telegraphs the *category* (first-run legible — design). The pick is a **choice-point intent** → `Run manager`.
-- **Draft** — the 1-of-3 reward; tooltips on hover; the pick is a **draft-pick intent**, and a **Skip button** is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A minimal **gold HUD counter** displays the banked total (placeholder placement; no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
+- **Draft** — the 1-of-3 reward, shown as a panel in the corridor area with the board and HUD still usable around it (events use the same placement — [run_screen.md](run_screen.md#overlays)); the rewards are the board's own item icons with the same tooltips; the pick is a **draft-pick intent**, and a **gold button** (`+{0} gold`) is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A minimal **gold HUD counter** displays the banked total (placeholder placement; no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
 - **1D progress map** — the act's beats + the player's position (boss at the end, relic at midpoint); forward visibility on a linear track, not a route map (design).
 
 ## Localization
