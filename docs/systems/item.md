@@ -23,7 +23,7 @@ What it **is not**:
 
 ## Definition vs. instance
 
-- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`. (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
+- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`. (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
 - **Item instance** — runtime, on a board: a definition + live `Ticker` state + its one enchant (if any) + its item-targeted statuses. **Duplicates stack independently** — two of the same definition are two instances, each its own Ticker, firing twice (design).
 
 ---

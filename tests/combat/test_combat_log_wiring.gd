@@ -121,7 +121,7 @@ func test_heal_is_logged() -> void:
   def.id = 'test_salve'
   def.name_key = 'Test Salve'
   var effect := ItemEffect.new()
-  effect.kind = Delivery.Kind.HEAL
+  effect.mechanic = HealMechanic.ID
   effect.value = 15.0
   effect.shape = ItemEffect.Shape.SELF
   effect.travel = 0.0
@@ -146,7 +146,7 @@ func test_throw_is_logged_with_its_def_id() -> void:
   def.id = 'test_dart'
   def.name_key = 'Test Dart'
   var effect := ItemEffect.new()
-  effect.kind = Delivery.Kind.DAMAGE
+  effect.mechanic = AttackMechanic.ID
   effect.value = 5.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   effect.travel = 0.0

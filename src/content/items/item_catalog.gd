@@ -109,13 +109,12 @@ static func _weapon() -> ItemDef:
   d.icon = 'res://assets/icons/items/old_sword.png'
   d.cooldown = Balance.WEAPON_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.WEAPON_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -127,13 +126,11 @@ static func _armor() -> ItemDef:
   d.icon = 'res://assets/icons/items/metal_shield_1.png'
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.ARMOR_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -164,11 +161,9 @@ static func _avenger() -> ItemDef:
   d.icon = 'res://assets/icons/items/skull_shield.png'
   d.cooldown = Balance.ARMOR_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.ARMOR_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
   # ticks normally AND pushes its cooldown when poison is applied (charges model)
   d.trigger_subs = [{
@@ -176,7 +171,7 @@ static func _avenger() -> ItemDef:
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
   }]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -241,11 +236,10 @@ static func _pocket_shrooms() -> ItemDef:
   d.rarity = ItemDef.Rarity.RARE
   d.cooldown = Balance.POCKET_SHROOMS_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.POCKET_SHROOMS_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var blind := ItemEffect.new()
   blind.kind = Delivery.Kind.APPLY_STATUS
   blind.status_id = 'blind'
@@ -255,7 +249,7 @@ static func _pocket_shrooms() -> ItemDef:
   blind.travel = Balance.WEAPON_TRAVEL
   blind.color = Colours.STATUS_BLIND         # applier shares the status colour
   d.effects = [hit, blind]
-  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
 
 
@@ -272,11 +266,10 @@ static func _druid_staff() -> ItemDef:
   d.icon = 'res://assets/icons/items/staff_v2_02.png'
   d.cooldown = Balance.DRUID_STAFF_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.DRUID_STAFF_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var spore := ItemEffect.new()
   spore.kind = Delivery.Kind.APPLY_STATUS
   spore.status_id = 'spores'
@@ -285,7 +278,7 @@ static func _druid_staff() -> ItemDef:
   spore.travel = Balance.WEAPON_TRAVEL
   spore.color = Colours.STATUS_SPORES        # applier shares the status colour
   d.effects = [hit, spore]
-  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
 
 
@@ -301,11 +294,10 @@ static func _spore_spitter() -> ItemDef:
   d.icon = 'res://assets/icons/items/herbalism_28_stinkymushroom.png'
   d.cooldown = Balance.SPORE_SPITTER_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.SPORE_SPITTER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var spore := ItemEffect.new()
   spore.kind = Delivery.Kind.APPLY_STATUS
   spore.status_id = 'spores'
@@ -314,7 +306,7 @@ static func _spore_spitter() -> ItemDef:
   spore.travel = Balance.WEAPON_TRAVEL
   spore.color = Colours.STATUS_SPORES        # applier shares the status colour
   d.effects = [hit, spore]
-  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
 
 
@@ -329,13 +321,12 @@ static func _capped_cudgel() -> ItemDef:
   d.icon = 'res://assets/icons/items/club_v2_02.png'
   d.cooldown = Balance.CAPPED_CUDGEL_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.CAPPED_CUDGEL_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -350,11 +341,10 @@ static func _bloomhammer() -> ItemDef:
   d.icon = 'res://assets/icons/items/wooden_hammer.png'
   d.cooldown = Balance.BLOOMHAMMER_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.BLOOMHAMMER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var spore := ItemEffect.new()
   spore.kind = Delivery.Kind.APPLY_STATUS
   spore.status_id = 'spores'
@@ -363,7 +353,7 @@ static func _bloomhammer() -> ItemDef:
   spore.travel = Balance.WEAPON_TRAVEL
   spore.color = Colours.STATUS_SPORES        # applier shares the status colour
   d.effects = [hit, spore]
-  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
 
 
@@ -380,11 +370,10 @@ static func _wilt_frond() -> ItemDef:
   d.icon = 'res://assets/icons/items/herbalism_20_sickflower.png'
   d.cooldown = Balance.WILT_FROND_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.WILT_FROND_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var weak := ItemEffect.new()
   weak.kind = Delivery.Kind.APPLY_STATUS
   weak.status_id = 'weak'
@@ -394,7 +383,7 @@ static func _wilt_frond() -> ItemDef:
   weak.travel = Balance.WEAPON_TRAVEL
   weak.color = Colours.STATUS_WEAK           # applier shares the status colour
   d.effects = [hit, weak]
-  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
 
 
@@ -409,13 +398,11 @@ static func _leather_gloves() -> ItemDef:
   d.icon = 'res://assets/icons/items/gloves_01.png'
   d.cooldown = Balance.LEATHER_GLOVES_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.LEATHER_GLOVES_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -427,13 +414,11 @@ static func _leather_trews() -> ItemDef:
   d.icon = 'res://assets/icons/items/leather_pants.png'
   d.cooldown = Balance.LEATHER_TREWS_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.LEATHER_TREWS_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -445,13 +430,11 @@ static func _leather_breastplate() -> ItemDef:
   d.icon = 'res://assets/icons/items/leather_chest_1.png'
   d.cooldown = Balance.LEATHER_BREASTPLATE_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.LEATHER_BREASTPLATE_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -469,13 +452,12 @@ static func _flesh_chunk() -> ItemDef:
   d.cooldown = Balance.FLESH_CHUNK_COOLDOWN
   d.starting_uses = Balance.FLESH_CHUNK_USES   # decays after this many fires (the Decay use-status seed)
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.FLESH_CHUNK_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -492,18 +474,17 @@ static func _flesh_carving_knife() -> ItemDef:
   d.icon = 'res://assets/icons/items/dagger_01.png'
   d.cooldown = Balance.FLESH_CARVING_KNIFE_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.FLESH_CARVING_KNIFE_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
   make.shape = ItemEffect.Shape.SELF         # the chunk lands on the firer's OWN board
   make.color = Colours.STATUS_DECAY          # the created chunk decays
   d.effects = [hit, make]
-  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
 
 
@@ -518,18 +499,17 @@ static func _flesh_cleaver() -> ItemDef:
   d.icon = 'res://assets/icons/items/dagger_38.png'
   d.cooldown = Balance.FLESH_CLEAVER_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.FLESH_CLEAVER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
   make.shape = ItemEffect.Shape.SELF
   make.color = Colours.STATUS_DECAY
   d.effects = [hit, make]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -545,11 +525,10 @@ static func _flesh_bone_saw() -> ItemDef:
   d.icon = 'res://assets/icons/items/loot_12_saw.png'
   d.cooldown = Balance.FLESH_BONE_SAW_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.FLESH_BONE_SAW_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
@@ -561,7 +540,7 @@ static func _flesh_bone_saw() -> ItemDef:
   make2.shape = ItemEffect.Shape.SELF
   make2.color = Colours.STATUS_DECAY
   d.effects = [hit, make, make2]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -580,11 +559,10 @@ static func _flesh_explosion() -> ItemDef:
   d.rarity = ItemDef.Rarity.UNCOMMON
   d.cooldown = Balance.FLESH_EXPLOSION_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.FLESH_EXPLOSION_DAMAGE
   hit.shape = ItemEffect.Shape.ALL_OPPONENTS
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
   # Charges as your OWN items die — each ITEM_DESTROYED pushes the cooldown ~1s (OWN_SIDE is the
   # wired default; no data filter = any own item, per "whenever one of your items is destroyed").
@@ -592,7 +570,7 @@ static func _flesh_explosion() -> ItemDef:
     'event': EventBus.Event.ITEM_DESTROYED,
     'amount': Balance.FLESH_EXPLOSION_CHARGE_PER_DESTROY,
   }]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -609,11 +587,10 @@ static func _flesh_flensing_hook() -> ItemDef:
   d.icon = 'res://assets/icons/items/hook.png'
   d.cooldown = Balance.FLESH_FLENSING_HOOK_COOLDOWN
   var hurt := ItemEffect.new()
-  hurt.kind = Delivery.Kind.DAMAGE
+  hurt.mechanic = AttackMechanic.ID
   hurt.value = Balance.FLESH_FLENSING_HOOK_SELF_DAMAGE
   hurt.shape = ItemEffect.Shape.SELF          # the firer takes the hit — self-harm
   hurt.flags = Delivery.Flag.UNBLOCKABLE      # own shield must NOT absorb the cost (else the HP-spend no-ops)
-  hurt.color = Colours.ATTACK                 # travel 0 (self, instant)
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
@@ -643,15 +620,14 @@ static func _flesh_skin_graft() -> ItemDef:
   d.icon = 'res://assets/icons/items/loot_99_needle.png'
   d.cooldown = Balance.FLESH_SKIN_GRAFT_COOLDOWN
   var heal := ItemEffect.new()
-  heal.kind = Delivery.Kind.HEAL
+  heal.mechanic = HealMechanic.ID
   heal.value = 0.0                            # all healing comes from the consumed flesh
   heal.shape = ItemEffect.Shape.SELF
   heal.consume_item_def_id = FLESH_CHUNK      # eat a chunk off the OWN board
   heal.consume_item_amount = Balance.FLESH_SKIN_GRAFT_CONSUME
   heal.consume_item_scale = Balance.FLESH_SKIN_GRAFT_HEAL_PER_CHUNK  # heal per chunk consumed
-  heal.color = Colours.HEAL
   d.effects = [heal]
-  d.panel_color = heal.color
+  d.panel_color = Colours.HEAL
   return d
 
 
@@ -668,11 +644,10 @@ static func _flesh_bone_spear() -> ItemDef:
   d.icon = 'res://assets/icons/items/spear_27.png'
   d.cooldown = Balance.FLESH_BONE_SPEAR_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.FLESH_BONE_SPEAR_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   var bleed := ItemEffect.new()
   bleed.kind = Delivery.Kind.APPLY_STATUS
   bleed.status_id = 'bleed'
@@ -682,7 +657,7 @@ static func _flesh_bone_spear() -> ItemDef:
   bleed.flags = Delivery.Flag.UNBLOCKABLE    # the enemy's own shield must not soak the wound
   bleed.color = Colours.ATTACK               # applier shares the (placeholder) bleed colour
   d.effects = [hit, bleed]
-  d.panel_color = hit.color                  # primary payload is damage (single-panel model)
+  d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
 
 
@@ -697,13 +672,11 @@ static func _flesh_rib() -> ItemDef:
   d.icon = 'res://assets/icons/items/loot_22_remains.png'
   d.cooldown = Balance.FLESH_RIB_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.FLESH_RIB_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -715,13 +688,11 @@ static func _flesh_femur() -> ItemDef:
   d.icon = 'res://assets/icons/items/loot_23_bone.png'
   d.cooldown = Balance.FLESH_FEMUR_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.FLESH_FEMUR_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -733,13 +704,11 @@ static func _flesh_skull() -> ItemDef:
   d.icon = 'res://assets/icons/items/quest_24_scull.png'
   d.cooldown = Balance.FLESH_SKULL_COOLDOWN
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = Balance.FLESH_SKULL_SHIELD
   blk.shape = ItemEffect.Shape.SELF
-  blk.color = Colours.SHIELD
   d.effects = [blk]
-  d.panel_color = blk.color
+  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -779,13 +748,12 @@ static func _armourer_broadaxe() -> ItemDef:
   d.icon = 'res://assets/icons/items/axe_hard_2.png'
   d.cooldown = Balance.ARMOURER_BROADAXE_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.ARMOURER_BROADAXE_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -797,13 +765,12 @@ static func _armourer_warhammer() -> ItemDef:
   d.icon = 'res://assets/icons/items/war_hammer.png'
   d.cooldown = Balance.ARMOURER_WARHAMMER_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.ARMOURER_WARHAMMER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -815,13 +782,12 @@ static func _armourer_greatsword() -> ItemDef:
   d.icon = 'res://assets/icons/items/sword_twohanded_1.png'
   d.cooldown = Balance.ARMOURER_GREATSWORD_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.ARMOURER_GREATSWORD_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d
 
 
@@ -833,11 +799,10 @@ static func _enemy_claw() -> ItemDef:
   d.icon = 'res://assets/icons/items/loot_183_claw.png'
   d.cooldown = Balance.WEAPON_COOLDOWN
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.WEAPON_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ATTACK
   d.effects = [hit]
-  d.panel_color = hit.color
+  d.panel_color = Colours.ATTACK
   return d

@@ -19,5 +19,13 @@ func color() -> Color:
 
 
 func land(delivery: Delivery, combat: CombatManager) -> void:
-  # The next step of docs/plans/mechanics.md fills this in; nothing calls it yet.
-  pass
+  if delivery.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
+    var dealt: float = delivery.target.take_damage(delivery.value, delivery.flags)
+    combat.bus.publish(EventBus.Event.DAMAGE_DEALT, null, delivery.source_actor,
+        combat._source_item_of(delivery))
+    if combat.combat_log != null:
+      # `delivery.value` is the GROSS hit (pre-shield); `dealt` is the NET HP lost — log both
+      # (gross = the threat metric, survives a full shield; net = what HP actually did).
+      combat.combat_log.on_damage(combat._delivery_source_name(delivery),
+          combat._delivery_source_side(delivery), delivery.target.display_name,
+          combat._side_of(delivery.target), dealt, combat.timekeeper.sim_time, delivery.value)

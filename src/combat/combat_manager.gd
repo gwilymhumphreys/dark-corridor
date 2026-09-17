@@ -321,7 +321,8 @@ func _advance_statuses_on(target) -> void:
 ## passed to _land, and flagged so the autotest's direct-hit attribution skips it.
 func _dot_visual(status: StatusEffect, target, dealt: float) -> Delivery:
   var d := Delivery.new()
-  d.kind = Delivery.Kind.DAMAGE
+  d.kind = Delivery.Kind.MECHANIC
+  d.mechanic = status.id
   d.value = dealt
   d.target = target
   d.source = status.source
@@ -346,7 +347,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
   bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
   if combat_log != null:
     combat_log.on_item_fired(it.def.name_key, _side_of(it.owner), timekeeper.sim_time)
-  # The item still fires (cooldown reset, fire-emote) even when blinded — but its DAMAGE
+  # The item still fires (cooldown reset, fire-emote) even when blinded — but its attack
   # whiffs (docs/systems/spore_engine.md Cap 2). Locked at fire so a swing launched while blinded misses.
   var blinded: bool = StatusManager.has_evasion(it.owner)
   for p in payloads:
@@ -363,7 +364,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
       # only known now), scaling the Delivery — the Item stayed downward-clean (it declared).
       if p.consume_id != '' and p.consume_from_target:
         d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
-      if blinded and d.kind == Delivery.Kind.DAMAGE:
+      if blinded and d.mechanic == AttackMechanic.ID:
         d.evaded = true
       _deliveries.append(d)
       if d.travel.crossed():
@@ -449,6 +450,7 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   var d := Delivery.new()
   d.kind = p.kind
   d.value = p.value
+  d.mechanic = p.mechanic
   d.status_id = p.status_id
   d.duration = p.duration
   d.summon_def_id = p.summon_def_id
@@ -481,33 +483,21 @@ func _land(d: Delivery) -> void:
   d.impact_time = timekeeper.sim_time
   d.landed = true
   match d.kind:
-    Delivery.Kind.DAMAGE:
-      if d.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
-        var dealt: float = d.target.take_damage(d.value, d.flags)
-        bus.publish(EventBus.Event.DAMAGE_DEALT, null, d.source_actor, _source_item_of(d))
-        if combat_log != null:
-          # `d.value` is the GROSS hit (pre-shield); `dealt` is the NET HP lost — log both
-          # (gross = the threat metric, survives a full shield; net = what HP actually did).
-          combat_log.on_damage(_delivery_source_name(d), _delivery_source_side(d),
-              d.target.display_name, _side_of(d.target), dealt, timekeeper.sim_time, d.value)
-    Delivery.Kind.HEAL:
-      if d.target is Actor:
-        var healed: float = d.target.heal(d.value)
-        bus.publish(EventBus.Event.HEALED, null, d.source_actor, _source_item_of(d))
-        if combat_log != null:
-          combat_log.on_heal(_delivery_source_name(d), _delivery_source_side(d),
-              d.target.display_name, _side_of(d.target), healed, timekeeper.sim_time)
+    Delivery.Kind.MECHANIC:   # the mechanic's land applies it (attack / heal / shield)
+      if d.mechanic == '':
+        push_error('[CombatManager] _land: a MECHANIC delivery has no mechanic id — nothing lands.')
+      else:
+        MechanicRegistry.get_mechanic(d.mechanic).land(d, self)
     Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
-      var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
-      if applied != null:   # an unknown id applies nothing — publish no event for it
-        bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id, d.source_actor, _source_item_of(d))
-        if combat_log != null:
-          # Shield carries its value; every other status is a count. Use ShieldStatus.ID,
-          # not a literal, so the two stay in step (docs/systems/combat_log.md Cap 2 site 5).
-          if d.status_id == ShieldStatus.ID:
-            combat_log.on_shield(_delivery_source_name(d), _delivery_source_side(d),
-                _target_name(d.target), _target_side(d.target), d.value, timekeeper.sim_time)
-          else:
+      # A status that is also a mechanic (e.g. 'shield') is an authoring mistake: it must be
+      # delivered as a MECHANIC, so applying it here would double-apply its rules.
+      if MechanicRegistry.has(d.status_id):
+        push_error('[CombatManager] _land: status "%s" is a mechanic — deliver it as a MECHANIC, not APPLY_STATUS.' % d.status_id)
+      else:
+        var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
+        if applied != null:   # an unknown id applies nothing — publish no event for it
+          bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id, d.source_actor, _source_item_of(d))
+          if combat_log != null:
             combat_log.on_status_applied(_delivery_source_name(d), _delivery_source_side(d),
                 _target_name(d.target), _target_side(d.target), d.status_id, timekeeper.sim_time)
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)

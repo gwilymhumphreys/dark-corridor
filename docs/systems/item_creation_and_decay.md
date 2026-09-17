@@ -32,8 +32,8 @@ spending HP. Two seams the spine lacked:
 2. **Item decay / limited use** — remove an item after a fixed number of activations.
 
 **What needs NO engine work (author as content whenever — don't over-build):** the base **attack /
-shield commons** (a `DAMAGE` effect; self-shield) — the built item subtypes; the chunk's **own
-behaviour** — a `DAMAGE` effect on a cooldown is already the built weapon subtype. Only **creating**
+shield commons** (an attack effect; a shield effect) — the built item subtypes; the chunk's **own
+behaviour** — an attack effect on a cooldown is already the built weapon subtype. Only **creating**
 the chunk and **expiring** it were new.
 
 ### Consistency with decision #23 — general seams, no baked chunk
@@ -213,7 +213,7 @@ not yet needed; all numbers (charge fractions, consume amounts, scaling) are con
 
 ## Then content (owner, not this PRD)
 
-The chunk-of-flesh `ItemDef` (a `DAMAGE` effect, cooldown, `starting_uses`); the attack commons with a
+The chunk-of-flesh `ItemDef` (an attack effect, cooldown, `starting_uses`); the attack commons with a
 `CREATE_ITEM` effect; the Fleshmancer `CharacterDef` + item pool; `Balance` numbers.
 
 ## Open / deferred
@@ -225,7 +225,7 @@ The chunk-of-flesh `ItemDef` (a `DAMAGE` effect, cooldown, `starting_uses`); the
   (`effects[0]`) → `damage` / `shield` / `poison` / `heal` / `status` / `other`. A `CREATE_ITEM`-*primary*
   item falls to `'other'`, so the family strategies won't prefer it — **parallel to SUMMON's current
   gap** (it falls to `'other'` too). A damage-attack-*with*-a-create-rider is unaffected (its primary
-  effect is `DAMAGE`). When create-primary content exists, give `CREATE_ITEM` (and SUMMON) a family in
+  effect is an attack). When create-primary content exists, give `CREATE_ITEM` (and SUMMON) a family in
   `_family_of`. Code left unchanged — nothing needs it until then (owner, 2026-06-19). See
   [`autotest.md`](autotest.md).
 - **`StatusContext` scope** — minimal (`remove_item`); add `apply_status` / `spawn` / `publish` / `rng`

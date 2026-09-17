@@ -75,7 +75,7 @@ The engine hardcodes **no spore** — it gains verbs, hooks, and one capability;
 
 > **Realized:** a `StatusEffect.causes_evasion()` hook (beside `absorb` / the damage modifiers)
 > + `StatusManager.has_evasion(actor)`. A blinded actor still fires (cooldown resets), but in
-> `CombatManager._fire_item` its **DAMAGE** Deliveries are marked `Delivery.evaded` at fire;
+> `CombatManager._fire_item` its **attack** Deliveries are marked `Delivery.evaded` at fire;
 > they travel, then **fizzle on land** (`_land`) with no damage. `evaded` is the fizzle reason
 > (vs. target-died) the VFX wall reads for the whiff tell (the tell itself is presentation —
 > not yet drawn). Damage-only, total-miss (a timed status); no probabilistic roll. A

@@ -147,7 +147,7 @@ fire-pipeline **seam is in** (decision #35): the firing `Item` is threaded into 
 a status can scope to a weapon attack via `item.def.types.has(ItemType.WEAPON)`.
 
 - **`EmpoweredStatus`** (`src/content/statuses/empowered_status.gd`, id `empowered`) — a consumed
-  counter: `modify_outgoing` doubles a `weapon`-tagged DAMAGE payload while a charge is banked (pure,
+  counter: `modify_outgoing` doubles a `weapon`-tagged attack payload while a charge is banked (pure,
   ×2 of ONE attack); `on_owner_item_fired` spends exactly one charge per weapon attack (banking N
   doubles the next N). Registered in `StatusRegistry`. `EMPOWER_MULT` = 2.0 (`Balance`, placeholder).
 - **Mighty Blow** (`mighty_blow`, `[skill]`) — a plain-cooldown metronome that applies `empowered`

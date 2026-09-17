@@ -24,7 +24,25 @@ func shield_multiplier() -> float:
   return 1.0
 
 
-## What happens when a delivery of this mechanic lands. The next step of
-## docs/plans/mechanics.md fills this in; nothing calls it yet.
+## What happens when a delivery of this mechanic lands. The base applies the mechanic's
+## `status_id` to the target (the shield mechanic's behaviour) and logs it; `AttackMechanic`
+## and `HealMechanic` override it for their direct effects. Only `CombatManager._land` calls it.
 func land(delivery: Delivery, combat: CombatManager) -> void:
-  pass
+  if status_id == '':
+    return
+  var applied: StatusEffect = StatusManager.apply(delivery.target, status_id, delivery.value,
+      delivery.duration, delivery.source, delivery.flags)
+  if applied != null:   # an unknown id applies nothing — publish no event for it
+    combat.bus.publish(EventBus.Event.STATUS_APPLIED, status_id, delivery.source_actor,
+        combat._source_item_of(delivery))
+    if combat.combat_log != null:
+      # Shield carries its value; every other status is a count. Use ShieldStatus.ID,
+      # not a literal, so the two stay in step (docs/systems/combat_log.md Cap 2 site 5).
+      if status_id == ShieldStatus.ID:
+        combat.combat_log.on_shield(combat._delivery_source_name(delivery),
+            combat._delivery_source_side(delivery), combat._target_name(delivery.target),
+            combat._target_side(delivery.target), delivery.value, combat.timekeeper.sim_time)
+      else:
+        combat.combat_log.on_status_applied(combat._delivery_source_name(delivery),
+            combat._delivery_source_side(delivery), combat._target_name(delivery.target),
+            combat._target_side(delivery.target), status_id, combat.timekeeper.sim_time)

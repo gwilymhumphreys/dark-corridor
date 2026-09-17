@@ -70,16 +70,15 @@ func _best_by(candidates: Array, score: Callable) -> int:
 
 
 ## The effect family of an item def (its primary effect) — mirrors the colour
-## vocabulary (design): damage / shield / poison / heal / status / other.
+## vocabulary (design): damage / shield / poison / heal / status / other. A mechanic
+## effect classifies by its mechanic; an outside-set status by its status id.
 func _family_of(def: ItemDef) -> String:
   if def.effects.is_empty():
     return 'other'
   var effect: ItemEffect = def.effects[0]
+  if effect.mechanic != '':
+    return _mechanic_family(effect.mechanic)
   match effect.kind:
-    Delivery.Kind.DAMAGE:
-      return 'damage'
-    Delivery.Kind.HEAL:
-      return 'heal'
     Delivery.Kind.APPLY_STATUS:
       match effect.status_id:
         'shield':
@@ -91,15 +90,34 @@ func _family_of(def: ItemDef) -> String:
   return 'other'
 
 
-## Map a strategy name to the family it targets. `scaling` / `burn` alias to the
-## nearest family present in the prototype pool until their own content exists
-## (docs/history/phase5_plan.md: the deferred raw-damage/scaling + burn content).
+## The family a mechanic id maps to (docs/plans/mechanics.md): attack is the damage family,
+## regen is the heal family, the rest keep their own names.
+func _mechanic_family(mechanic_id: String) -> String:
+  match mechanic_id:
+    AttackMechanic.ID:
+      return 'damage'
+    ShieldMechanic.ID:
+      return 'shield'
+    HealMechanic.ID:
+      return 'heal'
+    'poison':
+      return 'poison'
+    'burn':
+      return 'burn'
+    'bleed':
+      return 'bleed'
+    'regen':
+      return 'heal'
+  return 'other'
+
+
+## Map a strategy name to the family it targets. `scaling` aliases to the nearest family
+## present in the prototype pool until its own content exists (docs/history/phase5_plan.md:
+## the deferred raw-damage/scaling content).
 func _strategy_family(strat: String) -> String:
   match strat:
     'scaling':
       return 'damage'
-    'burn':
-      return 'poison'
     _:
       return strat
 
@@ -139,8 +157,13 @@ func _board_applies_status(board: Array, status_id: String) -> bool:
 
 func _status_applied_by(def: ItemDef) -> String:
   for effect in def.effects:
+    var status: String = ''
     if effect.kind == Delivery.Kind.APPLY_STATUS:
-      return effect.status_id
+      status = effect.status_id
+    elif effect.mechanic != '':
+      status = MechanicRegistry.get_mechanic(effect.mechanic).status_id
+    if status != '':
+      return status
   return ''
 
 

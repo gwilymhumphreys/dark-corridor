@@ -21,7 +21,8 @@ func test_weapon_fires_damage_payload() -> void:
   var payloads := it.fire()
   assert_eq(payloads.size(), 1, 'one effect -> one payload')
   var p: Payload = payloads[0]
-  assert_eq(p.kind, Delivery.Kind.DAMAGE)
+  assert_eq(p.kind, Delivery.Kind.MECHANIC)
+  assert_eq(p.mechanic, AttackMechanic.ID, 'the weapon fires the attack mechanic')
   assert_eq(p.value, Balance.WEAPON_DAMAGE)
   assert_eq(p.shape, ItemEffect.Shape.OPPONENT_LEFTMOST)
   assert_eq(p.source, it, 'payload is sourced from the firing item')
@@ -51,8 +52,8 @@ func test_sunder_applies_vulnerable_to_opponent() -> void:
 
 func test_armor_applies_shield_to_self() -> void:
   var p: Payload = _make(ItemCatalog.ARMOR).fire()[0]
-  assert_eq(p.kind, Delivery.Kind.APPLY_STATUS)
-  assert_eq(p.status_id, 'shield')
+  assert_eq(p.kind, Delivery.Kind.MECHANIC)
+  assert_eq(p.mechanic, ShieldMechanic.ID, 'the armor fires the shield mechanic')
   assert_eq(p.shape, ItemEffect.Shape.SELF)
 
 
@@ -94,7 +95,7 @@ func test_self_fuel_consume_scales_the_payload_at_fire() -> void:
   StatusManager.apply(owner_actor, 'poison', 4.0)
   var def := ItemDef.new()
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = 5.0
   hit.consume_id = 'poison'
   hit.consume_amount = 3.0

@@ -6,10 +6,11 @@ extends RefCounted
 ## (Distinct from ItemEffect: that is the authored template; this is the runtime
 ## output after value-modifiers / enchants are applied.)
 
-var kind: int = Delivery.Kind.DAMAGE
+var kind: int = Delivery.Kind.MECHANIC
 var value: float = 0.0
 var shape: int = ItemEffect.Shape.OPPONENT_LEFTMOST
 var travel: float = 0.0
+var mechanic: String = ''
 var status_id: String = ''
 var duration: float = 0.0     # per-application duration for an APPLY_STATUS payload (timed statuses)
 var flags: int = 0
@@ -47,6 +48,7 @@ static func from_effect(effect: ItemEffect) -> Payload:
   payload.value = effect.value
   payload.shape = effect.shape
   payload.travel = effect.travel
+  payload.mechanic = effect.mechanic
   payload.status_id = effect.status_id
   payload.duration = effect.duration
   payload.summon_def_id = effect.summon_def_id
@@ -60,5 +62,10 @@ static func from_effect(effect: ItemEffect) -> Payload:
   payload.consume_from_target = effect.consume_from_target
   payload.consume_scale = effect.consume_scale
   payload.flags = effect.flags
-  payload.color = effect.color
+  # A mechanic effect takes its colour from the mechanic (the effect's own colour is unset);
+  # everything else keeps the effect's authored colour.
+  if effect.mechanic != '':
+    payload.color = MechanicRegistry.get_mechanic(effect.mechanic).color()
+  else:
+    payload.color = effect.color
   return payload

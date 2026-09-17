@@ -21,8 +21,7 @@ var layout: CombatView        # the swappable view surface — item_pos / actor_
 var _sounded: Dictionary = {}   # Delivery instance id -> true, so each landing sounds once
 var _projectile: EffectDrawer
 var _damage_number: DamageNumberDrawer
-var _impact_drawers: Dictionary = {}   # Delivery.Kind -> EffectDrawer
-var _number_kinds: Array = []   # the Delivery.Kind values that show a number
+var _impact_drawers: Dictionary = {}   # mechanic id (or Delivery.Kind.APPLY_STATUS) -> EffectDrawer
 
 
 func setup(cm: CombatManager, layout_source: CombatView) -> void:
@@ -34,10 +33,12 @@ func _ready() -> void:
   _projectile = ProjectileDiscDrawer.new()
   _damage_number = DamageNumberDrawer.new()
   var ring: ImpactRingDrawer = ImpactRingDrawer.new()
-  _impact_drawers[Delivery.Kind.DAMAGE] = ring
-  _impact_drawers[Delivery.Kind.HEAL] = ring
+  # Every mechanic id maps to the same ring for now (docs/plans/mechanics.md); the five not yet
+  # built are string literals until their mechanic classes exist. A DoT tick's visual-only Delivery
+  # carries its status id as the mechanic, so its ring still draws.
+  for mechanic_id in [AttackMechanic.ID, ShieldMechanic.ID, HealMechanic.ID, 'poison', 'burn', 'bleed', 'regen', 'crit']:
+    _impact_drawers[mechanic_id] = ring
   _impact_drawers[Delivery.Kind.APPLY_STATUS] = ring
-  _number_kinds = [Delivery.Kind.DAMAGE, Delivery.Kind.HEAL]
 
 
 func _process(_delta: float) -> void:
@@ -82,19 +83,36 @@ func _draw() -> void:
         _projectile.draw_effect(self, d, src.lerp(dst, t), now - d.fire_time)   # PLACEHOLDER shape
       continue
     var landing: Vector2 = layout.target_pos(d.target) + scatter_offset(d)
-    if _impact_drawers.has(d.kind):
-      var drawer: EffectDrawer = _impact_drawers[d.kind]
+    var key: Variant = _impact_key(d)
+    if _impact_drawers.has(key):
+      var drawer: EffectDrawer = _impact_drawers[key]
       drawer.draw_effect(self, d, landing, now - d.impact_time)
-    if d.kind in _number_kinds:
+    if _shows_number(d):
       _damage_number.draw_effect(self, d, landing, now - d.impact_time)
 
 
 ## How big a hit is, from 0 at BIG_HIT_DAMAGE to 1 at BIGGEST_HIT_DAMAGE, or -1 for anything that
-## is not damage or is smaller than BIG_HIT_DAMAGE.
+## is not an attack or is smaller than BIG_HIT_DAMAGE.
 static func big_hit_strength(delivery: Delivery) -> float:
-  if delivery.kind != Delivery.Kind.DAMAGE or delivery.value < BIG_HIT_DAMAGE:
+  if delivery.mechanic != AttackMechanic.ID or delivery.value < BIG_HIT_DAMAGE:
     return -1.0
   return clampf((delivery.value - BIG_HIT_DAMAGE) / (BIGGEST_HIT_DAMAGE - BIG_HIT_DAMAGE), 0.0, 1.0)
+
+
+## The impact-drawer key for a delivery: its mechanic id for a mechanic delivery, else its kind
+## (APPLY_STATUS). SUMMON / CREATE_ITEM have no entry and so draw nothing.
+static func _impact_key(delivery: Delivery) -> Variant:
+  if delivery.kind == Delivery.Kind.MECHANIC:
+    return delivery.mechanic
+  return delivery.kind
+
+
+## Whether a landing shows a number: attack and heal landings, plus every visual-only delivery
+## (a DoT tick's number, which carries no landing of its own).
+static func _shows_number(delivery: Delivery) -> bool:
+  if delivery.visual_only:
+    return true
+  return delivery.mechanic == AttackMechanic.ID or delivery.mechanic == HealMechanic.ID
 
 
 ## One sound per landing, played the first time a delivery shows as landed. Sounds are
@@ -110,7 +128,7 @@ func _sound_new_impacts() -> void:
     var id: int = d.get_instance_id()
     live[id] = true
     # Summons and created items have no impact to hear, as they have none to see.
-    if not d.landed or d.fizzled or not _impact_drawers.has(d.kind) or _sounded.has(id):
+    if not d.landed or d.fizzled or not _impact_drawers.has(_impact_key(d)) or _sounded.has(id):
       continue
     _sounded[id] = true
     SfxManager.play_impact()

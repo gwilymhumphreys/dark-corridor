@@ -88,8 +88,7 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
   var avenger := ItemDef.new()
   avenger.cooldown = 9999.0
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   avenger.effects = [blk]
@@ -125,7 +124,7 @@ func test_delivery_fizzles_if_target_died() -> void:
   cm.start()
   e.take_damage(10.0)   # enemy already dead
   var d := Delivery.new()
-  d.kind = Delivery.Kind.DAMAGE
+  d.mechanic = AttackMechanic.ID
   d.value = 5.0
   d.target = e
   d.travel = Ticker.new(1)
@@ -191,7 +190,7 @@ func test_actor_and_item_statuses_advance_identically() -> void:
 func _instant_damage_item(owner_actor: Actor, value: float) -> Item:
   var def := ItemDef.new()
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = value
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -216,7 +215,7 @@ func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
   StatusManager.apply(e, 'poison', 5.0)
   var def := ItemDef.new()
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = 10.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -613,8 +612,7 @@ func _never_fires_avenger(source_filter: int = -1) -> ItemDef:
   var def := ItemDef.new()
   def.cooldown = 9999.0
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   def.effects = [blk]
@@ -765,7 +763,7 @@ func test_thrown_consumable_event_carries_the_thrower() -> void:
   def.id = 'test_dart'
   def.name_key = 'Test Dart'
   var effect := ItemEffect.new()
-  effect.kind = Delivery.Kind.DAMAGE
+  effect.mechanic = AttackMechanic.ID
   effect.value = 5.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   effect.travel = 0.0
@@ -860,7 +858,7 @@ func test_lethal_potion_resolves_fight_without_a_step() -> void:
   def.id = 'test_bomb'
   def.name_key = 'Test Bomb'
   var effect := ItemEffect.new()
-  effect.kind = Delivery.Kind.DAMAGE
+  effect.mechanic = AttackMechanic.ID
   effect.value = 50.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   effect.travel = 0.0
@@ -880,7 +878,7 @@ func test_status_applied_event_only_published_on_success() -> void:
   cm.bus.subscribe(EventBus.Event.STATUS_APPLIED, probe, 1.0, null)
   cm._land(_status_delivery(e, 'nonexistent_status'))
   assert_eq(probe.accum, 0.0, 'an unknown id publishes no event')
-  cm._land(_status_delivery(e, 'shield'))
+  cm._land(_status_delivery(e, 'poison'))
   assert_gt(probe.accum, 0.0, 'a real apply still publishes')
 
 
@@ -952,7 +950,7 @@ func _decay_weapon_def(uses: int) -> ItemDef:
   def.cooldown = Balance.WEAPON_COOLDOWN
   def.starting_uses = uses
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.WEAPON_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -1086,7 +1084,7 @@ func _chunk_consumer_def(chunk_id: String, amount: int, scale: float) -> ItemDef
   var def := ItemDef.new()
   def.id = 'test_chunk_consumer'
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = 10.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -1103,8 +1101,7 @@ func _destroy_charged_avenger() -> ItemDef:
   var def := ItemDef.new()
   def.cooldown = 9999.0
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'shield'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   def.effects = [blk]
@@ -1237,3 +1234,83 @@ func test_consumed_items_publish_item_destroyed_for_the_charge_synergy() -> void
   cm._fire_item(consumer, [])
   assert_eq(seen.size(), 3, 'all 3 consumed chunks published ITEM_DESTROYED (consume-death = decay-death)')
   assert_eq(seen[0], 'chunk', 'with the chunk def id as the event data')
+
+
+# --- Mechanics land through the registry (docs/plans/mechanics.md step 1) ------------
+# The DAMAGE / HEAL branches of _land moved into the mechanic classes; the shield part of
+# APPLY_STATUS moved into the base Mechanic. These prove the routing is behaviour-identical.
+
+## A one-effect item whose single effect is the named mechanic (or status), instant.
+func _mechanic_item(owner_actor: Actor, mechanic_id: String, value: float, shape: int = ItemEffect.Shape.OPPONENT_LEFTMOST) -> Item:
+  var def := ItemDef.new()
+  var effect := ItemEffect.new()
+  effect.mechanic = mechanic_id
+  effect.value = value
+  effect.shape = shape
+  effect.travel = 0.0
+  def.effects = [effect]
+  return Item.new(def, owner_actor)
+
+
+func test_attack_mechanic_deals_damage_and_publishes_damage_dealt() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var seen: Array = []
+  cm.bus.add_listener(EventBus.Event.DAMAGE_DEALT,
+      func(_data, source_actor, _source_item) -> void:
+        seen.append(source_actor))
+  var arrived: Array = []
+  cm._fire_item(_mechanic_item(p, AttackMechanic.ID, 12.0), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(e.hp, 1000.0 - 12.0, 0.0001, 'the attack mechanic dealt its damage')
+  assert_eq(seen.size(), 1, 'it published DAMAGE_DEALT (no new events)')
+  assert_eq(seen[0], p, 'the source actor is the firer')
+
+
+func test_heal_mechanic_heals_the_target() -> void:
+  var p := Actor.new(100.0)
+  p.take_damage(40.0)   # at 60 / 100
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var arrived: Array = []
+  cm._fire_item(_mechanic_item(p, HealMechanic.ID, 15.0, ItemEffect.Shape.SELF), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(p.hp, 60.0 + 15.0, 0.0001, 'the heal mechanic restored health')
+
+
+func test_shield_mechanic_applies_shield() -> void:
+  var p := Actor.new(100.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var arrived: Array = []
+  cm._fire_item(_mechanic_item(p, ShieldMechanic.ID, 8.0, ItemEffect.Shape.SELF), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_true(_has_status(p, 'shield'), 'the shield mechanic applied the shield status')
+  assert_almost_eq(_status_count(p, 'shield'), 8.0, 0.0001, 'with the delivery value as its count')
+
+
+func test_apply_status_with_a_mechanic_id_applies_nothing() -> void:
+  # 'shield' is a mechanic, so an APPLY_STATUS delivery naming it is an authoring mistake:
+  # it pushes an error and applies nothing (the mechanic must be delivered as MECHANIC).
+  var p := Actor.new(100.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  cm._land(_status_delivery(p, 'shield'))
+  assert_false(_has_status(p, 'shield'), 'an APPLY_STATUS delivery with a mechanic id applies nothing')
+
+
+func test_item_uses_reports_its_mechanics() -> void:
+  var weapon := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), Actor.new())
+  var armor := Item.new(ItemCatalog.get_def(ItemCatalog.ARMOR), Actor.new())
+  assert_true(weapon.uses(AttackMechanic.ID), 'the weapon uses the attack mechanic')
+  assert_false(weapon.uses(ShieldMechanic.ID), 'the weapon does not use shield')
+  assert_true(armor.uses(ShieldMechanic.ID), 'the shield item uses the shield mechanic')
+  assert_false(armor.uses(AttackMechanic.ID), 'the shield item does not use attack')

@@ -58,10 +58,12 @@ enemy also flinches back in the corridor and is lit ([run_screen.md](run_screen.
 
 Each shape is its own class under `src/vfx/drawers/`, extending `EffectDrawer`: `duration()`,
 `progress(age)` and `draw_effect(canvas, delivery, point, age)`. A drawer holds no state, so slow
-motion and pause keep working. The driver keeps a dictionary from `Delivery.Kind` to the drawer for
-that kind, so a new effect is a new file rather than another branch in `_draw()`. Damage, healing
-and status application currently share one `ImpactRingDrawer`; `SUMMON` and `CREATE_ITEM` have no
-entry and so draw nothing.
+motion and pause keep working. The driver keeps a dictionary from a mechanic id (for a `MECHANIC` delivery) or
+`Delivery.Kind.APPLY_STATUS` to the drawer, so a new effect is a new file rather than another branch in
+`_draw()`. All eight [mechanics](mechanics.md) and status application currently share one
+`ImpactRingDrawer`; `SUMMON` and `CREATE_ITEM` have no entry and so draw nothing. Numbers draw for
+attack and heal landings and for every visual-only delivery (a poison tick or bleed carries its status
+id as its mechanic).
 
 A landing point is nudged from the target's centre by `VfxDriver.scatter_offset`, within
 `SCATTER_RADIUS`. The nudge comes from the delivery's own identity rather than being drawn each

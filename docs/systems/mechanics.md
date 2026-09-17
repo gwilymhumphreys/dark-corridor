@@ -10,9 +10,22 @@ mechanic they use, so items, relics and enchantments can refer to them. The owne
 
 ## Built so far
 
-Attack, heal and shield exist as classes and are registered. Nothing calls them yet: items still use
-`Delivery.Kind.DAMAGE`, `HEAL` and `APPLY_STATUS`, and `CombatManager._land` still handles each kind.
-Poison, burn, bleed, regen and crit are not built.
+Attack, heal and shield are built. Poison, burn, bleed, regen and crit are not; poison and bleed
+effects still use `APPLY_STATUS`.
+
+## How effects name a mechanic
+
+`ItemEffect`, `Payload` and `Delivery` have a `mechanic` id. `Delivery.Kind` is `{ MECHANIC,
+APPLY_STATUS, SUMMON, CREATE_ITEM }`, and `MECHANIC` is the default. An effect using a mechanic sets
+only `mechanic` (plus value, shape, travel, flags), not `status_id` or `color`:
+`Payload.from_effect` takes the colour from the mechanic.
+
+- `CombatManager._land` calls `MechanicRegistry.get_mechanic(d.mechanic).land(d, self)` for a
+  `MECHANIC` delivery. It keeps its own branches for the other kinds.
+- `APPLY_STATUS` is for statuses that are not mechanics. Using it with a mechanic's status id
+  (`'shield'`) pushes an error and applies nothing.
+- `Item.uses(mechanic_id)` is true when any of the item's effects uses that mechanic.
+- Weak and empower modify effects whose mechanic is attack, and blind makes attacks miss.
 
 ## The Mechanic class
 
@@ -26,7 +39,7 @@ Poison, burn, bleed, regen and crit are not built.
 | `status_id` | The status the mechanic applies (`'shield'`), or empty for mechanics that act directly (attack, heal). |
 | `color() -> Color` | Returns the mechanic's `Colours` variable. It is a function so a palette applied at runtime is read each time. |
 | `shield_multiplier() -> float` | How much shield a hit of this mechanic uses. 1.0 by default. |
-| `land(delivery, combat)` | What happens when a delivery lands. Empty until the next step. |
+| `land(delivery, combat)` | What happens when a delivery lands. The base applies the mechanic's `status_id` (shield); `AttackMechanic` and `HealMechanic` override it for their direct effects. |
 
 `ShieldStatus` copies its `name_key`, `desc_key` and `icon` from `ShieldMechanic`, so the text is
 written once. The status keeps these fields because the combat log, status icons and combat summary

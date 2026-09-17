@@ -106,7 +106,7 @@ read-only stack getter); a static consume number would mislead.
 `TooltipContent.keyword_ids(item)` collects candidate ids and keeps only those present
 in `KeywordCatalog` (statuses first in effect order, then mechanics in a fixed order):
 
-- per effect: `APPLY_STATUS` → its `status_id`; `consume_id` → that status + `kw:fuel`;
+- per effect: `APPLY_STATUS` → its `status_id`; a `MECHANIC` effect → its mechanic's `status_id` (shield); `consume_id` → that status + `kw:fuel`;
   `SUMMON` → `kw:summon`; AOE shapes → `kw:aoe`; item-target shapes → `kw:item_target`;
   the `UNBLOCKABLE` flag → `kw:unblockable`.
 - `trigger_subs` → `kw:trigger` + each sub's `filter` (a status id); an **`ITEM_DESTROYED`** sub

@@ -43,12 +43,19 @@ func _effect_lines(item: Item) -> Array:
 func _effect_line(item: Item, effect: ItemEffect) -> Array:
   var value_seg: Dictionary = _value_seg(item, effect)
   match effect.kind:
-    Delivery.Kind.DAMAGE:
-      if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-        return _interpolate(tr('Deal {0} damage to all enemies'), [value_seg])
-      return _interpolate(tr('Deal {0} damage to {1}'), [value_seg, _shape_text(effect.shape)])
-    Delivery.Kind.HEAL:
-      return _interpolate(tr('Heal {0}'), [value_seg])
+    Delivery.Kind.MECHANIC:
+      # Attack and heal keep their line templates; the status mechanics (shield, and later
+      # poison / burn / bleed / regen) use the status templates with the mechanic id as the chip.
+      if effect.mechanic == AttackMechanic.ID:
+        if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
+          return _interpolate(tr('Deal {0} damage to all enemies'), [value_seg])
+        return _interpolate(tr('Deal {0} damage to {1}'), [value_seg, _shape_text(effect.shape)])
+      if effect.mechanic == HealMechanic.ID:
+        return _interpolate(tr('Heal {0}'), [value_seg])
+      var chip: Dictionary = {'t': 'chip', 'id': effect.mechanic}
+      if effect.shape == ItemEffect.Shape.SELF:
+        return _interpolate(tr('Gain {0} {1}'), [value_seg, chip])
+      return _interpolate(tr('Apply {0} {1}'), [value_seg, chip])
     Delivery.Kind.APPLY_STATUS:
       var chip: Dictionary = {'t': 'chip', 'id': effect.status_id}
       if effect.shape == ItemEffect.Shape.SELF:
@@ -116,10 +123,13 @@ func _summon_text(effect: ItemEffect) -> Dictionary:
 ## id is silently dropped — that is how a mechanic is enabled (by authoring its catalog entry).
 static func keyword_ids(item: Item) -> Array[String]:
   var ids: Array[String] = []
-  # Statuses first, in effect order: applied statuses, then consumed-fuel statuses.
+  # Statuses first, in effect order: applied statuses, then consumed-fuel statuses. A mechanic
+  # effect contributes the status its mechanic applies (shield; attack / heal apply none).
   for effect: ItemEffect in item.def.effects:
     if effect.kind == Delivery.Kind.APPLY_STATUS:
       _add_keyword(ids, effect.status_id)
+    if effect.mechanic != '':
+      _add_keyword(ids, MechanicRegistry.get_mechanic(effect.mechanic).status_id)
     if effect.consume_id != '':
       _add_keyword(ids, effect.consume_id)
   for sub: Dictionary in item.def.trigger_subs:
