@@ -31,10 +31,10 @@ func is_alive() -> bool:
 ## remaining HP (a killing blow returns effective, not inflated raw, damage) — so
 ## the CombatLog records honest numbers with no HP-diff machinery (docs/systems/
 ## combat_log.md). Statement-callers may ignore the return.
-func take_damage(amount: float, flags: int = 0) -> float:
+func take_damage(amount: float, flags: int = 0, mechanic_id: String = '') -> float:
   if not is_alive():
     return 0.0
-  var net: float = StatusManager.resolve_incoming_damage(self, amount, flags)
+  var net: float = StatusManager.resolve_incoming_damage(self, amount, flags, null, mechanic_id)
   var hp_before: float = hp
   hp = maxf(hp - net, 0.0)
   if hp <= 0.0:

@@ -173,7 +173,7 @@ class SpentProbeStatus extends StatusEffect:
     id = 'spent_probe'
 
 
-  func absorb(amount: float, _incoming_flags: int, _target, _ctx) -> float:
+  func absorb(amount: float, _incoming_flags: int, _target, _ctx, _mechanic_id: String = '') -> float:
     var soaked: float = minf(amount, count)
     count -= soaked
     return amount - soaked

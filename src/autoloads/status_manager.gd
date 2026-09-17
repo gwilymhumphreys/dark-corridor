@@ -32,13 +32,15 @@ func apply(target, id: String, count: float, duration: float = 0.0, source = nul
 
 ## The incoming-damage pipeline: amplifiers (Vulnerable) scale up FIRST, then absorbers (Shield)
 ## soak the amplified amount (#6). Two passes over the target's statuses so the order holds;
-## emptied pools are removed afterward. Returns net damage to HP.
-func resolve_incoming_damage(target, raw: float, flags: int = 0, ctx = null) -> float:
+## emptied pools are removed afterward. `mechanic_id` names the mechanic that dealt the damage
+## (docs/plans/mechanics.md → Shield) — the shield pool spends its multiplier against it.
+## Returns net damage to HP.
+func resolve_incoming_damage(target, raw: float, flags: int = 0, ctx = null, mechanic_id: String = '') -> float:
   var net: float = raw
   for s in target.statuses:
     net = s.modify_incoming(net, target, ctx)
   for s in target.statuses:
-    net = s.absorb(net, flags, target, ctx)
+    net = s.absorb(net, flags, target, ctx, mechanic_id)
   _remove_spent(target)
   return maxf(net, 0.0)
 

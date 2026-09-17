@@ -27,6 +27,6 @@ func _init() -> void:
 ## item ticks down harmlessly, cf. PeriodicStatus).
 func on_owner_item_fired(actor, _item, _ctx) -> bool:
   if actor is Actor:
-    actor.take_damage(count, flags)
+    actor.take_damage(count, flags, id)
   count -= 1.0
   return count <= 0.0

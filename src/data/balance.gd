@@ -206,6 +206,12 @@ const EMPOWER_MULT: float = 2.0
 # this long. 2s = the Spore Druid's blinding spore as designed (spore_druid.md), applied by
 # Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).
 const STATUS_BLIND_DURATION: float = 2.0
+# Shield multipliers (docs/plans/mechanics.md → Shield): how much shield a hit of the mechanic
+# uses (1.0 = normal). Nothing reads these yet — the poison, burn and bleed mechanic classes
+# return them once they are converted.
+const SHIELD_MULTIPLIER_POISON: float = 2.0   # PLACEHOLDER — owner tunes
+const SHIELD_MULTIPLIER_BURN: float = 0.5     # PLACEHOLDER — owner tunes
+const SHIELD_MULTIPLIER_BLEED: float = 0.5    # PLACEHOLDER — owner tunes
 
 
 # ── Triggers (charges model — push as a fraction of the bar; docs/systems/combat_model.md) ─────

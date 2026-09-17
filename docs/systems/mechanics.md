@@ -13,6 +13,11 @@ mechanic they use, so items, relics and enchantments can refer to them. The owne
 Attack, heal and shield are built. Poison, burn, bleed, regen and crit are not; poison and bleed
 effects still use `APPLY_STATUS`.
 
+The damage pipeline carries a mechanic id (`take_damage` / `resolve_incoming_damage` / `absorb`
+take `mechanic_id`, default `''`), and the shield pool spends the dealing mechanic's multiplier
+(`MechanicRegistry.shield_multiplier`). Only registered mechanic ids change
+the multiplier, so nothing behaves differently until poison, burn and bleed are converted.
+
 ## How effects name a mechanic
 
 `ItemEffect`, `Payload` and `Delivery` have a `mechanic` id. `Delivery.Kind` is `{ MECHANIC,

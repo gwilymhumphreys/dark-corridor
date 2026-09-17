@@ -98,7 +98,9 @@ func modify_incoming(amount: float, target, ctx) -> float:
 
 
 ## Absorb from an incoming hit, returning the unabsorbed remainder (Shield overrides; mutates pool).
-func absorb(amount: float, incoming_flags: int, target, ctx) -> float:
+## `mechanic_id` names the mechanic that dealt the damage — the shield pool spends its multiplier
+## against it (docs/plans/mechanics.md → Shield).
+func absorb(amount: float, incoming_flags: int, target, ctx, mechanic_id: String = '') -> float:
   return amount
 
 

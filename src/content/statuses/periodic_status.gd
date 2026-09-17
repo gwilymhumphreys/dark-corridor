@@ -20,7 +20,7 @@ func setup(amount: float, dur: float, src, applied_flags: int) -> void:
 func on_step(target, ctx) -> bool:
   if ticker.step():
     if target is Actor:
-      target.take_damage(count * damage_per_tick, flags)
+      target.take_damage(count * damage_per_tick, flags, id)
     count -= 1.0
     ticker.reset()
     return count <= 0.0
