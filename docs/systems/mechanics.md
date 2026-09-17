@@ -103,3 +103,21 @@ Each mechanic has a variable in the "Mechanics" section of `src/data/colours.gd`
 `HEAL`, `POISON`, `BURN`, `BLEED`, `REGEN` and `CRIT`. Burn, bleed, regen and crit are placeholders for
 the owner to re-tint. Interface palette files name them in lower case (`attack`, `poison`); see
 [interface_palette.md](interface_palette.md).
+
+## Health bar numbers
+
+`StatusNumbers` (`src/scenes/combat/status_numbers.tscn` / `.gd`) sits beside the health bar in all
+three places that draw one (the player portrait in `combat_view_framed.tscn`, `enemy_hud.tscn` and
+`ally_slot.tscn`). It holds one `Label` per mechanic status — shield, poison, burn, bleed, regen —
+and each frame shows the actor's stack count for that status in the mechanic's colour (the numbers
+are not translated). It reads the actor's statuses; writes nothing. The enemy HUD's status-icon row
+(`StatusIcon`) shows only the OUTSIDE-set statuses — the mechanic statuses read off the numbers
+instead.
+
+## Tooltip keyword cards
+
+`KeywordCatalog.has` / `get_entry` resolve a **mechanic** id from its `Mechanic` class (name /
+desc / colour / icon), so attack, heal, shield, poison, burn, bleed, regen and crit all have cards
+([tooltips.md](tooltips.md)). `TooltipContent.keyword_ids` adds each effect's mechanic id (attack and
+heal included) and `crit` for an item with a crit chance, and the tooltip stat block gets a
+`'Crit chance: {0}%'` line for such an item.

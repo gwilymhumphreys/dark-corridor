@@ -114,8 +114,11 @@ mockup), composition:
   moves it in from its scene rectangle by the corridor margin and draws the optional border and overlay
   ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
-  a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
-  Each status shows as a `status_icon.tscn`: the status's icon on a square of its colour.
+  a **status-icon row + HP bar + status numbers**, and the enemy's **name**
+  (`Actor.display_name`, `tr()`'d). Each OUTSIDE-set status shows as a `status_icon.tscn`:
+  the status's icon on a square of its colour. The mechanic statuses (shield, poison, burn,
+  bleed, regen) show as **stack counts beside the HP bar** (`status_numbers.tscn`,
+  `StatusNumbers` — one label per mechanic status in its colour, numbers untranslated).
   The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
   count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`. The HUD / ally-slot item cells
@@ -123,7 +126,7 @@ mockup), composition:
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
-  "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
+  status numbers, "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
   a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding the item's icon (`ItemDef.icon`), a
   centred row of effect-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per value-bearing effect)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
@@ -131,7 +134,7 @@ mockup), composition:
   whose edge is torn like the paper edges of the print look) + fire recoil),
   with the **potion slots** (`potion_slot.tscn`, the potion's icon on the potion colour) above it.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
-  + HP + name + item cells), filling **left-to-right** (2 left of the player, then 2 right —
+  + HP + status numbers + name + item cells), filling **left-to-right** (2 left of the player, then 2 right —
   capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
   `AllyLeft` / `AllyRight`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
   participating, revived to full next fight); a **dead combat-scoped token is reaped** like an

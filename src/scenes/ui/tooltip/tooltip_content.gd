@@ -87,7 +87,10 @@ static func _value_seg(item: Item, effect: ItemEffect) -> Dictionary:
 
 
 func _stat_lines(item: Item) -> Array:
-  return [tr('Every {0}s').format([fmt(item.def.cooldown)])]
+  var lines: Array = [tr('Every {0}s').format([fmt(item.def.cooldown)])]
+  if item.def.crit_chance > 0.0:
+    lines.append(tr('Crit chance: {0}%').format([fmt(item.def.crit_chance * 100.0)]))
+  return lines
 
 
 ## The single-target DAMAGE line's {1} target phrase. Baseline copy (owner refines). Literal tr()
@@ -118,25 +121,29 @@ func _summon_text(effect: ItemEffect) -> Dictionary:
 
 # --- keyword extraction (catalog-gated) --------------------------------------
 
-## The keyword ids referenced by `item`, deduped, statuses first (in effect order) then mechanics
-## (fixed order), keeping only those present in KeywordCatalog (docs/systems/tooltips.md). An absent
-## id is silently dropped — that is how a mechanic is enabled (by authoring its catalog entry).
+## The keyword ids referenced by `item`, deduped, mechanics + statuses first (in effect order)
+## then mechanic keywords (fixed order), keeping only those present in KeywordCatalog
+## (docs/systems/tooltips.md). An absent id is silently dropped — that is how a mechanic keyword
+## is enabled (by authoring its catalog entry).
 static func keyword_ids(item: Item) -> Array[String]:
   var ids: Array[String] = []
-  # Statuses first, in effect order: applied statuses, then consumed-fuel statuses. A mechanic
-  # effect contributes the status its mechanic applies (shield; attack / heal apply none).
+  # In effect order: applied statuses, each effect's mechanic (attack / heal included), then
+  # consumed-fuel statuses.
   for effect: ItemEffect in item.def.effects:
     if effect.kind == Delivery.Kind.APPLY_STATUS:
       _add_keyword(ids, effect.status_id)
     if effect.mechanic != '':
-      _add_keyword(ids, MechanicRegistry.get_mechanic(effect.mechanic).status_id)
+      _add_keyword(ids, effect.mechanic)
     if effect.consume_id != '':
       _add_keyword(ids, effect.consume_id)
+  # An item with a crit chance carries the crit keyword.
+  if item.def.crit_chance > 0.0:
+    _add_keyword(ids, CritMechanic.ID)
   for sub: Dictionary in item.def.trigger_subs:
     var filter: Variant = sub.get('filter', null)
     if filter is String:
       _add_keyword(ids, filter)
-  # Then mechanics, in the catalog's fixed order — only those this item actually references.
+  # Then mechanic keywords, in the catalog's fixed order — only those this item actually references.
   for mech: String in KeywordCatalog.MECHANIC_ORDER:
     if _item_uses_mechanic(item, mech):
       _add_keyword(ids, mech)

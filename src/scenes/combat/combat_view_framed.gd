@@ -36,6 +36,7 @@ var _player: Actor
 @onready var _portrait_image: TextureRect = $BottomBar/PlayerPortrait/Portrait/Image
 @onready var _player_hp_fill: ColorRect = $BottomBar/PlayerPortrait/HP/Fill
 @onready var _player_hp_label: Label = $BottomBar/PlayerPortrait/HP/Label
+@onready var _player_status_numbers: StatusNumbers = $BottomBar/PlayerPortrait/StatusNumbers
 @onready var _ally_left: HBoxContainer = $BottomBar/AllyLeft
 @onready var _ally_right: HBoxContainer = $BottomBar/AllyRight
 @onready var _corridor_area: Control = $CorridorArea
@@ -55,6 +56,7 @@ var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the 
 func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _cm = cm
   _player = player
+  _player_status_numbers.actor = player
   if player.portrait != '':
     _portrait_image.texture = load(player.portrait)
   _build_player_items(player)

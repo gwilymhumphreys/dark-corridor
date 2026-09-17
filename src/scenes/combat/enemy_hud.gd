@@ -12,6 +12,7 @@ var actor: Actor
 
 @onready var _items: HBoxContainer = $Items
 @onready var _statuses: HBoxContainer = $HpRow/Statuses
+@onready var _status_numbers: StatusNumbers = $HpRow/StatusNumbers
 @onready var _hp_fill: ColorRect = $HpRow/HP/Fill
 @onready var _hp_label: Label = $HpRow/HP/Label
 @onready var _name: Label = $Name
@@ -27,6 +28,7 @@ const CELL_SEPARATION: float = 8.0
 ## budgets the item row — cells shrink so a big loadout fits its share of the panel.
 func setup(target: Actor, timekeeper: Timekeeper = null, max_width: float = 0.0) -> void:
   actor = target
+  _status_numbers.actor = target
   _name.text = tr(actor.display_name) if actor.display_name != '' else ''
   var cell_px: float = CELL_PX
   if max_width > 0.0 and not actor.board.is_empty():
@@ -43,6 +45,7 @@ func setup(target: Actor, timekeeper: Timekeeper = null, max_width: float = 0.0)
 
 func _exit_tree() -> void:
   _cells.clear()
+  _status_numbers.actor = null
   actor = null
 
 
@@ -60,12 +63,17 @@ func _refresh_hp() -> void:
   _hp_label.text = '%d / %d' % [int(round(actor.hp)), int(round(actor.max_hp))]
 
 
-## Status icons — one StatusIcon (the status's icon on its colour) per active actor-targeted
-## status. Rebuilt each frame since statuses accrue / expire during combat.
+## Status icons — one StatusIcon (the status's icon on its colour) per active OUTSIDE-set
+## status (the mechanic statuses read off the StatusNumbers beside the HP bar). Rebuilt each
+## frame since statuses accrue / expire during combat.
 func _refresh_statuses() -> void:
   if actor == null:
     return
-  var want: int = actor.statuses.size()
+  var outside: Array[StatusEffect] = []
+  for s in actor.statuses:
+    if not MechanicRegistry.has(s.id):
+      outside.append(s)
+  var want: int = outside.size()
   while _statuses.get_child_count() > want:
     # Deferred frees for nodes (CLAUDE.md) — but remove from the tree NOW so the
     # child count this loop reads actually shrinks.
@@ -75,7 +83,7 @@ func _refresh_statuses() -> void:
   while _statuses.get_child_count() < want:
     _statuses.add_child(STATUS_ICON.instantiate())
   for i in want:
-    (_statuses.get_child(i) as StatusIcon).show_status(actor.statuses[i])
+    (_statuses.get_child(i) as StatusIcon).show_status(outside[i])
 
 
 func hud_centre() -> Vector2:

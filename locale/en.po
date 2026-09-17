@@ -708,6 +708,10 @@ msgid "Every {0}s"
 msgstr "Every {0}s"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Crit chance: {0}%"
+msgstr "Crit chance: {0}%"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "yourself"
 msgstr "yourself"
 

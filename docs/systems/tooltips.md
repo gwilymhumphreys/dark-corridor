@@ -14,7 +14,7 @@ holds the design rationale, the ratified decisions, and the prior-art lineage
 
 - **Main panel** (nearest the item) — name (rarity-tinted), generated effect lines
   with **live values** and inline keyword **chips**, an optional authored flavor
-  line, and a stat block (cooldown).
+  line, and a stat block (cooldown, plus a crit-chance line for an item with one).
 - **Keyword column** (cards beside the main panel) — one card per keyword the item
   references (statuses + mechanics), **all shown at once**.
 - **Per-keyword tooltip** — hovering a chip pops a Godot built-in custom tooltip
@@ -104,20 +104,24 @@ read-only stack getter); a static consume number would mislead.
 ## Keywords (catalog-gated)
 
 `TooltipContent.keyword_ids(item)` collects candidate ids and keeps only those present
-in `KeywordCatalog` (statuses first in effect order, then mechanics in a fixed order):
+in `KeywordCatalog` (mechanics + statuses in effect order, then mechanic keywords in a
+fixed order):
 
-- per effect: `APPLY_STATUS` → its `status_id`; a `MECHANIC` effect → its mechanic's `status_id` (shield); `consume_id` → that status + `kw:fuel`;
+- per effect: `APPLY_STATUS` → its `status_id`; a `MECHANIC` effect → its **mechanic id**
+  (attack and heal included, so they get cards); `consume_id` → that status + `kw:fuel`;
   `SUMMON` → `kw:summon`; AOE shapes → `kw:aoe`; item-target shapes → `kw:item_target`;
   the `UNBLOCKABLE` flag → `kw:unblockable`.
+- an item with a crit chance → `crit` (after the effect ids).
 - `trigger_subs` → `kw:trigger` + each sub's `filter` (a status id); an **`ITEM_DESTROYED`** sub
   instead surfaces **`kw:reclaim`** (Reclaim, the destroy-payoff keyword — the Fleshmancer's;
   `character_ideas.md`), not generic `kw:trigger`, and its trigger line renders the Reclaim chip.
 - `item.enchant` → `kw:enchant`.
 
-`KeywordCatalog` resolves a **status** id from its `StatusEffect` subclass
-(name/desc/color/icon — one home per status) and a **mechanic** id (`kw:*`) from
-entries authored in the catalog. An id absent from the catalog yields no card,
-silently — that absence is how the owner gates a mechanic keyword.
+`KeywordCatalog` resolves a **mechanic** id from its `Mechanic` class (name/desc/color/icon —
+one home per mechanic, [mechanics.md](mechanics.md)), a **status** id from its `StatusEffect`
+subclass, and a **mechanic keyword** id (`kw:*`) from entries authored in the catalog. An id
+absent from the catalog yields no card, silently — that absence is how the owner gates a
+mechanic keyword.
 
 ## Built-in custom tooltip — the double-panel contract
 

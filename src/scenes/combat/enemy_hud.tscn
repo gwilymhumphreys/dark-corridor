@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/enemy_hud.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="2"]
 [ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
+[ext_resource type="PackedScene" path="res://src/scenes/combat/status_numbers.tscn" id="status_numbers"]
 
 [node name="EnemyHud" type="VBoxContainer"]
 theme_override_constants/separation = 10
@@ -63,6 +64,9 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="StatusNumbers" parent="HpRow" instance=ExtResource("status_numbers")]
+layout_mode = 2
 
 [node name="Name" type="Label" parent="."]
 layout_mode = 2
