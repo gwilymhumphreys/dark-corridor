@@ -738,6 +738,10 @@ func _reap_from(roster: Array, player_side_roster: bool) -> void:
 func _finish(won: bool) -> void:
   _resolved = true
   _player_won = won
+  # Cooldowns are combat-scoped (decision #26): empty them when the fight ends, so the board does
+  # not sit mid-charge between fights. _register_actor also zeroes them at the next fight's start.
+  for it in _items:
+    it.cooldown.accum = 0.0
   set_physics_process(false)
   resolved.emit(won)
 

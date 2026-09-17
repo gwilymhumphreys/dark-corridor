@@ -1,24 +1,20 @@
 class_name PrintFrame
 extends Control
 ## The printed frame around the combat corridor (docs/systems/print_frame.md), set from the F5 print
-## panel. It moves the corridor in from its place in the scene by the corridor margin, sizes the border
-## behind the corridor and the overlay on top of it, and tells the background wear where the corridor
-## is on screen so folds can line up with it. The border and the overlay are hidden while their effects
-## are off.
+## panel. It sizes the border behind the corridor and the overlay on top of it, and tells the background
+## wear where the corridor is on screen so folds can line up with it. The corridor itself is placed by
+## the screen sections (`ScreenSections`). The border and the overlay are hidden while their effects are
+## off.
 
 ## The corridor panel the frame surrounds; a sibling after this node, so the border draws behind it.
 @export var corridor: Control
 ## The rectangle over the corridor that draws wear and a worn edge; a sibling after the corridor.
 @export var overlay: ColorRect
 
-var _scene_rect: Rect2   # the corridor's place in the scene, before the margin
-var _margin: float = -1.0
-
 @onready var _border: ColorRect = $Border
 
 
 func _ready() -> void:
-  _scene_rect = Rect2(corridor.position, corridor.size)
   _border.material = PrintLook.border_material
   overlay.material = PrintLook.overlay_material
   _process(0.0)
@@ -32,11 +28,6 @@ func _exit_tree() -> void:
 
 
 func _process(_delta: float) -> void:
-  var margin: float = PrintLook.print_setting('corridor_margin')
-  if margin != _margin:
-    _margin = margin
-    corridor.position = _scene_rect.position + Vector2(margin, margin)
-    corridor.size = _scene_rect.size - Vector2(margin, margin) * 2.0
   _place_border()
   _place_overlay()
   PrintLook.background_material.set_shader_parameter('print_corridor_rect', _screen_rect(corridor))

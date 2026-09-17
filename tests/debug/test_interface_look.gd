@@ -16,8 +16,8 @@ const SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/ally_slot.tscn', 'Left/HP/Fill'],
   ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Background'],
   ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Fill'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'BottomBar/PlayerPortrait/Portrait/Image'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'BottomBar/PlayerPortrait/HP/Fill'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Portrait/Image'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/HP/Fill'],
 ]
 
 

@@ -9,6 +9,10 @@ extends Control
 ## to RunManager.throw_potion (which activates it through the Combat manager).
 signal potion_thrown(index: int)
 
+## The screen sections the view places its parts in (docs/systems/ui_layout.md#screen-sections), set by
+## the run screen before the view enters the tree. Left null, a variant makes its own.
+var sections: ScreenSections
+
 
 ## Bind the live fight (the view reads the full rosters off the CombatManager).
 func bind(_cm: CombatManager, _player_actor: Actor, _potions: Array) -> void:

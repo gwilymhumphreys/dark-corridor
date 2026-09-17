@@ -12,7 +12,6 @@ extends Node2D
 
 signal big_hit(strength: float)   # a hit of at least BIG_HIT_DAMAGE landed; strength is 0 to 1
 
-const SCATTER_RADIUS: float = 44.0   # how far a landing point can be nudged from the target centre
 const BIG_HIT_DAMAGE: float = 200.0   # the smallest hit that pauses and shakes the screen
 const BIGGEST_HIT_DAMAGE: float = 2000.0   # the hit that pauses and shakes the most
 
@@ -52,17 +51,6 @@ func _exit_tree() -> void:
   _sounded.clear()
 
 
-## A small fixed nudge for one delivery's landing point, so several hits on the same target do not
-## stack their rings and numbers in one spot. It is derived from the delivery's own identity rather
-## than drawn each frame, so the effect stays where it landed instead of jittering, and it touches
-## no game state — the autotest draws nothing, so seeded runs are unchanged.
-static func scatter_offset(delivery: Delivery) -> Vector2:
-  var id: int = delivery.get_instance_id()
-  var angle: float = float(hash(id) % 3600) / 3600.0 * TAU
-  var distance: float = float(hash(id * 31 + 7) % 1000) / 1000.0 * SCATTER_RADIUS
-  return Vector2(cos(angle), sin(angle)) * distance
-
-
 func _draw() -> void:
   if combat == null or combat.timekeeper == null:
     return
@@ -77,11 +65,11 @@ func _draw() -> void:
       if travel_dur > 0.0:
         var src: Vector2 = layout.item_pos(d.source)
         # The same scattered point the ring will use, so the disc does not jump on landing.
-        var dst: Vector2 = layout.target_pos(d.target) + scatter_offset(d)   # Actor OR Item target
+        var dst: Vector2 = layout.target_pos(d.target) + EffectDrawer.scatter_offset(d)   # Actor OR Item target
         var t: float = clampf((now - d.fire_time) / travel_dur, 0.0, 1.0)
         _projectile.draw_effect(self, d, src.lerp(dst, t), now - d.fire_time)   # PLACEHOLDER shape
       continue
-    var landing: Vector2 = layout.target_pos(d.target) + scatter_offset(d)
+    var landing: Vector2 = layout.target_pos(d.target) + EffectDrawer.scatter_offset(d)
     if _impact_drawers.has(d.kind):
       var drawer: EffectDrawer = _impact_drawers[d.kind]
       drawer.draw_effect(self, d, landing, now - d.impact_time)

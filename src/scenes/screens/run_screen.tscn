@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/run_screen.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/screen_background.gd" id="named_colour"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://src/scenes/screens/speed_button.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/combat_stats_readout.tscn" id="4"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="5"]
+[ext_resource type="PackedScene" path="res://src/ui/screen_sections.tscn" id="6"]
 
 [node name="RunScreen" type="Control"]
 layout_mode = 3
@@ -30,15 +31,28 @@ folds_shown = true
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
-[node name="MapStrip" parent="HUD" instance=ExtResource("2")]
-anchor_right = 0.0
-offset_left = 1720.0
-offset_top = 8.0
-offset_right = 2550.0
-offset_bottom = 118.0
-grow_horizontal = 1
+[node name="Sections" parent="HUD" instance=ExtResource("6")]
 
-[node name="SpeedButton" parent="HUD" instance=ExtResource("3")]
+[node name="MapStrip" parent="HUD/Sections/Info" instance=ExtResource("2")]
+offset_bottom = 110.0
+
+[node name="GoldReadout" type="Label" parent="HUD/Sections/Info"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -48.0
+offset_right = 296.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 36
+text = "Gold: 0"
+vertical_alignment = 1
+
+[node name="SpeedButton" parent="HUD/Sections/Info" instance=ExtResource("3")]
+offset_left = -110.0
+offset_top = -70.0
+offset_right = 0.0
+offset_bottom = 0.0
 
 [node name="StatsReadout" parent="HUD" instance=ExtResource("4")]
 visible = false
@@ -46,18 +60,6 @@ offset_left = 24.0
 offset_top = 24.0
 offset_right = 280.0
 offset_bottom = 120.0
-
-[node name="GoldReadout" type="Label" parent="HUD"]
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -68.0
-offset_right = 320.0
-offset_bottom = -20.0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 36
-text = "Gold: 0"
-vertical_alignment = 1
 
 [node name="PausedPanel" type="PanelContainer" parent="HUD"]
 visible = false

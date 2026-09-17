@@ -36,7 +36,7 @@ func setup(candidates: Array) -> void:
     cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     _cards.add_child(cell)
     var item := Item.new(candidates[i])
-    item.cooldown.accum = item.cooldown.threshold   # shown charged, so no cooldown fill covers the icon
+    cell.show_cooldown = false   # a reward is not in a fight, so no cooldown fill covers the icon
     cell.setup(item)
     cell.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
     cell.gui_input.connect(_on_cell_input.bind(i))

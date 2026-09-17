@@ -40,9 +40,10 @@ var _pause_menu: PauseMenu = null
 @onready var _paused_panel: PanelContainer = $HUD/PausedPanel   # shown while paused with Space (no menu)
 var _settings: SettingsScreen = null
 
-@onready var _map: MapStrip = $HUD/MapStrip
+@onready var _sections: ScreenSections = $HUD/Sections   # the screen's four sections; the combat view places its parts in them
+@onready var _map: MapStrip = $HUD/Sections/Info/MapStrip
 @onready var _stats: CombatStatsReadout = $HUD/StatsReadout
-@onready var _gold: Label = $HUD/GoldReadout
+@onready var _gold: Label = $HUD/Sections/Info/GoldReadout
 
 
 func _ready() -> void:
@@ -455,6 +456,7 @@ func _ensure_view() -> void:
 
 func _mount_view(cm: CombatManager) -> void:
   _view = COMBAT_VIEW.instantiate()
+  _view.sections = _sections
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
   _view.bind(cm, _run.player, _run.potions)   # the view reads the full rosters off the CM (none without a fight)

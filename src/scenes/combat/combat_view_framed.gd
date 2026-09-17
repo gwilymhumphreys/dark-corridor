@@ -1,10 +1,10 @@
 class_name CombatViewFramed
 extends CombatView
-## The framed combat view (docs/systems/ui_layout.md) — the corridor-forward layout: the corridor large
-## top-left with each **enemy floating over it** (`enemy_hud`: name + status + HP + item cells),
-## the **player's portrait + HP centre-bottom** with its board as a **column down the right edge**,
-## and run-scoped allies / combat-scoped summon tokens in the **slots flanking the player**
-## (`ally_slot`). It reads the CombatManager's rosters each frame, so mid-fight summons (a boss
+## The framed combat view (docs/systems/ui_layout.md) — the corridor-forward layout, placed in the
+## screen sections: the corridor top left with each **enemy floating over it** (`enemy_hud`: name +
+## status + HP + item cells), the potions and the player's board top right, and the **player's portrait
+## + HP** lower left with run-scoped allies / combat-scoped summon tokens in the **slots flanking the
+## player** (`ally_slot`). It reads the CombatManager's rosters each frame, so mid-fight summons (a boss
 ## add, a player token) appear as they spawn. Hosts the VFX wall; reads logic, writes nothing.
 ## The corridor stays as the mood backdrop + the lead occupant for the approach. No alpha.
 ## (The swappable surface — bind/release/positions + potion_thrown — is the CombatView base.)
@@ -14,9 +14,11 @@ const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
 const ENEMY_HUD: PackedScene = preload('res://src/scenes/combat/enemy_hud.tscn')
 const ALLY_SLOT: PackedScene = preload('res://src/scenes/combat/ally_slot.tscn')
 const TOOLTIP_CLUSTER: PackedScene = preload('res://src/scenes/ui/tooltip/tooltip_cluster.tscn')
+const SCREEN_SECTIONS: PackedScene = preload('res://src/ui/screen_sections.tscn')
 
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
+const PORTRAIT_MIN_SIZE: float = 40.0   # the player portrait shrinks to fit its section, down to this
 # A big hit pauses the fight and shakes this view, both growing with VfxDriver.big_hit_strength.
 const HIT_PAUSE_MIN: float = 0.05     # real seconds
 const HIT_PAUSE_MAX: float = 0.15
@@ -28,16 +30,22 @@ const SHAKE_DURATION_MAX: float = 0.45
 var _cm: CombatManager
 var _player: Actor
 
-@onready var _corridor: CombatCorridor = $CorridorPanel
+@onready var _corridor_part: Control = $Corridor
+@onready var _corridor: CombatCorridor = $Corridor/CorridorPanel
 @onready var _enemy_huds_box: Control = $EnemyArea/EnemyHuds
-@onready var _player_items: GridContainer = $RightPanel/PlayerItems
-@onready var _potions: HBoxContainer = $RightPanel/Potions
-@onready var _portrait: Control = $BottomBar/PlayerPortrait/Portrait
-@onready var _portrait_image: TextureRect = $BottomBar/PlayerPortrait/Portrait/Image
-@onready var _player_hp_fill: ColorRect = $BottomBar/PlayerPortrait/HP/Fill
-@onready var _player_hp_label: Label = $BottomBar/PlayerPortrait/HP/Label
-@onready var _ally_left: HBoxContainer = $BottomBar/AllyLeft
-@onready var _ally_right: HBoxContainer = $BottomBar/AllyRight
+@onready var _items_part: VBoxContainer = $Items
+@onready var _player_items: GridContainer = $Items/PlayerItems
+@onready var _potions: HBoxContainer = $Items/Potions
+@onready var _portraits_part: HBoxContainer = $Portraits
+@onready var _player_portrait_box: VBoxContainer = $Portraits/PlayerPortrait
+@onready var _portrait: Control = $Portraits/PlayerPortrait/Portrait
+@onready var _portrait_image: TextureRect = $Portraits/PlayerPortrait/Portrait/Image
+@onready var _player_hp: Control = $Portraits/PlayerPortrait/HP
+@onready var _player_hp_fill: ColorRect = $Portraits/PlayerPortrait/HP/Fill
+@onready var _player_hp_label: Label = $Portraits/PlayerPortrait/HP/Label
+@onready var _player_name: Label = $Portraits/PlayerPortrait/Name
+@onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
+@onready var _ally_right: HBoxContainer = $Portraits/AllyRight
 @onready var _corridor_area: Control = $CorridorArea
 @onready var _vfx: VfxDriver = $VfxWall
 
@@ -49,7 +57,52 @@ var _shake_tween: Tween
 var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the fight's seeded one
 
 
-## Bind the live fight: the player's portrait + HP (centre-bottom) and its board column (right),
+func _ready() -> void:
+  if sections == null:
+    sections = SCREEN_SECTIONS.instantiate()
+    add_child(sections)
+    move_child(sections, 0)
+  sections.sections_changed.connect(_place_in_sections)
+  _place_in_sections()
+
+
+## Put the corridor, the item column and the portrait row in their screen sections. The item columns and
+## portraits are fitted to the new sizes first, so no container is held larger than its section.
+func _place_in_sections() -> void:
+  var corridor_rect: Rect2 = sections.section('Corridor').get_global_rect()
+  var items_rect: Rect2 = sections.section('Items').get_global_rect()
+  var portraits_rect: Rect2 = sections.section('Portraits').get_global_rect()
+  _fit_item_columns(items_rect.size.x)
+  _fit_portraits(portraits_rect.size.y)
+  _place(_corridor_part, corridor_rect)
+  _place(_corridor_area, corridor_rect)
+  _place(_items_part, items_rect)
+  _place(_portraits_part, portraits_rect)
+
+
+func _place(part: Control, rect: Rect2) -> void:
+  part.global_position = rect.position
+  part.size = rect.size
+
+
+## As many item columns as fit the section's width.
+func _fit_item_columns(width: float) -> void:
+  var gap: float = _player_items.get_theme_constant('h_separation')
+  _player_items.columns = maxi(1, int((width + gap) / (ItemCell.CELL_SIZE.x + gap)))
+
+
+## The player portrait stays square and takes the height left after the HP bar and name. Each ally slot
+## fits itself the same way.
+func _fit_portraits(height: float) -> void:
+  var gap: float = _player_portrait_box.get_theme_constant('separation')
+  var side: float = floorf(height - _player_hp.custom_minimum_size.y - _player_name.get_combined_minimum_size().y - gap * 2.0)
+  side = maxf(side, PORTRAIT_MIN_SIZE)
+  _portrait.custom_minimum_size = Vector2(side, side)
+  for slot in _ally_slots.values():
+    (slot as AllySlot).fit_height(height)
+
+
+## Bind the live fight: the player's portrait + HP (lower left) and its board column (top right),
 ## the potion slots, a HUD per enemy / a slot per ally-or-token, and the VFX wall on this layout.
 ## `cm` is null outside a fight (an event beat): the player's side is shown with no enemies.
 func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
@@ -64,6 +117,8 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _refresh_player_hp()
   _vfx.setup(_cm, self)
   _vfx.big_hit.connect(_on_big_hit)
+  if _cm == null:
+    _set_cooldowns_shown(false)   # no fight (an event beat): the board shows no cooldown fill
   _cluster = TOOLTIP_CLUSTER.instantiate()
   add_child(_cluster)   # a CanvasLayer — renders in screen space regardless of this Control parent
 
@@ -122,6 +177,7 @@ func _sync_rosters() -> void:
       var slot: AllySlot = ALLY_SLOT.instantiate()
       _pick_ally_box().add_child(slot)
       slot.setup(a, _cm.timekeeper)
+      slot.fit_height(sections.section('Portraits').size.y)
       _ally_slots[a] = slot
 
 
@@ -194,8 +250,8 @@ func set_enemy_depth(depth_cells: float) -> void:
   _corridor.set_enemy_depth(depth_cells)
 
 
-func set_walk_distance(sections: float) -> void:
-  _corridor.set_walk_distance(sections)
+func set_walk_distance(corridor_sections: float) -> void:
+  _corridor.set_walk_distance(corridor_sections)
 
 
 ## Stop reading the live fight before it is torn down (the run screen calls this right before
@@ -203,10 +259,18 @@ func set_walk_distance(sections: float) -> void:
 func release() -> void:
   _vfx.combat = null
   _corridor.show_hits([], 0.0)
+  _set_cooldowns_shown(false)   # the fight is over, so clear the fills left at its last moment
   # Drop the hovered Item ref BEFORE the run frees the CombatManager + its items (the Actor↔Item
   # cycle is broken at dissolve() — the cluster must not retain an Item across teardown).
   if _cluster != null:
     _cluster.hide_cluster()
+
+
+func _set_cooldowns_shown(shown: bool) -> void:
+  for cell in _player_cells.values():
+    (cell as ItemCell).show_cooldown = shown
+  for slot in _ally_slots.values():
+    (slot as AllySlot).set_cooldowns_shown(shown)
 
 
 func _exit_tree() -> void:
@@ -218,6 +282,9 @@ func _exit_tree() -> void:
   _cm = null
   _player = null
   _portrait_image.texture = null
+  if sections != null and sections.sections_changed.is_connected(_place_in_sections):
+    sections.sections_changed.disconnect(_place_in_sections)
+  sections = null
   _enemy_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()

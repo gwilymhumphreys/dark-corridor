@@ -2,13 +2,15 @@ class_name PrintPanel
 extends LookPanel
 ## The print panel (docs/systems/print_frame.md, docs/systems/panel_wear.md), toggled with F5 by
 ## `DebugPanels`: the printed look around the corridor and on UI panels. One section per group of the
-## background wear, then Layout (the corridor margin), then the border and the wear over the corridor,
+## background wear, then Layout (the padding and split point of the screen sections), then the border and the wear over the corridor,
 ## then the panel wear groups. Its saved looks are print looks, in `DebugPanelsAutoload.PRINT_LOOK_DIR`,
 ## separate from the look panel's; reset leaves the corridor look alone.
 
 ## Print frame settings shown in the Layout section: setting -> [min, max, step].
 const LAYOUT_PROPERTIES: Dictionary = {
-  'corridor_margin': [0.0, 160.0, 1.0],
+  'padding': [0.0, 160.0, 1.0],
+  'split_across': [800.0, 2400.0, 1.0],
+  'split_down': [600.0, 1400.0, 1.0],
 }
 
 

@@ -20,6 +20,15 @@ const RECOIL_DURATION: float = 0.18    # combat-clock seconds
 
 var item: Item
 var cell_size: Vector2 = CELL_SIZE
+# False outside a fight: the fill is hidden whatever the item's progress. Applies at once.
+var show_cooldown: bool = true:
+  set(value):
+    show_cooldown = value
+    if not value:
+      _recoil_start = -1.0   # the reset at fight end is not a fire; drop any recoil it started
+      scale = Vector2.ONE
+    if is_node_ready():
+      _update_cooldown()
 
 @onready var _pills: HBoxContainer = $Pills
 @onready var _icon: TextureRect = $Frame/Icon
@@ -110,7 +119,7 @@ func _process(_delta: float) -> void:
   if item == null:
     return
   var progress: float = item.cooldown.progress()
-  if progress < _last_progress - 0.2:   # cooldown reset -> it just fired
+  if show_cooldown and progress < _last_progress - 0.2:   # cooldown reset -> it just fired
     _recoil_start = _timekeeper.render_time() if _timekeeper != null else -1.0
   _last_progress = progress
   _update_recoil()
@@ -134,10 +143,10 @@ func _update_recoil() -> void:
 
 
 ## The fill covers the cell up to the cooldown's progress, and is hidden outright once the item is
-## ready, so a charged item shows its art unobscured.
+## ready, so a charged item shows its art unobscured. Hidden entirely when show_cooldown is off.
 func _update_cooldown() -> void:
   var progress: float = item.cooldown.progress() if item != null else 1.0
-  _cooldown.visible = progress < 1.0
+  _cooldown.visible = show_cooldown and progress < 1.0
   if _cooldown.visible:
     (_cooldown.material as ShaderMaterial).set_shader_parameter('cooldown_progress', progress)
 

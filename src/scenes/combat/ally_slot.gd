@@ -7,10 +7,15 @@ extends HBoxContainer
 ## cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
+const PORTRAIT_MAX_SIZE: float = 110.0   # the portrait's size when the row is tall enough
+const PORTRAIT_MIN_SIZE: float = 40.0
 
 var actor: Actor
 
+@onready var _left: VBoxContainer = $Left
+@onready var _portrait_frame: Control = $Left/Portrait
 @onready var _portrait: TextureRect = $Left/Portrait/Image
+@onready var _hp: Control = $Left/HP
 @onready var _hp_fill: ColorRect = $Left/HP/Fill
 @onready var _hp_label: Label = $Left/HP/Label
 @onready var _name: Label = $Left/Name
@@ -32,6 +37,21 @@ func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
     cell.setup(item, timekeeper)
     _cells[item] = cell
   _refresh_hp()
+
+
+## Shrink the portrait, keeping it square, so the portrait, HP bar and name fit in `height`. It never
+## grows past its size in the scene.
+func fit_height(height: float) -> void:
+  var gap: float = _left.get_theme_constant('separation')
+  var side: float = floorf(height - _hp.custom_minimum_size.y - _name.get_combined_minimum_size().y - gap * 2.0)
+  side = clampf(side, PORTRAIT_MIN_SIZE, PORTRAIT_MAX_SIZE)
+  _portrait_frame.custom_minimum_size = Vector2(side, side)
+
+
+## Show or hide the cooldown fill on this slot's item cells (hidden once the fight is over).
+func set_cooldowns_shown(shown: bool) -> void:
+  for cell in _cells.values():
+    (cell as ItemCell).show_cooldown = shown
 
 
 func _exit_tree() -> void:

@@ -43,7 +43,9 @@ Because fire-rate and travel are decoupled (combat_model.md), many Deliveries ca
 where it lands, and a number for damage and healing, each in the delivery's colour. The number
 (`DamageNumberDrawer`) has a black outline. Its size grows with the amount on a logarithmic curve,
 from a fixed base size to a maximum, so it rises quickly for small amounts and slowly for large
-ones. It floats up while drifting toward the side its landing point was nudged to, then quickly
+ones. It floats up while drifting sideways, away from the target's centre on the side its landing
+point was nudged to, by an amount that grows with how far off centre it landed plus a small
+random amount fixed per delivery, with a slight side-to-side wave, then quickly
 grows and shrinks away. Heals show a '+' in front. The landed delivery is kept for
 `Balance.DELIVERY_VISUAL_HOLD`, which must be at least the number's duration.
 
@@ -63,8 +65,9 @@ that kind, so a new effect is a new file rather than another branch in `_draw()`
 and status application currently share one `ImpactRingDrawer`; `SUMMON` and `CREATE_ITEM` have no
 entry and so draw nothing.
 
-A landing point is nudged from the target's centre by `VfxDriver.scatter_offset`, within
-`SCATTER_RADIUS`. The nudge comes from the delivery's own identity rather than being drawn each
+A landing point is nudged from the target's centre by `EffectDrawer.scatter_offset`, within
+`EffectDrawer.SCATTER_RADIUS`. It lives on the drawer base class so drawers never refer back to
+`VfxDriver`; the two scripts referring to each other made Godot leak scripts at exit. The nudge comes from the delivery's own identity rather than being drawn each
 frame, so an effect stays where it landed, and the projectile flies to the same nudged point. This
 is what stops several hits on one creature stacking their rings and numbers in a single unreadable
 spot.

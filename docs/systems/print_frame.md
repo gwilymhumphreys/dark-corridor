@@ -1,8 +1,8 @@
 # Print frame
 
 A dev tool for making the combat screen look like a printed sheet: a border around the corridor, the
-background wear carried over the corridor, a worn corridor edge, and the corridor moved in from the
-screen edges to make room. Every effect is set from the F5 print panel, together with the
+background wear carried over the corridor, a worn corridor edge, and the split point and padding of the
+[screen sections](ui_layout.md#screen-sections). Every effect is set from the F5 print panel, together with the
 [background wear](background_wear.md).
 
 **Location:** `src/ui/print_frame.gd` (class `PrintFrame`), `src/shaders/print_border.gdshader`,
@@ -14,13 +14,12 @@ delegates to `PrintLook`.
 
 ## How it works
 
-- `combat_view_framed.tscn` has a `PrintFrame` node before `CorridorPanel`, holding the `Border`
-  rectangle, and a `CorridorOverlay` rectangle after `CorridorPanel` and before the enemy HUDs. The
+- `combat_view_framed.tscn` has a `PrintFrame` node before the corridor panel, holding the `Border`
+  rectangle, and a `CorridorOverlay` rectangle after the corridor panel and before the enemy HUDs. The
   border draws behind the corridor; the overlay draws over the corridor image but under the HUDs and
   VFX, so text is never covered.
-- Each frame `PrintFrame` moves the corridor in from its place in the scene by the corridor margin on
-  every side, sizes the border and overlay around it, and hides either one while its effects are off.
-  Enemy HUDs follow the corridor through `CombatCorridor.enemy_anchor`.
+- Each frame `PrintFrame` sizes the border and overlay around the corridor and hides either one while
+  its effects are off. The corridor itself is placed by the screen sections.
 - It also sets `print_corridor_rect` on `PrintLook.background_material`, the corridor's rectangle in
   window pixels, so [folds](background_wear.md) can line up with the corridor. It clears it on leaving
   the tree.
@@ -32,7 +31,7 @@ delegates to `PrintLook`.
 
 | Group | Does |
 |---|---|
-| Layout | Corridor margin: how far the corridor moves in on each side. Default in `PRINT_SETTING_DEFAULTS` |
+| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Defaults in `PRINT_SETTING_DEFAULTS` |
 | Print Border | A solid line around the corridor: width, gap from the corridor, edge roughness, rubbed spots and their size |
 | Corridor Wear | The background wear, with its current settings, drawn over the corridor too |
 | Corridor Worn Edge | The corridor image's edges rubbed away into the background colour, heavier at the corners: width, amount, patch size, corners |

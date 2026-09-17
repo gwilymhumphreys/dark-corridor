@@ -78,6 +78,7 @@ Prevent leaks and invalid frees at scene changes / exit:
 - **Signals/tweens/timers**: Disconnect and stop in `_exit_tree()`
 - **Arrays/dicts with Node refs**: Clear in `_exit_tree()`
 - **Deferred frees**: Use `call_deferred('queue_free')` for nodes with render resources
+- **Script leaks at exit** ("ObjectDB instances were leaked" with only scripts and shaders listed): two scripts that refer to each other's `class_name`, or a `static var` used in a subclass of a script that refers to autoloads, keep scripts alive at exit. Move the shared code to one side, or keep the value on an autoload.
 
 ## Bugs
 

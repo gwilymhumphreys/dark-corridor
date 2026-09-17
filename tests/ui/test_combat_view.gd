@@ -83,9 +83,9 @@ func test_view_potion_slots_emit_the_throw_intent() -> void:
   cm.start()
   var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
   view.bind(cm, p, potions)
-  assert_eq(view.get_node('RightPanel/Potions').get_child_count(), 1, 'one slot per potion')
+  assert_eq(view.get_node('Items/Potions').get_child_count(), 1, 'one slot per potion')
   watch_signals(view)
-  var slot: Button = view.get_node('RightPanel/Potions').get_child(0)
+  var slot: Button = view.get_node('Items/Potions').get_child(0)
   slot.pressed.emit()
   assert_signal_emitted_with_parameters(view, 'potion_thrown', [0])
   cm.free()
@@ -133,9 +133,41 @@ func test_framed_view_binds_a_fight_without_error() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  assert_eq(view.get_node('RightPanel/PlayerItems').get_child_count(), 3, 'player board built (the right-edge column)')
+  assert_eq(view.get_node('Items/PlayerItems').get_child_count(), 3, 'player board built (the right-edge column)')
   assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 1, 'one HUD for the one enemy')
   cm.free()   # after_each dissolves the actors (breaks the Actor<->Item cycles)
+
+
+func test_release_clears_the_cooldown_fills() -> void:
+  # When the fight ends the board keeps its items, but the fills left at the last moment are cleared.
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var ally := _spawn(15.0, [ItemCatalog.ENEMY_CLAW])
+  var cm := CombatManager.new(p, [e], 0, [ally])
+  cm.start()
+  view.bind(cm, p, [])
+  var cell: ItemCell = view.get_node('Items/PlayerItems').get_child(0)
+  cell.item.cooldown.accum = cell.item.cooldown.threshold * 0.5   # part-way through its cooldown
+  cell._update_cooldown()
+  assert_true(cell.get_node('Cooldown').visible, 'a part-charged item shows its fill during the fight')
+  view.release()
+  cell._update_cooldown()
+  assert_false(cell.get_node('Cooldown').visible, 'the fill is cleared once the fight is over')
+  var ally_slot: AllySlot = view.get_node('Portraits/AllyLeft').get_child(0)
+  for ally_cell in ally_slot._cells.values():
+    assert_false((ally_cell as ItemCell).show_cooldown, 'ally item fills are cleared too')
+  cm.free()
+
+
+func test_view_without_a_fight_shows_no_cooldown_fills() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  view.bind(null, p, [])
+  var cell: ItemCell = view.get_node('Items/PlayerItems').get_child(0)
+  assert_false(cell.get_node('Cooldown').visible, 'an event beat shows the board with no fill')
 
 
 func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
@@ -151,7 +183,7 @@ func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
   cm.start()
   view.bind(cm, p, [])
   assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 2, 'a HUD per enemy (the elite)')
-  assert_eq(view.get_node('BottomBar/AllyLeft').get_child_count(), 1, 'the first ally fills the left slot')
+  assert_eq(view.get_node('Portraits/AllyLeft').get_child_count(), 1, 'the first ally fills the left slot')
   await wait_physics_frames(2)   # let the containers lay the widgets out so the centres are real
   # each enemy resolves to its own HUD — the second grunt no longer collapses to the player
   assert_ne(view.actor_pos(e2), view.actor_pos(p), 'the second enemy is NOT at the player portrait')

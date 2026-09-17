@@ -106,13 +106,12 @@ swappable surface (bind / release / approach controls / hover / the `item_pos` /
 `target_pos` lookups the VFX wall reads). The run screen and `VfxDriver` are typed against the
 base, so the framed-vs-fullscreen open is isolated here; a full-screen variant is an additive
 later compare (extend the base, swap one preload). The **corridor-forward** layout (the layout
-mockup), composition:
+mockup). The view places its parts in the run screen's [screen sections](ui_layout.md#screen-sections):
 
 - **Corridor large, top-left** — `combat_corridor.tscn` (`SubViewportContainer` →
   `SubViewport` → `Corridor3D`, with each enemy a `Sprite3D` inside its 3D scene).
   Resizeable; the SubViewportContainer clips it. See *Enemies in the corridor* below. `PrintFrame`
-  moves it in from its scene rectangle by the corridor margin and draws the optional border and overlay
-  ([print_frame.md](print_frame.md)).
+  draws the optional border and overlay ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
   a **status-icon row + HP bar**, and the enemy's **name** (`Actor.display_name`, `tr()`'d).
   Each status shows as a `status_icon.tscn`: the status's icon on a square of its colour.
@@ -122,9 +121,8 @@ mockup), composition:
   are smaller than the player's board (`ItemCell.set_cell_size`). The view **reconciles** its
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
-- **Player portrait + HP centre-bottom** (`BottomBar/PlayerPortrait` — portrait, HP bar,
-  "You"); the **player's board is a column down the right edge** (`RightPanel/PlayerItems`,
-  a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding the item's icon (`ItemDef.icon`), a
+- **Player portrait + HP in the portrait section** (portrait, HP bar, "You"), centred between the
+  ally slots; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding the item's icon (`ItemDef.icon`), a
   centred row of effect-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per value-bearing effect)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
@@ -140,7 +138,7 @@ mockup), composition:
   they spawn.
 - **VFX wall** (`vfx_driver.gd`) over it — projectiles fly in screen space; `actor_pos`
   resolves the player to its portrait, each enemy to its HUD, each ally/token to its slot;
-  `item_pos` finds an item's cell in the right-edge column or any HUD/slot.
+  `item_pos` finds an item's cell in the player's grid or any HUD/slot.
 
 The view `bind(cm, player, potions)`s the live fight (it reads the rosters off the CM)
 and exposes `item_pos` / `actor_pos` / `target_pos` to the wall; `release()` nulls the
@@ -200,7 +198,8 @@ the corridor's rectangle), and their root Controls ignore the mouse, so the boar
 HUD and item tooltips keep working around them. An event beat has no fight, so the run screen still
 builds the combat view for it with no `CombatManager` (`bind(null, ...)`: the player's side, no
 enemies). When a fight resolves, the run screen calls `view.release()` at once so the last hits'
-numbers and rings don't stay frozen in the corridor under the reward panel. The choice overlay and
+numbers and rings don't stay frozen in the corridor under the reward panel. `release()` also clears the item
+cells' cooldown fills (`ItemCell.show_cooldown`), and a view built without a fight never shows them. The choice overlay and
 the post-fight summary are still full-screen.
 
 - **Draft** — `draft_overlay.tscn` shows each reward as an `ItemCell` (the same icon and value
@@ -209,13 +208,12 @@ the post-fight summary are still full-screen.
   panel's bottom right (`'+{0} gold'`, the amount from `Balance.GOLD_SKIP`) emits `skipped` →
   `RunManager.apply_draft_skip` instead, banking gold and
   refreshing the gold HUD before advancing (decision #33). Both paths then advance.
-- **Gold HUD** — a minimal `GoldReadout` label on the HUD (`tr('Gold: {0}')`), seeded from
-  run-state on entry (covers a resumed run's banked gold) and refreshed after each skip.
-  Placeholder placement — the owner can relocate / juice it.
-- **Map** — `map_strip.tscn` draws the run's beats as a line of colour-coded dots (cleared
+- **Gold HUD** — a minimal `GoldReadout` label in the information section (`tr('Gold: {0}')`),
+  seeded from run-state on entry (covers a resumed run's banked gold) and refreshed after each skip.
+- **Map** — `map_strip.tscn`, at the top of the information section, draws the run's beats as a line of colour-coded dots (cleared
   solid, upcoming rings, the current beat haloed) with an "Act N" label and edge chevrons
   for off-screen beats; `mark_position` on each advance.
-- **Speed button** — `speed_button.tscn` on the HUD (bottom-right): an always-visible
+- **Speed button** — `speed_button.tscn` in the information section: an always-visible
   ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
 - **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque
   centered panel (no translucent scrim) + Resume / Settings /

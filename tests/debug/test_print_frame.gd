@@ -1,6 +1,6 @@
 extends GutTest
-## The print frame: the F5 print panel, the print settings in look files, and `PrintFrame` moving the
-## corridor and showing the border and overlay (docs/systems/print_frame.md).
+## The print frame: the F5 print panel, the print settings in look files, and `PrintFrame` showing the
+## border and overlay (docs/systems/print_frame.md).
 
 const COMBAT_VIEW_SCENE: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 const LOOK_PATH: String = 'user://test_looks/print.cfg'
@@ -55,7 +55,7 @@ func test_panel_has_background_layout_border_and_overlay_sections() -> void:
   var titles: Array[String] = _section_titles()
   assert_true(titles.has('Background Specks'), 'background wear groups')
   assert_true(titles.has('Background Folds'), 'the folds group')
-  assert_true(titles.has('Layout'), 'the corridor margin')
+  assert_true(titles.has('Layout'), 'the padding and split point')
   assert_true(titles.has('Print Border'), 'the border')
   assert_true(titles.has('Corridor Wear'), 'wear over the corridor')
   assert_true(titles.has('Corridor Worn Edge'), 'the worn corridor edge')
@@ -65,18 +65,18 @@ func test_panel_has_background_layout_border_and_overlay_sections() -> void:
 func test_save_then_load_restores_the_print_look() -> void:
   PrintLook.set_print_value('print_border_on', true)
   PrintLook.set_print_value('corridor_worn_edge_width', 50.0)
-  PrintLook.set_print_value('corridor_margin', 70.0)
+  PrintLook.set_print_value('padding', 70.0)
   PrintLook.background_material.set_shader_parameter('background_folds_on', false)
   assert_eq(PrintLook.save_print_look(LOOK_PATH), OK, 'the print look is saved')
   DebugPanels.reset_settings()
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), false, 'reset turns the border off')
-  assert_eq(PrintLook.print_setting('corridor_margin'), PrintLookAutoload.PRINT_SETTING_DEFAULTS['corridor_margin'],
-    'reset returns the margin to its default')
+  assert_eq(PrintLook.print_setting('padding'), PrintLookAutoload.PRINT_SETTING_DEFAULTS['padding'],
+    'reset returns the padding to its default')
   assert_true(PrintLook.load_print_look(LOOK_PATH), 'the print look is loaded')
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'border switch restored')
   assert_almost_eq(PrintLook.overlay_material.get_shader_parameter('corridor_worn_edge_width'), 50.0, 0.001,
     'overlay number restored')
-  assert_eq(PrintLook.print_setting('corridor_margin'), 70.0, 'layout setting restored')
+  assert_eq(PrintLook.print_setting('padding'), 70.0, 'layout setting restored')
   assert_eq(PrintLook.background_material.get_shader_parameter('background_folds_on'), false, 'background wear restored')
 
 
@@ -93,24 +93,22 @@ func test_print_and_corridor_looks_are_separate() -> void:
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'resetting the corridor look keeps the print look')
 
 
-func test_frame_moves_the_corridor_by_the_margin() -> void:
+func test_corridor_padding_lines_the_folds_up_with_the_split() -> void:
+  # The fold shader puts the last fold at twice the corridor's left edge plus its width, which is the
+  # split point when the corridor has the same padding on both sides.
+  PrintLook.print_settings['padding'] = 30.0
   var view: Control = _view()
-  var corridor: Control = view.get_node('CorridorPanel')
-  var frame: PrintFrame = view.get_node('PrintFrame') as PrintFrame
-  var margin: float = PrintLook.print_setting('corridor_margin')
-  var scene_position: Vector2 = corridor.position - Vector2(margin, margin)
-  var scene_size: Vector2 = corridor.size + Vector2(margin, margin) * 2.0
-  PrintLook.print_settings['corridor_margin'] = 60.0
-  frame._process(0.0)
-  assert_eq(corridor.position, scene_position + Vector2(60.0, 60.0), 'moved in by the margin')
-  assert_eq(corridor.size, scene_size - Vector2(120.0, 120.0), 'shrunk on every side')
+  var corridor: Rect2 = view.get_node('Corridor/CorridorPanel').get_global_rect()
+  var split: float = PrintLook.print_setting('split_across')
+  assert_eq(corridor.position.x, 30.0, 'the corridor starts the padding in from the screen edge')
+  assert_eq(corridor.position.x * 2.0 + corridor.size.x, split, 'the last fold lands on the split')
 
 
 func test_frame_shows_the_border_and_overlay_only_when_on() -> void:
   var view: Control = _view()
-  var frame: PrintFrame = view.get_node('PrintFrame') as PrintFrame
-  var border: ColorRect = view.get_node('PrintFrame/Border')
-  var overlay: ColorRect = view.get_node('CorridorOverlay')
+  var frame: PrintFrame = view.get_node('Corridor/PrintFrame') as PrintFrame
+  var border: ColorRect = view.get_node('Corridor/PrintFrame/Border')
+  var overlay: ColorRect = view.get_node('Corridor/CorridorOverlay')
   PrintLook.set_print_value('corridor_wear_on', false)
   PrintLook.set_print_value('corridor_worn_edge_on', false)
   frame._process(0.0)
@@ -121,13 +119,14 @@ func test_frame_shows_the_border_and_overlay_only_when_on() -> void:
   frame._process(0.0)
   assert_true(border.visible, 'the border shows')
   assert_true(overlay.visible, 'the overlay shows')
-  var corridor: Control = view.get_node('CorridorPanel')
+  var corridor: Control = view.get_node('Corridor/CorridorPanel')
   assert_true(border.get_rect().encloses(corridor.get_rect()), 'the border surrounds the corridor')
   assert_eq(overlay.get_rect(), corridor.get_rect(), 'the overlay covers the corridor')
 
 
 func test_frame_tells_the_background_where_the_corridor_is() -> void:
   var view: Control = _view()
+  await get_tree().process_frame   # the view places the corridor in its section after the frame's first update
   var rect: Vector4 = PrintLook.background_material.get_shader_parameter('print_corridor_rect')
   assert_gt(rect.z, 0.0, 'the corridor rectangle is set while a fight view is on screen')
   _nodes.erase(view)

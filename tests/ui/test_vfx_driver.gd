@@ -62,10 +62,10 @@ func test_impact_burst_runs_for_its_duration_then_stops() -> void:
 func test_a_landing_is_scattered_a_little_and_stays_put() -> void:
   var first: Delivery = _landed_delivery()
   var second: Delivery = _landed_delivery()
-  var offset: Vector2 = VfxDriver.scatter_offset(first)
-  assert_lt(offset.length(), VfxDriver.SCATTER_RADIUS, 'the nudge is small')
-  assert_eq(VfxDriver.scatter_offset(first), offset, 'the same landing is nudged the same way each frame')
-  assert_ne(VfxDriver.scatter_offset(second), offset, 'a second landing goes somewhere else')
+  var offset: Vector2 = EffectDrawer.scatter_offset(first)
+  assert_lt(offset.length(), EffectDrawer.SCATTER_RADIUS, 'the nudge is small')
+  assert_eq(EffectDrawer.scatter_offset(first), offset, 'the same landing is nudged the same way each frame')
+  assert_ne(EffectDrawer.scatter_offset(second), offset, 'a second landing goes somewhere else')
 
 
 func test_each_landing_is_sounded_once() -> void:
@@ -147,3 +147,15 @@ func test_only_damage_of_at_least_the_big_hit_amount_counts_as_a_big_hit() -> vo
   heal.kind = Delivery.Kind.HEAL
   heal.value = VfxDriver.BIGGEST_HIT_DAMAGE
   assert_eq(VfxDriver.big_hit_strength(heal), -1.0)
+
+
+func test_damage_number_drift_follows_the_landing_side_and_stays_put() -> void:
+  for i in 20:
+    var hit := Delivery.new()
+    var off_centre: float = EffectDrawer.scatter_offset(hit).x / EffectDrawer.SCATTER_RADIUS
+    var drift: float = DamageNumberDrawer.drift_for(hit)
+    var expected: float = off_centre * DamageNumberDrawer.DRIFT_DISTANCE
+    var most_random: float = DamageNumberDrawer.DRIFT_RANDOMNESS * DamageNumberDrawer.DRIFT_DISTANCE
+    assert_almost_eq(drift, expected, most_random + 0.001, 'drift is the off-centre amount plus a little randomness')
+    assert_eq(DamageNumberDrawer.drift_for(hit), drift, 'the same delivery always drifts the same amount')
+

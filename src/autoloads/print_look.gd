@@ -28,9 +28,13 @@ const PANEL_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_co
 ## Border and corridor overlay uniforms set by `PrintFrame`, so they are not look settings.
 const PRINT_FRAME_UNIFORMS: Array[String] = ['border_colour', 'border_wear_colour', 'rect_size', 'paper_colour']
 ## Print frame settings that are not shader uniforms (setting -> default), from the print panel, look
-## files and `--print-set=`. The corridor margin is in pixels on the interface canvas.
+## files and `--print-set=`: the screen's split point, where the folds cross and the four
+## screen sections meet (`ScreenSections`, docs/systems/ui_layout.md), and the padding inside each
+## section. In pixels on the interface canvas.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
-  'corridor_margin': 40.0,
+  'padding': 20.0,
+  'split_across': 1700.0,
+  'split_down': 1150.0,
 }
 
 ## The material every screen background is drawn through (background_wear.gdshader).
@@ -44,6 +48,9 @@ var border_material: ShaderMaterial = ShaderMaterial.new()
 var overlay_material: ShaderMaterial = ShaderMaterial.new()
 ## Print frame settings changed from their defaults (setting -> value); see `print_setting()`.
 var print_settings: Dictionary = {}
+## How many screen backgrounds with `folds_shown` set are in the tree. Kept here rather than in a
+## static variable on `ScreenBackground`, because that static variable made Godot leak scripts at exit.
+var fold_backgrounds: int = 0
 
 var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
 var _panel_defaults: Dictionary = {}   # panel wear uniform -> default value, read from its code

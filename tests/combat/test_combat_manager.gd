@@ -590,6 +590,7 @@ func test_tick_drives_fight_to_resolution() -> void:
     guard += 1
   assert_true(cm.is_resolved(), 'tick(delta) drives the fight to a verdict')
   assert_true(cm.player_won(), 'player (100 HP) beats the grunt (40 HP)')
+  assert_eq(p.board[0].cooldown.accum, 0.0, 'the player item cooldowns reset when the fight ends')
 
 
 func test_request_slowmo_sets_and_clears_the_dial() -> void:

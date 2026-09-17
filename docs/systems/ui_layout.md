@@ -30,6 +30,17 @@ What it **is not**: not game logic (it emits intents — the `Combat manager` / 
 
 Mock up one of each with placeholder items; decide on feel. Everything below holds either way.
 
+## Screen sections
+
+The run screen is split into four sections that match the folds in the paper background: the corridor top left, the potions and the player's items top right, the portraits lower left, and the run information (map, gold, battle-speed button) lower right.
+
+**Location:** `src/ui/screen_sections.gd` (class `ScreenSections`) and `screen_sections.tscn`.
+
+- The run screen owns one `ScreenSections`, on its HUD. The information section's contents sit in it directly. The combat view is given the same node (`CombatView.sections`) and moves its corridor, item column and portrait row onto the sections' rectangles whenever `sections_changed` fires. A view made without one, as in tests, makes its own.
+- The **split point** is where the sections meet. The **padding** is taken off every side of each section, so everything sits the same distance from the screen edge and from the folds. Both are print frame settings (`split_across`, `split_down`, `padding` in `PrintLook.PRINT_SETTING_DEFAULTS`), set from the Layout group of the F5 [print panel](print_frame.md).
+- The folds line up with the split point on their own: with follow layout on, the [background wear](background_wear.md) puts the last fold at the corridor's far edge plus its padding.
+- Moving the split point or changing the padding reflows the parts. The item grid uses as many columns as fit the width. The player portrait stays square and takes whatever height is left after the HP bar and name. Ally portraits do the same, but never grow past their size in `ally_slot.tscn`.
+
 ## The corridor & the approaching encounter
 
 The corridor view is **mood + feedback**, not the focus (design) — but it carries the **between-encounter beat**: the **next encounter is created right after the draft and approaches from depth**. The `Run manager` spawns the next `Encounter`'s enemies at the vanishing point; the corridor advance (the ~2–3s walk) scales them up into full view (enemies are 2D sprites with their own depth-scaling — art doc); on **arrival** (front segment locked at full scale — "encounters happen at a place") combat / event resolution begins and the boards activate. The walk *is* the encounter arriving, not dead time. (The advance + depth-scaling is the `docs/systems/corridors/` renderer's; the UI composes the boards over it and times the board activation to arrival.)
@@ -40,7 +51,7 @@ Colour is the readability mechanism that scales (design) — you can't parse 30 
 
 - **Type-zoned** — items in fixed, learnable regions by effect family (weapon / armor / heal / status-applier); synergy groups cluster + glow together when one fires (glow can be drawn with [interface glow](interface_glow.md); not wired yet). Fixed positions, hover-tilt on the focused item only — *not* drifting (art doc: motion = signal; a still board that erupts on fire reads as the cascade).
 - **Colour-coded value panel** per item (extruding over the top edge): the panel background = effect family (red attack, blue block, green heal, per-effect status colours), the number = the value. Usually one panel; rares may show more.
-- **Cooldown fill** (a filling overlay over the icon, its top edge a torn paper line) on each active item — **on enemy items too** (mutual cooldowns = the visible race). As built: `cooldown_fill.gdshader`, driven by `ItemCell` ([run_screen.md](run_screen.md)).
+- **Cooldown fill** (a filling overlay over the icon, its top edge a torn paper line) on each active item — **on enemy items too** (mutual cooldowns = the visible race). As built: `cooldown_fill.gdshader`, driven by `ItemCell` ([run_screen.md](run_screen.md)). The fills are cleared when the fight ends and are not shown outside a fight (events, reward icons).
 - **Rarity border** (bronze / silver / gold); **build-anchor** is a separate glow channel (never the border or size); **size** = a tempo tag (if it ships — Item PRD).
 - **Bigger than feels comfortable**, so activations stay legible in a packed cascade.
 
@@ -58,13 +69,13 @@ Hover anything important (own items, enemy items, potions, enemies) → time slo
 
 ## Battle-speed dial + pause (built)
 
-- **Battle-speed** — an always-visible ×1/×2/×3 HUD toggle (`speed_button.tscn`, bottom-right). A **session preference on `Game`** (`battle_speed`, never saved); the run screen applies it to each fight's `Timekeeper` **base** scale. The hover slow-mo override **replaces** the base absolutely (resolved — same readable speed at any dial), returning to it on release.
+- **Battle-speed** — an always-visible ×1/×2/×3 HUD toggle (`speed_button.tscn`, in the information section). A **session preference on `Game`** (`battle_speed`, never saved); the run screen applies it to each fight's `Timekeeper` **base** scale. The hover slow-mo override **replaces** the base absolutely (resolved — same readable speed at any dial), returning to it on release.
 - **Pause** — `ui_cancel` (Escape) raises `pause_menu.tscn` (Resume / Quit-to-menu) and freezes the run-screen tick (approach + fight). A **run-screen gate, not a `Game` phase**. Opaque centered panel, no translucent scrim. Quit-to-menu keeps the save (Title's Resume re-enters the beat). **Space** pauses and resumes without the menu, showing a small Paused panel at the top centre. See [run_screen](run_screen.md).
 
 ## The out-of-combat screens
 
 - **Choice layer** — the 2–3 location options at a choice point (two-tier: pick a location, then the within-choice); telegraphs the *category* (first-run legible — design). The pick is a **choice-point intent** → `Run manager`.
-- **Draft** — the 1-of-3 reward, shown as a panel in the corridor area with the board and HUD still usable around it (events use the same placement — [run_screen.md](run_screen.md#overlays)); the rewards are the board's own item icons with the same tooltips; the pick is a **draft-pick intent**, and a **gold button** (`+{0} gold`) is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A minimal **gold HUD counter** displays the banked total (placeholder placement; no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
+- **Draft** — the 1-of-3 reward, shown as a panel in the corridor area with the board and HUD still usable around it (events use the same placement — [run_screen.md](run_screen.md#overlays)); the rewards are the board's own item icons with the same tooltips; the pick is a **draft-pick intent**, and a **gold button** (`+{0} gold`) is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A minimal **gold HUD counter** in the information section displays the banked total (no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
 - **1D progress map** — the act's beats + the player's position (boss at the end, relic at midpoint); forward visibility on a linear track, not a route map (design).
 
 ## Localization

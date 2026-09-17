@@ -9,14 +9,12 @@ extends NamedColourRect
 ## menus opened from the title screen have none and the settings screen opened during a run keeps them.
 @export var folds_shown: bool = false
 
-static var _fold_backgrounds: int = 0
-
 
 func _enter_tree() -> void:
   super()
   if folds_shown:
-    _fold_backgrounds += 1
-  PrintLook.background_material.set_shader_parameter('folds_shown', _fold_backgrounds > 0)
+    PrintLook.fold_backgrounds += 1
+  PrintLook.background_material.set_shader_parameter('folds_shown', PrintLook.fold_backgrounds > 0)
 
 
 func _ready() -> void:
@@ -32,6 +30,6 @@ func _copy_colour() -> void:
 func _exit_tree() -> void:
   super()
   if folds_shown:
-    _fold_backgrounds -= 1
-  PrintLook.background_material.set_shader_parameter('folds_shown', _fold_backgrounds > 0)
+    PrintLook.fold_backgrounds -= 1
+  PrintLook.background_material.set_shader_parameter('folds_shown', PrintLook.fold_backgrounds > 0)
   material = null
