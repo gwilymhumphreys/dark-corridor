@@ -1,6 +1,6 @@
 class_name RelicCatalog
 ## The relic definitions (decision #23 — authored in GDScript, keyed by Id). Stone Ward
-## is the starting relic (combat-start block). Vital Charm + Iron Idol are the placeholder
+## is the starting relic (combat-start shield). Vital Charm + Iron Idol are the placeholder
 ## REWARD relics (granted by the reward routing — RELIC / ELITE / boss beats; #2): they
 ## prove both relic shapes (a direct max-HP mod + a combat-start status). Lazily built.
 
@@ -47,8 +47,8 @@ static func _stone_ward() -> RelicDef:
   d.id = STONE_WARD
   d.name_key = 'Stone Ward'
   d.kind = RelicDef.Kind.COMBAT_START_STATUS
-  d.status_id = 'block'
-  d.status_count = Balance.RELIC_STONE_WARD_BLOCK
+  d.status_id = 'shield'
+  d.status_count = Balance.RELIC_STONE_WARD_SHIELD
   d.panel_color = Colours.RELIC_STONE_WARD
   return d
 
@@ -64,13 +64,13 @@ static func _vital_charm() -> RelicDef:
   return d
 
 
-## Placeholder reward relic — a second combat-start-block relic (stacks with Stone Ward).
+## Placeholder reward relic — a second combat-start-shield relic (stacks with Stone Ward).
 static func _iron_idol() -> RelicDef:
   var d := RelicDef.new()
   d.id = IRON_IDOL
   d.name_key = 'Iron Idol'
   d.kind = RelicDef.Kind.COMBAT_START_STATUS
-  d.status_id = 'block'
-  d.status_count = Balance.RELIC_IRON_IDOL_BLOCK
+  d.status_id = 'shield'
+  d.status_count = Balance.RELIC_IRON_IDOL_SHIELD
   d.panel_color = Colours.RELIC_IRON_IDOL
   return d

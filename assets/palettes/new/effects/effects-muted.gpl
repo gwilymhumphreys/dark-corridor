@@ -16,8 +16,8 @@ Columns: 16
  69 117  87	heal dark
 110 179 174	spores light
  56 117 113	spores dark
-122 170 212	block light
- 68 109 144	block dark
+122 170 212	shield light
+ 68 109 144	shield dark
 163 155 218	arcane light
 104  97 148	arcane dark
 190 149 186	weak light

@@ -16,7 +16,7 @@ the post-fight summary screen — see *Presentation*). Plan lineage: `docs/plans
 ordered timeline, unit-testable on synthetic input. It is a **direct-write observer, not an
 [event-bus](combat_manager.md#the-trigger-event-bus) listener**: the bus's listener signature
 `(data, source_actor, source_item)` carries no amount and no timestamp, `data` is the trigger
-filter key (it can't also carry block's value), and DoT publishes no event at all. So the
+filter key (it can't also carry shield's value), and DoT publishes no event at all. So the
 manager hands the log the full rich data — amount + resolved `name_key`s + side + `sim_time` —
 at the exact mutation site, with zero risk to the loop-proof trigger core.
 
@@ -34,18 +34,18 @@ enemy's; and the player report + the autotest contribution table want **player-s
 `Side` is an enum (`PLAYER` / `ENEMY`); the manager resolves it per write via `_on_player_side`.
 
 - **Per-item:** `fires_by_item`, `damage_by_item` (net, **direct hits only**), `gross_by_item`
-  (pre-mitigation), `healing_by_item`, `block_by_item`, `statuses_by_item` (count of non-block
+  (pre-mitigation), `healing_by_item`, `shield_by_item`, `statuses_by_item` (count of non-shield
   statuses applied — the item's attributable contribution to a status).
 - **Per-status:** `damage_by_status` (net) — DoT / cash-out (Bleed) damage, bucketed by the
   **status's own `name_key`**, not the applier item (see *Status damage is by-status* below).
 - **Totals (per side):** `total_damage_dealt` / `total_damage_taken` (net), `total_gross`
-  (pre-mitigation dealt), `total_healing`, `total_block`. Status damage still folds into these —
+  (pre-mitigation dealt), `total_healing`, `total_shield`. Status damage still folds into these —
   only its per-item *breakdown* is replaced by the per-status one.
 - A **source-less DIRECT hit** (a thrown consumable's damage — no source item) falls to the
   generic `CombatLog.SOURCELESS` (`'Poison'`) bucket on the dealer's side. Status damage never
   needs this fallback — it always keys by the status's own name.
 
-`summary(side)` flattens one side's per-item rows (Item · Fires · Damage · Block · Healing ·
+`summary(side)` flattens one side's per-item rows (Item · Fires · Damage · Shield · Healing ·
 Statuses) — the union of every item that did anything on that side; `status_damage(side)` returns
 the per-status damage rows (Status · Damage). Both view `tr(name_key)` at draw; the log never
 stores display strings (localization).
@@ -65,27 +65,27 @@ attributable); only status damage moves.
 ## Write methods + the timeline
 
 Seven manager-called writers, each taking resolved `name_key`s + side + `sim_time`:
-`on_item_fired`, `on_damage`, `on_status_damage`, `on_heal`, `on_block`, `on_status_applied`,
+`on_item_fired`, `on_damage`, `on_status_damage`, `on_heal`, `on_shield`, `on_status_applied`,
 `on_throw`. `on_damage` is the **direct-hit** writer (credits the item); `on_status_damage` is the
 **DoT / cash-out** writer (credits the status's `name_key`, carries the status `id` on the event
 `data`). Every write also appends to the ordered **`events`** timeline (append order = sim order) —
 the post-fight event log. Each entry: `{ t, type, source, source_side, target, amount, data }`,
-`type` in fire / damage / heal / block / status / throw; `data` holds the status id (a status tick
+`type` in fire / damage / heal / shield / status / throw; `data` holds the status id (a status tick
 or a status apply) or thrown consumable id (throw). The amount writers ignore a non-positive amount
 (record nothing, append no event).
 
 The numbers are **honest** because `Actor.take_damage` / `Actor.heal` now return the actual HP
-delta (see [actor.md](actor.md)) — post-block, capped on a killing blow, post-overheal-cap —
+delta (see [actor.md](actor.md)) — post-shield, capped on a killing blow, post-overheal-cap —
 so the log shows effective (net) damage/healing with no HP-diff machinery.
 
 **Net vs gross.** `on_damage(…, net, t, raw)` records two numbers: **net** (effective HP
 removed — the `take_damage` return) and **gross** (the pre-mitigation hit, `raw`; defaults to
-net when omitted). Gross is recorded **even when block absorbs the whole hit** (net 0), because
-*incoming pressure* tuning needs the enemy's real threat — a block-heavy build would otherwise
+net when omitted). Gross is recorded **even when shield absorbs the whole hit** (net 0), because
+*incoming pressure* tuning needs the enemy's real threat — a shield-heavy build would otherwise
 read every enemy as harmless. The autotest's "Incoming damage (gross, by enemy item)" report is
 the enemy side's gross; net survivability is the per-encounter HP attrition. The direct-damage
-land site passes `raw = d.value`; a DoT tick has no pre-block value to hand, so its gross
-defaults to net (enemy DoT through player block is an uncommon edge — flagged, not solved).
+land site passes `raw = d.value`; a DoT tick has no pre-shield value to hand, so its gross
+defaults to net (enemy DoT through player shield is an uncommon edge — flagged, not solved).
 `on_status_damage` still accrues `total_gross` (so total incoming stays complete), but enemy
 status pressure (Bleed / enemy poison) is attributed **per status** — the autotest's "Incoming
 damage" report breaks it out under a `[status]` line, not per enemy item.
@@ -94,11 +94,11 @@ damage" report breaks it out under a `[status]` line, not per enemy item.
 
 ## Single source of truth (Design B)
 
-`CombatLog` is **the** damage/heal/block/fire tally; the autotest no longer reconstructs it.
+`CombatLog` is **the** damage/heal/shield/fire tally; the autotest no longer reconstructs it.
 The manager writes the log at each mutation site (see [combat_manager.md](combat_manager.md)),
 the autotest attaches a `CombatLog` before its `sim_step()` loop and reads the player side at
 fight end, and the [logger](autotest.md) sources its `fires_by_item` / `damage_by_item` /
-`block_by_item` / `healing_by_item` + totals from it. The old HP-diff path
+`shield_by_item` / `healing_by_item` + totals from it. The old HP-diff path
 (`AutoTestLogger.attribute_damage` / `_split_remainder`, the per-step HP snapshots,
 `_observe_damage` / `_observe_support`) is **deleted**.
 
@@ -106,8 +106,8 @@ fight end, and the [logger](autotest.md) sources its `fires_by_item` / `damage_b
 *proportionally by weight* across appliers. Direct emission logs each DoT tick at its source
 (`_advance_statuses_on` / `_drain_actor_fire_statuses`) — but it credits the **status**, not the
 applier item, because appliers of one status merge to a single instance (first-applier-kept), so a
-per-item DoT credit was a fiction (see *Status damage is by-status*). Block-absorbed and
-killing-blow numbers already matched (both are net-after-block HP delta — `Actor.take_damage`'s
+per-item DoT credit was a fiction (see *Status damage is by-status*). Shield-absorbed and
+killing-blow numbers already matched (both are net-after-shield HP delta — `Actor.take_damage`'s
 return).
 
 **Precondition:** direct emission only sees HP routed through `take_damage` / `heal` (the
@@ -128,7 +128,7 @@ the summary can read it after the manager's teardown nulls its side). See
   running *Dealt · Taken* (net) this fight, refreshed each tick. Shown only while FIGHTING.
 - **Post-fight summary** — `combat_summary.tscn`, a `SUMMARY` FSM state parked before the draft
   on a **won, non-final** fight (a loss / final win ends the run → the outcome screen instead).
-  Shows the player per-item damage report (Item · Fires · Damage · Block · Healing, from
+  Shows the player per-item damage report (Item · Fires · Damage · Shield · Healing, from
   `summary(PLAYER)` — Damage is **direct hits only**), a **Status damage** section (Status ·
   Damage, from `status_damage(PLAYER)`, hidden when no status dealt damage), and the ordered
   event-log timeline (from `events`), with a Continue button.

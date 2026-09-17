@@ -49,7 +49,7 @@ func test_reapply_stacks_by_extending_the_timer() -> void:
 
 
 # --- Decay use-status (docs/systems/item_creation_and_decay.md Cap 2) -----------------------
-# Block's twin: a pool of count on an ITEM, drained by the item firing, that removes the item at 0.
+# Shield's twin: a pool of count on an ITEM, drained by the item firing, that removes the item at 0.
 
 ## Records the ctx.remove_item call so the unit test can assert the host item is requested for removal.
 class _RecordingCtx:
@@ -84,8 +84,9 @@ func test_decay_reapply_tops_up_charges() -> void:
 
 
 # --- Bleed (docs/design/mechanic_ideas.md → Bleed) -----------------------------------------
-# An enemy-applied wound: each of the holder's item activations bites it for the current stack
-# count, then loses a stack; removed at zero. Drained by the holder FIRING (the actor twin of Decay).
+# An enemy-applied wound: each time the holder is hit by an attack it bites for the current
+# stack count, then loses a stack; removed at zero. Triggered by attacks landing on the holder
+# (the on_holder_attacked hook), not by the holder firing.
 
 func test_registry_builds_a_bleed_status_for_its_id() -> void:
   var b := StatusRegistry.create('bleed')
@@ -93,18 +94,18 @@ func test_registry_builds_a_bleed_status_for_its_id() -> void:
   assert_eq(b.id, 'bleed', 'and builds a BleedStatus carrying that id')
 
 
-func test_bleed_bites_the_holder_per_activation_and_pays_itself_down() -> void:
+func test_bleed_bites_the_holder_per_attack_and_pays_itself_down() -> void:
   var actor := Actor.new(100.0)
   var b := StatusRegistry.create('bleed')
   b.setup(3.0, 0.0, null, 0)
   actor.statuses.append(b)
-  var expired: bool = b.on_owner_item_fired(actor, null, null)
-  assert_almost_eq(actor.hp, 97.0, 0.0001, 'bleed 3 bites 3 on the first activation')
+  var expired: bool = b.on_holder_attacked(actor, null)
+  assert_almost_eq(actor.hp, 97.0, 0.0001, 'bleed 3 bites 3 on the first attack')
   assert_almost_eq(b.count, 2.0, 0.0001, 'and loses a stack')
   assert_false(expired, 'still bleeding while stacks remain')
-  b.on_owner_item_fired(actor, null, null)             # bites 2 -> 95
-  expired = b.on_owner_item_fired(actor, null, null)   # bites 1 -> 94, drained
-  assert_almost_eq(actor.hp, 94.0, 0.0001, 'triangular total 3+2+1 = 6 over three activations')
+  b.on_holder_attacked(actor, null)                    # bites 2 -> 95
+  expired = b.on_holder_attacked(actor, null)          # bites 1 -> 94, drained
+  assert_almost_eq(actor.hp, 94.0, 0.0001, 'triangular total 3+2+1 = 6 over three attacks')
   assert_true(expired, 'expires when the last stack is spent')
 
 

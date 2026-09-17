@@ -3,9 +3,9 @@
 > The roster's **on-ramp / starter** character. Working doc — add cards as they come, cull to a
 > pool later. Targets in [`card_pool_targets.md`](card_pool_targets.md), held loosely. Promoted from
 > the [parking lot](character_ideas.md) 2026-07-04 (owner); its mechanical ancestor is the parked
-> *Spiked Shield / Retributive Block* entry — this is the **simple** use of block, that one the spicy.
+> *Spiked Shield / Retributive Shield* entry — this is the **simple** use of shield, that one the spicy.
 
-**Concept (owner):** a big **block**-oriented fighter — a figure who has fused overlapping bits of
+**Concept (owner):** a big **shield**-oriented fighter — a figure who has fused overlapping bits of
 scavenged armour to themselves (helmets, breastplates, greaves, all layered). Basic weapons and
 armour, one clean twist: **stack armour, then spend it.**
 
@@ -26,12 +26,12 @@ character are solid, both the `wanderer` and `duelist` placeholders can go.
 register display name (oblique, mournful, does not telegraph the mechanic) comes later. Internal
 id / file stay `armourer` until renamed.
 
-**Affordance — the highest on the roster.** *Armour = block* is about the tightest theme→mechanic
+**Affordance — the highest on the roster.** *Armour = shield* is about the tightest theme→mechanic
 map that exists (a player guesses the mechanic from the fiction alone — the affordance screen in
 [`character_ideas.md`](character_ideas.md)). That legibility is *why* it's the right anchor. The one
 place to be deliberate is the **spend side**: "spend armour → deal damage" isn't as self-evident as
 "armour = defence," so lean the spender fiction on something that affords it — a **shield bash**,
-**hurling a plate**, a **guard-break counter** — so the player intuits "this attack eats my block."
+**hurling a plate**, a **guard-break counter** — so the player intuits "this attack eats my shield."
 
 **Fiction — relaxed for the on-ramp.** The overlapping-fused-plates image reads instantly; kept as a
 **scavenger in layered armour** (not fused body-horror), which also dodges two collisions the parking
@@ -45,8 +45,8 @@ overlapping plates stay pure visual flavour; no horror needed.
 Aim for **~3 archetypes that overlap** (a card can serve two) — the pool-breadth goal, not a quota
 (see [`card_pool_targets.md`](card_pool_targets.md)). Two are decided:
 
-1. **Spend armour (decided).** The signature engine: build block (armour), then spend it — an attack
-   or effect that **consumes block** for its payoff. Block stops being only defence and becomes
+1. **Spend armour (decided).** The signature engine: build shield (armour), then spend it — an attack
+   or effect that **consumes shield** for its payoff. Shield stops being only defence and becomes
    *ammo*, with a real decision baked in: **spending it trades away your safety** (offense vs.
    defence on one resource — not win-more).
 2. **Big slow weapons + the empower payoff (decided 2026-07-09).** The signature weapons thread: a
@@ -62,19 +62,19 @@ Candidate 3 stays open — "strength or something, tbd" (owner). Keep the non-si
 **simple**: this is the low-load character, so they should be the kind a player reasons about at a
 glance.
 
-## Engine seam — block-as-fuel is nearly free (verified 2026-07-04)
+## Engine seam — shield-as-fuel is nearly free (verified 2026-07-04)
 
-- **Block is a `PoolStatus`** (`src/content/statuses/block_status.gd`): an absorb pool that soaks
+- **Shield is a `PoolStatus`** (`src/content/statuses/shield_status.gd`): an absorb pool that soaks
   incoming damage and is removed when emptied. Stacks additively on reapply. **Combat-scoped** — it
   resets every fight (#26), so any *cross-run* "layer up your armour over a descent" would be a
-  relic/enchant, not the block status.
-- **Spending block rides the built consume seam.** The Spore Druid's Mass fuel uses
+  relic/enchant, not the shield status.
+- **Spending shield rides the built consume seam.** The Spore Druid's Mass fuel uses
   `StatusManager.consume(target, id, amount)`, gated by each status's `is_fuel()`. `Spores` opts in
-  with a one-line `is_fuel() -> true`; **block does not (yet).** So "spend N block for an effect" is:
-  make block fuel-eligible (the one override) + author the spender items — **no new engine.**
-  Consuming block spends its absorb `count`, i.e. spending armour literally removes that defence —
+  with a one-line `is_fuel() -> true`; **shield does not (yet).** So "spend N shield for an effect" is:
+  make shield fuel-eligible (the one override) + author the spender items — **no new engine.**
+  Consuming shield spends its absorb `count`, i.e. spending armour literally removes that defence —
   which *is* the intended tradeoff.
-- **Block generators are a solved pattern.** Plain self-block items already exist (the Fleshmancer's
+- **Shield generators are a solved pattern.** Plain self-shield items already exist (the Fleshmancer's
   bone spread — Rib / Femur / Skull); the Armourer's armour pieces follow the same shape.
 
 ## The empower engine — the weapons payoff (decided 2026-07-09)
@@ -87,7 +87,7 @@ next weapon attack**.
 - **Weapon-scoped** (owner) — only a *weapon* attack is doubled; a spell/skill attack wouldn't
   benefit. That scoping is exactly what the `weapon` tag is for.
 - **Stacks by proc count** (owner — "the default for triggered effects like this"): a **consumed
-  counter** (like block / spores — no timer, persists until spent). **Consume rate (decided):** one
+  counter** (like shield / spores — no timer, persists until spent). **Consume rate (decided):** one
   charge per weapon attack — banking N charges doubles the next N weapon attacks (not all-charges-on-
   one-hit, which would be a spiky ×2ⁿ nuke).
 - **The auto-combat twist that makes the archetype:** you can't *choose* which attack is "next" — it
@@ -121,22 +121,22 @@ surfaces **weapon** + **skill** (kept lean — it's the on-ramp).
 the firing item — so the item's `types` must be threaded in to tell a weapon attack from a spell
 attack. And `modify_outgoing` doubles as the **read-only tooltip preview** (`Item.display_value`), so
 it must stay pure — the **consume** (spend a charge) belongs on the real-fire hook
-`on_owner_item_fired` (Bleed uses it), not in the modifier. Weak dodges this (blanket, no scope, no
+`on_owner_item_fired`, not in the modifier. Weak dodges this (blanket, no scope, no
 consume); this is the first type-scoped one-shot synergy, so build the seam cleanly — future
 "your weapons / skills…" effects reuse it.
 
 ## Watch / open
 
-- **Win-more guard (carry forward).** The trap for a block character is payoffs that key off
-  **block-on-hand** (strongest when you're already safe — e.g. "deal damage equal to your block"
+- **Win-more guard (carry forward).** The trap for a shield character is payoffs that key off
+  **shield-on-hand** (strongest when you're already safe — e.g. "deal damage equal to your shield"
   while *keeping* it). The cure: tie payoffs to **spend / absorbed-damage flow**, not the stockpile.
   Consume-to-hit avoids it for free. (The parked *Spiked Shield* entry worked this out in full.)
 - **Which are archetypes 2 and 3?** Weapon-synergy and strength/scaling are candidates, not decided.
 - **Does it become the new default character?** (Replacing `wanderer` as autostart + autotest
   baseline.) Likely yes — confirm on build.
-- **Relationship to the parked block character.** *Spiked Shield / Retributive Block* is the
-  **spicier** use of block (thorns / charge off absorbed damage — needs an unbuilt on-absorb seam).
-  Only one block character likely ships; the Armourer (stack/spend) is the one being pursued. That
+- **Relationship to the parked shield character.** *Spiked Shield / Retributive Shield* is the
+  **spicier** use of shield (thorns / charge off absorbed damage — needs an unbuilt on-absorb seam).
+  Only one shield character likely ships; the Armourer (stack/spend) is the one being pursued. That
   engine is salvageable as a relic / item / later variant, not lost.
 
 ## Authored so far
@@ -147,7 +147,7 @@ fire-pipeline **seam is in** (decision #35): the firing `Item` is threaded into 
 a status can scope to a weapon attack via `item.def.types.has(ItemType.WEAPON)`.
 
 - **`EmpoweredStatus`** (`src/content/statuses/empowered_status.gd`, id `empowered`) — a consumed
-  counter: `modify_outgoing` doubles a `weapon`-tagged DAMAGE payload while a charge is banked (pure,
+  counter: `modify_outgoing` doubles a `weapon`-tagged attack payload while a charge is banked (pure,
   ×2 of ONE attack); `on_owner_item_fired` spends exactly one charge per weapon attack (banking N
   doubles the next N). Registered in `StatusRegistry`. `EMPOWER_MULT` = 2.0 (`Balance`, placeholder).
 - **Mighty Blow** (`mighty_blow`, `[skill]`) — a plain-cooldown metronome that applies `empowered`
@@ -159,6 +159,6 @@ a status can scope to a weapon attack via `item.def.types.has(ItemType.WEAPON)`.
 All four are authored in `ItemCatalog` (+ registered in `_build()`) but deliberately **NOT in any
 item pool or the colorless pool** (per-character pools, #27) — there is no Armourer character yet, so
 they are drafted by nothing. **Still to build:** the `CharacterCatalog.ARMOURER` def + its starting
-3-item kit (a block generator, a block-spending attack, a weapon — the floor the other characters
-get), and the block-spend archetype (block made fuel-eligible + spender items — the "nearly free"
+3-item kit (a shield generator, a shield-spending attack, a weapon — the floor the other characters
+get), and the shield-spend archetype (shield made fuel-eligible + spender items — the "nearly free"
 seam above).

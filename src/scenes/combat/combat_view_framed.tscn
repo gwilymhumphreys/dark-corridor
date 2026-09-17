@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/combat_view_framed.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/combat_corridor.tscn" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="5"]
 [ext_resource type="Script" path="res://src/ui/print_frame.gd" id="6"]
 [ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
+[ext_resource type="PackedScene" path="res://src/scenes/combat/status_numbers.tscn" id="status_numbers"]
 
 [node name="CombatViewFramed" type="Control"]
 layout_mode = 3
@@ -181,6 +182,17 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="StatusNumbers" parent="Portraits/PlayerPortrait/HP" instance=ExtResource("status_numbers")]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_right = 8.0
+grow_horizontal = 1
 
 [node name="Name" type="Label" parent="Portraits/PlayerPortrait"]
 layout_mode = 2

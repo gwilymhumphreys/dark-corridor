@@ -16,11 +16,11 @@ func setup(amount: float, dur: float, src, applied_flags: int) -> void:
 
 ## Per tick: damage the holder (actors only — items have no HP, so a DoT authored onto an item
 ## ticks down harmlessly), decay a stack, expire when drained. Carries the applying flags so an
-## unblockable DoT bypasses block per tick (#5).
+## unblockable DoT bypasses shield per tick (#5).
 func on_step(target, ctx) -> bool:
   if ticker.step():
     if target is Actor:
-      target.take_damage(count * damage_per_tick, flags)
+      target.take_damage(count * damage_per_tick, flags, id)
     count -= 1.0
     ticker.reset()
     return count <= 0.0

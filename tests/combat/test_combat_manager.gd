@@ -83,18 +83,17 @@ func test_fight_is_deterministic() -> void:
 
 
 func test_poison_trigger_fires_avenger_next_step() -> void:
-  # A custom avenger that NEVER fires on its own cooldown, so any block it grants
+  # A custom avenger that NEVER fires on its own cooldown, so any shield it grants
   # MUST come from the poison trigger.
   var avenger := ItemDef.new()
   avenger.cooldown = 9999.0
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   avenger.effects = [blk]
   avenger.trigger_subs = [{
-    'event': EventBus.Event.STATUS_APPLIED,
+    'event': EventBus.Event.APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
   }]
@@ -112,10 +111,10 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
     cm.sim_step()
     guard += 1
   assert_true(_has_status(e, 'poison'), 'poison was applied')
-  assert_false(_has_status(p, 'block'), 'the push does NOT fire the avenger the same step')
+  assert_false(_has_status(p, 'shield'), 'the push does NOT fire the avenger the same step')
 
   cm.sim_step()
-  assert_true(_has_status(p, 'block'), 'the avenger fires one step later (loop-proof synergy)')
+  assert_true(_has_status(p, 'shield'), 'the avenger fires one step later (loop-proof synergy)')
 
 
 func test_delivery_fizzles_if_target_died() -> void:
@@ -125,7 +124,7 @@ func test_delivery_fizzles_if_target_died() -> void:
   cm.start()
   e.take_damage(10.0)   # enemy already dead
   var d := Delivery.new()
-  d.kind = Delivery.Kind.DAMAGE
+  d.mechanic = AttackMechanic.ID
   d.value = 5.0
   d.target = e
   d.travel = Ticker.new(1)
@@ -191,7 +190,7 @@ func test_actor_and_item_statuses_advance_identically() -> void:
 func _instant_damage_item(owner_actor: Actor, value: float) -> Item:
   var def := ItemDef.new()
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = value
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -216,7 +215,7 @@ func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
   StatusManager.apply(e, 'poison', 5.0)
   var def := ItemDef.new()
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = 10.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -263,7 +262,7 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   var def := ItemDef.new()
   var ap := ItemEffect.new()
   ap.kind = Delivery.Kind.APPLY_STATUS
-  ap.status_id = 'poison'
+  ap.status_id = 'weak'
   ap.value = 3.0
   ap.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   ap.travel = 0.0
@@ -272,7 +271,7 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   cm._fire_item(Item.new(def, p), arrived)
   assert_false(arrived[0].evaded, 'a non-damage delivery is not evaded')
   cm._land(arrived[0])
-  assert_true(_has_status(e, 'poison'), 'the blinded actor still applies its status')
+  assert_true(_has_status(e, 'weak'), 'the blinded actor still applies its status')
 
 
 # --- mid-fight roster: summons + both-side rosters (docs/systems/spore_engine.md Cap 3) --
@@ -483,25 +482,26 @@ func test_item_target_with_no_enemy_items_yields_no_targets() -> void:
   assert_eq(cm._resolve_targets(payload, p).size(), 0, 'no enemy items → no item targets')
 
 
-func test_dot_tick_through_block_does_not_skip_a_later_status() -> void:
-  # A poison tick calls take_damage, which can erase a depleted block from the SAME
+func test_dot_tick_through_shield_does_not_skip_a_later_status() -> void:
+  # A poison tick calls take_damage, which can erase a depleted shield from the SAME
   # status list the step-pass is walking. A naive in-place loop would then skip the
-  # status after block. Set up [block, poison, weak] with poison about to tick and
-  # block small enough to be fully consumed — weak must still advance this pass.
+  # status after shield. Set up [shield, poison, weak] with poison about to tick and
+  # shield small enough to be fully consumed — weak must still advance this pass.
   var p := Actor.new(100.0)
   var a := Actor.new(100.0)
   var cm := _manager(p, [a])
   cm.start()
-  StatusManager.apply(a, 'block', 1.0)          # one poison tick empties it
+  StatusManager.apply(a, 'shield', 1.0)          # one poison tick empties it (double drain)
   var pois: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
   pois.ticker.accum = pois.ticker.threshold - 1.0            # fire on the next advance
   var weak: StatusEffect = StatusManager.apply(a, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)   # after poison in the list
 
   cm._advance_statuses_on(a)
 
-  assert_eq(weak.ticker.accum, 1.0, 'the status after block still advanced (no skip)')
-  assert_false(_has_status(a, 'block'), 'block was consumed and erased mid-pass')
-  assert_eq(a.hp, 98.0, 'poison dealt 3, block absorbed 1, 2 leaked to HP')
+  assert_eq(weak.ticker.accum, 1.0, 'the status after shield still advanced (no skip)')
+  assert_false(_has_status(a, 'shield'), 'shield was consumed and erased mid-pass')
+  # Poison drains shield double: 1 shield covers 0.5 of the 3-damage tick, 2.5 leaks to HP.
+  assert_almost_eq(a.hp, 97.5, 0.0001, 'poison dealt 3, shield absorbed 0.5 (double drain), 2.5 leaked to HP')
 
 
 func test_dot_tick_shows_a_visual_on_the_wall() -> void:
@@ -608,19 +608,18 @@ func test_request_slowmo_sets_and_clears_the_dial() -> void:
 
 # --- Event-bus source identity (decision #30) ---
 
-## A trigger item that never fires on its own cooldown, so any block it grants MUST
+## A trigger item that never fires on its own cooldown, so any shield it grants MUST
 ## come from its trigger push. `source_filter` omitted = the OWN_SIDE content default.
 func _never_fires_avenger(source_filter: int = -1) -> ItemDef:
   var def := ItemDef.new()
   def.cooldown = 9999.0
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   def.effects = [blk]
   var sub := {
-    'event': EventBus.Event.STATUS_APPLIED,
+    'event': EventBus.Event.APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
   }
@@ -646,7 +645,7 @@ func test_enemy_poison_does_not_charge_own_side_trigger() -> void:
   assert_true(_has_status(p, 'poison'), 'the enemy poisoned the player')
   cm.sim_step()
   cm.sim_step()
-  assert_false(_has_status(p, 'block'), "the enemy's application charged nothing (OWN_SIDE default)")
+  assert_false(_has_status(p, 'shield'), "the enemy's application charged nothing (OWN_SIDE default)")
 
 
 func test_opponent_side_filter_inverts_the_default() -> void:
@@ -661,7 +660,7 @@ func test_opponent_side_filter_inverts_the_default() -> void:
     cm.sim_step()
     guard += 1
   cm.sim_step()
-  assert_true(_has_status(p, 'block'), "an OPPONENT_SIDE sub charges off the enemy's application")
+  assert_true(_has_status(p, 'shield'), "an OPPONENT_SIDE sub charges off the enemy's application")
 
 
 func test_summoned_token_trigger_resolves_own_side_at_event_time() -> void:
@@ -681,7 +680,7 @@ func test_summoned_token_trigger_resolves_own_side_at_event_time() -> void:
     guard += 1
   assert_true(_has_status(e, 'poison'), "the player's poison landed")
   cm.sim_step()
-  assert_true(_has_status(token, 'block'), "the player-side token's trigger charged off its own side")
+  assert_true(_has_status(token, 'shield'), "the player-side token's trigger charged off its own side")
 
 
 func test_reaped_actors_trigger_item_receives_no_pushes() -> void:
@@ -694,7 +693,7 @@ func test_reaped_actors_trigger_item_receives_no_pushes() -> void:
   var reactive := ItemDef.new()
   reactive.cooldown = 9999.0
   reactive.trigger_subs = [{
-    'event': EventBus.Event.STATUS_APPLIED,
+    'event': EventBus.Event.APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
     'source_filter': EventBus.SourceFilter.ANY,
@@ -759,22 +758,23 @@ func test_thrown_consumable_event_carries_the_thrower() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var seen: Array = []
-  cm.bus.add_listener(EventBus.Event.DAMAGE_DEALT,
-      func(_data, source_actor, source_item) -> void:
-        seen.append([source_actor, source_item]))
+  cm.bus.add_listener(EventBus.Event.APPLIED,
+      func(data, source_actor, source_item) -> void:
+        seen.append([data, source_actor, source_item]))
   var def := ConsumableDef.new()
   def.id = 'test_dart'
   def.name_key = 'Test Dart'
   var effect := ItemEffect.new()
-  effect.kind = Delivery.Kind.DAMAGE
+  effect.mechanic = AttackMechanic.ID
   effect.value = 5.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   effect.travel = 0.0
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  assert_eq(seen.size(), 1, 'the throw published DAMAGE_DEALT')
-  assert_eq(seen[0][0], p, 'source actor is the thrower')
-  assert_null(seen[0][1], 'source item is null — a throw has no firing Item')
+  assert_eq(seen.size(), 1, 'the throw published APPLIED')
+  assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
+  assert_eq(seen[0][1], p, 'source actor is the thrower')
+  assert_null(seen[0][2], 'source item is null — a throw has no firing Item')
 
 
 func test_fight_with_triggers_is_deterministic() -> void:
@@ -861,7 +861,7 @@ func test_lethal_potion_resolves_fight_without_a_step() -> void:
   def.id = 'test_bomb'
   def.name_key = 'Test Bomb'
   var effect := ItemEffect.new()
-  effect.kind = Delivery.Kind.DAMAGE
+  effect.mechanic = AttackMechanic.ID
   effect.value = 50.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   effect.travel = 0.0
@@ -871,17 +871,17 @@ func test_lethal_potion_resolves_fight_without_a_step() -> void:
   assert_true(cm.player_won(), 'and the player won it')
 
 
-func test_status_applied_event_only_published_on_success() -> void:
-  # An unknown status id applies nothing — no STATUS_APPLIED event may be routed for it.
+func test_applied_event_only_published_on_success() -> void:
+  # An unknown status id applies nothing — no APPLIED event may be routed for it.
   var p := _spawn(Balance.PLAYER_START_HP, [])
   var e := _spawn(1000.0, [])
   var cm := _manager(p, [e])
   cm.start()
   var probe := Ticker.new(100)
-  cm.bus.subscribe(EventBus.Event.STATUS_APPLIED, probe, 1.0, null)
+  cm.bus.subscribe(EventBus.Event.APPLIED, probe, 1.0, null)
   cm._land(_status_delivery(e, 'nonexistent_status'))
   assert_eq(probe.accum, 0.0, 'an unknown id publishes no event')
-  cm._land(_status_delivery(e, 'block'))
+  cm._land(_status_delivery(e, 'weak'))
   assert_gt(probe.accum, 0.0, 'a real apply still publishes')
 
 
@@ -953,7 +953,7 @@ func _decay_weapon_def(uses: int) -> ItemDef:
   def.cooldown = Balance.WEAPON_COOLDOWN
   def.starting_uses = uses
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = Balance.WEAPON_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -1087,7 +1087,7 @@ func _chunk_consumer_def(chunk_id: String, amount: int, scale: float) -> ItemDef
   var def := ItemDef.new()
   def.id = 'test_chunk_consumer'
   var hit := ItemEffect.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = 10.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = 0.0
@@ -1099,13 +1099,12 @@ func _chunk_consumer_def(chunk_id: String, amount: int, scale: float) -> ItemDef
 
 
 ## A reactive item that never fires on its own cooldown and charges (full push) off ITEM_DESTROYED,
-## granting itself block — so any block it grants proves it saw a destroy event. OWN_SIDE default.
+## granting itself shield — so any shield it grants proves it saw a destroy event. OWN_SIDE default.
 func _destroy_charged_avenger() -> ItemDef:
   var def := ItemDef.new()
   def.cooldown = 9999.0
   var blk := ItemEffect.new()
-  blk.kind = Delivery.Kind.APPLY_STATUS
-  blk.status_id = 'block'
+  blk.mechanic = ShieldMechanic.ID
   blk.value = 5.0
   blk.shape = ItemEffect.Shape.SELF
   def.effects = [blk]
@@ -1150,7 +1149,7 @@ func test_item_destroyed_does_not_fire_at_teardown() -> void:
 
 func test_a_trigger_item_charges_off_item_destroyed() -> void:
   # A decay item dies on fire; an avenger subscribed to ITEM_DESTROYED charges off it one step later
-  # (accrual-only, loop-proof). The avenger never fires on its own cooldown, so the block proves it.
+  # (accrual-only, loop-proof). The avenger never fires on its own cooldown, so the shield proves it.
   var p := Actor.new(1000.0)
   var dying := Item.new(_decay_weapon_def(1), p)
   var avenger := Item.new(_destroy_charged_avenger(), p)
@@ -1159,9 +1158,9 @@ func test_a_trigger_item_charges_off_item_destroyed() -> void:
   var cm := _manager(p, [Actor.new(1000.0)])
   cm.start()
   cm._fire_item(dying, [])   # decay 1 → destroyed → ITEM_DESTROYED published
-  assert_false(_has_status(p, 'block'), 'the push does NOT fire the avenger the same step')
+  assert_false(_has_status(p, 'shield'), 'the push does NOT fire the avenger the same step')
   cm.sim_step()
-  assert_true(_has_status(p, 'block'), 'the avenger charged off ITEM_DESTROYED one step later (SELF block on its owner)')
+  assert_true(_has_status(p, 'shield'), 'the avenger charged off ITEM_DESTROYED one step later (SELF shield on its owner)')
 
 
 func test_own_board_consume_counts_removes_and_scales() -> void:
@@ -1238,3 +1237,84 @@ func test_consumed_items_publish_item_destroyed_for_the_charge_synergy() -> void
   cm._fire_item(consumer, [])
   assert_eq(seen.size(), 3, 'all 3 consumed chunks published ITEM_DESTROYED (consume-death = decay-death)')
   assert_eq(seen[0], 'chunk', 'with the chunk def id as the event data')
+
+
+# --- Mechanics land through the registry (docs/plans/mechanics.md step 1) ------------
+# The DAMAGE / HEAL branches of _land moved into the mechanic classes; the shield part of
+# APPLY_STATUS moved into the base Mechanic. These prove the routing is behaviour-identical.
+
+## A one-effect item whose single effect is the named mechanic (or status), instant.
+func _mechanic_item(owner_actor: Actor, mechanic_id: String, value: float, shape: int = ItemEffect.Shape.OPPONENT_LEFTMOST) -> Item:
+  var def := ItemDef.new()
+  var effect := ItemEffect.new()
+  effect.mechanic = mechanic_id
+  effect.value = value
+  effect.shape = shape
+  effect.travel = 0.0
+  def.effects = [effect]
+  return Item.new(def, owner_actor)
+
+
+func test_attack_mechanic_deals_damage_and_publishes_applied() -> void:
+  var p := Actor.new(1000.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var seen: Array = []
+  cm.bus.add_listener(EventBus.Event.APPLIED,
+      func(data, source_actor, _source_item) -> void:
+        seen.append([data, source_actor]))
+  var arrived: Array = []
+  cm._fire_item(_mechanic_item(p, AttackMechanic.ID, 12.0), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(e.hp, 1000.0 - 12.0, 0.0001, 'the attack mechanic dealt its damage')
+  assert_eq(seen.size(), 1, 'it published APPLIED (no new events)')
+  assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
+  assert_eq(seen[0][1], p, 'the source actor is the firer')
+
+
+func test_heal_mechanic_heals_the_target() -> void:
+  var p := Actor.new(100.0)
+  p.take_damage(40.0)   # at 60 / 100
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var arrived: Array = []
+  cm._fire_item(_mechanic_item(p, HealMechanic.ID, 15.0, ItemEffect.Shape.SELF), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_almost_eq(p.hp, 60.0 + 15.0, 0.0001, 'the heal mechanic restored health')
+
+
+func test_shield_mechanic_applies_shield() -> void:
+  var p := Actor.new(100.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var arrived: Array = []
+  cm._fire_item(_mechanic_item(p, ShieldMechanic.ID, 8.0, ItemEffect.Shape.SELF), arrived)
+  for d in arrived:
+    cm._land(d)
+  assert_true(_has_status(p, 'shield'), 'the shield mechanic applied the shield status')
+  assert_almost_eq(_status_count(p, 'shield'), 8.0, 0.0001, 'with the delivery value as its count')
+
+
+func test_apply_status_with_a_mechanic_id_applies_nothing() -> void:
+  # 'shield' is a mechanic, so an APPLY_STATUS delivery naming it is an authoring mistake:
+  # it pushes an error and applies nothing (the mechanic must be delivered as MECHANIC).
+  var p := Actor.new(100.0)
+  var e := Actor.new(1000.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  cm._land(_status_delivery(p, 'shield'))
+  assert_false(_has_status(p, 'shield'), 'an APPLY_STATUS delivery with a mechanic id applies nothing')
+
+
+func test_item_uses_reports_its_mechanics() -> void:
+  var weapon := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), Actor.new())
+  var armor := Item.new(ItemCatalog.get_def(ItemCatalog.ARMOR), Actor.new())
+  assert_true(weapon.uses(AttackMechanic.ID), 'the weapon uses the attack mechanic')
+  assert_false(weapon.uses(ShieldMechanic.ID), 'the weapon does not use shield')
+  assert_true(armor.uses(ShieldMechanic.ID), 'the shield item uses the shield mechanic')
+  assert_false(armor.uses(AttackMechanic.ID), 'the shield item does not use attack')

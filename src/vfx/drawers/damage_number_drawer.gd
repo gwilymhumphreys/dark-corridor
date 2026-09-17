@@ -77,7 +77,7 @@ func draw_effect(canvas: CanvasItem, delivery: Delivery, point: Vector2, age: fl
     return
   var font: Font = _font()
   var text: String = str(int(delivery.value))
-  if delivery.kind == Delivery.Kind.HEAL:
+  if delivery.mechanic == HealMechanic.ID or delivery.mechanic == RegenMechanic.ID:
     text = '+' + text
   var size: int = font_size_for(delivery.value)
   var rise: float = clampf(age / FLOAT_DURATION, 0.0, 1.0)

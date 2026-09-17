@@ -314,7 +314,7 @@ changing translatable strings, run `tools/extract_pot.gd` and reimport.
 
 | Step | Work | Tests to add |
 |---|---|---|
-| 1 | `Mechanic`, `MechanicRegistry`, attack, heal and shield. The `Delivery.Kind` change and the `mechanic` field. Convert all catalogs and tests. Rename block to shield everywhere. The colour renames. | Registry lookups. An attack effect deals damage and publishes nothing new yet. A shield effect applies shield. An `APPLY_STATUS` with `'shield'` applies nothing. |
+| 1 | `Mechanic`, `MechanicRegistry`, attack, heal and shield. The `Delivery.Kind` change and the `mechanic` field. Convert all catalogs and tests. The colour renames. (All done.) | Registry lookups. An attack effect deals damage and publishes nothing new yet. A shield effect applies shield. An `APPLY_STATUS` with `'shield'` applies nothing. |
 | 2 | The `mechanic_id` argument through the damage pipeline and the shield multipliers. | The poison example above, with shield of 30 and 6. Unblockable skips shield. Vulnerable scales before shield. |
 | 3 | Poison as a mechanic, converting poison effects from `APPLY_STATUS`. Burn and regen, with their statuses, mechanics, colours and constants. Regen's health gain in `_advance_statuses_on`. | Burn ticks and uses half shield. Regen heals each tick and never expires. A regen tick is logged as a heal. |
 | 4 | Bleed as a mechanic and its new trigger, converting bleed effects from `APPLY_STATUS`. `StatusManager.reduce` and heal's removal of stacks. | Each case in the [Bleed](#bleed) list. Heal removes `floor(value * fraction)` of each of the three, and removes a status reaching zero. |

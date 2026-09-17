@@ -6,7 +6,7 @@ extends RefCounted
 ## state (the same discipline as the VFX wall it shadows).
 ##
 ## SINGLE SOURCE OF TRUTH (docs/systems/combat_log.md Design B): the damage / fire /
-## block / healing numbers come from the CombatManager's CombatLog — the manager
+## shield / healing numbers come from the CombatManager's CombatLog — the manager
 ## logs each at its mutation site — not from per-step HP-diff reconstruction. The old
 ## `attribute_damage` / `_split_remainder` HP-diff helper (and its proportional
 ## multi-DoT weight-split) is GONE. DIRECT-hit damage is credited per item; STATUS (DoT
@@ -27,13 +27,13 @@ var total_damage: float = 0.0
 # Phase 5 (tune machinery): per-encounter breakdown + per-item fire counts.
 var encounters: Array = []             # Array[Dictionary] — one per resolved beat
 var fires_by_item: Dictionary = {}     # item name_key -> times it fired (player items)
-# Defensive-item value (tune): block applied + healing landed per player item, so a
-# block/heal item can be RANKED, not just cleared of the trap flag by firing.
-var block_by_item: Dictionary = {}     # item name_key -> total block applied
+# Defensive-item value (tune): shield applied + healing landed per player item, so a
+# shield/heal item can be RANKED, not just cleared of the trap flag by firing.
+var shield_by_item: Dictionary = {}    # item name_key -> total shield applied
 var healing_by_item: Dictionary = {}   # item name_key -> total healing done (post-cap, from
                                        # Actor.heal's return — honest, no overheal)
 # Incoming pressure (tune): GROSS (pre-mitigation) enemy output, keyed by the enemy item that
-# dealt it. GROSS — not net HP lost — because a block-heavy test build absorbs the hit to ~0 net,
+# dealt it. GROSS — not net HP lost — because a shield-heavy test build absorbs the hit to ~0 net,
 # which would hide the enemy's real threat. Net survivability is the per-encounter HP attrition.
 var incoming_by_enemy: Dictionary = {}  # enemy item name_key -> gross damage thrown at the player side
 var total_incoming: float = 0.0         # gross damage the player side faced (pre-mitigation)
@@ -59,8 +59,8 @@ func ingest_combat_log(log: CombatLog) -> void:
       fires_by_item[name] = int(fires_by_item.get(name, 0)) + int(row['fires'])
     if float(row['damage']) > 0.0:
       damage_by_family[name] = float(damage_by_family.get(name, 0.0)) + float(row['damage'])
-    if float(row['block']) > 0.0:
-      block_by_item[name] = float(block_by_item.get(name, 0.0)) + float(row['block'])
+    if float(row['shield']) > 0.0:
+      shield_by_item[name] = float(shield_by_item.get(name, 0.0)) + float(row['shield'])
     if float(row['healing']) > 0.0:
       healing_by_item[name] = float(healing_by_item.get(name, 0.0)) + float(row['healing'])
   # Status (DoT / cash-out) damage, bucketed by status — the player's output + the enemy's incoming.
@@ -72,7 +72,7 @@ func ingest_combat_log(log: CombatLog) -> void:
       incoming_by_status[row['name']] = float(incoming_by_status.get(row['name'], 0.0)) + float(row['damage'])
   total_damage += float(log.total_damage_dealt.get(side, 0.0))
   # Incoming pressure = the enemy side's GROSS output (it lands on the player side). Gross, not
-  # net, so a hit the player fully blocked still registers as threat.
+  # net, so a hit the player fully shielded still registers as threat.
   for row in log.summary(CombatLog.Side.ENEMY):
     if float(row['gross']) > 0.0:
       var src: String = row['name']
@@ -111,7 +111,7 @@ func summarize(result: Dictionary) -> Dictionary:
     'incoming_by_status': incoming_by_status.duplicate(),
     'encounters': encounters.duplicate(true),           # run mode only
     'fires_by_item': fires_by_item.duplicate(),
-    'block_by_item': block_by_item.duplicate(),
+    'shield_by_item': shield_by_item.duplicate(),
     'healing_by_item': healing_by_item.duplicate(),
     'player_items': result.get('player_items', []),     # final board names (run mode)
     'strategy': result.get('strategy', ''),
@@ -139,7 +139,7 @@ func format_summary(summary: Dictionary) -> PackedStringArray:
     lines.append('  %s: %.1f' % [family, summary['damage_by_family'][family]])
   for status in _sorted_families(summary['damage_by_status']):
     lines.append('  [status] %s: %.1f' % [status, summary['damage_by_status'][status]])
-  lines.append('Incoming (gross, pre-block): %.1f' % summary['total_incoming'])
+  lines.append('Incoming (gross, pre-shield): %.1f' % summary['total_incoming'])
   for src in _sorted_families(summary['incoming_by_enemy']):
     lines.append('  %s: %.1f' % [src, summary['incoming_by_enemy'][src]])
   for status in _sorted_families(summary['incoming_by_status']):
@@ -205,7 +205,7 @@ func write_report(path: String, summary: Dictionary) -> void:
       lines.append('- %s: %.1f' % [status, summary['damage_by_status'][status]])
 
   # Incoming pressure (the difficulty lens) — GROSS enemy output, total + per enemy item. Gross
-  # (pre-block) so a block-heavy build doesn't hide enemy threat; net HP loss is the per-encounter
+  # (pre-shield) so a shield-heavy build doesn't hide enemy threat; net HP loss is the per-encounter
   # attrition below. This is what a tune pass reads to judge whether an enemy hits too hard.
   lines.append('')
   lines.append('## Incoming damage (gross, by enemy item)')
@@ -221,7 +221,7 @@ func write_report(path: String, summary: Dictionary) -> void:
     for status in _sorted_families(summary['incoming_by_status']):
       lines.append('- [status] %s: %.1f' % [status, summary['incoming_by_status'][status]])
   lines.append('')
-  lines.append('Total incoming (gross, pre-block): **%.1f**' % summary['total_incoming'])
+  lines.append('Total incoming (gross, pre-shield): **%.1f**' % summary['total_incoming'])
 
   # Per-encounter breakdown (run mode) — duration vs the ~10–15s window + HP attrition.
   if not summary['encounters'].is_empty():
@@ -237,19 +237,19 @@ func write_report(path: String, summary: Dictionary) -> void:
         float(enc.get('hp_after', 0.0)), enc.get('outcome', ''),
       ])
 
-  # Per-item contribution (run mode) — fires + damage + block + healing; a never-fired
-  # item is a trap pick, and the defensive columns let block/heal items be RANKED.
+  # Per-item contribution (run mode) — fires + damage + shield + healing; a never-fired
+  # item is a trap pick, and the defensive columns let shield/heal items be RANKED.
   var rows: Array = _item_contribution_rows(summary)
   if not rows.is_empty():
     lines.append('')
     lines.append('## Item contribution (player board)')
     lines.append('')
-    lines.append('| Item | Count | Fires | Damage | Block | Healing | Trap? |')
-    lines.append('|------|-------|-------|--------|-------|---------|-------|')
+    lines.append('| Item | Count | Fires | Damage | Shield | Healing | Trap? |')
+    lines.append('|------|-------|-------|--------|--------|---------|-------|')
     for r in rows:
       lines.append('| %s | %d | %d | %.1f | %.1f | %.1f | %s |' % [
         r['name'], int(r['count']), int(r['fires']), float(r['damage']),
-        float(r['block']), float(r['healing']), 'yes' if r['trap'] else '',
+        float(r['shield']), float(r['healing']), 'yes' if r['trap'] else '',
       ])
 
   _write_file(path, '\n'.join(lines) + '\n')
@@ -276,7 +276,7 @@ func _item_contribution_rows(summary: Dictionary) -> Array:
       'count': counts[name],
       'fires': fires,
       'damage': float(summary['damage_by_family'].get(name, 0.0)),
-      'block': float(summary['block_by_item'].get(name, 0.0)),
+      'shield': float(summary['shield_by_item'].get(name, 0.0)),
       'healing': float(summary['healing_by_item'].get(name, 0.0)),
       'trap': fires == 0,
     })

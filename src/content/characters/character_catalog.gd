@@ -113,11 +113,11 @@ static func _duelist() -> CharacterDef:
 ## item-economy character: its attacks create Chunks of Flesh on the player's OWN board, which decay
 ## after a couple of activations (the CREATE_ITEM + Decay seams, item_creation_and_decay.md). SCAFFOLD
 ## — the pool below is the authority (chunk-creating attacks, the self-harm producer + consumer, the
-## Reclaim payoff, a bleed applier, and the bone block spread); numbers + names are PLACEHOLDERS to
+## Reclaim payoff, a bleed applier, and the bone shield spread); numbers + names are PLACEHOLDERS to
 ## tune / rename (a Vermis display-name later). Still the owner's to fill: the signature relic, the
 ## real select-screen blurb, more pool depth, and flipping it into ids() once it's non-degenerate to
 ## draft. Starts with a 3-item kit that seeds the loop + a survival floor: Cleaver (producer),
-## Femur (block), Carving Knife (fast producer) — the other characters' 3-item start floor.
+## Femur (shield), Carving Knife (fast producer) — the other characters' 3-item start floor.
 static func _fleshmancer() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = FLESHMANCER

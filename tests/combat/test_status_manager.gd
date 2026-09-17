@@ -1,5 +1,5 @@
 extends GutTest
-## The status FACADE over the polymorphic StatusEffect instances. Block (pool/absorber), the
+## The status FACADE over the polymorphic StatusEffect instances. Shield (pool/absorber), the
 ## unblockable flag, additive stacking, the poison DoT (periodic, decrementing), a timed status
 ## expiring at its per-application duration, the Mass consume rule, and evasion. Statuses are
 ## driven by stepping in-test (the Combat manager drives them in the real loop).
@@ -13,43 +13,43 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func test_block_absorbs_before_hp() -> void:
+func test_shield_absorbs_before_hp() -> void:
   var a := Actor.new(50.0)
-  StatusManager.apply(a, 'block', 8.0)
+  StatusManager.apply(a, 'shield', 8.0)
   a.take_damage(5.0)
-  assert_eq(a.hp, 50.0, 'block absorbs all 5')
+  assert_eq(a.hp, 50.0, 'shield absorbs all 5')
   a.take_damage(5.0)
-  assert_eq(a.hp, 48.0, 'remaining 3 block absorbs 3, 2 leaks to HP')
-  assert_null(_find(a, 'block'), 'a spent block pool is removed')
+  assert_eq(a.hp, 48.0, 'remaining 3 shield absorbs 3, 2 leaks to HP')
+  assert_null(_find(a, 'shield'), 'a spent shield pool is removed')
 
 
-func test_unblockable_skips_block() -> void:
+func test_unblockable_skips_shield() -> void:
   var a := Actor.new(50.0)
-  StatusManager.apply(a, 'block', 8.0)
+  StatusManager.apply(a, 'shield', 8.0)
   a.take_damage(5.0, Delivery.Flag.UNBLOCKABLE)
-  assert_eq(a.hp, 45.0, 'an unblockable payload bypasses block')
+  assert_eq(a.hp, 45.0, 'an unblockable payload bypasses shield')
 
 
-func test_unblockable_dot_bypasses_block() -> void:
-  # Decision #5: an unblockable payload bypasses block — and a DoT is per-effect, so
+func test_unblockable_dot_bypasses_shield() -> void:
+  # Decision #5: an unblockable payload bypasses shield — and a DoT is per-effect, so
   # the flag must survive to each tick (the applying Delivery is long gone by then).
   var a := Actor.new(50.0)
-  StatusManager.apply(a, 'block', 8.0)
+  StatusManager.apply(a, 'shield', 8.0)
   var p := StatusManager.apply(a, 'poison', 3.0, 0.0, null, Delivery.Flag.UNBLOCKABLE)
   _advance(a, p, int(p.ticker.threshold))   # one tick
   assert_eq(a.hp, 47.0, 'the unblockable poison tick goes straight to HP (3 damage)')
-  assert_eq(_find(a, 'block').count, 8.0, 'block is untouched by an unblockable DoT')
+  assert_eq(_find(a, 'shield').count, 8.0, 'shield is untouched by an unblockable DoT')
 
 
-func test_block_stacks_additively() -> void:
+func test_shield_stacks_additively() -> void:
   var a := Actor.new(50.0)
-  StatusManager.apply(a, 'block', 5.0)
-  StatusManager.apply(a, 'block', 3.0)
-  assert_eq(_find(a, 'block').count, 8.0, 'block adds to the pool')
+  StatusManager.apply(a, 'shield', 5.0)
+  StatusManager.apply(a, 'shield', 3.0)
+  assert_eq(_find(a, 'shield').count, 8.0, 'shield adds to the pool')
 
 
-func test_vulnerable_amplifies_incoming_before_block() -> void:
-  # #6 incoming seam: Vulnerable scales damage UP in the amplifier stage, before block
+func test_vulnerable_amplifies_incoming_before_shield() -> void:
+  # #6 incoming seam: Vulnerable scales damage UP in the amplifier stage, before shield
   # soaks the (amplified) remainder.
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'vulnerable', 1.0, Balance.STATUS_VULNERABLE_DURATION)
@@ -59,9 +59,9 @@ func test_vulnerable_amplifies_incoming_before_block() -> void:
 
   var b := Actor.new(100.0)
   StatusManager.apply(b, 'vulnerable', 1.0, Balance.STATUS_VULNERABLE_DURATION)
-  StatusManager.apply(b, 'block', 5.0)
-  b.take_damage(10.0)   # 10 → x1.5 = 15 amplified; block soaks 5; 10 to HP
-  assert_almost_eq(b.hp, 90.0, 0.0001, 'block absorbs the amplified amount (amplifier before absorber)')
+  StatusManager.apply(b, 'shield', 5.0)
+  b.take_damage(10.0)   # 10 → x1.5 = 15 amplified; shield soaks 5; 10 to HP
+  assert_almost_eq(b.hp, 90.0, 0.0001, 'shield absorbs the amplified amount (amplifier before absorber)')
 
 
 func test_outgoing_damage_modifier_reads_weak() -> void:
@@ -117,9 +117,9 @@ func test_consume_caps_at_available_and_drops_a_drained_stack() -> void:
 func test_consume_is_a_noop_for_non_fuel_statuses() -> void:
   # The design's stacked-only Mass rule: pool / timed / static return 0 and are untouched.
   var a := Actor.new(50.0)
-  StatusManager.apply(a, 'block', 8.0)
-  assert_almost_eq(StatusManager.consume(a, 'block', 5.0), 0.0, 0.0001, 'block is not Mass fuel')
-  assert_almost_eq(_find(a, 'block').count, 8.0, 0.0001, 'and is untouched')
+  StatusManager.apply(a, 'shield', 8.0)
+  assert_almost_eq(StatusManager.consume(a, 'shield', 5.0), 0.0, 0.0001, 'shield is not Mass fuel')
+  assert_almost_eq(_find(a, 'shield').count, 8.0, 0.0001, 'and is untouched')
 
 
 func test_consume_of_an_absent_status_returns_zero() -> void:
@@ -164,7 +164,7 @@ class FuelProbeStatus extends StatusEffect:
     expired_called = true
 
 
-## A block-like absorber with an observable on_expire (spent-removal site).
+## A shield-like absorber with an observable on_expire (spent-removal site).
 class SpentProbeStatus extends StatusEffect:
   var expired_called: bool = false
 
@@ -173,7 +173,7 @@ class SpentProbeStatus extends StatusEffect:
     id = 'spent_probe'
 
 
-  func absorb(amount: float, _incoming_flags: int, _target, _ctx) -> float:
+  func absorb(amount: float, _incoming_flags: int, _target, _ctx, _mechanic_id: String = '') -> float:
     var soaked: float = minf(amount, count)
     count -= soaked
     return amount - soaked
@@ -191,12 +191,12 @@ func test_different_flag_applications_get_separate_instances() -> void:
   # Reapply matches id AND flags: unblockable poison applied over blockable poison must
   # not inherit (or rewrite) the earlier application's flags — each keeps its own.
   var a := Actor.new(50.0)
-  StatusManager.apply(a, 'block', 100.0)
+  StatusManager.apply(a, 'shield', 100.0)
   var plain: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
   var piercing: StatusEffect = StatusManager.apply(a, 'poison', 3.0, 0.0, null, Delivery.Flag.UNBLOCKABLE)
   assert_ne(plain, piercing, 'a different-flags application is its own instance')
   _advance(a, plain, int(plain.ticker.threshold))
-  assert_eq(a.hp, 50.0, 'the blockable tick was absorbed by block')
+  assert_eq(a.hp, 50.0, 'the blockable tick was absorbed by shield')
   _advance(a, piercing, int(piercing.ticker.threshold))
   assert_eq(a.hp, 47.0, 'the unblockable tick went straight to HP')
 

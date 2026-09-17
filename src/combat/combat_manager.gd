@@ -289,7 +289,7 @@ func sim_step() -> void:
 ## statuses tick on the same cadence as actor statuses.
 func _advance_statuses_on(target) -> void:
   var spent: Array[StatusEffect] = []
-  # Iterate a COPY: a PERIODIC tick calls take_damage, which can erase a spent block
+  # Iterate a COPY: a PERIODIC tick calls take_damage, which can erase a spent shield
   # status from `target.statuses` mid-pass (StatusManager.resolve_incoming_damage).
   # Mutating the list being iterated would skip the status after it — so walk a
   # snapshot, apply, and erase expiries afterward.
@@ -297,8 +297,8 @@ func _advance_statuses_on(target) -> void:
     var hp_before: float = target.hp if target is Actor else 0.0
     if StatusManager.advance_status(st, target):
       spent.append(st)
-    # Surface a DoT tick on the VFX wall (the damage was already applied above): a
-    # pre-landed, payload-less Delivery the wall draws as a number. Periodic statuses
+    # Surface a status's health change on the VFX wall (the damage / healing was already applied
+    # above): a pre-landed, payload-less Delivery the wall draws as a number. Periodic statuses
     # only ever sit on actors, so this never runs for item statuses.
     if target is Actor:
       var dealt: float = hp_before - target.hp
@@ -311,6 +311,15 @@ func _advance_statuses_on(target) -> void:
         if combat_log != null:
           combat_log.on_status_damage(st.name_key, _status_source_side(st, target),
               target.display_name, _side_of(target), dealt, timekeeper.sim_time, st.id)
+      else:
+        # A status that HEALS its holder (Regen): the same visual-only number (its mechanic is the
+        # status id, so the wall draws it with the heal '+' styling) + a heal log entry.
+        var healed: float = target.hp - hp_before
+        if healed > 0.0:
+          _deliveries.append(_dot_visual(st, target, healed))
+          if combat_log != null:
+            combat_log.on_heal(st.name_key, _status_source_side(st, target),
+                target.display_name, _side_of(target), healed, timekeeper.sim_time)
   for st in spent:
     st.on_expire(target, null)   # the natural-removal hook (every removal site calls it)
     target.statuses.erase(st)
@@ -321,7 +330,8 @@ func _advance_statuses_on(target) -> void:
 ## passed to _land, and flagged so the autotest's direct-hit attribution skips it.
 func _dot_visual(status: StatusEffect, target, dealt: float) -> Delivery:
   var d := Delivery.new()
-  d.kind = Delivery.Kind.DAMAGE
+  d.kind = Delivery.Kind.MECHANIC
+  d.mechanic = status.id
   d.value = dealt
   d.target = target
   d.source = status.source
@@ -346,7 +356,14 @@ func _fire_item(it: Item, arrived: Array) -> void:
   bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
   if combat_log != null:
     combat_log.on_item_fired(it.def.name_key, _side_of(it.owner), timekeeper.sim_time)
-  # The item still fires (cooldown reset, fire-emote) even when blinded — but its DAMAGE
+  # Crit (docs/plans/mechanics.md → Crit): one roll per fire, on the seeded per-fight RNG. The
+  # `> 0.0` check comes first so an item with no crit chance draws NOTHING from the RNG — existing
+  # fights and seeded autotest runs are bit-identical. On a crit, the fire's mechanic deliveries
+  # are multiplied by Balance.CRIT_MULTIPLIER (below, after consume) and flagged `crit`.
+  var crit: bool = it.def.crit_chance > 0.0 and rng.randf() < it.def.crit_chance
+  if crit:
+    bus.publish(EventBus.Event.CRIT, it.def.id, it.owner, it)
+  # The item still fires (cooldown reset, fire-emote) even when blinded — but its attack
   # whiffs (docs/systems/spore_engine.md Cap 2). Locked at fire so a swing launched while blinded misses.
   var blinded: bool = StatusManager.has_evasion(it.owner)
   for p in payloads:
@@ -363,7 +380,13 @@ func _fire_item(it: Item, arrived: Array) -> void:
       # only known now), scaling the Delivery — the Item stayed downward-clean (it declared).
       if p.consume_id != '' and p.consume_from_target:
         d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
-      if blinded and d.kind == Delivery.Kind.DAMAGE:
+      # A critting fire multiplies its mechanic deliveries LAST — after enchant, weak, empower and
+      # both kinds of consume (docs/plans/mechanics.md → Crit). Outside-set deliveries (statuses,
+      # summons, created items) are untouched, and so is `duration`.
+      if crit and d.kind == Delivery.Kind.MECHANIC and MechanicRegistry.has(d.mechanic):
+        d.value *= Balance.CRIT_MULTIPLIER
+        d.crit = true
+      if blinded and d.mechanic == AttackMechanic.ID:
         d.evaded = true
       _deliveries.append(d)
       if d.travel.crossed():
@@ -371,9 +394,10 @@ func _fire_item(it: Item, arrived: Array) -> void:
   # Drain the item's use-statuses AFTER its payload(s) are spawned (docs/systems/item.md fire
   # pipeline): decay spends one activation, so the final fire still lands, then removes the item at 0.
   _drain_uses(it)
-  # Bleed (and any actor-level fire-status) cashes out on the OWNER's activation — the actor twin of
-  # the item-use drain above (docs/design/mechanic_ideas.md -> Bleed). The firing item is threaded in
-  # so a status can scope to a weapon attack (the Armourer empower spends a charge). After the payload.
+  # Any actor-level fire-status (the Armourer empower) cashes out on the OWNER's activation — the
+  # actor twin of the item-use drain above. The firing item is threaded in so a status can scope to
+  # a weapon attack (the empower spends a charge). After the payload. (Bleed no longer fires here —
+  # it triggers on attacks landing on the holder, in the attack mechanic's land.)
   _drain_actor_fire_statuses(it.owner, it)
 
 
@@ -385,12 +409,13 @@ func _drain_uses(it: Item) -> void:
     s.on_holder_fired(it, _ctx)
 
 
-## After an item fires, drain its OWNER's actor-level fire-statuses (Bleed / empower) — the actor twin
-## of _drain_uses (which drains the fired item's own use-statuses). Each takes its bite of the holder /
-## spends its charge, and decays; a drained one is removed. The firing `item` is passed so a status can
-## scope to a weapon attack (empower). Mirrors the DoT-tick path (a wall visual + a combat-log entry,
-## since neither take_damage nor the bus reports a status's own damage). Iterate a COPY: a bite can
-## kill / remove statuses mid-pass.
+## After an item fires, drain its OWNER's actor-level fire-statuses (the Armourer empower) — the actor
+## twin of _drain_uses (which drains the fired item's own use-statuses). Each spends its charge and
+## decays; a drained one is removed. The firing `item` is passed so a status can scope to a weapon
+## attack (empower). Mirrors the DoT-tick path (a wall visual + a combat-log entry, since neither
+## take_damage nor the bus reports a status's own damage). Iterate a COPY: a bite can kill / remove
+## statuses mid-pass. (Bleed no longer drains here — it triggers on attacks landing on the holder,
+## in the attack mechanic's land.)
 func _drain_actor_fire_statuses(actor: Actor, item: Item) -> void:
   if actor == null:
     return
@@ -401,13 +426,38 @@ func _drain_actor_fire_statuses(actor: Actor, item: Item) -> void:
       spent.append(st)
     var dealt: float = hp_before - actor.hp
     if dealt > 0.0:
-      _deliveries.append(_dot_visual(st, actor, dealt))
-      if combat_log != null:
-        combat_log.on_status_damage(st.name_key, _status_source_side(st, actor),
-            actor.display_name, _side_of(actor), dealt, timekeeper.sim_time, st.id)
+      _show_status_damage(st, actor, dealt)
   for st in spent:
     st.on_expire(actor, null)
     actor.statuses.erase(st)
+
+
+## An ATTACK landed on `target` (the attack mechanic's land calls this, after its damage and
+## event/log calls, only if the target survived): run each of the target's statuses through
+## on_holder_attacked (Bleed bites here), surfacing any health loss on the wall + log, then
+## removing the ones that expired. Iterate a COPY: a bite can kill / remove statuses mid-pass.
+func _on_holder_attacked(target: Actor) -> void:
+  var spent: Array[StatusEffect] = []
+  for st in target.statuses.duplicate():
+    var hp_before: float = target.hp
+    if st.on_holder_attacked(target, _ctx):
+      spent.append(st)
+    var dealt: float = hp_before - target.hp
+    if dealt > 0.0:
+      _show_status_damage(st, target, dealt)
+  for st in spent:
+    st.on_expire(target, null)
+    target.statuses.erase(st)
+
+
+## Surface a status's damage to its holder on the VFX wall + combat log (the damage itself was
+## already applied by the status's hook) — the shared code of the DoT-tick, fire-status and
+## attack-triggered paths.
+func _show_status_damage(st: StatusEffect, actor: Actor, dealt: float) -> void:
+  _deliveries.append(_dot_visual(st, actor, dealt))
+  if combat_log != null:
+    combat_log.on_status_damage(st.name_key, _status_source_side(st, actor),
+        actor.display_name, _side_of(actor), dealt, timekeeper.sim_time, st.id)
 
 
 ## Consume up to `amount` of `owner_actor`'s board items whose def id matches `def_id`, as fuel for an
@@ -449,6 +499,7 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   var d := Delivery.new()
   d.kind = p.kind
   d.value = p.value
+  d.mechanic = p.mechanic
   d.status_id = p.status_id
   d.duration = p.duration
   d.summon_def_id = p.summon_def_id
@@ -481,33 +532,21 @@ func _land(d: Delivery) -> void:
   d.impact_time = timekeeper.sim_time
   d.landed = true
   match d.kind:
-    Delivery.Kind.DAMAGE:
-      if d.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
-        var dealt: float = d.target.take_damage(d.value, d.flags)
-        bus.publish(EventBus.Event.DAMAGE_DEALT, null, d.source_actor, _source_item_of(d))
-        if combat_log != null:
-          # `d.value` is the GROSS hit (pre-block); `dealt` is the NET HP lost — log both
-          # (gross = the threat metric, survives a full block; net = what HP actually did).
-          combat_log.on_damage(_delivery_source_name(d), _delivery_source_side(d),
-              d.target.display_name, _side_of(d.target), dealt, timekeeper.sim_time, d.value)
-    Delivery.Kind.HEAL:
-      if d.target is Actor:
-        var healed: float = d.target.heal(d.value)
-        bus.publish(EventBus.Event.HEALED, null, d.source_actor, _source_item_of(d))
-        if combat_log != null:
-          combat_log.on_heal(_delivery_source_name(d), _delivery_source_side(d),
-              d.target.display_name, _side_of(d.target), healed, timekeeper.sim_time)
+    Delivery.Kind.MECHANIC:   # the mechanic's land applies it (attack / heal / shield)
+      if d.mechanic == '':
+        push_error('[CombatManager] _land: a MECHANIC delivery has no mechanic id — nothing lands.')
+      else:
+        MechanicRegistry.get_mechanic(d.mechanic).land(d, self)
     Delivery.Kind.APPLY_STATUS:   # target is an Actor OR an Item — both hold a status list
-      var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
-      if applied != null:   # an unknown id applies nothing — publish no event for it
-        bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id, d.source_actor, _source_item_of(d))
-        if combat_log != null:
-          # Shield (block) carries its value; every other status is a count. Use BlockStatus.ID,
-          # not a literal, so the two stay in step (docs/systems/combat_log.md Cap 2 site 5).
-          if d.status_id == BlockStatus.ID:
-            combat_log.on_block(_delivery_source_name(d), _delivery_source_side(d),
-                _target_name(d.target), _target_side(d.target), d.value, timekeeper.sim_time)
-          else:
+      # A status that is also a mechanic (e.g. 'shield') is an authoring mistake: it must be
+      # delivered as a MECHANIC, so applying it here would double-apply its rules.
+      if MechanicRegistry.has(d.status_id):
+        push_error('[CombatManager] _land: status "%s" is a mechanic — deliver it as a MECHANIC, not APPLY_STATUS.' % d.status_id)
+      else:
+        var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
+        if applied != null:   # an unknown id applies nothing — publish no event for it
+          bus.publish(EventBus.Event.APPLIED, d.status_id, d.source_actor, _source_item_of(d))
+          if combat_log != null:
             combat_log.on_status_applied(_delivery_source_name(d), _delivery_source_side(d),
                 _target_name(d.target), _target_side(d.target), d.status_id, timekeeper.sim_time)
     Delivery.Kind.SUMMON:   # spawn a token onto the summoner's side (shape SELF → target = summoner)

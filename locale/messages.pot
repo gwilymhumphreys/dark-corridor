@@ -292,7 +292,7 @@ msgid "Targets an enemy item rather than the enemy."
 msgstr ""
 
 #: src/content/keywords/keyword_catalog.gd
-msgid "Cannot be soaked by Block."
+msgid "Cannot be soaked by Shield."
 msgstr ""
 
 #: src/content/keywords/keyword_catalog.gd
@@ -307,6 +307,66 @@ msgstr ""
 msgid "A permanent modifier attached to this item."
 msgstr ""
 
+#: src/content/mechanics/attack_mechanic.gd
+msgid "Attack"
+msgstr ""
+
+#: src/content/mechanics/attack_mechanic.gd
+msgid "Deals damage to the target."
+msgstr ""
+
+#: src/content/mechanics/bleed_mechanic.gd
+msgid "Bleed"
+msgstr ""
+
+#: src/content/mechanics/bleed_mechanic.gd
+msgid "Each time the holder is hit by an attack, it takes damage and loses a stack."
+msgstr ""
+
+#: src/content/mechanics/burn_mechanic.gd
+msgid "Burn"
+msgstr ""
+
+#: src/content/mechanics/burn_mechanic.gd
+msgid "Deals damage over time, losing a stack each tick."
+msgstr ""
+
+#: src/content/mechanics/crit_mechanic.gd
+msgid "Crit"
+msgstr ""
+
+#: src/content/mechanics/crit_mechanic.gd
+msgid "A chance to double the values of this item's effects when it fires."
+msgstr ""
+
+#: src/content/mechanics/heal_mechanic.gd
+msgid "Heal"
+msgstr ""
+
+#: src/content/mechanics/heal_mechanic.gd
+msgid "Restores health."
+msgstr ""
+
+#: src/content/mechanics/poison_mechanic.gd
+msgid "Poison"
+msgstr ""
+
+#: src/content/mechanics/regen_mechanic.gd
+msgid "Regen"
+msgstr ""
+
+#: src/content/mechanics/regen_mechanic.gd
+msgid "Restores health over time, keeping its stacks for the whole fight."
+msgstr ""
+
+#: src/content/mechanics/shield_mechanic.gd
+msgid "Shield"
+msgstr ""
+
+#: src/content/mechanics/shield_mechanic.gd
+msgid "Absorbs incoming damage, then wears off."
+msgstr ""
+
 #: src/content/relics/relic_catalog.gd
 msgid "Stone Ward"
 msgstr ""
@@ -319,28 +379,12 @@ msgstr ""
 msgid "Iron Idol"
 msgstr ""
 
-#: src/content/statuses/bleed_status.gd
-msgid "Bleed"
-msgstr ""
-
-#: src/content/statuses/bleed_status.gd
-msgid "Each time the bleeding side acts, it takes damage and loses a stack."
-msgstr ""
-
 #: src/content/statuses/blind_status.gd
 msgid "Blind"
 msgstr ""
 
 #: src/content/statuses/blind_status.gd
 msgid "Attacks miss while it lasts."
-msgstr ""
-
-#: src/content/statuses/block_status.gd
-msgid "Block"
-msgstr ""
-
-#: src/content/statuses/block_status.gd
-msgid "Absorbs incoming damage, then wears off."
 msgstr ""
 
 #: src/content/statuses/decay_status.gd
@@ -357,14 +401,6 @@ msgstr ""
 
 #: src/content/statuses/empowered_status.gd
 msgid "Doubles your next weapon attack."
-msgstr ""
-
-#: src/content/statuses/poison_status.gd
-msgid "Poison"
-msgstr ""
-
-#: src/content/statuses/poison_status.gd
-msgid "Deals damage over time, losing a stack each tick."
 msgstr ""
 
 #: src/content/statuses/silence_status.gd
@@ -500,7 +536,7 @@ msgid "{0}  {1} → {2}  +{3}"
 msgstr ""
 
 #: src/scenes/screens/combat_summary.gd
-msgid "{0}  {1} → {2}  +{3} block"
+msgid "{0}  {1} → {2}  +{3} shield"
 msgstr ""
 
 #: src/scenes/screens/combat_summary.gd
@@ -669,6 +705,10 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "Every {0}s"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Crit chance: {0}%"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd

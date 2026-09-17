@@ -22,7 +22,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts](architectu
 
 The Spore Druid is a **status-identity character** (the Slay-the-Spire Silent analog — most of its board is status appliers). Its two pillars (Spores: Mass / Self; Summon) need three mechanical seams the spine doesn't have. This PRD enumerates that engine work so it can be picked up cleanly, and — equally important — marks the large surface that needs **nothing new**, so the work isn't over-built.
 
-**What needs no engine work (author as content whenever):** the **applier commons** — a damage item with a status rider (Pocket Shrooms), poison (stacked / periodic), beneficial self-spores (regen = periodic, self-block = pool), burn (the timed counterpart DoT). These are the built apply-status item subtype + the existing status shapes (periodic / timed / pool / static-modifier — [StatusManager](status_manager.md)). The engine is already built for this character; only the gaps below are open.
+**What needs no engine work (author as content whenever):** the **applier commons** — a damage item with a status rider (Pocket Shrooms), poison (stacked / periodic), beneficial self-spores (regen = periodic, self-shield = pool), burn (the timed counterpart DoT). These are the built apply-status item subtype + the existing status shapes (periodic / timed / pool / static-modifier — [StatusManager](status_manager.md)). The engine is already built for this character; only the gaps below are open.
 
 **Is:** three capabilities — (1) **status-stack consumption** (spend spores as fuel), (2) **evasion** (the "acts but misses" seam, for blinding), (3) the **player-side consumer** of the already-deferred mid-fight roster add (summon).
 
@@ -75,7 +75,7 @@ The engine hardcodes **no spore** — it gains verbs, hooks, and one capability;
 
 > **Realized:** a `StatusEffect.causes_evasion()` hook (beside `absorb` / the damage modifiers)
 > + `StatusManager.has_evasion(actor)`. A blinded actor still fires (cooldown resets), but in
-> `CombatManager._fire_item` its **DAMAGE** Deliveries are marked `Delivery.evaded` at fire;
+> `CombatManager._fire_item` its **attack** Deliveries are marked `Delivery.evaded` at fire;
 > they travel, then **fizzle on land** (`_land`) with no damage. `evaded` is the fizzle reason
 > (vs. target-died) the VFX wall reads for the whiff tell (the tell itself is presentation —
 > not yet drawn). Damage-only, total-miss (a timed status); no probabilistic roll. A

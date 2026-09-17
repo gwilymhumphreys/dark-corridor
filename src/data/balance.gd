@@ -43,16 +43,16 @@ const WEAPON_DAMAGE: float = 6.0
 const WEAPON_TRAVEL: float = 0.3            # projectile flight time (docs/systems/combat_model.md)
 
 const ARMOR_COOLDOWN: float = 2.0
-const ARMOR_BLOCK: float = 8.0              # self-target, travel 0
+const ARMOR_SHIELD: float = 8.0              # self-target, travel 0
 
-# Leather block spread — self-block on a cooldown curve mirroring the weapon DPS tax
-# (fast = taxed, slow = rewarded). Trews sits on the established 4 block/sec baseline.
-const LEATHER_GLOVES_COOLDOWN: float = 1.0      # fast, taxed — 3 block/sec
-const LEATHER_GLOVES_BLOCK: float = 3.0
-const LEATHER_TREWS_COOLDOWN: float = 2.0       # baseline — 4 block/sec (matches Iron Guard)
-const LEATHER_TREWS_BLOCK: float = 8.0
-const LEATHER_BREASTPLATE_COOLDOWN: float = 3.0  # slow, rewarded — 5 block/sec
-const LEATHER_BREASTPLATE_BLOCK: float = 15.0
+# Leather shield spread — self-shield on a cooldown curve mirroring the weapon DPS tax
+# (fast = taxed, slow = rewarded). Trews sits on the established 4 shield/sec baseline.
+const LEATHER_GLOVES_COOLDOWN: float = 1.0      # fast, taxed — 3 shield/sec
+const LEATHER_GLOVES_SHIELD: float = 3.0
+const LEATHER_TREWS_COOLDOWN: float = 2.0       # baseline — 4 shield/sec (matches Iron Guard)
+const LEATHER_TREWS_SHIELD: float = 8.0
+const LEATHER_BREASTPLATE_COOLDOWN: float = 3.0  # slow, rewarded — 5 shield/sec
+const LEATHER_BREASTPLATE_SHIELD: float = 15.0
 
 const POISON_APPLIER_COOLDOWN: float = 1.6
 const POISON_APPLIER_STACKS: float = 3.0    # stacks applied per fire
@@ -133,7 +133,7 @@ const FLESH_EXPLOSION_CHARGE_PER_DESTROY: float = 0.05  # push per own item dest
 
 # Flensing Hook (PLACEHOLDER name) — the self-harm PRODUCER (carving theme): deals 1 UNBLOCKABLE
 # damage to YOURSELF and makes 2 chunks, 4s — the HP-spend identity made literal (carve your own
-# flesh). Self-damage is UNBLOCKABLE so the player's own block can't absorb it (else the cost AND the
+# flesh). Self-damage is UNBLOCKABLE so the player's own shield can't absorb it (else the cost AND the
 # self-damage synergy silently no-op). NOTE: values don't live in a vacuum (owner) — the real cost
 # emerges in context: self-harm can stack, and flesh spent here isn't attacking / banking explosion
 # charge (opportunity cost). Tune in /tune.
@@ -153,20 +153,21 @@ const FLESH_SKIN_GRAFT_CONSUME: int = 1
 
 # Bone Spear (owner) — the Fleshmancer's first BLEED applier (docs/design/mechanic_ideas.md -> Bleed;
 # the carve-as-bleed-applier fusion). A slow attack: damage + apply bleed to the enemy (UNBLOCKABLE,
-# so its own block can't soak the wound it bites itself for on its activations). PLACEHOLDER — /tune.
+# so its own shield can't soak the wound it bites itself for when it is hit by an attack).
+# PLACEHOLDER — /tune.
 const FLESH_BONE_SPEAR_COOLDOWN: float = 6.0
 const FLESH_BONE_SPEAR_DAMAGE: float = 6.0
-const FLESH_BONE_SPEAR_BLEED: float = 3.0   # enemy bleeds 3+2+1 = 6 over its next three activations
+const FLESH_BONE_SPEAR_BLEED: float = 3.0   # enemy bleeds 3+2+1 = 6 over its next three attacks
 
-# Bone block spread (owner) — the Fleshmancer's self-block: the survival FLOOR that protects the
+# Bone shield spread (owner) — the Fleshmancer's self-shield: the survival FLOOR that protects the
 # HP-spend engine while you voluntarily bleed yourself (character_ideas.md). The bone twin of the
 # Leather spread, same fast/mid/slow curve (Rib taxed, Femur baseline, Skull rewarded). PLACEHOLDER.
-const FLESH_RIB_COOLDOWN: float = 1.0       # fast, taxed — 3 block/sec
-const FLESH_RIB_BLOCK: float = 3.0
-const FLESH_FEMUR_COOLDOWN: float = 2.0     # baseline — 4 block/sec
-const FLESH_FEMUR_BLOCK: float = 8.0
-const FLESH_SKULL_COOLDOWN: float = 3.0     # slow, rewarded — 5 block/sec
-const FLESH_SKULL_BLOCK: float = 15.0
+const FLESH_RIB_COOLDOWN: float = 1.0       # fast, taxed — 3 shield/sec
+const FLESH_RIB_SHIELD: float = 3.0
+const FLESH_FEMUR_COOLDOWN: float = 2.0     # baseline — 4 shield/sec
+const FLESH_FEMUR_SHIELD: float = 8.0
+const FLESH_SKULL_COOLDOWN: float = 3.0     # slow, rewarded — 5 shield/sec
+const FLESH_SKULL_SHIELD: float = 15.0
 
 # Armourer big slow weapons (PLACEHOLDER numbers — /tune's job; docs/design/armourer.md → The empower
 # engine). A ladder of heavy single-target attacks on 5s/6s/7s cooldowns with SIMILAR DPS but a rising
@@ -189,8 +190,12 @@ const MIGHTY_BLOW_CHARGES: float = 1.0             # empower charges banked per 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks
 const POISON_DAMAGE_PER_TICK: float = 1.0   # per-tick damage (per-stack rule is content)
-# Block is a pure pool (persists until consumed, no decay) — no constants beyond
-# the ARMOR_BLOCK that feeds it.
+const BURN_TICK_INTERVAL: float = 0.5       # seconds between burn ticks — PLACEHOLDER — owner tunes
+const BURN_DAMAGE_PER_TICK: float = 1.0     # per-tick damage (per-stack rule is content) — PLACEHOLDER — owner tunes
+const REGEN_TICK_INTERVAL: float = 0.5      # seconds between regen ticks — PLACEHOLDER — owner tunes
+const REGEN_HEAL_PER_TICK: float = 1.0      # per-tick healing (per-stack rule is content) — PLACEHOLDER — owner tunes
+# Shield is a pure pool (persists until consumed, no decay) — no constants beyond
+# the ARMOR_SHIELD that feeds it.
 const SAMPLE_DEBUFF_DURATION: float = 5.0   # a timed status, to exercise that shape
 # Stat-statuses (#6) — % damage modifiers (timed). Placeholder values; the owner tunes
 # them (and may author per-stack variants — the engine supports it).
@@ -206,10 +211,22 @@ const EMPOWER_MULT: float = 2.0
 # this long. 2s = the Spore Druid's blinding spore as designed (spore_druid.md), applied by
 # Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).
 const STATUS_BLIND_DURATION: float = 2.0
+# Shield multipliers (docs/plans/mechanics.md → Shield): how much shield a hit of the mechanic
+# uses (1.0 = normal). The poison and burn mechanic classes return theirs; bleed returns its
+# once it is converted.
+const SHIELD_MULTIPLIER_POISON: float = 2.0   # PLACEHOLDER — owner tunes
+const SHIELD_MULTIPLIER_BURN: float = 0.5     # PLACEHOLDER — owner tunes
+const SHIELD_MULTIPLIER_BLEED: float = 0.5    # PLACEHOLDER — owner tunes
+# Heal cleanse (docs/plans/mechanics.md → Heal): a heal removes floor(value × this) stacks of the
+# target's poison, burn and bleed (value = the full heal, including overheal).
+const HEAL_CLEANSE_FRACTION: float = 0.1      # PLACEHOLDER — owner tunes
+# Crit (docs/plans/mechanics.md → Crit): the multiplier applied to a critting fire's mechanic
+# delivery values.
+const CRIT_MULTIPLIER: float = 2.0            # PLACEHOLDER — owner tunes
 
 
 # ── Triggers (charges model — push as a fraction of the bar; docs/systems/combat_model.md) ─────
-# "on poison applied -> push the block item." ~1.0 fills the bar (an instant
+# "on poison applied -> push the shield item." ~1.0 fills the bar (an instant
 # reaction); smaller values accelerate firing without completing it.
 const TRIGGER_PUSH_FULL: float = 1.0
 const TRIGGER_PUSH_SMALL: float = 0.25
@@ -217,12 +234,12 @@ const TRIGGER_PUSH_SMALL: float = 0.25
 
 # ── Content — Relics (run-level modifiers; docs/systems/content.md) ──────────────────────
 # Stone Ward (starting relic): a combat-start status applier (start each fight with
-# this much block on the player).
-const RELIC_STONE_WARD_BLOCK: float = 10.0
+# this much shield on the player).
+const RELIC_STONE_WARD_SHIELD: float = 10.0
 # Placeholder REWARD relics (granted by the reward routing; #2) — values are the owner's
-# to tune. Vital Charm: a direct max-HP mod on grant. Iron Idol: more combat-start block.
+# to tune. Vital Charm: a direct max-HP mod on grant. Iron Idol: more combat-start shield.
 const RELIC_VITAL_CHARM_MAX_HP: float = 20.0
-const RELIC_IRON_IDOL_BLOCK: float = 6.0
+const RELIC_IRON_IDOL_SHIELD: float = 6.0
 
 
 # ── Content — Enchantments (permanent item modifiers; docs/systems/content.md, #26) ──────

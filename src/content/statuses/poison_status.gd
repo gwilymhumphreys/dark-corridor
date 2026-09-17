@@ -8,9 +8,12 @@ const ID := 'poison'
 
 func _init() -> void:
   id = ID
-  name_key = 'Poison'
-  desc_key = 'Deals damage over time, losing a stack each tick.'   # PLACEHOLDER desc — owner writes
-  color = Colours.STATUS_POISON
-  icon = 'res://assets/icons/statuses/skill_poison_nb.png'
+  # Presentation is written once, in the mechanic (docs/plans/mechanics.md) — copy it here so the
+  # combat log, status icons and combat summary keep reading the status's own fields.
+  var mechanic: Mechanic = MechanicRegistry.get_mechanic(ID)
+  name_key = mechanic.name_key
+  desc_key = mechanic.desc_key
+  icon = mechanic.icon
+  color = Colours.POISON
   tick_interval = Balance.POISON_TICK_INTERVAL
   damage_per_tick = Balance.POISON_DAMAGE_PER_TICK

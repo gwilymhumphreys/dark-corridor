@@ -50,7 +50,7 @@ The corridor view is **mood + feedback**, not the focus (design) — but it carr
 Colour is the readability mechanism that scales (design) — you can't parse 30 names in 15s, but you can parse "lots of red on my side, blue on theirs." The board:
 
 - **Type-zoned** — items in fixed, learnable regions by effect family (weapon / armor / heal / status-applier); synergy groups cluster + glow together when one fires (glow can be drawn with [interface glow](interface_glow.md); not wired yet). Fixed positions, hover-tilt on the focused item only — *not* drifting (art doc: motion = signal; a still board that erupts on fire reads as the cascade).
-- **Colour-coded value panel** per item (extruding over the top edge): the panel background = effect family (red attack, blue block, green heal, per-effect status colours), the number = the value. Usually one panel; rares may show more.
+- **Colour-coded value panel** per item (extruding over the top edge): the panel background = effect family (red attack, blue shield, green heal, per-effect status colours), the number = the value. Usually one panel; rares may show more.
 - **Cooldown fill** (a filling overlay over the icon, its top edge a torn paper line) on each active item — **on enemy items too** (mutual cooldowns = the visible race). As built: `cooldown_fill.gdshader`, driven by `ItemCell` ([run_screen.md](run_screen.md)). The fills are cleared when the fight ends and are not shown outside a fight (events, reward icons).
 - **Rarity border** (bronze / silver / gold); **build-anchor** is a separate glow channel (never the border or size); **size** = a tempo tag (if it ships — Item PRD).
 - **Bigger than feels comfortable**, so activations stay legible in a packed cascade.

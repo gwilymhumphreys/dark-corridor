@@ -18,7 +18,7 @@
 > (beats auto-roll combat/event, the choice layer dormant), the **Spore Druid's first common
 > weapons** + Wilt Frond, and a **central colour/const palette** (`Colours` / `Consts`).
 > Latest 2026-06-21: the **combat item tooltip** (#31, 2026-06-19) and the **combat log** — a
-> combat-scoped observation sink that is the **single source of truth** for damage / heal / block
+> combat-scoped observation sink that is the **single source of truth** for damage / heal / shield
 > numbers (the autotest reads it instead of reconstructing from HP diffs), with a live HUD
 > *Dealt · Taken* readout + a post-fight summary screen. 2026-06-22: the **UI theme / pixel-scale /
 > font** model (#32) — `Consts.UI_SCALE`, the integer-at-rest rule, and a locale-gated vector↔pixel
@@ -28,6 +28,13 @@
 > **2026-09-16 (branch `full-res-art-3d-corridor`): pixel art is set aside and the look is being
 > explored** with the art we have, shaders, post-processing and palettes — see
 > [The look](#the-look-being-explored) below.
+> **2026-09-17: the mechanics plan is built** — all eight are now
+> [mechanics](systems/mechanics.md) (one class each, effects name them, they land through them);
+> bleed triggers when its holder is hit by an attack, heal removes poison / burn / bleed stacks,
+> and crit is a chance on an item that doubles that fire's mechanic values. Landing publishes one
+> `APPLIED` event. Health bars show shield, poison, burn, bleed and regen counts, and every mechanic
+> has a tooltip keyword card. The `mechanics` branch is not merged into `main` yet.
+>
 > **GUT suite green** on Godot 4.7 (latest count in [build_log.md](history/build_log.md)); the run is
 > watchable end-to-end and the autotest plays + reports builds.
 >
@@ -88,7 +95,7 @@ the character system #23/#27). See the per-item status in "Your task" below.
   defs, decision #23). The autotest's `run_full` drives a **whole descent** (draft
   → fight → advance → win) headless, deterministic by `--seed`, with quit/resume.
 - **Content** (`src/content/`): all three categories — **Relic** (Stone Ward,
-  combat-start block), **Enchant** (Whetstone, scale-a-value, saved on the board),
+  combat-start shield), **Enchant** (Whetstone, scale-a-value, saved on the board),
   **Consumable** (Healing Draught, thrown self-heal). Each proves its path end-to-end.
 - **Phase 4 — real UI / the run screen** (`src/scenes/main.tscn` + `main_controller.gd`,
   `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title (→ **character
@@ -293,7 +300,7 @@ test-first + its own green commit, with the headless autotest as the regression 
    (logger `attribute_damage` + the mode's per-step observation). [autotest](systems/autotest.md).
 6. **Stat-statuses — SEAMS WIRED (placeholder content).** Both damage-modifier seams are
    built: `modify_outgoing` (applied at fire time in `Item._resolve_effect`) and the
-   incoming **amplifier** stage in `resolve_incoming_damage` (before block). The `StatusEffect`
+   incoming **amplifier** stage in `resolve_incoming_damage` (before shield). The `StatusEffect`
    classes carry both as **% multipliers** (cascade-safe — not flat-per-fire). Placeholder statuses
    **Weak** (outgoing −25%) / **Vulnerable** (incoming +50%) + a **Sundering Bolt** applier
    prove the path; the real stat-status content (numbers, per-stack variants, which damage
@@ -309,7 +316,7 @@ test-first + its own green commit, with the headless autotest as the regression 
    run-scoped ally · `Delivery.Kind.SUMMON` · scope-aware teardown), so **allies support both
    run and combat scope** (#22), wired into the live fight + the multi-actor view (#4/#6).
    **Still the owner's:** the Spore Druid content itself, the spore **appliers** (poison /
-   blinding-status / burn / self-regen / self-block — they need nothing new, just authoring),
+   blinding-status / burn / self-regen / self-shield — they need nothing new, just authoring),
    and the **lethal-spore execute / spawn-on-kill rider** content. Full spec:
    [spore_engine](systems/spore_engine.md). **The seams are engineering (done); the spores are content.**
 

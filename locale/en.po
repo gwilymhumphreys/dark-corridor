@@ -292,8 +292,8 @@ msgid "Targets an enemy item rather than the enemy."
 msgstr "Targets an enemy item rather than the enemy."
 
 #: src/content/keywords/keyword_catalog.gd
-msgid "Cannot be soaked by Block."
-msgstr "Cannot be soaked by Block."
+msgid "Cannot be soaked by Shield."
+msgstr "Cannot be soaked by Shield."
 
 #: src/content/keywords/keyword_catalog.gd
 msgid "Charges faster when its condition happens."
@@ -307,6 +307,66 @@ msgstr "Charges as your own items are destroyed."
 msgid "A permanent modifier attached to this item."
 msgstr "A permanent modifier attached to this item."
 
+#: src/content/mechanics/attack_mechanic.gd
+msgid "Attack"
+msgstr "Attack"
+
+#: src/content/mechanics/attack_mechanic.gd
+msgid "Deals damage to the target."
+msgstr "Deals damage to the target."
+
+#: src/content/mechanics/bleed_mechanic.gd
+msgid "Bleed"
+msgstr "Bleed"
+
+#: src/content/mechanics/bleed_mechanic.gd
+msgid "Each time the holder is hit by an attack, it takes damage and loses a stack."
+msgstr "Each time the holder is hit by an attack, it takes damage and loses a stack."
+
+#: src/content/mechanics/burn_mechanic.gd
+msgid "Burn"
+msgstr "Burn"
+
+#: src/content/mechanics/burn_mechanic.gd
+msgid "Deals damage over time, losing a stack each tick."
+msgstr "Deals damage over time, losing a stack each tick."
+
+#: src/content/mechanics/crit_mechanic.gd
+msgid "Crit"
+msgstr "Crit"
+
+#: src/content/mechanics/crit_mechanic.gd
+msgid "A chance to double the values of this item's effects when it fires."
+msgstr "A chance to double the values of this item's effects when it fires."
+
+#: src/content/mechanics/heal_mechanic.gd
+msgid "Heal"
+msgstr "Heal"
+
+#: src/content/mechanics/heal_mechanic.gd
+msgid "Restores health."
+msgstr "Restores health."
+
+#: src/content/mechanics/poison_mechanic.gd
+msgid "Poison"
+msgstr "Poison"
+
+#: src/content/mechanics/regen_mechanic.gd
+msgid "Regen"
+msgstr "Regen"
+
+#: src/content/mechanics/regen_mechanic.gd
+msgid "Restores health over time, keeping its stacks for the whole fight."
+msgstr "Restores health over time, keeping its stacks for the whole fight."
+
+#: src/content/mechanics/shield_mechanic.gd
+msgid "Shield"
+msgstr "Shield"
+
+#: src/content/mechanics/shield_mechanic.gd
+msgid "Absorbs incoming damage, then wears off."
+msgstr "Absorbs incoming damage, then wears off."
+
 #: src/content/relics/relic_catalog.gd
 msgid "Stone Ward"
 msgstr "Stone Ward"
@@ -319,14 +379,6 @@ msgstr "Vital Charm"
 msgid "Iron Idol"
 msgstr "Iron Idol"
 
-#: src/content/statuses/bleed_status.gd
-msgid "Bleed"
-msgstr "Bleed"
-
-#: src/content/statuses/bleed_status.gd
-msgid "Each time the bleeding side acts, it takes damage and loses a stack."
-msgstr "Each time the bleeding side acts, it takes damage and loses a stack."
-
 #: src/content/statuses/blind_status.gd
 msgid "Blind"
 msgstr "Blind"
@@ -334,14 +386,6 @@ msgstr "Blind"
 #: src/content/statuses/blind_status.gd
 msgid "Attacks miss while it lasts."
 msgstr "Attacks miss while it lasts."
-
-#: src/content/statuses/block_status.gd
-msgid "Block"
-msgstr "Block"
-
-#: src/content/statuses/block_status.gd
-msgid "Absorbs incoming damage, then wears off."
-msgstr "Absorbs incoming damage, then wears off."
 
 #: src/content/statuses/decay_status.gd
 msgid "Decay"
@@ -358,14 +402,6 @@ msgstr "Empowered"
 #: src/content/statuses/empowered_status.gd
 msgid "Doubles your next weapon attack."
 msgstr "Doubles your next weapon attack."
-
-#: src/content/statuses/poison_status.gd
-msgid "Poison"
-msgstr "Poison"
-
-#: src/content/statuses/poison_status.gd
-msgid "Deals damage over time, losing a stack each tick."
-msgstr "Deals damage over time, losing a stack each tick."
 
 #: src/content/statuses/silence_status.gd
 msgid "Silence"
@@ -500,8 +536,8 @@ msgid "{0}  {1} → {2}  +{3}"
 msgstr "{0}  {1} → {2}  +{3}"
 
 #: src/scenes/screens/combat_summary.gd
-msgid "{0}  {1} → {2}  +{3} block"
-msgstr "{0}  {1} → {2}  +{3} block"
+msgid "{0}  {1} → {2}  +{3} shield"
+msgstr "{0}  {1} → {2}  +{3} shield"
 
 #: src/scenes/screens/combat_summary.gd
 msgid "{0}  threw {1}"
@@ -670,6 +706,10 @@ msgstr "On trigger"
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "Every {0}s"
 msgstr "Every {0}s"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Crit chance: {0}%"
+msgstr "Crit chance: {0}%"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "yourself"

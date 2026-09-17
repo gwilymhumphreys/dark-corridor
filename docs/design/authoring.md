@@ -30,7 +30,7 @@ string id), and where relevant a runtime instance class (`relic.gd`, `enchantmen
 
 1. **Write the def.** Add a `_name() -> ItemDef` builder in `items/item_catalog.gd` (or a new
    themed file the catalog aggregates). Give it a **string id** with a const alias —
-   `const POCKET_SHROOMS := 'pocket_shrooms'` — and set its effects via `ItemEffect` (kind / value
+   `const POCKET_SHROOMS := 'pocket_shrooms'` — and set its effects via `ItemEffect` (`mechanic` for any of the eight mechanics — attack, shield, heal, poison, burn, bleed, regen, crit — otherwise kind / value
    / shape / travel / `status_id` + `duration` for a status applier, the `consume_id` Mass fields,
    the `summon_*` fields). Set the item's `types` — one or more `ItemType` tags (`weapon` / `armour` /
    `skill` / `spell` / `trinket`), inert synergy labels ([item.md](../systems/item.md)). Shared numbers

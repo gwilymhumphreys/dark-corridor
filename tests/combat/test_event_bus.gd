@@ -7,25 +7,25 @@ extends GutTest
 func test_publish_pushes_subscribed_ticker() -> void:
   var bus := EventBus.new()
   var cd := Ticker.new(10)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, cd, 1.0)
-  bus.publish(EventBus.Event.STATUS_APPLIED)
+  bus.subscribe(EventBus.Event.APPLIED, cd, 1.0)
+  bus.publish(EventBus.Event.APPLIED)
   assert_true(cd.crossed(), 'a full-bar push via the bus crosses the ticker')
 
 
 func test_filter_only_pushes_on_match() -> void:
   var bus := EventBus.new()
   var cd := Ticker.new(10)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, cd, 1.0, 7)   # only status type 7
-  bus.publish(EventBus.Event.STATUS_APPLIED, 3)
+  bus.subscribe(EventBus.Event.APPLIED, cd, 1.0, 7)   # only data 7
+  bus.publish(EventBus.Event.APPLIED, 3)
   assert_false(cd.crossed(), 'a non-matching event is ignored by a filtered sub')
-  bus.publish(EventBus.Event.STATUS_APPLIED, 7)
+  bus.publish(EventBus.Event.APPLIED, 7)
   assert_true(cd.crossed(), 'a matching event pushes')
 
 
 func test_event_with_no_subscribers_is_noop() -> void:
   var bus := EventBus.new()
   var cd := Ticker.new(10)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, cd, 1.0)
+  bus.subscribe(EventBus.Event.APPLIED, cd, 1.0)
   bus.publish(EventBus.Event.ITEM_FIRED)
   assert_false(cd.crossed(), 'an event with no subscribers pushes nothing')
 
@@ -44,10 +44,10 @@ func test_own_side_filter_matches_own_side_only() -> void:
   var enemy_actor := Actor.new(10.0)
   var bus := _bus_with_sides(player_actor)
   var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, item.cooldown, 0.2, null, EventBus.SourceFilter.OWN_SIDE, item)
-  bus.publish(EventBus.Event.STATUS_APPLIED, 'poison', enemy_actor, null)
+  bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 0.2, null, EventBus.SourceFilter.OWN_SIDE, item)
+  bus.publish(EventBus.Event.APPLIED, 'poison', enemy_actor, null)
   assert_eq(item.cooldown.accum, 0.0, "an opponent's event does not push an OWN_SIDE sub")
-  bus.publish(EventBus.Event.STATUS_APPLIED, 'poison', player_actor, null)
+  bus.publish(EventBus.Event.APPLIED, 'poison', player_actor, null)
   assert_gt(item.cooldown.accum, 0.0, 'an own-side event pushes')
 
 
@@ -56,10 +56,10 @@ func test_opponent_side_filter_is_the_inverse() -> void:
   var enemy_actor := Actor.new(10.0)
   var bus := _bus_with_sides(player_actor)
   var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, item.cooldown, 0.2, null, EventBus.SourceFilter.OPPONENT_SIDE, item)
-  bus.publish(EventBus.Event.STATUS_APPLIED, 'poison', player_actor, null)
+  bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 0.2, null, EventBus.SourceFilter.OPPONENT_SIDE, item)
+  bus.publish(EventBus.Event.APPLIED, 'poison', player_actor, null)
   assert_eq(item.cooldown.accum, 0.0, 'an own-side event does not push an OPPONENT_SIDE sub')
-  bus.publish(EventBus.Event.STATUS_APPLIED, 'poison', enemy_actor, null)
+  bus.publish(EventBus.Event.APPLIED, 'poison', enemy_actor, null)
   assert_gt(item.cooldown.accum, 0.0, "an opponent's event pushes")
 
 
@@ -70,9 +70,9 @@ func test_null_source_fails_side_filters_but_passes_any() -> void:
   var bus := _bus_with_sides(player_actor)
   var own_side := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
   var any_ticker := Ticker.new(10)
-  bus.subscribe(EventBus.Event.DAMAGE_DEALT, own_side.cooldown, 0.2, null, EventBus.SourceFilter.OWN_SIDE, own_side)
-  bus.subscribe(EventBus.Event.DAMAGE_DEALT, any_ticker, 1.0)
-  bus.publish(EventBus.Event.DAMAGE_DEALT)   # no source identity
+  bus.subscribe(EventBus.Event.APPLIED, own_side.cooldown, 0.2, null, EventBus.SourceFilter.OWN_SIDE, own_side)
+  bus.subscribe(EventBus.Event.APPLIED, any_ticker, 1.0)
+  bus.publish(EventBus.Event.APPLIED)   # no source identity
   assert_eq(own_side.cooldown.accum, 0.0, 'a null-source event fails the side filter')
   assert_true(any_ticker.crossed(), 'an ANY sub still receives it')
 
@@ -81,10 +81,10 @@ func test_data_and_side_filters_compose() -> void:
   var player_actor := Actor.new(10.0)
   var bus := _bus_with_sides(player_actor)
   var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, item.cooldown, 0.2, 'poison', EventBus.SourceFilter.OWN_SIDE, item)
-  bus.publish(EventBus.Event.STATUS_APPLIED, 'block', player_actor, null)
+  bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 0.2, 'poison', EventBus.SourceFilter.OWN_SIDE, item)
+  bus.publish(EventBus.Event.APPLIED, 'shield', player_actor, null)
   assert_eq(item.cooldown.accum, 0.0, 'right side, wrong data — no push')
-  bus.publish(EventBus.Event.STATUS_APPLIED, 'poison', player_actor, null)
+  bus.publish(EventBus.Event.APPLIED, 'poison', player_actor, null)
   assert_gt(item.cooldown.accum, 0.0, 'matching data AND side pushes')
 
 
@@ -93,12 +93,12 @@ func test_unsubscribe_removes_all_of_an_items_subscriptions() -> void:
   var bus := EventBus.new()
   var leaving := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), holder)
   var staying := Ticker.new(10)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, leaving.cooldown, 1.0, null, EventBus.SourceFilter.ANY, leaving)
-  bus.subscribe(EventBus.Event.DAMAGE_DEALT, leaving.cooldown, 1.0, null, EventBus.SourceFilter.ANY, leaving)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, staying, 1.0)
+  bus.subscribe(EventBus.Event.APPLIED, leaving.cooldown, 1.0, null, EventBus.SourceFilter.ANY, leaving)
+  bus.subscribe(EventBus.Event.ITEM_FIRED, leaving.cooldown, 1.0, null, EventBus.SourceFilter.ANY, leaving)
+  bus.subscribe(EventBus.Event.APPLIED, staying, 1.0)
   bus.unsubscribe(leaving)
-  bus.publish(EventBus.Event.STATUS_APPLIED)
-  bus.publish(EventBus.Event.DAMAGE_DEALT)
+  bus.publish(EventBus.Event.APPLIED)
+  bus.publish(EventBus.Event.ITEM_FIRED)
   assert_eq(leaving.cooldown.accum, 0.0, 'every subscription of the removed item is gone')
   assert_true(staying.crossed(), 'other subscriptions survive, in order')
 
@@ -124,11 +124,11 @@ func test_push_to_gated_subscriber_is_dropped() -> void:
   var bus := EventBus.new()
   var holder := Actor.new(10.0)
   var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), holder)
-  bus.subscribe(EventBus.Event.STATUS_APPLIED, item.cooldown, 1.0, null, EventBus.SourceFilter.ANY, item)
+  bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 1.0, null, EventBus.SourceFilter.ANY, item)
   var silence: StatusEffect = StatusManager.apply(item, 'silence', 1.0)
-  bus.publish(EventBus.Event.STATUS_APPLIED)
+  bus.publish(EventBus.Event.APPLIED)
   assert_eq(item.cooldown.accum, 0.0, 'a push to a gated subscriber is dropped')
   item.statuses.erase(silence)
-  bus.publish(EventBus.Event.STATUS_APPLIED)
+  bus.publish(EventBus.Event.APPLIED)
   assert_gt(item.cooldown.accum, 0.0, 'pushes resume once the gate lifts')
   holder.dissolve()

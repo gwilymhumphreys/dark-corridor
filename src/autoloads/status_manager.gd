@@ -30,15 +30,17 @@ func apply(target, id: String, count: float, duration: float = 0.0, source = nul
   return s
 
 
-## The incoming-damage pipeline: amplifiers (Vulnerable) scale up FIRST, then absorbers (Block)
+## The incoming-damage pipeline: amplifiers (Vulnerable) scale up FIRST, then absorbers (Shield)
 ## soak the amplified amount (#6). Two passes over the target's statuses so the order holds;
-## emptied pools are removed afterward. Returns net damage to HP.
-func resolve_incoming_damage(target, raw: float, flags: int = 0, ctx = null) -> float:
+## emptied pools are removed afterward. `mechanic_id` names the mechanic that dealt the damage
+## (docs/plans/mechanics.md → Shield) — the shield pool spends its multiplier against it.
+## Returns net damage to HP.
+func resolve_incoming_damage(target, raw: float, flags: int = 0, ctx = null, mechanic_id: String = '') -> float:
   var net: float = raw
   for s in target.statuses:
     net = s.modify_incoming(net, target, ctx)
   for s in target.statuses:
-    net = s.absorb(net, flags, target, ctx)
+    net = s.absorb(net, flags, target, ctx, mechanic_id)
   _remove_spent(target)
   return maxf(net, 0.0)
 
@@ -81,6 +83,21 @@ func consume(target, id: String, amount: float) -> float:
     s.on_expire(target, null)   # the natural-removal hook (every removal site calls it)
     target.statuses.erase(s)
   return removed
+
+
+## Remove up to `amount` stacks of `id` from `target` — any status, not only fuel (unlike
+## consume). A status reduced to zero or below is removed with its on_expire hook (the
+## natural-removal hook). Does nothing when the status is absent or `amount` <= 0.
+func reduce(target, id: String, amount: float) -> void:
+  if amount <= 0.0:
+    return
+  var s: StatusEffect = _find(target, id)
+  if s == null:
+    return
+  s.count -= amount
+  if s.count <= 0.0:
+    s.on_expire(target, null)
+    target.statuses.erase(s)
 
 
 func _find(target, id: String) -> StatusEffect:

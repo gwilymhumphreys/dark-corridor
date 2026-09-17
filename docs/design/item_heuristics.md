@@ -39,10 +39,10 @@ in damage *and* stacks Spores. Rationale: Spores do nothing on their own (pure M
 must *also* draft, so the applier alone isn't getting a free effect. Revisit if Spores ever
 earn a solo effect.
 
-## The block curve — `block/sec = cooldown + 2` *(recorded from code, owner to ratify)*
+## The shield curve — `shield/sec = cooldown + 2` *(recorded from code, owner to ratify)*
 
-The self-block items follow a parallel curve, **anchored at 2s = 4 block/sec** (Iron Guard —
-8 block / 2s) and rising **+1 per second of cooldown**, mirroring the weapon line's
+The self-shield items follow a parallel curve, **anchored at 2s = 4 shield/sec** (Iron Guard —
+8 shield / 2s) and rising **+1 per second of cooldown**, mirroring the weapon line's
 fast-taxed / slow-rewarded shape (the leather spread in `src/data/balance.gd`: Gloves 1s→3,
 Trews 2s→4, Breastplate 3s→5). This section records what the authored numbers already do —
 it lived only in a `balance.gd` comment; the rule itself is the owner's to keep or change.
@@ -54,4 +54,4 @@ flows through to the status instance (the 2026-06-10 status refactor). So "apply
 this item's `duration = 2.0`; a different item can apply a longer Weak. The `Balance` constants
 (`STATUS_WEAK_DURATION`, …) are now *default durations an applier reuses*, not a global the status
 owns. Re-applying a timed status **stacks** (extends the timer) by default. (Non-timed statuses —
-block, poison, spores — ignore `duration`; their `count` is the magnitude.)
+shield, poison, spores — ignore `duration`; their `count` is the magnitude.)

@@ -55,6 +55,18 @@ func is_gated() -> bool:
   return false
 
 
+## True when any of this item's effects uses the named mechanic (docs/plans/mechanics.md) —
+## how items, relics and enchantments refer to a mechanic ("your attack items"). For `'crit'`
+## (which is never an effect's mechanic) it is true when the item has a crit chance.
+func uses(mechanic_id: String) -> bool:
+  if mechanic_id == CritMechanic.ID:
+    return def.crit_chance > 0.0
+  for effect in def.effects:
+    if effect.mechanic == mechanic_id:
+      return true
+  return false
+
+
 ## Read-only display value for the tooltip (docs/systems/tooltips.md) — the value the tooltip
 ## SHOWS, computed WITHOUT side effects. Mirrors the pure stages of _resolve_effect (enchant
 ## scaling + the outgoing stat-status seam) but never resets the cooldown or spends fuel, so it
@@ -62,7 +74,7 @@ func is_gated() -> bool:
 ## mutating stack peek; tooltips.md). Pairs with base_value for the changed-value highlight.
 func display_value(effect: ItemEffect) -> float:
   var v: float = base_value(effect)
-  if effect.kind == Delivery.Kind.DAMAGE and owner != null:
+  if effect.mechanic == AttackMechanic.ID and owner != null:
     v = StatusManager.modify_outgoing(owner, v, self)   # pure (Weak, empower — scoped by this item's types)
   return v
 
@@ -83,9 +95,9 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   var p := Payload.from_effect(effect)
   if enchant != null:
     p.value *= enchant.def.value_mult   # scale-a-value enchant (docs/systems/content.md / #26)
-  # Outgoing-damage stat-status seam (#6): scale DAMAGE by the owner's modifiers AT FIRE
+  # Outgoing-damage stat-status seam (#6): scale an attack by the owner's modifiers AT FIRE
   # TIME (e.g. Weak). A % multiplier, so it's locked into the payload here, cascade-safe.
-  if effect.kind == Delivery.Kind.DAMAGE and owner != null:
+  if effect.mechanic == AttackMechanic.ID and owner != null:
     p.value = StatusManager.modify_outgoing(owner, p.value, self)
   # Status-stack consume (docs/systems/spore_engine.md Cap 1): SELF-fuel resolves now (the
   # owner is known) by spending its stacks + scaling. OPPONENT-fuel (Mass) rides the

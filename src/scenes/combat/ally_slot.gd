@@ -18,6 +18,7 @@ var actor: Actor
 @onready var _hp: Control = $Left/HP
 @onready var _hp_fill: ColorRect = $Left/HP/Fill
 @onready var _hp_label: Label = $Left/HP/Label
+@onready var _status_numbers: StatusNumbers = $Left/HP/StatusNumbers
 @onready var _name: Label = $Left/Name
 @onready var _items: HBoxContainer = $Items
 
@@ -27,6 +28,7 @@ var _cells: Dictionary = {}   # Item -> ItemCell
 ## `timekeeper` drives the cells' fire recoil on the combat clock (null = no recoil).
 func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
   actor = target
+  _status_numbers.actor = target
   _name.text = tr(actor.display_name) if actor.display_name != '' else tr('Ally')
   if actor.portrait != '':
     _portrait.texture = load(actor.portrait)
@@ -57,6 +59,7 @@ func set_cooldowns_shown(shown: bool) -> void:
 func _exit_tree() -> void:
   _portrait.texture = null
   _cells.clear()
+  _status_numbers.actor = null
   actor = null
 
 

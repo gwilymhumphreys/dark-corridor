@@ -7,11 +7,12 @@ extends RefCounted
 ## the manager resolves the item's relative target-shape into the concrete
 ## `target` here.
 
-enum Kind { DAMAGE, HEAL, APPLY_STATUS, SUMMON, CREATE_ITEM }
+enum Kind { MECHANIC, APPLY_STATUS, SUMMON, CREATE_ITEM }
 enum Flag { NONE = 0, UNBLOCKABLE = 1 }   # bitmask; resolved by StatusManager
 
-var kind: int = Kind.DAMAGE
+var kind: int = Kind.MECHANIC
 var value: float = 0.0
+var mechanic: String = ''    # set when kind == MECHANIC (MechanicRegistry id)
 var status_id: String = ''    # set when kind == APPLY_STATUS (string id, #23)
 var duration: float = 0.0     # per-application duration carried to apply() (timed statuses)
 var summon_def_id: String = ''   # EnemyCatalog id of the token to spawn (kind == SUMMON)
@@ -37,6 +38,10 @@ var visual_only: bool = false
 # attack swung but whiffs. It travels, then fizzles on land (no damage). The flag is the
 # fizzle REASON (evaded vs. target-died) so the VFX wall can play a distinct miss tell.
 var evaded: bool = false
+# Set at fire when the item's crit roll succeeds (docs/plans/mechanics.md → Crit): the delivery's
+# value was multiplied by Balance.CRIT_MULTIPLIER. Effects can use this later (e.g. a distinct
+# impact tell). Never set on a thrown consumable (potions have no crit chance).
+var crit: bool = false
 
 
 ## Advance the travel Ticker one sim-step; returns true the step it arrives.

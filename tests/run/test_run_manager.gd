@@ -1,6 +1,6 @@
 extends GutTest
 ## Step 5 — the descent. A full short run reaches WON, drafts land on the board, a
-## starting relic grants combat-start block, a loss ends the run DIED, and a
+## starting relic grants combat-start shield, a loss ends the run DIED, and a
 ## save-mid-run + rehydrate reproduces the exact continuation (deterministic
 ## resume — the no-save-scum property end to end).
 
@@ -38,9 +38,9 @@ func _board_ids(actor: Actor) -> Array:
   return ids
 
 
-func _block_count(actor: Actor) -> float:
+func _shield_count(actor: Actor) -> float:
   for s in actor.statuses:
-    if s.id == 'block':
+    if s.id == 'shield':
       return s.count
   return 0.0
 
@@ -90,13 +90,13 @@ func test_draft_pick_lands_on_the_board() -> void:
   assert_eq(run.position, 1, 'and the run advanced a beat')
 
 
-func test_starting_relic_grants_combat_start_block() -> void:
+func test_starting_relic_grants_combat_start_shield() -> void:
   var run := _run()
   run.start(1)
   # beat 0 auto-rolls to a live (easy) fight — begin it; relics apply at fight start, before any step
   run.begin_current()
-  assert_almost_eq(_block_count(run.player), Balance.RELIC_STONE_WARD_BLOCK, 0.0001,
-    'Stone Ward applies its block when the fight begins')
+  assert_almost_eq(_shield_count(run.player), Balance.RELIC_STONE_WARD_SHIELD, 0.0001,
+    'Stone Ward applies its shield when the fight begins')
 
 
 func test_loss_ends_run_died() -> void:

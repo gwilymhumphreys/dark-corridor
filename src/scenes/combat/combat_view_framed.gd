@@ -43,6 +43,7 @@ var _player: Actor
 @onready var _player_hp: Control = $Portraits/PlayerPortrait/HP
 @onready var _player_hp_fill: ColorRect = $Portraits/PlayerPortrait/HP/Fill
 @onready var _player_hp_label: Label = $Portraits/PlayerPortrait/HP/Label
+@onready var _player_status_numbers: StatusNumbers = $Portraits/PlayerPortrait/HP/StatusNumbers
 @onready var _player_name: Label = $Portraits/PlayerPortrait/Name
 @onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
 @onready var _ally_right: HBoxContainer = $Portraits/AllyRight
@@ -108,6 +109,7 @@ func _fit_portraits(height: float) -> void:
 func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _cm = cm
   _player = player
+  _player_status_numbers.actor = player
   if player.portrait != '':
     _portrait_image.texture = load(player.portrait)
   _build_player_items(player)

@@ -1,12 +1,15 @@
 class_name KeywordCatalog
 ## The tooltip keyword catalog (docs/systems/tooltips.md): maps a keyword id to its card data
-## `{name_key, desc_key, color, icon}`. Two kinds of id:
+## `{name_key, desc_key, color, icon}`. Three kinds of id:
 ##
-##   - a STATUS id ('poison', 'block', …) → pulls its presentation straight from the StatusEffect
-##     subclass (name_key / desc_key / color / icon), so a status is documented in exactly one place.
-##   - a MECHANIC id ('kw:fuel', 'kw:summon', …) → authored here. A mechanic keyword appears in a
-##     tooltip ONLY if it has an entry below — that absence is how the owner gates a mechanic card
-##     (author the entry → the card shows; remove it → it silently disappears).
+##   - a MECHANIC id ('attack', 'shield', 'poison', …) → pulls its presentation straight from the
+##     Mechanic class (name_key / desc_key / color / icon), so a mechanic is documented in exactly
+##     one place.
+##   - a STATUS id ('weak', 'vulnerable', …) → pulls its presentation straight from the StatusEffect
+##     subclass, so a status is documented in exactly one place.
+##   - a MECHANIC KEYWORD id ('kw:fuel', 'kw:summon', …) → authored here. A mechanic keyword appears
+##     in a tooltip ONLY if it has an entry below — that absence is how the owner gates a mechanic
+##     card (author the entry → the card shows; remove it → it silently disappears).
 ##
 ## Owner's domain: the mechanic desc_key copy (and which mechanics exist). Scaffolded as marked
 ## placeholders. Lazily built once, like the other catalogs.
@@ -43,7 +46,7 @@ static func _build() -> void:
   _mechanics[AOE] = {
     'name_key': 'All Enemies',
     'desc_key': 'Hits every enemy at once.',
-    'color': Colours.DAMAGE,
+    'color': Colours.ATTACK,
     'icon': 'res://assets/icons/keywords/skill_sword_splash_nb.png',
   }
   _mechanics[ITEM_TARGET] = {
@@ -54,8 +57,8 @@ static func _build() -> void:
   }
   _mechanics[UNBLOCKABLE] = {
     'name_key': 'Unblockable',
-    'desc_key': 'Cannot be soaked by Block.',
-    'color': Colours.DAMAGE,
+    'desc_key': 'Cannot be soaked by Shield.',
+    'color': Colours.ATTACK,
     'icon': 'res://assets/icons/keywords/skill_piercing_attack_nb.png',
   }
   _mechanics[TRIGGER] = {
@@ -87,9 +90,12 @@ static func refresh_colours() -> void:
   _mechanics.clear()
 
 
-## True if `id` resolves to a card. Statuses defer to the registry; mechanic ids must be authored
-## above. An unknown id (catalog-gated out) returns false — no chip card, silently.
+## True if `id` resolves to a card. Mechanics defer to the MechanicRegistry; statuses to the
+## StatusRegistry; `kw:` mechanic ids must be authored above. An unknown id (catalog-gated out)
+## returns false — no chip card, silently.
 static func has(id: String) -> bool:
+  if MechanicRegistry.has(id):
+    return true
   if id.begins_with('kw:'):
     if _mechanics.is_empty():
       _build()
@@ -100,6 +106,14 @@ static func has(id: String) -> bool:
 ## The card data for `id`: `{name_key, desc_key, color, icon}`, or an empty Dictionary if unknown
 ## (the chip then renders its bare name and shows no card — never crash; tooltips.md).
 static func get_entry(id: String) -> Dictionary:
+  if MechanicRegistry.has(id):
+    var m: Mechanic = MechanicRegistry.get_mechanic(id)
+    return {
+      'name_key': m.name_key,
+      'desc_key': m.desc_key,
+      'color': m.color(),
+      'icon': m.icon,
+    }
   if id.begins_with('kw:'):
     if _mechanics.is_empty():
       _build()

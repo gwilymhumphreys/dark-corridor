@@ -55,6 +55,20 @@ func test_enemy_hud_hp_text_tracks_actor() -> void:
   assert_eq(hud.get_node('HpRow/HP/Label').text, '60 / 100', 'HP text tracks the actor')
 
 
+func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
+  # The mechanic statuses (shield, poison, …) read off the StatusNumbers beside the HP bar; the
+  # status-icon row keeps showing only the outside-set statuses.
+  var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
+  _host(hud)
+  var a := _spawn(100.0, [ItemCatalog.WEAPON])
+  StatusManager.apply(a, ShieldStatus.ID, 5.0)
+  StatusManager.apply(a, 'weak', 1.0)
+  hud.setup(a)
+  hud._refresh_statuses()
+  assert_eq(hud.get_node('HpRow/Statuses').get_child_count(), 1,
+      'shield is a mechanic (its number shows beside the HP bar), only weak gets an icon')
+
+
 func test_ally_slot_builds_one_cell_per_item() -> void:
   var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
   _host(slot)

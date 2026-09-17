@@ -28,4 +28,8 @@ var trigger_subs: Array[Dictionary] = []
 # created chunk), so the item is destroyed after that many fires. 0 = unlimited (never decays). Just a
 # seed — the live thing is the status, which content can then top up / re-target. Numbers -> Balance.
 var starting_uses: int = 0
+# Crit chance (docs/plans/mechanics.md → Crit): 0 to 1. On a fire, the Combat manager rolls
+# once; on a crit, the values of that fire's mechanic deliveries are multiplied by
+# Balance.CRIT_MULTIPLIER. 0 = never crits (the default; draws nothing from the per-fight RNG).
+var crit_chance: float = 0.0
 var panel_color: Color = Color.WHITE

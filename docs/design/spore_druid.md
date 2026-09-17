@@ -44,7 +44,7 @@ The character is **one identity, several strategies** (the StS Defect model: orb
 The spore engine has two ways to play — **Mass** and **Self** — not separate pillars, just different ways into spores. A player drafts each differently; they share the applier commons. (Spread — rewarding *different* types held at once — is **not** an archetype: it's a state with no consume-verb or draft identity of its own. It lives as a cross-cutting *mechanism* a card or two can reward, not a thing you build toward.)
 
 - **Mass** — each Mass card *names its own fuel*: consume X of a printed spore type (rarely >1 type) for a scaling effect. Not a generic engine — a card only references a spore that can be consumed, so the stacked/timed split (below) is a per-card authoring fact, not a system rule. Conditional (dead without their fuel) → skews uncommon/rare. Commons stay the appliers; Mass lives a tier up.
-- **Self** — payoffs for being heavily spored, plus *beneficial* self-spores (regen, block-on-tick). Cleanest framing is "spore myself with good stuff + reward being spored," **not** "poison yourself and cope" — the masochist line (eat a bad spore, payoff justifies it) is the spicy high-risk *sub*-line, not the whole premise. Inward/defensive. **Anti-synergy with Mass** lives in *target shape* (Self appliers spray everyone; Mass wants one type stacked on one target) — kept live deliberately as a real draft tension.
+- **Self** — payoffs for being heavily spored, plus *beneficial* self-spores (regen, shield-on-tick). Cleanest framing is "spore myself with good stuff + reward being spored," **not** "poison yourself and cope" — the masochist line (eat a bad spore, payoff justifies it) is the spicy high-risk *sub*-line, not the whole premise. Inward/defensive. **Anti-synergy with Mass** lives in *target shape* (Self appliers spray everyone; Mass wants one type stacked on one target) — kept live deliberately as a real draft tension.
 
 Cross-cutting applier commons feed multiple flavours — a main-spore applier counts toward Mass *and* the distinct-status variety, and (if self-shaped) feeds Self. That overlap keeps any one flavour from becoming the only concern.
 
@@ -82,7 +82,7 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 **Reused baseline (not bespoke spores):** **Vulnerable**, **Weak** — the shared status vocabulary every character can apply (#28). Their appliers sit in the pool like any card and feed the distinct-status variety, but are never Mass fuel (timed, not stacked).
 
 ## Tagging key
-- **Type:** A = attack (damage item) · S = skill (block / resource / utility)
+- **Type:** A = attack (damage item) · S = skill (shield / resource / utility)
 - **Archetype:** mass · self · spread · x (cross-cutting / serves no single thread)
 
 ## Commons (target ~20, held loosely)
@@ -105,7 +105,7 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 ### Skills
 
-| Name | Subtype (block/resource/utility) | Archetype | Effect | Notes |
+| Name | Subtype (shield/resource/utility) | Archetype | Effect | Notes |
 |------|----------------------------------|-----------|--------|-------|
 | | | | | |
 
@@ -137,6 +137,6 @@ On-mechanism standouts: thallid counter, decompose-for-fuel, board-linking, spaw
 
 ---
 
-**Running count:** Commons — Attacks 5 (Druid Staff, Spore Spitter, Capped Cudgel, Bloomhammer, Wilt Frond) · Skills 0 (block 0 / resource 0 / utility 0). Rares — 1 (Pocket Shrooms, attack).
+**Running count:** Commons — Attacks 5 (Druid Staff, Spore Spitter, Capped Cudgel, Bloomhammer, Wilt Frond) · Skills 0 (shield 0 / resource 0 / utility 0). Rares — 1 (Pocket Shrooms, attack).
 
 **Character:** `CharacterCatalog.SPORE_DRUID` scaffolded (pool: the 5 commons + Pocket Shrooms — the running count above; starts with Druid Staff; no signature relic yet; not yet selectable).

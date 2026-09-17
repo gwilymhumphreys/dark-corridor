@@ -16,8 +16,8 @@ func test_travelled_delivery_lands_after_threshold() -> void:
   assert_true(d.step_travel(), 'step 2: arrives')
 
 
-func test_default_payload_is_damage() -> void:
+func test_default_payload_is_mechanic() -> void:
   var d := Delivery.new()
-  assert_eq(d.kind, Delivery.Kind.DAMAGE, 'defaults to a damage payload')
+  assert_eq(d.kind, Delivery.Kind.MECHANIC, 'defaults to a mechanic payload')
   assert_false(d.landed, 'starts in flight')
   assert_false(d.fizzled, 'starts un-fizzled')

@@ -101,7 +101,7 @@ func _build_pills() -> void:
       break
     var pill: ValuePill = pills[index]
     pill.visible = true
-    pill.setup(TooltipContent.fmt(item.display_value(effect)), effect.color, ratio)
+    pill.setup(TooltipContent.fmt(item.display_value(effect)), _effect_color(effect), ratio)
     index += 1
   var pills_size: Vector2 = _pills.get_combined_minimum_size()
   _pills.size = pills_size
@@ -110,9 +110,17 @@ func _build_pills() -> void:
 
 func _effect_has_value(effect: ItemEffect) -> bool:
   match effect.kind:
-    Delivery.Kind.DAMAGE, Delivery.Kind.HEAL, Delivery.Kind.APPLY_STATUS:
+    Delivery.Kind.MECHANIC, Delivery.Kind.APPLY_STATUS:
       return true
   return false
+
+
+## The pill's tint: a mechanic effect takes its colour from the mechanic (the effect's own colour
+## is unset), everything else keeps the effect's authored colour.
+func _effect_color(effect: ItemEffect) -> Color:
+  if effect.mechanic != '':
+    return MechanicRegistry.get_mechanic(effect.mechanic).color()
+  return effect.color
 
 
 func _process(_delta: float) -> void:

@@ -46,6 +46,7 @@ func _driver(cm: CombatManager) -> VfxDriver:
 
 func _landed_delivery() -> Delivery:
   var d := Delivery.new()
+  d.mechanic = AttackMechanic.ID   # a valid impact (the impact drawers are keyed by mechanic id)
   d.landed = true
   d.impact_time = 1.0
   return d
@@ -136,7 +137,7 @@ func test_damage_number_grows_then_shrinks_away_at_the_end() -> void:
 
 func test_only_damage_of_at_least_the_big_hit_amount_counts_as_a_big_hit() -> void:
   var hit := Delivery.new()
-  hit.kind = Delivery.Kind.DAMAGE
+  hit.mechanic = AttackMechanic.ID
   hit.value = VfxDriver.BIG_HIT_DAMAGE - 1.0
   assert_eq(VfxDriver.big_hit_strength(hit), -1.0)
   hit.value = VfxDriver.BIG_HIT_DAMAGE
@@ -144,7 +145,7 @@ func test_only_damage_of_at_least_the_big_hit_amount_counts_as_a_big_hit() -> vo
   hit.value = VfxDriver.BIGGEST_HIT_DAMAGE * 3.0
   assert_eq(VfxDriver.big_hit_strength(hit), 1.0)
   var heal := Delivery.new()
-  heal.kind = Delivery.Kind.HEAL
+  heal.mechanic = HealMechanic.ID
   heal.value = VfxDriver.BIGGEST_HIT_DAMAGE
   assert_eq(VfxDriver.big_hit_strength(heal), -1.0)
 

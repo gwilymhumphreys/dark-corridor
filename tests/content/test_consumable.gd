@@ -38,7 +38,7 @@ func test_catalog_builds_the_heal_potion() -> void:
   var d := ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)
   assert_eq(d.name_key, 'Healing Draught')
   assert_eq(d.effects.size(), 1)
-  assert_eq(d.effects[0].kind, Delivery.Kind.HEAL, 'it heals')
+  assert_eq(d.effects[0].mechanic, HealMechanic.ID, 'it heals')
   assert_eq(d.effects[0].shape, ItemEffect.Shape.SELF, 'the thrower')
 
 
