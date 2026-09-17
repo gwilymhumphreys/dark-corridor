@@ -14,7 +14,7 @@ extends RefCounted
 ## Side is resolved AT EVENT TIME via `side_resolver`, never cached at subscribe time
 ## (rosters change mid-fight — a summon subscribes before it is inserted into its roster).
 
-enum Event { ITEM_FIRED, DAMAGE_DEALT, STATUS_APPLIED, HEALED, ITEM_DESTROYED, CRIT }
+enum Event { ITEM_FIRED, APPLIED, ITEM_DESTROYED, CRIT }
 
 ## Which event sources a subscription listens to, relative to the SUBSCRIBER's side.
 enum SourceFilter { OWN_SIDE, ANY, OPPONENT_SIDE }
@@ -40,8 +40,8 @@ var _listeners: Dictionary = {}   # Event -> Array[Callable] — the observation
 
 
 ## Subscribe a Ticker to an event. `data_filter` (non-null) restricts the push to events
-## whose `data` matches — e.g. STATUS_APPLIED filtered to the 'poison' status id, so "on
-## poison applied" doesn't fire on shield. `source_filter` scopes by the source's side
+## whose `data` matches — e.g. APPLIED filtered to the 'poison' id, so "on poison applied"
+## doesn't fire on shield. `source_filter` scopes by the source's side
 ## relative to the subscriber. `subscriber` (the owning Item, when there is one) is what
 ## the gate check and the side check read.
 func subscribe(event: int, ticker: Ticker, amount: float, data_filter = null,

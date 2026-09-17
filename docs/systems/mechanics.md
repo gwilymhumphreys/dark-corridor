@@ -60,6 +60,14 @@ owner as source, straight after `ITEM_FIRED`. Thrown consumables never crit, and
 `Item.display_value` never rolls (the tooltip shows the value without crit). `CritMechanic` has no
 `land` override — it is never delivered.
 
+## The APPLIED event
+
+Landing publishes one event, `EventBus.Event.APPLIED`, when a `MECHANIC` or `APPLY_STATUS` delivery lands and
+applies. The data is the mechanic id (attack, heal, shield, poison, burn, bleed, regen) or the
+status id for `APPLY_STATUS`; the source is the delivery's `source_actor`. Ticks,
+bleed's own damage, `SUMMON` and `CREATE_ITEM` publish nothing. A trigger's `filter` names the
+id — Spite Ward (`ItemCatalog.AVENGER`) subscribes to `APPLIED` filtered to `'poison'`.
+
 ## The Mechanic class
 
 `Mechanic` (`mechanic.gd`) is the base. Each mechanic is a subclass in its own file with `const ID`.

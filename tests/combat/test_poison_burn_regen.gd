@@ -2,7 +2,7 @@ extends GutTest
 ## Step 3 of docs/plans/mechanics.md — poison as a mechanic, and burn + regen (statuses,
 ## mechanics, colours, constants). Poison drains shield double, burn half; regen heals each
 ## tick and never expires. The registry knows all three, and a poison mechanic effect still
-## publishes STATUS_APPLIED with 'poison' (Spite Ward's trigger depends on it).
+## publishes APPLIED with 'poison' (Spite Ward's trigger depends on it).
 
 
 var _made: Array = []
@@ -130,9 +130,9 @@ func test_regen_tick_in_a_running_combat_manager_is_logged_as_a_heal() -> void:
   assert_true(saw_heal, 'a regen heal event is in the timeline, sourced by the status name')
 
 
-# --- A poison mechanic effect applies poison and still publishes STATUS_APPLIED --
+# --- A poison mechanic effect applies poison and still publishes APPLIED --------
 
-func test_poison_mechanic_effect_applies_poison_and_publishes_status_applied() -> void:
+func test_poison_mechanic_effect_applies_poison_and_publishes_applied() -> void:
   var p := Actor.new(1000.0)
   var e := Actor.new(1000.0)
   TestCleanup.dissolve_at_reset(e)
@@ -146,7 +146,7 @@ func test_poison_mechanic_effect_applies_poison_and_publishes_status_applied() -
   effect.travel = 0.0
   def.effects = [effect]
   var applied_data: Array = []
-  cm.bus.add_listener(EventBus.Event.STATUS_APPLIED,
+  cm.bus.add_listener(EventBus.Event.APPLIED,
       func(data, _source_actor, _source_item) -> void:
         applied_data.append(data))
   var arrived: Array = []
@@ -155,7 +155,7 @@ func test_poison_mechanic_effect_applies_poison_and_publishes_status_applied() -
     cm._land(d)
   assert_true(_has_status(e, 'poison'), 'the poison mechanic effect applied the poison status')
   assert_almost_eq(_find(e, 'poison').count, 3.0, 0.0001, 'with the delivery value as its count')
-  assert_true(applied_data.has('poison'), 'it still publishes STATUS_APPLIED with the poison id (Spite Ward)')
+  assert_true(applied_data.has('poison'), 'it still publishes APPLIED with the poison id (Spite Ward)')
 
 
 func _has_status(actor: Actor, id: String) -> bool:

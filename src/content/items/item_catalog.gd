@@ -165,7 +165,7 @@ static func _avenger() -> ItemDef:
   d.effects = [blk]
   # ticks normally AND pushes its cooldown when poison is applied (charges model)
   d.trigger_subs = [{
-    'event': EventBus.Event.STATUS_APPLIED,
+    'event': EventBus.Event.APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
   }]

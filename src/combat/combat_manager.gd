@@ -545,7 +545,7 @@ func _land(d: Delivery) -> void:
       else:
         var applied: StatusEffect = StatusManager.apply(d.target, d.status_id, d.value, d.duration, d.source, d.flags)
         if applied != null:   # an unknown id applies nothing — publish no event for it
-          bus.publish(EventBus.Event.STATUS_APPLIED, d.status_id, d.source_actor, _source_item_of(d))
+          bus.publish(EventBus.Event.APPLIED, d.status_id, d.source_actor, _source_item_of(d))
           if combat_log != null:
             combat_log.on_status_applied(_delivery_source_name(d), _delivery_source_side(d),
                 _target_name(d.target), _target_side(d.target), d.status_id, timekeeper.sim_time)

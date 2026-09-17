@@ -93,7 +93,7 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
   blk.shape = ItemEffect.Shape.SELF
   avenger.effects = [blk]
   avenger.trigger_subs = [{
-    'event': EventBus.Event.STATUS_APPLIED,
+    'event': EventBus.Event.APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
   }]
@@ -618,7 +618,7 @@ func _never_fires_avenger(source_filter: int = -1) -> ItemDef:
   blk.shape = ItemEffect.Shape.SELF
   def.effects = [blk]
   var sub := {
-    'event': EventBus.Event.STATUS_APPLIED,
+    'event': EventBus.Event.APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
   }
@@ -692,7 +692,7 @@ func test_reaped_actors_trigger_item_receives_no_pushes() -> void:
   var reactive := ItemDef.new()
   reactive.cooldown = 9999.0
   reactive.trigger_subs = [{
-    'event': EventBus.Event.STATUS_APPLIED,
+    'event': EventBus.Event.APPLIED,
     'amount': Balance.TRIGGER_PUSH_FULL,
     'filter': 'poison',
     'source_filter': EventBus.SourceFilter.ANY,
@@ -757,9 +757,9 @@ func test_thrown_consumable_event_carries_the_thrower() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var seen: Array = []
-  cm.bus.add_listener(EventBus.Event.DAMAGE_DEALT,
-      func(_data, source_actor, source_item) -> void:
-        seen.append([source_actor, source_item]))
+  cm.bus.add_listener(EventBus.Event.APPLIED,
+      func(data, source_actor, source_item) -> void:
+        seen.append([data, source_actor, source_item]))
   var def := ConsumableDef.new()
   def.id = 'test_dart'
   def.name_key = 'Test Dart'
@@ -770,9 +770,10 @@ func test_thrown_consumable_event_carries_the_thrower() -> void:
   effect.travel = 0.0
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  assert_eq(seen.size(), 1, 'the throw published DAMAGE_DEALT')
-  assert_eq(seen[0][0], p, 'source actor is the thrower')
-  assert_null(seen[0][1], 'source item is null — a throw has no firing Item')
+  assert_eq(seen.size(), 1, 'the throw published APPLIED')
+  assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
+  assert_eq(seen[0][1], p, 'source actor is the thrower')
+  assert_null(seen[0][2], 'source item is null — a throw has no firing Item')
 
 
 func test_fight_with_triggers_is_deterministic() -> void:
@@ -869,14 +870,14 @@ func test_lethal_potion_resolves_fight_without_a_step() -> void:
   assert_true(cm.player_won(), 'and the player won it')
 
 
-func test_status_applied_event_only_published_on_success() -> void:
-  # An unknown status id applies nothing — no STATUS_APPLIED event may be routed for it.
+func test_applied_event_only_published_on_success() -> void:
+  # An unknown status id applies nothing — no APPLIED event may be routed for it.
   var p := _spawn(Balance.PLAYER_START_HP, [])
   var e := _spawn(1000.0, [])
   var cm := _manager(p, [e])
   cm.start()
   var probe := Ticker.new(100)
-  cm.bus.subscribe(EventBus.Event.STATUS_APPLIED, probe, 1.0, null)
+  cm.bus.subscribe(EventBus.Event.APPLIED, probe, 1.0, null)
   cm._land(_status_delivery(e, 'nonexistent_status'))
   assert_eq(probe.accum, 0.0, 'an unknown id publishes no event')
   cm._land(_status_delivery(e, 'weak'))
@@ -1253,22 +1254,23 @@ func _mechanic_item(owner_actor: Actor, mechanic_id: String, value: float, shape
   return Item.new(def, owner_actor)
 
 
-func test_attack_mechanic_deals_damage_and_publishes_damage_dealt() -> void:
+func test_attack_mechanic_deals_damage_and_publishes_applied() -> void:
   var p := Actor.new(1000.0)
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
   var seen: Array = []
-  cm.bus.add_listener(EventBus.Event.DAMAGE_DEALT,
-      func(_data, source_actor, _source_item) -> void:
-        seen.append(source_actor))
+  cm.bus.add_listener(EventBus.Event.APPLIED,
+      func(data, source_actor, _source_item) -> void:
+        seen.append([data, source_actor]))
   var arrived: Array = []
   cm._fire_item(_mechanic_item(p, AttackMechanic.ID, 12.0), arrived)
   for d in arrived:
     cm._land(d)
   assert_almost_eq(e.hp, 1000.0 - 12.0, 0.0001, 'the attack mechanic dealt its damage')
-  assert_eq(seen.size(), 1, 'it published DAMAGE_DEALT (no new events)')
-  assert_eq(seen[0], p, 'the source actor is the firer')
+  assert_eq(seen.size(), 1, 'it published APPLIED (no new events)')
+  assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
+  assert_eq(seen[0][1], p, 'the source actor is the firer')
 
 
 func test_heal_mechanic_heals_the_target() -> void:

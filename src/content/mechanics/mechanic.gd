@@ -33,7 +33,7 @@ func land(delivery: Delivery, combat: CombatManager) -> void:
   var applied: StatusEffect = StatusManager.apply(delivery.target, status_id, delivery.value,
       delivery.duration, delivery.source, delivery.flags)
   if applied != null:   # an unknown id applies nothing — publish no event for it
-    combat.bus.publish(EventBus.Event.STATUS_APPLIED, status_id, delivery.source_actor,
+    combat.bus.publish(EventBus.Event.APPLIED, id, delivery.source_actor,
         combat._source_item_of(delivery))
     if combat.combat_log != null:
       # Shield carries its value; every other status is a count. Use ShieldStatus.ID,

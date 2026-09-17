@@ -21,7 +21,7 @@ func color() -> Color:
 func land(delivery: Delivery, combat: CombatManager) -> void:
   if delivery.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
     var dealt: float = delivery.target.take_damage(delivery.value, delivery.flags, AttackMechanic.ID)
-    combat.bus.publish(EventBus.Event.DAMAGE_DEALT, null, delivery.source_actor,
+    combat.bus.publish(EventBus.Event.APPLIED, AttackMechanic.ID, delivery.source_actor,
         combat._source_item_of(delivery))
     if combat.combat_log != null:
       # `delivery.value` is the GROSS hit (pre-shield); `dealt` is the NET HP lost — log both

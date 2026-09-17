@@ -117,5 +117,5 @@ func _status_count(actor: Actor, id: String) -> float:
 func test_trigger_item_declares_its_subscription() -> void:
   var d := ItemCatalog.get_def(ItemCatalog.AVENGER)
   assert_eq(d.trigger_subs.size(), 1, 'avenger declares one trigger')
-  assert_eq(d.trigger_subs[0]['event'], EventBus.Event.STATUS_APPLIED)
+  assert_eq(d.trigger_subs[0]['event'], EventBus.Event.APPLIED)
   assert_eq(d.trigger_subs[0]['filter'], 'poison', 'on poison applied, not shield')
