@@ -1,9 +1,9 @@
-class_name PoisonStatus
+class_name BurnStatus
 extends PeriodicStatus
-## Poison — the stacked damage-over-time DoT. Ticks every interval for its stack count, decays a
+## Burn — the burning damage-over-time DoT. Ticks every interval for its stack count, decays a
 ## stack each tick, and is Mass fuel (PeriodicStatus). Stacks additively on reapply (base default).
 
-const ID := 'poison'
+const ID := 'burn'
 
 
 func _init() -> void:
@@ -14,6 +14,6 @@ func _init() -> void:
   name_key = mechanic.name_key
   desc_key = mechanic.desc_key
   icon = mechanic.icon
-  color = Colours.POISON
-  tick_interval = Balance.POISON_TICK_INTERVAL
-  damage_per_tick = Balance.POISON_DAMAGE_PER_TICK
+  color = Colours.BURN
+  tick_interval = Balance.BURN_TICK_INTERVAL
+  damage_per_tick = Balance.BURN_DAMAGE_PER_TICK

@@ -297,8 +297,8 @@ func _advance_statuses_on(target) -> void:
     var hp_before: float = target.hp if target is Actor else 0.0
     if StatusManager.advance_status(st, target):
       spent.append(st)
-    # Surface a DoT tick on the VFX wall (the damage was already applied above): a
-    # pre-landed, payload-less Delivery the wall draws as a number. Periodic statuses
+    # Surface a status's health change on the VFX wall (the damage / healing was already applied
+    # above): a pre-landed, payload-less Delivery the wall draws as a number. Periodic statuses
     # only ever sit on actors, so this never runs for item statuses.
     if target is Actor:
       var dealt: float = hp_before - target.hp
@@ -311,6 +311,15 @@ func _advance_statuses_on(target) -> void:
         if combat_log != null:
           combat_log.on_status_damage(st.name_key, _status_source_side(st, target),
               target.display_name, _side_of(target), dealt, timekeeper.sim_time, st.id)
+      else:
+        # A status that HEALS its holder (Regen): the same visual-only number (its mechanic is the
+        # status id, so the wall draws it with the heal '+' styling) + a heal log entry.
+        var healed: float = target.hp - hp_before
+        if healed > 0.0:
+          _deliveries.append(_dot_visual(st, target, healed))
+          if combat_log != null:
+            combat_log.on_heal(st.name_key, _status_source_side(st, target),
+                target.display_name, _side_of(target), healed, timekeeper.sim_time)
   for st in spent:
     st.on_expire(target, null)   # the natural-removal hook (every removal site calls it)
     target.statuses.erase(st)

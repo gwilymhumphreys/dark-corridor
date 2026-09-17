@@ -189,6 +189,10 @@ const MIGHTY_BLOW_CHARGES: float = 1.0             # empower charges banked per 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 const POISON_TICK_INTERVAL: float = 0.5     # seconds between poison ticks
 const POISON_DAMAGE_PER_TICK: float = 1.0   # per-tick damage (per-stack rule is content)
+const BURN_TICK_INTERVAL: float = 0.5       # seconds between burn ticks — PLACEHOLDER — owner tunes
+const BURN_DAMAGE_PER_TICK: float = 1.0     # per-tick damage (per-stack rule is content) — PLACEHOLDER — owner tunes
+const REGEN_TICK_INTERVAL: float = 0.5      # seconds between regen ticks — PLACEHOLDER — owner tunes
+const REGEN_HEAL_PER_TICK: float = 1.0      # per-tick healing (per-stack rule is content) — PLACEHOLDER — owner tunes
 # Shield is a pure pool (persists until consumed, no decay) — no constants beyond
 # the ARMOR_SHIELD that feeds it.
 const SAMPLE_DEBUFF_DURATION: float = 5.0   # a timed status, to exercise that shape
@@ -207,8 +211,8 @@ const EMPOWER_MULT: float = 2.0
 # Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).
 const STATUS_BLIND_DURATION: float = 2.0
 # Shield multipliers (docs/plans/mechanics.md → Shield): how much shield a hit of the mechanic
-# uses (1.0 = normal). Nothing reads these yet — the poison, burn and bleed mechanic classes
-# return them once they are converted.
+# uses (1.0 = normal). The poison and burn mechanic classes return theirs; bleed returns its
+# once it is converted.
 const SHIELD_MULTIPLIER_POISON: float = 2.0   # PLACEHOLDER — owner tunes
 const SHIELD_MULTIPLIER_BURN: float = 0.5     # PLACEHOLDER — owner tunes
 const SHIELD_MULTIPLIER_BLEED: float = 0.5    # PLACEHOLDER — owner tunes

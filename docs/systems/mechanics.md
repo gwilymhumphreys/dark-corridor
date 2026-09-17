@@ -10,13 +10,22 @@ mechanic they use, so items, relics and enchantments can refer to them. The owne
 
 ## Built so far
 
-Attack, heal and shield are built. Poison, burn, bleed, regen and crit are not; poison and bleed
-effects still use `APPLY_STATUS`.
+Attack, heal, shield, poison, burn and regen are built. Bleed and crit are not; the bleed effect
+still uses `APPLY_STATUS`.
 
 The damage pipeline carries a mechanic id (`take_damage` / `resolve_incoming_damage` / `absorb`
 take `mechanic_id`, default `''`), and the shield pool spends the dealing mechanic's multiplier
-(`MechanicRegistry.shield_multiplier`). Only registered mechanic ids change
-the multiplier, so nothing behaves differently until poison, burn and bleed are converted.
+(`MechanicRegistry.shield_multiplier`). Poison drains shield double and burn half (their
+`shield_multiplier()` returns the `Balance.SHIELD_MULTIPLIER_*` constants); bleed returns its
+constant once it is converted.
+
+Poison, burn and regen are statuses that are also mechanics: their effects are delivered as
+`MECHANIC` (naming the mechanic), and their status classes copy their `name_key` / `desc_key` /
+`icon` from their mechanic. Burn and poison extend `PeriodicStatus` (a tick DoT, Mass fuel);
+regen extends `StatusEffect` directly — it heals the holder each tick, never loses stacks, and is
+not fuel. The Combat manager's status pass reacts to a status's health **gain** as well as its
+loss: a regen tick spawns the same visual-only number (drawn with the heal `+` styling, since its
+mechanic is the status id) and logs a heal.
 
 ## How effects name a mechanic
 
@@ -28,7 +37,7 @@ only `mechanic` (plus value, shape, travel, flags), not `status_id` or `color`:
 - `CombatManager._land` calls `MechanicRegistry.get_mechanic(d.mechanic).land(d, self)` for a
   `MECHANIC` delivery. It keeps its own branches for the other kinds.
 - `APPLY_STATUS` is for statuses that are not mechanics. Using it with a mechanic's status id
-  (`'shield'`) pushes an error and applies nothing.
+  (`'shield'`, `'poison'`, `'burn'`, `'regen'`) pushes an error and applies nothing.
 - `Item.uses(mechanic_id)` is true when any of the item's effects uses that mechanic.
 - Weak and empower modify effects whose mechanic is attack, and blind makes attacks miss.
 
@@ -46,9 +55,9 @@ only `mechanic` (plus value, shape, travel, flags), not `status_id` or `color`:
 | `shield_multiplier() -> float` | How much shield a hit of this mechanic uses. 1.0 by default. |
 | `land(delivery, combat)` | What happens when a delivery lands. The base applies the mechanic's `status_id` (shield); `AttackMechanic` and `HealMechanic` override it for their direct effects. |
 
-`ShieldStatus` copies its `name_key`, `desc_key` and `icon` from `ShieldMechanic`, so the text is
-written once. The status keeps these fields because the combat log, status icons and combat summary
-read them.
+`ShieldStatus`, `PoisonStatus`, `BurnStatus` and `RegenStatus` each copy their `name_key`,
+`desc_key` and `icon` from their mechanic, so the text is written once. The statuses keep these
+fields because the combat log, status icons and combat summary read them.
 
 ## MechanicRegistry
 

@@ -11,6 +11,9 @@ static func _build() -> void:
   _mechanics[AttackMechanic.ID] = AttackMechanic.new()
   _mechanics[HealMechanic.ID] = HealMechanic.new()
   _mechanics[ShieldMechanic.ID] = ShieldMechanic.new()
+  _mechanics[PoisonMechanic.ID] = PoisonMechanic.new()
+  _mechanics[BurnMechanic.ID] = BurnMechanic.new()
+  _mechanics[RegenMechanic.ID] = RegenMechanic.new()
 
 
 static func get_mechanic(id: String) -> Mechanic:

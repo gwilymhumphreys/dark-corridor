@@ -315,12 +315,32 @@ msgstr ""
 msgid "Deals damage to the target."
 msgstr ""
 
+#: src/content/mechanics/burn_mechanic.gd
+msgid "Burn"
+msgstr ""
+
+#: src/content/mechanics/burn_mechanic.gd
+msgid "Deals damage over time, losing a stack each tick."
+msgstr ""
+
 #: src/content/mechanics/heal_mechanic.gd
 msgid "Heal"
 msgstr ""
 
 #: src/content/mechanics/heal_mechanic.gd
 msgid "Restores health."
+msgstr ""
+
+#: src/content/mechanics/poison_mechanic.gd
+msgid "Poison"
+msgstr ""
+
+#: src/content/mechanics/regen_mechanic.gd
+msgid "Regen"
+msgstr ""
+
+#: src/content/mechanics/regen_mechanic.gd
+msgid "Restores health over time, keeping its stacks for the whole fight."
 msgstr ""
 
 #: src/content/mechanics/shield_mechanic.gd
@@ -373,14 +393,6 @@ msgstr ""
 
 #: src/content/statuses/empowered_status.gd
 msgid "Doubles your next weapon attack."
-msgstr ""
-
-#: src/content/statuses/poison_status.gd
-msgid "Poison"
-msgstr ""
-
-#: src/content/statuses/poison_status.gd
-msgid "Deals damage over time, losing a stack each tick."
 msgstr ""
 
 #: src/content/statuses/silence_status.gd

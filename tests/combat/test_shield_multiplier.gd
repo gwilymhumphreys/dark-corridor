@@ -1,9 +1,9 @@
 extends GutTest
 ## Shield multipliers through the damage pipeline (docs/plans/mechanics.md → Shield, step 2):
 ## `take_damage` / `resolve_incoming_damage` / `absorb` carry a mechanic id, and the shield pool
-## spends the damage times the mechanic's multiplier. The poison mechanic does not exist yet, so
-## the multiplier is exercised with a test-only mechanic (a 2.0 shield multiplier) registered in
-## the MechanicRegistry for the duration of the suite.
+## spends the damage times the mechanic's multiplier. The multiplier is exercised with a test-only
+## mechanic (a 2.0 shield multiplier) registered in the MechanicRegistry for the duration of the
+## suite, so the pipeline is tested independently of any one mechanic's constant.
 
 
 ## A test-only mechanic whose hits drain shield twice as fast.

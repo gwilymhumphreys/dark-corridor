@@ -59,8 +59,8 @@ func test_armor_applies_shield_to_self() -> void:
 
 func test_poison_dagger_applies_poison_to_opponent() -> void:
   var p: Payload = _make(ItemCatalog.POISON_DAGGER).fire()[0]
-  assert_eq(p.kind, Delivery.Kind.APPLY_STATUS)
-  assert_eq(p.status_id, 'poison')
+  assert_eq(p.kind, Delivery.Kind.MECHANIC)
+  assert_eq(p.mechanic, PoisonMechanic.ID, 'the dagger fires the poison mechanic')
   assert_eq(p.shape, ItemEffect.Shape.OPPONENT_LEFTMOST)
 
 

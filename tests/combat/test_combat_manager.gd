@@ -262,7 +262,7 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   var def := ItemDef.new()
   var ap := ItemEffect.new()
   ap.kind = Delivery.Kind.APPLY_STATUS
-  ap.status_id = 'poison'
+  ap.status_id = 'weak'
   ap.value = 3.0
   ap.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   ap.travel = 0.0
@@ -271,7 +271,7 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   cm._fire_item(Item.new(def, p), arrived)
   assert_false(arrived[0].evaded, 'a non-damage delivery is not evaded')
   cm._land(arrived[0])
-  assert_true(_has_status(e, 'poison'), 'the blinded actor still applies its status')
+  assert_true(_has_status(e, 'weak'), 'the blinded actor still applies its status')
 
 
 # --- mid-fight roster: summons + both-side rosters (docs/systems/spore_engine.md Cap 3) --
@@ -491,7 +491,7 @@ func test_dot_tick_through_shield_does_not_skip_a_later_status() -> void:
   var a := Actor.new(100.0)
   var cm := _manager(p, [a])
   cm.start()
-  StatusManager.apply(a, 'shield', 1.0)          # one poison tick empties it
+  StatusManager.apply(a, 'shield', 1.0)          # one poison tick empties it (double drain)
   var pois: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
   pois.ticker.accum = pois.ticker.threshold - 1.0            # fire on the next advance
   var weak: StatusEffect = StatusManager.apply(a, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)   # after poison in the list
@@ -500,7 +500,8 @@ func test_dot_tick_through_shield_does_not_skip_a_later_status() -> void:
 
   assert_eq(weak.ticker.accum, 1.0, 'the status after shield still advanced (no skip)')
   assert_false(_has_status(a, 'shield'), 'shield was consumed and erased mid-pass')
-  assert_eq(a.hp, 98.0, 'poison dealt 3, shield absorbed 1, 2 leaked to HP')
+  # Poison drains shield double: 1 shield covers 0.5 of the 3-damage tick, 2.5 leaks to HP.
+  assert_almost_eq(a.hp, 97.5, 0.0001, 'poison dealt 3, shield absorbed 0.5 (double drain), 2.5 leaked to HP')
 
 
 func test_dot_tick_shows_a_visual_on_the_wall() -> void:
@@ -878,7 +879,7 @@ func test_status_applied_event_only_published_on_success() -> void:
   cm.bus.subscribe(EventBus.Event.STATUS_APPLIED, probe, 1.0, null)
   cm._land(_status_delivery(e, 'nonexistent_status'))
   assert_eq(probe.accum, 0.0, 'an unknown id publishes no event')
-  cm._land(_status_delivery(e, 'poison'))
+  cm._land(_status_delivery(e, 'weak'))
   assert_gt(probe.accum, 0.0, 'a real apply still publishes')
 
 

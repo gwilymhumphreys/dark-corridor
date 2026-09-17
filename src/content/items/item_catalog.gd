@@ -142,14 +142,12 @@ static func _poison_dagger() -> ItemDef:
   d.icon = 'res://assets/icons/items/loot_26_spiderteeth.png'
   d.cooldown = Balance.POISON_APPLIER_COOLDOWN
   var pois := ItemEffect.new()
-  pois.kind = Delivery.Kind.APPLY_STATUS
-  pois.status_id = 'poison'
+  pois.mechanic = PoisonMechanic.ID
   pois.value = Balance.POISON_APPLIER_STACKS
   pois.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   pois.travel = Balance.WEAPON_TRAVEL
-  pois.color = Colours.POISON
   d.effects = [pois]
-  d.panel_color = pois.color
+  d.panel_color = Colours.POISON
   return d
 
 

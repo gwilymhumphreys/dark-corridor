@@ -100,13 +100,13 @@ func _mechanic_family(mechanic_id: String) -> String:
       return 'shield'
     HealMechanic.ID:
       return 'heal'
-    'poison':
+    PoisonMechanic.ID:
       return 'poison'
-    'burn':
+    BurnMechanic.ID:
       return 'burn'
     'bleed':
       return 'bleed'
-    'regen':
+    RegenMechanic.ID:
       return 'heal'
   return 'other'
 
