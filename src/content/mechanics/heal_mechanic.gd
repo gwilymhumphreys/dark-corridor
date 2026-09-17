@@ -27,3 +27,10 @@ func land(delivery: Delivery, combat: CombatManager) -> void:
       combat.combat_log.on_heal(combat._delivery_source_name(delivery),
           combat._delivery_source_side(delivery), delivery.target.display_name,
           combat._side_of(delivery.target), healed, combat.timekeeper.sim_time)
+    # A heal scrubs a fraction of the target's poison, burn and bleed (docs/plans/mechanics.md →
+    # Heal). `delivery.value` is the FULL heal (including overheal), not the amount healed.
+    var removed: float = floor(delivery.value * Balance.HEAL_CLEANSE_FRACTION)
+    if removed > 0.0:
+      StatusManager.reduce(delivery.target, PoisonMechanic.ID, removed)
+      StatusManager.reduce(delivery.target, BurnMechanic.ID, removed)
+      StatusManager.reduce(delivery.target, BleedMechanic.ID, removed)

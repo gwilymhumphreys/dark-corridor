@@ -153,10 +153,11 @@ const FLESH_SKIN_GRAFT_CONSUME: int = 1
 
 # Bone Spear (owner) — the Fleshmancer's first BLEED applier (docs/design/mechanic_ideas.md -> Bleed;
 # the carve-as-bleed-applier fusion). A slow attack: damage + apply bleed to the enemy (UNBLOCKABLE,
-# so its own shield can't soak the wound it bites itself for on its activations). PLACEHOLDER — /tune.
+# so its own shield can't soak the wound it bites itself for when it is hit by an attack).
+# PLACEHOLDER — /tune.
 const FLESH_BONE_SPEAR_COOLDOWN: float = 6.0
 const FLESH_BONE_SPEAR_DAMAGE: float = 6.0
-const FLESH_BONE_SPEAR_BLEED: float = 3.0   # enemy bleeds 3+2+1 = 6 over its next three activations
+const FLESH_BONE_SPEAR_BLEED: float = 3.0   # enemy bleeds 3+2+1 = 6 over its next three attacks
 
 # Bone shield spread (owner) — the Fleshmancer's self-shield: the survival FLOOR that protects the
 # HP-spend engine while you voluntarily bleed yourself (character_ideas.md). The bone twin of the
@@ -216,6 +217,9 @@ const STATUS_BLIND_DURATION: float = 2.0
 const SHIELD_MULTIPLIER_POISON: float = 2.0   # PLACEHOLDER — owner tunes
 const SHIELD_MULTIPLIER_BURN: float = 0.5     # PLACEHOLDER — owner tunes
 const SHIELD_MULTIPLIER_BLEED: float = 0.5    # PLACEHOLDER — owner tunes
+# Heal cleanse (docs/plans/mechanics.md → Heal): a heal removes floor(value × this) stacks of the
+# target's poison, burn and bleed (value = the full heal, including overheal).
+const HEAL_CLEANSE_FRACTION: float = 0.1      # PLACEHOLDER — owner tunes
 
 
 # ── Triggers (charges model — push as a fraction of the bar; docs/systems/combat_model.md) ─────

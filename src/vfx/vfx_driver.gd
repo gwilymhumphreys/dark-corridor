@@ -33,10 +33,10 @@ func _ready() -> void:
   _projectile = ProjectileDiscDrawer.new()
   _damage_number = DamageNumberDrawer.new()
   var ring: ImpactRingDrawer = ImpactRingDrawer.new()
-  # Every mechanic id maps to the same ring for now (docs/plans/mechanics.md); the two not yet
-  # built are string literals until their mechanic classes exist. A DoT tick's visual-only Delivery
-  # carries its status id as the mechanic, so its ring still draws.
-  for mechanic_id in [AttackMechanic.ID, ShieldMechanic.ID, HealMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID, 'bleed', RegenMechanic.ID, 'crit']:
+  # Every mechanic id maps to the same ring for now (docs/plans/mechanics.md); crit is not yet
+  # built, so it stays a string literal until its mechanic class exists. A DoT tick's visual-only
+  # Delivery carries its status id as the mechanic, so its ring still draws.
+  for mechanic_id in [AttackMechanic.ID, ShieldMechanic.ID, HealMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID, BleedMechanic.ID, RegenMechanic.ID, 'crit']:
     _impact_drawers[mechanic_id] = ring
   _impact_drawers[Delivery.Kind.APPLY_STATUS] = ring
 

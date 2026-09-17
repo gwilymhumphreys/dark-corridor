@@ -29,3 +29,7 @@ func land(delivery: Delivery, combat: CombatManager) -> void:
       combat.combat_log.on_damage(combat._delivery_source_name(delivery),
           combat._delivery_source_side(delivery), delivery.target.display_name,
           combat._side_of(delivery.target), dealt, combat.timekeeper.sim_time, delivery.value)
+    # Bleed (and any other attack-triggered status) cashes out on the hit — after the damage
+    # resolves, and only if the target survived it (docs/plans/mechanics.md → Bleed).
+    if delivery.target.is_alive():
+      combat._on_holder_attacked(delivery.target)

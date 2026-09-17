@@ -26,12 +26,12 @@
   on yourself. (A self-bleed version was considered and set aside for *this* mechanic — not a
   blanket rule against self-statuses.) So: you stack bleed on the enemy, and the enemy's own attacks
   bleed it out.
-- **Read — activation-paced (a new clock for us).** Existing statuses run on *time* (poison/burn) or
-  *incoming damage* (shield); bleed advances on the **bleeding actor's item activations** — the
-  enemy's tempo cashes it out. Because of the `−1`, one application is a fixed triangular burst
-  (bleed 5 → 5+4+3+2+1 = 15 over five of the enemy's activations, then gone): fixed **total**, but
-  the **rate** tracks enemy tempo — gushes against a fast multi-item enemy, trickles against a slow
-  one-big-hit boss. Good texture (rewards reading the enemy), a feast/famine balance watch.
+- **Read — attack-paced (a new clock for us).** Existing statuses run on *time* (poison/burn) or
+  *incoming damage* (shield); bleed advances when the **bleeding actor is hit by an attack** — the
+  enemy's incoming damage cashes it out. Because of the `−1`, one application is a fixed triangular
+  burst (bleed 5 → 5+4+3+2+1 = 15 over five attacks landing on it, then gone): fixed **total**, but
+  the **rate** tracks how often it is struck — gushes against a fast multi-attacker, trickles against
+  a slow one-big-hit boss. Good texture (rewards reading the enemy), a feast/famine balance watch.
 - **The `−1` paydown is the engine for synergy.** Left alone, bleed winds down to nothing, so the
   synergy space is *fighting the decay* two ways: **burst** (dump a big stack so the triangular
   total is huge) vs. **sustain** (re-apply faster than it pays down → a standing wound). Two
@@ -42,14 +42,15 @@
   - **Payoffs / cares-about-bleeding** — items that key off the enemy *being* bled or off a bleed
     tick ("+X vs. a bleeding enemy"; "when it bleeds, gain shield") — the distinct-status-cares
     mechanism, like the Spore Druid's spread cards.
-- **Built (2026-06-22).** `BleedStatus` + the actor-level `on_owner_item_fired(actor, ctx)` hook (the
-  twin of Decay's `on_holder_fired`): the Combat manager drains the firing actor's bleed in
-  `_fire_item` after the payload spawns (deterministic, #24). The bite goes through `take_damage`
-  carrying the applier's flags, so an UNBLOCKABLE bleed bypasses the holder's own shield (#5); it shows
-  a DoT-style wall visual + a combat-log line — like a poison tick, it publishes **no** bus event, so
-  a future bleed *payoff* would read a hook, not a subscription. First applier: **Bone Spear**
-  (Fleshmancer pool; 6s, damage + 3 bleed, unblockable). Tempo reading confirmed = the holder's *own*
-  item fires.
+- **Built (2026-06-22; trigger changed 2026-09-17).** `BleedStatus` + the actor-level
+  `on_holder_attacked(target, ctx)` hook: the Combat manager runs the target's statuses through it
+  when an **attack lands on the target** (the attack mechanic's `land`, only if the target survives).
+  The bite goes through `take_damage` carrying the applier's flags, so an UNBLOCKABLE bleed bypasses
+  the holder's own shield (#5); it shows a DoT-style wall visual + a combat-log line — like a poison
+  tick, it publishes **no** bus event, so a future bleed *payoff* would read a hook, not a
+  subscription. First applier: **Bone Spear** (Fleshmancer pool; 6s, damage + 3 bleed, unblockable).
+  Tempo reading = how often the holder is **struck** (the original reading was the holder's own item
+  fires; the trigger moved to attacks received in the mechanics plan).
 - **Open / tune:** the **Fleshmancer** is its tentative home but uncommitted (see
   [`character_ideas.md`](character_ideas.md)); Bone Spear's numbers are placeholders (`/tune`); bleed
   defaults **unblockable** via the applier flag (a blockable applier could omit it — the lever is

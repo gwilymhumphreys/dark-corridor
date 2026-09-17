@@ -121,7 +121,7 @@ surfaces **weapon** + **skill** (kept lean — it's the on-ramp).
 the firing item — so the item's `types` must be threaded in to tell a weapon attack from a spell
 attack. And `modify_outgoing` doubles as the **read-only tooltip preview** (`Item.display_value`), so
 it must stay pure — the **consume** (spend a charge) belongs on the real-fire hook
-`on_owner_item_fired` (Bleed uses it), not in the modifier. Weak dodges this (blanket, no scope, no
+`on_owner_item_fired`, not in the modifier. Weak dodges this (blanket, no scope, no
 consume); this is the first type-scoped one-shot synergy, so build the seam cleanly — future
 "your weapons / skills…" effects reuse it.
 

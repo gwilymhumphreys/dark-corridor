@@ -381,9 +381,10 @@ func _fire_item(it: Item, arrived: Array) -> void:
   # Drain the item's use-statuses AFTER its payload(s) are spawned (docs/systems/item.md fire
   # pipeline): decay spends one activation, so the final fire still lands, then removes the item at 0.
   _drain_uses(it)
-  # Bleed (and any actor-level fire-status) cashes out on the OWNER's activation — the actor twin of
-  # the item-use drain above (docs/design/mechanic_ideas.md -> Bleed). The firing item is threaded in
-  # so a status can scope to a weapon attack (the Armourer empower spends a charge). After the payload.
+  # Any actor-level fire-status (the Armourer empower) cashes out on the OWNER's activation — the
+  # actor twin of the item-use drain above. The firing item is threaded in so a status can scope to
+  # a weapon attack (the empower spends a charge). After the payload. (Bleed no longer fires here —
+  # it triggers on attacks landing on the holder, in the attack mechanic's land.)
   _drain_actor_fire_statuses(it.owner, it)
 
 
@@ -395,12 +396,13 @@ func _drain_uses(it: Item) -> void:
     s.on_holder_fired(it, _ctx)
 
 
-## After an item fires, drain its OWNER's actor-level fire-statuses (Bleed / empower) — the actor twin
-## of _drain_uses (which drains the fired item's own use-statuses). Each takes its bite of the holder /
-## spends its charge, and decays; a drained one is removed. The firing `item` is passed so a status can
-## scope to a weapon attack (empower). Mirrors the DoT-tick path (a wall visual + a combat-log entry,
-## since neither take_damage nor the bus reports a status's own damage). Iterate a COPY: a bite can
-## kill / remove statuses mid-pass.
+## After an item fires, drain its OWNER's actor-level fire-statuses (the Armourer empower) — the actor
+## twin of _drain_uses (which drains the fired item's own use-statuses). Each spends its charge and
+## decays; a drained one is removed. The firing `item` is passed so a status can scope to a weapon
+## attack (empower). Mirrors the DoT-tick path (a wall visual + a combat-log entry, since neither
+## take_damage nor the bus reports a status's own damage). Iterate a COPY: a bite can kill / remove
+## statuses mid-pass. (Bleed no longer drains here — it triggers on attacks landing on the holder,
+## in the attack mechanic's land.)
 func _drain_actor_fire_statuses(actor: Actor, item: Item) -> void:
   if actor == null:
     return
@@ -411,13 +413,38 @@ func _drain_actor_fire_statuses(actor: Actor, item: Item) -> void:
       spent.append(st)
     var dealt: float = hp_before - actor.hp
     if dealt > 0.0:
-      _deliveries.append(_dot_visual(st, actor, dealt))
-      if combat_log != null:
-        combat_log.on_status_damage(st.name_key, _status_source_side(st, actor),
-            actor.display_name, _side_of(actor), dealt, timekeeper.sim_time, st.id)
+      _show_status_damage(st, actor, dealt)
   for st in spent:
     st.on_expire(actor, null)
     actor.statuses.erase(st)
+
+
+## An ATTACK landed on `target` (the attack mechanic's land calls this, after its damage and
+## event/log calls, only if the target survived): run each of the target's statuses through
+## on_holder_attacked (Bleed bites here), surfacing any health loss on the wall + log, then
+## removing the ones that expired. Iterate a COPY: a bite can kill / remove statuses mid-pass.
+func _on_holder_attacked(target: Actor) -> void:
+  var spent: Array[StatusEffect] = []
+  for st in target.statuses.duplicate():
+    var hp_before: float = target.hp
+    if st.on_holder_attacked(target, _ctx):
+      spent.append(st)
+    var dealt: float = hp_before - target.hp
+    if dealt > 0.0:
+      _show_status_damage(st, target, dealt)
+  for st in spent:
+    st.on_expire(target, null)
+    target.statuses.erase(st)
+
+
+## Surface a status's damage to its holder on the VFX wall + combat log (the damage itself was
+## already applied by the status's hook) — the shared code of the DoT-tick, fire-status and
+## attack-triggered paths.
+func _show_status_damage(st: StatusEffect, actor: Actor, dealt: float) -> void:
+  _deliveries.append(_dot_visual(st, actor, dealt))
+  if combat_log != null:
+    combat_log.on_status_damage(st.name_key, _status_source_side(st, actor),
+        actor.display_name, _side_of(actor), dealt, timekeeper.sim_time, st.id)
 
 
 ## Consume up to `amount` of `owner_actor`'s board items whose def id matches `def_id`, as fuel for an

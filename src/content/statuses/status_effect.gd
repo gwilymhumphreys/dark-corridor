@@ -74,11 +74,19 @@ func on_holder_fired(item, ctx) -> void:
 
 ## Called on an ACTOR-targeted status when one of that actor's items FIRES — the actor-level twin of
 ## on_holder_fired (which fires for the one item the status sits ON). Receives the firing `item`, so a
-## status can scope to a weapon attack (the Armourer empower consumes a charge here; Bleed ignores it
-## and bites on any fire). This is the REAL-fire path (not the tooltip preview), so consuming state
-## belongs here, not in modify_outgoing. Returns true when the status has expired (the Combat manager
-## removes it + runs on_expire); default no-op.
+## status can scope to a weapon attack (the Armourer empower consumes a charge here). This is the
+## REAL-fire path (not the tooltip preview), so consuming state belongs here, not in modify_outgoing.
+## Returns true when the status has expired (the Combat manager removes it + runs on_expire);
+## default no-op.
 func on_owner_item_fired(actor, item, ctx) -> bool:
+  return false
+
+
+## Called on an ACTOR-targeted status when an ATTACK delivery lands on that actor (after its damage
+## resolves — docs/plans/mechanics.md → Bleed). Poison/burn ticks, the status's own damage and
+## outside-set damage never call it, so a status cannot repeat within a step. Returns true when the
+## status has expired (the Combat manager removes it + runs on_expire); default no-op.
+func on_holder_attacked(target, ctx) -> bool:
   return false
 
 

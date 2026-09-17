@@ -85,6 +85,21 @@ func consume(target, id: String, amount: float) -> float:
   return removed
 
 
+## Remove up to `amount` stacks of `id` from `target` — any status, not only fuel (unlike
+## consume). A status reduced to zero or below is removed with its on_expire hook (the
+## natural-removal hook). Does nothing when the status is absent or `amount` <= 0.
+func reduce(target, id: String, amount: float) -> void:
+  if amount <= 0.0:
+    return
+  var s: StatusEffect = _find(target, id)
+  if s == null:
+    return
+  s.count -= amount
+  if s.count <= 0.0:
+    s.on_expire(target, null)
+    target.statuses.erase(s)
+
+
 func _find(target, id: String) -> StatusEffect:
   for s in target.statuses:
     if s.id == id:

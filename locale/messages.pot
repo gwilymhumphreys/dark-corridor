@@ -315,6 +315,14 @@ msgstr ""
 msgid "Deals damage to the target."
 msgstr ""
 
+#: src/content/mechanics/bleed_mechanic.gd
+msgid "Bleed"
+msgstr ""
+
+#: src/content/mechanics/bleed_mechanic.gd
+msgid "Each time the holder is hit by an attack, it takes damage and loses a stack."
+msgstr ""
+
 #: src/content/mechanics/burn_mechanic.gd
 msgid "Burn"
 msgstr ""
@@ -361,14 +369,6 @@ msgstr ""
 
 #: src/content/relics/relic_catalog.gd
 msgid "Iron Idol"
-msgstr ""
-
-#: src/content/statuses/bleed_status.gd
-msgid "Bleed"
-msgstr ""
-
-#: src/content/statuses/bleed_status.gd
-msgid "Each time the bleeding side acts, it takes damage and loses a stack."
 msgstr ""
 
 #: src/content/statuses/blind_status.gd

@@ -19,7 +19,7 @@ func color() -> Color:
 
 
 ## How much of a shield a hit of this mechanic uses (1.0 = normal). Poison, burn and bleed
-## return their constants once they are converted.
+## return their constants.
 func shield_multiplier() -> float:
   return 1.0
 

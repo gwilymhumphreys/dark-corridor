@@ -632,8 +632,8 @@ static func _flesh_skin_graft() -> ItemDef:
 ## Bone Spear (owner) — the Fleshmancer's first BLEED applier (docs/design/mechanic_ideas.md -> Bleed;
 ## the carve-as-bleed-applier fusion in character_ideas.md). A slow attack that deals damage AND applies
 ## bleed to the struck enemy. Bleed is UNBLOCKABLE so the enemy's own shield can't soak the self-damage
-## the wound bites on its activations. Single-target (the bleed piles on one enemy). COMMON. Numbers ->
-## Balance (placeholders).
+## the wound bites for when it is hit by an attack. Single-target (the bleed piles on one enemy).
+## COMMON. Numbers -> Balance (placeholders).
 static func _flesh_bone_spear() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_BONE_SPEAR
@@ -647,13 +647,11 @@ static func _flesh_bone_spear() -> ItemDef:
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
   var bleed := ItemEffect.new()
-  bleed.kind = Delivery.Kind.APPLY_STATUS
-  bleed.status_id = 'bleed'
+  bleed.mechanic = BleedMechanic.ID
   bleed.value = Balance.FLESH_BONE_SPEAR_BLEED
   bleed.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   bleed.travel = Balance.WEAPON_TRAVEL
   bleed.flags = Delivery.Flag.UNBLOCKABLE    # the enemy's own shield must not soak the wound
-  bleed.color = Colours.ATTACK               # applier shares the (placeholder) bleed colour
   d.effects = [hit, bleed]
   d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
   return d
