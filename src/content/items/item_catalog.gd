@@ -113,7 +113,7 @@ static func _weapon() -> ItemDef:
   hit.value = Balance.WEAPON_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   d.panel_color = hit.color
   return d
@@ -150,7 +150,7 @@ static func _poison_dagger() -> ItemDef:
   pois.value = Balance.POISON_APPLIER_STACKS
   pois.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   pois.travel = Balance.WEAPON_TRAVEL
-  pois.color = Colours.STATUS_POISON
+  pois.color = Colours.POISON
   d.effects = [pois]
   d.panel_color = pois.color
   return d
@@ -245,7 +245,7 @@ static func _pocket_shrooms() -> ItemDef:
   hit.value = Balance.POCKET_SHROOMS_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var blind := ItemEffect.new()
   blind.kind = Delivery.Kind.APPLY_STATUS
   blind.status_id = 'blind'
@@ -276,7 +276,7 @@ static func _druid_staff() -> ItemDef:
   hit.value = Balance.DRUID_STAFF_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var spore := ItemEffect.new()
   spore.kind = Delivery.Kind.APPLY_STATUS
   spore.status_id = 'spores'
@@ -305,7 +305,7 @@ static func _spore_spitter() -> ItemDef:
   hit.value = Balance.SPORE_SPITTER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var spore := ItemEffect.new()
   spore.kind = Delivery.Kind.APPLY_STATUS
   spore.status_id = 'spores'
@@ -333,7 +333,7 @@ static func _capped_cudgel() -> ItemDef:
   hit.value = Balance.CAPPED_CUDGEL_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   d.panel_color = hit.color
   return d
@@ -354,7 +354,7 @@ static func _bloomhammer() -> ItemDef:
   hit.value = Balance.BLOOMHAMMER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var spore := ItemEffect.new()
   spore.kind = Delivery.Kind.APPLY_STATUS
   spore.status_id = 'spores'
@@ -384,7 +384,7 @@ static func _wilt_frond() -> ItemDef:
   hit.value = Balance.WILT_FROND_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var weak := ItemEffect.new()
   weak.kind = Delivery.Kind.APPLY_STATUS
   weak.status_id = 'weak'
@@ -473,7 +473,7 @@ static func _flesh_chunk() -> ItemDef:
   hit.value = Balance.FLESH_CHUNK_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   d.panel_color = hit.color
   return d
@@ -496,7 +496,7 @@ static func _flesh_carving_knife() -> ItemDef:
   hit.value = Balance.FLESH_CARVING_KNIFE_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
@@ -522,7 +522,7 @@ static func _flesh_cleaver() -> ItemDef:
   hit.value = Balance.FLESH_CLEAVER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
@@ -549,7 +549,7 @@ static func _flesh_bone_saw() -> ItemDef:
   hit.value = Balance.FLESH_BONE_SAW_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
@@ -584,7 +584,7 @@ static func _flesh_explosion() -> ItemDef:
   hit.value = Balance.FLESH_EXPLOSION_DAMAGE
   hit.shape = ItemEffect.Shape.ALL_OPPONENTS
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   # Charges as your OWN items die — each ITEM_DESTROYED pushes the cooldown ~1s (OWN_SIDE is the
   # wired default; no data filter = any own item, per "whenever one of your items is destroyed").
@@ -613,7 +613,7 @@ static func _flesh_flensing_hook() -> ItemDef:
   hurt.value = Balance.FLESH_FLENSING_HOOK_SELF_DAMAGE
   hurt.shape = ItemEffect.Shape.SELF          # the firer takes the hit — self-harm
   hurt.flags = Delivery.Flag.UNBLOCKABLE      # own shield must NOT absorb the cost (else the HP-spend no-ops)
-  hurt.color = Colours.DAMAGE                 # travel 0 (self, instant)
+  hurt.color = Colours.ATTACK                 # travel 0 (self, instant)
   var make := ItemEffect.new()
   make.kind = Delivery.Kind.CREATE_ITEM
   make.create_item_def_id = FLESH_CHUNK
@@ -672,7 +672,7 @@ static func _flesh_bone_spear() -> ItemDef:
   hit.value = Balance.FLESH_BONE_SPEAR_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   var bleed := ItemEffect.new()
   bleed.kind = Delivery.Kind.APPLY_STATUS
   bleed.status_id = 'bleed'
@@ -680,7 +680,7 @@ static func _flesh_bone_spear() -> ItemDef:
   bleed.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   bleed.travel = Balance.WEAPON_TRAVEL
   bleed.flags = Delivery.Flag.UNBLOCKABLE    # the enemy's own shield must not soak the wound
-  bleed.color = Colours.DAMAGE               # applier shares the (placeholder) bleed colour
+  bleed.color = Colours.ATTACK               # applier shares the (placeholder) bleed colour
   d.effects = [hit, bleed]
   d.panel_color = hit.color                  # primary payload is damage (single-panel model)
   return d
@@ -783,7 +783,7 @@ static func _armourer_broadaxe() -> ItemDef:
   hit.value = Balance.ARMOURER_BROADAXE_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   d.panel_color = hit.color
   return d
@@ -801,7 +801,7 @@ static func _armourer_warhammer() -> ItemDef:
   hit.value = Balance.ARMOURER_WARHAMMER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   d.panel_color = hit.color
   return d
@@ -819,7 +819,7 @@ static func _armourer_greatsword() -> ItemDef:
   hit.value = Balance.ARMOURER_GREATSWORD_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.DAMAGE
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   d.panel_color = hit.color
   return d
@@ -837,7 +837,7 @@ static func _enemy_claw() -> ItemDef:
   hit.value = Balance.WEAPON_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  hit.color = Colours.ENEMY_CLAW
+  hit.color = Colours.ATTACK
   d.effects = [hit]
   d.panel_color = hit.color
   return d

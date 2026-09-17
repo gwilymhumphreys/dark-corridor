@@ -43,7 +43,7 @@ static func _build() -> void:
   _mechanics[AOE] = {
     'name_key': 'All Enemies',
     'desc_key': 'Hits every enemy at once.',
-    'color': Colours.DAMAGE,
+    'color': Colours.ATTACK,
     'icon': 'res://assets/icons/keywords/skill_sword_splash_nb.png',
   }
   _mechanics[ITEM_TARGET] = {
@@ -55,7 +55,7 @@ static func _build() -> void:
   _mechanics[UNBLOCKABLE] = {
     'name_key': 'Unblockable',
     'desc_key': 'Cannot be soaked by Shield.',
-    'color': Colours.DAMAGE,
+    'color': Colours.ATTACK,
     'icon': 'res://assets/icons/keywords/skill_piercing_attack_nb.png',
   }
   _mechanics[TRIGGER] = {

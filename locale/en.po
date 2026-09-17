@@ -307,6 +307,30 @@ msgstr "Charges as your own items are destroyed."
 msgid "A permanent modifier attached to this item."
 msgstr "A permanent modifier attached to this item."
 
+#: src/content/mechanics/attack_mechanic.gd
+msgid "Attack"
+msgstr "Attack"
+
+#: src/content/mechanics/attack_mechanic.gd
+msgid "Deals damage to the target."
+msgstr "Deals damage to the target."
+
+#: src/content/mechanics/heal_mechanic.gd
+msgid "Heal"
+msgstr "Heal"
+
+#: src/content/mechanics/heal_mechanic.gd
+msgid "Restores health."
+msgstr "Restores health."
+
+#: src/content/mechanics/shield_mechanic.gd
+msgid "Shield"
+msgstr "Shield"
+
+#: src/content/mechanics/shield_mechanic.gd
+msgid "Absorbs incoming damage, then wears off."
+msgstr "Absorbs incoming damage, then wears off."
+
 #: src/content/relics/relic_catalog.gd
 msgid "Stone Ward"
 msgstr "Stone Ward"
@@ -358,14 +382,6 @@ msgstr "Poison"
 #: src/content/statuses/poison_status.gd
 msgid "Deals damage over time, losing a stack each tick."
 msgstr "Deals damage over time, losing a stack each tick."
-
-#: src/content/statuses/shield_status.gd
-msgid "Shield"
-msgstr "Shield"
-
-#: src/content/statuses/shield_status.gd
-msgid "Absorbs incoming damage, then wears off."
-msgstr "Absorbs incoming damage, then wears off."
 
 #: src/content/statuses/silence_status.gd
 msgid "Silence"

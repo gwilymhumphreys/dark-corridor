@@ -33,11 +33,11 @@ The `UI_PANEL_*` and `UI_TEXT_*` defaults are the greys the theme already uses, 
 not set them leaves the theme unchanged. `InterfacePalette.reset()` restores the defaults, the original
 images and the theme colours.
 
-Effect colours (`DAMAGE`, `STATUS_*` and so on) are shared by item value badges, status swatches,
-projectiles, damage numbers and the corridor's [hit lights](corridors/corridor_3d.md#hit-lights), so an
-interface palette changes all of them. Effects have no palette of
-their own (owner, 2026-09-15): interface colours keep them coherent with the interface and stand out
-against the desaturated corridor.
+Effect colours (the [mechanic colours](mechanics.md#colours) and the remaining `STATUS_*` and
+`ARCANE`) are shared by item value badges, status swatches, projectiles, damage numbers
+and the corridor's [hit lights](corridors/corridor_3d.md#hit-lights), so an interface palette changes
+all of them. Effects have no palette of their own (owner, 2026-09-15): interface colours keep them
+coherent with the interface and stand out against the desaturated corridor.
 
 ## Images
 

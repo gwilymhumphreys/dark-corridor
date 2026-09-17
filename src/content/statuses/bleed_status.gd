@@ -16,7 +16,7 @@ func _init() -> void:
   id = ID
   name_key = 'Bleed'
   desc_key = 'Each time the bleeding side acts, it takes damage and loses a stack.'   # PLACEHOLDER desc — owner writes
-  color = Colours.DAMAGE   # PLACEHOLDER tint — no dedicated bleed colour yet (owner's to add)
+  color = Colours.ATTACK   # PLACEHOLDER tint — no dedicated bleed colour yet (owner's to add)
   icon = 'res://assets/icons/statuses/skill_bleeding_nb.png'
 
 

@@ -31,12 +31,11 @@ Columns: 8
 190 160 100	rarity rare
 188 161 105	tooltip changed
 # Effect families (shared with projectiles and damage numbers)
-154  80  75	damage
+154  80  75	attack
  69 117  87	heal
 104  97 148	arcane
-141  92  57	enemy claw
  68 109 144	shield
- 94 113  59	status poison
+ 94 113  59	poison
 126  92 122	status weak
 141  92  57	status vulnerable
 169 167 131	status blind

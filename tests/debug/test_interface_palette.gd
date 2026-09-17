@@ -59,20 +59,20 @@ func test_only_gpl_files_naming_a_colours_variable_are_interface_palettes() -> v
 
 
 func test_named_colours_are_read_from_a_gpl_file() -> void:
-  var path: String = _write_palette('named.gpl', ['255 0 0\tdamage', '0 0 255', '0 255 0 hp bar fill'])
+  var path: String = _write_palette('named.gpl', ['255 0 0\tattack', '0 0 255', '0 255 0 hp bar fill'])
   var named: Dictionary = PaletteLoader.load_named_colours(path)
   assert_eq(named.size(), 2, 'the unnamed colour is skipped')
-  assert_eq(named['damage'], Color8(255, 0, 0))
+  assert_eq(named['attack'], Color8(255, 0, 0))
   assert_eq(named['hp bar fill'], Color8(0, 255, 0))
 
 
 func test_apply_sets_colours_and_reset_restores_them() -> void:
-  var default_damage: Color = Colours.DAMAGE
-  var path: String = _write_palette('apply.gpl', ['10 20 30 damage', '1 2 3 not a colour'])
+  var default_attack: Color = Colours.ATTACK
+  var path: String = _write_palette('apply.gpl', ['10 20 30 attack', '1 2 3 not a colour'])
   assert_eq(InterfacePalette.apply(path), 1, 'only the name that matches a Colours variable counts')
-  assert_eq(Colours.DAMAGE, Color8(10, 20, 30))
+  assert_eq(Colours.ATTACK, Color8(10, 20, 30))
   InterfacePalette.reset()
-  assert_eq(Colours.DAMAGE, default_damage, 'reset restores the default')
+  assert_eq(Colours.ATTACK, default_attack, 'reset restores the default')
 
 
 func test_default_palette_names_every_match_a_colour() -> void:
@@ -85,7 +85,7 @@ func test_default_palette_names_every_match_a_colour() -> void:
 func test_theme_is_unchanged_when_the_palette_sets_no_panel_or_text_colours() -> void:
   var pixel: Color = _panel_centre_pixel()
   var button_text: Color = _theme().get_color('font_color', 'Button')
-  InterfacePalette.apply(_write_palette('effects_only.gpl', ['10 20 30 damage']))
+  InterfacePalette.apply(_write_palette('effects_only.gpl', ['10 20 30 attack']))
   assert_true(_panel_centre_pixel().is_equal_approx(pixel), 'panel image unchanged')
   assert_true(_theme().get_color('font_color', 'Button').is_equal_approx(button_text), 'button text unchanged')
 
@@ -107,9 +107,9 @@ func test_definitions_already_built_take_the_palette_until_reset() -> void:
   var weapon: ItemDef = ItemCatalog.get_def(ItemCatalog.WEAPON)
   var potion: ConsumableDef = ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)
   var relic: RelicDef = RelicCatalog.get_def(RelicCatalog.STONE_WARD)
-  var default_damage: Color = weapon.effects[0].color
+  var default_attack: Color = weapon.effects[0].color
   InterfacePalette.apply(_write_palette('catalogs.gpl', [
-    '10 20 30 damage',
+    '10 20 30 attack',
     '40 50 60 heal',
     '70 80 90 relic stone ward',
   ]))
@@ -119,7 +119,7 @@ func test_definitions_already_built_take_the_palette_until_reset() -> void:
   assert_eq(potion.effects[0].color, Color8(40, 50, 60))
   assert_eq(relic.panel_color, Color8(70, 80, 90))
   InterfacePalette.reset()
-  assert_eq(weapon.effects[0].color, default_damage, 'reset restores the default')
+  assert_eq(weapon.effects[0].color, default_attack, 'reset restores the default')
 
 
 func test_named_colour_rect_takes_its_colour_when_added() -> void:
@@ -152,7 +152,7 @@ func test_palette_style_box_follows_an_applied_palette_and_returns_to_default_on
 
 func test_interface_images_are_clamped_to_the_palette_colours_until_reset() -> void:
   DebugPanels.set_interface_palette(_write_palette('clamp.gpl', [
-    '10 20 30 damage',
+    '10 20 30 attack',
     '10 20 30 heal',
     '200 0 0 ui panel',
   ]))

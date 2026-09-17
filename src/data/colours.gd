@@ -11,10 +11,20 @@ class_name Colours
 ## NOTE: a couple of colours still live at their use site by design — pure dev/debug tints (e.g.
 ## the corridor "see gaps" magenta), which never ship.
 
+# ── Mechanics ────────────────────────────────────────────────────────────────
+# One colour per mechanic (docs/plans/mechanics.md); a mechanic's color() returns its variable, so a
+# palette applied at runtime is read each time.
+static var ATTACK: Color = Color(0.9, 0.2, 0.2)             # the generic attack red
+static var SHIELD: Color = Color(0.3, 0.6, 1.0)
+static var HEAL: Color = Color(0.3, 0.9, 0.4)
+static var POISON: Color = Color(0.4, 0.8, 0.2)
+static var BURN: Color = Color(0.95, 0.5, 0.1)              # PLACEHOLDER — owner re-tints
+static var BLEED: Color = Color(0.55, 0.1, 0.1)             # PLACEHOLDER — owner re-tints
+static var REGEN: Color = Color(0.6, 0.95, 0.6)             # PLACEHOLDER — owner re-tints
+static var CRIT: Color = Color(0.95, 0.95, 0.6)             # PLACEHOLDER — owner re-tints
+
 # ── Statuses ─────────────────────────────────────────────────────────────────
 # Each StatusEffect subclass AND its appliers reference the same colour (applier = status colour).
-static var SHIELD: Color = Color(0.3, 0.6, 1.0)
-static var STATUS_POISON: Color = Color(0.4, 0.8, 0.2)
 static var STATUS_WEAK: Color = Color(0.6, 0.4, 0.7)
 static var STATUS_VULNERABLE: Color = Color(0.85, 0.5, 0.2)
 static var STATUS_BLIND: Color = Color(0.9, 0.9, 0.55)
@@ -24,10 +34,7 @@ static var STATUS_DECAY: Color = Color(0.55, 0.4, 0.35)     # placeholder rot br
 static var STATUS_EMPOWERED: Color = Color(0.95, 0.75, 0.2) # placeholder might gold (Armourer empower) — owner re-tints
 
 # ── Combat payloads / item panels ────────────────────────────────────────────
-static var DAMAGE: Color = Color(0.9, 0.2, 0.2)             # the generic attack red
-static var HEAL: Color = Color(0.3, 0.9, 0.4)
 static var ARCANE: Color = Color(0.5, 0.2, 0.7)             # Hex Bolt (item-targeting)
-static var ENEMY_CLAW: Color = Color(0.8, 0.4, 0.1)
 
 # ── Relic panels ─────────────────────────────────────────────────────────────
 static var RELIC_STONE_WARD: Color = Color(0.4, 0.5, 0.6)

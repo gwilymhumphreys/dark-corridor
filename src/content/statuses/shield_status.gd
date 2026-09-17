@@ -8,7 +8,10 @@ const ID := 'shield'
 
 func _init() -> void:
   id = ID
-  name_key = 'Shield'
-  desc_key = 'Absorbs incoming damage, then wears off.'   # PLACEHOLDER desc — owner writes
+  # Presentation is written once, in the mechanic (docs/plans/mechanics.md) — copy it here so the
+  # combat log, status icons and combat summary keep reading the status's own fields.
+  var mechanic: Mechanic = MechanicRegistry.get_mechanic(ID)
+  name_key = mechanic.name_key
+  desc_key = mechanic.desc_key
+  icon = mechanic.icon
   color = Colours.SHIELD
-  icon = 'res://assets/icons/statuses/skill_shield_block_nb.png'
