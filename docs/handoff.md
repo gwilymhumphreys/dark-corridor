@@ -28,11 +28,12 @@
 > **2026-09-16 (branch `full-res-art-3d-corridor`): pixel art is set aside and the look is being
 > explored** with the art we have, shaders, post-processing and palettes — see
 > [The look](#the-look-being-explored) below.
-> **2026-09-17: mechanics plan steps 1 to 4 are built** — attack, shield, heal, poison, burn, bleed and
-> regen are now [mechanics](systems/mechanics.md) (one class each, effects name them, they land
-> through them); bleed triggers when its holder is hit by an attack and heal removes poison / burn /
-> bleed stacks. Still to build: crit, the `APPLIED` event, and the health bar numbers and keyword
-> cards (steps 5 to 7 of `plans/mechanics.md`).
+> **2026-09-17: mechanics plan steps 1 to 5 are built** — all eight are now
+> [mechanics](systems/mechanics.md) (one class each, effects name them, they land through them);
+> bleed triggers when its holder is hit by an attack, heal removes poison / burn / bleed stacks,
+> and crit is a chance on an item that doubles that fire's mechanic values. Still to build: the
+> `APPLIED` event, and the health bar numbers and keyword cards (steps 6 to 7 of
+> `plans/mechanics.md`).
 >
 > **GUT suite green** on Godot 4.7 (latest count in [build_log.md](history/build_log.md)); the run is
 > watchable end-to-end and the autotest plays + reports builds.

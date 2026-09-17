@@ -356,6 +356,13 @@ func _fire_item(it: Item, arrived: Array) -> void:
   bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
   if combat_log != null:
     combat_log.on_item_fired(it.def.name_key, _side_of(it.owner), timekeeper.sim_time)
+  # Crit (docs/plans/mechanics.md → Crit): one roll per fire, on the seeded per-fight RNG. The
+  # `> 0.0` check comes first so an item with no crit chance draws NOTHING from the RNG — existing
+  # fights and seeded autotest runs are bit-identical. On a crit, the fire's mechanic deliveries
+  # are multiplied by Balance.CRIT_MULTIPLIER (below, after consume) and flagged `crit`.
+  var crit: bool = it.def.crit_chance > 0.0 and rng.randf() < it.def.crit_chance
+  if crit:
+    bus.publish(EventBus.Event.CRIT, it.def.id, it.owner, it)
   # The item still fires (cooldown reset, fire-emote) even when blinded — but its attack
   # whiffs (docs/systems/spore_engine.md Cap 2). Locked at fire so a swing launched while blinded misses.
   var blinded: bool = StatusManager.has_evasion(it.owner)
@@ -373,6 +380,12 @@ func _fire_item(it: Item, arrived: Array) -> void:
       # only known now), scaling the Delivery — the Item stayed downward-clean (it declared).
       if p.consume_id != '' and p.consume_from_target:
         d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
+      # A critting fire multiplies its mechanic deliveries LAST — after enchant, weak, empower and
+      # both kinds of consume (docs/plans/mechanics.md → Crit). Outside-set deliveries (statuses,
+      # summons, created items) are untouched, and so is `duration`.
+      if crit and d.kind == Delivery.Kind.MECHANIC and MechanicRegistry.has(d.mechanic):
+        d.value *= Balance.CRIT_MULTIPLIER
+        d.crit = true
       if blinded and d.mechanic == AttackMechanic.ID:
         d.evaded = true
       _deliveries.append(d)

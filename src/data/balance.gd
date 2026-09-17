@@ -220,6 +220,9 @@ const SHIELD_MULTIPLIER_BLEED: float = 0.5    # PLACEHOLDER — owner tunes
 # Heal cleanse (docs/plans/mechanics.md → Heal): a heal removes floor(value × this) stacks of the
 # target's poison, burn and bleed (value = the full heal, including overheal).
 const HEAL_CLEANSE_FRACTION: float = 0.1      # PLACEHOLDER — owner tunes
+# Crit (docs/plans/mechanics.md → Crit): the multiplier applied to a critting fire's mechanic
+# delivery values.
+const CRIT_MULTIPLIER: float = 2.0            # PLACEHOLDER — owner tunes
 
 
 # ── Triggers (charges model — push as a fraction of the bar; docs/systems/combat_model.md) ─────

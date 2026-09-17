@@ -10,7 +10,7 @@ mechanic they use, so items, relics and enchantments can refer to them. The owne
 
 ## Built so far
 
-Attack, heal, shield, poison, burn, bleed and regen are built. Crit is not.
+All eight are built: attack, heal, shield, poison, burn, bleed, regen and crit.
 
 The damage pipeline carries a mechanic id (`take_damage` / `resolve_incoming_damage` / `absorb`
 take `mechanic_id`, default `''`), and the shield pool spends the dealing mechanic's multiplier
@@ -44,8 +44,21 @@ only `mechanic` (plus value, shape, travel, flags), not `status_id` or `color`:
   `MECHANIC` delivery. It keeps its own branches for the other kinds.
 - `APPLY_STATUS` is for statuses that are not mechanics. Using it with a mechanic's status id
   (`'shield'`, `'poison'`, `'burn'`, `'bleed'`, `'regen'`) pushes an error and applies nothing.
-- `Item.uses(mechanic_id)` is true when any of the item's effects uses that mechanic.
+- `Item.uses(mechanic_id)` is true when any of the item's effects uses that mechanic; for `'crit'`
+  it is true when the item has a crit chance (`ItemDef.crit_chance > 0`).
 - Weak and empower modify effects whose mechanic is attack, and blind makes attacks miss.
+
+## Crit
+
+Crit is a chance on an item, not a delivery: `ItemDef.crit_chance` (0 to 1). When the item fires,
+the Combat manager rolls once on the seeded per-fight RNG — items with no crit chance draw nothing
+from it, so existing fights and seeded autotest runs are unchanged. On a crit, the values of that
+fire's mechanic deliveries are multiplied by `Balance.CRIT_MULTIPLIER` (after enchant, weak,
+empower and both kinds of consume) and flagged `Delivery.crit`; outside-set deliveries and
+durations are untouched. `EventBus.Event.CRIT` is published with the item's def id as data, the
+owner as source, straight after `ITEM_FIRED`. Thrown consumables never crit, and
+`Item.display_value` never rolls (the tooltip shows the value without crit). `CritMechanic` has no
+`land` override — it is never delivered.
 
 ## The Mechanic class
 

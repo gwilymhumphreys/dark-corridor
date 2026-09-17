@@ -38,6 +38,10 @@ var visual_only: bool = false
 # attack swung but whiffs. It travels, then fizzles on land (no damage). The flag is the
 # fizzle REASON (evaded vs. target-died) so the VFX wall can play a distinct miss tell.
 var evaded: bool = false
+# Set at fire when the item's crit roll succeeds (docs/plans/mechanics.md → Crit): the delivery's
+# value was multiplied by Balance.CRIT_MULTIPLIER. Effects can use this later (e.g. a distinct
+# impact tell). Never set on a thrown consumable (potions have no crit chance).
+var crit: bool = false
 
 
 ## Advance the travel Ticker one sim-step; returns true the step it arrives.
