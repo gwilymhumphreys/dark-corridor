@@ -3,6 +3,8 @@ Name: ui-muted
 Columns: 8
 # Placeholder. Warm dark-brown panels, bone text, muted effect hues from new/effects/effects-muted.gpl,
 # bronze, silver and gold rarity. See docs/systems/interface_palette.md.
+# Shield, poison, burn, bleed, regen and crit follow the mechanic colours (docs/systems/mechanics.md),
+# fitted to this scheme; crit is a placeholder in every palette until it is chosen.
 # Interface
  16  12  10	ui background
  58  52  46	ui background wear
@@ -11,6 +13,8 @@ Columns: 8
  29  26  23	ui panel
  50  45  40	ui panel edge
 120 113 104	ui panel light
+ 58  52  46	ui panel wear
+150 142 130	ui panel wear light
  80  76  72	ui text disabled
 115 110 105	ui text pressed
 140 133 124	ui text dim
@@ -34,8 +38,12 @@ Columns: 8
 154  80  75	attack
  69 117  87	heal
 104  97 148	arcane
- 68 109 144	shield
- 94 113  59	poison
+160 138  72	shield
+ 72  90  48	poison
+176 108  50	burn
+110  58  78	bleed
+120 158 118	regen
+214 200 150	crit
 126  92 122	status weak
 141  92  57	status vulnerable
 169 167 131	status blind

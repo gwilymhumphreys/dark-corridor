@@ -1,6 +1,6 @@
 class_name CritMechanic
 extends Mechanic
-## Crit — the mechanic for an item's crit chance (docs/plans/mechanics.md). It is never
+## Crit — the mechanic for an item's crit chance (docs/systems/mechanics.md). It is never
 ## delivered: the Combat manager rolls it at fire time and multiplies that fire's mechanic
 ## deliveries by Balance.CRIT_MULTIPLIER. It has no `land` override (the base no-ops on an
 ## empty `status_id`).

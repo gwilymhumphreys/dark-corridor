@@ -37,9 +37,9 @@ The run screen is split into four sections that match the folds in the paper bac
 **Location:** `src/ui/screen_sections.gd` (class `ScreenSections`) and `screen_sections.tscn`.
 
 - The run screen owns one `ScreenSections`, on its HUD. The information section's contents sit in it directly. The combat view is given the same node (`CombatView.sections`) and moves its corridor, item column and portrait row onto the sections' rectangles whenever `sections_changed` fires. A view made without one, as in tests, makes its own.
-- The **split point** is where the sections meet. The **padding** is taken off every side of each section, so everything sits the same distance from the screen edge and from the folds. Both are print frame settings (`split_across`, `split_down`, `padding` in `PrintLook.PRINT_SETTING_DEFAULTS`), set from the Layout group of the F5 [print panel](print_frame.md).
+- The **split point** is where the sections meet. The **padding** is taken off every side of each section, so everything sits the same distance from the screen edge and from the folds. Both are print frame settings (`split_across`, `split_down`, `padding` in `PrintLook.PRINT_SETTING_DEFAULTS`), set from the Layout group of the [Print tab](print_frame.md).
 - The folds line up with the split point on their own: with follow layout on, the [background wear](background_wear.md) puts the last fold at the corridor's far edge plus its padding.
-- Moving the split point or changing the padding reflows the parts. The item grid uses as many columns as fit the width. The player portrait stays square and takes whatever height is left after the HP bar and name. Ally portraits do the same, but never grow past their size in `ally_slot.tscn`.
+- Moving the split point or changing the padding reflows the parts. The item grid uses as many columns as fit the width. The player portrait stays square and takes the section's full height, with the name and HP bar beside it. Ally portraits do the same, but never grow past their size in `ally_slot.tscn`.
 
 ## The corridor & the approaching encounter
 
@@ -50,7 +50,8 @@ The corridor view is **mood + feedback**, not the focus (design) — but it carr
 Colour is the readability mechanism that scales (design) — you can't parse 30 names in 15s, but you can parse "lots of red on my side, blue on theirs." The board:
 
 - **Type-zoned** — items in fixed, learnable regions by effect family (weapon / armor / heal / status-applier); synergy groups cluster + glow together when one fires (glow can be drawn with [interface glow](interface_glow.md); not wired yet). Fixed positions, hover-tilt on the focused item only — *not* drifting (art doc: motion = signal; a still board that erupts on fire reads as the cascade).
-- **Colour-coded value panel** per item (extruding over the top edge): the panel background = effect family (red attack, blue shield, green heal, per-effect status colours), the number = the value. Usually one panel; rares may show more.
+- **Colour-coded value panel** per item (extruding over the top edge): the panel background = effect family (red attack, yellow shield, green heal, per-effect status colours), the number = the value. Usually one panel; rares may show more.
+- **The enemy board appears with the fight** — an enemy's readout (name, HP bar, items) sits above its corridor sprite and is hidden through the approach, fading in when the fight starts.
 - **Cooldown fill** (a filling overlay over the icon, its top edge a torn paper line) on each active item — **on enemy items too** (mutual cooldowns = the visible race). As built: `cooldown_fill.gdshader`, driven by `ItemCell` ([run_screen.md](run_screen.md)). The fills are cleared when the fight ends and are not shown outside a fight (events, reward icons).
 - **Rarity border** (bronze / silver / gold); **build-anchor** is a separate glow channel (never the border or size); **size** = a tempo tag (if it ships — Item PRD).
 - **Bigger than feels comfortable**, so activations stay legible in a packed cascade.
@@ -59,7 +60,7 @@ The enemy board mirrors the player's (loadouts visible — "watch the cascades c
 
 ## Portrait, HP, potions
 
-- **Player portrait** separate from the scene (identity anchor); **HP** shown as the portrait getting progressively beaten-up + the value as text.
+- **Player portrait** separate from the scene (identity anchor), with the left-aligned name over the HP bar beside it, both at the top of the section; **HP** shown as the portrait getting progressively beaten-up + the value as text. Ally slots use the same arrangement, with their item row under the HP bar.
 - As built, the portrait image comes from `CharacterDef.portrait` (player) or `EnemyDef.portrait` (ally slots), copied onto `Actor.portrait` when the Actor is made. The image sits in a `PanelSlot` frame, the worn panel used behind icons ([panel_wear.md](panel_wear.md)). The character select cards show `CharacterDef.portrait` too. Beaten-up HP is not built.
 - **Potion slots** distinct from item slots (tactical reserve, not item-cousin UI); **slow-mo-on-hover** to inspect + throw.
 

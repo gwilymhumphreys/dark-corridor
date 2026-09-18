@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/debug/background_panel.gd" id="1"]
+[ext_resource type="PackedScene" path="res://src/debug/preset_part_row.tscn" id="2"]
+
+[node name="BackgroundPanel" type="VBoxContainer"]
+theme_override_constants/separation = 16
+script = ExtResource("1")
+
+[node name="PartRow" parent="." instance=ExtResource("2")]
+layout_mode = 2
+part = 3
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Sections" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8

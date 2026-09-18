@@ -51,6 +51,13 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 
 **Built (2026-06-06):** all three categories, each proving its path end-to-end and wired into the run + headless autotest (starting-kit grants stand in for drafting them — slot composition is deferred):
 
+> **Not reachable in play right now (2026-09-18).** A starting kit was the only way a run got a
+> potion or an enchant, and the only character that carried them was the deleted Wanderer
+> placeholder. Neither authored character has a starting relic, potion or enchant, and Stone Ward is
+> not in `RelicCatalog.REWARD_POOL`, so only Vital Charm and Iron Idol can be earned mid-run. The
+> code paths are all still exercised by the test suite. Giving a character a starting kit, or
+> adding a potion or enchant reward, is content work for the owner.
+
 - One **relic** — Stone Ward (a combat-start shield status applier), in run-state, applied at each fight start, saved (`src/content/relics/relic*.gd`).
 - One **enchant** — Whetstone (scale-a-value, +50%), applied to a chosen item, saved on the board entry; the Item fire pipeline scales payload values (`src/content/enchants/enchant*.gd`, `Item._resolve_effect`).
 - One **consumable** — Healing Draught (a thrown self-heal), in a potion slot, fired via `RunManager.throw_potion` → `CombatManager.throw_consumable` → a travel-0 Delivery (`src/content/consumables/consumable*.gd`). **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.

@@ -125,15 +125,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 24
 
-[node name="PlayerPortrait" type="VBoxContainer" parent="Portraits"]
+[node name="PlayerPortrait" type="HBoxContainer" parent="Portraits"]
 layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 1
+theme_override_constants/separation = 20
 
 [node name="Portrait" type="PanelContainer" parent="Portraits/PlayerPortrait"]
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"PanelSlot"
 
@@ -144,11 +143,21 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HP" type="Control" parent="Portraits/PlayerPortrait"]
+[node name="Readout" type="VBoxContainer" parent="Portraits/PlayerPortrait"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 10
+
+[node name="Name" type="Label" parent="Portraits/PlayerPortrait/Readout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "You"
+
+[node name="HP" type="Control" parent="Portraits/PlayerPortrait/Readout"]
 custom_minimum_size = Vector2(200, 30)
 layout_mode = 2
 
-[node name="Background" type="ColorRect" parent="Portraits/PlayerPortrait/HP"]
+[node name="Background" type="ColorRect" parent="Portraits/PlayerPortrait/Readout/HP"]
 material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 15
@@ -160,7 +169,7 @@ color = Color(0.1, 0.1, 0.12, 1)
 script = ExtResource("5")
 colour_name = "HP_BAR_BG"
 
-[node name="Fill" type="ColorRect" parent="Portraits/PlayerPortrait/HP"]
+[node name="Fill" type="ColorRect" parent="Portraits/PlayerPortrait/Readout/HP"]
 material = ExtResource("interface_look_material")
 layout_mode = 1
 anchors_preset = 15
@@ -172,7 +181,7 @@ color = Color(0.4, 0.75, 0.4, 1)
 script = ExtResource("5")
 colour_name = "HP_BAR_FILL"
 
-[node name="Label" type="Label" parent="Portraits/PlayerPortrait/HP"]
+[node name="Label" type="Label" parent="Portraits/PlayerPortrait/Readout/HP"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -183,7 +192,7 @@ theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StatusNumbers" parent="Portraits/PlayerPortrait/HP" instance=ExtResource("status_numbers")]
+[node name="StatusNumbers" parent="Portraits/PlayerPortrait/Readout/HP" instance=ExtResource("status_numbers")]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -193,12 +202,6 @@ anchor_bottom = 1.0
 offset_left = 8.0
 offset_right = 8.0
 grow_horizontal = 1
-
-[node name="Name" type="Label" parent="Portraits/PlayerPortrait"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "You"
-horizontal_alignment = 1
 
 [node name="AllyRight" type="HBoxContainer" parent="Portraits"]
 layout_mode = 2

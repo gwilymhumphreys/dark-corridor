@@ -44,7 +44,7 @@ func test_status_and_mechanic_keyword_ids_still_resolve() -> void:
 
 
 func test_weapon_keyword_ids_include_its_attack_mechanic() -> void:
-  var it: Item = Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), _actor(100.0))
+  var it: Item = Item.new(FixtureItems.attack(), _actor(100.0))
   var ids: Array[String] = TooltipContent.keyword_ids(it)
   assert_true(AttackMechanic.ID in ids, 'the weapon\'s attack mechanic is a keyword')
 
@@ -67,7 +67,7 @@ func test_crit_item_has_the_crit_keyword_and_a_crit_stat_line() -> void:
 
 
 func test_no_crit_item_has_no_crit_keyword_or_line() -> void:
-  var it: Item = Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), _actor(100.0))
+  var it: Item = Item.new(FixtureItems.attack(), _actor(100.0))
   var ids: Array[String] = TooltipContent.keyword_ids(it)
   assert_false(CritMechanic.ID in ids, 'no crit chance, no crit keyword')
   var content: Dictionary = TooltipContent.new().build(it)

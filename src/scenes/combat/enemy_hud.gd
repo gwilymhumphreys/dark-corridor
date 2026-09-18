@@ -1,9 +1,10 @@
 class_name EnemyHud
 extends VBoxContainer
-## An enemy in the framed combat view, floating over the corridor occupant (docs/systems/ui_layout.md):
-## its board items as cells (top), a status-icon row + HP bar, and the enemy's name (bottom).
-## Structure is authored in enemy_hud.tscn; setup() builds the item row and HP reads each
-## frame. Reads the Actor; writes nothing. The VFX wall reads hud_centre / cell_centre.
+## An enemy in the framed combat view, floating above the corridor occupant (docs/systems/ui_layout.md):
+## the enemy's name, then a status-icon row + HP bar, then its board items as cells. Structure is
+## authored in enemy_hud.tscn; setup() builds the item row and HP reads each frame. The HUD is
+## hidden through the approach and fade_in() brings it up when the fight starts. Reads the Actor;
+## writes nothing. The VFX wall reads hud_centre / cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
 const STATUS_ICON: PackedScene = preload('res://src/scenes/combat/status_icon.tscn')
@@ -18,6 +19,7 @@ var actor: Actor
 @onready var _name: Label = $Name
 
 var _cells: Dictionary = {}   # Item -> ItemCell
+var _fade: Tween
 
 
 const CELL_PX: float = 90.0   # smaller than the player's prominent board
@@ -44,6 +46,9 @@ func setup(target: Actor, timekeeper: Timekeeper = null, max_width: float = 0.0)
 
 
 func _exit_tree() -> void:
+  if _fade != null:
+    _fade.kill()
+    _fade = null
   _cells.clear()
   _status_numbers.actor = null
   actor = null
@@ -84,6 +89,17 @@ func _refresh_statuses() -> void:
     _statuses.add_child(STATUS_ICON.instantiate())
   for i in want:
     (_statuses.get_child(i) as StatusIcon).show_status(outside[i])
+
+
+## Show this HUD, fading it up over `duration` seconds — the fight starting (the HUDs are hidden
+## through the approach) or a summon appearing mid-fight.
+func fade_in(duration: float) -> void:
+  if _fade != null:
+    _fade.kill()
+  visible = true
+  modulate.a = 0.0
+  _fade = create_tween()
+  _fade.tween_property(self, 'modulate:a', 1.0, duration)
 
 
 func hud_centre() -> Vector2:

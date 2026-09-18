@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/debug/debug_panels.gd" id="1"]
-[ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="3"]
 [ext_resource type="PackedScene" path="res://src/debug/look_panel.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://src/debug/print_panel.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://src/debug/interface_look_panel.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://src/debug/preset_bar.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://src/debug/background_panel.tscn" id="8"]
 
 [node name="DebugPanels" type="Node"]
 process_mode = 3
@@ -15,222 +16,44 @@ layer = 127
 visible = false
 
 [node name="Panel" type="PanelContainer" parent="PanelLayer"]
-offset_left = 24.0
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1124.0
 offset_top = 24.0
-offset_right = 824.0
-offset_bottom = 424.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 2
 
 [node name="Rows" type="VBoxContainer" parent="PanelLayer/Panel"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="PanelLayer/Panel/Rows"]
+[node name="PresetBar" parent="PanelLayer/Panel/Rows" instance=ExtResource("7")]
 layout_mode = 2
-text = "Debug (F1)"
 
-[node name="WorldPaletteRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
+[node name="Tabs" type="TabContainer" parent="PanelLayer/Panel/Rows"]
 layout_mode = 2
-theme_override_constants/separation = 24
+size_flags_vertical = 3
+current_tab = 0
 
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/WorldPaletteRow"]
-custom_minimum_size = Vector2(320, 0)
+[node name="Corridor" parent="PanelLayer/Panel/Rows/Tabs" instance=ExtResource("4")]
 layout_mode = 2
-text = "World palette (corridor)"
-vertical_alignment = 1
+metadata/_tab_index = 0
 
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/WorldPaletteRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 1
-selected = 0
-popup/item_0/text = "Off"
-popup/item_0/id = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/WorldPaletteRow/Option"]
-script = ExtResource("3")
-
-[node name="InterfacePaletteRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/InterfacePaletteRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Interface palette"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/InterfacePaletteRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 1
-selected = 0
-popup/item_0/text = "Off"
-popup/item_0/id = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/InterfacePaletteRow/Option"]
-script = ExtResource("3")
-
-[node name="PortraitPaletteRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/PortraitPaletteRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Portrait palette"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/PortraitPaletteRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 1
-selected = 0
-popup/item_0/text = "Off"
-popup/item_0/id = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/PortraitPaletteRow/Option"]
-script = ExtResource("3")
-
-[node name="FontRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/FontRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Font"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/FontRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 1
-selected = 0
-popup/item_0/text = "Game default"
-popup/item_0/id = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/FontRow/Option"]
-script = ExtResource("3")
-
-[node name="MatchingRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/MatchingRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Colour matching"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/MatchingRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 2
-selected = 0
-popup/item_0/text = "Nearest in RGB"
-popup/item_0/id = 0
-popup/item_1/text = "Perceptual (OKLab)"
-popup/item_1/id = 1
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/MatchingRow/Option"]
-script = ExtResource("3")
-
-[node name="DitheringRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/DitheringRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Dithering"
-vertical_alignment = 1
-
-[node name="Check" type="CheckButton" parent="PanelLayer/Panel/Rows/DitheringRow"]
-layout_mode = 2
-focus_mode = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/DitheringRow/Check"]
-script = ExtResource("3")
-
-[node name="ComboSaveRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/ComboSaveRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Save palette combo"
-vertical_alignment = 1
-
-[node name="NameEdit" type="LineEdit" parent="PanelLayer/Panel/Rows/ComboSaveRow"]
-custom_minimum_size = Vector2(256, 48)
-layout_mode = 2
-placeholder_text = "Combo name"
-
-[node name="SaveButton" type="Button" parent="PanelLayer/Panel/Rows/ComboSaveRow"]
-custom_minimum_size = Vector2(120, 48)
-layout_mode = 2
-focus_mode = 0
-text = "Save"
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/ComboSaveRow/SaveButton"]
-script = ExtResource("3")
-
-[node name="ComboLoadRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/ComboLoadRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Load palette combo"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/ComboLoadRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/ComboLoadRow/Option"]
-script = ExtResource("3")
-
-[node name="StartUpRow" type="HBoxContainer" parent="PanelLayer/Panel/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PanelLayer/Panel/Rows/StartUpRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Load at start-up"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PanelLayer/Panel/Rows/StartUpRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-
-[node name="Juice" type="Node" parent="PanelLayer/Panel/Rows/StartUpRow/Option"]
-script = ExtResource("3")
-
-[node name="LookLayer" type="CanvasLayer" parent="."]
-layer = 127
+[node name="Interface" parent="PanelLayer/Panel/Rows/Tabs" instance=ExtResource("6")]
 visible = false
+layout_mode = 2
+metadata/_tab_index = 1
 
-[node name="LookPanel" parent="LookLayer" instance=ExtResource("4")]
-
-[node name="PrintLayer" type="CanvasLayer" parent="."]
-layer = 127
+[node name="Print" parent="PanelLayer/Panel/Rows/Tabs" instance=ExtResource("5")]
 visible = false
+layout_mode = 2
+metadata/_tab_index = 2
 
-[node name="PrintPanel" parent="PrintLayer" instance=ExtResource("5")]
-
-[node name="InterfaceLookLayer" type="CanvasLayer" parent="."]
-layer = 127
+[node name="Background" parent="PanelLayer/Panel/Rows/Tabs" instance=ExtResource("8")]
 visible = false
-
-[node name="InterfaceLookPanel" parent="InterfaceLookLayer" instance=ExtResource("6")]
+layout_mode = 2
+metadata/_tab_index = 3

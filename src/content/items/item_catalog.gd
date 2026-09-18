@@ -1,13 +1,11 @@
 class_name ItemCatalog
-## The item definitions (decision #23 — authored in GDScript, keyed by Id).
-## Phase 1 pool: a weapon (single-target damage, travels), an armor (self shield),
-## a poison dagger (applies poison), an avenger (ticks self-shield AND triggers on
-## poison-applied), plus an enemy claw (the enemy pool stays separate by design —
-## one catalog here for Phase 1). HEX_BOLT is the example item-targeting item (silences
-## a RANDOM enemy item; #14/#20) — catalog-only, not pooled by default. Lazily built once.
+## The item definitions (decision #23 — authored in GDScript, keyed by Id). Lazily built once.
+## Every character's cards live here (the Spore Druid's, the Fleshmancer's, the Armourer's), plus
+## the enemy claw (enemy boards only) and a few unpooled items kept as the working examples of a
+## seam: POISON_DAGGER applies poison, AVENGER triggers on it, HEX_BOLT targets an enemy ITEM
+## (#14/#20) and SUNDER applies Vulnerable (#6).
+## A def in no character pool is authored but never drafted — pool membership is the toggle (#27).
 
-const WEAPON := 'weapon'
-const ARMOR := 'armor'
 const POISON_DAGGER := 'poison_dagger'
 const AVENGER := 'avenger'
 const ENEMY_CLAW := 'enemy_claw'
@@ -19,9 +17,6 @@ const SPORE_SPITTER := 'spore_spitter'
 const CAPPED_CUDGEL := 'capped_cudgel'
 const BLOOMHAMMER := 'bloomhammer'
 const WILT_FROND := 'wilt_frond'
-const LEATHER_GLOVES := 'leather_gloves'
-const LEATHER_TREWS := 'leather_trews'
-const LEATHER_BREASTPLATE := 'leather_breastplate'
 const FLESH_CHUNK := 'flesh_chunk'
 const FLESH_CARVING_KNIFE := 'flesh_carving_knife'
 const FLESH_CLEAVER := 'flesh_cleaver'
@@ -68,8 +63,6 @@ static func refresh_colours() -> void:
 
 
 static func _build() -> void:
-  _defs[WEAPON] = _weapon()
-  _defs[ARMOR] = _armor()
   _defs[POISON_DAGGER] = _poison_dagger()
   _defs[AVENGER] = _avenger()
   _defs[ENEMY_CLAW] = _enemy_claw()
@@ -81,9 +74,6 @@ static func _build() -> void:
   _defs[CAPPED_CUDGEL] = _capped_cudgel()
   _defs[BLOOMHAMMER] = _bloomhammer()
   _defs[WILT_FROND] = _wilt_frond()
-  _defs[LEATHER_GLOVES] = _leather_gloves()
-  _defs[LEATHER_TREWS] = _leather_trews()
-  _defs[LEATHER_BREASTPLATE] = _leather_breastplate()
   _defs[FLESH_CHUNK] = _flesh_chunk()
   _defs[FLESH_CARVING_KNIFE] = _flesh_carving_knife()
   _defs[FLESH_CLEAVER] = _flesh_cleaver()
@@ -99,39 +89,6 @@ static func _build() -> void:
   _defs[ARMOURER_BROADAXE] = _armourer_broadaxe()
   _defs[ARMOURER_WARHAMMER] = _armourer_warhammer()
   _defs[ARMOURER_GREATSWORD] = _armourer_greatsword()
-
-
-static func _weapon() -> ItemDef:
-  var d := ItemDef.new()
-  d.id = WEAPON
-  d.types = [ItemType.WEAPON]
-  d.name_key = 'Rusted Blade'
-  d.icon = 'res://assets/icons/items/old_sword.png'
-  d.cooldown = Balance.WEAPON_COOLDOWN
-  var hit := ItemEffect.new()
-  hit.mechanic = AttackMechanic.ID
-  hit.value = Balance.WEAPON_DAMAGE
-  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = Balance.WEAPON_TRAVEL
-  d.effects = [hit]
-  d.panel_color = Colours.ATTACK
-  return d
-
-
-static func _armor() -> ItemDef:
-  var d := ItemDef.new()
-  d.id = ARMOR
-  d.types = [ItemType.ARMOUR]
-  d.name_key = 'Iron Guard'
-  d.icon = 'res://assets/icons/items/metal_shield_1.png'
-  d.cooldown = Balance.ARMOR_COOLDOWN
-  var blk := ItemEffect.new()
-  blk.mechanic = ShieldMechanic.ID
-  blk.value = Balance.ARMOR_SHIELD
-  blk.shape = ItemEffect.Shape.SELF
-  d.effects = [blk]
-  d.panel_color = Colours.SHIELD
-  return d
 
 
 static func _poison_dagger() -> ItemDef:
@@ -157,10 +114,10 @@ static func _avenger() -> ItemDef:
   d.types = [ItemType.ARMOUR]
   d.name_key = 'Spite Ward'
   d.icon = 'res://assets/icons/items/skull_shield.png'
-  d.cooldown = Balance.ARMOR_COOLDOWN
+  d.cooldown = Balance.SPITE_WARD_COOLDOWN
   var blk := ItemEffect.new()
   blk.mechanic = ShieldMechanic.ID
-  blk.value = Balance.ARMOR_SHIELD
+  blk.value = Balance.SPITE_WARD_SHIELD
   blk.shape = ItemEffect.Shape.SELF
   d.effects = [blk]
   # ticks normally AND pushes its cooldown when poison is applied (charges model)
@@ -175,8 +132,8 @@ static func _avenger() -> ItemDef:
 
 ## The example item-targeting item (#14/#20): a bolt that applies SILENCE to a RANDOM
 ## enemy item, chosen on the seeded per-fight RNG. Demonstrates OPPONENT_ITEM_RANDOM end
-## to end. Not in DraftPool by default — the owner can pool it once enemies carry several
-## items (against the single-item grunt a silence is a guaranteed disable).
+## to end. In no character pool — the owner can pool it once enemies carry several items
+## (against the single-item grunt a silence is a guaranteed disable).
 static func _hex_bolt() -> ItemDef:
   var d := ItemDef.new()
   d.id = HEX_BOLT
@@ -382,57 +339,6 @@ static func _wilt_frond() -> ItemDef:
   weak.color = Colours.STATUS_WEAK           # applier shares the status colour
   d.effects = [hit, weak]
   d.panel_color = Colours.ATTACK             # primary payload is damage (single-panel model)
-  return d
-
-
-## Leather shield spread — three plain self-shield items on a cooldown curve (Gloves fast/taxed,
-## Trews baseline, Breastplate slow/rewarded), mirroring the weapon DPS tax. No Spore consume yet
-## (the consume source is an open design question — Spores land on enemies, not the wearer). COMMON.
-static func _leather_gloves() -> ItemDef:
-  var d := ItemDef.new()
-  d.id = LEATHER_GLOVES
-  d.types = [ItemType.ARMOUR]
-  d.name_key = 'Leather Gloves'
-  d.icon = 'res://assets/icons/items/gloves_01.png'
-  d.cooldown = Balance.LEATHER_GLOVES_COOLDOWN
-  var blk := ItemEffect.new()
-  blk.mechanic = ShieldMechanic.ID
-  blk.value = Balance.LEATHER_GLOVES_SHIELD
-  blk.shape = ItemEffect.Shape.SELF
-  d.effects = [blk]
-  d.panel_color = Colours.SHIELD
-  return d
-
-
-static func _leather_trews() -> ItemDef:
-  var d := ItemDef.new()
-  d.id = LEATHER_TREWS
-  d.types = [ItemType.ARMOUR]
-  d.name_key = 'Leather Trews'
-  d.icon = 'res://assets/icons/items/leather_pants.png'
-  d.cooldown = Balance.LEATHER_TREWS_COOLDOWN
-  var blk := ItemEffect.new()
-  blk.mechanic = ShieldMechanic.ID
-  blk.value = Balance.LEATHER_TREWS_SHIELD
-  blk.shape = ItemEffect.Shape.SELF
-  d.effects = [blk]
-  d.panel_color = Colours.SHIELD
-  return d
-
-
-static func _leather_breastplate() -> ItemDef:
-  var d := ItemDef.new()
-  d.id = LEATHER_BREASTPLATE
-  d.types = [ItemType.ARMOUR]
-  d.name_key = 'Leather Breastplate'
-  d.icon = 'res://assets/icons/items/leather_chest_1.png'
-  d.cooldown = Balance.LEATHER_BREASTPLATE_COOLDOWN
-  var blk := ItemEffect.new()
-  blk.mechanic = ShieldMechanic.ID
-  blk.value = Balance.LEATHER_BREASTPLATE_SHIELD
-  blk.shape = ItemEffect.Shape.SELF
-  d.effects = [blk]
-  d.panel_color = Colours.SHIELD
   return d
 
 
@@ -793,10 +699,10 @@ static func _enemy_claw() -> ItemDef:
   d.types = [ItemType.WEAPON]
   d.name_key = 'Claw'
   d.icon = 'res://assets/icons/items/loot_183_claw.png'
-  d.cooldown = Balance.WEAPON_COOLDOWN
+  d.cooldown = Balance.ENEMY_CLAW_COOLDOWN
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
-  hit.value = Balance.WEAPON_DAMAGE
+  hit.value = Balance.ENEMY_CLAW_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
   d.effects = [hit]

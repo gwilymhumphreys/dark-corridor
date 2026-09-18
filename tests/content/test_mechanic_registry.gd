@@ -1,5 +1,5 @@
 extends GutTest
-## The mechanic registry (docs/plans/mechanics.md): one shared Mechanic instance per id, built
+## The mechanic registry (docs/systems/mechanics.md): one shared Mechanic instance per id, built
 ## lazily like the StatusRegistry. This run registers all eight: attack, heal, shield, poison,
 ## burn, bleed, regen and crit.
 

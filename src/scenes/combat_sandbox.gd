@@ -26,9 +26,10 @@ func _ready() -> void:
 
 
 func _build_fight() -> void:
-  _player = _spawn(Balance.PLAYER_START_HP, [
-    ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER,
-  ])
+  # The default character's starting kit, so the sandbox shows real cards without a fixed list
+  # here going stale every time that kit changes.
+  _player = _spawn(Balance.PLAYER_START_HP,
+      CharacterCatalog.get_def(CharacterCatalog.DEFAULT).starting_item_ids)
   _enemy = _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
 
   _cm = CombatManager.new(_player, [_enemy])

@@ -25,10 +25,10 @@ func test_instance_carries_its_def() -> void:
 
 func test_enchant_scales_the_item_payload_value() -> void:
   var actor := Actor.new(100.0)
-  var base_weapon := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), actor)
+  var base_weapon := Item.new(FixtureItems.attack(), actor)
   var base_value: float = base_weapon.fire()[0].value
 
-  var enchanted := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), actor)
+  var enchanted := Item.new(FixtureItems.attack(), actor)
   enchanted.enchant = Enchantment.new(EnchantCatalog.get_def(EnchantCatalog.WHETSTONE))
   var enchanted_value: float = enchanted.fire()[0].value
 

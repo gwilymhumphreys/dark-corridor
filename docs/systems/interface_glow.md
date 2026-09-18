@@ -28,7 +28,7 @@ example an item that just triggered). Nothing glows unless code asks for it.
 ## Settings
 
 Intensity, strength, threshold and blend mode, with defaults in `DEFAULTS`. They are set in the Glow
-section of the interface look panel and saved in the `glow` section of an interface look file.
+section of the Interface tab and saved in a [preset's](look_presets.md) `interface_glow` section.
 
 ## Public API
 

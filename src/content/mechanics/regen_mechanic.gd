@@ -1,6 +1,6 @@
 class_name RegenMechanic
 extends Mechanic
-## Regen — the mechanic for the regenerating status (docs/plans/mechanics.md). Heals the holder
+## Regen — the mechanic for the regenerating status (docs/systems/mechanics.md). Heals the holder
 ## every interval; never loses stacks, so it lasts the whole fight.
 
 const ID := 'regen'

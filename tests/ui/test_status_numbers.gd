@@ -1,5 +1,5 @@
 extends GutTest
-## The health-bar status numbers (docs/plans/mechanics.md step 7): one label per mechanic status
+## The health-bar status numbers (docs/systems/mechanics.md → Health bar numbers): one label per mechanic status
 ## (shield, poison, burn, bleed, regen) shows its stack count in the mechanic's colour; outside-set
 ## statuses (weak) show no label, and a null actor hides everything.
 

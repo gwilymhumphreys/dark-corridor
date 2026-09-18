@@ -1,26 +1,28 @@
 class_name AllySlot
 extends HBoxContainer
 ## A run-scoped ally / combat-scoped summon token in the framed combat view, in one of the
-## slots flanking the player (docs/systems/ui_layout.md): a portrait + HP + name, with its board items
-## beside it. Structure is authored in ally_slot.tscn; setup() builds the item row and HP
-## reads each frame. Reads the Actor; writes nothing. The VFX wall reads slot_centre /
-## cell_centre.
+## slots flanking the player (docs/systems/ui_layout.md): a portrait, and beside it a column of its
+## name, its HP bar, and its board items. Structure is authored in ally_slot.tscn; setup() builds the
+## item row and HP reads each frame. Reads the Actor; writes nothing. The VFX wall reads
+## slot_centre / cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
 const PORTRAIT_MAX_SIZE: float = 110.0   # the portrait's size when the row is tall enough
 const PORTRAIT_MIN_SIZE: float = 40.0
+const CELL_PX: float = 76.0              # compact — these slots flank the player
+const CELL_MIN_PX: float = 24.0
+const CELL_SEPARATION: float = 10.0      # the Items separation in ally_slot.tscn
+const ITEMS_WIDTH: float = 240.0         # the item row's budget under the HP bar; cells shrink to fit
 
 var actor: Actor
 
-@onready var _left: VBoxContainer = $Left
-@onready var _portrait_frame: Control = $Left/Portrait
-@onready var _portrait: TextureRect = $Left/Portrait/Image
-@onready var _hp: Control = $Left/HP
-@onready var _hp_fill: ColorRect = $Left/HP/Fill
-@onready var _hp_label: Label = $Left/HP/Label
-@onready var _status_numbers: StatusNumbers = $Left/HP/StatusNumbers
-@onready var _name: Label = $Left/Name
-@onready var _items: HBoxContainer = $Items
+@onready var _portrait_frame: Control = $Portrait
+@onready var _portrait: TextureRect = $Portrait/Image
+@onready var _hp_fill: ColorRect = $Readout/HP/Fill
+@onready var _hp_label: Label = $Readout/HP/Label
+@onready var _status_numbers: StatusNumbers = $Readout/HP/StatusNumbers
+@onready var _name: Label = $Readout/Name
+@onready var _items: HBoxContainer = $Readout/Items
 
 var _cells: Dictionary = {}   # Item -> ItemCell
 
@@ -32,21 +34,24 @@ func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
   _name.text = tr(actor.display_name) if actor.display_name != '' else tr('Ally')
   if actor.portrait != '':
     _portrait.texture = load(actor.portrait)
+  # The row sits under the HP bar, so the cells shrink to fit its width rather than widening the slot.
+  var cell_px: float = CELL_PX
+  if not actor.board.is_empty():
+    var n: float = float(actor.board.size())
+    cell_px = clampf((ITEMS_WIDTH - CELL_SEPARATION * (n - 1.0)) / n, CELL_MIN_PX, CELL_PX)
   for item in actor.board:
     var cell: ItemCell = ITEM_CELL.instantiate()
     _items.add_child(cell)
-    cell.set_cell_size(76.0)   # compact — these slots flank the player
+    cell.set_cell_size(cell_px)
     cell.setup(item, timekeeper)
     _cells[item] = cell
   _refresh_hp()
 
 
-## Shrink the portrait, keeping it square, so the portrait, HP bar and name fit in `height`. It never
-## grows past its size in the scene.
+## Shrink the portrait, keeping it square, so it fits in `height`. It never grows past its size in
+## the scene.
 func fit_height(height: float) -> void:
-  var gap: float = _left.get_theme_constant('separation')
-  var side: float = floorf(height - _hp.custom_minimum_size.y - _name.get_combined_minimum_size().y - gap * 2.0)
-  side = clampf(side, PORTRAIT_MIN_SIZE, PORTRAIT_MAX_SIZE)
+  var side: float = clampf(floorf(height), PORTRAIT_MIN_SIZE, PORTRAIT_MAX_SIZE)
   _portrait_frame.custom_minimum_size = Vector2(side, side)
 
 

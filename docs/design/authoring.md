@@ -68,6 +68,13 @@ for each def's fields and how it resolves.
 - **Enemies stay a shared pool** and the **reward-relic pool stays shared** — only *item* pools split
   per character (#27).
 
+## Tests do not use authored content
+
+Combat, UI and event tests spawn items from `tests/fixtures/fixture_items.gd` (an attack, a shield,
+a poison applier, an enemy-named attack), not from the catalog, so tuning or renaming a card cannot
+break them. Reach for a real catalog item in a test only when the test is about that card, or about
+the catalog itself. Adding a card needs no test change.
+
 ## After authoring
 
 - **Added a new `class_name` script?** Run a headless `--import --exit` once or the test suite won't

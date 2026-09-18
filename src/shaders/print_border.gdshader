@@ -1,14 +1,15 @@
 shader_type canvas_item;
-// The printed border around the combat corridor (docs/systems/print_frame.md): a solid line in one
-// colour with rough edges and rubbed spots. PrintFrame draws it on a rectangle behind the corridor,
-// sized to the corridor plus the gap, the line width and the roughness. Pixels off the line are fully
-// transparent, so nothing is blended.
+// The printed border around the combat corridor (docs/systems/print_frame.md): a solid line in the
+// background wear's colour, with rough edges and rubbed spots. PrintFrame draws it on a rectangle
+// behind the corridor, sized to the corridor plus the gap, the line width and the roughness. Pixels
+// off the line are fully transparent, so nothing is blended.
 
 #include "res://src/shaders/print_noise.gdshaderinc"
 
-// Set by PrintFrame from Colours: the line colour and the colour of its rubbed spots.
-uniform vec3 border_colour : source_color = vec3(0.6, 0.16, 0.13);
-uniform vec3 border_wear_colour : source_color = vec3(0.2, 0.2, 0.2);
+// Set by PrintFrame from Colours: the background wear's dark colour for the line and its light colour
+// for the rubbed spots, so the border is printed in the same ink as the wear on the paper.
+uniform vec3 border_colour : source_color = vec3(0.2, 0.2, 0.2);
+uniform vec3 border_wear_colour : source_color = vec3(0.48, 0.47, 0.47);
 // The rectangle's size in screen pixels, set by PrintFrame.
 uniform vec2 rect_size = vec2(1.0);
 

@@ -10,8 +10,9 @@ theme for the whole interface; the [screen background](background_wear.md) and t
 **Location:** `src/ui/worn_style_box.gd` (class `WornStyleBox`), `src/shaders/panel_wear.gdshader`,
 `src/shaders/print_wear.gdshaderinc` (the shared effect functions), `PrintLook`
 (`src/autoloads/print_look.gd`, class `PrintLookAutoload`), which owns the material, settings, defaults
-and save/load/reset for panel wear alongside background wear and the print frame. Settings are in the F5
-print panel ([print_frame.md](print_frame.md)).
+and reset for panel wear alongside background wear and the print frame. Settings are in the Print tab
+([print_frame.md](print_frame.md)), under headings that say they apply to item borders and other panels.
+The images inside panels have their own picture wear in the Interface tab ([interface_look.md](interface_look.md#picture-wear)).
 
 ## How it works
 
@@ -55,7 +56,7 @@ print panel ([print_frame.md](print_frame.md)).
 | Panel Creases | Faint bands across the panel |
 
 The defaults are scaled down from the background's own (smaller faded areas, fewer and closer specks, a
-narrower edge) and are starting values for the owner to tune from the F5 panel.
+narrower edge) and are starting values for the owner to tune from the Print tab.
 
 ## What is not covered
 
@@ -64,10 +65,10 @@ narrower edge) and are starting values for the owner to tune from the F5 panel.
 - A control's `self_modulate` does not reach the worn copy, because it is a separate canvas item
   parented to the control's own, not drawn by the control itself; `modulate` does reach it.
 
-## Look files and screenshots
+## Presets and screenshots
 
-Panel wear is saved in a print look's `panel` section and reset with the rest of the print look
-([print_frame.md](print_frame.md#print-looks)). The mark colours are not saved; they come from
+Panel wear is saved in a preset's `print_panel` section and reset with the rest of the print part
+([print_frame.md](print_frame.md#in-a-preset)). The mark colours are not saved; they come from
 `Colours`.
 
 For screenshots, `--panel-set=<uniform>=<value>` sets one setting (repeatable)

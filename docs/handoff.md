@@ -33,7 +33,9 @@
 > bleed triggers when its holder is hit by an attack, heal removes poison / burn / bleed stacks,
 > and crit is a chance on an item that doubles that fire's mechanic values. Landing publishes one
 > `APPLIED` event. Health bars show shield, poison, burn, bleed and regen counts, and every mechanic
-> has a tooltip keyword card. The `mechanics` branch is not merged into `main` yet.
+> has a tooltip keyword card. Merged into `main`. The mechanics' descriptions and four of their
+> icons are still placeholders — the tooltip keyword cards show them, so the player is not yet
+> told the real rules ([mechanics.md](systems/mechanics.md)).
 >
 > **GUT suite green** on Godot 4.7 (latest count in [build_log.md](history/build_log.md)); the run is
 > watchable end-to-end and the autotest plays + reports builds.
@@ -97,6 +99,8 @@ the character system #23/#27). See the per-item status in "Your task" below.
 - **Content** (`src/content/`): all three categories — **Relic** (Stone Ward,
   combat-start shield), **Enchant** (Whetstone, scale-a-value, saved on the board),
   **Consumable** (Healing Draught, thrown self-heal). Each proves its path end-to-end.
+  Since the prototype characters were deleted no character starts with any of them, so they
+  are not reachable in a played run — see [content.md](systems/content.md).
 - **Phase 4 — real UI / the run screen** (`src/scenes/main.tscn` + `main_controller.gd`,
   `src/scenes/screens/`, `src/scenes/combat/`): the watchable run — title (→ **character
   select**) → **framed run** (corridor large top-left with an `enemy_hud` above each enemy
@@ -196,13 +200,14 @@ resolution.
 | What | Doc |
 |---|---|
 | `Corridor3D`: real 3D corridor, one steady light at the camera, painted enemies as lit `Sprite3D` cut-outs, hit lights in the effect colour | [corridor_3d.md](systems/corridors/corridor_3d.md) |
-| F1 debug panel: world palette, interface palette, palette combos, font choice, start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
-| F2 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog; look files in `assets/looks/` | [corridor_look.md](systems/corridor_look.md) |
-| F3 interface look: the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look; interface looks in `assets/interface_looks/` | [interface_look.md](systems/interface_look.md) |
+| Debug panel (F1 to F4 open its tabs): world palette (Corridor tab), interface palette and font choice (Interface tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
+| Look presets: the whole look in one file, the default preset loaded at start-up, the history of past defaults; `assets/presets/` | [look_presets.md](systems/look_presets.md) |
+| F1 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog | [corridor_look.md](systems/corridor_look.md) |
+| F2 interface look: the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look | [interface_look.md](systems/interface_look.md) |
 | Interface glow: code makes a specific node glow (`InterfaceGlow.set_glow`, `flash`); 2D HDR is on; not used by any element yet | [interface_glow.md](systems/interface_glow.md) |
 | World palette clamp (corridor only); the full-screen clamp was removed | [palette_clamp.md](systems/palette_clamp.md) |
 | Interface palette: a named `.gpl` recolours `Colours` and the theme; effects use its effect colours | [interface_palette.md](systems/interface_palette.md) |
-| F5 print panel: worn record-sleeve background, wear over the corridor, worn corridor edge, border, folds; print looks in `assets/print_looks/` | [background_wear.md](systems/background_wear.md) · [print_frame.md](systems/print_frame.md) |
+| F3 print tab: wear over the corridor, worn corridor edge, border, panel wear; F4 background tab: the worn record-sleeve background and its folds | [print_frame.md](systems/print_frame.md) · [background_wear.md](systems/background_wear.md) |
 | Rakkas as the interface font (smooth, not pixel) | [ui_theme.md](systems/ui_theme.md) |
 
 **Open:** the effects style, which corridor look and palettes, whether the print style spreads to the
@@ -343,8 +348,8 @@ game_manager · sfx · music) · `src/autotest/` (the harness + strategies + rep
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
 map_strip · speed_button · pause_menu) · `src/scenes/combat/`
 (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell · potion_slot) ·
-`src/scenes/` (sandbox + corridors) · `src/debug/` (F1, F2, F3 and F5 panels, interface palette) ·
+`src/scenes/` (sandbox + corridors) · `src/debug/` (debug panel and its tabs, interface palette) ·
 `src/shaders/` (corridor look, palette clamp, print wear) · `src/ui/` (print frame, screen background) ·
-`assets/looks/`, `assets/print_looks/`, `assets/palettes/`, `assets/palette_combos/` · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
+`assets/presets/`, `assets/palettes/` · `src/data/balance.gd` (tunables) · `tools/extract_pot.gd`
 + `locale/` (i18n) · `tests/` (combat · content · run · autotest · ui · smoke · utils) ·
 `addons/gut/` (vendored).

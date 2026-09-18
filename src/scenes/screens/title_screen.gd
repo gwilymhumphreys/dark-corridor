@@ -23,14 +23,23 @@ func _ready() -> void:
   resume_button.pressed.connect(_on_resume)
   settings_button.pressed.connect(_open_settings)
   resume_button.disabled = not Save.has_save()
-  # Dev hook: skip the menu + select and drop straight into a default-character run (pairs
-  # with `--shot`). `--select` instead opens the character-select screen (to inspect it).
+  # Dev hook: skip the menu + select and drop straight into a run (pairs with `--shot`), as the
+  # default character or the one named by `--character=ID`. `--select` instead opens the
+  # character-select screen (to inspect it).
   if '--autostart' in OS.get_cmdline_args() or '--autostart' in OS.get_cmdline_user_args():
-    _start_run.bind(CharacterCatalog.DEFAULT).call_deferred()
+    _start_run.bind(_autostart_character()).call_deferred()
   elif '--select' in OS.get_cmdline_args() or '--select' in OS.get_cmdline_user_args():
     _open_select.call_deferred()
   elif '--settings' in OS.get_cmdline_args() or '--settings' in OS.get_cmdline_user_args():
     _open_settings.call_deferred()
+
+
+## The character named by `--character=ID`, or the default.
+func _autostart_character() -> String:
+  for arg: String in OS.get_cmdline_args() + OS.get_cmdline_user_args():
+    if arg.begins_with('--character='):
+      return arg.trim_prefix('--character=')
+  return CharacterCatalog.DEFAULT
 
 
 # Start Run → the character-select screen; its pick supplies the character to Game.start_run.

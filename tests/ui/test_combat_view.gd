@@ -24,10 +24,10 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func _spawn(hp: float, ids: Array) -> Actor:
+func _spawn(hp: float, defs: Array) -> Actor:
   var a := Actor.new(hp)
-  for id in ids:
-    a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  for def in defs:
+    a.board.append(Item.new(def, a))
   _actors.append(a)
   return a
 
@@ -41,14 +41,14 @@ func _host(node: Node) -> Node:
 func test_enemy_hud_builds_one_cell_per_item() -> void:
   var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
   _host(hud)
-  hud.setup(_spawn(100.0, [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]))
+  hud.setup(_spawn(100.0, [FixtureItems.attack(), FixtureItems.shield(), FixtureItems.poison()]))
   assert_eq(hud.get_node('Items').get_child_count(), 3, 'one cell per board item')
 
 
 func test_enemy_hud_hp_text_tracks_actor() -> void:
   var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
   _host(hud)
-  var a := _spawn(100.0, [ItemCatalog.WEAPON])
+  var a := _spawn(100.0, [FixtureItems.attack()])
   hud.setup(a)
   a.take_damage(40.0)
   hud._refresh_hp()   # the per-frame refresh, called directly — deterministic, no _process race
@@ -60,7 +60,7 @@ func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
   # status-icon row keeps showing only the outside-set statuses.
   var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
   _host(hud)
-  var a := _spawn(100.0, [ItemCatalog.WEAPON])
+  var a := _spawn(100.0, [FixtureItems.attack()])
   StatusManager.apply(a, ShieldStatus.ID, 5.0)
   StatusManager.apply(a, 'weak', 1.0)
   hud.setup(a)
@@ -72,17 +72,17 @@ func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
 func test_ally_slot_builds_one_cell_per_item() -> void:
   var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
   _host(slot)
-  slot.setup(_spawn(15.0, [ItemCatalog.ENEMY_CLAW]))
-  assert_eq(slot.get_node('Items').get_child_count(), 1, 'one cell per board item')
+  slot.setup(_spawn(15.0, [FixtureItems.attack()]))
+  assert_eq(slot.get_node('Readout/Items').get_child_count(), 1, 'one cell per board item')
 
 
 func test_ally_slot_mouse_over_detects_a_cell() -> void:
   # The hover hit-test (the slow-mo intent's surface) uses each cell's global rect.
   var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
   _host(slot)
-  slot.setup(_spawn(15.0, [ItemCatalog.ENEMY_CLAW]))
+  slot.setup(_spawn(15.0, [FixtureItems.attack()]))
   await get_tree().process_frame   # let the container lay the cell out
-  var cell: Control = slot.get_node('Items').get_child(0)
+  var cell: Control = slot.get_node('Readout/Items').get_child(0)
   var centre: Vector2 = cell.global_position + cell.size * 0.5
   assert_true(slot.mouse_over(centre), 'a point over a cell is detected')
   assert_false(slot.mouse_over(centre + Vector2(10000, 10000)), 'a far point is not')
@@ -91,8 +91,8 @@ func test_ally_slot_mouse_over_detects_a_cell() -> void:
 func test_view_potion_slots_emit_the_throw_intent() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
@@ -111,8 +111,8 @@ func test_item_pos_handles_a_source_less_delivery() -> void:
   # moment a content author adds a travel>0 potion. It must resolve to the thrower.
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
@@ -128,8 +128,8 @@ func test_target_pos_resolves_an_item_target_to_its_cell() -> void:
   # a non-Actor (the wall calls target_pos, not actor_pos, for the destination).
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
@@ -142,8 +142,8 @@ func test_target_pos_resolves_an_item_target_to_its_cell() -> void:
 func test_framed_view_binds_a_fight_without_error() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack(), FixtureItems.shield(), FixtureItems.poison()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
@@ -152,13 +152,29 @@ func test_framed_view_binds_a_fight_without_error() -> void:
   cm.free()   # after_each dissolves the actors (breaks the Actor<->Item cycles)
 
 
+func test_enemy_huds_stay_hidden_until_the_fight_starts() -> void:
+  # The HUDs are hidden through the approach and fade up when the run screen calls show_enemies.
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [])
+  var hud: EnemyHud = view._enemy_huds[e]
+  assert_false(hud.visible, 'the HUD is down while the enemy is still approaching')
+  view.show_enemies()
+  assert_true(hud.visible, 'the fight starting brings it up')
+  cm.free()
+
+
 func test_release_clears_the_cooldown_fills() -> void:
   # When the fight ends the board keeps its items, but the fills left at the last moment are cleared.
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
-  var ally := _spawn(15.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var ally := _spawn(15.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e], 0, [ally])
   cm.start()
   view.bind(cm, p, [])
@@ -178,7 +194,7 @@ func test_release_clears_the_cooldown_fills() -> void:
 func test_view_without_a_fight_shows_no_cooldown_fills() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
+  var p := _spawn(100.0, [FixtureItems.attack()])
   view.bind(null, p, [])
   var cell: ItemCell = view.get_node('Items/PlayerItems').get_child(0)
   assert_false(cell.get_node('Cooldown').visible, 'an event beat shows the board with no fill')
@@ -189,10 +205,10 @@ func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
   # ally slot flanking the player, and actor_pos resolves each to a distinct point.
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e1 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
-  var e2 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
-  var ally := _spawn(15.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e1 := _spawn(40.0, [FixtureItems.attack()])
+  var e2 := _spawn(40.0, [FixtureItems.attack()])
+  var ally := _spawn(15.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e1, e2], 0, [ally])
   cm.start()
   view.bind(cm, p, [])
@@ -211,8 +227,8 @@ func test_corridor_backdrop_is_not_inspectable() -> void:
   # the whole fight crawls. Only the entities (HUDs / items / potions / ally slots) are.
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
@@ -227,9 +243,9 @@ func test_reaped_enemy_drops_its_hud() -> void:
   # a stale one — every frame it reconciles the widget set against the live roster.
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
-  var p := _spawn(1000.0, [ItemCatalog.WEAPON])
-  var e1 := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
-  var e2 := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(1000.0, [FixtureItems.attack()])
+  var e1 := _spawn(40.0, [FixtureItems.attack()])
+  var e2 := _spawn(1000.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e1, e2])
   cm.start()
   view.bind(cm, p, [])
@@ -239,4 +255,44 @@ func test_reaped_enemy_drops_its_hud() -> void:
   view._process(0.0)     # the view reconciles its widgets to the roster
   assert_eq(view._enemy_huds.size(), 1, 'the reaped enemy\'s HUD is dropped')
   assert_false(e1 in view._enemy_huds, 'and it was the dead one (the living enemy keeps its HUD)')
+  cm.free()
+
+
+func test_an_item_created_during_the_fight_gets_a_cell_marked_temporary() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(1000.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [])
+  cm.add_item(p, ItemCatalog.FLESH_CHUNK)
+  view._process(0.0)
+  var chunk: Item = p.board[1]
+  assert_true(view._player_cells.has(chunk), 'the created item has a cell')
+  assert_true((view._player_cells[chunk] as ItemCell).get_node('TemporaryTag').visible, 'and it is marked temporary')
+  assert_false((view._player_cells[p.board[0]] as ItemCell).get_node('TemporaryTag').visible, 'a drafted item is not')
+  cm.remove_item(chunk)
+  view._process(0.0)
+  assert_false(view._player_cells.has(chunk), 'a removed item loses its cell')
+  assert_eq(view._player_cells.size(), 1, 'the drafted item keeps its cell')
+  cm.free()
+
+
+func test_a_thrown_consumable_starts_from_its_slot() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  var potion := Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))
+  view.bind(cm, p, [potion])
+  var slot: PotionSlot = view.get_node('Items/Potions').get_child(0)
+  var centre: Vector2 = slot.get_global_rect().get_center()
+  slot.pressed.emit()
+  view.refresh_potions([])   # the throw removes the slot; its position is remembered
+  assert_eq(view.consumable_pos(potion), centre, 'the effect starts from the slot it was thrown from')
+  cm.throw_consumable(potion, p)
+  assert_eq((cm.deliveries()[0] as Delivery).consumable, potion, 'the delivery carries the thrown consumable')
   cm.free()

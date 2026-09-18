@@ -1,5 +1,9 @@
 # Plan: mechanics
 
+> **Built, 2026-09-17. This file is history and is not maintained** — it is kept for the rationale
+> and the order of work. The built system is [`systems/mechanics.md`](../systems/mechanics.md); read
+> that instead for how anything works today.
+
 This plan turns the game's basic combat rules (attack, shield, heal, poison, burn, bleed, regen and
 crit) into mechanics. A mechanic is a named rule with one class that holds its name, description,
 icon, colour and what it does. Item effects name the mechanic they use, so items, relics and

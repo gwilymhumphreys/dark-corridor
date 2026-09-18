@@ -22,9 +22,9 @@ func test_overlay_lists_the_offer_and_emits_the_pick() -> void:
   add_child(overlay)
   _nodes.append(overlay)
   var offer: Array = [
-    ItemCatalog.get_def(ItemCatalog.WEAPON),
-    ItemCatalog.get_def(ItemCatalog.ARMOR),
-    ItemCatalog.get_def(ItemCatalog.POISON_DAGGER),
+    FixtureItems.attack(),
+    FixtureItems.shield(),
+    FixtureItems.poison(),
   ]
   overlay.setup(offer)
   assert_eq(overlay.get_node('Panel/Cards').get_child_count(), 3, 'one card per candidate')
@@ -45,7 +45,7 @@ func test_skip_button_emits_skipped() -> void:
   var overlay: DraftOverlay = preload('res://src/scenes/screens/draft_overlay.tscn').instantiate()
   add_child(overlay)
   _nodes.append(overlay)
-  overlay.setup([ItemCatalog.get_def(ItemCatalog.WEAPON)])
+  overlay.setup([FixtureItems.attack()])
   watch_signals(overlay)
   var skip: Button = overlay.get_node('Panel/SkipButton')
   assert_eq(skip.text, '+%d gold' % Balance.GOLD_SKIP, 'the button shows the gold amount')

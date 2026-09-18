@@ -13,7 +13,7 @@ func after_each() -> void:
 
 
 func test_every_item_has_an_icon() -> void:
-  ItemCatalog.get_def(ItemCatalog.WEAPON)   # builds the catalog
+  ItemCatalog.get_def(ItemCatalog.ENEMY_CLAW)   # builds the catalog
   for id: String in ItemCatalog._defs:
     _assert_icon((ItemCatalog._defs[id] as ItemDef).icon, 'item %s' % id)
 

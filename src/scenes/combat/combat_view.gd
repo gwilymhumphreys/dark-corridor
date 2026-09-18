@@ -33,6 +33,11 @@ func set_walk_distance(_sections: float) -> void:
   pass
 
 
+## The fight has started (the approach is over): show the enemy readouts, hidden until now.
+func show_enemies() -> void:
+  pass
+
+
 ## The hover surface for the slow-mo intent.
 func mouse_over_inspectable(_point: Vector2) -> bool:
   return false
@@ -66,6 +71,11 @@ func refresh_potions(_potions: Array) -> void:
 
 
 # --- layout lookups the VFX wall reads (global / screen space) ---------------
+
+## Where a thrown consumable's effects start: the slot it was thrown from.
+func consumable_pos(_consumable: Consumable) -> Vector2:
+  return Vector2.ZERO
+
 
 func item_pos(_item: Item) -> Vector2:
   return Vector2.ZERO

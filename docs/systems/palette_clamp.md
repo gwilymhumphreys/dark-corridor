@@ -25,8 +25,8 @@ includes it), `src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.
 | Dither size (`dither_size`) | Screen pixels per pattern cell, multiplied by the look shader's pixelate size |
 | Supersample (`dither_supersample`) | Dither at twice the resolution and average each 2x2, the fix Obra Dinn uses against moire; the output mixes palette colours |
 
-Matching and the dithering switch are set from the F1 panel; the pattern, size and supersample are set
-from the look panel's Dithering section.
+Matching is set from the Corridor tab's palette rows and the dithering switch from its Dithering section header; the pattern, size and supersample are set
+from the Corridor tab's Dithering section.
 
 The OKLab conversion exists twice, in `PaletteLoader.to_oklab` and in `palette_clamp.gdshaderinc`; change
 both together.

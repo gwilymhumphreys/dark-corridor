@@ -179,6 +179,12 @@ func add_item(actor: Actor, def_id: String) -> void:
   _seed_item_uses(it)
 
 
+## Whether an item was created during this fight (by add_item), so it leaves the board when the fight
+## ends. The view marks these items as temporary.
+func is_created_item(it: Item) -> bool:
+  return it in _created_items
+
+
 ## Remove a SINGLE live item from its owner's board mid-fight — the genuinely new plumbing (the
 ## decay use-status emptying calls this via StatusContext; Cap 1's teardown strip converges here).
 ## Mirrors the dead-actor reap for one item: drop it from the board + the swept set, deregister its
@@ -260,6 +266,12 @@ func sim_step() -> void:
 
   # 2. Fire crossed items -> resolve shapes -> spawn Deliveries (travel-0 land now).
   for it in fired_items:
+    # The crossings were collected before this loop, and firing can remove another item that
+    # crossed the same step — own-board consume spends board items as fuel, and a decay use-status
+    # can empty. remove_item dissolves the item, which nulls its owner, so that is the check: a
+    # removed item must not fire.
+    if it.owner == null:
+      continue
     _fire_item(it, arrived)
 
   # 3. Land arrived (travelled this step + instant spawns).
@@ -356,7 +368,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
   bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
   if combat_log != null:
     combat_log.on_item_fired(it.def.name_key, _side_of(it.owner), timekeeper.sim_time)
-  # Crit (docs/plans/mechanics.md → Crit): one roll per fire, on the seeded per-fight RNG. The
+  # Crit (docs/systems/mechanics.md → Crit): one roll per fire, on the seeded per-fight RNG. The
   # `> 0.0` check comes first so an item with no crit chance draws NOTHING from the RNG — existing
   # fights and seeded autotest runs are bit-identical. On a crit, the fire's mechanic deliveries
   # are multiplied by Balance.CRIT_MULTIPLIER (below, after consume) and flagged `crit`.
@@ -381,7 +393,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
       if p.consume_id != '' and p.consume_from_target:
         d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
       # A critting fire multiplies its mechanic deliveries LAST — after enchant, weak, empower and
-      # both kinds of consume (docs/plans/mechanics.md → Crit). Outside-set deliveries (statuses,
+      # both kinds of consume (docs/systems/mechanics.md → Crit). Outside-set deliveries (statuses,
       # summons, created items) are untouched, and so is `duration`.
       if crit and d.kind == Delivery.Kind.MECHANIC and MechanicRegistry.has(d.mechanic):
         d.value *= Balance.CRIT_MULTIPLIER
@@ -509,6 +521,7 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   d.color = p.color
   d.source = p.source
   d.source_actor = p.source_actor
+  d.consumable = p.consumable
   d.target = target
   d.travel = Ticker.from_seconds(p.travel)
   d.fire_time = timekeeper.sim_time
@@ -844,7 +857,8 @@ func throw_consumable(consumable, thrower: Actor) -> void:
     # The shared template copy only — a throw deliberately SKIPS the item-side stages
     # (enchant scaling, modify_outgoing, evasion): potions are exempt (decision #30).
     var p := Payload.from_effect(effect)
-    p.source_actor = thrower   # event source identity; `source` stays null (the VFX origin)
+    p.source_actor = thrower   # event source identity; `source` stays null
+    p.consumable = consumable   # the VFX origin: the effect starts from the potion's slot
     # Self-fuel consume (Cap 1) — the thrower is known here, so resolve it like an item fire.
     if p.consume_id != '' and not p.consume_from_target:
       p.value += StatusManager.consume(thrower, p.consume_id, p.consume_amount) * p.consume_scale

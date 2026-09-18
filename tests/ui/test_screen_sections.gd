@@ -78,7 +78,7 @@ func test_player_portrait_fits_the_portrait_section_height() -> void:
     view.sections._process(0.0)
     var height: float = view.sections.section('Portraits').size.y
     assert_eq(portrait.custom_minimum_size.x, portrait.custom_minimum_size.y, 'the portrait stays square')
-    assert_true(box.get_combined_minimum_size().y <= height, 'portrait, HP bar and name fit in %d pixels' % height)
+    assert_true(box.get_combined_minimum_size().y <= height, 'the portrait row fits in %d pixels' % height)
   PrintLook.print_settings['split_down'] = 1000.0
   view.sections._process(0.0)
   var tall: float = portrait.custom_minimum_size.y

@@ -5,46 +5,54 @@ extends Node
 ## that the corridor is drawn through: the corridor look shader, with its world palette clamp
 ## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
 ##
-## F1 toggles the panel, F2 the look panel, F3 the interface look panel and F5 the print panel, in
-## debug builds only. Choices last for the session only, unless saved as a look file or palette combo.
+## One panel with a preset bar and four tabs: corridor look with its palette (F1), interface look with
+## its palettes and font (F2), print look (F3) and background wear (F4); each key opens its tab, in
+## debug builds only. Choices last for the session only, unless saved as a look preset
+## (docs/systems/look_presets.md). The default preset loads at start-up.
 ## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
 
 ## Emitted after an interface palette is applied or reset, so nodes that copied `Colours` when built
 ## can copy them again.
 signal interface_palette_changed
-## Emitted with true when the first panel opens and false when the last one closes. The run screen
-## pauses on it.
+## Emitted with true when the panel opens and false when it closes. The run screen pauses on it.
 signal panels_open_changed(open: bool)
 
 const PALETTE_ROOT: String = 'res://assets/palettes'
 const SHORTLIST_DIR: String = 'res://assets/palettes/shortlist'
-const PALETTE_COMBO_DIR: String = 'res://assets/palette_combos'
-## Remembers the palette combo loaded at start-up, on this computer only.
-const START_UP_PATH: String = 'user://debug_start_up.cfg'
-## Start-up arguments that set palettes; any of them stops the start-up palette combo loading.
-const PALETTE_ARGUMENTS: Array[String] = ['--world-palette=', '--ui-palette=', '--portrait-palette=', '--look=', '--palette-combo=']
 ## `portrait_palette` values that follow another palette instead of naming a file.
 const PORTRAIT_SAME_AS_CORRIDOR: String = 'corridor'
 const PORTRAIT_SAME_AS_INTERFACE: String = 'interface'
 ## The first item id in the portrait palette option that names a palette file.
 const PORTRAIT_FIRST_FILE_ID: int = 3
-const LOOK_DIR: String = 'res://assets/looks'
-const PRINT_LOOK_DIR: String = 'res://assets/print_looks'
 const FONT_DIR: String = 'res://assets/fonts/candidates'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
 const LOOK_EFFECTS_INCLUDE: ShaderInclude = preload('res://src/shaders/look_effects.gdshaderinc')
 const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
-## Palette clamp uniforms set from the F1 panel and the palette section of a look file, so they are
-## not look settings.
+## Palette clamp uniforms set from the palette rows and the palette sections of a preset, so they are
+## not corridor look settings.
 const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'dithering']
+## Tab titles, by tab. The tabs are in `LookPresets.Part` order.
+const TAB_TITLES: Dictionary = {
+  LookPresets.Part.CORRIDOR: 'Corridor (F1)',
+  LookPresets.Part.INTERFACE: 'Interface (F2)',
+  LookPresets.Part.PRINT: 'Print (F3)',
+  LookPresets.Part.BACKGROUND: 'Background (F4)',
+}
+## The tab each key opens.
+const TAB_KEYS: Dictionary = {
+  KEY_F1: LookPresets.Part.CORRIDOR,
+  KEY_F2: LookPresets.Part.INTERFACE,
+  KEY_F3: LookPresets.Part.PRINT,
+  KEY_F4: LookPresets.Part.BACKGROUND,
+}
 
-## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the look
-## panel and look files. Corridors apply them when built.
+## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the corridor
+## tab and presets. Corridors apply them when built.
 var corridor_settings: Dictionary = {}
-## Properties of the corridor camera's Environment (property -> value), from the look panel and look
-## files. Corridors apply them when built.
+## Properties of the corridor camera's Environment (property -> value), from the corridor tab and
+## presets. Corridors apply them when built.
 var environment_settings: Dictionary = {}
 ## The palette file the world clamp on the combat corridor uses, or '' when it is off.
 var world_palette: String = ''
@@ -67,31 +75,29 @@ var _palettes_scanned: bool = false
 var _perceptual: bool = false
 var _dithering: bool = false
 var _look_defaults: Dictionary = {}   # look shader uniform -> default value, read from its code
+var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Environment values, read once
 
-@onready var _look_layer: CanvasLayer = $LookLayer
-@onready var _look_panel: LookPanel = $LookLayer/LookPanel
-@onready var _print_layer: CanvasLayer = $PrintLayer
-@onready var _print_panel: PrintPanel = $PrintLayer/PrintPanel
-@onready var _interface_look_layer: CanvasLayer = $InterfaceLookLayer
-@onready var _interface_look_panel: InterfaceLookPanel = $InterfaceLookLayer/InterfaceLookPanel
 @onready var _panel_layer: CanvasLayer = $PanelLayer
-@onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/WorldPaletteRow/Option
-@onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/InterfacePaletteRow/Option
-@onready var _portrait_option: OptionButton = $PanelLayer/Panel/Rows/PortraitPaletteRow/Option
-@onready var _font_option: OptionButton = $PanelLayer/Panel/Rows/FontRow/Option
-@onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/MatchingRow/Option
-@onready var _dithering_check: CheckButton = $PanelLayer/Panel/Rows/DitheringRow/Check
-@onready var _combo_name_edit: LineEdit = $PanelLayer/Panel/Rows/ComboSaveRow/NameEdit
-@onready var _combo_save_button: Button = $PanelLayer/Panel/Rows/ComboSaveRow/SaveButton
-@onready var _combo_option: OptionButton = $PanelLayer/Panel/Rows/ComboLoadRow/Option
-@onready var _start_up_option: OptionButton = $PanelLayer/Panel/Rows/StartUpRow/Option
-
+@onready var _panel: PanelContainer = $PanelLayer/Panel
+@onready var _preset_bar: PresetBar = $PanelLayer/Panel/Rows/PresetBar
+@onready var _tabs: TabContainer = $PanelLayer/Panel/Rows/Tabs
+@onready var _look_panel: LookPanel = $PanelLayer/Panel/Rows/Tabs/Corridor
+@onready var _interface_look_panel: InterfaceLookPanel = $PanelLayer/Panel/Rows/Tabs/Interface
+@onready var _print_panel: PrintPanel = $PanelLayer/Panel/Rows/Tabs/Print
+@onready var _background_panel: BackgroundPanel = $PanelLayer/Panel/Rows/Tabs/Background
+@onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option
+@onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
+@onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
+@onready var _portrait_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/PortraitPaletteRow/Option
+@onready var _font_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/FontRow/Option
 
 func _ready() -> void:
   _panel_layer.visible = false
-  _look_layer.visible = false
-  _print_layer.visible = false
-  _interface_look_layer.visible = false
+  for tab: int in TAB_TITLES:
+    _tabs.set_tab_title(tab, TAB_TITLES[tab])
+  _tabs.tab_changed.connect(_on_tab_changed)
+  _preset_bar.preset_loaded.connect(refresh_panels)
+  _preset_bar.side_switched.connect(_switch_side)
   world_material.shader = LOOK_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
@@ -101,39 +107,29 @@ func _ready() -> void:
   _portrait_option.item_selected.connect(_on_portrait_palette_selected)
   _font_option.item_selected.connect(_on_font_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
-  _dithering_check.toggled.connect(_on_dithering_toggled)
-  _dithering_check.toggled.connect(func(_on: bool) -> void: _look_panel.refresh())
-  _combo_save_button.pressed.connect(_on_combo_save_pressed)
-  _combo_option.item_selected.connect(_on_combo_selected)
-  _start_up_option.item_selected.connect(_on_start_up_selected)
   _sync_controls()
-  _apply_start_up_palette_combo()
+  LookPresets.load_default()
   _apply_command_line()
 
 
-## Dev hooks for screenshots: `--world-palette=<res path>` sets the world clamp, `--perceptual` and `--dither` set
-## the matching and dithering, `--look=<res path>` loads a saved look (applied first, so the other
-## arguments can override it), `--print-look=<res path>` loads a saved print look and
-## `--palette-combo=<res path>` a saved palette combo (also first),
-## `--look-panel` opens the look panel, `--font=<res path>` sets the UI
-## font, `--ui-palette=<res path>` applies an interface palette, `--portrait-palette=<res path, corridor or interface>`
-## sets the portrait palette, `--background-set=uniform=value` sets a
-## background wear setting, `--panel-set=uniform=value` sets a panel wear setting,
-## `--print-set=name=value` sets a border, corridor overlay or layout setting, `--print-panel` opens the
-## print panel, `--interface-look=<res path>` loads a saved interface look (applied first),
-## `--interface-set=uniform=value` sets an interface look setting, `--interface-panel` opens the
-## interface look panel.
+## Dev hooks for screenshots, applied after the default preset: `--preset=<name or res path>` loads a
+## preset (applied first, so the other arguments can override it), `--world-palette=<res path>` sets
+## the world clamp, `--perceptual` and `--dither` set the matching and dithering, `--font=<res path>`
+## sets the UI font, `--ui-palette=<res path>` applies an interface palette,
+## `--portrait-palette=<res path, corridor or interface>` sets the portrait palette,
+## `--corridor-set=property=value` sets a corridor export, `--background-set=uniform=value` a background
+## wear setting, `--panel-set=uniform=value` a panel wear setting, `--print-set=name=value` a border,
+## corridor overlay or layout setting, `--interface-set=uniform=value` an interface look setting.
+## `--look-panel`, `--interface-panel`, `--print-panel` and `--background-panel` open the panel on that
+## tab.
 func _apply_command_line() -> void:
   var args: PackedStringArray = OS.get_cmdline_user_args()
   for arg: String in args:
-    if arg.begins_with('--look='):
-      load_look(arg.substr(7))
-    elif arg.begins_with('--print-look='):
-      PrintLook.load_print_look(arg.substr(13))
-    elif arg.begins_with('--palette-combo='):
-      load_palette_combo(arg.substr(16))
-    elif arg.begins_with('--interface-look='):
-      InterfaceLook.load_look(arg.substr(17))
+    if arg.begins_with('--preset='):
+      var preset: String = arg.substr(9)
+      var preset_path: String = preset if preset.begins_with('res://') else LookPresets.preset_path(preset)
+      if LookPresets.load_preset(preset_path):
+        _preset_bar.remember_loaded(preset_path)
   for arg: String in args:
     if arg.begins_with('--world-palette='):
       set_world_palette(arg.substr(16))
@@ -170,11 +166,13 @@ func _apply_command_line() -> void:
   if '--dither' in args:
     _on_dithering_toggled(true)
   if '--look-panel' in args:
-    toggle_look_panel()
-  if '--print-panel' in args:
-    toggle_print_panel()
-  if '--interface-panel' in args:
-    toggle_interface_look_panel()
+    toggle_tab(LookPresets.Part.CORRIDOR)
+  elif '--interface-panel' in args:
+    toggle_tab(LookPresets.Part.INTERFACE)
+  elif '--print-panel' in args:
+    toggle_tab(LookPresets.Part.PRINT)
+  elif '--background-panel' in args:
+    toggle_tab(LookPresets.Part.BACKGROUND)
   _sync_controls()
 
 
@@ -191,18 +189,14 @@ func _input(event: InputEvent) -> void:
   var key: InputEventKey = event as InputEventKey
   if key == null or not key.pressed or key.echo:
     return
-  # Typing a look or palette combo name must not trigger the palette keys (Backspace included).
-  if get_viewport().gui_get_focus_owner() is LineEdit and key.keycode not in [KEY_F1, KEY_F2, KEY_F3, KEY_F5]:
+  # Typing a preset name must not trigger the palette keys (Backspace included).
+  if get_viewport().gui_get_focus_owner() is LineEdit and not TAB_KEYS.has(key.keycode):
+    return
+  if TAB_KEYS.has(key.keycode):
+    toggle_tab(TAB_KEYS[key.keycode])
+    get_viewport().set_input_as_handled()
     return
   match key.keycode:
-    KEY_F1:
-      toggle_panel()
-    KEY_F2:
-      toggle_look_panel()
-    KEY_F3:
-      toggle_interface_look_panel()
-    KEY_F5:
-      toggle_print_panel()
     KEY_BRACKETLEFT:
       cycle_palette(-1)
     KEY_BRACKETRIGHT:
@@ -225,50 +219,73 @@ func _input(event: InputEvent) -> void:
   get_viewport().set_input_as_handled()
 
 
-func toggle_panel() -> void:
-  if not _palettes_scanned:
-    _scan_palettes()
-  if _font_option.item_count <= 1:
-    _scan_fonts()
-  if _toggle_layer(_panel_layer):
-    _list_palette_combos()
+## Open the panel on `tab` (a `LookPresets.Part`), or close it if it is already showing that tab.
+func toggle_tab(tab: int) -> void:
+  if _panel_layer.visible and _tabs.current_tab == tab:
+    _panel_layer.visible = false
+    panels_open_changed.emit(false)
+    return
+  var was_open: bool = _panel_layer.visible
+  _panel_layer.visible = true
+  if _tabs.current_tab == tab:
+    _open_tab(tab)
+  else:
+    _tabs.current_tab = tab   # fills it through `_on_tab_changed`
+  if not was_open:
+    _preset_bar.open()
+    panels_open_changed.emit(true)
 
 
-## Show or hide the look panel. Its controls are built the first time it opens.
-func toggle_look_panel() -> void:
-  if _toggle_layer(_look_layer):
-    _look_panel.open()
+## True while the panel is showing.
+func is_panel_open() -> bool:
+  return _panel_layer.visible
 
 
-## Show or hide the print panel. Its controls are built the first time it opens.
-func toggle_print_panel() -> void:
-  if _toggle_layer(_print_layer):
-    _print_panel.open()
+# Fill a tab when it shows: its controls, and the palette and font lists the first time.
+func _open_tab(tab: int) -> void:
+  match tab:
+    LookPresets.Part.CORRIDOR:
+      if not _palettes_scanned:
+        _scan_palettes()
+      _look_panel.open()
+    LookPresets.Part.INTERFACE:
+      if not _palettes_scanned:
+        _scan_palettes()
+      if _font_option.item_count <= 1:
+        _scan_fonts()
+      _interface_look_panel.open()
+    LookPresets.Part.PRINT:
+      _print_panel.open()
+    LookPresets.Part.BACKGROUND:
+      _background_panel.open()
 
 
-## Show or hide the interface look panel. Its controls are built the first time it opens.
-func toggle_interface_look_panel() -> void:
-  if _toggle_layer(_interface_look_layer):
-    _interface_look_panel.open()
+func _on_tab_changed(tab: int) -> void:
+  if _panel_layer.visible:
+    _open_tab(tab)
 
 
-## True while any of the four panels is showing.
-func any_panel_open() -> bool:
-  return _panel_layer.visible or _look_layer.visible or _print_layer.visible or _interface_look_layer.visible
+# Move the panel to the other side of the screen, so it does not cover what is being changed.
+func _switch_side() -> void:
+  var width: float = _panel.offset_right - _panel.offset_left
+  var on_right: bool = _panel.anchor_left > 0.5
+  _panel.anchor_left = 0.0 if on_right else 1.0
+  _panel.anchor_right = _panel.anchor_left
+  _panel.offset_left = 24.0 if on_right else -24.0 - width
+  _panel.offset_right = _panel.offset_left + width
 
 
-# Show or hide one panel's layer, emitting `panels_open_changed` when that changes whether any panel
-# is open. Returns whether the layer is now showing.
-func _toggle_layer(layer: CanvasLayer) -> bool:
-  var was_open: bool = any_panel_open()
-  layer.visible = not layer.visible
-  if any_panel_open() != was_open:
-    panels_open_changed.emit(not was_open)
-  return layer.visible
+## Show the current settings in every tab, after a preset or part of one is loaded.
+func refresh_panels() -> void:
+  _sync_controls()
+  _look_panel.refresh()
+  _interface_look_panel.refresh()
+  _print_panel.refresh()
+  _background_panel.refresh()
 
 
-## Rebuild the look panel's controls after corridor look settings change elsewhere (the interface look
-## panel's copy button).
+## Rebuild the Corridor tab's controls after corridor look settings change elsewhere (the Interface
+## tab's copy button).
 func refresh_look_panel() -> void:
   _look_panel.refresh()
 
@@ -319,7 +336,7 @@ func shortlist_palette() -> void:
   var new_path: String = move_palette_file(old_path, SHORTLIST_DIR)
   if new_path == '':
     return
-  replace_palette_path([LOOK_DIR, PALETTE_COMBO_DIR], old_path, new_path)
+  replace_palette_path([LookPresets.PRESET_DIR, LookPresets.HISTORY_DIR], old_path, new_path)
   if portrait_palette == old_path:
     portrait_palette = new_path
   _scan_palettes()
@@ -345,8 +362,8 @@ static func move_palette_file(path: String, folder: String) -> String:
   return new_path
 
 
-## Rewrite `old_path` to `new_path` in every `.cfg` file in `folders`, so saved looks and palette
-## combos still find a palette after it is moved.
+## Rewrite `old_path` to `new_path` in every `.cfg` file in `folders`, so saved presets still find a
+## palette after it is moved.
 static func replace_palette_path(folders: Array[String], old_path: String, new_path: String) -> void:
   for folder: String in folders:
     if not DirAccess.dir_exists_absolute(folder):
@@ -366,135 +383,63 @@ static func replace_palette_path(folders: Array[String], old_path: String, new_p
       file.close()
 
 
-## Save the palette choices to a text file at `path`: the world, interface and portrait palettes,
-## colour matching and dithering.
-func save_palette_combo(path: String) -> Error:
-  var file: ConfigFile = ConfigFile.new()
-  file.set_value('palettes', 'world_palette', world_palette)
-  file.set_value('palettes', 'interface_palette', interface_palette)
-  file.set_value('palettes', 'portrait_palette', portrait_palette)
-  file.set_value('palettes', 'perceptual', _perceptual)
-  file.set_value('palettes', 'dithering', _dithering)
-  DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-  return file.save(path)
+## Write the corridor's palette choices into a preset's corridor part: the world palette, colour
+## matching and dithering.
+func write_corridor_palette(file: ConfigFile) -> void:
+  file.set_value('corridor_palette', 'world_palette', world_palette)
+  file.set_value('corridor_palette', 'perceptual', _perceptual)
+  file.set_value('corridor_palette', 'dithering', _dithering)
 
 
-## Apply a palette combo saved by `save_palette_combo`: the world, interface and portrait palettes,
-## colour matching and dithering. Returns false if the file cannot be read.
-func load_palette_combo(path: String) -> bool:
-  var file: ConfigFile = ConfigFile.new()
-  if file.load(path) != OK:
-    push_warning('[DebugPanels] could not read palette combo file %s' % path)
-    return false
-  set_world_palette(file.get_value('palettes', 'world_palette', ''))
-  set_interface_palette(file.get_value('palettes', 'interface_palette', ''))
-  set_portrait_palette(file.get_value('palettes', 'portrait_palette', PORTRAIT_SAME_AS_INTERFACE))
-  _on_matching_selected(1 if file.get_value('palettes', 'perceptual', false) else 0)
-  _on_dithering_toggled(file.get_value('palettes', 'dithering', false))
+## Set the corridor's palette choices from a preset file written by `write_corridor_palette`. Choices
+## the file leaves out go back to their defaults.
+func read_corridor_palette(file: ConfigFile) -> void:
+  set_world_palette(file.get_value('corridor_palette', 'world_palette', ''))
+  _on_matching_selected(1 if file.get_value('corridor_palette', 'perceptual', false) else 0)
+  _on_dithering_toggled(file.get_value('corridor_palette', 'dithering', false))
   _sync_controls()
   _look_panel.refresh()
-  return true
 
 
-## The file a palette combo named `combo_name` is saved in.
-static func palette_combo_path(combo_name: String) -> String:
-  return PALETTE_COMBO_DIR.path_join(combo_name + '.cfg')
+## Write the interface's palette choices into a preset's interface part: the interface and portrait
+## palettes and the font.
+func write_interface_palettes(file: ConfigFile) -> void:
+  file.set_value('interface_palette', 'interface_palette', interface_palette)
+  file.set_value('interface_palette', 'portrait_palette', portrait_palette)
+  file.set_value('interface_palette', 'font', ui_font)
 
 
-## The name of the palette combo chosen in "Load at start-up", or '' for none.
-static func start_up_palette_combo() -> String:
-  var file: ConfigFile = ConfigFile.new()
-  if file.load(START_UP_PATH) != OK:
-    return ''
-  return file.get_value('start_up', 'palette_combo', '')
+## Set the interface's palette choices from a preset file written by `write_interface_palettes`.
+## Choices the file leaves out go back to their defaults.
+func read_interface_palettes(file: ConfigFile) -> void:
+  set_interface_palette(file.get_value('interface_palette', 'interface_palette', ''))
+  set_portrait_palette(file.get_value('interface_palette', 'portrait_palette', PORTRAIT_SAME_AS_INTERFACE))
+  var font: String = file.get_value('interface_palette', 'font', '')
+  if font != '':
+    set_ui_font(font)
+  elif ui_font != '':
+    restore_default_font()
+  _sync_controls()
 
 
-## Load the palette combo named `combo_name` at start-up from now on, or none with ''.
-static func set_start_up_palette_combo(combo_name: String) -> void:
-  var file: ConfigFile = ConfigFile.new()
-  file.load(START_UP_PATH)
-  file.set_value('start_up', 'palette_combo', combo_name)
-  file.save(START_UP_PATH)
+## Palettes back to their defaults: world clamp off, no interface palette, portrait palette same as
+## interface, RGB matching, no dithering, the game's own font.
+func reset_palettes() -> void:
+  read_corridor_palette(ConfigFile.new())
+  read_interface_palettes(ConfigFile.new())
 
 
-## Whether the start-up palette combo may load. It does not in headless runs (tests, autotest),
-## screenshot runs (`--shot`), or when an argument in `PALETTE_ARGUMENTS` sets the palettes, so those
-## runs stay predictable.
-static func start_up_combo_allowed(args: PackedStringArray, headless: bool) -> bool:
-  if headless or '--shot' in args:
-    return false
-  for arg: String in args:
-    for prefix: String in PALETTE_ARGUMENTS:
-      if arg.begins_with(prefix):
-        return false
-  return true
-
-
-func _apply_start_up_palette_combo() -> void:
-  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
-  if not OS.is_debug_build() or not start_up_combo_allowed(args, DisplayServer.get_name() == 'headless'):
-    return
-  var combo_name: String = start_up_palette_combo()
-  if combo_name != '':
-    load_palette_combo(palette_combo_path(combo_name))
-
-
-# Saved palette combos are listed each time the panel opens, in both the load and start-up options.
-func _list_palette_combos() -> void:
-  _combo_option.clear()
-  _start_up_option.clear()
-  _combo_option.add_item('Load a combo...')
-  _start_up_option.add_item('None')
-  var start_up: String = start_up_palette_combo()
-  if DirAccess.dir_exists_absolute(PALETTE_COMBO_DIR):
-    for file: String in DirAccess.get_files_at(PALETTE_COMBO_DIR):
-      if file.get_extension() != 'cfg':
-        continue
-      _combo_option.add_item(file.get_basename())
-      _start_up_option.add_item(file.get_basename())
-      if file.get_basename() == start_up:
-        _start_up_option.select(_start_up_option.item_count - 1)
-  _combo_option.select(0)
-
-
-func _on_combo_save_pressed() -> void:
-  var combo_name: String = _combo_name_edit.text.strip_edges().to_snake_case().validate_filename()
-  if combo_name == '':
-    return
-  save_palette_combo(palette_combo_path(combo_name))
-  _combo_name_edit.release_focus()
-  _list_palette_combos()
-
-
-func _on_combo_selected(index: int) -> void:
-  if index <= 0:
-    return
-  var combo_name: String = _combo_option.get_item_text(index)
-  if load_palette_combo(palette_combo_path(combo_name)):
-    _combo_name_edit.text = combo_name
-
-
-func _on_start_up_selected(index: int) -> void:
-  set_start_up_palette_combo('' if index <= 0 else _start_up_option.get_item_text(index))
-
-
-## Back to the defaults: world clamp off, no interface palette, portrait palette same as interface,
-## every look and interface look effect off, no corridor settings, random enemy images. Used between
-## tests.
+## Every part of the look back to its defaults, with every effect off (not the default preset), and
+## random enemy images. Used between tests.
 func reset_settings() -> void:
   reset_look()
   PrintLook.reset_print_look()
+  PrintLook.reset_background_look()
   InterfaceLook.reset()
   MonsterImages.forced_path = ''
-  set_interface_palette('')
-  set_portrait_palette(PORTRAIT_SAME_AS_INTERFACE)
-  if ui_font != '':
-    restore_default_font()
-  _font_option.select(0)
-  _sync_controls()
-  _look_panel.refresh()
-  _print_panel.refresh()
-  _interface_look_panel.refresh()
+  reset_palettes()
+  _preset_bar.forget_loaded()
+  refresh_panels()
 
 
 ## Every look shader uniform with a default in the shader code, its shared effects include or its
@@ -528,28 +473,21 @@ static func _uniform_defaults(code: String, skip: Array[String]) -> Dictionary:
   return defaults
 
 
-## Every corridor look effect back to its shader default, no corridor or environment settings, world
-## palette off, RGB matching, no dithering. Corridors on screen go back to their scene values. The print
-## look is unchanged.
+## Every corridor look effect back to its shader default, and no corridor or environment settings.
+## Corridors on screen go back to their scene values. The palettes and the other parts are unchanged.
 func reset_look() -> void:
   _write_look_defaults()
   corridor_settings.clear()
   environment_settings.clear()
   var corridors: Array[Node] = get_tree().get_nodes_in_group(Corridor3D.GROUP)
-  if not corridors.is_empty():
-    var scene_values: Array[Dictionary] = LookPanel.scene_values()
-    for corridor: Corridor3D in corridors:
-      corridor.apply_settings(scene_values[0], scene_values[1])
-  set_world_palette('')
-  _on_matching_selected(0)
-  _on_dithering_toggled(false)
-  _sync_controls()
+  for corridor: Corridor3D in corridors:
+    corridor.apply_settings(scene_values()[0], scene_values()[1])
 
 
-## Turn dithering on or off for the world clamp, keeping the F1 panel's switch in step.
+## Turn dithering on or off for the world clamp. The Corridor tab's Dithering switch shows it after a
+## refresh.
 func set_dithering(on: bool) -> void:
   _on_dithering_toggled(on)
-  _sync_controls()
 
 
 func is_dithering() -> bool:
@@ -562,48 +500,41 @@ func apply_corridor_settings() -> void:
     corridor.apply_settings(corridor_settings, environment_settings)
 
 
-## Save the current corridor look to a text file at `path`: the look shader settings, the corridor and
-## environment settings, the world palette, matching and dithering.
-func save_look(path: String) -> Error:
-  var file: ConfigFile = ConfigFile.new()
+## The corridor scene's own values for the Light and Environment properties, as
+## [corridor property -> value, environment property -> value]. Read from the scene once.
+func scene_values() -> Array[Dictionary]:
+  if _scene_values.is_empty():
+    _scene_values = LookPanel.scene_values()
+  return _scene_values
+
+
+## Write the corridor look part of a preset: every look shader setting, and every Light and Environment
+## setting, changed or not.
+func write_corridor_look(file: ConfigFile) -> void:
   for uniform: String in look_defaults():
-    file.set_value('shader', uniform, world_material.get_shader_parameter(uniform))
-  for property: String in corridor_settings:
-    file.set_value('corridor', property, corridor_settings[property])
-  for property: String in environment_settings:
-    file.set_value('environment', property, environment_settings[property])
-  file.set_value('palette', 'world_palette', world_palette)
-  file.set_value('palette', 'perceptual', _perceptual)
-  file.set_value('palette', 'dithering', _dithering)
-  DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-  return file.save(path)
+    file.set_value('corridor_shader', uniform, world_material.get_shader_parameter(uniform))
+  for property: String in LookPanel.CORRIDOR_PROPERTIES:
+    file.set_value('corridor_light', property, corridor_settings.get(property, scene_values()[0][property]))
+  for property: String in LookPanel.ENVIRONMENT_PROPERTIES:
+    file.set_value('corridor_environment', property, environment_settings.get(property, scene_values()[1][property]))
 
 
-## Load a look saved by `save_look`, starting from the defaults. Returns false if the file cannot be
-## read.
-func load_look(path: String) -> bool:
-  var file: ConfigFile = ConfigFile.new()
-  if file.load(path) != OK:
-    push_warning('[DebugPanels] could not read look file %s' % path)
-    return false
+## Set the corridor look from a preset file written by `write_corridor_look`, starting from the
+## defaults.
+func read_corridor_look(file: ConfigFile) -> void:
   reset_look()
   var defaults: Dictionary = look_defaults()
-  for uniform: String in _section_keys(file, 'shader'):
+  for uniform: String in _section_keys(file, 'corridor_shader'):
     if defaults.has(uniform):
-      world_material.set_shader_parameter(uniform, file.get_value('shader', uniform))
-  for property: String in _section_keys(file, 'corridor'):
-    corridor_settings[property] = file.get_value('corridor', property)
-  for property: String in _section_keys(file, 'environment'):
-    environment_settings[property] = file.get_value('environment', property)
+      world_material.set_shader_parameter(uniform, file.get_value('corridor_shader', uniform))
+  for property: String in _section_keys(file, 'corridor_light'):
+    corridor_settings[property] = file.get_value('corridor_light', property)
+  for property: String in _section_keys(file, 'corridor_environment'):
+    environment_settings[property] = file.get_value('corridor_environment', property)
   apply_corridor_settings()
-  set_world_palette(file.get_value('palette', 'world_palette', ''))
-  _on_matching_selected(1 if file.get_value('palette', 'perceptual', false) else 0)
-  _on_dithering_toggled(file.get_value('palette', 'dithering', false))
-  _sync_controls()
-  return true
 
 
-# Every uniform is set explicitly, so a saved look lists every one of them.
+# Every uniform is set explicitly, so a saved preset lists every one of them.
 func _write_look_defaults() -> void:
   var defaults: Dictionary = look_defaults()
   for uniform: String in defaults:
@@ -757,10 +688,11 @@ func _scan_palettes() -> void:
   _sync_controls()
 
 
-# Shows the current choices in the panel's controls, without applying anything.
+# Shows the current palette, matching and font choices in the tabs' controls, without applying anything.
 func _sync_controls() -> void:
+  if _font_option.item_count > 1:
+    _font_option.select(maxi(_font_option.get_item_index(_font_paths.find(ui_font) + 1), 0))
   _matching_option.select(1 if _perceptual else 0)
-  _dithering_check.set_pressed_no_signal(_dithering)
   if _palettes_scanned:
     _world_option.select(maxi(_world_option.get_item_index(_palette_paths.find(world_palette) + 1), 0))
     _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))

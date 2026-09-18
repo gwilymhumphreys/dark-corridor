@@ -283,11 +283,12 @@ func _live_actors(cm: CombatManager) -> Array:
 
 # --- fight construction -----------------------------------------------------
 
-## A default player board (mirrors the sandbox) vs the authored grunt. Enemy names
-## are kept beside the actors for the log/report (the Actor itself is name-blind).
+## A default player board — the default character's starting kit, as the sandbox uses — vs the
+## authored grunt. Enemy names are kept beside the actors for the log/report (the Actor itself is
+## name-blind). A test that needs a particular board overrides this.
 func _build_fight() -> Dictionary:
   var player := Actor.new(Balance.PLAYER_START_HP)
-  for id in [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]:
+  for id in CharacterCatalog.get_def(CharacterCatalog.DEFAULT).starting_item_ids:
     player.board.append(Item.new(ItemCatalog.get_def(id), player))
 
   var grunt: EnemyDef = EnemyCatalog.get_def(EnemyCatalog.GRUNT)

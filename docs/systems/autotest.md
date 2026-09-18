@@ -54,7 +54,7 @@ Each run writes a raw log + a markdown report to **`autotest_results/`** (projec
 
 | Flag | Meaning |
 |------|---------|
-| `--autotest` | enable the mode |
+| `--autotest` | enable the mode (also mutes all audio — see [audio](audio.md)) |
 | `--seed N` | RNG seed (determinism) |
 | `--speed N` | sets the Timekeeper dial (fast-test); game-time identical |
 | `--encounters N` | cap the run at N beats (0 / omitted = play the whole map) |

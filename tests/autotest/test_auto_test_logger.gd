@@ -22,13 +22,13 @@ func after_each() -> void:
 
 func test_ingest_folds_player_side_fires_and_damage() -> void:
   var clog := CombatLog.new()
-  clog.on_item_fired('Rusted Blade', PLAYER, 0.1)
-  clog.on_item_fired('Rusted Blade', PLAYER, 0.2)
-  clog.on_damage('Rusted Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.2)
+  clog.on_item_fired('Fixture Blade', PLAYER, 0.1)
+  clog.on_item_fired('Fixture Blade', PLAYER, 0.2)
+  clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.2)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
-  assert_eq(log.fires_by_item['Rusted Blade'], 2, 'fires folded in')
-  assert_almost_eq(log.damage_by_family['Rusted Blade'], 12.0, 0.0001, 'damage per item folded in')
+  assert_eq(log.fires_by_item['Fixture Blade'], 2, 'fires folded in')
+  assert_almost_eq(log.damage_by_family['Fixture Blade'], 12.0, 0.0001, 'damage per item folded in')
   assert_almost_eq(log.total_damage, 12.0, 0.0001, 'player-side dealt total folded in')
 
 
@@ -58,12 +58,12 @@ func test_ingest_records_enemy_status_pressure_by_status() -> void:
 
 func test_ingest_folds_shield_and_healing() -> void:
   var clog := CombatLog.new()
-  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
-  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
+  clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
+  clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
   clog.on_heal('Salve', PLAYER, 'Player', PLAYER, 12.0, 0.3)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
-  assert_almost_eq(log.shield_by_item['Iron Guard'], 16.0, 0.0001, 'shield accumulates per item')
+  assert_almost_eq(log.shield_by_item['Fixture Guard'], 16.0, 0.0001, 'shield accumulates per item')
   assert_almost_eq(log.healing_by_item['Salve'], 12.0, 0.0001, 'healing accumulates per item')
 
 
@@ -85,11 +85,11 @@ func test_ingest_records_incoming_gross_by_enemy() -> void:
   var clog := CombatLog.new()
   clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 7.0, 0.1)
   clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 5.0, 0.4)
-  clog.on_damage('Rusted Blade', PLAYER, 'Grunt', ENEMY, 9.0, 0.2)
+  clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 9.0, 0.2)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
   assert_almost_eq(log.incoming_by_enemy['Claw'], 12.0, 0.0001, 'enemy gross output tallied by source')
-  assert_false(log.incoming_by_enemy.has('Rusted Blade'), 'player output is not "incoming"')
+  assert_false(log.incoming_by_enemy.has('Fixture Blade'), 'player output is not "incoming"')
   assert_almost_eq(log.total_incoming, 12.0, 0.0001, 'total incoming is the enemy gross')
   assert_almost_eq(log.total_damage, 9.0, 0.0001, 'total dealt stays player output')
 
@@ -109,10 +109,10 @@ func test_ingest_accumulates_across_multiple_fights() -> void:
   var log := AutoTestLogger.new()
   for _fight in 2:
     var clog := CombatLog.new()
-    clog.on_item_fired('Rusted Blade', PLAYER, 0.1)
-    clog.on_damage('Rusted Blade', PLAYER, 'Grunt', ENEMY, 10.0, 0.1)
+    clog.on_item_fired('Fixture Blade', PLAYER, 0.1)
+    clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 10.0, 0.1)
     log.ingest_combat_log(clog)
-  assert_eq(log.fires_by_item['Rusted Blade'], 2, 'fires accumulate across fights')
+  assert_eq(log.fires_by_item['Fixture Blade'], 2, 'fires accumulate across fights')
   assert_almost_eq(log.total_damage, 20.0, 0.0001, 'damage accumulates across fights')
 
 
@@ -147,7 +147,7 @@ func test_summarize_merges_result_with_the_ingested_tally() -> void:
 func test_format_summary_and_report_write() -> void:
   var clog := CombatLog.new()
   clog.on_damage('Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.1)
-  clog.on_damage('Venom Fang', PLAYER, 'Grunt', ENEMY, 3.0, 0.5)
+  clog.on_damage('Fixture Fang', PLAYER, 'Grunt', ENEMY, 3.0, 0.5)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
   var s := log.summarize({
@@ -182,22 +182,22 @@ func test_record_encounter_is_summarized() -> void:
 
 func test_item_contribution_flags_never_fired_as_trap() -> void:
   var clog := CombatLog.new()
-  clog.on_item_fired('Rusted Blade', PLAYER, 0.1)
-  clog.on_item_fired('Rusted Blade', PLAYER, 0.2)
-  clog.on_damage('Rusted Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.2)
-  clog.on_item_fired('Venom Fang', PLAYER, 0.3)   # fires, but no DIRECT damage here
-  # Iron Guard never fired.
+  clog.on_item_fired('Fixture Blade', PLAYER, 0.1)
+  clog.on_item_fired('Fixture Blade', PLAYER, 0.2)
+  clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.2)
+  clog.on_item_fired('Fixture Fang', PLAYER, 0.3)   # fires, but no DIRECT damage here
+  # The shield never fired.
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
-  var s := log.summarize({ 'player_items': ['Rusted Blade', 'Iron Guard', 'Venom Fang'] })
+  var s := log.summarize({ 'player_items': ['Fixture Blade', 'Fixture Guard', 'Fixture Fang'] })
   var by := {}
   for r in log._item_contribution_rows(s):
     by[r['name']] = r
-  assert_eq(by['Rusted Blade']['fires'], 2, 'fires counted')
-  assert_almost_eq(by['Rusted Blade']['damage'], 12.0, 0.0001, 'damage attributed')
-  assert_false(by['Rusted Blade']['trap'], 'a firing damage item is not a trap')
-  assert_false(by['Venom Fang']['trap'], 'a firing non-damage item is not a trap')
-  assert_true(by['Iron Guard']['trap'], 'a never-fired item is a trap pick')
+  assert_eq(by['Fixture Blade']['fires'], 2, 'fires counted')
+  assert_almost_eq(by['Fixture Blade']['damage'], 12.0, 0.0001, 'damage attributed')
+  assert_false(by['Fixture Blade']['trap'], 'a firing damage item is not a trap')
+  assert_false(by['Fixture Fang']['trap'], 'a firing non-damage item is not a trap')
+  assert_true(by['Fixture Guard']['trap'], 'a never-fired item is a trap pick')
 
 
 func test_item_contribution_aggregates_duplicates() -> void:
@@ -212,13 +212,13 @@ func test_item_contribution_aggregates_duplicates() -> void:
 
 func test_item_contribution_carries_shield_and_healing() -> void:
   var clog := CombatLog.new()
-  clog.on_item_fired('Iron Guard', PLAYER, 0.1)
-  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
-  clog.on_shield('Iron Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
+  clog.on_item_fired('Fixture Guard', PLAYER, 0.1)
+  clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
+  clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
   clog.on_heal('Salve', PLAYER, 'Player', PLAYER, 12.0, 0.3)
   var log := AutoTestLogger.new()
   log.ingest_combat_log(clog)
-  var rows := log._item_contribution_rows(log.summarize({ 'player_items': ['Iron Guard', 'Salve'] }))
+  var rows := log._item_contribution_rows(log.summarize({ 'player_items': ['Fixture Guard', 'Salve'] }))
   assert_almost_eq(float(rows[0]['shield']), 16.0, 0.0001, 'shield accumulates per item')
   assert_almost_eq(float(rows[1]['healing']), 12.0, 0.0001, 'healing accumulates per item')
   assert_false(rows[0]['trap'], 'a firing shield item is not a trap')

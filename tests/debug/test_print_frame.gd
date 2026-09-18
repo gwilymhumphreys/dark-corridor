@@ -1,9 +1,8 @@
 extends GutTest
-## The print frame: the F5 print panel, the print settings in look files, and `PrintFrame` showing the
+## The print frame: the print tab, the print settings in presets, and `PrintFrame` showing the
 ## border and overlay (docs/systems/print_frame.md).
 
 const COMBAT_VIEW_SCENE: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
-const LOOK_PATH: String = 'user://test_looks/print.cfg'
 
 var _nodes: Array = []
 
@@ -17,18 +16,20 @@ func after_each() -> void:
     if is_instance_valid(node):
       node.free()
   _nodes.clear()
-  DirAccess.remove_absolute(LOOK_PATH)
-  DirAccess.remove_absolute(LOOK_PATH.get_base_dir())
   TestCleanup.reset_all_managers()
 
 
 func _panel() -> PrintPanel:
-  return DebugPanels.get_node('PrintLayer/PrintPanel') as PrintPanel
+  return DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Print') as PrintPanel
 
 
-func _section_titles() -> Array[String]:
+func _background_panel() -> BackgroundPanel:
+  return DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Background') as BackgroundPanel
+
+
+func _section_titles(panel: LookPanel = _panel()) -> Array[String]:
   var titles: Array[String] = []
-  for section: Node in _panel().get_node('Rows/Scroll/Sections').get_children():
+  for section: Node in panel.get_node('Scroll/Sections').get_children():
     titles.append((section.get_node('Header/Title') as Button).text)
   return titles
 
@@ -50,45 +51,51 @@ func test_defaults_match_the_owners_saved_look() -> void:
   assert_eq(PrintLook.background_defaults()['background_folds_on'], true, 'folds are on')
 
 
-func test_panel_has_background_layout_border_and_overlay_sections() -> void:
+func test_print_panel_has_layout_border_and_overlay_sections() -> void:
   _panel().rebuild()
   var titles: Array[String] = _section_titles()
-  assert_true(titles.has('Background Specks'), 'background wear groups')
-  assert_true(titles.has('Background Folds'), 'the folds group')
   assert_true(titles.has('Layout'), 'the padding and split point')
   assert_true(titles.has('Print Border'), 'the border')
   assert_true(titles.has('Corridor Wear'), 'wear over the corridor')
   assert_true(titles.has('Corridor Worn Edge'), 'the worn corridor edge')
-  assert_eq(titles.count('Background Specks'), 1, 'the overlay does not repeat the background sections')
+  assert_false(titles.has('Background Specks'), 'background wear is in the Background tab')
+
+
+func test_background_panel_has_the_background_wear_sections() -> void:
+  _background_panel().rebuild()
+  var titles: Array[String] = _section_titles(_background_panel())
+  assert_true(titles.has('Background Specks'), 'background wear groups')
+  assert_true(titles.has('Background Folds'), 'the folds group')
+  assert_false(titles.has('Print Border'), 'the border is in the Print tab')
 
 
 func test_save_then_load_restores_the_print_look() -> void:
   PrintLook.set_print_value('print_border_on', true)
   PrintLook.set_print_value('corridor_worn_edge_width', 50.0)
   PrintLook.set_print_value('padding', 70.0)
-  PrintLook.background_material.set_shader_parameter('background_folds_on', false)
-  assert_eq(PrintLook.save_print_look(LOOK_PATH), OK, 'the print look is saved')
+  var file: ConfigFile = ConfigFile.new()
+  PrintLook.write_print_look(file)
   DebugPanels.reset_settings()
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), false, 'reset turns the border off')
   assert_eq(PrintLook.print_setting('padding'), PrintLookAutoload.PRINT_SETTING_DEFAULTS['padding'],
     'reset returns the padding to its default')
-  assert_true(PrintLook.load_print_look(LOOK_PATH), 'the print look is loaded')
+  PrintLook.read_print_look(file)
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'border switch restored')
   assert_almost_eq(PrintLook.overlay_material.get_shader_parameter('corridor_worn_edge_width'), 50.0, 0.001,
     'overlay number restored')
   assert_eq(PrintLook.print_setting('padding'), 70.0, 'layout setting restored')
-  assert_eq(PrintLook.background_material.get_shader_parameter('background_folds_on'), false, 'background wear restored')
 
 
 func test_print_and_corridor_looks_are_separate() -> void:
   DebugPanels.world_material.set_shader_parameter('grade_on', true)
   PrintLook.set_print_value('print_border_on', true)
-  PrintLook.save_print_look(LOOK_PATH)
+  var file: ConfigFile = ConfigFile.new()
+  PrintLook.write_print_look(file)
   PrintLook.reset_print_look()
   assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), true, 'resetting the print look keeps the corridor look')
   DebugPanels.world_material.set_shader_parameter('grade_on', false)
-  PrintLook.load_print_look(LOOK_PATH)
-  assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), false, 'a print look does not hold the corridor look')
+  PrintLook.read_print_look(file)
+  assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), false, 'the print part does not hold the corridor look')
   DebugPanels.reset_look()
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'resetting the corridor look keeps the print look')
 

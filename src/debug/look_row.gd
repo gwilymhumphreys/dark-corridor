@@ -1,6 +1,6 @@
 class_name LookRow
 extends HBoxContainer
-## One setting in the look panel (docs/systems/corridor_look.md): a label and one control. The
+## One setting in a look tab of the debug panel (docs/systems/corridor_look.md): a label and one control. The
 ## same script drives four scenes: a slider (`Slider`), a dropdown (`Option`), a switch (`Check`) or
 ## a colour button (`Colour`).
 

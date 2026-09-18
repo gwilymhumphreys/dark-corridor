@@ -24,7 +24,7 @@ the menu: `--autostart` (default-character run), `--select`, `--settings`.
 
 `MainController` boots with `Game` (already in TITLE — autoloads ready first) and
 **swaps the active screen on `Game.phase_changed`** (TITLE / RUN / DEATH / WIN). It
-holds no game state. Dev hooks: title `--autostart`, MainController `--shot
+holds no game state. Dev hooks: title `--autostart` (with `--character=ID` to pick the character), MainController `--shot
 [--shot-delay s]`. `project.godot`'s `main_scene` is `main.tscn` (the corridor
 testbed + combat sandbox stay runnable as direct scenes).
 
@@ -112,9 +112,11 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   `SubViewport` → `Corridor3D`, with each enemy a `Sprite3D` inside its 3D scene).
   Resizeable; the SubViewportContainer clips it. See *Enemies in the corridor* below. `PrintFrame`
   draws the optional border and overlay ([print_frame.md](print_frame.md)).
-- **An `enemy_hud` pinned above each enemy's corridor sprite** — its **item cells** (top),
-  a **status-icon row + HP bar + status numbers**, and the enemy's **name**
-  (`Actor.display_name`, `tr()`'d). Each OUTSIDE-set status shows as a `status_icon.tscn`:
+- **An `enemy_hud` pinned above each enemy's corridor sprite** — the enemy's **name**
+  (`Actor.display_name`, `tr()`'d), then a **status-icon row + HP bar + status numbers**, then its
+  **item cells**. The HUD is **hidden through the approach** and fades in over `ENEMY_FADE_IN`
+  seconds when the fight starts (the run screen calls `CombatView.show_enemies` on arrival); a
+  summon that spawns mid-fight fades in the same way. Each OUTSIDE-set status shows as a `status_icon.tscn`:
   the status's icon on a square of its colour. The mechanic statuses (shield, poison, burn,
   bleed, regen) show as **stack counts beside the HP bar** (`status_numbers.tscn`,
   `StatusNumbers` — one label per mechanic status in its colour, numbers untranslated).
@@ -124,15 +126,20 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   are smaller than the player's board (`ItemCell.set_cell_size`). The view **reconciles** its
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
-- **Player portrait + HP in the portrait section** (portrait, HP bar, status numbers, "You"), centred between the
+- **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
+  aligned to the top of the section, the left-aligned name ("You") over the HP bar and status
+  numbers — centred between the
   ally slots; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding the item's icon (`ItemDef.icon`), a
   centred row of effect-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per value-bearing effect)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
-  whose edge is torn like the paper edges of the print look) + fire recoil),
+  whose edge is torn like the paper edges of the print look) + fire recoil). The grid is matched to
+  the board every frame (`_sync_player_items`), so an item created during the fight gains a cell with a
+  "Temporary" tag on its bottom edge, and a decayed or consumed item loses its cell,
   with the **potion slots** (`potion_slot.tscn`, the potion's icon on the potion colour) above it.
-- **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (portrait
-  + HP + status numbers + name + item cells), filling **left-to-right** (2 left of the player, then 2 right —
+- **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (the portrait,
+  and beside it a column of the name, the HP bar + status numbers, and the item cells, whose size
+  shrinks so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
   capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
   `AllyLeft` / `AllyRight`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
   participating, revived to full next fight); a **dead combat-scoped token is reaped** like an
@@ -141,7 +148,9 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   they spawn.
 - **VFX wall** (`vfx_driver.gd`) over it — projectiles fly in screen space; `actor_pos`
   resolves the player to its portrait, each enemy to its HUD, each ally/token to its slot;
-  `item_pos` finds an item's cell in the player's grid or any HUD/slot.
+  `item_pos` finds an item's cell in the player's grid or any HUD/slot. A thrown consumable's
+  effects start from its potion slot: the view remembers the slot's centre when it is pressed (the slot
+  is removed by the throw), and `consumable_pos` returns it for the delivery's `consumable`.
 
 The view `bind(cm, player, potions)`s the live fight (it reads the rosters off the CM)
 and exposes `item_pos` / `actor_pos` / `target_pos` to the wall; `release()` nulls the
@@ -173,7 +182,7 @@ the corridor light, so they come out of the dark on the approach. The container 
   `release()`. Each hit enemy flinches — its sprite is knocked away from the camera by
   `CombatCorridor.flinch_offset`, a function of render time since the hit, so slow motion slows it
   and pause holds it — and is lit ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)). The
-  flinch and the light have separate durations, so shortening the light in the look panel does not
+  flinch and the light have separate durations, so shortening the light in the Corridor tab does not
   cut the flinch short. The ring the wall draws at the landing point is a placeholder shape
   ([vfx_driver.md](vfx_driver.md#what-is-built)), not the intended look, and each landing is nudged
   a little off the sprite centre so hits in a burst do not stack.

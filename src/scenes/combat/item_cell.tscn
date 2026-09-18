@@ -38,6 +38,27 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="TemporaryTag" type="PanelContainer" parent="."]
+visible = false
+material = ExtResource("interface_look_material")
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"PanelSmall"
+
+[node name="Label" type="Label" parent="TemporaryTag"]
+material = ExtResource("interface_look_material")
+layout_mode = 2
+mouse_filter = 2
+text = "Temporary"
+horizontal_alignment = 1
+
 [node name="Pills" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 0

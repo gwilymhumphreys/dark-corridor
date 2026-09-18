@@ -26,11 +26,11 @@ func after_each() -> void:
 
 # --- helpers ----------------------------------------------------------------
 
-func _spawn(max_hp: float, item_ids: Array, name: String = '') -> Actor:
+func _spawn(max_hp: float, item_defs: Array, name: String = '') -> Actor:
   var a := Actor.new(max_hp)
   a.display_name = name
-  for id in item_ids:
-    a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  for def in item_defs:
+    a.board.append(Item.new(def, a))
   TestCleanup.dissolve_at_reset(a)   # teardown keeps the player side; dissolve it after the test
   return a
 
@@ -60,45 +60,45 @@ func _status_of(side: int, log: CombatLog) -> Dictionary:
 # --- the six sites + throw, end-to-end --------------------------------------
 
 func test_a_full_fight_logs_fires_damage_shield_and_dot() -> void:
-  # Player: Rusted Blade (direct damage), Iron Guard (shield), Venom Fang (poison DoT).
-  # Enemy: Claw (direct damage to the player).
+  # Player: a fixture attack (direct damage), a fixture shield, a fixture poison applier.
+  # Enemy: a fixture attack (direct damage to the player).
   var p := _spawn(Balance.PLAYER_START_HP,
-      [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER], 'Wanderer')
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW], 'Corridor Grunt')
+      [FixtureItems.attack(), FixtureItems.shield(), FixtureItems.poison()], 'Player')
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   cm.run_headless()
   var log: CombatLog = cm.combat_log
   var player_rows := _name_of(PLAYER, log)
 
   # Fire (site 1) — every player item that fired is counted.
-  assert_gt(player_rows.get('Rusted Blade', {}).get('fires', 0), 0, 'the blade fired')
-  assert_gt(player_rows.get('Iron Guard', {}).get('fires', 0), 0, 'the guard fired')
-  assert_gt(player_rows.get('Venom Fang', {}).get('fires', 0), 0, 'the fang fired')
+  assert_gt(player_rows.get('Fixture Blade', {}).get('fires', 0), 0, 'the blade fired')
+  assert_gt(player_rows.get('Fixture Guard', {}).get('fires', 0), 0, 'the guard fired')
+  assert_gt(player_rows.get('Fixture Fang', {}).get('fires', 0), 0, 'the fang fired')
 
   # Direct damage (site 2) — the blade's hits land on the enemy.
-  assert_gt(float(player_rows['Rusted Blade']['damage']), 0.0, 'direct damage logged to the blade')
+  assert_gt(float(player_rows['Fixture Blade']['damage']), 0.0, 'direct damage logged to the blade')
 
-  # Shield (site 5) — Iron Guard's shield, by ShieldStatus.ID (not a literal).
-  assert_gt(float(player_rows['Iron Guard']['shield']), 0.0, 'shield logged to the guard')
+  # Shield (site 5) — the shield item's shield, by ShieldStatus.ID (not a literal).
+  assert_gt(float(player_rows['Fixture Guard']['shield']), 0.0, 'shield logged to the guard')
 
   # DoT damage (site 3) — poison ticks are bucketed by the STATUS, not credited to the applier
-  # (merged appliers make per-item DoT attribution a fiction). Venom Fang only APPLIES poison, so
+  # (merged appliers make per-item DoT attribution a fiction). the fixture applier only APPLIES poison, so
   # its per-item damage stays 0; the tick damage shows under the 'Poison' status bucket.
-  assert_eq(float(player_rows['Venom Fang']['damage']), 0.0, 'no per-item DoT credit to the applier')
+  assert_eq(float(player_rows['Fixture Fang']['damage']), 0.0, 'no per-item DoT credit to the applier')
   assert_gt(float(_status_of(PLAYER, log).get('Poison', {}).get('damage', 0.0)), 0.0,
       'poison tick damage is bucketed under the status')
 
   # Other status (site 6) — poison APPLIED is counted (separate from its tick damage).
-  assert_gt(player_rows['Venom Fang']['statuses'], 0, 'the poison application is counted')
+  assert_gt(player_rows['Fixture Fang']['statuses'], 0, 'the poison application is counted')
 
-  # Totals split by side: the player dealt damage; the player also took the enemy's Claw.
+  # Totals split by side: the player dealt damage; the player also took the enemy's hits.
   assert_gt(float(log.total_damage_dealt[PLAYER]), 0.0, 'player-side dealt total')
   assert_gt(float(log.total_shield[PLAYER]), 0.0, 'player-side shield total')
 
 
 func test_enemy_damage_is_logged_on_the_enemy_side() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [], 'Wanderer')   # player deals nothing
-  var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW], 'Corridor Grunt')
+  var p := _spawn(Balance.PLAYER_START_HP, [], 'Player')   # player deals nothing
+  var e := _spawn(1000.0, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   # Step a handful of times; the enemy claws the player (player never wins — it has no board).
   for _i in 200:
@@ -107,13 +107,13 @@ func test_enemy_damage_is_logged_on_the_enemy_side() -> void:
     cm.sim_step()
   var log: CombatLog = cm.combat_log
   var enemy_rows := _name_of(ENEMY, log)
-  assert_gt(float(enemy_rows.get('Claw', {}).get('damage', 0.0)), 0.0, 'the enemy Claw is logged enemy-side')
+  assert_gt(float(enemy_rows.get('Fixture Claw', {}).get('damage', 0.0)), 0.0, 'the enemy item is logged enemy-side')
   assert_gt(float(log.total_damage_taken[PLAYER]), 0.0, 'the player took damage (taken total, player side)')
   assert_true(_name_of(PLAYER, log).is_empty(), 'the boardless player logged nothing player-side')
 
 
 func test_heal_is_logged() -> void:
-  var p := _spawn(100.0, [], 'Wanderer')
+  var p := _spawn(100.0, [], 'Player')
   p.take_damage(40.0)   # at 60 / 100 so a heal restores real HP
   var e := _spawn(1000.0, [], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
@@ -139,7 +139,7 @@ func test_heal_is_logged() -> void:
 
 
 func test_throw_is_logged_with_its_def_id() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [], 'Wanderer')
+  var p := _spawn(Balance.PLAYER_START_HP, [], 'Player')
   var e := _spawn(1000.0, [], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   var def := ConsumableDef.new()
@@ -163,8 +163,8 @@ func test_throw_is_logged_with_its_def_id() -> void:
 # --- null-guard: no log attached is harmless --------------------------------
 
 func test_no_log_attached_runs_clean() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON], 'Wanderer')
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW], 'Corridor Grunt')
+  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()], 'Player')
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := CombatManager.new(p, [e])
   _made.append(cm)
   cm.start()
@@ -177,8 +177,8 @@ func test_no_log_attached_runs_clean() -> void:
 # --- the timeline records in sim order with timestamps ----------------------
 
 func test_timeline_is_ordered_and_timestamped() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [ItemCatalog.WEAPON], 'Wanderer')
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW], 'Corridor Grunt')
+  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()], 'Player')
+  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   cm.run_headless()
   var events: Array = cm.combat_log.events

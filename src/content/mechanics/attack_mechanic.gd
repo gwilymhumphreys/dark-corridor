@@ -1,6 +1,6 @@
 class_name AttackMechanic
 extends Mechanic
-## Attack — the mechanic for a direct hit from an item or potion (docs/plans/mechanics.md).
+## Attack — the mechanic for a direct hit from an item or potion (docs/systems/mechanics.md).
 ## Deals damage to the target.
 
 const ID := 'attack'
@@ -30,6 +30,6 @@ func land(delivery: Delivery, combat: CombatManager) -> void:
           combat._delivery_source_side(delivery), delivery.target.display_name,
           combat._side_of(delivery.target), dealt, combat.timekeeper.sim_time, delivery.value)
     # Bleed (and any other attack-triggered status) cashes out on the hit — after the damage
-    # resolves, and only if the target survived it (docs/plans/mechanics.md → Bleed).
+    # resolves, and only if the target survived it (docs/systems/mechanics.md → Bleed).
     if delivery.target.is_alive():
       combat._on_holder_attacked(delivery.target)

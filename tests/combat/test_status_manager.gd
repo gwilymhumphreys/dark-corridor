@@ -130,7 +130,7 @@ func test_periodic_status_on_an_item_does_not_crash() -> void:
   # The item-target shapes can deliver an APPLY_STATUS to an Item, and the status id is
   # authored content. A PERIODIC (poison) status on an item must NOT crash (Item has no
   # take_damage) — it ticks down harmlessly with no damage.
-  var item := Item.new(ItemCatalog.get_def(ItemCatalog.POISON_DAGGER), Actor.new())
+  var item := Item.new(FixtureItems.poison(), Actor.new())
   var p := StatusManager.apply(item, 'poison', 2.0)
   p.ticker.accum = p.ticker.threshold - 1.0   # one step from firing
   StatusManager.advance_status(p, item)        # crosses → take_damage(item) would crash, guarded

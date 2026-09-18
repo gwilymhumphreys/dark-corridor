@@ -27,6 +27,7 @@ When working on this project, you may freely read from:
 - `../a-machine` - Previous project, most useful (Juice, VFX, Audio, UI, save/load)
 - `../battledraft` - Sister project with shared systems (VFX, debug panels, post-processing)
 - `../dogmage` - Sister project with shared systems (VFX, debug panels, post-processing)
+- `../dark-corridor-design` - Source art packs for this game (icons, portraits, monsters, palettes, UI sheets). See [`docs/design/asset_library.md`](docs/design/asset_library.md) for what is where and how to find a named file.
 
 ## Code Standards (MANDATORY)
 

@@ -3,7 +3,12 @@ extends GutTest
 ## everything back (docs/systems/interface_palette.md).
 
 const TEST_DIR: String = 'user://test_interface_palette'
-const DEFAULT_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
+const PALETTE_DIR: String = 'res://assets/palettes/new/ui'
+const DEFAULT_PALETTE: String = PALETTE_DIR + '/ui-default.gpl'
+const COLOURS_PATH: String = 'res://src/data/colours.gd'
+# A .gpl carries no alpha (PaletteLoader forces it to 1), so a Colours variable that uses alpha is
+# not settable from a palette and is left out of the files.
+const NOT_SETTABLE: Array[String] = ['COOLDOWN_FILL']
 
 
 func before_each() -> void:
@@ -82,6 +87,41 @@ func test_default_palette_names_every_match_a_colour() -> void:
       '%s matches a Colours variable' % colour_name)
 
 
+func _colours_variables() -> Array[String]:
+  var regex: RegEx = RegEx.create_from_string('(?m)^static var ([A-Z0-9_]+): Color')
+  var names: Array[String] = []
+  for result: RegExMatch in regex.search_all(FileAccess.get_file_as_string(COLOURS_PATH)):
+    names.append(result.get_string(1))
+  return names
+
+
+func _variables_named_by(path: String) -> Array[String]:
+  var names: Array[String] = []
+  for colour_name: String in PaletteLoader.load_named_colours(path):
+    names.append(InterfacePalette.variable_name(colour_name))
+  names.sort()
+  return names
+
+
+func test_default_palette_lists_every_settable_colour() -> void:
+  var listed: Array[String] = _variables_named_by(DEFAULT_PALETTE)
+  for variable: String in _colours_variables():
+    if variable in NOT_SETTABLE:
+      continue
+    assert_true(variable in listed, '%s is listed in ui-default.gpl' % variable)
+
+
+func test_every_interface_palette_sets_the_same_colours_as_the_default() -> void:
+  # A palette may leave a colour out and keep its default, but a shipped one should not: a mechanic
+  # or status added later would show its default colour inside someone else's scheme.
+  var expected: Array[String] = _variables_named_by(DEFAULT_PALETTE)
+  for file_name: String in DirAccess.get_files_at(PALETTE_DIR):
+    if file_name.get_extension() != 'gpl' or file_name == DEFAULT_PALETTE.get_file():
+      continue
+    assert_eq(_variables_named_by(PALETTE_DIR.path_join(file_name)), expected,
+      '%s names the same colours as ui-default.gpl' % file_name)
+
+
 func test_theme_is_unchanged_when_the_palette_sets_no_panel_or_text_colours() -> void:
   var pixel: Color = _panel_centre_pixel()
   var button_text: Color = _theme().get_color('font_color', 'Button')
@@ -104,7 +144,7 @@ func test_panel_and_text_colours_recolour_the_theme_until_reset() -> void:
 
 
 func test_definitions_already_built_take_the_palette_until_reset() -> void:
-  var weapon: ItemDef = ItemCatalog.get_def(ItemCatalog.WEAPON)
+  var weapon: ItemDef = ItemCatalog.get_def(ItemCatalog.FLESH_CLEAVER)
   var potion: ConsumableDef = ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)
   var relic: RelicDef = RelicCatalog.get_def(RelicCatalog.STONE_WARD)
   # The weapon / potion effects are mechanics, so their colour is the mechanic's (Colours.ATTACK /
@@ -115,7 +155,7 @@ func test_definitions_already_built_take_the_palette_until_reset() -> void:
     '40 50 60 heal',
     '70 80 90 relic stone ward',
   ]))
-  assert_eq(ItemCatalog.get_def(ItemCatalog.WEAPON), weapon, 'the cached definition is kept')
+  assert_eq(ItemCatalog.get_def(ItemCatalog.FLESH_CLEAVER), weapon, 'the cached definition is kept')
   assert_eq(MechanicRegistry.get_mechanic(weapon.effects[0].mechanic).color(), Color8(10, 20, 30))
   assert_eq(weapon.panel_color, Color8(10, 20, 30))
   assert_eq(MechanicRegistry.get_mechanic(potion.effects[0].mechanic).color(), Color8(40, 50, 60))

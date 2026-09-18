@@ -18,7 +18,7 @@ const DEFAULTS: Dictionary = {
 ## Canvas layers up to this one glow; the debug panels' layer is above it.
 const MAX_GLOW_LAYER: int = 126
 
-## Glow properties changed from `DEFAULTS` (property -> value), from the interface look panel and files.
+## Glow properties changed from `DEFAULTS` (property -> value), from the Interface tab and presets.
 var settings: Dictionary = {}
 
 var _environment: Environment = Environment.new()

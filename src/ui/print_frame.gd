@@ -1,6 +1,6 @@
 class_name PrintFrame
 extends Control
-## The printed frame around the combat corridor (docs/systems/print_frame.md), set from the F5 print
+## The printed frame around the combat corridor (docs/systems/print_frame.md), set from the F3 print
 ## panel. It sizes the border behind the corridor and the overlay on top of it, and tells the background
 ## wear where the corridor is on screen so folds can line up with it. The corridor itself is placed by
 ## the screen sections (`ScreenSections`). The border and the overlay are hidden while their effects are
@@ -44,8 +44,8 @@ func _place_border() -> void:
   _border.position = corridor.position - Vector2(grow, grow)
   _border.size = corridor.size + Vector2(grow, grow) * 2.0
   border_material.set_shader_parameter('rect_size', _screen_size(_border))
-  border_material.set_shader_parameter('border_colour', Colours.UI_BORDER)
-  border_material.set_shader_parameter('border_wear_colour', Colours.UI_BACKGROUND_WEAR)
+  border_material.set_shader_parameter('border_colour', Colours.UI_BACKGROUND_WEAR)
+  border_material.set_shader_parameter('border_wear_colour', Colours.UI_BACKGROUND_WEAR_LIGHT)
 
 
 # The overlay takes the background wear's settings so its marks match the background's.

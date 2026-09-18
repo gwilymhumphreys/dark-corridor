@@ -1,9 +1,10 @@
 extends GutTest
 ## The [ and ] palette hotkeys step through the world palette list, skipping folder headings and
-## wrapping through "Off"; ; and ' do the same for the interface palette list. Palette combos save and
-## load the palette choices (docs/systems/debug_panel.md).
+## wrapping through "Off"; ; and ' do the same for the interface palette list. The corridor and
+## interface parts of a preset hold their palette choices and the font, and the function keys open the
+## panel's tabs
+## (docs/systems/debug_panel.md).
 
-const COMBO_DIR: String = 'user://test_palette_combos'
 const INTERFACE_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
 
 
@@ -16,7 +17,7 @@ func after_each() -> void:
 
 
 func _option() -> OptionButton:
-  return DebugPanels.get_node('PanelLayer/Panel/Rows/WorldPaletteRow/Option') as OptionButton
+  return DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option') as OptionButton
 
 
 func _clamp_on() -> bool:
@@ -69,11 +70,11 @@ func test_replace_palette_path_updates_saved_looks() -> void:
   var folder: String = 'user://test_palette_refs'
   DirAccess.make_dir_recursive_absolute(folder)
   var look: String = folder.path_join('look.cfg')
-  FileAccess.open(look, FileAccess.WRITE).store_string('[palettes]
+  FileAccess.open(look, FileAccess.WRITE).store_string('[corridor_palette]
 world_palette="res://old/a.gpl"
 ')
   DebugPanelsAutoload.replace_palette_path([folder], 'res://old/a.gpl', 'res://new/a.gpl')
-  assert_eq(FileAccess.get_file_as_string(look), '[palettes]
+  assert_eq(FileAccess.get_file_as_string(look), '[corridor_palette]
 world_palette="res://new/a.gpl"
 ',
     'the look points at the moved palette')
@@ -81,9 +82,9 @@ world_palette="res://new/a.gpl"
   DirAccess.remove_absolute(folder)
 
 
-func test_saved_looks_and_combos_only_name_files_that_exist() -> void:
+func test_saved_presets_only_name_files_that_exist() -> void:
   var regex: RegEx = RegEx.create_from_string('"(res://[^"]+)"')
-  for folder: String in [DebugPanelsAutoload.LOOK_DIR, DebugPanelsAutoload.PALETTE_COMBO_DIR, DebugPanelsAutoload.PRINT_LOOK_DIR, InterfaceLookAutoload.LOOK_DIR]:
+  for folder: String in [LookPresets.PRESET_DIR, LookPresets.HISTORY_DIR]:
     if not DirAccess.dir_exists_absolute(folder):
       continue
     for file_name: String in DirAccess.get_files_at(folder):
@@ -128,41 +129,35 @@ func test_portrait_palette_keys_step_away_from_the_default() -> void:
     'back on the default')
 
 
-func test_a_saved_palette_combo_loads_the_same_choices() -> void:
-  var path: String = COMBO_DIR.path_join('combo.cfg')
+func test_the_palette_sections_restore_the_same_choices() -> void:
   DebugPanels.set_world_palette(INTERFACE_PALETTE)
   DebugPanels.set_interface_palette(INTERFACE_PALETTE)
   DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR)
   DebugPanels.set_dithering(true)
-  assert_eq(DebugPanels.save_palette_combo(path), OK, 'saved')
+  var file: ConfigFile = ConfigFile.new()
+  DebugPanels.write_corridor_palette(file)
+  DebugPanels.write_interface_palettes(file)
   DebugPanels.reset_settings()
-  assert_true(DebugPanels.load_palette_combo(path), 'loaded')
+  DebugPanels.read_corridor_palette(file)
+  DebugPanels.read_interface_palettes(file)
   assert_eq(DebugPanels.world_palette, INTERFACE_PALETTE, 'world palette restored')
   assert_eq(DebugPanels.interface_palette, INTERFACE_PALETTE, 'interface palette restored')
   assert_eq(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR,
     'portrait palette restored')
   assert_true(DebugPanels.is_dithering(), 'dithering restored')
-  DirAccess.remove_absolute(path)
-  DirAccess.remove_absolute(COMBO_DIR)
 
 
-func test_start_up_combo_is_skipped_for_tests_screenshots_and_palette_arguments() -> void:
-  assert_true(DebugPanelsAutoload.start_up_combo_allowed(PackedStringArray(['--autostart']), false), 'a normal run')
-  assert_false(DebugPanelsAutoload.start_up_combo_allowed(PackedStringArray(), true), 'headless')
-  assert_false(DebugPanelsAutoload.start_up_combo_allowed(PackedStringArray(['--shot']), false), 'screenshot')
-  assert_false(DebugPanelsAutoload.start_up_combo_allowed(PackedStringArray(['--ui-palette=x.gpl']), false),
-    'a palette argument')
-
-
-func test_panels_open_changed_fires_on_the_first_open_and_the_last_close() -> void:
+func test_a_tab_key_opens_its_tab_switches_tabs_and_closes_its_own_tab() -> void:
+  var tabs: TabContainer = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs') as TabContainer
   watch_signals(DebugPanels)
-  DebugPanels.toggle_print_panel()
+  DebugPanels.toggle_tab(LookPresets.Part.PRINT)
   assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [true])
-  DebugPanels.toggle_interface_look_panel()
-  DebugPanels.toggle_print_panel()
-  assert_signal_emit_count(DebugPanels, 'panels_open_changed', 1, 'a second panel opening or closing does not emit')
-  assert_true(DebugPanels.any_panel_open(), 'one panel is still open')
-  DebugPanels.toggle_interface_look_panel()
+  assert_eq(tabs.current_tab, LookPresets.Part.PRINT, 'opens on the print tab')
+  DebugPanels.toggle_tab(LookPresets.Part.INTERFACE)
+  assert_true(DebugPanels.is_panel_open(), 'another tab key switches tabs instead of closing')
+  assert_eq(tabs.current_tab, LookPresets.Part.INTERFACE, 'now on the interface tab')
+  assert_signal_emit_count(DebugPanels, 'panels_open_changed', 1, 'switching tabs does not emit')
+  DebugPanels.toggle_tab(LookPresets.Part.INTERFACE)
   assert_signal_emit_count(DebugPanels, 'panels_open_changed', 2)
   assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [false])
-  assert_false(DebugPanels.any_panel_open())
+  assert_false(DebugPanels.is_panel_open(), 'the key for the tab showing closes the panel')

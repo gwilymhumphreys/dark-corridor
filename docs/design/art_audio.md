@@ -31,6 +31,8 @@ Failure mode to avoid: dread-without-juice — oppressive and miserable, no payo
 
 Art sources (exploring)
 
+Where the packs live and how to find a file by name: docs/design/asset_library.md.
+
 Monsters: painted images from the monster collection in ../dark-corridor-design/monsters/, used at their original resolution and cut out of their black backgrounds. The game has a sample of nine in assets/monsters/cut_out/. Fights pick one at random; which enemy uses which image is not content yet.
 Corridor walls: one tiling stone texture for now. Candidate PSX-style modular kits are listed in docs/plans/full_res_art_palette_clamp_3d_corridor.md.
 Icons: painted icons from the 6000 Fantasy Icons pack for items, potions, statuses and keywords, copied into assets/icons/. The agent picked a first icon for each; every pick is a placeholder for the owner to swap.
@@ -52,12 +54,12 @@ Readability limits: text and item icons must stay readable. Panels, buttons, tex
 
 Looks being tried
 
-Corridor look (F2 panel): post-processing on the corridor image only. It covers grade, colour ramp, halftone, hatching, edge lines, bloom, warp, scanlines, grain, vignette, posterize, pixelate, and the world palette with dithering, plus fog and glow. Example looks are saved in assets/looks/; their names are placeholders. Dithering in motion is one of the things being judged.
-Printed record sleeve (F5 panel): the screen background is drawn like a worn printed sleeve the owner liked. Rubbed edges, creases, subtle faded areas and sparse specks are on by default. Mottling, faint flecks and scratches were tried and removed.
+Corridor look (F1 tab of the debug panel): post-processing on the corridor image only. It covers grade, colour ramp, halftone, hatching, edge lines, bloom, warp, scanlines, grain, vignette, posterize, pixelate, and the world palette with dithering, plus fog and glow. Example looks are saved as presets in assets/presets/; their names are placeholders. Dithering in motion is one of the things being judged.
+Printed record sleeve (F4 Background tab): the screen background is drawn like a worn printed sleeve the owner liked. Rubbed edges, creases, subtle faded areas and sparse specks are on by default. Mottling, faint flecks and scratches were tried and removed.
 The same print wear can be carried over the corridor, with its edge worn away, and the corridor moved in from the screen edges. The owner's saved defaults have both on. A rough border around the corridor and folds across the sheet are available but not judged yet. Two red two-ink corridor looks go with this style.
-Interface look (F3 panel): the corridor look's effects on item and potion icons, portraits and health bars only, never on text or panels. Settings can be copied to and from the corridor look.
+Interface look (F2 tab): the corridor look's effects on item and potion icons, portraits and health bars only, never on text or panels. Settings can be copied to and from the corridor look.
 Glow: any interface element can be made to glow from code, following the image's shape, when there is a use for it (for example an item that fires). Nothing uses it yet.
-Interface palettes: candidate palette files, saved together with a world palette as palette combos, so the corridor and interface are judged together.
+Interface palettes: candidate palette files, saved with the world palette and the rest of the look in a preset, so the corridor and interface are judged together.
 
 
 VFX
@@ -103,7 +105,7 @@ Full-screen scene (Topdeck Automat-style) — player character on-screen one sid
 
 
 Item arrangement (open): type-zoned grid, or a loose arc around the character. Either way fixed positions with hover-tilt on the focused item — not drifting. Both can keep colour-zoning and a stable scan path; the arc just needs more deliberate zoning to stay as readable. Pure layout swap, no mechanical cost — try both with placeholder items.
-Items zoned by type. Effect family is carried by a colour-coded value panel at the top of each item, extruding over the edge (red attack, blue block, green heal, per-effect colours for status applicators); the number on the panel is the effect value. Borders are spoken for by rarity — bronze / silver / gold for common / uncommon / rare. Items bigger than feels comfortable, so activations stay legible in a cascade.
+Items zoned by type. Effect family is carried by a colour-coded value panel at the top of each item, extruding over the edge (red attack, yellow shield, green heal, per-effect colours for status applicators); the number on the panel is the effect value. Borders are spoken for by rarity — bronze / silver / gold for common / uncommon / rare. Items bigger than feels comfortable, so activations stay legible in a cascade.
 Cooldown meters Bazaar-style (filling overlay), on enemy items too — mutual cooldowns visible on both boards is the visible-race feel.
 Player portrait separate from the scene; HP shown as the portrait getting progressively more beaten-up at low HP, with the value as text. No frame.
 Buttons: hovering does not change a button's size; hover is shown by the text colour only. Pressing squashes the button.
@@ -115,6 +117,8 @@ Soundtrack
 Dungeon synth. Slow, droning, atmospheric, loop-friendly. Sits under the game.
 Adaptive layering — thickens during combat, thins during the walk. No dramatic combat-theme cuts. Single base track per act, or one for the whole game.
 Cheap to source: existing dungeon synth scene on Bandcamp, CC-licensed work, or commission a single ~30-min looped piece from a dungeon synth artist for modest money. Much cheaper than a generalist game composer, and better-fit.
+
+In the project now: three dungeon synth packs by arnocyreus — Lordran Tapes, Outrider's Oath and Bonfires — converted to `.ogg` in `assets/music/` and shuffled by MusicManager (docs/systems/audio.md); see [asset_credits.md](asset_credits.md). They are a starting soundtrack, not a final pick — swapping or adding tracks is a matter of changing the files in that folder.
 
 Sound design
 

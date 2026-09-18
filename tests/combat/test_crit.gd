@@ -1,5 +1,5 @@
 extends GutTest
-## Crit (docs/plans/mechanics.md step 5): an item's crit chance rolls once per fire on the
+## Crit (docs/systems/mechanics.md → Crit): an item's crit chance rolls once per fire on the
 ## seeded per-fight RNG; on a crit the fire's mechanic deliveries are multiplied by
 ## Balance.CRIT_MULTIPLIER and flagged `crit`, and EventBus.Event.CRIT is published. Items
 ## with no crit chance draw nothing from the RNG (seeded runs stay bit-identical), thrown

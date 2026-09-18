@@ -12,18 +12,18 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func _make(id: String) -> Item:
-  return Item.new(ItemCatalog.get_def(id), Actor.new())
+func _make(def: ItemDef) -> Item:
+  return Item.new(def, Actor.new())
 
 
 func test_weapon_fires_damage_payload() -> void:
-  var it := _make(ItemCatalog.WEAPON)
+  var it := _make(FixtureItems.attack())
   var payloads := it.fire()
   assert_eq(payloads.size(), 1, 'one effect -> one payload')
   var p: Payload = payloads[0]
   assert_eq(p.kind, Delivery.Kind.MECHANIC)
   assert_eq(p.mechanic, AttackMechanic.ID, 'the weapon fires the attack mechanic')
-  assert_eq(p.value, Balance.WEAPON_DAMAGE)
+  assert_eq(p.value, FixtureItems.ATTACK_DAMAGE)
   assert_eq(p.shape, ItemEffect.Shape.OPPONENT_LEFTMOST)
   assert_eq(p.source, it, 'payload is sourced from the firing item')
 
@@ -32,17 +32,17 @@ func test_weak_owner_fires_reduced_damage() -> void:
   # #6 outgoing seam (the Item half): a Weak owner's DAMAGE payload is scaled DOWN at
   # fire time (locked into the payload — a % multiplier, cascade-safe).
   var owner_actor := Actor.new()
-  var it := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), owner_actor)
-  assert_almost_eq(it.fire()[0].value, Balance.WEAPON_DAMAGE, 0.0001, 'unweakened: full damage')
+  var it := Item.new(FixtureItems.attack(), owner_actor)
+  assert_almost_eq(it.fire()[0].value, FixtureItems.ATTACK_DAMAGE, 0.0001, 'unweakened: full damage')
   it.cooldown.reset()
   StatusManager.apply(owner_actor, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)
   var weak_value: float = it.fire()[0].value
-  assert_almost_eq(weak_value, Balance.WEAPON_DAMAGE * Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
+  assert_almost_eq(weak_value, FixtureItems.ATTACK_DAMAGE * Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
     'a Weak owner fires reduced damage')
 
 
 func test_sunder_applies_vulnerable_to_opponent() -> void:
-  var p: Payload = _make(ItemCatalog.SUNDER).fire()[0]
+  var p: Payload = _make(ItemCatalog.get_def(ItemCatalog.SUNDER)).fire()[0]
   assert_eq(p.kind, Delivery.Kind.APPLY_STATUS)
   assert_eq(p.status_id, 'vulnerable')
   assert_eq(p.shape, ItemEffect.Shape.OPPONENT_LEFTMOST)
@@ -51,21 +51,21 @@ func test_sunder_applies_vulnerable_to_opponent() -> void:
 
 
 func test_armor_applies_shield_to_self() -> void:
-  var p: Payload = _make(ItemCatalog.ARMOR).fire()[0]
+  var p: Payload = _make(FixtureItems.shield()).fire()[0]
   assert_eq(p.kind, Delivery.Kind.MECHANIC)
   assert_eq(p.mechanic, ShieldMechanic.ID, 'the armor fires the shield mechanic')
   assert_eq(p.shape, ItemEffect.Shape.SELF)
 
 
 func test_poison_dagger_applies_poison_to_opponent() -> void:
-  var p: Payload = _make(ItemCatalog.POISON_DAGGER).fire()[0]
+  var p: Payload = _make(FixtureItems.poison()).fire()[0]
   assert_eq(p.kind, Delivery.Kind.MECHANIC)
   assert_eq(p.mechanic, PoisonMechanic.ID, 'the dagger fires the poison mechanic')
   assert_eq(p.shape, ItemEffect.Shape.OPPONENT_LEFTMOST)
 
 
 func test_fire_resets_the_cooldown() -> void:
-  var it := _make(ItemCatalog.WEAPON)
+  var it := _make(FixtureItems.attack())
   for _i in int(it.cooldown.threshold):
     it.cooldown.step()
   assert_true(it.cooldown.crossed(), 'ready to fire')
@@ -74,15 +74,15 @@ func test_fire_resets_the_cooldown() -> void:
 
 
 func test_silenced_item_does_not_fire() -> void:
-  var it := _make(ItemCatalog.WEAPON)
+  var it := _make(FixtureItems.attack())
   StatusManager.apply(it, 'silence', 1.0)
   assert_eq(it.fire().size(), 0, 'a gate status suppresses the fire')
 
 
 func test_duplicates_tick_independently() -> void:
   var owner_actor := Actor.new()
-  var a := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), owner_actor)
-  var b := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), owner_actor)
+  var a := Item.new(FixtureItems.attack(), owner_actor)
+  var b := Item.new(FixtureItems.attack(), owner_actor)
   a.cooldown.step()
   assert_almost_eq(a.cooldown.accum, 1.0, 0.0001, 'first instance advanced')
   assert_almost_eq(b.cooldown.accum, 0.0, 0.0001, 'duplicate has its own Ticker')

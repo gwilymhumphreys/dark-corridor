@@ -157,7 +157,7 @@ func test_a_hit_enemy_flinches_back_and_settles() -> void:
 
 func test_flinch_outlasts_a_shorter_hit_light() -> void:
   # The flinch and the hit light are separate: a light duration set shorter than the flinch in the
-  # look panel must not cut the flinch short.
+  # Corridor tab must not cut the flinch short.
   var corridor: CombatCorridor = _host()
   var enemy: RefCounted = RefCounted.new()
   corridor.set_enemies([enemy])

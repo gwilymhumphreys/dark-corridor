@@ -2,13 +2,15 @@ GIMP Palette
 Name: ui-default
 Columns: 8
 # Every colour an interface palette can set, at its current value in src/data/colours.gd (rounded).
-# A template: copy it, change colours, and delete lines to keep the default. Names match Colours
-# variables (spaces for underscores). See docs/systems/interface_palette.md.
+# The template: copy it and change the colours. Names match Colours variables (spaces for
+# underscores). A palette may leave a name out and keep that default, but the files in this
+# folder all list every name, so nothing falls back to a default inside another scheme.
+# Colours.COOLDOWN_FILL is the one colour missing: it is translucent, and a .gpl carries no
+# alpha. See docs/systems/interface_palette.md.
 # Interface
  10  10  13	ui background
  51  51  51	ui background wear
 123 120 120	ui background wear light
-153  41  34	ui border
   0   0   0	ui panel shadow
  31  31  31	ui panel
  51  51  51	ui panel edge
@@ -38,10 +40,10 @@ Columns: 8
 230  51  51	attack
  77 230 102	heal
 128  51 179	arcane
- 77 153 255	shield
-102 204  51	poison
+242 209  51	shield
+ 69 133  46	poison
 242 128  26	burn
-140  26  26	bleed
+120  28  74	bleed
 153 242 153	regen
 242 242 153	crit
 153 102 179	status weak

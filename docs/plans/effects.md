@@ -69,7 +69,7 @@ Each effect type becomes one file so the set can grow without `_draw()` growing.
 ## Settings for comparing looks
 
 The debug panels are the place for this, matching how the corridor look and the palettes are
-compared. F1, F2, F3 and F5 are taken, so an effects panel takes F4. What belongs in it:
+compared. F1 to F4 are taken, so an effects panel takes F5. What belongs in it:
 
 - Where effects are drawn — 2D over the corridor, or inside the 3D corridor.
 - Which drawer each kind uses, once there is more than one per kind.
@@ -108,7 +108,7 @@ not exist. A file is needed before the impact reads as a hit. Getting one is the
 5. Add the missing landings: the miss tell, the death fade, and effects for `HEAL`,
    `APPLY_STATUS`, `SUMMON` and `CREATE_ITEM`.
 6. Add screen shake.
-7. Add the F4 panel and its start-up arguments alongside whichever of the above needs comparing.
+7. Add the F5 panel and its start-up arguments alongside whichever of the above needs comparing.
 
 Each step keeps the working standard: the full test suite green, the seeded autotest still winning
 with exit 0, and the affected docs updated in the same change.

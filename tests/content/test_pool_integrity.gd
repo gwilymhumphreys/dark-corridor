@@ -5,8 +5,6 @@ extends GutTest
 ## unknown id, which is exactly the failure this sweep surfaces at test time.
 
 const CHARACTER_IDS: Array = [
-  CharacterCatalog.DEFAULT,
-  CharacterCatalog.DUELIST,
   CharacterCatalog.SPORE_DRUID,
   CharacterCatalog.FLESHMANCER,
 ]
@@ -75,7 +73,7 @@ func test_draftable_item_effects_reference_registered_statuses() -> void:
     var character: CharacterDef = CharacterCatalog.get_def(character_id)
     for item_id in character.item_pool + character.starting_item_ids:
       item_ids[item_id] = true
-  for item_id in DraftPool.ITEMS + ColorlessPool.ITEMS:
+  for item_id in ColorlessPool.ITEMS:
     item_ids[item_id] = true
   for item_id in item_ids.keys():
     var def: ItemDef = ItemCatalog.get_def(item_id)

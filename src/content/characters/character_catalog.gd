@@ -1,14 +1,14 @@
 class_name CharacterCatalog
-## The character definitions (#23 — GDScript, keyed by String id). One placeholder default
-## ('wanderer') ports the prototype seed — its board, the Stone Ward relic, a Whetstone'd
-## weapon, a Healing Draught, and the prototype draft pool — now character-scoped (#27).
-## The owner authors the real characters (the Spore Druid, …), each with its OWN item
-## pool. Lazily built once, like the other catalogs.
+## The character definitions (#23 — GDScript, keyed by String id). Each character has its OWN
+## item pool (#27). The prototype Wanderer and Duelist were deleted once the Fleshmancer and the
+## Spore Druid could carry a run. Lazily built once, like the other catalogs.
 
-const DEFAULT := 'wanderer'
-const DUELIST := 'duelist'
 const SPORE_DRUID := 'spore_druid'
 const FLESHMANCER := 'fleshmancer'
+
+## The character a run opens on when none is chosen: the title-screen autostart, the save-resume
+## fallback, and the autotest's baseline. The Fleshmancer holds it because its pool is the deepest.
+const DEFAULT := FLESHMANCER
 
 static var _defs: Dictionary = {}
 
@@ -29,39 +29,19 @@ static func has(id: String) -> bool:
   return _defs.has(id)
 
 
-## The roster ids in display order — the character-select screen enumerates this. DEFAULT leads
-## (the first card / the autostart character + the autotest baseline — keep it). FLESHMANCER is now
-## LIVE: its pool is deep enough (10 items) for a non-degenerate 1-of-3 draft, replacing the Duelist
-## placeholder (numbers are still placeholders to /tune). SPORE_DRUID + DUELIST stay authored (in
-## _defs) but unlisted — the Spore Druid pool is still too thin to draft; the Duelist is the dormant
-## placeholder. Add an id here once its pool is deep enough to play.
+## The roster ids in display order — the character-select screen enumerates this. The Fleshmancer
+## leads: it is DEFAULT (the autostart and the autotest baseline) and has the deeper pool. Both
+## characters' numbers and names are still placeholders to /tune and rename. Add an id here once
+## its pool is deep enough to play.
 static func ids() -> Array:
   if _defs.is_empty():
     _build()
-  return [DEFAULT, FLESHMANCER]
+  return [FLESHMANCER, SPORE_DRUID]
 
 
 static func _build() -> void:
-  _defs[DEFAULT] = _wanderer()
-  _defs[DUELIST] = _duelist()
   _defs[SPORE_DRUID] = _spore_druid()
   _defs[FLESHMANCER] = _fleshmancer()
-
-
-## Placeholder default character — the prototype seed, now character-scoped. The owner
-## replaces / joins this with real characters (each its own pool, relic, starting kit).
-static func _wanderer() -> CharacterDef:
-  var d := CharacterDef.new()
-  d.id = DEFAULT
-  d.name_key = 'Wanderer'
-  d.portrait = 'res://assets/portraits/characters/archer_woman.png'   # PLACEHOLDER portrait — owner's to swap
-  d.blurb_key = 'A balanced kit — blade, plate, and a creeping poison.'
-  d.item_pool = DraftPool.ITEMS                  # this character's draftable pool (#27)
-  d.starting_item_ids = [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]
-  d.starting_relic_id = RelicCatalog.STONE_WARD
-  d.starting_potion_ids = [ConsumableCatalog.HEALING_DRAUGHT]
-  d.starting_enchants = [{ 'item_index': 0, 'enchant_id': EnchantCatalog.WHETSTONE }]
-  return d
 
 
 ## Spore Druid — the first real character (spore_druid.md). Status-identity: its kit is built
@@ -91,24 +71,6 @@ static func _spore_druid() -> CharacterDef:
   return d
 
 
-## DORMANT placeholder — the Fleshmancer replaced it on the live roster (ids()), so it no longer
-## shows in character select. Kept in _defs: it still proves the per-character start kit (a distinct
-## blade-forward loadout sharing the prototype pool) and is a run-manager test fixture (a non-default
-## character start). Delete once a second real character lands and nothing references it.
-static func _duelist() -> CharacterDef:
-  var d := CharacterDef.new()
-  d.id = DUELIST
-  d.name_key = 'Duelist'
-  d.portrait = 'res://assets/portraits/characters/assassin.png'   # PLACEHOLDER portrait — owner's to swap
-  d.blurb_key = 'Twin blades, no safety net — all pressure, no plate.'
-  d.item_pool = DraftPool.ITEMS                  # placeholder: shares the prototype pool for now
-  d.starting_item_ids = [ItemCatalog.WEAPON, ItemCatalog.WEAPON, ItemCatalog.POISON_DAGGER]
-  d.starting_relic_id = ''                        # no signature relic (a distinct, riskier start)
-  d.starting_potion_ids = []
-  d.starting_enchants = [{ 'item_index': 0, 'enchant_id': EnchantCatalog.WHETSTONE }]
-  return d
-
-
 ## Fleshmancer (PLACEHOLDER name — owner's to rename; character_ideas.md → Flesh Golem / Meat) — an
 ## item-economy character: its attacks create Chunks of Flesh on the player's OWN board, which decay
 ## after a couple of activations (the CREATE_ITEM + Decay seams, item_creation_and_decay.md). SCAFFOLD
@@ -122,7 +84,7 @@ static func _fleshmancer() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = FLESHMANCER
   d.name_key = 'Fleshmancer'           # PLACEHOLDER name — owner's to rename
-  d.portrait = 'res://assets/portraits/characters/monster_cannibal.png'   # PLACEHOLDER portrait — owner's to swap
+  d.portrait = 'res://assets/portraits/characters/leper_nb.png'
   d.blurb_key = 'Carve yourself into a churning board of flesh.'   # PLACEHOLDER hook — owner writes the real one
   d.item_pool = [
     ItemCatalog.FLESH_CARVING_KNIFE,

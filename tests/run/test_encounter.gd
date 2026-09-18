@@ -31,8 +31,8 @@ func _encounter(def_id: String, player: Actor) -> Encounter:
 
 func _default_player(hp: float) -> Actor:
   var a := Actor.new(hp)
-  for id in [ItemCatalog.WEAPON, ItemCatalog.ARMOR, ItemCatalog.POISON_DAGGER]:
-    a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  for def in [FixtureItems.attack(), FixtureItems.shield(), FixtureItems.poison()]:
+    a.board.append(Item.new(def, a))
   TestCleanup.dissolve_at_reset(a)
   return a
 
@@ -96,7 +96,7 @@ func test_fight_seeds_run_scoped_allies_onto_the_player_side() -> void:
   # on the player side (and are NOT dissolved at fight end — they're run-lifetime).
   var player := _default_player(100.0)
   var ally := Actor.new(15.0)
-  ally.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.ENEMY_CLAW), ally))
+  ally.board.append(Item.new(FixtureItems.enemy_attack(), ally))
   var enc := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.FIGHT_GRUNT), player, 0, [ally])
   _encs.append(enc)
   enc.begin()

@@ -23,10 +23,10 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func _spawn(hp: float, ids: Array) -> Actor:
+func _spawn(hp: float, defs: Array) -> Actor:
   var a := Actor.new(hp)
-  for id in ids:
-    a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  for def in defs:
+    a.board.append(Item.new(def, a))
   _actors.append(a)
   return a
 
@@ -70,8 +70,8 @@ func test_a_landing_is_scattered_a_little_and_stays_put() -> void:
 
 
 func test_each_landing_is_sounded_once() -> void:
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   var vfx: VfxDriver = _driver(cm)
@@ -88,8 +88,8 @@ func test_each_landing_is_sounded_once() -> void:
 
 
 func test_a_summon_landing_is_not_sounded() -> void:
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   var vfx: VfxDriver = _driver(cm)
@@ -102,8 +102,8 @@ func test_a_summon_landing_is_not_sounded() -> void:
 
 
 func test_a_delivery_in_flight_is_not_sounded() -> void:
-  var p := _spawn(100.0, [ItemCatalog.WEAPON])
-  var e := _spawn(40.0, [ItemCatalog.ENEMY_CLAW])
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   var vfx: VfxDriver = _driver(cm)

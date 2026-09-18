@@ -1,5 +1,5 @@
 extends GutTest
-## Shield multipliers through the damage pipeline (docs/plans/mechanics.md → Shield, step 2):
+## Shield multipliers through the damage pipeline (docs/systems/mechanics.md → Shield):
 ## `take_damage` / `resolve_incoming_damage` / `absorb` carry a mechanic id, and the shield pool
 ## spends the damage times the mechanic's multiplier. The multiplier is exercised with a test-only
 ## mechanic (a 2.0 shield multiplier) registered in the MechanicRegistry for the duration of the

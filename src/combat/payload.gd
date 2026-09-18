@@ -17,6 +17,7 @@ var flags: int = 0
 var color: Color = Color.WHITE
 var source: Item = null        # the firing Item (the VFX origin; null for a thrown consumable)
 var source_actor: Actor = null # the acting Actor — event source identity (decision #30)
+var consumable: Consumable = null   # the thrown consumable (the VFX origin for a throw; null for an item fire)
 # Opponent-fuel consume declaration (docs/systems/spore_engine.md Cap 1 — Mass): the Combat manager
 # consumes `consume_id` from the resolved target at spawn and scales the Delivery value.
 # Self-fuel is already applied into `value` at fire (Item._resolve_effect).

@@ -64,9 +64,11 @@ numbers are `ItemDef` / `Balance`, authored by the owner.
 
 **Driver:** the attack commons' rider — "on fire, create a chunk of flesh on my own board."
 
-**Presentation (flag — UI, lags the engine):** the board **grows mid-fight**, so the run-screen item
-area must handle an added slot, and a created item wants an arrival tell. See
-[`run_screen.md`](run_screen.md), [`ui_layout.md`](ui_layout.md). Not yet drawn.
+**Presentation:** the player's item grid matches the board every frame, so a created item gets a
+cell as it is created and loses it when it decays, is consumed, or the fight ends. Its cell shows a
+"Temporary" tag on the bottom edge (`CombatManager.is_created_item`). See
+[`run_screen.md`](run_screen.md). Enemy HUDs and ally slots still build their cells once, so an item
+created on their boards has no cell yet. An arrival tell is not drawn.
 
 **Open / to decide when content needs it:**
 
@@ -171,6 +173,11 @@ dies," that is a *separate* death event, not this one.)
 > no RNG.
 
 **Driver:** a "consume your chunks for a scaling effect" payoff (the Mass-payoff feel on board items).
+
+**An eaten item does not also fire.** `sim_step` collects the step's cooldown crossings before any of
+them fires, so an item can be removed after it was collected and before its turn — eaten as fuel here,
+or emptied by its decay use-status. `remove_item` dissolves it, which nulls its owner, and the fire
+loop skips a crossed item whose owner has gone.
 
 ### The synergy — the critical wiring (why Caps 3 & 4 ship together)
 

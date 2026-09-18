@@ -10,7 +10,7 @@ var kind: int = Delivery.Kind.MECHANIC
 var value: float = 0.0
 var shape: int = Shape.OPPONENT_LEFTMOST
 var travel: float = 0.0          # seconds (0 = instant; docs/systems/combat_model.md's zero case)
-var mechanic: String = ''        # for kind == MECHANIC (MechanicRegistry id; docs/plans/mechanics.md)
+var mechanic: String = ''        # for kind == MECHANIC (MechanicRegistry id; docs/systems/mechanics.md)
 var status_id: String = ''       # for kind == APPLY_STATUS (string id, #23)
 var duration: float = 0.0        # for kind == APPLY_STATUS — per-application duration (timed statuses)
 var flags: int = 0               # Delivery.Flag bits (e.g. unblockable)

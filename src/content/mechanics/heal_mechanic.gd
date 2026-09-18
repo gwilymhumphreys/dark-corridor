@@ -1,6 +1,6 @@
 class_name HealMechanic
 extends Mechanic
-## Heal — the mechanic for restoring health (docs/plans/mechanics.md). Restores health up to
+## Heal — the mechanic for restoring health (docs/systems/mechanics.md). Restores health up to
 ## maximum, then removes some poison, burn and bleed from the healed actor.
 
 const ID := 'heal'
@@ -27,7 +27,7 @@ func land(delivery: Delivery, combat: CombatManager) -> void:
       combat.combat_log.on_heal(combat._delivery_source_name(delivery),
           combat._delivery_source_side(delivery), delivery.target.display_name,
           combat._side_of(delivery.target), healed, combat.timekeeper.sim_time)
-    # A heal scrubs a fraction of the target's poison, burn and bleed (docs/plans/mechanics.md →
+    # A heal scrubs a fraction of the target's poison, burn and bleed (docs/systems/mechanics.md →
     # Heal). `delivery.value` is the FULL heal (including overheal), not the amount healed.
     var removed: float = floor(delivery.value * Balance.HEAL_CLEANSE_FRACTION)
     if removed > 0.0:

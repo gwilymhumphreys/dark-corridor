@@ -4,11 +4,12 @@ Columns: 8
 # Placeholder. Blue-grey panels and pale lavender text built around the gothic-bit palette's eight
 # colours (#0e0e12 #1a1a24 #333346 #535373 #8080a4 #a6a6bf #c1c1d2 #e6e6ec), with desaturated,
 # slightly cool effect hues. See docs/systems/interface_palette.md.
+# Shield, poison, burn, bleed, regen and crit follow the mechanic colours (docs/systems/mechanics.md),
+# fitted to this scheme; crit is a placeholder in every palette until it is chosen.
 # Interface
  14  14  18	ui background
  51  51  70	ui background wear
 128 128 164	ui background wear light
-118  52  62	ui border
   8   8  11	ui panel shadow
  26  26  36	ui panel
  51  51  70	ui panel edge
@@ -38,8 +39,12 @@ Columns: 8
 184  72  84	attack
 112 170 132	heal
 136 100 176	arcane
-100 130 190	shield
-122 160  92	poison
+202 172  84	shield
+ 92 130  76	poison
+196 116  72	burn
+134  68 104	bleed
+150 196 160	regen
+222 212 178	crit
 146 112 160	status weak
 182 120  88	status vulnerable
 196 190 140	status blind

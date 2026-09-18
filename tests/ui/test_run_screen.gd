@@ -97,8 +97,10 @@ func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
   for _i in 6:   # walk the approach into the fight
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
+  # Granted here: no authored character starts with a potion, and this test is about the throw.
+  Game.run.potions.append(Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)))
   var before: int = Game.run.potions.size()
-  assert_gt(before, 0, 'a starting Healing Draught is held')
+  assert_gt(before, 0, 'a potion is held')
   screen._on_potion_thrown(0)
   assert_eq(Game.run.potions.size(), before - 1, 'the thrown potion is consumed')
   screen.free()
@@ -277,7 +279,7 @@ func test_draft_rewards_are_inspectable_in_the_corridor() -> void:
   var screen := _mount_into_event(1)
   screen._event.queue_free()
   screen._event = null
-  screen._run._pending_offer.assign([ItemCatalog.get_def(ItemCatalog.WEAPON)])
+  screen._run._pending_offer.assign([FixtureItems.attack()])
   screen._show_draft()
   await get_tree().process_frame   # let the containers place the reward icon
   assert_eq(screen._draft.get_parent(), screen._view.corridor_area(), 'the reward panel is in the corridor area')

@@ -1,6 +1,6 @@
 class_name LookSection
 extends VBoxContainer
-## One section of the look panel (docs/systems/corridor_look.md): a header with an optional on/off
+## One section of a look tab of the debug panel (docs/systems/corridor_look.md): a header with an optional on/off
 ## switch and a title button that shows or hides the section's rows. Rows start hidden unless the
 ## section's effect is on.
 

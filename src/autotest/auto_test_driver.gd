@@ -90,7 +90,7 @@ func _family_of(def: ItemDef) -> String:
   return 'other'
 
 
-## The family a mechanic id maps to (docs/plans/mechanics.md): attack is the damage family,
+## The family a mechanic id maps to (docs/systems/mechanics.md): attack is the damage family,
 ## regen is the heal family, the rest keep their own names.
 func _mechanic_family(mechanic_id: String) -> String:
   match mechanic_id:

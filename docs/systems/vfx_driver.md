@@ -39,7 +39,8 @@ Because fire-rate and travel are decoupled (combat_model.md), many Deliveries ca
 
 ## What is built
 
-`VfxDriver` (`src/vfx/vfx_driver.gd`) draws a solid projectile in flight, a ring that snaps outward
+`VfxDriver` (`src/vfx/vfx_driver.gd`) draws a solid projectile in flight on a slight upward arc
+(`VfxDriver.arc_point`, height set by `ARC_HEIGHT` as a fraction of the distance), a ring that snaps outward
 where it lands, and a number for damage and healing, each in the delivery's colour. The number
 (`DamageNumberDrawer`) has a black outline. Its size grows with the amount on a logarithmic curve,
 from a fixed base size to a maximum, so it rises quickly for small amounts and slowly for large
@@ -72,7 +73,8 @@ A landing point is nudged from the target's centre by `EffectDrawer.scatter_offs
 `VfxDriver`; the two scripts referring to each other made Godot leak scripts at exit. The nudge comes from the delivery's own identity rather than being drawn each
 frame, so an effect stays where it landed, and the projectile flies to the same nudged point. This
 is what stops several hits on one creature stacking their rings and numbers in a single unreadable
-spot.
+spot. A projectile starts from the firing item's cell (`item_pos`), or for a thrown consumable from
+the potion slot it was thrown from (`consumable_pos`, read from `Delivery.consumable`).
 
 Each landing that draws an impact (so not `SUMMON` or `CREATE_ITEM`) plays one sound through `SfxManager.play_impact()` ([audio.md](audio.md)), the first
 frame the delivery shows as landed — the one thing here that is an event rather than a function of

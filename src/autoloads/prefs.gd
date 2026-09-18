@@ -23,10 +23,14 @@ const AUDIO_BUSES: Dictionary = {
   'effects': 'Effects',
 }
 const AUDIO_DEFAULTS: Dictionary = {
-  'master': 0.8,
-  'music': 0.7,
-  'effects': 0.9,
+  'master': 0.5,
+  'music': 0.5,
+  'effects': 0.5,
 }
+
+# Command-line flags that mean nobody is listening: the autotest harness and a --shot screenshot
+# capture. Any of these mutes the Master bus for the whole process.
+const SILENT_ARGS: Array[String] = ['--autotest', '--shot']
 
 # When true the disk write is skipped. The game leaves it false; TestCleanup sets it so tests
 # stay hermetic (in-memory + bus only, never writing user://). Like Save.disabled in spirit.
@@ -39,11 +43,26 @@ func _ready() -> void:
   load_prefs()
   apply_audio()
   apply_display()
+  if is_silent_run():
+    _set_master_muted(true)
+
+
+## Whether this process was launched by the autotest harness or a screenshot capture. Those runs
+## play no sound at all: the Master bus is muted at boot and the stored volumes are left alone, so
+## the player's own settings are untouched.
+func is_silent_run() -> bool:
+  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
+  for flag: String in SILENT_ARGS:
+    if flag in args:
+      return true
+  return false
 
 
 ## Autoloads are in the tree, so they receive APPLICATION_FOCUS_OUT / _IN: mute / unmute the
 ## Master bus when `mute_on_focus_lost` is on.
 func _notification(what: int) -> void:
+  if is_silent_run():
+    return
   if what == NOTIFICATION_APPLICATION_FOCUS_OUT and mute_on_focus_lost():
     _set_master_muted(true)
   elif what == NOTIFICATION_APPLICATION_FOCUS_IN and mute_on_focus_lost():

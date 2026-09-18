@@ -2,19 +2,20 @@ class_name PrintLookAutoload
 extends Node
 ## Owns the print look (docs/systems/print_frame.md, docs/systems/panel_wear.md): background wear,
 ## panel wear, the print border and the corridor overlay — their materials, settings, defaults and
-## save/load/reset. Registered as the `PrintLook` autoload, before `DebugPanels`, which keeps the F5
-## panel UI and the `--print-look=`, `--print-set=`, `--background-set=`, `--panel-set=` start-up
-## arguments and delegates to this autoload.
+## reset, and how they are written to and read from a look preset (docs/systems/look_presets.md).
+## Background wear is a preset part of its own, with its own tab, so it is written, read and reset
+## separately from the rest. Registered as the `PrintLook` autoload, before `DebugPanels`, which keeps
+## the Print and Background tabs and the `--print-set=`, `--background-set=`, `--panel-set=` start-up
+## arguments.
 ##
 ## Also hands out and frees the per-control canvas items `WornStyleBox` draws panel wear into, so the
-## registry survives an F5 panel rebuild and is freed in one place at exit.
+## registry survives a Print tab rebuild and is freed in one place at exit.
 
 const BACKGROUND_SHADER: Shader = preload('res://src/shaders/background_wear.gdshader')
 const PANEL_SHADER: Shader = preload('res://src/shaders/panel_wear.gdshader')
 const BORDER_SHADER: Shader = preload('res://src/shaders/print_border.gdshader')
 const OVERLAY_SHADER: Shader = preload('res://src/shaders/corridor_overlay.gdshader')
 const BACKGROUND_SETTINGS_INCLUDE: ShaderInclude = preload('res://src/shaders/background_wear_settings.gdshaderinc')
-const DEFAULT_PRINT_LOOK: String = 'res://assets/print_looks/default.cfg'
 ## Background wear uniforms set from `Colours` or the current screen by `ScreenBackground`, or from the
 ## layout by `PrintFrame`, so they are not look settings.
 const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
@@ -27,8 +28,8 @@ const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
 const PANEL_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_colour', 'panel_rect', 'panel_seed']
 ## Border and corridor overlay uniforms set by `PrintFrame`, so they are not look settings.
 const PRINT_FRAME_UNIFORMS: Array[String] = ['border_colour', 'border_wear_colour', 'rect_size', 'paper_colour']
-## Print frame settings that are not shader uniforms (setting -> default), from the print panel, look
-## files and `--print-set=`: the screen's split point, where the folds cross and the four
+## Print frame settings that are not shader uniforms (setting -> default), from the Print tab,
+## presets and `--print-set=`: the screen's split point, where the folds cross and the four
 ## screen sections meet (`ScreenSections`, docs/systems/ui_layout.md), and the padding inside each
 ## section. In pixels on the interface canvas.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
@@ -65,9 +66,8 @@ func _ready() -> void:
   border_material.shader = BORDER_SHADER
   overlay_material.shader = OVERLAY_SHADER
   _write_print_defaults()
+  _write_background_defaults()
   push_wear_colours()
-  if FileAccess.file_exists(DEFAULT_PRINT_LOOK):
-    load_print_look(DEFAULT_PRINT_LOOK)
   get_tree().node_removed.connect(_on_node_removed)
 
 
@@ -183,63 +183,73 @@ static func _uniform_defaults(code: String, skip: Array[String]) -> Dictionary:
   return defaults
 
 
-## Every background wear, panel wear, border and corridor overlay effect back to its shader default,
-## and no print frame settings.
+## Every panel wear, border and corridor overlay effect back to its shader default, and no print frame
+## settings. Background wear has its own reset.
 func reset_print_look() -> void:
   _write_print_defaults()
   print_settings.clear()
 
 
-## Save the current print look to a text file at `path`: the background wear settings, the panel wear
-## settings, the border and corridor overlay settings, and the print frame settings that were changed.
-func save_print_look(path: String) -> Error:
-  var file: ConfigFile = ConfigFile.new()
-  for uniform: String in background_defaults():
-    file.set_value('background', uniform, background_material.get_shader_parameter(uniform))
+## Every background wear effect back to its shader default.
+func reset_background_look() -> void:
+  _write_background_defaults()
+
+
+## Write the current print look into a preset file: every panel wear, border and corridor overlay
+## setting, and every print frame setting. Background wear is written by `write_background_look`.
+func write_print_look(file: ConfigFile) -> void:
   for uniform: String in panel_defaults():
-    file.set_value('panel', uniform, panel_material.get_shader_parameter(uniform))
+    file.set_value('print_panel', uniform, panel_material.get_shader_parameter(uniform))
   for uniform: String in print_defaults():
-    file.set_value('print', uniform, _print_material(uniform).get_shader_parameter(uniform))
-  for setting: String in print_settings:
-    file.set_value('layout', setting, print_settings[setting])
-  DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-  return file.save(path)
+    file.set_value('print_frame', uniform, _print_material(uniform).get_shader_parameter(uniform))
+  for setting: String in PRINT_SETTING_DEFAULTS:
+    file.set_value('print_layout', setting, print_setting(setting))
 
 
-## Load a print look saved by `save_print_look`, starting from the print defaults. Returns false if the
-## file cannot be read.
-func load_print_look(path: String) -> bool:
-  var file: ConfigFile = ConfigFile.new()
-  if file.load(path) != OK:
-    push_warning('[PrintLook] could not read print look file %s' % path)
-    return false
+## Write the current background wear into a preset file: every background wear setting.
+func write_background_look(file: ConfigFile) -> void:
+  for uniform: String in background_defaults():
+    file.set_value('print_background', uniform, background_material.get_shader_parameter(uniform))
+
+
+## Set the print look from a preset file written by `write_print_look`, starting from the print
+## defaults. Settings the file leaves out keep their defaults.
+func read_print_look(file: ConfigFile) -> void:
   reset_print_look()
-  var background: Dictionary = background_defaults()
-  for uniform: String in _section_keys(file, 'background'):
-    if background.has(uniform):
-      background_material.set_shader_parameter(uniform, file.get_value('background', uniform))
   var panel: Dictionary = panel_defaults()
-  for uniform: String in _section_keys(file, 'panel'):
+  for uniform: String in _section_keys(file, 'print_panel'):
     if panel.has(uniform):
-      panel_material.set_shader_parameter(uniform, file.get_value('panel', uniform))
-  for setting: String in _section_keys(file, 'print'):
-    set_print_value(setting, file.get_value('print', setting))
-  for setting: String in _section_keys(file, 'layout'):
-    set_print_value(setting, file.get_value('layout', setting))
-  return true
+      panel_material.set_shader_parameter(uniform, file.get_value('print_panel', uniform))
+  for setting: String in _section_keys(file, 'print_frame'):
+    set_print_value(setting, file.get_value('print_frame', setting))
+  for setting: String in _section_keys(file, 'print_layout'):
+    set_print_value(setting, file.get_value('print_layout', setting))
 
 
-# Every uniform is set explicitly, so a saved print look lists every one of them.
-func _write_print_defaults() -> void:
+## Set the background wear from a preset file written by `write_background_look`, starting from the
+## background defaults. Settings the file leaves out keep their defaults.
+func read_background_look(file: ConfigFile) -> void:
+  reset_background_look()
   var background: Dictionary = background_defaults()
-  for uniform: String in background:
-    background_material.set_shader_parameter(uniform, background[uniform])
+  for uniform: String in _section_keys(file, 'print_background'):
+    if background.has(uniform):
+      background_material.set_shader_parameter(uniform, file.get_value('print_background', uniform))
+
+
+# Every uniform is set explicitly, so a saved preset lists every one of them.
+func _write_print_defaults() -> void:
   var panel: Dictionary = panel_defaults()
   for uniform: String in panel:
     panel_material.set_shader_parameter(uniform, panel[uniform])
   var frame: Dictionary = print_defaults()
   for uniform: String in frame:
     _print_material(uniform).set_shader_parameter(uniform, frame[uniform])
+
+
+func _write_background_defaults() -> void:
+  var background: Dictionary = background_defaults()
+  for uniform: String in background:
+    background_material.set_shader_parameter(uniform, background[uniform])
 
 
 func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:

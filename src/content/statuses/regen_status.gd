@@ -1,6 +1,6 @@
 class_name RegenStatus
 extends StatusEffect
-## Regen — the regenerating status (docs/plans/mechanics.md). Every interval, heals the holder
+## Regen — the regenerating status (docs/systems/mechanics.md). Every interval, heals the holder
 ## for its stack count; never loses a stack, so it lasts the whole fight (on_step always returns
 ## false). Not Mass fuel (the base is_fuel). Stacks additively on reapply (base default).
 
@@ -9,7 +9,7 @@ const ID := 'regen'
 
 func _init() -> void:
   id = ID
-  # Presentation is written once, in the mechanic (docs/plans/mechanics.md) — copy it here so the
+  # Presentation is written once, in the mechanic (docs/systems/mechanics.md) — copy it here so the
   # combat log, status icons and combat summary keep reading the status's own fields.
   var mechanic: Mechanic = MechanicRegistry.get_mechanic(ID)
   name_key = mechanic.name_key

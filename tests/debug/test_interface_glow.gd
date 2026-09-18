@@ -1,8 +1,8 @@
 extends GutTest
 ## `InterfaceGlow`: nodes glow through `self_modulate` above white, the screen glow is only on while
-## something glows, and glow settings are saved with an interface look (docs/systems/interface_glow.md).
+## something glows, and glow settings are saved with the interface look part of a preset
+## (docs/systems/interface_glow.md).
 
-const LOOK_PATH: String = 'user://test_looks/interface_glow.cfg'
 
 var _item: ColorRect = null
 
@@ -16,8 +16,6 @@ func before_each() -> void:
 func after_each() -> void:
   _item.free()
   _item = null
-  DirAccess.remove_absolute(LOOK_PATH)
-  DirAccess.remove_absolute(LOOK_PATH.get_base_dir())
   TestCleanup.reset_all_managers()
 
 
@@ -60,10 +58,11 @@ func test_an_item_freed_mid_flash_turns_the_glow_off() -> void:
   assert_false(InterfaceGlow.is_enabled(), 'the glow does not stay on for a freed item')
 
 
-func test_glow_settings_are_saved_with_the_interface_look() -> void:
+func test_glow_settings_are_saved_with_the_interface_look_part() -> void:
   InterfaceGlow.settings['glow_intensity'] = 4.0
-  assert_eq(InterfaceLook.save_look(LOOK_PATH), OK, 'saved')
+  var file: ConfigFile = ConfigFile.new()
+  InterfaceLook.write_look(file)
   InterfaceLook.reset()
   assert_almost_eq(InterfaceGlow.setting('glow_intensity'), 1.0, 0.001, 'reset restores the default')
-  assert_true(InterfaceLook.load_look(LOOK_PATH), 'loaded')
+  InterfaceLook.read_look(file)
   assert_almost_eq(InterfaceGlow.setting('glow_intensity'), 4.0, 0.001, 'the glow setting is restored')

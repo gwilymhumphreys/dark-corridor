@@ -43,7 +43,7 @@ func test_own_side_filter_matches_own_side_only() -> void:
   var player_actor := Actor.new(10.0)
   var enemy_actor := Actor.new(10.0)
   var bus := _bus_with_sides(player_actor)
-  var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
+  var item := Item.new(FixtureItems.attack(), player_actor)
   bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 0.2, null, EventBus.SourceFilter.OWN_SIDE, item)
   bus.publish(EventBus.Event.APPLIED, 'poison', enemy_actor, null)
   assert_eq(item.cooldown.accum, 0.0, "an opponent's event does not push an OWN_SIDE sub")
@@ -55,7 +55,7 @@ func test_opponent_side_filter_is_the_inverse() -> void:
   var player_actor := Actor.new(10.0)
   var enemy_actor := Actor.new(10.0)
   var bus := _bus_with_sides(player_actor)
-  var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
+  var item := Item.new(FixtureItems.attack(), player_actor)
   bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 0.2, null, EventBus.SourceFilter.OPPONENT_SIDE, item)
   bus.publish(EventBus.Event.APPLIED, 'poison', player_actor, null)
   assert_eq(item.cooldown.accum, 0.0, 'an own-side event does not push an OPPONENT_SIDE sub')
@@ -68,7 +68,7 @@ func test_null_source_fails_side_filters_but_passes_any() -> void:
   # event (no source actor) only reaches ANY subscriptions.
   var player_actor := Actor.new(10.0)
   var bus := _bus_with_sides(player_actor)
-  var own_side := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
+  var own_side := Item.new(FixtureItems.attack(), player_actor)
   var any_ticker := Ticker.new(10)
   bus.subscribe(EventBus.Event.APPLIED, own_side.cooldown, 0.2, null, EventBus.SourceFilter.OWN_SIDE, own_side)
   bus.subscribe(EventBus.Event.APPLIED, any_ticker, 1.0)
@@ -80,7 +80,7 @@ func test_null_source_fails_side_filters_but_passes_any() -> void:
 func test_data_and_side_filters_compose() -> void:
   var player_actor := Actor.new(10.0)
   var bus := _bus_with_sides(player_actor)
-  var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
+  var item := Item.new(FixtureItems.attack(), player_actor)
   bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 0.2, 'poison', EventBus.SourceFilter.OWN_SIDE, item)
   bus.publish(EventBus.Event.APPLIED, 'shield', player_actor, null)
   assert_eq(item.cooldown.accum, 0.0, 'right side, wrong data — no push')
@@ -91,7 +91,7 @@ func test_data_and_side_filters_compose() -> void:
 func test_unsubscribe_removes_all_of_an_items_subscriptions() -> void:
   var holder := Actor.new(10.0)
   var bus := EventBus.new()
-  var leaving := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), holder)
+  var leaving := Item.new(FixtureItems.attack(), holder)
   var staying := Ticker.new(10)
   bus.subscribe(EventBus.Event.APPLIED, leaving.cooldown, 1.0, null, EventBus.SourceFilter.ANY, leaving)
   bus.subscribe(EventBus.Event.ITEM_FIRED, leaving.cooldown, 1.0, null, EventBus.SourceFilter.ANY, leaving)
@@ -105,7 +105,7 @@ func test_unsubscribe_removes_all_of_an_items_subscriptions() -> void:
 
 func test_listener_observes_data_and_source_identity() -> void:
   var player_actor := Actor.new(10.0)
-  var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), player_actor)
+  var item := Item.new(FixtureItems.attack(), player_actor)
   var bus := EventBus.new()
   var seen: Array = []
   bus.add_listener(EventBus.Event.ITEM_FIRED,
@@ -123,7 +123,7 @@ func test_push_to_gated_subscriber_is_dropped() -> void:
   # so nothing banks toward a burst while silenced.
   var bus := EventBus.new()
   var holder := Actor.new(10.0)
-  var item := Item.new(ItemCatalog.get_def(ItemCatalog.WEAPON), holder)
+  var item := Item.new(FixtureItems.attack(), holder)
   bus.subscribe(EventBus.Event.APPLIED, item.cooldown, 1.0, null, EventBus.SourceFilter.ANY, item)
   var silence: StatusEffect = StatusManager.apply(item, 'silence', 1.0)
   bus.publish(EventBus.Event.APPLIED)

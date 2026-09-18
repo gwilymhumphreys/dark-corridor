@@ -33,6 +33,7 @@ var show_cooldown: bool = true:
 @onready var _pills: HBoxContainer = $Pills
 @onready var _icon: TextureRect = $Frame/Icon
 @onready var _cooldown: ColorRect = $Cooldown
+@onready var _temporary_tag: Control = $TemporaryTag
 
 var _timekeeper: Timekeeper = null     # the fight's clock; null = no recoil (sandbox/tests)
 var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurious recoil on bind
@@ -73,9 +74,11 @@ func _exit_tree() -> void:
 
 ## Bind to an item. Call after the cell is in the tree (so the node refs exist).
 ## `timekeeper` is the fight's clock for the recoil; null (default) disables it.
-func setup(target_item: Item, timekeeper: Timekeeper = null) -> void:
+## `temporary` shows the tag for an item created during the fight, which leaves when the fight ends.
+func setup(target_item: Item, timekeeper: Timekeeper = null, temporary: bool = false) -> void:
   item = target_item
   _timekeeper = timekeeper
+  _temporary_tag.visible = temporary
   _icon.texture = load(item.def.icon) as Texture2D if item != null and item.def.icon != '' else null
   _build_pills()
   _update_cooldown()

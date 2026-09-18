@@ -2,8 +2,8 @@ class_name CombatViewFramed
 extends CombatView
 ## The framed combat view (docs/systems/ui_layout.md) — the corridor-forward layout, placed in the
 ## screen sections: the corridor top left with each **enemy floating over it** (`enemy_hud`: name +
-## status + HP + item cells), the potions and the player's board top right, and the **player's portrait
-## + HP** lower left with run-scoped allies / combat-scoped summon tokens in the **slots flanking the
+## status + HP + item cells), the potions and the player's board top right, and the **player's
+## portrait + name + HP** lower left with run-scoped allies / combat-scoped summon tokens in the **slots flanking the
 ## player** (`ally_slot`). It reads the CombatManager's rosters each frame, so mid-fight summons (a boss
 ## add, a player token) appear as they spawn. Hosts the VFX wall; reads logic, writes nothing.
 ## The corridor stays as the mood backdrop + the lead occupant for the approach. No alpha.
@@ -19,6 +19,7 @@ const SCREEN_SECTIONS: PackedScene = preload('res://src/ui/screen_sections.tscn'
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
 const PORTRAIT_MIN_SIZE: float = 40.0   # the player portrait shrinks to fit its section, down to this
+const ENEMY_FADE_IN: float = 0.25       # seconds an enemy HUD takes to fade up when the fight starts
 # A big hit pauses the fight and shakes this view, both growing with VfxDriver.big_hit_strength.
 const HIT_PAUSE_MIN: float = 0.05     # real seconds
 const HIT_PAUSE_MAX: float = 0.15
@@ -37,14 +38,11 @@ var _player: Actor
 @onready var _player_items: GridContainer = $Items/PlayerItems
 @onready var _potions: HBoxContainer = $Items/Potions
 @onready var _portraits_part: HBoxContainer = $Portraits
-@onready var _player_portrait_box: VBoxContainer = $Portraits/PlayerPortrait
 @onready var _portrait: Control = $Portraits/PlayerPortrait/Portrait
 @onready var _portrait_image: TextureRect = $Portraits/PlayerPortrait/Portrait/Image
-@onready var _player_hp: Control = $Portraits/PlayerPortrait/HP
-@onready var _player_hp_fill: ColorRect = $Portraits/PlayerPortrait/HP/Fill
-@onready var _player_hp_label: Label = $Portraits/PlayerPortrait/HP/Label
-@onready var _player_status_numbers: StatusNumbers = $Portraits/PlayerPortrait/HP/StatusNumbers
-@onready var _player_name: Label = $Portraits/PlayerPortrait/Name
+@onready var _player_hp_fill: ColorRect = $Portraits/PlayerPortrait/Readout/HP/Fill
+@onready var _player_hp_label: Label = $Portraits/PlayerPortrait/Readout/HP/Label
+@onready var _player_status_numbers: StatusNumbers = $Portraits/PlayerPortrait/Readout/HP/StatusNumbers
 @onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
 @onready var _ally_right: HBoxContainer = $Portraits/AllyRight
 @onready var _corridor_area: Control = $CorridorArea
@@ -53,9 +51,12 @@ var _player: Actor
 var _enemy_huds: Dictionary = {}    # Actor -> EnemyHud
 var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
+var _throw_origins: Dictionary = {}  # Consumable -> the global centre of the slot it was thrown from
+var _cooldowns_shown: bool = true  # whether board cells show their cooldown fill (off outside a fight)
 var _cluster: TooltipCluster = null   # the floating item tooltip (its own CanvasLayer, layer 50)
 var _shake_tween: Tween
 var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the fight's seeded one
+var _enemies_shown: bool = false   # false through the approach: the enemy HUDs stay hidden
 
 
 func _ready() -> void:
@@ -92,12 +93,10 @@ func _fit_item_columns(width: float) -> void:
   _player_items.columns = maxi(1, int((width + gap) / (ItemCell.CELL_SIZE.x + gap)))
 
 
-## The player portrait stays square and takes the height left after the HP bar and name. Each ally slot
-## fits itself the same way.
+## The player portrait stays square and takes the section's full height, sitting to the left of the
+## name and HP bar. Each ally slot fits itself the same way.
 func _fit_portraits(height: float) -> void:
-  var gap: float = _player_portrait_box.get_theme_constant('separation')
-  var side: float = floorf(height - _player_hp.custom_minimum_size.y - _player_name.get_combined_minimum_size().y - gap * 2.0)
-  side = maxf(side, PORTRAIT_MIN_SIZE)
+  var side: float = maxf(floorf(height), PORTRAIT_MIN_SIZE)
   _portrait.custom_minimum_size = Vector2(side, side)
   for slot in _ally_slots.values():
     (slot as AllySlot).fit_height(height)
@@ -109,7 +108,9 @@ func _fit_portraits(height: float) -> void:
 func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _cm = cm
   _player = player
+  _enemies_shown = false   # the HUDs stay hidden until show_enemies (the fight starting)
   _player_status_numbers.actor = player
+  _cooldowns_shown = cm != null
   if player.portrait != '':
     _portrait_image.texture = load(player.portrait)
   _build_player_items(player)
@@ -127,6 +128,7 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
 
 func _process(_delta: float) -> void:
   _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
+  _sync_player_items()    # pick up items created or removed during the fight
   _position_enemy_huds()  # keep each HUD pinned above its enemy's corridor sprite
   _refresh_player_hp()
   if _cm != null and _vfx.combat != null and _cm.timekeeper != null:
@@ -142,15 +144,35 @@ func _refresh_player_hp() -> void:
   _player_hp_label.text = '%d / %d' % [int(round(_player.hp)), int(round(_player.max_hp))]
 
 
-## The player's board is fixed during a fight (drafts happen between beats), so build the
-## right-edge item column once at bind. Cells get the fight's clock so their fire recoil
+## Build the right-edge item column at bind. Cells get the fight's clock so their fire recoil
 ## rides render_time (slow-mo slows it; pause freezes it).
 func _build_player_items(player: Actor) -> void:
   for item in player.board:
-    var cell: ItemCell = ITEM_CELL.instantiate()
-    _player_items.add_child(cell)
-    cell.setup(item, _cm.timekeeper if _cm != null else null)
-    _player_cells[item] = cell
+    _add_player_cell(item)
+
+
+## Match the item column to the player's board each frame: items created during the fight gain a
+## cell, and items removed (decayed, consumed, or stripped when the fight ends) lose theirs.
+func _sync_player_items() -> void:
+  if _player == null:
+    return
+  for item: Item in _player_cells.keys():
+    if not item in _player.board:
+      var cell: ItemCell = _player_cells[item]
+      _player_cells.erase(item)
+      _player_items.remove_child(cell)
+      cell.queue_free()
+  for item: Item in _player.board:
+    if not _player_cells.has(item):
+      _add_player_cell(item)
+
+
+func _add_player_cell(item: Item) -> void:
+  var cell: ItemCell = ITEM_CELL.instantiate()
+  _player_items.add_child(cell)
+  cell.setup(item, _cm.timekeeper if _cm != null else null, _cm != null and _cm.is_created_item(item))
+  cell.show_cooldown = _cooldowns_shown
+  _player_cells[item] = cell
 
 
 ## Ensure every roster actor has its widget — enemies as HUDs over the corridor, player-side
@@ -173,6 +195,9 @@ func _sync_rosters() -> void:
       # Budget each HUD a per-enemy share of the corridor panel so a multi-enemy row
       # shrinks its item cells instead of overlapping neighbours / clipping off-panel.
       hud.setup(e, _cm.timekeeper, _corridor.size.x * HUD_WIDTH_MARGIN / maxf(enemies.size(), 1.0))
+      hud.visible = false   # up only once the fight starts; a mid-fight summon fades in as it spawns
+      if _enemies_shown:
+        hud.fade_in(ENEMY_FADE_IN)
       _enemy_huds[e] = hud
   for a in player_side:
     if a != _player and not _ally_slots.has(a):   # the player keeps its centre-bottom portrait
@@ -200,6 +225,16 @@ func _drop_missing(widgets: Dictionary, present: Array) -> void:
     if actor not in present:
       (widgets[actor] as Node).queue_free()
       widgets.erase(actor)
+
+
+## Bring the enemy HUDs up when the fight starts — they stay hidden through the approach so the
+## readouts appear with the boards rather than riding in with the walk.
+func show_enemies() -> void:
+  if _enemies_shown:
+    return
+  _enemies_shown = true
+  for hud in _enemy_huds.values():
+    (hud as EnemyHud).fade_in(ENEMY_FADE_IN)
 
 
 ## Pin each enemy HUD's bottom-centre just above its corridor sprite (enemy_anchor), so the HUD
@@ -233,7 +268,10 @@ func _build_potions(potions: Array) -> void:
     slot.pressed.connect(_on_potion_pressed.bind(i))
 
 
+## Remember the slot's centre before the throw removes the slot, so the potion's effects start there.
 func _on_potion_pressed(index: int) -> void:
+  var slot: PotionSlot = _potions.get_child(index)
+  _throw_origins[slot.consumable] = slot.get_global_rect().get_center()
   potion_thrown.emit(index)
 
 
@@ -262,6 +300,7 @@ func release() -> void:
   _vfx.combat = null
   _corridor.show_hits([], 0.0)
   _set_cooldowns_shown(false)   # the fight is over, so clear the fills left at its last moment
+  _throw_origins.clear()
   # Drop the hovered Item ref BEFORE the run frees the CombatManager + its items (the Actor↔Item
   # cycle is broken at dissolve() — the cluster must not retain an Item across teardown).
   if _cluster != null:
@@ -269,6 +308,7 @@ func release() -> void:
 
 
 func _set_cooldowns_shown(shown: bool) -> void:
+  _cooldowns_shown = shown
   for cell in _player_cells.values():
     (cell as ItemCell).show_cooldown = shown
   for slot in _ally_slots.values():
@@ -290,6 +330,7 @@ func _exit_tree() -> void:
   _enemy_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()
+  _throw_origins.clear()
   _cluster = null
 
 
@@ -345,6 +386,12 @@ func stop_inspection() -> void:
 
 
 # --- layout lookups the VFX wall reads (global / screen space) ---------------
+
+func consumable_pos(consumable: Consumable) -> Vector2:
+  if _throw_origins.has(consumable):
+    return _throw_origins[consumable]
+  return actor_pos(_player)
+
 
 func item_pos(item: Item) -> Vector2:
   # A source-less Delivery (a thrown consumable: Delivery.source is null) flies from the player

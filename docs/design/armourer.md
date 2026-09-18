@@ -17,10 +17,9 @@ teaches it. **This is a `legibility-load` choice, not a `weirdness` choice** —
 budgets (see [`character_ideas.md` → Complexity vs. distinctness](character_ideas.md)): the Armourer
 is mechanically light but its fiction can stay distinct.
 
-**Successor to the Wanderer placeholder.** "The starter" most likely means it **replaces `wanderer`**
-as the roster-leading / autostart / autotest-baseline character (the Wanderer's def exists to be
-replaced by a real character). Confirm the role when it's built. Once the Armourer + a second real
-character are solid, both the `wanderer` and `duelist` placeholders can go.
+**The roster-leading character.** "The starter" most likely means it takes the roster-leading /
+autostart / autotest-baseline role, which the Fleshmancer holds now (`CharacterCatalog.DEFAULT`).
+Confirm the role when it's built. The `wanderer` and `duelist` placeholders have been deleted.
 
 **Name:** *Armourer* is the owner's **working concept label** (like *Fleshmancer* was) — a Vermis-
 register display name (oblique, mournful, does not telegraph the mechanic) comes later. Internal
@@ -132,8 +131,8 @@ consume); this is the first type-scoped one-shot synergy, so build the seam clea
   while *keeping* it). The cure: tie payoffs to **spend / absorbed-damage flow**, not the stockpile.
   Consume-to-hit avoids it for free. (The parked *Spiked Shield* entry worked this out in full.)
 - **Which are archetypes 2 and 3?** Weapon-synergy and strength/scaling are candidates, not decided.
-- **Does it become the new default character?** (Replacing `wanderer` as autostart + autotest
-  baseline.) Likely yes — confirm on build.
+- **Does it become the new default character?** (Taking `CharacterCatalog.DEFAULT` from the
+  Fleshmancer: autostart + autotest baseline.) Likely yes — confirm on build.
 - **Relationship to the parked shield character.** *Spiked Shield / Retributive Shield* is the
   **spicier** use of shield (thorns / charge off absorbed damage — needs an unbuilt on-absorb seam).
   Only one shield character likely ships; the Armourer (stack/spend) is the one being pursued. That

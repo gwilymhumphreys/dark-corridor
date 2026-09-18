@@ -83,7 +83,7 @@ func on_owner_item_fired(actor, item, ctx) -> bool:
 
 
 ## Called on an ACTOR-targeted status when an ATTACK delivery lands on that actor (after its damage
-## resolves — docs/plans/mechanics.md → Bleed). Poison/burn ticks, the status's own damage and
+## resolves — docs/systems/mechanics.md → Bleed). Poison/burn ticks, the status's own damage and
 ## outside-set damage never call it, so a status cannot repeat within a step. Returns true when the
 ## status has expired (the Combat manager removes it + runs on_expire); default no-op.
 func on_holder_attacked(target, ctx) -> bool:
@@ -107,7 +107,7 @@ func modify_incoming(amount: float, target, ctx) -> float:
 
 ## Absorb from an incoming hit, returning the unabsorbed remainder (Shield overrides; mutates pool).
 ## `mechanic_id` names the mechanic that dealt the damage — the shield pool spends its multiplier
-## against it (docs/plans/mechanics.md → Shield).
+## against it (docs/systems/mechanics.md → Shield).
 func absorb(amount: float, incoming_flags: int, target, ctx, mechanic_id: String = '') -> float:
   return amount
 

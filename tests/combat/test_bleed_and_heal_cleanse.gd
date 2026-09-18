@@ -1,5 +1,5 @@
 extends GutTest
-## Step 4 of docs/plans/mechanics.md — bleed as a mechanic with its new trigger (an attack
+## Step 4 of docs/systems/mechanics.md — bleed as a mechanic with its new trigger (an attack
 ## landing on the holder, via on_holder_attacked) and heal removing poison / burn / bleed
 ## stacks (StatusManager.reduce). Each bullet of the plan's Bleed list, plus the heal-cleanse
 ## cases. Uses a running CombatManager, like test_combat_manager.gd.
@@ -33,10 +33,10 @@ func _manager(p: Actor, enemy_list: Array) -> CombatManager:
   return cm
 
 
-func _spawn(max_hp: float, item_ids: Array) -> Actor:
+func _spawn(max_hp: float, item_defs: Array) -> Actor:
   var a := Actor.new(max_hp)
-  for id in item_ids:
-    a.board.append(Item.new(ItemCatalog.get_def(id), a))
+  for def in item_defs:
+    a.board.append(Item.new(def, a))
   TestCleanup.dissolve_at_reset(a)
   return a
 
@@ -117,7 +117,7 @@ func test_attack_triggers_bleed_even_when_shield_absorbs_the_whole_attack() -> v
 
 func test_poison_tick_and_own_item_fire_do_not_trigger_bleed() -> void:
   var p := Actor.new(1000.0)
-  var e := _spawn(1000.0, [ItemCatalog.ENEMY_CLAW])
+  var e := _spawn(1000.0, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
   StatusManager.apply(e, 'bleed', 3.0)

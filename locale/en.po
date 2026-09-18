@@ -8,32 +8,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/content/characters/character_catalog.gd
-msgid "Wanderer"
-msgstr "Wanderer"
-
-#: src/content/characters/character_catalog.gd
 msgid "Spore Druid"
 msgstr "Spore Druid"
-
-#: src/content/characters/character_catalog.gd
-msgid "Duelist"
-msgstr "Duelist"
 
 #: src/content/characters/character_catalog.gd
 msgid "Fleshmancer"
 msgstr "Fleshmancer"
 
 #: src/content/characters/character_catalog.gd
-msgid "A balanced kit — blade, plate, and a creeping poison."
-msgstr "A balanced kit — blade, plate, and a creeping poison."
-
-#: src/content/characters/character_catalog.gd
 msgid "Stack Spores, then spend them."
 msgstr "Stack Spores, then spend them."
-
-#: src/content/characters/character_catalog.gd
-msgid "Twin blades, no safety net — all pressure, no plate."
-msgstr "Twin blades, no safety net — all pressure, no plate."
 
 #: src/content/characters/character_catalog.gd
 msgid "Carve yourself into a churning board of flesh."
@@ -120,14 +104,6 @@ msgid "Spore Thrall"
 msgstr "Spore Thrall"
 
 #: src/content/items/item_catalog.gd
-msgid "Rusted Blade"
-msgstr "Rusted Blade"
-
-#: src/content/items/item_catalog.gd
-msgid "Iron Guard"
-msgstr "Iron Guard"
-
-#: src/content/items/item_catalog.gd
 msgid "Venom Fang"
 msgstr "Venom Fang"
 
@@ -166,18 +142,6 @@ msgstr "Bloomhammer"
 #: src/content/items/item_catalog.gd
 msgid "Wilt Frond"
 msgstr "Wilt Frond"
-
-#: src/content/items/item_catalog.gd
-msgid "Leather Gloves"
-msgstr "Leather Gloves"
-
-#: src/content/items/item_catalog.gd
-msgid "Leather Trews"
-msgstr "Leather Trews"
-
-#: src/content/items/item_catalog.gd
-msgid "Leather Breastplate"
-msgstr "Leather Breastplate"
 
 #: src/content/items/item_catalog.gd
 msgid "Chunk of Flesh"
@@ -470,6 +434,10 @@ msgstr "Items"
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "You"
 msgstr "You"
+
+#: src/scenes/combat/item_cell.tscn
+msgid "Temporary"
+msgstr "Temporary"
 
 #: src/scenes/combat/value_pill.tscn
 msgid "0"

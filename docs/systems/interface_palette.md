@@ -14,8 +14,16 @@ A GIMP `.gpl` file whose colour names match `Colours` variables, written in lowe
 give a warning, and any variable the file leaves out keeps its default.
 
 `assets/palettes/new/ui/ui-default.gpl` lists every name at its default colour; copy it to start a new
-palette. A test checks that every name in it matches a variable. The other files in that folder are
-placeholder candidates.
+palette. The other files in that folder are placeholder candidates.
+
+A `.gpl` carries no alpha — the loader forces it to 1 — so a `Colours` variable that is translucent
+cannot be set from a palette. `COOLDOWN_FILL` is the only one, and it is left out of the files.
+
+Every palette in that folder lists every settable name, even though leaving one out is legal. A
+palette that skips a name shows that colour's default inside its own scheme, which stands out badly
+once a mechanic or status is added later. Three tests hold this: each name in `ui-default.gpl`
+matches a variable, `ui-default.gpl` names every settable variable, and every other palette in the
+folder names the same set as `ui-default.gpl`.
 
 ## What it changes
 
@@ -44,8 +52,8 @@ coherent with the interface and stand out against the desaturated corridor.
 Interface images share `InterfaceLook.material` ([interface_look.md](interface_look.md)), whose shader
 includes the [palette clamp](palette_clamp.md). `DebugPanels.set_portrait_palette` writes the portrait
 palette's distinct colours into that material, so each pixel of those images becomes the nearest palette
-colour. The portrait palette is its own F1 panel choice: off, the world palette, the interface palette,
-or any palette file (default: the interface palette). The clamp follows the F1 panel's colour matching
+colour. The portrait palette is its own Interface tab choice: off, the world palette, the interface palette,
+or any palette file (default: the interface palette). The clamp follows the Corridor tab's colour matching
 (RGB or OKLab) and does not dither. With no colours the colour count is 0 and images are unchanged.
 
 Enemy images in the corridor are part of the corridor and use the [world clamp](palette_clamp.md#world-clamp).
@@ -75,7 +83,7 @@ Enemy images in the corridor are part of the corridor and use the [world clamp](
 | `InterfacePalette.is_interface_palette(path) -> bool` | A `.gpl` file with at least one colour named after a `Colours` variable; only these are listed in the debug panel |
 | `InterfacePalette.variable_name(colour_name) -> String` | `'hp bar fill'` -> `'HP_BAR_FILL'` |
 | `PaletteLoader.load_named_colours(path) -> Dictionary` | Name -> colour for a `.gpl` file |
-| `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets. The `'` and `;` keys step through the palettes, and [palette combos](debug_panel.md#behaviour) save one with a world palette |
+| `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets. The `'` and `;` keys step through the palettes, and [presets](look_presets.md) save one with the rest of the look |
 | `DebugPanels.set_portrait_palette(choice)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path. The `.` and `,` keys step through the choices |
 
 Tests: `tests/debug/test_interface_palette.gd`.

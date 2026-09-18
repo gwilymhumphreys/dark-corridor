@@ -1,6 +1,6 @@
 class_name BurnMechanic
 extends Mechanic
-## Burn — the mechanic for the burning damage-over-time DoT (docs/plans/mechanics.md). The same
+## Burn — the mechanic for the burning damage-over-time DoT (docs/systems/mechanics.md). The same
 ## as poison with its own constants, except it does half damage to shield.
 
 const ID := 'burn'

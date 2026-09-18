@@ -6,8 +6,8 @@ and panels, and the corridor, are not affected.
 
 **Location:** `src/shaders/interface_look.gdshader`, `src/shaders/look_effects.gdshaderinc` (the effects
 shared with the corridor look), `src/shaders/interface_look_material.tres`, `InterfaceLook`
-(`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the F3 panel in
-`src/debug/interface_look_panel.*`. Saved looks in `assets/interface_looks/`.
+(`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the Interface tab in
+`src/debug/interface_look_panel.*`. Saved in the interface part of a [look preset](look_presets.md).
 
 ## How it works
 
@@ -19,8 +19,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`, `Int
 - Each node is drawn on its own, so effects work inside the node's rectangle only. Effects that need the
   whole screen are left out: warp, vignette and bloom (`UNUSED_GROUPS` in `interface_look.gd`), and the
   palette dithering. Glow on specific nodes is a separate system, [interface glow](interface_glow.md).
-  Its settings are in this panel's Glow section and saved in the `glow` section of an interface look
-  file.
+  Its settings are in this tab's Glow section and saved in the preset's `interface_glow` section.
 - The shader keeps the node's alpha and colour (a `ColorRect`'s colour, modulate), so HP bar colours and
   fades still work.
 - Distances are in screen pixels, as in the corridor look. Halftone dots, hatching lines and grain are laid
@@ -60,18 +59,23 @@ start and when an interface palette changes).
 - The image's average colour picks the arrangement of marks, so the same picture always wears the same
   way and its marks do not move while the node is animated.
 - The corridor look has no picture wear, so the copy buttons leave it alone.
+- The Picture Wear switch turns all picture wear on or off, including the faded areas, specks, edge wear
+  and creases sections, whose own switches do nothing while it is off. The section headings say what the
+  wear applies to, because the borders around icons are panels and their wear is panel wear, set in the
+  Print tab.
 
-## The panel
+## The Interface tab
 
-F3 toggles it, in debug builds. It is the [look panel](corridor_look.md#the-panel) built from the
-interface look shader, with its own save, load and reset, plus two buttons:
+F2 opens the [debug panel](debug_panel.md) on this tab. It is built like the
+[Corridor tab](corridor_look.md#the-corridor-tab) from the interface look shader, plus two buttons:
 
 | Button | Does |
 |---|---|
 | Copy from corridor look | Every interface look setting the corridor look also has takes the corridor look's value |
 | Copy to corridor look | The reverse; corridor-only settings (warp, bloom, vignette, dithering) are left alone |
 
-An interface look file is a `ConfigFile` with one `shader` section listing every setting.
+In a preset, the interface part has an `interface_shader` section listing every setting and an
+`interface_glow` section for the glow settings.
 
 ## Public API
 
@@ -79,10 +83,10 @@ An interface look file is a `ConfigFile` with one `shader` section listing every
 |---|---|
 | `InterfaceLook.material` | The shared material |
 | `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the include code |
-| `InterfaceLook.reset()`, `save_look(path)`, `load_look(path) -> bool` | Reset, save and load |
+| `InterfaceLook.reset()`, `write_look(file)`, `read_look(file)` | Reset, and the interface part of a preset |
 | `InterfaceLook.copy_from_corridor()`, `copy_to_corridor()` | Copy shared settings between the looks |
 
-Start-up arguments `--interface-look=`, `--interface-set=` and `--interface-panel` are listed in
+Start-up arguments `--interface-set=` and `--interface-panel` are listed in
 [debug_panel.md](debug_panel.md#start-up-arguments). `DebugPanels.reset_settings()` resets the interface
 look.
 

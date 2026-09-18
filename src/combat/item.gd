@@ -55,7 +55,7 @@ func is_gated() -> bool:
   return false
 
 
-## True when any of this item's effects uses the named mechanic (docs/plans/mechanics.md) —
+## True when any of this item's effects uses the named mechanic (docs/systems/mechanics.md) —
 ## how items, relics and enchantments refer to a mechanic ("your attack items"). For `'crit'`
 ## (which is never an effect's mechanic) it is true when the item has a crit chance.
 func uses(mechanic_id: String) -> bool:

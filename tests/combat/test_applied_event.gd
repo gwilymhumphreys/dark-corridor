@@ -1,5 +1,5 @@
 extends GutTest
-## Step 6 of docs/plans/mechanics.md — the single APPLIED event. Every mechanic that can be
+## Step 6 of docs/systems/mechanics.md — the single APPLIED event. Every mechanic that can be
 ## delivered publishes APPLIED once with its id when a delivery of it lands; an APPLY_STATUS
 ## delivery publishes APPLIED with the status id (nothing for an unknown id); ticks publish
 ## nothing; and Spite Ward's trigger still charges on poison and not on shield.

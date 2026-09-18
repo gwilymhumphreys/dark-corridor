@@ -1,10 +1,10 @@
 class_name LookPanel
-extends PanelContainer
-## The look panel (docs/systems/corridor_look.md), toggled with F2 by `DebugPanels`. One section
-## per effect in corridor_look.gdshader, built from the shader's uniform groups, then sections for
-## the corridor's light and its camera Environment. The background wear is in the F5 print panel
-## (`PrintPanel`, which extends this). Every change applies at once to what is on screen. Looks are
-## saved to and loaded from `DebugPanelsAutoload.LOOK_DIR`.
+extends VBoxContainer
+## The corridor tab of the debug panel (docs/systems/corridor_look.md), opened with F2 by `DebugPanels`.
+## One section per effect in corridor_look.gdshader, built from the shader's uniform groups, then
+## sections for the corridor's light and its camera Environment. The background wear is in the print
+## tab (`PrintPanel`, which extends this). Every change applies at once to what is on screen. The row
+## at the top loads this part of the look from a preset (`PresetPartRow`).
 
 const SECTION_SCENE: PackedScene = preload('res://src/debug/look_section.tscn')
 const SLIDER_ROW_SCENE: PackedScene = preload('res://src/debug/look_slider_row.tscn')
@@ -44,17 +44,8 @@ const ENVIRONMENT_PROPERTIES: Dictionary = {
 
 var _built: bool = false
 
-@onready var _sections: VBoxContainer = $Rows/Scroll/Sections
-@onready var _name_edit: LineEdit = $Rows/SaveRow/NameEdit
-@onready var _save_button: Button = $Rows/SaveRow/SaveButton
-@onready var _load_option: OptionButton = $Rows/LoadRow/LoadOption
-@onready var _reset_button: Button = $Rows/LoadRow/ResetButton
-
-
-func _ready() -> void:
-  _save_button.pressed.connect(_on_save_pressed)
-  _load_option.item_selected.connect(_on_look_selected)
-  _reset_button.pressed.connect(_on_reset_pressed)
+@onready var _sections: VBoxContainer = $Scroll/Sections
+@onready var _part_row: PresetPartRow = $PartRow
 
 
 func _exit_tree() -> void:
@@ -76,15 +67,15 @@ static func scene_values() -> Array[Dictionary]:
   return [corridor_values, environment_values]
 
 
-## Build the controls the first time the panel opens; list the saved looks every time.
+## Build the controls the first time the tab opens; list the presets every time.
 func open() -> void:
   if not _built:
     rebuild()
-  _list_looks()
+  _part_row.list_presets()
 
 
-## After settings change outside the panel: rebuild now if the panel is showing, otherwise on the
-## next open.
+## After settings change outside the tab: rebuild now if the tab is showing, otherwise on the next
+## open.
 func refresh() -> void:
   if is_visible_in_tree():
     rebuild()
@@ -116,14 +107,14 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
       continue
     if group == '':
       continue
-    # The palette clamp's switch is shared with the F1 panel.
+    # The palette clamp's dithering is kept by `DebugPanels`, which Backspace and presets also set.
     if uniform == 'dithering' and look_material == DebugPanels.world_material:
-      section = section if section != null else _add_section(group.capitalize())
+      section = section if section != null else _add_section(_section_title(group))
       section.set_switch(DebugPanels.is_dithering(), DebugPanels.set_dithering)
       continue
     if not defaults.has(uniform):
       continue
-    section = section if section != null else _add_section(group.capitalize())
+    section = section if section != null else _add_section(_section_title(group))
     var value: Variant = look_material.get_shader_parameter(uniform)
     if value == null:
       value = defaults[uniform]
@@ -139,6 +130,12 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
     elif entry['type'] == TYPE_INT and entry['hint'] == PROPERTY_HINT_ENUM:
       limits = Array((entry['hint_string'] as String).split(','))
     section.add_row(_make_row(label, value, limits, set_value))
+
+
+# The heading for a uniform group's section. The print and interface tabs override this to say what their
+# wear groups apply to.
+func _section_title(group: String) -> String:
+  return group.capitalize()
 
 
 func _build_property_section(title: String, properties: Dictionary, scene: Dictionary, settings: Dictionary) -> void:
@@ -182,56 +179,3 @@ func _clear_sections() -> void:
   for section: Node in _sections.get_children():
     _sections.remove_child(section)
     section.free()
-
-
-# The folder this panel's saved looks live in, and how it saves, loads and resets them. The print panel
-# overrides these, so the two panels keep separate saved looks.
-func _look_dir() -> String:
-  return DebugPanelsAutoload.LOOK_DIR
-
-
-func _save_look(path: String) -> void:
-  DebugPanels.save_look(path)
-
-
-func _load_look(path: String) -> bool:
-  return DebugPanels.load_look(path)
-
-
-func _reset_look() -> void:
-  DebugPanels.reset_look()
-
-
-func _list_looks() -> void:
-  _load_option.clear()
-  _load_option.add_item('Load a look...')
-  var dir: DirAccess = DirAccess.open(_look_dir())
-  if dir == null:
-    return
-  for file: String in dir.get_files():
-    if file.get_extension() == 'cfg':
-      _load_option.add_item(file.get_basename())
-  _load_option.select(0)
-
-
-func _on_save_pressed() -> void:
-  var look_name: String = _name_edit.text.strip_edges().to_snake_case().validate_filename()
-  if look_name == '':
-    return
-  _save_look(_look_dir().path_join(look_name + '.cfg'))
-  _name_edit.release_focus()
-  _list_looks()
-
-
-func _on_look_selected(index: int) -> void:
-  if index <= 0:
-    return
-  var look_name: String = _load_option.get_item_text(index)
-  if _load_look(_look_dir().path_join(look_name + '.cfg')):
-    _name_edit.text = look_name
-    rebuild()
-
-
-func _on_reset_pressed() -> void:
-  _reset_look()
-  rebuild()

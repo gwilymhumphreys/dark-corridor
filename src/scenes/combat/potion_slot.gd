@@ -6,11 +6,15 @@ extends Button
 
 @onready var _icon: TextureRect = $Icon
 
+var consumable: Consumable
 
-func setup(consumable: Consumable) -> void:
+
+func setup(target: Consumable) -> void:
+  consumable = target
   var path: String = consumable.def.icon
   _icon.texture = load(path) as Texture2D if path != '' else null
 
 
 func _exit_tree() -> void:
   _icon.texture = null
+  consumable = null

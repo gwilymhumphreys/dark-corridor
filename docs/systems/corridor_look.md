@@ -2,13 +2,13 @@
 
 A dev-only post-processing shader and panel for trying looks on the corridor walls and enemy images:
 colour grading, a colour ramp, halftone, hatching, edge lines, bloom, screen effects, plus the corridor
-light and camera Environment. Every shader effect is off by default. Settings last for the session unless saved as
-a look file.
+light and camera Environment. Every shader effect is off by default. Settings are saved in the corridor part
+of a [look preset](look_presets.md).
 
 **Location:** `src/shaders/corridor_look.gdshader`, with most effects in `look_effects.gdshaderinc`
-(shared with the [interface look](interface_look.md)); the panel in `src/debug/look_panel.*`,
-`look_section.*`, `look_row.gd` and the three `look_*_row.tscn` scenes; save, load and reset in
-`DebugPanelsAutoload` (`src/debug/debug_panels.gd`). Saved looks in `assets/looks/`.
+(shared with the [interface look](interface_look.md)); the Corridor tab in `src/debug/look_panel.*`,
+`look_section.*`, `look_row.gd` and the three `look_*_row.tscn` scenes; writing, reading and reset in
+`DebugPanelsAutoload` (`src/debug/debug_panels.gd`).
 
 ## The shader
 
@@ -17,7 +17,7 @@ a look file.
   only; the interface, enemy HUDs and VFX are not affected.
 - It includes `palette_clamp.gdshaderinc` inside a `dithering` group, so the
   [world palette clamp](palette_clamp.md#world-clamp) is one step of it. The palette and colour matching
-  are set from the F1 panel.
+  are set from the rows at the top of the Corridor tab.
 - Each effect is a `group_uniforms` block whose first uniform is `<group>_on`. Effects run in the order of
   `fragment()`, which is the order of the table below; the panel lists the Dithering section last.
 - Distances (line spacing, dot size, bloom radius) are in screen pixels.
@@ -39,39 +39,36 @@ a look file.
 | Dithering | The world palette clamp, with its dither pattern, dot size and 2x supersample ([palette_clamp.md](palette_clamp.md#how-it-works)) |
 | Scanlines | Dark horizontal lines and optional red, green and blue vertical stripes |
 
-## The panel
+## The Corridor tab
 
-- F2 toggles it, in debug builds. It is built the first time it opens.
+- F1 opens the [debug panel](debug_panel.md) on this tab. Its controls are built the first time it shows.
 - One section per shader group, built from `Shader.get_shader_uniform_list(true)`: the header switch sets
   `<group>_on`, a float gets a slider using its `hint_range`, an int with `hint_enum` a dropdown, a bool a
   switch, a `source_color` a colour button. Adding a uniform to a group adds its control with no panel
-  changes. The Dithering header switch is the shared `dithering` switch (`DebugPanels.set_dithering`), so
-  it and the F1 panel stay in step. A section starts expanded
-  when its effect is on; clicking the title shows or hides it.
+  changes. The Dithering header switch is the world clamp's `dithering` switch (`DebugPanels.set_dithering`),
+  which Backspace also sets. A section starts expanded when its effect is on; clicking the
+  title shows or hides it.
 - Defaults come from the shader and include code (`DebugPanels.look_defaults()`), because the rendering
   server does not report them when running headless. `PALETTE_UNIFORMS` (colour count, matching, the
-  dithering switch) are left out; the F1 panel and a look file's `palette` section set them.
+  dithering switch) are left out; `DebugPanels` writes them in the preset's `corridor_palette` section.
 - Two more sections set the corridor: **Light** (`Corridor3D` exports) and **Environment** (properties of
   the corridor camera's `Environment`, including Godot's glow and fog). Their lists are
   `CORRIDOR_PROPERTIES` and `ENVIRONMENT_PROPERTIES` in `look_panel.gd`. Changes go into
   `DebugPanels.corridor_settings` and `environment_settings` and are applied to every corridor in the
   `Corridor3D.GROUP` group; corridors built later apply them too.
-- A group with no settings gets no section. The background wear is in the F5 print panel
-  ([print_frame.md](print_frame.md)), which extends this panel.
-- Save writes `assets/looks/<name>.cfg`; the dropdown loads one; Reset all returns every effect, the
-  corridor, the world palette, matching and dithering to their defaults.
+- A group with no settings gets no section. The Print tab ([print_frame.md](print_frame.md)) and the
+  Background tab ([background_wear.md](background_wear.md)) extend this tab.
 
-## Look files
+## In a preset
 
-A `ConfigFile` with sections `shader` (every look uniform), `corridor` and `environment` (only settings
-that were changed), and `palette` (`world_palette`, `perceptual`, `dithering`). Loading starts from the
-defaults. The background wear and print frame are saved separately, as print looks from the F5 panel
-([print_frame.md](print_frame.md#print-looks)); loading or resetting a look leaves them unchanged.
+The corridor part has sections `corridor_shader` (every look uniform), `corridor_light` and
+`corridor_environment` (every Light and Environment property). Reading it starts from the look defaults and
+the corridor scene's own values, and leaves the palettes and the other parts unchanged.
 
-For a screenshot of a saved look (arguments in [debug_panel.md](debug_panel.md#start-up-arguments)):
+For a screenshot of a saved preset (arguments in [debug_panel.md](debug_panel.md#start-up-arguments)):
 
 ```
-<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --still --monster --shot-delay=3 --look=res://assets/looks/<name>.cfg
+<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --still --monster --shot-delay=3 --preset=<name>
 ```
 
 Tests: `tests/debug/test_corridor_look.gd`.

@@ -3,7 +3,7 @@ extends Control
 ## The four sections of the run screen, laid out to match the folds in the paper background
 ## (docs/systems/ui_layout.md#screen-sections): the corridor top left, the player's items top right, the
 ## portraits lower left and the run information lower right. The split point (where the folds cross)
-## and the padding are print frame settings from the F5 print panel. Each section is its part of the
+## and the padding are print frame settings from the Print tab. Each section is its part of the
 ## screen with the padding taken off every side. Emits `sections_changed` after moving the sections.
 
 signal sections_changed

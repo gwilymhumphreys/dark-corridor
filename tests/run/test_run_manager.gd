@@ -31,6 +31,13 @@ func _run() -> RunManager:
   return r
 
 
+## Put an enchant on the first board item and a potion in the slot. No authored character's
+## starting kit carries either, so the tests that exercise those paths grant them here.
+func _grant_enchant_and_potion(run: RunManager) -> void:
+  run.apply_enchant(Enchantment.new(EnchantCatalog.get_def(EnchantCatalog.WHETSTONE)), 0)
+  run.potions.append(Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)))
+
+
 func _board_ids(actor: Actor) -> Array:
   var ids: Array = []
   for it in actor.board:
@@ -93,6 +100,8 @@ func test_draft_pick_lands_on_the_board() -> void:
 func test_starting_relic_grants_combat_start_shield() -> void:
   var run := _run()
   run.start(1)
+  # Granted here: no authored character has a starting relic yet, and this is about the hook.
+  run.relics.append(Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD)))
   # beat 0 auto-rolls to a live (easy) fight — begin it; relics apply at fight start, before any step
   run.begin_current()
   assert_almost_eq(_shield_count(run.player), Balance.RELIC_STONE_WARD_SHIELD, 0.0001,
@@ -419,12 +428,15 @@ func test_player_actor_and_board_free_after_run_teardown() -> void:
 
 
 func test_starting_kit_saves_and_rehydrates() -> void:
-  # The starting relic + enchant + potion all round-trip through the snapshot.
+  # A relic + an enchant + a potion all round-trip through the snapshot. No authored character
+  # starts with an enchant or a potion, so this grants them the way a reward would.
   var run := _run()
   run.start(1)
-  assert_not_null(run.player.board[0].enchant, 'Whetstone is on the starting weapon')
-  assert_eq(run.potions.size(), 1, 'a starting Healing Draught')
-  assert_eq(run.relics.size(), 1, 'the Stone Ward relic')
+  _grant_enchant_and_potion(run)
+  run.relics.append(Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD)))
+  assert_not_null(run.player.board[0].enchant, 'the enchant is on the first board item')
+  assert_eq(run.potions.size(), 1, 'a potion is held')
+  assert_eq(run.relics.size(), 1, 'and a relic')
 
   var snap: Dictionary = run.snapshot()
   assert_eq(snap['board'][0]['enchant'], EnchantCatalog.WHETSTONE, 'enchant id saved on the board entry')
@@ -440,6 +452,7 @@ func test_starting_kit_saves_and_rehydrates() -> void:
 func test_throw_potion_heals_and_empties_the_slot() -> void:
   var run := _run()
   run.start(1)
+  _grant_enchant_and_potion(run)
   run.begin_current()                  # beat 0 auto-rolls to a live fight
   run.player.take_damage(40.0)
   var before: float = run.player.hp
@@ -452,6 +465,7 @@ func test_throw_potion_heals_and_empties_the_slot() -> void:
 func test_throw_potion_outside_a_fight_is_rejected() -> void:
   var run := _run()
   run.start(1)                         # beat created but not begun → no live fight
+  _grant_enchant_and_potion(run)
   assert_false(run.throw_potion(0), 'a potion only resolves through a live fight')
   assert_eq(run.potions.size(), 1, 'and stays in the slot')
 
@@ -480,13 +494,11 @@ func test_draft_pool_is_character_plus_colorless() -> void:
 
 func test_start_with_a_chosen_character_uses_its_kit() -> void:
   # The character-select pick routes through start(seed, id): the run opens in the chosen
-  # character's pool + starting kit (the Duelist's distinct no-relic loadout proves it).
+  # character's pool + starting kit, not the default one's.
   var run := _run()
-  run.start(1, CharacterCatalog.DUELIST)
-  assert_eq(run.character.id, CharacterCatalog.DUELIST, 'the run opens in the chosen character')
-  assert_eq(run.relics.size(), 0, 'the Duelist starts with no relic (a distinct kit from the Wanderer)')
-  assert_eq(_board_ids(run.player), [ItemCatalog.WEAPON, ItemCatalog.WEAPON, ItemCatalog.POISON_DAGGER],
-    'and its own starting board')
+  run.start(1, CharacterCatalog.SPORE_DRUID)
+  assert_eq(run.character.id, CharacterCatalog.SPORE_DRUID, 'the run opens in the chosen character')
+  assert_eq(_board_ids(run.player), [ItemCatalog.DRUID_STAFF], 'and its own starting board')
 
 
 func test_character_round_trips_through_the_snapshot() -> void:
@@ -525,11 +537,13 @@ func test_advance_past_an_unconsumed_draft_drops_the_offer() -> void:
   # bug — the offer is dropped (loudly) rather than carried unsaved into the next beat.
   var run := _run()
   run.start(3)
+  # Measured before the fight: items created mid-fight (the default character makes some) are
+  # stripped at teardown, so the board returns to this size unless the draft was added.
+  var board_size: int = run.player.board.size()
   run.begin_current()
   var cm: CombatManager = run.combat_manager()
   cm.run_headless()               # beat 0 is a fight with a draft reward
   assert_true(run.has_pending_draft(), 'a draft is pending after the win')
-  var board_size: int = run.player.board.size()
   run.advance()                   # flow bug: nobody consumed the draft
   assert_false(run.has_pending_draft(), 'the stale offer was dropped, not carried')
   assert_eq(run.player.board.size(), board_size, 'nothing was silently added to the board')

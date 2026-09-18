@@ -1,7 +1,7 @@
 class_name BleedMechanic
 extends Mechanic
 ## Bleed — the mechanic for the wound that cashes out when its holder is hit by an attack
-## (docs/plans/mechanics.md). Each time the holder is hit by an attack, it takes damage equal
+## (docs/systems/mechanics.md). Each time the holder is hit by an attack, it takes damage equal
 ## to its stacks and loses a stack; does half damage to shield.
 
 const ID := 'bleed'

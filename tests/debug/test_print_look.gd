@@ -1,8 +1,6 @@
 extends GutTest
-## `PrintLook`: background, panel, border and corridor overlay defaults, save/load round-trip including
+## `PrintLook`: background, panel, border and corridor overlay defaults, write and read round-trip including
 ## the panel section, and the panel wear colours (docs/systems/panel_wear.md, docs/systems/print_frame.md).
-
-const LOOK_PATH: String = 'user://test_looks/print_look.cfg'
 
 
 func before_each() -> void:
@@ -10,8 +8,6 @@ func before_each() -> void:
 
 
 func after_each() -> void:
-  DirAccess.remove_absolute(LOOK_PATH)
-  DirAccess.remove_absolute(LOOK_PATH.get_base_dir())
   TestCleanup.reset_all_managers()
 
 
@@ -34,10 +30,11 @@ func test_panel_wear_has_no_folds_group() -> void:
 func test_save_then_load_restores_the_panel_section() -> void:
   PrintLook.panel_material.set_shader_parameter('panel_specks_on', false)
   PrintLook.panel_material.set_shader_parameter('panel_edge_wear_width', 30.0)
-  assert_eq(PrintLook.save_print_look(LOOK_PATH), OK, 'saved')
+  var file: ConfigFile = ConfigFile.new()
+  PrintLook.write_print_look(file)
   PrintLook.reset_print_look()
   assert_eq(PrintLook.panel_material.get_shader_parameter('panel_specks_on'), true, 'reset restores the default')
-  assert_true(PrintLook.load_print_look(LOOK_PATH), 'loaded')
+  PrintLook.read_print_look(file)
   assert_eq(PrintLook.panel_material.get_shader_parameter('panel_specks_on'), false, 'panel switch restored')
   assert_almost_eq(PrintLook.panel_material.get_shader_parameter('panel_edge_wear_width'), 30.0, 0.001,
     'panel number restored')
@@ -56,3 +53,17 @@ func test_panel_wear_colours_follow_the_interface_palette() -> void:
   DebugPanels.set_interface_palette('')
   assert_eq(PrintLook.panel_material.get_shader_parameter('wear_dark_colour'), default_dark, 'reset restores it')
   DirAccess.remove_absolute(path)
+
+
+func test_the_background_is_written_and_read_on_its_own() -> void:
+  PrintLook.background_material.set_shader_parameter('background_specks_on', false)
+  var file: ConfigFile = ConfigFile.new()
+  PrintLook.write_print_look(file)
+  assert_false(file.has_section('print_background'), 'the print part does not hold the background')
+  PrintLook.write_background_look(file)
+  PrintLook.reset_background_look()
+  assert_eq(PrintLook.background_material.get_shader_parameter('background_specks_on'), true,
+    'reset restores the default')
+  PrintLook.read_background_look(file)
+  assert_eq(PrintLook.background_material.get_shader_parameter('background_specks_on'), false,
+    'background switch restored')

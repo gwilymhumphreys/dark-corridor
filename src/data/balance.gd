@@ -38,21 +38,16 @@ const ENEMY_SPORE_THRALL_HP: float = 15.0
 
 # ── Items (placeholder defs — cooldowns in SECONDS) ──────────────────────────
 # A Ticker threshold in steps = ceil(cooldown_seconds / STEP).
-const WEAPON_COOLDOWN: float = 1.2
-const WEAPON_DAMAGE: float = 6.0
-const WEAPON_TRAVEL: float = 0.3            # projectile flight time (docs/systems/combat_model.md)
+const WEAPON_TRAVEL: float = 0.6            # projectile flight time (docs/systems/combat_model.md)
 
-const ARMOR_COOLDOWN: float = 2.0
-const ARMOR_SHIELD: float = 8.0              # self-target, travel 0
+# Claw — the enemy board's only weapon, so every enemy's damage comes from here.
+const ENEMY_CLAW_COOLDOWN: float = 1.2
+const ENEMY_CLAW_DAMAGE: float = 6.0
 
-# Leather shield spread — self-shield on a cooldown curve mirroring the weapon DPS tax
-# (fast = taxed, slow = rewarded). Trews sits on the established 4 shield/sec baseline.
-const LEATHER_GLOVES_COOLDOWN: float = 1.0      # fast, taxed — 3 shield/sec
-const LEATHER_GLOVES_SHIELD: float = 3.0
-const LEATHER_TREWS_COOLDOWN: float = 2.0       # baseline — 4 shield/sec (matches Iron Guard)
-const LEATHER_TREWS_SHIELD: float = 8.0
-const LEATHER_BREASTPLATE_COOLDOWN: float = 3.0  # slow, rewarded — 5 shield/sec
-const LEATHER_BREASTPLATE_SHIELD: float = 15.0
+# Spite Ward — the example trigger item: a self-shield that also pushes its own cooldown whenever
+# poison is applied. Unpooled, kept as the working example of a trigger subscription.
+const SPITE_WARD_COOLDOWN: float = 2.0
+const SPITE_WARD_SHIELD: float = 8.0         # self-target, travel 0
 
 const POISON_APPLIER_COOLDOWN: float = 1.6
 const POISON_APPLIER_STACKS: float = 3.0    # stacks applied per fire
@@ -194,8 +189,8 @@ const BURN_TICK_INTERVAL: float = 0.5       # seconds between burn ticks — PLA
 const BURN_DAMAGE_PER_TICK: float = 1.0     # per-tick damage (per-stack rule is content) — PLACEHOLDER — owner tunes
 const REGEN_TICK_INTERVAL: float = 0.5      # seconds between regen ticks — PLACEHOLDER — owner tunes
 const REGEN_HEAL_PER_TICK: float = 1.0      # per-tick healing (per-stack rule is content) — PLACEHOLDER — owner tunes
-# Shield is a pure pool (persists until consumed, no decay) — no constants beyond
-# the ARMOR_SHIELD that feeds it.
+# Shield is a pure pool (persists until consumed, no decay) — no constants of its own; each
+# shield item carries the amount it applies.
 const SAMPLE_DEBUFF_DURATION: float = 5.0   # a timed status, to exercise that shape
 # Stat-statuses (#6) — % damage modifiers (timed). Placeholder values; the owner tunes
 # them (and may author per-stack variants — the engine supports it).
@@ -211,16 +206,16 @@ const EMPOWER_MULT: float = 2.0
 # this long. 2s = the Spore Druid's blinding spore as designed (spore_druid.md), applied by
 # Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).
 const STATUS_BLIND_DURATION: float = 2.0
-# Shield multipliers (docs/plans/mechanics.md → Shield): how much shield a hit of the mechanic
+# Shield multipliers (docs/systems/mechanics.md → Shield): how much shield a hit of the mechanic
 # uses (1.0 = normal). The poison and burn mechanic classes return theirs; bleed returns its
 # once it is converted.
 const SHIELD_MULTIPLIER_POISON: float = 2.0   # PLACEHOLDER — owner tunes
 const SHIELD_MULTIPLIER_BURN: float = 0.5     # PLACEHOLDER — owner tunes
 const SHIELD_MULTIPLIER_BLEED: float = 0.5    # PLACEHOLDER — owner tunes
-# Heal cleanse (docs/plans/mechanics.md → Heal): a heal removes floor(value × this) stacks of the
+# Heal cleanse (docs/systems/mechanics.md → Heal): a heal removes floor(value × this) stacks of the
 # target's poison, burn and bleed (value = the full heal, including overheal).
 const HEAL_CLEANSE_FRACTION: float = 0.1      # PLACEHOLDER — owner tunes
-# Crit (docs/plans/mechanics.md → Crit): the multiplier applied to a critting fire's mechanic
+# Crit (docs/systems/mechanics.md → Crit): the multiplier applied to a critting fire's mechanic
 # delivery values.
 const CRIT_MULTIPLIER: float = 2.0            # PLACEHOLDER — owner tunes
 

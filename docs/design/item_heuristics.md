@@ -11,10 +11,6 @@
 A pure-damage attack's expected DPS rises **+1 per second of cooldown**, anchored at the
 **2s = 5 DPS** baseline (Capped Cudgel — 10 dmg / 2s). So 1s→4, 2s→5, 3s→6, 4s→7, 5s→8.
 
-> *Recorded from code, owner to resolve in `/tune`:* **Rusted Blade** (6 dmg / 1.2s = 5 DPS)
-> sits **+0.8 over the curve** (the line gives 4.2 at 1.2s) — the starter weapon out-earns
-> its cooldown. Flagged, not changed: whether the starter rides above the line is a tuning call.
-
 **Why slow items need *more* DPS** (not the same): a slow item gives up value to —
 - **Overkill** — a big hit into a near-dead target wastes the damage past 0 HP. Fast small hits spend almost exactly to the kill.
 - **Trigger density** — anything per-*hit* (on-hit relics, the Spores-applied event, charge-pushers) fires per swing, not per damage. Slow weapons swing rarely → fewer procs.
@@ -41,11 +37,11 @@ earn a solo effect.
 
 ## The shield curve — `shield/sec = cooldown + 2` *(recorded from code, owner to ratify)*
 
-The self-shield items follow a parallel curve, **anchored at 2s = 4 shield/sec** (Iron Guard —
-8 shield / 2s) and rising **+1 per second of cooldown**, mirroring the weapon line's
-fast-taxed / slow-rewarded shape (the leather spread in `src/data/balance.gd`: Gloves 1s→3,
-Trews 2s→4, Breastplate 3s→5). This section records what the authored numbers already do —
-it lived only in a `balance.gd` comment; the rule itself is the owner's to keep or change.
+The self-shield items follow a parallel curve, **anchored at 2s = 4 shield/sec** and rising
+**+1 per second of cooldown**, mirroring the weapon line's fast-taxed / slow-rewarded shape. The
+worked example is the Fleshmancer's bone shield spread in `src/data/balance.gd`: Rib 1s→3, Femur
+2s→4, Skull 3s→5. This section records what the authored numbers already do — it lived only in a
+`balance.gd` comment; the rule itself is the owner's to keep or change.
 
 ## Status durations are per-application
 

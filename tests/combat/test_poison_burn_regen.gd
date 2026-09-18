@@ -1,5 +1,5 @@
 extends GutTest
-## Step 3 of docs/plans/mechanics.md — poison as a mechanic, and burn + regen (statuses,
+## Step 3 of docs/systems/mechanics.md — poison as a mechanic, and burn + regen (statuses,
 ## mechanics, colours, constants). Poison drains shield double, burn half; regen heals each
 ## tick and never expires. The registry knows all three, and a poison mechanic effect still
 ## publishes APPLIED with 'poison' (Spite Ward's trigger depends on it).

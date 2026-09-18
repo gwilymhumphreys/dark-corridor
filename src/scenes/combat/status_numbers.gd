@@ -1,6 +1,6 @@
 class_name StatusNumbers
 extends HBoxContainer
-## The health-bar status numbers (docs/plans/mechanics.md → Health bar numbers): one label per
+## The health-bar status numbers (docs/systems/mechanics.md → Health bar numbers): one label per
 ## mechanic status (shield, poison, burn, bleed, regen) showing its stack count in the mechanic's
 ## colour, beside the health bar. Reads the actor's statuses each frame; writes nothing.
 

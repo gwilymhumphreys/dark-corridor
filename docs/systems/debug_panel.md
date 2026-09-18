@@ -1,68 +1,74 @@
 # Debug panel
 
-A dev-only panel for comparing looks in game: the world and interface palettes, plus start-up
-arguments for screenshots of real fights. It is on every screen, including the corridor testbed and combat
-sandbox. The same autoload holds the F2 [look panel](corridor_look.md), the F5
-[print panel](print_frame.md) and the F3 [interface look panel](interface_look.md).
+A dev-only panel for trying and saving looks in game, with a [preset bar](look_presets.md) at the top and
+one tab per part of the look, plus start-up arguments for screenshots of real fights. It is on every
+screen, including the corridor testbed and combat sandbox.
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
-as the `DebugPanels` autoload.
+as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`
+and `background_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
+
+## Tabs
+
+| Tab | Key | Sets |
+|---|---|---|
+| Corridor | F1 | The corridor [palette rows](#palette-rows), the [corridor look](corridor_look.md), light and Environment |
+| Interface | F2 | The interface [palette rows](#palette-rows), the [interface look](interface_look.md) and [interface glow](interface_glow.md) |
+| Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
+| Background | F4 | [Background wear](background_wear.md) on every screen |
 
 ## Behaviour
 
-- F1 toggles the panel, F2 the look panel, F3 the interface look panel and F5 the print panel, only in debug builds (`OS.is_debug_build()`). The autoload
+- A tab's key opens the panel on that tab, switches to it if another tab is showing, and closes the
+  panel if that tab is already showing. Debug builds only (`OS.is_debug_build()`). The autoload
   processes while the game is paused.
-- Opening any panel during a run pauses it, like Space, and closing the last one resumes it
-  (`panels_open_changed`, handled by the run screen). Closing does not resume a pause the player
-  chose with Space or Escape before or while the panel was open. A panel opened by a start-up
-  argument does not pause, so screenshot runs keep playing.
-- The palette keys below are ignored while a text field (a look or palette combo name) has focus.
+- Opening the panel during a run pauses it, like Space, and closing it resumes it
+  (`panels_open_changed`, handled by the run screen). Closing does not resume a pause the player chose
+  with Space or Escape. A panel opened by a start-up argument does not pause, so screenshot runs keep
+  playing.
+- Every tab starts with a "Take this part from" row ([look_presets.md](look_presets.md#the-preset-bar)).
+- The palette keys below are ignored while a text field (the preset name) has focus.
 - `]` and `[` select the next and previous entry in the World palette list, `'` and `;` in the
   Interface palette list and `.` and `,` in the Portrait palette list, with the panel open or closed,
   skipping folder headings and wrapping round through "Off". Debug builds only.
 - `\` moves the selected world palette file (and its `.import` file) into
-  `assets/palettes/shortlist/`, rewrites the palette's path in any saved look (`assets/looks/`) or palette combo that uses it,
-  then rescans the list and keeps that palette selected. It does nothing
-  on "Off", for a palette already in the shortlist, or when a file of the same name is there.
-- Backspace turns the world clamp's dithering on or off, keeping the F1 panel's Dithering switch in step.
-- Choices last for the session only, unless saved. `DebugPanels.reset_settings()` restores the
-  defaults; `TestCleanup.reset_all_managers()` calls it.
-- A **palette combo** is a saved set of palette choices: world palette, interface palette, portrait
-  palette, colour matching and dithering. Combos are `.cfg` files in `assets/palette_combos/`, listed
-  each time the panel opens.
-- The combo chosen in "Load at start-up" is remembered in `START_UP_PATH` (`user://`, this computer
-  only) and loaded before the start-up arguments. It is skipped in headless runs (tests, autotest),
-  with `--shot`, and when an argument in `PALETTE_ARGUMENTS` sets palettes, so those runs stay
-  predictable.
-- The palette folder is scanned the first time the panel opens, so headless tests and autotest runs do no
-  extra work.
-- Built as a `.tscn`, styled by the project theme, with a `UIJuice` node on each control.
+  `assets/palettes/shortlist/`, rewrites the palette's path in any preset or history file that uses it,
+  then rescans the list and keeps that palette selected. It does nothing on "Off", for a palette
+  already in the shortlist, or when a file of the same name is there.
+- Backspace turns the world clamp's dithering on or off, keeping the Dithering switch in step.
+- Changes last for the session only, unless saved as a preset. The default preset loads at start-up.
+  `DebugPanels.reset_settings()` turns every part off; `TestCleanup.reset_all_managers()` calls it.
+- The palette folder is scanned the first time the Corridor or Interface tab opens, and the font folder
+  the first time the Interface tab opens, so headless tests and
+  autotest runs do no extra work.
+- Built as `.tscn` scenes, styled by the project theme, with a `UIJuice` node on each control.
 - English only. `tools/extract_pot.gd` skips `src/debug/`, so panel labels stay out of the translation
   files.
 
-## Controls
+## Palette rows
 
-| Control | Effect | Read by |
-|---|---|---|
-| World palette (corridor) | "Off", then every palette under `assets/palettes/`, grouped by subfolder. Applies immediately. | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
-| Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`). Applies immediately. | [Interface palette](interface_palette.md) |
-| Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file. Clamps the interface images to the chosen palette's colours. | [Interface images](interface_palette.md#images) |
-| Font | "Game default" (the `Prefs` font), then every font file in `assets/fonts/candidates/`. Applies immediately. | The project theme's default font ([ui_theme.md](ui_theme.md#font-candidates)) |
-| Colour matching | RGB or perceptual (OKLab). Applies immediately. | World clamp |
-| Dithering | On or off. Applies immediately. | World clamp |
-| Save palette combo | Saves the current palette choices under the typed name, replacing a combo of the same name. | `load_palette_combo()` |
-| Load palette combo | Applies a saved combo. | The palettes above |
-| Load at start-up | "None", or a saved combo to load when the game starts. | `_apply_start_up_palette_combo()` |
+Rows at the top of the Corridor and Interface tabs, below "Take this part from".
+
+| Tab | Control | Effect | Read by |
+|---|---|---|---|
+| Corridor | World palette (corridor) | "Off", then every palette under `assets/palettes/`, grouped by subfolder | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
+| Corridor | Colour matching | RGB or perceptual (OKLab) | World clamp and the portrait palette clamp |
+| Interface | Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`) | [Interface palette](interface_palette.md) |
+| Interface | Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file | [Interface images](interface_palette.md#images) |
+| Interface | Font | "Game default" (the `Prefs` font), then every font file in `assets/fonts/candidates/` | The project theme's default font ([ui_theme.md](ui_theme.md#font-candidates)) |
+
+The world clamp's dithering switch is the Dithering section header in the Corridor tab. Every control
+applies immediately. The corridor rows and dithering are saved in a preset's corridor part, and the
+interface rows in its interface part.
 
 ## Start-up arguments
 
-Read once at start-up from the user arguments (after `--`), for screenshots and comparisons:
+Read once at start-up from the user arguments (after `--`), after the default preset:
 
 | Argument | Effect |
 |---|---|
+| `--preset=<name or res path>` | Loads a [preset](look_presets.md) before the other arguments, so they can override it |
 | `--world-palette=<res path>`, `--perceptual`, `--dither` | World clamp settings ([palette_clamp.md](palette_clamp.md)) |
-| `--look=<path>` | Loads a [look file](corridor_look.md#look-files) before the other arguments, so they can override it |
-| `--look-panel` | Opens the look panel |
 | `--corridor-set=property=value` | Sets any `Corridor3D` export (`corridor_settings`). Repeatable |
 | `--monster-image=<res path>` | Every enemy uses this image (`MonsterImages.forced_path`) |
 | `--font=<res path>` | The project theme's default font becomes this font file, replacing the one `Prefs` set ([ui_theme.md](ui_theme.md#font-candidates)) |
@@ -70,42 +76,42 @@ Read once at start-up from the user arguments (after `--`), for screenshots and 
 | `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
 | `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
-| `--print-look=<path>` | Loads a [print look](print_frame.md#print-looks) before the other arguments, so they can override it |
-| `--palette-combo=<path>` | Loads a palette combo before the other arguments, so they can override it |
 | `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay or layout setting. Repeatable |
-| `--print-panel` | Opens the print panel |
-| `--interface-look=<path>` | Loads an [interface look](interface_look.md) before the other arguments, so they can override it |
 | `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
-| `--interface-panel` | Opens the interface look panel |
+| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel` | Opens the panel on the Corridor, Interface, Print or Background tab |
 | `--glow-demo=<brightness>` | Every node drawn through the interface look material glows ([interface_glow.md](interface_glow.md)); read by `InterfaceGlow` |
 
 `--shot` saves into the project's gitignored `screenshots/` folder, one file per shot named with the
 date and time (`src/debug/screenshot.gd`), and prints `SHOT_SAVED:<path>`.
 
-For example, a real fight under a world palette:
-`<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial --world-palette=res://assets/palettes/good/waldgeist-32x.png`
+For example, a real fight with a saved preset:
+`<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial --preset=candlelit`
 
 ## Public API
 
 | Member | Use |
 |---|---|
+| `toggle_tab(tab: int)`, `is_panel_open()` | Open, switch or close the panel; `tab` is a `LookPresets.Part` |
+| `refresh_panels()` | Show the current settings in every tab after they change elsewhere |
+| `panels_open_changed` (signal) | Emitted with true when the panel opens and false when it closes |
 | `corridor_settings`, `environment_settings` | Corridor exports and corridor camera Environment properties (property -> value), applied when a corridor is built |
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
 | `set_ui_font(path: String)`, `restore_default_font()`, `ui_font` | Use this font file as the project theme's default font, or put the theme's own font back; `ui_font` is the chosen path, or `''` when the theme's own font is in use |
 | `set_interface_palette(path: String)`, `interface_palette` | Apply an interface palette file; `''` goes back to the default colours. Also recolours statuses in the current fight |
 | `set_portrait_palette(choice: String)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path |
 | `interface_palette_changed` (signal) | Emitted after an interface palette is applied or reset; `NamedColourRect` copies its colour again |
-| `save_palette_combo(path) -> Error`, `load_palette_combo(path) -> bool`, `palette_combo_path(name)` (static) | Palette combo files |
-| `start_up_palette_combo()`, `set_start_up_palette_combo(name)`, `start_up_combo_allowed(args, headless)` (all static) | The combo loaded at start-up, and whether a run may load it |
+| `write_corridor_palette(file)`, `read_corridor_palette(file)` | The `corridor_palette` section of a [preset](look_presets.md)'s corridor part |
+| `write_interface_palettes(file)`, `read_interface_palettes(file)` | The `interface_palette` section of a preset's interface part |
+| `reset_palettes()` | Every palette choice, matching, dithering and the font back to their defaults |
+| `write_corridor_look(file)`, `read_corridor_look(file)`, `reset_look()` | The corridor part of a preset, and the corridor look defaults |
 | `world_palette`, `world_material` | The world clamp palette path (`''` when off) and the corridor look material corridors are drawn through |
-| `look_defaults() -> Dictionary` | Look shader uniform defaults, read from the shader code |
-| `save_look(path) -> Error`, `load_look(path) -> bool`, `reset_look()` | [Look files](corridor_look.md#look-files) and the look defaults |
-| `toggle_look_panel()` | Show or hide the look panel |
-| `toggle_print_panel()` | Show or hide the print panel; the [print frame](print_frame.md#public-api), [background wear](background_wear.md) and [panel wear](panel_wear.md) materials and settings are owned by `PrintLook`, not `DebugPanels` |
+| `look_defaults() -> Dictionary`, `scene_values()` | Look shader uniform defaults, read from the shader code; the corridor scene's own light and Environment values |
 | `set_dithering(on)`, `is_dithering()` | The world clamp's dithering switch, kept in step with the panel |
 | `set_world_palette(path: String)` | Clamp the combat corridor to this palette file; `''` turns it off |
-| `toggle_panel()` | Show or hide the panel |
 | `cycle_palette(step: int)`, `cycle_interface_palette(step: int)`, `cycle_portrait_palette(step: int)` | Select the next (`1`) or previous (`-1`) world, interface or portrait palette |
 | `shortlist_palette()` | Move the selected world palette into `SHORTLIST_DIR` |
 | `move_palette_file(path, folder) -> String` (static) | Move a palette file and its `.import` file; returns the new path or `''` |
-| `reset_settings()` | Back to defaults, including the interface palette |
+| `reset_settings()` | Every part of the look off, including the interface palette |
+
+The [print frame](print_frame.md#public-api), [background wear](background_wear.md) and
+[panel wear](panel_wear.md) materials and settings are owned by `PrintLook`, not `DebugPanels`.

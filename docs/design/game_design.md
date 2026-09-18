@@ -97,7 +97,7 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 
 - **Godot 4, a 3D corridor.** The corridor is a real 3D scene of modular sections seen from a fixed camera (decision #36). Enemies are flat painted images lit inside it. Everything renders at full monitor resolution. The art style itself is being explored (see the art doc).
 - **Items dominate the screen; the corridor view is mood/feedback.** Whether combat sits in a small framed window or a full-screen scene is open (see UI/Layout) — either way the items are the game, which is what the UI/Layout section is built around.
-- **Color vocabulary is the readability mechanism** (red attack, blue shield, green heal, per-effect status colors) — mechanically required to parse a 30-item cascade, not a cosmetic choice. Carried on both player and enemy boards.
+- **Color vocabulary is the readability mechanism** (red attack, yellow shield, green heal, per-effect status colors) — mechanically required to parse a 30-item cascade, not a cosmetic choice. Carried on both player and enemy boards.
 - **Lighting = one steady light at the camera, fading to black.** Hides art weaknesses and does coherence work across mixed asset sources. Relevant to mechanics only insofar as it sets the dark baseline the cascade punches through.
 - **Tone in one line:** atmosphere is dread, mechanics are juicy; the cascade punches through the dark. The mechanical consequence is that activations must read against a dark baseline (see UI/Layout and the art doc's cascade-readability section).
 ## Audio — mechanical note only
@@ -113,7 +113,7 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 - Items need to be bigger than feels comfortable. With huge inventory and cascade combat, individual activations get lost if items are tiny. Err toward "busier than seems right" so activations stay legible.
 - Cooldown meters Bazaar-style: filling overlay on each active item. Applies to enemy items too — mutual cooldowns visible on both boards is what creates the visible-race feel.
 - **Effect value shown in a color-coded panel** at the top of each item, extruding over the edge. The panel's background color encodes the effect family; the number is the value (e.g. a red panel with the damage value for a weapon). Per-effect colors as before — poison, burn, freeze etc. each have their own color, defined per-effect, not a single shared "status" color. Usually one panel; rarely an item shows more than one (a rare combining multiple effects).
-  - Effect-family colors: red = attack / damage, blue = shield, green = heal, per-effect colors for status applicators.
+  - Effect-family colors: red = attack, yellow = shield, green = heal, per-effect colors for status applicators.
   - Status icons (when statuses are applied to actors/items) use the same per-effect color as the panel of the item that applies them.
 - **Borders encode rarity:** bronze / silver / gold for common / uncommon / rare.
 - Color is the readability mechanism that scales. Can't parse 30 item names in 15 seconds. Can absolutely parse "lots of red on my side, mostly blue on theirs — they're tanking, I'm bursting."
@@ -233,6 +233,23 @@ Mechanism — how the tilt gets created:
 - Prototype failure test: late in a run, can you trace an early pickup still meaningfully feeding the cascade? If yes, the arc works. If it's doing nothing, you built replacement (the bad half of Spire without the mechanism that justified it).
 - Shield-specific failure mode: if mid-run fights resolve fast enough that shield never matters, shield items become trap picks and the arc collapses to damage→scaling. Mid-run enemy design has to demand shield, not just permit it. Tuning constraint, not content.
 -----
+
+## Mechanics (the named combat rules)
+
+The game's basic combat rules are a small fixed set of **mechanics** — attack, shield, heal, poison,
+burn, bleed, regen and crit (decision #38, 2026-09-17). Each one is a named rule that items, relics
+and enchantments can be written in terms of ("your poison items", "when you shield"), the way grail's
+keywords work. Shield replaced the old name block.
+
+Four of these are also statuses (poison, burn, bleed, regen); the rest act directly or, in crit's
+case, sit on the item. Two rules cut across the set: how much shield a hit of each mechanic uses, and
+a heal removing some poison, burn and bleed. The engineering side is
+[`systems/mechanics.md`](../systems/mechanics.md); the numbers are placeholders in
+`src/data/balance.gd`.
+
+**Open — the player-facing text.** Every mechanic's description is still a placeholder. These are the
+words the tooltip keyword cards show, so they are how the player learns each rule. Writing them is
+content work.
 
 ## Status System (shared primitive)
 
@@ -406,7 +423,7 @@ Meta-tree pacing must match the death curve — early runs end fast and unlock o
 1. **Onboarding.** With status engine, enchants, potions, relics, characters, elites, choice layer, AOE/single-target distinction, color vocabulary, slow-mo, cooldowns — a player parachuted into draft 1 is overwhelmed. Tutorial? Drip-feed unlocks? Genre literacy assumed? Real design question, currently absent.
 1. **Relics as items.** Open whether to collapse mechanically. Probably same underlying type with different presentation. Resolve in prototype.
 1. **Starting state — TODO.** What does the player start a run with beyond character (portrait + starting relic + 2-3 starting items)? Starting HP value? Starting potions (probably 0)? Other resources? Not yet specified.
-1. **Shield vs. damage-over-time — resolved.** Whether an effect bypasses shield is a **per-effect `unblockable` flag** (varies by DoT — not all DoT bypasses). Specifics are per-effect content.
+1. **Shield vs. damage-over-time — resolved.** Whether an effect bypasses shield is a **per-effect `unblockable` flag** (varies by DoT — not all DoT bypasses). Specifics are per-effect content. *(Extended by #38: an effect that does not bypass shield still drains it at a rate set by its mechanic — poison double, burn and bleed half.)*
 -----
 
 ## Pitfalls / self-notes

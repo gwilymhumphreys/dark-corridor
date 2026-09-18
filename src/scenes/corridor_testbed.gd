@@ -23,7 +23,7 @@ func _ready() -> void:
   _corridor = CORRIDOR_SCENE.instantiate() as Corridor3D
   _apply_overrides(_corridor)   # before add_child so the corridor builds with them
   $CorridorHolder.add_child(_corridor)
-  # The debug look panel's settings and shader, as in fights.
+  # The debug panel's corridor look settings and shader, as in fights.
   _corridor.apply_settings(DebugPanels.corridor_settings, DebugPanels.environment_settings)
   (_corridor.get_node('Display') as Sprite2D).material = DebugPanels.world_material
 

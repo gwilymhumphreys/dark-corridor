@@ -8,15 +8,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/content/characters/character_catalog.gd
-msgid "Wanderer"
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
 msgid "Spore Druid"
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Duelist"
 msgstr ""
 
 #: src/content/characters/character_catalog.gd
@@ -24,15 +16,7 @@ msgid "Fleshmancer"
 msgstr ""
 
 #: src/content/characters/character_catalog.gd
-msgid "A balanced kit — blade, plate, and a creeping poison."
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
 msgid "Stack Spores, then spend them."
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Twin blades, no safety net — all pressure, no plate."
 msgstr ""
 
 #: src/content/characters/character_catalog.gd
@@ -120,14 +104,6 @@ msgid "Spore Thrall"
 msgstr ""
 
 #: src/content/items/item_catalog.gd
-msgid "Rusted Blade"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Iron Guard"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
 msgid "Venom Fang"
 msgstr ""
 
@@ -165,18 +141,6 @@ msgstr ""
 
 #: src/content/items/item_catalog.gd
 msgid "Wilt Frond"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Leather Gloves"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Leather Trews"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Leather Breastplate"
 msgstr ""
 
 #: src/content/items/item_catalog.gd
@@ -469,6 +433,10 @@ msgstr ""
 
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "You"
+msgstr ""
+
+#: src/scenes/combat/item_cell.tscn
+msgid "Temporary"
 msgstr ""
 
 #: src/scenes/combat/value_pill.tscn

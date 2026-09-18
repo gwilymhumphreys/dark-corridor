@@ -1,6 +1,6 @@
 class_name PoisonMechanic
 extends Mechanic
-## Poison — the mechanic for the stacked damage-over-time DoT (docs/plans/mechanics.md). Ticks
+## Poison — the mechanic for the stacked damage-over-time DoT (docs/systems/mechanics.md). Ticks
 ## every interval for its stack count, then loses a stack; does double damage to shield.
 
 const ID := 'poison'

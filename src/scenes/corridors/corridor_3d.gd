@@ -11,7 +11,7 @@ extends Node2D
 ## One OmniLight3D at the camera lights the pieces and the enemy sprites, and there is no ambient
 ## light, so everything past `light_range` is black.
 
-## Every built corridor is in this group, so the debug look panel can change the ones on screen.
+## Every built corridor is in this group, so the debug panel's Corridor tab can change the ones on screen.
 const GROUP: StringName = &'corridors'
 
 ## When true (default), `view_size` is set to the size of the viewport this corridor is in (the
@@ -168,7 +168,7 @@ func set_back_held(held: bool) -> void:
 
 ## Set corridor exports (`corridor_values`: property -> value) and properties of the camera's
 ## Environment (`environment_values`: property -> value), then rebuild. Names that do not exist are
-## skipped. Used by the debug look panel and its saved looks.
+## skipped. Used by the debug panel's Corridor tab and look presets.
 func apply_settings(corridor_values: Dictionary, environment_values: Dictionary) -> void:
   for property: String in corridor_values:
     if property in self:

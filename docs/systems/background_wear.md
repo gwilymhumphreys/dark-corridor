@@ -2,14 +2,15 @@
 
 A dev tool that draws print wear on the screen background, like an old printed record sleeve: faded
 areas, specks, rubbed edges, creases and folds. Only the background rectangle behind a screen is drawn,
-so text, panels, icons and the corridor are unchanged. Every effect is on by default. The defaults are
-the owner's saved print look, `assets/print_looks/default.cfg`.
+so text, panels, icons and the corridor are unchanged. The owner's chosen settings are in the default
+[look preset](look_presets.md).
 
 **Location:** the effect functions in `src/shaders/print_wear.gdshaderinc`, shared with
 [panel wear](panel_wear.md); the uniforms in `src/shaders/background_wear_settings.gdshaderinc`, used by
 both `src/shaders/background_wear.gdshader` and the corridor overlay
 ([print_frame.md](print_frame.md)); `src/ui/screen_background.gd` (class `ScreenBackground`);
-`PrintLook.background_material`. Settings are in the F5 print panel ([print_frame.md](print_frame.md)).
+`PrintLook.background_material`. Settings are in the Background tab of the
+[debug panel](debug_panel.md), `src/debug/background_panel.*` (class `BackgroundPanel`).
 
 ## How it works
 
@@ -44,13 +45,21 @@ A soft mottled texture, faint elongated flecks and scratches were tried and remo
 areas differ from that mottling: a few large patches with plain background between them, not a texture
 over the whole screen.
 
-## Look files and screenshots
+## The Background tab
 
-Background wear is saved in a print look's `background` section and reset with the rest of the print
-look ([print_frame.md](print_frame.md#print-looks)). The mark colours are not saved; they come from
-`Colours`.
+F4 opens the [debug panel](debug_panel.md) on this tab. `BackgroundPanel` extends the
+[Corridor tab](corridor_look.md#the-corridor-tab) and builds one section per uniform group of
+`background_wear.gdshader`. Every change applies to every screen background at once.
+
+## Presets and screenshots
+
+Background wear is its own part of a [preset](look_presets.md), saved in the `print_background`
+section, written and read by `PrintLook.write_background_look`, `read_background_look` and
+`reset_background_look`. It can be taken from another preset on its own, without touching the print
+part. The mark colours are not saved; they come from `Colours`.
 
 For screenshots, `--background-set=<uniform>=<value>` sets one setting (repeatable), for example
-`--background-set=background_folds_on=true` ([debug_panel.md](debug_panel.md#start-up-arguments)).
+`--background-set=background_folds_on=true`, and `--background-panel` opens the Background tab
+([debug_panel.md](debug_panel.md#start-up-arguments)).
 
 Tests: `tests/debug/test_corridor_look.gd`, `tests/debug/test_print_frame.gd`.

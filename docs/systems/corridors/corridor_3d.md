@@ -18,9 +18,9 @@ testbed (`src/scenes/corridor_testbed.tscn`).
 - Exports set before the corridor enters the tree are used by the first build (the testbed's `--set=`).
   After that, `apply_settings(corridor_values, environment_values)` sets exports and camera `Environment`
   properties and rebuilds; `CombatCorridor` and the testbed call it with the
-  [look panel](../corridor_look.md) settings.
+  [Corridor tab](../corridor_look.md) settings.
 - Each corridor duplicates its camera's `Environment` in `_ready`, so changing one does not change the
-  others, and joins the `Corridor3D.GROUP` group so the look panel can reach the corridors on screen.
+  others, and joins the `Corridor3D.GROUP` group so the Corridor tab can reach the corridors on screen.
 - Both hosts draw the corridor image through `DebugPanels.world_material` (the
   [corridor look shader](../corridor_look.md)).
 
@@ -46,7 +46,7 @@ chose it over four lights on the walls, floor and ceiling, which looked almost t
   to black looks abrupt.
 - Raising `light_attenuation` above 1 makes the nearest surface brighter, not darker.
 - The light does not flicker (owner, 2026-09-15): `flicker_amount` is 0 by default and in the scene. The
-  flicker stays as a look panel setting. It is 1D simplex noise (`flicker_level(time)`), sampled each frame; the light's energy is
+  flicker stays as a Corridor tab setting. It is 1D simplex noise (`flicker_level(time)`), sampled each frame; the light's energy is
   `light_energy` times that level, which stays between `1 - flicker_amount` and 1.
 - `_apply_light()` copies the exports to the light node when the corridor is built; call it after
   changing them at runtime.

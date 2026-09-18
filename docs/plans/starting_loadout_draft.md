@@ -76,8 +76,9 @@ RunManager API:
 
 - **DECISION NEEDED — starting enchants orphan.** `CharacterDef.starting_enchants` pins to a board
   **index** (`{ 'item_index': 0, 'enchant_id': WHETSTONE }`) of the *fixed* starting items. With the
-  board now a chosen random set, that index is meaningless. Wanderer + Duelist both carry a
-  Whetstone-on-item-0 start. Options: **(a)** retire starting enchants too (relic + potion stay;
+  board now a chosen random set, that index is meaningless. (The Wanderer, the only character that
+  carried a Whetstone-on-item-0 start, has since been deleted, so nothing uses the field today.)
+  Options: **(a)** retire starting enchants too (relic + potion stay;
   enchants are earned via draft) — *recommended, simplest, kills the index coupling*; **(b)** a later
   generation rule attaches a starting enchant to the chosen attacker (re-introduces coupling). The
   earlier "enchant starts stay as-is" line in this plan is **wrong** — only relic + potion stay

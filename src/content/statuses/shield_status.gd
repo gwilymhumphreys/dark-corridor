@@ -8,7 +8,7 @@ const ID := 'shield'
 
 func _init() -> void:
   id = ID
-  # Presentation is written once, in the mechanic (docs/plans/mechanics.md) — copy it here so the
+  # Presentation is written once, in the mechanic (docs/systems/mechanics.md) — copy it here so the
   # combat log, status icons and combat summary keep reading the status's own fields.
   var mechanic: Mechanic = MechanicRegistry.get_mechanic(ID)
   name_key = mechanic.name_key

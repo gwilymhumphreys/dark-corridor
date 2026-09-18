@@ -1,7 +1,7 @@
 class_name Mechanic
 extends RefCounted
 ## A mechanic is a named combat rule with one class that holds its name, description, icon,
-## colour and what it does when a delivery lands (docs/plans/mechanics.md). Item effects name
+## colour and what it does when a delivery lands (docs/systems/mechanics.md). Item effects name
 ## the mechanic they use, so items, relics and enchantments can refer to them ("your poison
 ## items", "when you shield"). One shared instance per id lives in the MechanicRegistry.
 

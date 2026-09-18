@@ -55,15 +55,18 @@ func test_run_once_is_deterministic() -> void:
 func test_run_once_attributes_damage_per_player_item() -> void:
   # Sourced from the CombatLog (Design B): damage_by_family is per ITEM, DIRECT hits only, and
   # PLAYER-SIDE only. Status (DoT) damage is NOT here — it is bucketed by status in
-  # damage_by_status. So the weapon's hits show per item, the poison shows under its status, and
-  # the enemy Claw (enemy side) is excluded.
-  var r := _mode().run_once()
+  # damage_by_status. So the attack's hits show per item, the poison shows under its status, and
+  # the enemy's item (enemy side) is excluded. The board is fixtures, not the default character's
+  # kit, because this needs one direct attacker and one pure applier side by side.
+  var m := _FixtureBoardMode.new()
+  _modes.append(m)
+  var r := m.run_once()
   var fam: Dictionary = r['summary']['damage_by_family']
   var by_status: Dictionary = r['summary']['damage_by_status']
-  assert_true(fam.has('Rusted Blade'), 'direct weapon damage credited to the player item')
-  assert_false(fam.has('Venom Fang'), 'a pure applier deals no DIRECT damage — not in the per-item table')
+  assert_true(fam.has('Fixture Blade'), 'direct attack damage credited to the player item')
+  assert_false(fam.has('Fixture Fang'), 'a pure applier deals no DIRECT damage — not in the per-item table')
   assert_true(by_status.has('Poison'), 'poison DoT bucketed under its status')
-  assert_false(fam.has('Claw'), 'the enemy claw is enemy-side — excluded from the player-only tally')
+  assert_false(fam.has('Fixture Claw'), 'the enemy item is enemy-side — excluded from the player-only tally')
   assert_gt(r['summary']['total_damage'], 0.0, 'some player damage was dealt')
 
 
@@ -74,3 +77,25 @@ func test_tiny_timeout_fails_as_timeout() -> void:
   assert_eq(r['outcome'], 'TIMEOUT')
   assert_false(r['resolved'])
   assert_eq(r['exit_code'], 1, 'an unresolved fight fails')
+
+
+## A run_once fight with a known board: one direct attacker, one pure applier, and an enemy whose
+## item is named differently so per-item rows stay tellable apart by side. The shipped default
+## board is the default character's starting kit, which has no applier in it.
+class _FixtureBoardMode extends AutoTestMode:
+  func _build_fight() -> Dictionary:
+    var player := Actor.new(Balance.PLAYER_START_HP)
+    for def in [FixtureItems.attack(), FixtureItems.poison()]:
+      player.board.append(Item.new(def, player))
+
+    var enemy := Actor.new(Balance.ENEMY_PLACEHOLDER_HP)
+    enemy.board.append(Item.new(FixtureItems.enemy_attack(), enemy))
+
+    var names: Dictionary = {}
+    names[enemy] = 'Fixture Grunt'
+    return {
+      'cm': CombatManager.new(player, [enemy]),
+      'player': player,
+      'enemies': [enemy],
+      'names': names,
+    }

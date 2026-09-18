@@ -12,15 +12,15 @@ class_name Colours
 ## the corridor "see gaps" magenta), which never ship.
 
 # ── Mechanics ────────────────────────────────────────────────────────────────
-# One colour per mechanic (docs/plans/mechanics.md); a mechanic's color() returns its variable, so a
+# One colour per mechanic (docs/systems/mechanics.md); a mechanic's color() returns its variable, so a
 # palette applied at runtime is read each time.
 static var ATTACK: Color = Color(0.9, 0.2, 0.2)             # the generic attack red
-static var SHIELD: Color = Color(0.3, 0.6, 1.0)
+static var SHIELD: Color = Color(0.95, 0.82, 0.2)           # yellow
 static var HEAL: Color = Color(0.3, 0.9, 0.4)
-static var POISON: Color = Color(0.4, 0.8, 0.2)
-static var BURN: Color = Color(0.95, 0.5, 0.1)              # PLACEHOLDER — owner re-tints
-static var BLEED: Color = Color(0.55, 0.1, 0.1)             # PLACEHOLDER — owner re-tints
-static var REGEN: Color = Color(0.6, 0.95, 0.6)             # PLACEHOLDER — owner re-tints
+static var POISON: Color = Color(0.27, 0.52, 0.18)          # dark green, away from the heal green
+static var BURN: Color = Color(0.95, 0.5, 0.1)              # orange
+static var BLEED: Color = Color(0.47, 0.11, 0.29)           # maroon leaning purple
+static var REGEN: Color = Color(0.6, 0.95, 0.6)             # light green, the heal green lifted
 static var CRIT: Color = Color(0.95, 0.95, 0.6)             # PLACEHOLDER — owner re-tints
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
@@ -81,7 +81,6 @@ static var TOOLTIP_CHANGED: Color = Color(0.95, 0.92, 0.55)
 static var UI_BACKGROUND: Color = Color(0.04, 0.04, 0.05)
 static var UI_BACKGROUND_WEAR: Color = Color8(51, 51, 51)          # background print wear marks (background_wear.md)
 static var UI_BACKGROUND_WEAR_LIGHT: Color = Color8(123, 120, 120)
-static var UI_BORDER: Color = Color8(153, 41, 34)                  # the printed border around the corridor (print_frame.md)
 static var UI_PANEL_SHADOW: Color = Color8(0, 0, 0)
 static var UI_PANEL: Color = Color8(31, 31, 31)
 static var UI_PANEL_EDGE: Color = Color8(51, 51, 51)

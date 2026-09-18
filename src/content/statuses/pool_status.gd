@@ -7,7 +7,7 @@ extends StatusEffect
 
 ## Soak from an incoming hit, returning the unabsorbed remainder. Unblockable payloads bypass the
 ## pool entirely (#5). The pool spends the damage times the dealing mechanic's shield multiplier
-## (docs/plans/mechanics.md → Shield): `m` is `MechanicRegistry.shield_multiplier(mechanic_id)`,
+## (docs/systems/mechanics.md → Shield): `m` is `MechanicRegistry.shield_multiplier(mechanic_id)`,
 ## so a poison hit (m = 2) drains shield twice as fast and a burn hit (m = 0.5) half as fast.
 func absorb(amount: float, incoming_flags: int, target, ctx, mechanic_id: String = '') -> float:
   if (incoming_flags & Delivery.Flag.UNBLOCKABLE) != 0:

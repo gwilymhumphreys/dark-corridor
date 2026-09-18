@@ -1,12 +1,11 @@
 class_name InterfaceLookAutoload
 extends Node
 ## Owns the interface look (docs/systems/interface_look.md): the material interface images are drawn
-## through, its settings, defaults, save/load/reset, and copying settings to and from the corridor look.
-## Registered as the `InterfaceLook` autoload, after `PrintLook` and before `DebugPanels`, which keeps
-## the F3 panel and the `--interface-look=` start-up argument.
+## through, its settings, defaults and reset, how they are written to and read from a look preset
+## (docs/systems/look_presets.md), and copying settings to and from the corridor look. Registered as the
+## `InterfaceLook` autoload, after `PrintLook` and before `DebugPanels`, which keeps the interface tab.
 
 const EFFECTS_INCLUDE: ShaderInclude = preload('res://src/shaders/look_effects.gdshaderinc')
-const LOOK_DIR: String = 'res://assets/interface_looks'
 ## Picture wear's mark colours, set from `Colours` rather than by the look.
 const COLOUR_UNIFORMS: Array[String] = ['picture_wear_dark_colour', 'picture_wear_light_colour']
 ## Effect groups in the shared include that the interface look shader does not use, so they are not
@@ -56,34 +55,25 @@ func reset() -> void:
   InterfaceGlow.reset()
 
 
-## Save every setting to a text file at `path`, with the interface glow settings in a `glow` section.
-func save_look(path: String) -> Error:
-  var file: ConfigFile = ConfigFile.new()
+## Write every setting into a preset file, with the interface glow settings in their own section.
+func write_look(file: ConfigFile) -> void:
   for uniform: String in defaults():
-    file.set_value('shader', uniform, material.get_shader_parameter(uniform))
+    file.set_value('interface_shader', uniform, material.get_shader_parameter(uniform))
   for property: String in InterfaceGlowAutoload.DEFAULTS:
-    file.set_value('glow', property, InterfaceGlow.setting(property))
-  DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-  return file.save(path)
+    file.set_value('interface_glow', property, InterfaceGlow.setting(property))
 
 
-## Load a look saved by `save_look`, starting from the defaults. Returns false if the file cannot be
-## read.
-func load_look(path: String) -> bool:
-  var file: ConfigFile = ConfigFile.new()
-  if file.load(path) != OK:
-    push_warning('[InterfaceLook] could not read interface look file %s' % path)
-    return false
+## Set the interface look from a preset file written by `write_look`, starting from the defaults.
+func read_look(file: ConfigFile) -> void:
   reset()
   var settings: Dictionary = defaults()
-  for uniform: String in _section_keys(file, 'shader'):
+  for uniform: String in _section_keys(file, 'interface_shader'):
     if settings.has(uniform):
-      material.set_shader_parameter(uniform, file.get_value('shader', uniform))
-  for property: String in _section_keys(file, 'glow'):
+      material.set_shader_parameter(uniform, file.get_value('interface_shader', uniform))
+  for property: String in _section_keys(file, 'interface_glow'):
     if InterfaceGlowAutoload.DEFAULTS.has(property):
-      InterfaceGlow.settings[property] = file.get_value('glow', property)
+      InterfaceGlow.settings[property] = file.get_value('interface_glow', property)
   InterfaceGlow.apply_settings()
-  return true
 
 
 ## Set every interface look setting that the corridor look also has to the corridor look's current

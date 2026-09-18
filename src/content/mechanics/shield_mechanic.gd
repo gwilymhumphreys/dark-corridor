@@ -1,6 +1,6 @@
 class_name ShieldMechanic
 extends Mechanic
-## Shield — the mechanic for the absorb pool (docs/plans/mechanics.md). Replaces block: a pool
+## Shield — the mechanic for the absorb pool (docs/systems/mechanics.md). Replaces block: a pool
 ## that absorbs incoming damage before health and stays until used up. How much shield a hit
 ## uses depends on the mechanic that dealt it.
 

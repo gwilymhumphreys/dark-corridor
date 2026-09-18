@@ -41,7 +41,7 @@ status-identity engine (spores), not warrior/mage/rogue.
 ## Armourer — **promoted (2026-07-04)**
 
 Has its own working file: [`armourer.md`](armourer.md). The roster's **on-ramp / starter** — the
-low-load anchor (successor to the `wanderer` placeholder). Shield **stack/spend** ("armour is ammo"),
+low-load anchor. Shield **stack/spend** ("armour is ammo"),
 one clean engine + two simple threads (weapon synergy / strength, tbd). Deliberately the *legible*
 character: obvious-home shield taken on purpose (the Ironclad slot), highest theme→mechanic affordance
 on the roster. Its mechanical ancestor is *Spiked Shield / Retributive Shield* below — the Armourer is
@@ -321,7 +321,7 @@ ships).
     resource+theme screen in [Cross-cutting](#cross-cutting--resource-economies)).
   - **Shield to stay alive** while you voluntarily bleed HP — shield *protects the engine* (a
     distinct use from the Spiked Shield's shield-as-intake; only one ships anyway). *Authored: the
-    bone shield spread — **Rib / Femur / Skull**, plain self-shield on the Leather fast/mid/slow curve.*
+    bone shield spread — **Rib / Femur / Skull**, plain self-shield on the fast/mid/slow shield curve.*
   - **Healing is double-duty** — survival **and** refilling the HP you spend (heal = reload). This
     dissolves the usual "healing items are boring" problem: here lifegain *is* an engine piece.
   - **Ramp-up-over-time** scaling character: the board of fleshy items compounds; the ramp is gated
