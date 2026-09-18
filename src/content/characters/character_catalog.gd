@@ -53,7 +53,8 @@ static func _build() -> void:
 static func _spore_druid() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = SPORE_DRUID
-  d.name_key = 'Spore Druid'
+  d.name_key = 'Maren'                 # PLACEHOLDER personal name — owner's to rename
+  d.subtitle_key = 'Rot Shepherd'      # the owner's lead role name (spore_druid.md); 'Spore Druid' stays the internal label
   d.portrait = 'res://assets/portraits/characters/shaman.png'   # PLACEHOLDER portrait — owner's to swap
   d.blurb_key = 'Stack Spores, then spend them.'   # PLACEHOLDER hook — owner writes the real one
   d.item_pool = [
@@ -83,7 +84,8 @@ static func _spore_druid() -> CharacterDef:
 static func _fleshmancer() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = FLESHMANCER
-  d.name_key = 'Fleshmancer'           # PLACEHOLDER name — owner's to rename
+  d.name_key = 'Aldous'                # PLACEHOLDER personal name — owner's to rename
+  d.subtitle_key = 'Disgraced Surgeon' # the owner's role name (2026-09-18); 'Fleshmancer' stays the internal label
   d.portrait = 'res://assets/portraits/characters/leper_nb.png'
   d.blurb_key = 'Carve yourself into a churning board of flesh.'   # PLACEHOLDER hook — owner writes the real one
   d.item_pool = [

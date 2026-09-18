@@ -51,7 +51,7 @@ static func _build() -> void:
   }
   _mechanics[ITEM_TARGET] = {
     'name_key': 'Item Target',
-    'desc_key': 'Targets an enemy item rather than the enemy.',
+    'desc_key': 'Targets an item rather than a fighter.',
     'color': Colours.ARCANE,
     'icon': 'res://assets/icons/keywords/skill_mark_nb.png',
   }

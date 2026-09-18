@@ -70,6 +70,8 @@ Items declare a *relative* shape (Item PRD); the manager resolves it against the
 - **all-opponents** (AOE) → each living opponent at spawn; a target dead at arrival fizzles individually.
 - **opponent-item-random** → one *random* item on the living opponents, drawn from the **seeded combat RNG** (deterministic / reproducible). Locked at spawn; if that item leaves the board before arrival the Delivery fizzles. *(Random default — provisional, may become a rule after testing.)*
 - **all-opponent-items** → every item on the living opponents at spawn; an item gone at arrival fizzles individually.
+- **own-item-random** → one random item on the owner's own board, drawn from the same seeded RNG (`_random_own_item`). The firing item is excluded from the pool.
+- **all-own-items** → every other item on the owner's own board (`_all_own_items`), the firing item excluded. The owner's board only, not an ally's.
 
 **Actor-targeting** never gets smart — leftmost, no lowest-HP / highest-threat (combat_model.md), for player predictability. **Item-targeting**'s single-target case is **random** (seeded) by deliberate choice — variety over predictability, to validate in testing. The *rules* are combat_model.md's; their *runtime authority* (live ordering, the RNG draw) is here.
 
@@ -128,7 +130,7 @@ Checked each tick after **Land** + the dead-reaping (steps 3–4): player `Actor
 ## Prototype scope
 
 - One `Combat manager` driving one player `Actor` + one enemy `Actor`: the central tick (advance → fire → land → events → win/loss).
-- Target-shape resolution: self, opponent-leftmost, all-opponents, **and the item-target shapes** (opponent-item-random / all-opponent-items) — the random pick drawn from the per-fight RNG (below). Example item: **Hex Bolt** (silences a random enemy item).
+- Target-shape resolution: self, opponent-leftmost, all-opponents, **and the item-target shapes** (opponent-item-random / all-opponent-items / own-item-random / all-own-items) — the random pick drawn from the per-fight RNG (below). Example item: **Hex Bolt** (silences a random enemy item).
 - The event bus with one trigger ("on poison applied → push the shield item").
 - `Timekeeper` lifecycle (create / tear down); pull-based registration into its own registry; the UI timescale intent (hover slow-mo).
 

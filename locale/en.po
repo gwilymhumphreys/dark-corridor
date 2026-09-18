@@ -8,12 +8,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/content/characters/character_catalog.gd
-msgid "Spore Druid"
-msgstr "Spore Druid"
+msgid "Maren"
+msgstr "Maren"
 
 #: src/content/characters/character_catalog.gd
-msgid "Fleshmancer"
-msgstr "Fleshmancer"
+msgid "Aldous"
+msgstr "Aldous"
+
+#: src/content/characters/character_catalog.gd
+msgid "Rot Shepherd"
+msgstr "Rot Shepherd"
+
+#: src/content/characters/character_catalog.gd
+msgid "Disgraced Surgeon"
+msgstr "Disgraced Surgeon"
 
 #: src/content/characters/character_catalog.gd
 msgid "Stack Spores, then spend them."
@@ -252,8 +260,8 @@ msgid "Hits every enemy at once."
 msgstr "Hits every enemy at once."
 
 #: src/content/keywords/keyword_catalog.gd
-msgid "Targets an enemy item rather than the enemy."
-msgstr "Targets an enemy item rather than the enemy."
+msgid "Targets an item rather than a fighter."
+msgstr "Targets an item rather than a fighter."
 
 #: src/content/keywords/keyword_catalog.gd
 msgid "Cannot be soaked by Shield."
@@ -295,6 +303,14 @@ msgstr "Burn"
 msgid "Deals damage over time, losing a stack each tick."
 msgstr "Deals damage over time, losing a stack each tick."
 
+#: src/content/mechanics/charge_mechanic.gd
+msgid "Charge"
+msgstr "Charge"
+
+#: src/content/mechanics/charge_mechanic.gd
+msgid "Fills that many seconds of an item's cooldown bar."
+msgstr "Fills that many seconds of an item's cooldown bar."
+
 #: src/content/mechanics/crit_mechanic.gd
 msgid "Crit"
 msgstr "Crit"
@@ -302,6 +318,14 @@ msgstr "Crit"
 #: src/content/mechanics/crit_mechanic.gd
 msgid "A chance to double the values of this item's effects when it fires."
 msgstr "A chance to double the values of this item's effects when it fires."
+
+#: src/content/mechanics/decharge_mechanic.gd
+msgid "Decharge"
+msgstr "Decharge"
+
+#: src/content/mechanics/decharge_mechanic.gd
+msgid "Empties that many seconds of an item's cooldown bar."
+msgstr "Empties that many seconds of an item's cooldown bar."
 
 #: src/content/mechanics/heal_mechanic.gd
 msgid "Heal"
@@ -508,6 +532,10 @@ msgid "{0}  {1} → {2}  +{3} shield"
 msgstr "{0}  {1} → {2}  +{3} shield"
 
 #: src/scenes/screens/combat_summary.gd
+msgid "{0}  {1} → {2}  {3}s"
+msgstr "{0}  {1} → {2}  {3}s"
+
+#: src/scenes/screens/combat_summary.gd
 msgid "{0}  threw {1}"
 msgstr "{0}  threw {1}"
 
@@ -648,6 +676,10 @@ msgid "Heal {0}"
 msgstr "Heal {0}"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} {1} by {2}s"
+msgstr "{0} {1} by {2}s"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "Gain {0} {1}"
 msgstr "Gain {0} {1}"
 
@@ -694,6 +726,14 @@ msgstr "a random enemy item"
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "all enemy items"
 msgstr "all enemy items"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "a random item of yours"
+msgstr "a random item of yours"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "all your items"
+msgstr "all your items"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "the enemy"

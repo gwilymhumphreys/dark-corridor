@@ -10,7 +10,9 @@ extends Node
 ##
 ## Every play_* helper no-ops gracefully when its stream is missing, so callers
 ## (such as the UI juice node) work fine before any audio assets exist. Drop
-## files at the UI_*_PATH locations and they're picked up automatically.
+## files in the UI_*_DIR folders and they join that sound's pool automatically;
+## each play picks one of the pool at random so a repeated action doesn't
+## repeat the same recording. A sound kept as both .wav and .mp3 counts once.
 
 const BUS_EFFECTS: String = 'Effects'
 const POLYPHONY: int = 32
@@ -18,20 +20,30 @@ const COOLDOWN_TIME: float = 0.08
 const PITCH_JITTER_MIN: float = 0.92
 const PITCH_JITTER_MAX: float = 1.08
 
-# Shared default UI sound bank. Missing files leave the helper a silent no-op.
-const UI_HOVER_PATH: String = 'res://assets/sound-effects/ui/hover.wav'
-const UI_CLICK_PATH: String = 'res://assets/sound-effects/ui/click.wav'
-const UI_PRESS_PATH: String = 'res://assets/sound-effects/ui/press.wav'
+# Shared default UI sound bank. Every audio file in the folder is a variant of
+# that sound. An empty or missing folder leaves the helper a silent no-op.
+const UI_HOVER_DIR: String = 'res://assets/sound-effects/ui/hover/'
+const UI_CLICK_DIR: String = 'res://assets/sound-effects/ui/click/'
+## Audio file extensions, most preferred first. A sound is kept in the repository as both the
+## original .wav and a much smaller .mp3; the same name with two extensions is one sound, not two
+## variants. The web build prefers the mp3 so the player downloads less, everything else prefers
+## the original.
+const EXTENSIONS_BY_QUALITY: Array[String] = ['.wav', '.ogg', '.mp3']
+const EXTENSIONS_BY_SIZE: Array[String] = ['.mp3', '.ogg', '.wav']
+## Audio driver name used when there is no real output device (headless runs).
+const DUMMY_DRIVER: String = 'Dummy'
+## Command-line flags for runs that play no sound — the autotest harness and a --shot screenshot
+## capture. Prefs mutes the Master bus for these; here they also skip loading the sound files.
+const SILENT_ARGS: Array[String] = ['--autotest', '--shot']
 # Combat. No file is in the project yet, so play_impact() is silent until one is dropped here.
-const COMBAT_IMPACT_PATH: String = 'res://assets/sound-effects/combat/impact.wav'
+const COMBAT_IMPACT_PATH: String = 'res://assets/sound-effects/combat/impact.mp3'
 
 var _poly_player: AudioStreamPlayer
 var _poly_playback: AudioStreamPlaybackPolyphonic
 var _cooldowns: Dictionary = {}
 
-var _ui_hover_stream: AudioStream
-var _ui_click_stream: AudioStream
-var _ui_press_stream: AudioStream
+var _ui_hover_streams: Array[AudioStream] = []
+var _ui_click_streams: Array[AudioStream] = []
 var _impact_stream: AudioStream
 
 
@@ -59,9 +71,17 @@ func _create_player() -> void:
 
 
 func _load_ui_bank() -> void:
-  _ui_hover_stream = _try_load(UI_HOVER_PATH)
-  _ui_click_stream = _try_load(UI_CLICK_PATH)
-  _ui_press_stream = _try_load(UI_PRESS_PATH)
+  # Headless runs get the dummy driver, which never releases a playback, so a
+  # sound played during a test is reported as leaked at exit. Autotest and
+  # screenshot runs are silent too, so neither needs the files decoded.
+  if AudioServer.get_driver_name() == DUMMY_DRIVER:
+    return
+  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
+  for flag: String in SILENT_ARGS:
+    if flag in args:
+      return
+  _ui_hover_streams = _load_folder(UI_HOVER_DIR)
+  _ui_click_streams = _load_folder(UI_CLICK_DIR)
   _impact_stream = _try_load(COMBAT_IMPACT_PATH)
 
 
@@ -69,6 +89,45 @@ func _try_load(path: String) -> AudioStream:
   if ResourceLoader.exists(path):
     return load(path) as AudioStream
   return null
+
+
+## One stream per sound in `dir`, in no particular order. Files sharing a name before the
+## extension are the same sound in different formats, so only the preferred one is loaded.
+## A missing folder gives [].
+func _load_folder(dir_path: String) -> Array[AudioStream]:
+  var streams: Array[AudioStream] = []
+  var dir: DirAccess = DirAccess.open(dir_path)
+  if dir == null:
+    return streams
+  var order: Array[String] = EXTENSIONS_BY_SIZE if OS.has_feature('web') else EXTENSIONS_BY_QUALITY
+  # Each name before the extension maps to the extensions found for it.
+  var by_name: Dictionary = {}
+  dir.list_dir_begin()
+  var file_name: String = dir.get_next()
+  while file_name != '':
+    if not dir.current_is_dir():
+      var extension: String = '.' + file_name.get_extension().to_lower()
+      if extension in order:
+        var base: String = file_name.get_basename()
+        if not by_name.has(base):
+          by_name[base] = [] as Array[String]
+        by_name[base].append(extension)
+    file_name = dir.get_next()
+  dir.list_dir_end()
+  for base: String in by_name:
+    for extension: String in order:
+      if extension in by_name[base]:
+        var stream: AudioStream = _try_load(dir_path + base + extension)
+        if stream:
+          streams.append(stream)
+        break
+  return streams
+
+
+func _pick(streams: Array[AudioStream]) -> AudioStream:
+  if streams.is_empty():
+    return null
+  return streams[randi() % streams.size()]
 
 
 ## Play a one-shot. A negative pitch picks a random jitter; pass a value to
@@ -97,15 +156,11 @@ func play_guarded(key: String, stream: AudioStream, pitch: float = -1.0, volume_
 
 
 func play_ui_hover() -> void:
-  play_guarded('ui_hover', _ui_hover_stream)
+  play_guarded('ui_hover', _pick(_ui_hover_streams))
 
 
 func play_ui_click() -> void:
-  play_guarded('ui_click', _ui_click_stream)
-
-
-func play_ui_press() -> void:
-  play_guarded('ui_press', _ui_press_stream)
+  play_guarded('ui_click', _pick(_ui_click_streams))
 
 
 ## A hit landing in combat. Guarded, so a burst of hits in the same moment makes one sound
@@ -148,8 +203,7 @@ func _exit_tree() -> void:
   if _poly_player:
     _poly_player.stop()
     _poly_player.stream = null
-  _ui_hover_stream = null
-  _ui_click_stream = null
-  _ui_press_stream = null
+  _ui_hover_streams.clear()
+  _ui_click_streams.clear()
   _impact_stream = null
   _cooldowns.clear()

@@ -3,7 +3,7 @@ extends Node
 
 ## Shuffled background music with crossfade between tracks.
 ##
-## Loads every .ogg in MUSIC_DIR and plays them in a reshuffled order, blending
+## Loads every .ogg and .mp3 in MUSIC_DIR and plays them in a reshuffled order, blending
 ## from one track to the next via two players. No-ops cleanly when the directory
 ## is empty or missing, so it's safe to run before any music assets exist.
 
@@ -74,7 +74,7 @@ func _load_tracks() -> void:
   dir.list_dir_begin()
   var file_name: String = dir.get_next()
   while file_name != '':
-    if not dir.current_is_dir() and file_name.ends_with('.ogg'):
+    if not dir.current_is_dir() and (file_name.ends_with('.ogg') or file_name.ends_with('.mp3')):
       var stream: AudioStream = load(MUSIC_DIR + file_name)
       if stream:
         _tracks.append(stream)

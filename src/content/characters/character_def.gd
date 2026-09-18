@@ -7,7 +7,8 @@ extends RefCounted
 ## prototype seed; the owner authors the real characters (e.g. the Spore Druid).
 
 var id: String = ''
-var name_key: String = ''            # source English; displayed via tr() — localizable
+var name_key: String = ''            # the character's personal name; source English, displayed via tr()
+var subtitle_key: String = ''        # the role line under the name (e.g. 'Rot Shepherd'); tr(), '' = none
 var blurb_key: String = ''           # one-line identity hook for the character-select screen (tr())
 var portrait: String = ''            # res:// path of the character's portrait (assets/portraits/characters/); empty = none
 var item_pool: Array = []            # this character's draftable item ids (#27); colorless is added at draw

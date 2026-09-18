@@ -58,34 +58,46 @@ API:
   pitch = random jitter).
 - `play_guarded(key, stream, pitch, volume_db)` — same, but cooldown-guarded by
   `key`.
-- `play_ui_hover()` / `play_ui_click()` / `play_ui_press()` — the shared UI bank.
+- `play_ui_hover()` / `play_ui_click()` — the shared UI bank.
 - `play_impact()` — a hit landing in combat, played once per landing by the
   [VFX wall](vfx_driver.md). Guarded, so a burst of hits in the same moment makes one sound.
 
-The UI bank loads from the `UI_*_PATH` constants; drop files there and they're
-picked up automatically:
+**Variant folders.** The UI bank loads every sound in the `UI_*_DIR` folders, and each play
+picks one at random, so a repeated action doesn't repeat the same recording. Drop a file in or
+delete one and the pool changes with no code change:
 
-- `assets/sound-effects/ui/hover.wav`
-- `assets/sound-effects/ui/click.wav`
-- `assets/sound-effects/ui/press.wav`
+- `assets/sound-effects/ui/hover/` — 8 page turns
+- `assets/sound-effects/ui/click/` — 6 book closes and 2 book drops
 
-The combat impact sound loads the same way from `COMBAT_IMPACT_PATH`
-(`assets/sound-effects/combat/impact.wav`). No sound file is in the project yet, so every helper is
-currently silent.
+**Two formats per sound.** Each one is kept as both the original `.wav` and a much smaller
+`.mp3`. Files sharing a name before the extension are one sound, not two variants: the loader
+groups by that name and takes a single file per sound, preferring the `.mp3` on web (so the
+player downloads less) and the `.wav` everywhere else. The preference lists are
+`EXTENSIONS_BY_SIZE` and `EXTENSIONS_BY_QUALITY`.
+
+The combat impact sound is a single file at `COMBAT_IMPACT_PATH`
+(`assets/sound-effects/combat/impact.mp3`). No file is there yet, so `play_impact()` is silent.
+
+**Nothing is loaded in a silent run.** Like `MusicManager` below, the bank is skipped under the
+headless dummy audio driver and in `--autotest` / `--shot` runs. The dummy driver never releases
+a playback, so a sound played in a test would be reported as leaked at exit.
+
+See [art_audio.md](../design/art_audio.md) for where effects come from and
+[asset_credits.md](../design/asset_credits.md) for who recorded them.
 
 Tunable constants (polyphony, cooldown, pitch range, paths) live at the top of
 `sfx_manager.gd`.
 
 ## MusicManager (`src/autoloads/music_manager.gd`)
 
-Shuffled background music with a two-player crossfade. Loads every `.ogg` in
-`assets/music/`, reshuffles when the playlist is exhausted, and crossfades into
+Shuffled background music with a two-player crossfade. Loads every `.ogg` and `.mp3`
+in `assets/music/`, reshuffles when the playlist is exhausted, and crossfades into
 the next track near the end of the current one. Routes to the **Music** bus.
 
 The folder holds the tracks from three dungeon synth packs, credited in
 [asset_credits.md](../design/asset_credits.md). Where a pack ships both a
 full-length and a loop version of a track, the full-length one is in the project,
-because the crossfade already blends a track out. Drop another `.ogg` in the
+because the crossfade already blends a track out. Drop another `.ogg` or `.mp3` in the
 folder and it joins the shuffle with no code change.
 
 - **No-op when empty** — safe to run before any tracks exist.

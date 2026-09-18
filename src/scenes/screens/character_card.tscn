@@ -38,11 +38,24 @@ theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="Subtitle" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 24.0
+offset_top = 228.0
+offset_right = 336.0
+offset_bottom = 260.0
+mouse_filter = 2
+theme_type_variation = &"LabelDim"
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Blurb" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 0
 offset_left = 24.0
-offset_top = 240.0
+offset_top = 266.0
 offset_right = 336.0
 offset_bottom = 380.0
 mouse_filter = 2

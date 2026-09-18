@@ -39,6 +39,7 @@ GDScript — decision #23 — not data files):
 | `.gd` — `tr('...')` / `tr("...")` literals | code-built UI, formatted strings, the map/rarity/outcome labels |
 | `.tscn` — `text` / `tooltip_text` / `popup/item_<n>/text` | static scene UI (menus, titles, buttons, OptionButton / menu items) |
 | `.gd` — `name_key = '...'` literals | item / enemy / status / encounter / relic / enchant / consumable names (shown via `tr(def.name_key)`) |
+| `.gd` — `subtitle_key = '...'` literals | the role line under a character's name on the select screen (`tr(def.subtitle_key)`) |
 
 Dev / throwaway hosts are excluded (see `EXCLUDE_FILES` in `tools/extract_pot.gd`):
 the corridor testbed, the panel example, the combat sandbox — their text stays English.

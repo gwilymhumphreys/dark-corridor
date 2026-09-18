@@ -9,7 +9,7 @@ terms of.
 
 **Location:** `src/content/mechanics/`
 
-All eight are built: attack, heal, shield, poison, burn, bleed, regen and crit.
+All ten are built: attack, heal, shield, poison, burn, bleed, regen, crit, charge and decharge.
 
 ## Words used here
 
@@ -17,13 +17,13 @@ All eight are built: attack, heal, shield, poison, burn, bleed, regen and crit.
 - **Damage** is health or shield lost from any source. Poison, burn and bleed deal damage but are
   not attacks.
 - **Stacks** is a status's `count`.
-- **The eight** means the eight mechanics below. **Outside the set** means every other status and
+- **The set** means the ten mechanics below. **Outside the set** means every other status and
   delivery kind (weak, vulnerable, blind, silence, spores, decay, empowered, summon, item creation),
   all unchanged by this system.
 
 Every number these rules use is a constant in `src/data/balance.gd`.
 
-## The eight
+## The ten
 
 | Mechanic | Id | What it is | What it does |
 |---|---|---|---|
@@ -35,13 +35,15 @@ Every number these rules use is a constant in `src/data/balance.gd`.
 | **Bleed** | `'bleed'` | Status on an actor, triggered by attacks | Each time the holder is hit by an attack, deals damage equal to its stacks to the holder, then loses a stack. Uses half shield. |
 | **Regen** | `'regen'` | Status on an actor, ticks | Every interval, heals the holder by its stacks times its per-tick heal. Never loses stacks, so it lasts the whole fight. |
 | **Crit** | `'crit'` | A chance on an item | When the item fires, rolls its crit chance. On a crit, that fire's mechanic values are multiplied. |
+| **Charge** | `'charge'` | Direct, on an item | Adds seconds of progress to the target item's cooldown bar, so it fires sooner. |
+| **Decharge** | `'decharge'` | Direct, on an item | Takes seconds of progress off the target item's cooldown bar, so it fires later. |
 
 Poison, burn, bleed and regen are statuses that are also mechanics: their effects are delivered as
 `MECHANIC` naming the mechanic, and their status classes copy their `name_key` / `desc_key` / `icon`
 from their mechanic so the text is written once. Burn and poison extend `PeriodicStatus` (a tick
 damage-over-time, and Mass fuel); regen and bleed extend `StatusEffect` directly and are not fuel.
 
-**The descriptions and four of the icons are placeholders**, marked `# PLACEHOLDER` in the mechanic
+**The descriptions and seven of the icons are placeholders**, marked `# PLACEHOLDER` in the mechanic
 classes. They are the text the tooltip keyword cards show the player, so the player is not yet told
 the real rules. Writing them is the owner's work.
 
@@ -106,11 +108,47 @@ untouched. `EventBus.Event.CRIT` is published with the item's def id as data, th
 straight after `ITEM_FIRED`. Thrown consumables never crit, and `Item.display_value` never rolls (the
 tooltip shows the value without crit). `CritMechanic` has no `land` override — it is never delivered.
 
+## Charge and decharge
+
+Charge and decharge move an **item's** cooldown bar. An `Item` owns a `Ticker` whose `accum` fills
+one step at a time until it reaches `threshold`, then the item fires. Charge adds the delivery's
+value in seconds of progress to the target item's bar; decharge takes the same away. The effect's
+value is always authored positive — the mechanic applies the sign — and one second of progress is
+`1.0 / Balance.STEP` steps.
+
+Both are `MECHANIC` deliveries whose target is an `Item`, so an effect using them needs an item
+target shape ([item.md](item.md#targeting-declare-a-shape-dont-resolve-a-target)). The two
+own-board shapes, `own-item-random` and `all-own-items`, were added for them; the two opponent-item
+shapes work as well, and a decharge on the enemy's board is what they are for.
+
+- The shift is **clamped to the bar** — never below empty, never past full. A charge can therefore
+  never bank more than one fire, which is the same rule decision #30 applies to a gate.
+- A **gated** item (silenced) is unaffected by either. Its bar is frozen while the gate sits on it
+  and even trigger pushes are dropped (decision #30), so a charge must bank nothing there either.
+- A land that shifts the bar by nothing — charging a full bar, decharging an empty one — publishes
+  no event and writes no log entry.
+- A delivery aimed at an `Actor` instead of an `Item` is an authoring mistake: it pushes an error
+  and does nothing.
+- The **firing item is left out** of both own-board shapes. An item that could charge itself with
+  travel 0 would refill its own bar the step it fired, then fire every step after that.
+- `ChargeMechanic.shift_cooldown(item, seconds)` holds the shared arithmetic; `DechargeMechanic`
+  calls it with a negative value. It returns the seconds actually applied, which is what the log
+  records.
+
+The combat log gets a `charge` event through `CombatLog.on_charge`, holding the seconds applied
+(negative for a decharge) and the affected item's `name_key`. There is no per-item tally — charge
+moves no health, shield or status. The combat summary draws it as a signed number of seconds.
+
+**Open:** scoping which items they can pick — by item type tag, or a named item, rather than any
+item on the board. The owner has asked for this; it is not built, and it belongs with the target
+shapes rather than with the mechanics.
+
 ## The APPLIED event
 
 Landing publishes one event, `EventBus.Event.APPLIED`, when a `MECHANIC` or `APPLY_STATUS` delivery
 lands and applies. It replaced `DAMAGE_DEALT`, `HEALED` and `STATUS_APPLIED`. The data is the
-mechanic id (attack, heal, shield, poison, burn, bleed, regen) or the status id for `APPLY_STATUS`;
+mechanic id (attack, heal, shield, poison, burn, bleed, regen, charge, decharge) or the status id
+for `APPLY_STATUS`;
 the source is the delivery's `source_actor`. Ticks, bleed's own damage, `SUMMON` and `CREATE_ITEM`
 publish nothing. A trigger's `filter` names the id — Spite Ward (`ItemCatalog.AVENGER`) subscribes to
 `APPLIED` filtered to `'poison'`.
@@ -175,10 +213,12 @@ on 2026-09-18:
 | Burn | Orange |
 | Bleed | Maroon leaning purple |
 | Crit | Placeholder pale yellow, not yet chosen |
+| Charge | White |
+| Decharge | Grey |
 
 Interface palette files name them in lower case (`attack`, `poison`); see
 [interface_palette.md](interface_palette.md). `ui-default.gpl` carries the same values, and the other
-palettes in `assets/palettes/new/ui/` carry all eight fitted to their own schemes.
+palettes in `assets/palettes/new/ui/` carry all ten fitted to their own schemes.
 
 ## Health bar numbers
 
@@ -193,14 +233,15 @@ instead.
 ## Tooltip keyword cards
 
 `KeywordCatalog.has` / `get_entry` resolve a **mechanic** id from its `Mechanic` class (name /
-desc / colour / icon), so attack, heal, shield, poison, burn, bleed, regen and crit all have cards
+desc / colour / icon), so all ten mechanics have cards
 ([tooltips.md](tooltips.md)). `TooltipContent.keyword_ids` adds each effect's mechanic id (attack and
 heal included) and `crit` for an item with a crit chance, and the tooltip stat block gets a
 `'Crit chance: {0}%'` line for such an item.
 
 ## Content
 
-No items use burn, regen or crit yet — they are covered by items built inside the tests. Writing
+No items use burn, regen, crit, charge or decharge yet — they are covered by items built inside
+the tests. Writing
 items for them is the owner's work. Bleed items cash out on attacks received rather than on the
 holder's own fires, and were not re-tuned for the change.
 

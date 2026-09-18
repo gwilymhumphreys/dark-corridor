@@ -22,6 +22,8 @@ static var BURN: Color = Color(0.95, 0.5, 0.1)              # orange
 static var BLEED: Color = Color(0.47, 0.11, 0.29)           # maroon leaning purple
 static var REGEN: Color = Color(0.6, 0.95, 0.6)             # light green, the heal green lifted
 static var CRIT: Color = Color(0.95, 0.95, 0.6)             # PLACEHOLDER — owner re-tints
+static var CHARGE: Color = Color(0.94, 0.94, 0.94)          # white
+static var DECHARGE: Color = Color(0.5, 0.5, 0.5)           # grey
 
 # ── Statuses ─────────────────────────────────────────────────────────────────
 # Each StatusEffect subclass AND its appliers reference the same colour (applier = status colour).

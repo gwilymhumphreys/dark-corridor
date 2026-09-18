@@ -1,7 +1,7 @@
 # Dark Corridor — Combat Log (as-built)
 
 The per-fight **observation log**: a combat-scoped sink the [Combat manager](combat_manager.md)
-writes to at each mutation site (damage / heal / shield / status / fire / throw), and the
+writes to at each mutation site (damage / heal / shield / status / fire / charge / throw), and the
 **single source of truth** for combat numbers — the [autotest](autotest.md) reads it instead
 of reconstructing tallies from HP diffs. Session-only, combat-scoped, gone at fight teardown.
 
@@ -64,15 +64,20 @@ attributable); only status damage moves.
 
 ## Write methods + the timeline
 
-Seven manager-called writers, each taking resolved `name_key`s + side + `sim_time`:
+Eight manager-called writers, each taking resolved `name_key`s + side + `sim_time`:
 `on_item_fired`, `on_damage`, `on_status_damage`, `on_heal`, `on_shield`, `on_status_applied`,
-`on_throw`. `on_damage` is the **direct-hit** writer (credits the item); `on_status_damage` is the
+`on_charge`, `on_throw`. `on_damage` is the **direct-hit** writer (credits the item); `on_status_damage` is the
 **DoT / cash-out** writer (credits the status's `name_key`, carries the status `id` on the event
 `data`). Every write also appends to the ordered **`events`** timeline (append order = sim order) —
 the post-fight event log. Each entry: `{ t, type, source, source_side, target, amount, data }`,
-`type` in fire / damage / heal / shield / status / throw; `data` holds the status id (a status tick
-or a status apply) or thrown consumable id (throw). The amount writers ignore a non-positive amount
-(record nothing, append no event).
+`type` in fire / damage / heal / shield / status / charge / throw; `data` holds the status id (a
+status tick or a status apply) or thrown consumable id (throw). The amount writers ignore a
+non-positive amount (record nothing, append no event).
+
+`on_charge` is the [charge and decharge](mechanics.md#charge-and-decharge) writer: `amount` is the
+seconds of cooldown progress actually applied to the target item, negative for a decharge, and
+`target` is that item's `name_key`. It keeps no per-item tally, because charge moves no health,
+shield or status, and it records nothing when the seconds are zero.
 
 The numbers are **honest** because `Actor.take_damage` / `Actor.heal` now return the actual HP
 delta (see [actor.md](actor.md)) — post-shield, capped on a killing blow, post-overheal-cap —

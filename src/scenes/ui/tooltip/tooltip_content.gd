@@ -52,6 +52,11 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
         return _interpolate(tr('Deal {0} damage to {1}'), [value_seg, _shape_text(effect.shape)])
       if effect.mechanic == HealMechanic.ID:
         return _interpolate(tr('Heal {0}'), [value_seg])
+      # Charge and decharge move an item's cooldown bar by seconds, so their line names the
+      # target items and the seconds, not a stack count.
+      if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:
+        return _interpolate(tr('{0} {1} by {2}s'),
+            [{'t': 'chip', 'id': effect.mechanic}, _shape_text(effect.shape), value_seg])
       var chip: Dictionary = {'t': 'chip', 'id': effect.mechanic}
       if effect.shape == ItemEffect.Shape.SELF:
         return _interpolate(tr('Gain {0} {1}'), [value_seg, chip])
@@ -106,6 +111,10 @@ func _shape_text(shape: int) -> Dictionary:
       phrase = tr('a random enemy item')
     ItemEffect.Shape.ALL_OPPONENT_ITEMS:
       phrase = tr('all enemy items')
+    ItemEffect.Shape.OWN_ITEM_RANDOM:
+      phrase = tr('a random item of yours')
+    ItemEffect.Shape.ALL_OWN_ITEMS:
+      phrase = tr('all your items')
     _:
       phrase = tr('the enemy')
   return {'t': 'text', 's': phrase}
@@ -159,7 +168,9 @@ static func _item_uses_mechanic(item: Item, mech: String) -> bool:
     KeywordCatalog.AOE:
       return _any_effect(item, func(e): return e.shape == ItemEffect.Shape.ALL_OPPONENTS or e.shape == ItemEffect.Shape.ALL_OPPONENT_ITEMS)
     KeywordCatalog.ITEM_TARGET:
-      return _any_effect(item, func(e): return e.shape == ItemEffect.Shape.OPPONENT_ITEM_RANDOM or e.shape == ItemEffect.Shape.ALL_OPPONENT_ITEMS)
+      return _any_effect(item, func(e): return e.shape == ItemEffect.Shape.OPPONENT_ITEM_RANDOM \
+          or e.shape == ItemEffect.Shape.ALL_OPPONENT_ITEMS \
+          or e.shape == ItemEffect.Shape.OWN_ITEM_RANDOM or e.shape == ItemEffect.Shape.ALL_OWN_ITEMS)
     KeywordCatalog.UNBLOCKABLE:
       return _any_effect(item, func(e): return (e.flags & Delivery.Flag.UNBLOCKABLE) != 0)
     KeywordCatalog.TRIGGER:

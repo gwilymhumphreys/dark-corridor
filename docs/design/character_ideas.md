@@ -272,6 +272,15 @@ ships).
   the later items that *spend* chunks / HP (put flesh back together) — will be **surgery / sewing**.
   Butchery takes apart; surgery/sewing reassembles. (Item display names are placeholders; the
   character's Vermis display-name is a separate, still-open question.)
+- **Role name (owner, 2026-09-18): Disgraced Surgeon.** Settles the open display-name question
+  above. It takes the *surgery* half of the naming axis and puts it on the character, so the role
+  name and the consumer items share a theme. Same adjective-plus-occupation shape as *Rot
+  Shepherd* and *Weathered Traveller*, and it implies the carving and the self-harm without
+  stating the mechanic. It now sits as the **subtitle** under a personal name (see below);
+  *Fleshmancer* stays the internal id and working label.
+- **Two-line names (owner, 2026-09-18):** every character shows a **personal name** with the role
+  name as a **subtitle** under it on the select screen. Built: `CharacterDef.subtitle_key`. The
+  personal name is still open — `'Aldous'` is a placeholder in the def.
 - **Pricing rule (owner, 2026-06-20):** a chunk is a persistent auto-attacker, so chunk-*creation* is
   worth MORE than a spore stack — the common creators are priced **above** the druid's appliers: flat
   **low** damage (the chunk is the payload, not the hit) and a **3s minimum cooldown** (a chunk lives

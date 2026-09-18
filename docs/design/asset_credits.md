@@ -26,6 +26,29 @@ Outrider's Oath and Lordran Tapes ship a full-length and a loop version of each
 track; the full-length versions are the ones in the repository. Bonfires ships
 one version of each track.
 
+## Sound effects
+
+All interface sounds are by **SpaceJoe** on Freesound (https://freesound.org/people/SpaceJoe/),
+released under CC0, so no attribution is required — the record is kept here anyway. They are
+three families from one recording session, which is why they sit together.
+
+| Family | Files in the game | Freesound ids |
+| --- | --- | --- |
+| Quiet Page Turn | 8 in `assets/sound-effects/ui/hover/` | 484961 to 484968 |
+| Book Close | 6 in `assets/sound-effects/ui/click/` | 484882, 484885, 484888, 484890, 484891, 484892 |
+| Book Drop | 2 in `assets/sound-effects/ui/click/` | 484897, 484906 |
+
+A single sound's page is at `https://freesound.org/s/<id>/`. Each sound is in the
+repository twice, as the original `.wav` and as an `.mp3`; see
+[audio.md](../systems/audio.md) for which one each build loads.
+
+**The rest of the library.** SpaceJoe has 562 uploads — books, paper, locks, switches, safes,
+lighters and more — and all of them are in `../dark-corridor-design/sound/spacejoe/` as
+originals, outside this repository, with a `credits.csv` listing every id, name, licence and
+URL. Only the sounds the game actually plays are copied into `assets/`. The user-scoped `sfx`
+skill (`~/.claude/skills/sfx/`) fetched them and can fetch another uploader's library the same
+way.
+
 ## Art
 
 The art packs in use are listed in

@@ -89,6 +89,8 @@ func _format_event(ev: Dictionary) -> String:
       return tr('{0}  {1} → {2}  +{3} shield').format([t, src, tgt, amount])
     'status':
       return tr('{0}  {1} → {2}  {3}').format([t, src, tgt, tr(ev['data'])])
+    'charge':
+      return tr('{0}  {1} → {2}  {3}s').format([t, src, tgt, '%+.1f' % float(ev['amount'])])
     'throw':
       return tr('{0}  threw {1}').format([t, tr(ev['data'])])
   return t

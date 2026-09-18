@@ -46,6 +46,8 @@ Columns: 8
 120  28  74	bleed
 153 242 153	regen
 242 242 153	crit
+240 240 240	charge
+128 128 128	decharge
 153 102 179	status weak
 217 128  51	status vulnerable
 230 230 140	status blind

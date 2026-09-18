@@ -482,6 +482,65 @@ func test_item_target_with_no_enemy_items_yields_no_targets() -> void:
   assert_eq(cm._resolve_targets(payload, p).size(), 0, 'no enemy items → no item targets')
 
 
+func test_all_own_items_resolves_every_other_item_on_the_board() -> void:
+  # ALL_OWN_ITEMS (charge / decharge) resolves to every item on the firing actor's own
+  # board EXCEPT the firing item itself — an item that charges its own board must not
+  # be able to charge itself.
+  var p := Actor.new(100.0)
+  p.board.append(Item.new(FixtureItems.attack(), p))
+  p.board.append(Item.new(FixtureItems.attack(), p))
+  p.board.append(Item.new(FixtureItems.attack(), p))
+  var e := Actor.new(100.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var payload := Payload.new()
+  payload.shape = ItemEffect.Shape.ALL_OWN_ITEMS
+  payload.source = p.board[1]   # the firing item — excluded from the pool
+  var targets: Array = cm._resolve_targets(payload, p)
+  assert_eq(targets.size(), 2, 'every other item on the owner board is a target')
+  assert_false(p.board[1] in targets, 'the firing item itself is excluded')
+  assert_true(p.board[0] in targets, 'the first item is in the pool')
+  assert_true(p.board[2] in targets, 'the third item is in the pool')
+
+
+func test_own_item_random_never_picks_the_firing_item() -> void:
+  # OWN_ITEM_RANDOM (charge / decharge) resolves to exactly one item, chosen on the
+  # seeded per-fight RNG, and it is never the firing item (the source) — looped over
+  # several fights / picks to make a fluke impossible.
+  for s in 10:
+    var p := Actor.new(100.0)
+    p.board.append(Item.new(FixtureItems.attack(), p))
+    p.board.append(Item.new(FixtureItems.attack(), p))
+    p.board.append(Item.new(FixtureItems.attack(), p))
+    var e := Actor.new(100.0)
+    var cm := CombatManager.new(p, [e], s * 13 + 1)
+    _made.append(cm)
+    cm.start()
+    var payload := Payload.new()
+    payload.shape = ItemEffect.Shape.OWN_ITEM_RANDOM
+    payload.source = p.board[0]
+    var targets: Array = cm._resolve_targets(payload, p)
+    assert_eq(targets.size(), 1, 'one random own item is picked')
+    assert_ne(targets[0], p.board[0], 'the pick is never the firing item')
+
+
+func test_own_item_shapes_with_no_other_items_yield_no_targets() -> void:
+  # An own-board item-target shape on an actor holding ONLY the firing item resolves to
+  # no targets for either shape (the firing item is excluded from the pool).
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := Actor.new(100.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var all := Payload.new()
+  all.shape = ItemEffect.Shape.ALL_OWN_ITEMS
+  all.source = p.board[0]
+  assert_eq(cm._resolve_targets(all, p).size(), 0, 'no other items → ALL_OWN_ITEMS resolves nothing')
+  var random := Payload.new()
+  random.shape = ItemEffect.Shape.OWN_ITEM_RANDOM
+  random.source = p.board[0]
+  assert_eq(cm._resolve_targets(random, p).size(), 0, 'no other items → OWN_ITEM_RANDOM resolves nothing')
+
+
 func test_dot_tick_through_shield_does_not_skip_a_later_status() -> void:
   # A poison tick calls take_damage, which can erase a depleted shield from the SAME
   # status list the step-pass is walking. A naive in-place loop would then skip the

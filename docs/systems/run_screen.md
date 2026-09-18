@@ -17,7 +17,7 @@ main.tscn (Main) ── main_controller.gd
 ```
 
 **Title overlays.** Start Run raises **`character_select.tscn`** (one `character_card`
-per `CharacterCatalog.ids()` — name + blurb + a starting-kit hint; a pick →
+per `CharacterCatalog.ids()` — personal name + role subtitle + blurb + a starting-kit hint; a pick →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below). Dev hooks skip
 the menu: `--autostart` (default-character run), `--select`, `--settings`.

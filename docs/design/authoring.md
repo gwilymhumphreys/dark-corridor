@@ -63,7 +63,9 @@ for each def's fields and how it resolves.
   timed status, sets `duration` (per-application). See [status PRD](../systems/status_manager.md).
 
 - A **character** is a `CharacterDef` (`characters/character_catalog.gd`): its own `item_pool`,
-  starting board, starting relic, starting potions/enchants. Adding a character = a def + registering
+  starting board, starting relic, starting potions/enchants. Its display is two lines on the select
+  screen: `name_key` is the character's personal name, `subtitle_key` the role beneath it
+  (`'Rot Shepherd'`). The `id` stays the internal working label (`spore_druid`) and never displays. Adding a character = a def + registering
   it; the run picks one at `start`.
 - **Enemies stay a shared pool** and the **reward-relic pool stays shared** — only *item* pools split
   per character (#27).

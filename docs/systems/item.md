@@ -64,6 +64,8 @@ An effect declares a **relative target-shape**, not a resolved target:
 - **all-opponents** — AOE over actors.
 - **opponent-item-random** — one *random* item on the living opponents (e.g. silence / debuff an enemy item). Selection is **random via the seeded combat RNG**, so the fight stays deterministic / bit-reproducible. *(Random is the provisional default — may become a rule after testing. Deliberate exception to the actor-level "leftmost, never random" rule, which exists for player predictability; item-targeting trades that for variety, to validate.)*
 - **all-opponent-items** — every item on the living opponents (AOE over items).
+- **own-item-random** — one *random* item on the owner's own board, for the [charge and decharge mechanics](mechanics.md#charge-and-decharge). Same seeded RNG as the opponent case. The **firing item is left out of the pool**, so an item that charges its own board cannot charge itself.
+- **all-own-items** — every other item on the owner's own board (again without the firing item). Only the owner's board — an ally's items are not included.
 
 The `Combat manager` (which knows sides + ordering) resolves the shape to actual target(s) **at spawn** and locks the Delivery onto them (a single target that dies mid-flight → fizzle, per combat_model.md; an item target removed from the board before arrival fizzles the same way). Shape is **per-effect** (a rare's damage = opponent, its heal = self). This is what keeps Items downward-clean — no `Item → Combat manager` dependency; the item declares, the manager (above) resolves. *(Ally-targeting — e.g. an enemy buffing another enemy — is a possible future shape the Combat manager would resolve; not in the prototype.)*
 
@@ -138,6 +140,7 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 - **Size** — whether to ship size-as-tempo and how many sizes (art doc: a leaning to test).
 - **Ally-targeting shape** — only if enemies ever buff/heal allies; the Combat manager would resolve it; not in the prototype.
 - **Item-target shapes — added (resolved 2026-06-05):** `opponent-item-random` (one random enemy item; selection **random via seeded RNG**, provisional) and `all-opponent-items`.
+- **Own-board item shapes — added (2026-09-18):** `own-item-random` and `all-own-items`, for charge and decharge. Narrowing which of your items they can pick (by item type tag, or a named item) is not built; the owner has asked for it.
 
 ## Dependencies
 

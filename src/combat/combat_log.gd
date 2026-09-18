@@ -28,7 +28,7 @@ const SOURCELESS: String = 'Poison'
 # The ordered event timeline (append order = sim order) — the post-fight event log.
 # Each entry: { t: float, type: String, source: String, source_side: int,
 #   target: String, amount: float, data: String }. `type` in fire / damage / heal /
-#   shield / status / throw; `data` holds the status id or thrown consumable id.
+#   shield / status / charge / throw; `data` holds the status id or thrown consumable id.
 var events: Array = []
 
 # Per-source-item tallies, side-aware: each is Dictionary[int side -> Dictionary[String
@@ -128,6 +128,15 @@ func on_shield(source_name: String, source_side: int, target_name: String, _targ
 func on_status_applied(source_name: String, source_side: int, target_name: String, _target_side: int, status_id: String, t: float) -> void:
   _bump(statuses_by_item, source_side, source_name, 1.0)
   _record(t, 'status', source_name, source_side, target_name, 0.0, status_id)
+
+
+## An item's cooldown bar charged or discharged — `seconds` is the progress actually applied,
+## positive for charge and negative for decharge. `target_name` is the affected item's
+## name_key. No per-item tally: it moves no health, shield or status.
+func on_charge(source_name: String, source_side: int, target_name: String, _target_side: int, seconds: float, t: float) -> void:
+  if is_zero_approx(seconds):
+    return
+  _record(t, 'charge', source_name, source_side, target_name, seconds, '')
 
 
 ## A consumable thrown — the throw itself, so it shows in the event log. `consumable_id`

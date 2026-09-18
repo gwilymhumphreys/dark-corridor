@@ -4,7 +4,8 @@ extends RefCounted
 ## effect. Carries a relative target-SHAPE (not a resolved target — the Combat
 ## manager resolves it) + the payload kind/value + travel + presentation.
 
-enum Shape { SELF, OPPONENT_LEFTMOST, ALL_OPPONENTS, OPPONENT_ITEM_RANDOM, ALL_OPPONENT_ITEMS }
+enum Shape { SELF, OPPONENT_LEFTMOST, ALL_OPPONENTS, OPPONENT_ITEM_RANDOM, ALL_OPPONENT_ITEMS,
+    OWN_ITEM_RANDOM, ALL_OWN_ITEMS }
 
 var kind: int = Delivery.Kind.MECHANIC
 var value: float = 0.0

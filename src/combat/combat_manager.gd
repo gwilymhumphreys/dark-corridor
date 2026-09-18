@@ -653,6 +653,10 @@ func _resolve_targets(p: Payload, owner_actor: Actor) -> Array:
       return _random_opponent_item(owner_actor)
     ItemEffect.Shape.ALL_OPPONENT_ITEMS:
       return _all_opponent_items(owner_actor)
+    ItemEffect.Shape.OWN_ITEM_RANDOM:
+      return _random_own_item(owner_actor, p.source)
+    ItemEffect.Shape.ALL_OWN_ITEMS:
+      return _all_own_items(owner_actor, p.source)
     _:
       # A future shape with no resolver — warn ONCE so an authored item using it isn't a
       # silent no-op (it would fire nothing with no clue why).
@@ -732,6 +736,29 @@ func _all_opponent_items(actor: Actor) -> Array:
 ## seed keeps the fight bit-reproducible). [] when no opponent has a board item.
 func _random_opponent_item(actor: Actor) -> Array:
   var pool: Array = _all_opponent_items(actor)
+  if pool.is_empty():
+    return []
+  return [pool[rng.randi_range(0, pool.size() - 1)]]
+
+
+## Every Item on the firing actor's OWN board, minus the firing item itself. The own-side twin
+## of `_all_opponent_items`, for charge and decharge. The firing item is left out so an item
+## that charges its own board cannot charge itself: with travel 0 it would refill its own bar
+## the step it fired and then fire every step after that. Only the owner's own board — an
+## ally's items are not included. [] when the owner holds nothing else.
+func _all_own_items(actor: Actor, firing_item) -> Array:
+  var out: Array = []
+  for it in actor.board:
+    if it != firing_item:
+      out.append(it)
+  return out
+
+
+## One random Item from that pool, chosen on the seeded per-fight RNG, like
+## `_random_opponent_item` (decision #14: item-target selection is random but reproducible).
+## [] when the owner holds no other item.
+func _random_own_item(actor: Actor, firing_item) -> Array:
+  var pool: Array = _all_own_items(actor, firing_item)
   if pool.is_empty():
     return []
   return [pool[rng.randi_range(0, pool.size() - 1)]]
