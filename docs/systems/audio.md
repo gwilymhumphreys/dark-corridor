@@ -69,6 +69,10 @@ delete one and the pool changes with no code change:
 - `assets/sound-effects/ui/hover/` — 8 page turns
 - `assets/sound-effects/ui/click/` — 6 book closes and 2 book drops
 
+**No lead-in.** Every interface sound is trimmed so it starts at the first sample. The
+recordings arrive with up to a third of a second of room tone before the sound itself, which on a
+button reads as lag rather than as silence. Trim any new one before adding it.
+
 **Two formats per sound.** Each one is kept as both the original `.wav` and a much smaller
 `.mp3`. Files sharing a name before the extension are one sound, not two variants: the loader
 groups by that name and takes a single file per sound, preferring the `.mp3` on web (so the

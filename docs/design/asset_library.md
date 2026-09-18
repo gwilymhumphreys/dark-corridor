@@ -59,7 +59,7 @@ no-background versions so the worn frame shows behind the figure.
 
 Copy the file, rename it to `snake_case` (keeping the `_nb` suffix, so
 `Leper_nb.png` becomes `leper_nb.png`), then run
-`godot --headless --import --exit` so Godot imports it.
+`tools/import.sh` so Godot imports it.
 
 Art direction and which packs we are considering are in
 [art_audio.md](art_audio.md). Every icon and portrait an agent picked is a

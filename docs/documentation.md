@@ -8,7 +8,7 @@ them. Read this before adding or changing a doc. (Agent working rules live in
 
 | Location | Holds |
 |----------|-------|
-| `docs/index.md` | The catalog — one row per doc (Doc / Covers / Keywords). **Read first; every doc is listed here — except `docs/plans/`, which is transient and not catalogued.** |
+| `docs/index.md` | The catalog — one row per doc (Doc / Covers). **Read first; every doc is listed here — except `docs/plans/`, which is transient and not catalogued.** |
 | `docs/handoff.md` + `docs/decision_log.md` | Fresh-agent orientation + the canonical numbered decision record. |
 | `docs/systems/` | One doc per engineering system — spec + as-built together. Cross-system edges live **once** in `systems/architecture.md`'s boundary hub, not duplicated. |
 | `docs/design/` | Game/content design (the owner's domain) + the content authoring guide. |
@@ -21,7 +21,7 @@ them. Read this before adding or changing a doc. (Agent working rules live in
    behaviour a doc describes, update that doc in the same commit. Code and its
    doc are never committed out of sync. This is mandatory, not a follow-up.
 2. **Catalog every doc — except plans.** A new doc gets a one-row entry in
-   `docs/index.md` (Doc / Covers / Keywords); an uncatalogued doc is invisible —
+   `docs/index.md` (Doc / Covers); an uncatalogued doc is invisible —
    the index is the entry point everyone reads first. **`docs/plans/` docs are the
    exception: they're temporary, so they are NOT catalogued** — a plan earns an
    index row only if/when it ships as a `systems/` doc.
@@ -33,7 +33,13 @@ them. Read this before adding or changing a doc. (Agent working rules live in
    Each doc opens with its own one-paragraph summary (the index matches on it).
 5. **Plain language, full names.** No invented jargon; refer to game entities by
    their full names (the `CLAUDE.md` Code Standards apply to docs too).
-6. **Keep player-facing text translatable.** See `systems/localization.md`;
+6. **Keep decision-log entries short.** A `decision_log.md` entry is what was
+   decided, why, what it supersedes, and a link to the system doc holding the
+   detail — under about ten lines. Implementation specifics, file lists and
+   rejected alternatives worked through at length belong in the linked doc; build
+   status and test counts belong in `history/build_log.md`. The full rule is in the
+   log's own header.
+7. **Keep player-facing text translatable.** See `systems/localization.md`;
    regenerate the POT after changing any translatable string.
 
 ## Lifecycle (which doc to touch when)
@@ -49,7 +55,8 @@ them. Read this before adding or changing a doc. (Agent working rules live in
   scaffolding: keep it for lineage or discard it; it isn't canonical. (Early plans like the tooltip
   system happened to map 1:1 — that's no longer the assumption.)
 - **A settled decision / rationale** → a numbered `decision_log.md` entry (don't
-  re-litigate anything already in it).
+  re-litigate anything already in it). Keep the entry short and put the detail in the
+  system doc it links to (rule 6).
 - **A notable milestone** → refresh `handoff.md`'s "Last updated" blurb.
 
 ## After-change checklist
@@ -57,5 +64,5 @@ them. Read this before adding or changing a doc. (Agent working rules live in
 - [ ] Behaviour changed? Update the doc(s) that describe it — same change.
 - [ ] Implemented a plan? Review the docs **holistically** — update every `systems/` doc the change touched (don't just promote the plan 1:1).
 - [ ] New doc (not a `docs/plans/` plan)? Add its `index.md` catalog row.
-- [ ] New decision/rationale worth keeping? Add a `decision_log.md` entry.
+- [ ] New decision/rationale worth keeping? Add a short `decision_log.md` entry that links to the system doc holding the detail.
 - [ ] Player-facing strings changed? Regenerate the POT (`localization.md`).

@@ -52,7 +52,7 @@ project uses a headless extractor. **Run it after adding or changing any transla
 string:**
 
 ```bash
-godot --headless --path . --script res://tools/extract_pot.gd
+tools/pot.sh   # extract the POT, merge the .po files, then reimport
 ```
 
 It writes `locale/messages.pot` and merges every `locale/*.po`, preserving existing
@@ -61,7 +61,7 @@ dependency). Then translate the empty `msgstr` entries in non-English `.po`s, an
 **re-import** so the `.po` → `.translation` resources rebuild:
 
 ```bash
-godot --headless --path . --import --exit
+tools/import.sh
 ```
 
 ## Fonts per locale

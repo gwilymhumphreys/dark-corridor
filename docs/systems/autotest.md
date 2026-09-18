@@ -39,13 +39,17 @@ The Mode/Driver/Logger trio in `src/autotest/`:
 
 ### How to run
 
+Use the `tools/autotest.sh` wrapper. It writes the full output to `_temp/autotest.log`
+and prints only the errors and the closing summary; `--nosave` and `--notutorial` are
+always passed. A raw Godot command is refused by the `PreToolUse` hook in
+`.claude/settings.json` unless its output is redirected.
+
 ```
 # a full headless run (default)
-<godot> --headless --path . res://src/autotest/autotest.tscn -- \
-        --autotest --seed 1 --speed 5 --timeout 120 --wall-timeout 30
+tools/autotest.sh --seed 1 --speed 5 --timeout 120 --wall-timeout 30
 
 # just one fight (the Phase-2 path)
-<godot> --headless --path . res://src/autotest/autotest.tscn -- --autotest --single-fight
+tools/autotest.sh --single-fight
 ```
 
 Each run writes a raw log + a markdown report to **`autotest_results/`** (project-local, git-ignored) — `--log <path>` / `--report <path>` override. A **dedicated scene** (not an autoload), so nothing presentational mounts and the corridor testbed stays the normal `main_scene`. **`--seed` is now live** in run mode (it seeds the run RNG → deterministic drafts/descent). **`--speed`** stays plumbed-but-inert (the direct `sim_step` loop advances one STEP per call regardless of the dial). Exit `0` = the run **ended cleanly** (won or died) or hit the `--encounters` cap; exit `1` = a fight **failed to resolve** (stuck / game-timeout / wall-timeout). The harness asserts the sim runs to a clean conclusion, not who wins (that becomes `tune`'s job).

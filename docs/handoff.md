@@ -64,7 +64,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
    `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
    self-attribution in git messages**). These OVERRIDE defaults.
 2. **[`decision_log.md`](decision_log.md)** — the canonical record: every decision
-   (numbered #1–#36) and what's still open. **Don't re-litigate anything in it.**
+   (numbered #1–#39) and what's still open. **Don't re-litigate anything in it.**
 3. **[`architecture.md`](systems/architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
 4. The per-system **PRDs** as needed (one per system in `docs/systems/`, spec +
@@ -157,16 +157,20 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
 ## How to work (the rhythm)
 
 - **Godot exe:** `C:\projects\godot\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe`
-- **Run the GUT suite:**
-  `<exe> --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/ -gexit`
-- **GOTCHA:** after adding any new `class_name` script, run
-  `<exe> --headless --path . --import --exit` FIRST or GUT won't see the new global.
-- **Drive a whole run headless** (the product loop):
-  `<exe> --headless --path . res://src/autotest/autotest.tscn -- --autotest --seed 1`
+  (override with `GODOT=<path>`). Run it through the `tools/*.sh` wrappers: each one
+  writes the full output to `_temp/` and prints only the failures and the summary. A
+  raw Godot command is refused by the `PreToolUse` hook in `.claude/settings.json`
+  unless its output is redirected to a file or piped through `tail`/`grep`.
+- **Run the GUT suite:** `tools/gut.sh`. Extra arguments go to GUT, so one file is
+  `tools/gut.sh -gdir=res://tests/combat -gselect=test_item.gd`.
+- **GOTCHA:** after adding any new `class_name` script, run `tools/import.sh` FIRST
+  or GUT won't see the new global.
+- **Drive a whole run headless** (the product loop): `tools/autotest.sh --seed 1`
   → prints a summary, writes a log + markdown report to `autotest_results/`
-  (git-ignored), exit `0` = resolved / `1` = stuck-or-timeout. `--single-fight` runs
-  one fight; `--encounters N` caps; flags in [`autotest.md`](systems/autotest.md).
-- **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn` → Start Run
+  (git-ignored), exit `0` = resolved / `1` = stuck-or-timeout. `--nosave --notutorial`
+  are always passed. `--single-fight` runs one fight; `--encounters N` caps; flags in
+  [`autotest.md`](systems/autotest.md).
+- **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn > _temp/run.txt 2>&1` → Start Run
   (append `-- --autostart` to skip the menu; `--shot [--shot-delay s]` screenshots). For look
   screenshots of a real fight add `--autofight --nosave --notutorial` and the look arguments in
   [debug_panel.md](systems/debug_panel.md#start-up-arguments).
@@ -332,11 +336,10 @@ are on hold with the pixel-art direction. *(The **timescale
 replace-vs-multiply** open is now resolved → replace, with the battle-speed dial — item 3 above.)*
 Decision-AI: the Driver's **potion / choice / event** policies stay stubs until those beats exist.
 
-**Run / watch:** `<exe> --path . res://src/scenes/main.tscn` → Start Run; append
-`-- --autostart --shot [--shot-delay s]` to capture a frame. **Autotest:** `<exe>
---headless --path . res://src/autotest/autotest.tscn -- --autotest --seed 1 --strategy
-greedy-synergy --report autotest_results/r.md`. **Suite:** `<exe> --headless --path .
--s addons/gut/gut_cmdln.gd -gdir=res://tests/ -gexit`.
+**Run / watch:** `<exe> --path . res://src/scenes/main.tscn > _temp/run.txt 2>&1` → Start
+Run; append `-- --autostart --shot [--shot-delay s]` to capture a frame. **Autotest:**
+`tools/autotest.sh --seed 1 --strategy greedy-synergy --report autotest_results/r.md`.
+**Suite:** `tools/gut.sh`.
 
 ## Quick file map
 

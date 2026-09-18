@@ -24,7 +24,7 @@ The orchestrator provides specific parameter changes in the prompt (item values 
 ### 2. Run autotest
 Headless, with `--log` and `--report` to save output:
 ```bash
-godot --headless --path . -- --autotest --nosave --notutorial --seed 42 --encounters <N> --speed 20 --timeout <game_s> --wall-timeout <real_s> --strategy <S> --log <log_path> --report <report_path> 2>&1 | tail -20
+tools/autotest.sh --seed 42 --encounters <N> --speed 20 --timeout <game_s> --wall-timeout <real_s> --strategy <S> --log <log_path> --report <report_path>
 ```
 - `Strategy:` field → `--strategy` (default `random` if unspecified).
 - `Output paths:` → `--log` / `--report` (default `runs/run-NN.log` / `runs/run-NN.md`).

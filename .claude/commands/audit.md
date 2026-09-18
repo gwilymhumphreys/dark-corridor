@@ -14,8 +14,8 @@ Repeat the periodic "is the codebase clean and are the docs honest?" pass. Scope
 Canonical commands + the Godot console-exe path live in [`docs/handoff.md`](../../docs/handoff.md) ("How to work"). Always **import first** after any new `class_name` script, then run the suite:
 
 ```bash
-<exe> --headless --path . --import --exit          # required before the suite sees new globals
-<exe> --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests/ -gexit
+tools/import.sh   # required before the suite sees new globals
+tools/gut.sh
 ```
 
 The at-exit `ObjectDB leaked` / `resources still in use` lines are **benign** (the static catalog caches — handoff confirms this), not a leak.

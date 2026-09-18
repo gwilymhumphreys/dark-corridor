@@ -163,6 +163,6 @@ look setting, kept until the effects pass decides on hit visuals.
   --corridor-set=light_energy=<value>` ([debug_panel.md](../debug_panel.md#start-up-arguments)).
 - Light settings: edit the root node's "Light" exports in `corridor_3d.tscn`; fights and the testbed both
   build from that scene.
-- Headless reimport after adding or replacing textures: `<godot> --headless --path . --import`.
+- Headless reimport after adding or replacing textures: `tools/import.sh`.
 - The Godot exe path is in [`../../handoff.md`](../../handoff.md).
 - Tests: `tests/corridors/test_corridor_renderers.gd`, `tests/corridors/test_combat_corridor.gd`.

@@ -6,7 +6,7 @@ Guidance for Claude Code when working with this Godot 4 game.
 
 **Always reference the docs before searching the codebase.** Start at
 [`docs/index.md`](docs/index.md) — a catalog of all project documentation with
-descriptions and keywords. Find the relevant doc there, read it, and only then
+one-line descriptions. Find the relevant doc there, read it, and only then
 search the code it points to. Most questions about the rendering, geometry,
 filtering, motion, or scenes are already answered in `docs/`.
 
@@ -43,7 +43,6 @@ var text: String = 'hello'
 func first() -> void:
   pass
 
-
 func second() -> void:
   pass
 
@@ -64,59 +63,36 @@ var data: Dictionary = {
 - **Full names, not abbreviations**: Refer to game entities by their full names. Applies to code, comments, docs, run reports, tuning logs, and chat replies — abbreviations make grep harder and obscure what's being discussed.
 - **Don't add jargon**: No invented terms or vague, high-level, obtuse shorthand. Use plain, concrete language; if a term is genuinely needed, define it where it's introduced, and don't reuse a word that already means something specific in the game. Applies to code, comments, docs, run reports, tuning logs, and chat replies.
 
-## RichTextLabel fit_content Sizing (Godot-specific)
-
-`RichTextLabel` with `fit_content = true` computes its height based on its **actual rendered width**, not `custom_minimum_size.x`. On first display, if sibling nodes (e.g. item rows) push the parent container wider than `custom_minimum_size.x`, the label's height was already computed at the narrower minimum width — producing extra empty space. On subsequent opens the cached width is correct.
-
-**Fix:** set `custom_minimum_size.x` on the parent container wide enough to match the widest expected content, so the label computes height at the correct width from the start. Other approaches (deferred resize, re-setting text, updating `custom_minimum_size.x` after layout, switching to Label) did not work.
-
-## Runtime Cleanup (Godot-specific)
-
-Prevent leaks and invalid frees at scene changes / exit:
-
-- **Textures**: Set `node.texture = null` before `queue_free()` in `_exit_tree()`
-- **Reparented nodes**: Avoid reparenting during teardown; store `original_parent` with `set_meta()`
-- **Signals/tweens/timers**: Disconnect and stop in `_exit_tree()`
-- **Arrays/dicts with Node refs**: Clear in `_exit_tree()`
-- **Deferred frees**: Use `call_deferred('queue_free')` for nodes with render resources
-- **Script leaks at exit** ("ObjectDB instances were leaked" with only scripts and shaders listed): two scripts that refer to each other's `class_name`, or a `static var` used in a subclass of a script that refers to autoloads, keep scripts alive at exit. Move the shared code to one side, or keep the value on an autoload.
-
 ## Bugs
 
 - When you encounter a bug or failing test, always fix it or ask the user if you should fix it — don't dismiss anything as pre-existing or unrelated.
 
+## Running Godot
+
+Use the wrappers, never a raw Godot command: `tools/gut.sh` (GUT suite),
+`tools/autotest.sh` (headless run), `tools/import.sh` (reimport, required after adding
+a file or a new `class_name`). Each writes the full output to `_temp/` and prints only
+the failures and the summary. A raw Godot command is refused by the `PreToolUse` hook
+in `.claude/settings.json` unless its output is redirected to a file or piped through
+`tail` or `grep`.
+
+## Searching
+
+When a search will span many files or several naming conventions, use the Explore
+subagent instead of running it here. It returns the answer without the file listings.
+
 ## Testing
 
-```gdscript
-# Standard setup - reset autoloads between tests
-func before_each() -> void:
-  TestCleanup.reset_all_managers()
+Conventions, `TestCleanup`, and signal tests: [`docs/systems/testing.md`](docs/systems/testing.md).
 
-func after_each() -> void:
-  TestCleanup.reset_all_managers()
+AI-controlled E2E testing: [`docs/systems/autotest.md`](docs/systems/autotest.md) for
+standard commands, defaults, and the full argument reference.
 
-# Signal testing
-func test_something() -> void:
-  watch_signals(SomeManager)
-  SomeManager.do_thing()
-  assert_signal_emitted(SomeManager, 'thing_done')
-```
+## Godot engine notes
 
-- Test files: `test_<component>.gd` in `tests/` subdirectories
-- Work with autoloads, don't mock them
-- Use `TestCleanup.setup_development_environment()` for auth tests
-
-### AutoTest Mode (E2E)
-
-AI-controlled E2E testing. See `docs/systems/autotest.md` for standard commands, defaults, and full argument reference. Always use `--nosave --notutorial` flags.
-
-## Importing Assets
-
-If you get errors due to files not having been imported, or if you add files, run:
-
-```bash
-godot --headless --import --exit
-```
+Asset importing, `RichTextLabel` `fit_content` sizing, and runtime cleanup (leaks and
+invalid frees at scene changes and exit):
+[`docs/systems/godot_notes.md`](docs/systems/godot_notes.md).
 
 ## Shell
 
@@ -139,11 +115,10 @@ godot --headless --import --exit
 
 ## Localization
 
-All player-facing text must be translatable (dev/debug panels stay English). See `docs/systems/localization.md` for the full system.
-
-- **Static UI text** (menus, labels, buttons, dropdown items): put it in the `.tscn` as plain English and let auto-translate handle it — no `tr()`, no locale-change handler. Set `auto_translate_mode = DISABLED` for text that must not translate (e.g. language names).
-- **Dynamic / formatted / data-driven text**: use `tr('...')` (e.g. `tr('Time: {0}').format(...)`, `tr(data.name)`). Never `node.text = tr('...')` for static text — it won't re-translate on a locale switch.
-- After adding or changing any translatable string, run `godot --headless --path . --script res://tools/extract_pot.gd` to regenerate `locale/messages.pot` and merge the `.po` files, then re-import.
+All player-facing text must be translatable; dev and debug panels stay English.
+Static UI text goes in the `.tscn` as plain English and auto-translates; dynamic,
+formatted or data-driven text uses `tr()`. Full rules and the POT regeneration step:
+[`docs/systems/localization.md`](docs/systems/localization.md).
 
 ## Save files
 

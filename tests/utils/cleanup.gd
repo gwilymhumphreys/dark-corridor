@@ -2,7 +2,7 @@ class_name TestCleanup
 extends RefCounted
 ## Resets autoload / manager state between tests: frees the live run (Game), clears
 ## the autotest's Save.disabled, and keeps Prefs off disk. Mirrors a-machine's
-## TestCleanup pattern (CLAUDE.md Testing). File is NOT named `test_*` so GUT does
+## TestCleanup pattern (docs/systems/testing.md). File is NOT named `test_*` so GUT does
 ## not collect it as a test case.
 
 # Weak references to actors a test built outside a RunManager (a player or an ally handed to a

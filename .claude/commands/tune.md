@@ -31,7 +31,7 @@ Read: the autotest spec (`docs/systems/autotest.md`), the relevant system PRDs (
 ### 1. Evaluate
 Run the autotest with a strategy and read the report:
 ```bash
-godot --headless --path . -- --autotest --nosave --notutorial --seed 42 --speed 20 --encounters <N> --strategy <S> --timeout <game_s> --wall-timeout <real_s> --report runs/NNN-<desc>.md
+tools/autotest.sh --seed 42 --speed 20 --encounters <N> --strategy <S> --timeout <game_s> --wall-timeout <real_s> --report runs/NNN-<desc>.md
 ```
 For each act / era, check:
 - Do fights resolve in their window?
