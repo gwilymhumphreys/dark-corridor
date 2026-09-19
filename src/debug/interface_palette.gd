@@ -9,6 +9,10 @@ extends RefCounted
 ## `DebugPanels.set_interface_palette` also recolours statuses in the current fight and tells scene
 ## colour rectangles through its `interface_palette_changed` signal.
 
+## The palette the debug panel writes chosen colours into.
+const CUSTOM_PATH: String = 'res://assets/palettes/new/ui/ui-custom.gpl'
+## The default palette, in the same folder as `CUSTOM_PATH`: the set of names a custom palette names.
+const DEFAULT_PATH: String = 'res://assets/palettes/new/ui/ui-default.gpl'
 ## Theme colours are mapped onto these `Colours` variables, dark to light.
 const PANEL_COLOURS: Array[String] = ['UI_PANEL_SHADOW', 'UI_PANEL', 'UI_PANEL_EDGE', 'UI_PANEL_LIGHT']
 const TEXT_COLOURS: Array[String] = ['UI_TEXT_DISABLED', 'UI_TEXT_PRESSED', 'UI_TEXT_DIM', 'UI_TEXT_BUTTON', 'UI_TEXT']
@@ -25,6 +29,33 @@ static var _original_palette_colours: Dictionary = {} # PaletteStyleBox -> its b
 ## The `Colours` variable a palette colour name refers to: 'hp bar fill' -> 'HP_BAR_FILL'.
 static func variable_name(colour_name: String) -> String:
   return colour_name.strip_edges().to_upper().replace(' ', '_').replace('-', '_')
+
+
+## Set one `Colours` variable in the custom palette and make that palette the active one, so what is
+## on screen always matches the file. The file is written whole every time.
+static func write_custom(variable: String, colour: Color) -> void:
+  # `apply` resets the default colours first, so read the live values before anything is applied.
+  var named: Dictionary = {}
+  var colours_script: Script = Colours
+  for name: String in PaletteLoader.load_named_colours(DEFAULT_PATH):
+    var value: Variant = colours_script.get(variable_name(name))
+    if value is Color:
+      named[name] = value
+  if not (colours_script.get(variable) is Color):
+    push_warning('[InterfacePalette] no colour named %s in Colours' % variable)
+    return
+  named[_name_for(variable)] = colour
+  PaletteLoader.save_named_colours(CUSTOM_PATH, named)
+  DebugPanels.set_interface_palette(CUSTOM_PATH)
+
+
+# The `ui-default.gpl` name whose variable is `variable`, so the written file keeps the default
+# spellings: 'ATTACK' -> 'attack', 'HP_BAR_FILL' -> 'hp bar fill'.
+static func _name_for(variable: String) -> String:
+  for name: String in PaletteLoader.load_named_colours(DEFAULT_PATH):
+    if variable_name(name) == variable:
+      return name
+  return variable.to_lower().replace('_', ' ')
 
 
 ## Whether the palette file at `path` can recolour the interface: a `.gpl` file with at least one colour

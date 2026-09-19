@@ -17,7 +17,7 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
-| Icons | F6 | Which icon each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice |
+| Icons | F6 | Which icon and colour each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice; a mechanic's colour is written to the [custom palette](interface_palette.md) |
 
 The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The five above line up
 with the parts, but a tab that saves its own files rather than being part of a

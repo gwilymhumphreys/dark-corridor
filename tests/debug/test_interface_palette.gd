@@ -14,12 +14,20 @@ const NOT_SETTABLE: Array[String] = ['COOLDOWN_FILL']
 const TEST_ART_TYPE: String = 'TestArt'
 
 
+# `write_custom` writes `InterfacePalette.CUSTOM_PATH`, so the test that uses it puts the file back
+# as it found it (or deletes the one it created) in after_each — per docs/systems/testing.md.
+var _had_custom_file: bool = false
+var _custom_file_text: String = ''
+
+
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  _snapshot_custom_file()
 
 
 func after_each() -> void:
   TestCleanup.reset_all_managers()
+  _restore_custom_file()
   if _theme().has_stylebox('panel', TEST_ART_TYPE):
     _theme().clear_stylebox('panel', TEST_ART_TYPE)
 
@@ -37,6 +45,23 @@ func _write_palette(file_name: String, lines: Array[String]) -> String:
   file.store_string('GIMP Palette\nName: test\n' + '\n'.join(lines) + '\n')
   file.close()
   return path
+
+
+# `write_custom` writes `InterfacePalette.CUSTOM_PATH`, which is a real palette in the shipped
+# folder, not a throwaway under TEST_DIR. Snapshot it before a test and put it back after.
+func _snapshot_custom_file() -> void:
+  _had_custom_file = FileAccess.file_exists(InterfacePalette.CUSTOM_PATH)
+  if _had_custom_file:
+    _custom_file_text = FileAccess.get_file_as_string(InterfacePalette.CUSTOM_PATH)
+
+
+func _restore_custom_file() -> void:
+  if _had_custom_file:
+    var file: FileAccess = FileAccess.open(InterfacePalette.CUSTOM_PATH, FileAccess.WRITE)
+    file.store_string(_custom_file_text)
+    file.close()
+  elif FileAccess.file_exists(InterfacePalette.CUSTOM_PATH):
+    DirAccess.remove_absolute(ProjectSettings.globalize_path(InterfacePalette.CUSTOM_PATH))
 
 
 func _theme() -> Theme:
@@ -134,6 +159,16 @@ func test_every_interface_palette_sets_the_same_colours_as_the_default() -> void
       continue
     assert_eq(_variables_named_by(PALETTE_DIR.path_join(file_name)), expected,
       '%s names the same colours as ui-default.gpl' % file_name)
+
+
+func test_write_custom_writes_a_full_palette_with_the_new_colour() -> void:
+  InterfacePalette.write_custom('ATTACK', Color8(10, 20, 30))
+  assert_true(FileAccess.file_exists(InterfacePalette.CUSTOM_PATH), 'the custom palette file is created')
+  assert_eq(_variables_named_by(InterfacePalette.CUSTOM_PATH), _variables_named_by(DEFAULT_PALETTE),
+    'the written file names the same variables as ui-default.gpl')
+  var named: Dictionary = PaletteLoader.load_named_colours(InterfacePalette.CUSTOM_PATH)
+  assert_eq(named['attack'], Color8(10, 20, 30), 'the written colour for that variable')
+  assert_eq(Colours.ATTACK, Color8(10, 20, 30), 'the live value takes the new colour')
 
 
 func test_theme_is_unchanged_when_the_palette_sets_no_panel_or_text_colours() -> void:

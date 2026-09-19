@@ -1,0 +1,67 @@
+GIMP Palette
+Name: ui-custom
+# The palette the debug panel's Icons tab writes chosen mechanic colours into (step 10,
+# docs/plans/mechanic_icons.md). It starts as a copy of ui-default.gpl's colours; `InterfacePalette`
+# writes it whole on every change, so it always names the same set as ui-default.gpl.
+ 10  10  13	ui background
+ 51  51  51	ui background wear
+123 120 120	ui background wear light
+  0   0   0	ui panel shadow
+ 31  31  31	ui panel
+ 51  51  51	ui panel edge
+123 120 120	ui panel light
+ 51  51  51	ui panel wear
+123 120 120	ui panel wear light
+ 89  89  89	ui text disabled
+128 128 128	ui text pressed
+153 153 168	ui text dim
+191 191 191	ui text button
+255 255 255	ui text
+ 18  18  20	ui button
+199 196 189	ui button light
+ 15  15  18	ui text button dark
+209 204 194	ui highlight
+ 51  77 128	portrait player
+128  51  56	portrait enemy
+ 26  26  31	hp bar bg
+102 191 102	hp bar fill
+ 31  15  15	enemy hp bar bg
+184  56  56	enemy hp bar fill
+242 242 242	cooldown ring
+115 115 115	ally downed
+255 255 255	rarity common
+153 217 255	rarity uncommon
+255 217 102	rarity rare
+242 235 140	tooltip changed
+230  51  51	attack
+ 77 230 102	heal
+128  51 179	arcane
+242 209  51	shield
+ 69 133  46	poison
+242 128  26	burn
+120  28  74	bleed
+153 242 153	regen
+242 242 153	crit
+240 240 240	charge
+128 128 128	decharge
+153 102 179	status weak
+217 128  51	status vulnerable
+230 230 140	status blind
+128 128 128	status silence
+115 204 179	status spores
+140 102  89	status decay
+242 191  51	status empowered
+102 128 153	relic stone ward
+153  77  89	relic vital charm
+115 115 128	relic iron idol
+179 102 230	beat boss
+217 179  77	beat relic
+102 191 115	beat rest
+115 140 204	beat event
+179  89  89	beat combat
+102 102 115	map track
+242 235 140	map current halo
+128 117  77	map cleared
+140 140 153	map arrow
+217 217 224	map label
+166 102 102	map rolled beat

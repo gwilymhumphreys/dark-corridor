@@ -120,6 +120,24 @@ static func _read_gpl(path: String) -> Array[Array]:
   return entries
 
 
+## Write `colours` (name -> Color) to the `.gpl` file at `path`, in dictionary order. The write half
+## of `load_named_colours`. A `.gpl` carries no alpha, so alpha is dropped.
+static func save_named_colours(path: String, colours: Dictionary) -> Error:
+  var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+  if file == null:
+    return FileAccess.get_open_error()
+  file.store_line('GIMP Palette')
+  file.store_line('Name: ' + path.get_file().get_basename())
+  for name: String in colours:
+    var colour: Color = colours[name]
+    var r: int = roundi(clampf(colour.r, 0.0, 1.0) * 255.0)
+    var g: int = roundi(clampf(colour.g, 0.0, 1.0) * 255.0)
+    var b: int = roundi(clampf(colour.b, 0.0, 1.0) * 255.0)
+    file.store_line('%d %d %d %s' % [r, g, b, name])
+  file.close()
+  return OK
+
+
 ## `colour` in the OKLab perceptual colour space (lightness, green-red, blue-yellow). The palette
 ## clamp shader has the same conversion for screen pixels; keep the two in step.
 static func to_oklab(colour: Color) -> Vector3:

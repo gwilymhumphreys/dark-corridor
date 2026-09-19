@@ -14,7 +14,11 @@ A GIMP `.gpl` file whose colour names match `Colours` variables, written in lowe
 give a warning, and any variable the file leaves out keeps its default.
 
 `assets/palettes/new/ui/ui-default.gpl` lists every name at its default colour; copy it to start a new
-palette. The other files in that folder are placeholder candidates.
+palette. The other files in that folder are placeholder candidates. `ui-custom.gpl` is the palette the
+[debug panel's Icons tab](debug_panel.md) writes a mechanic's chosen colour into, through
+`InterfacePalette.write_custom`: it copies the live `Colours` values (whichever palette is active) under
+the default file's names, sets the one changed name, writes the whole file, and applies it, so what is on
+screen always matches the file.
 
 A `.gpl` carries no alpha — the loader forces it to 1 — so a `Colours` variable that is translucent
 cannot be set from a palette. `COOLDOWN_FILL` is the only one, and it is left out of the files.
@@ -82,7 +86,10 @@ Enemy images in the corridor are part of the corridor and use the [world clamp](
 | `InterfacePalette.reset()` | Back to the default colours and theme |
 | `InterfacePalette.is_interface_palette(path) -> bool` | A `.gpl` file with at least one colour named after a `Colours` variable; only these are listed in the debug panel |
 | `InterfacePalette.variable_name(colour_name) -> String` | `'hp bar fill'` -> `'HP_BAR_FILL'` |
+| `InterfacePalette.write_custom(variable: String, colour: Color)` | Set one `Colours` variable in the custom palette and make it the active palette (`CUSTOM_PATH`) |
+| `InterfacePalette.CUSTOM_PATH` | The custom palette file the debug panel writes into |
 | `PaletteLoader.load_named_colours(path) -> Dictionary` | Name -> colour for a `.gpl` file |
+| `PaletteLoader.save_named_colours(path: String, colours: Dictionary) -> Error` | Write a name -> colour dictionary as a `.gpl` file; the write half of `load_named_colours` |
 | `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets. The `'` and `;` keys step through the palettes, and [presets](look_presets.md) save one with the rest of the look |
 | `DebugPanels.set_portrait_palette(choice)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path. The `.` and `,` keys step through the choices |
 
