@@ -10,6 +10,9 @@ class_name Colours
 ##
 ## NOTE: a couple of colours still live at their use site by design — pure dev/debug tints (e.g.
 ## the corridor "see gaps" magenta), which never ship.
+##
+## These colours are editable in game from the Interface tab (F2) of the debug panel; a change
+## there is written to the custom palette (docs/systems/interface_palette.md).
 
 # ── Mechanics ────────────────────────────────────────────────────────────────
 # One colour per mechanic (docs/systems/mechanics.md); a mechanic's color() returns its variable, so a

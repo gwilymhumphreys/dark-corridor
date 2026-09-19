@@ -13,7 +13,7 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Tab | Key | Sets |
 |---|---|---|
 | Corridor | F1 | The corridor [palette rows](#palette-rows), the [corridor look](corridor_look.md), light, Environment and fog |
-| Interface | F2 | The interface [palette rows](#palette-rows), the [interface look](interface_look.md) and [interface glow](interface_glow.md) |
+| Interface | F2 | The interface [palette rows](#palette-rows), the [palette colours](#palette-colours), the [interface look](interface_look.md) and [interface glow](interface_glow.md) |
 | Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
@@ -65,6 +65,20 @@ Rows at the top of the Corridor and Interface tabs, below "Take this part from".
 | Corridor | Colour matching | RGB or perceptual (OKLab) | World clamp and the portrait palette clamp |
 | Interface | Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`) | [Interface palette](interface_palette.md) |
 | Interface | Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file | [Interface images](interface_palette.md#images) |
+
+## Palette colours
+
+Above the look effect sections on the Interface tab, one section per group heading in
+`src/data/colours.gd` (Mechanics, Statuses, Combat payloads, Relic panels, Beat categories, Combat
+view, Map strip, Tooltip, Interface, Control feedback). Each row is a colour picker for one
+`Colours` variable; changing one writes it to the [custom palette](interface_palette.md) and makes
+that palette active. The grouping is `InterfaceLookPanel.COLOUR_SECTIONS`, not read from
+`colours.gd`, so the panel owns its own layout.
+
+`COOLDOWN_FILL` has no row. It is translucent and a `.gpl` carries no alpha, so it cannot be set
+from a palette.
+
+A mechanic's colour also has a row on the Icons tab, beside its icon. Both write the same file.
 
 Each clamp's dithering switch is the Dithering section header in its own tab, and the two are
 separate. Every control applies immediately. The corridor rows and its dithering are saved in a
