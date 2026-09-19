@@ -15,6 +15,12 @@ tools/import.sh
 
 Do this after adding any file, and always after adding a new `class_name` script.
 
+**Wav files must be 8-bit or 16-bit PCM.** Godot's wav importer rejects 24-bit, and the failure
+is quiet: the file imports as an empty resource and plays nothing. The only sign is
+`Can't save empty resource` in the import log, which is easy to miss because the import still
+exits successfully. Check the log after adding audio, and convert a 24-bit recording before
+committing it.
+
 ## RichTextLabel with fit_content
 
 A `RichTextLabel` with `fit_content = true` computes its height from its actual

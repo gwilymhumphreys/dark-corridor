@@ -20,8 +20,9 @@ const GROUP: StringName = &'corridors'
 @export var auto_view_size: bool = true
 ## The on-screen rectangle the corridor fills, in local pixels, centred on this node's origin.
 @export var view_size: Vector2 = Vector2(1280.0, 1280.0)
-## Sections per second at full glide.
-@export var speed: float = 1.2
+## Sections per second at full glide: a cautious walking pace, about 0.7 metres per second with a
+## 3 metre section.
+@export var speed: float = 0.233
 ## Seconds to ease the speed in and out.
 @export var ramp_time: float = 0.3
 ## Whether the corridor polls the move_forward / move_back actions itself (the testbed). Hosts
@@ -33,10 +34,23 @@ const GROUP: StringName = &'corridors'
 ## The camera's vertical field of view, in degrees.
 @export var fov: float = 70.0
 
+@export_group('Walk')
+## Metres covered per footstep. `CombatCorridor` overwrites it from the run's character; the
+## default is what the testbed and the tests use.
+@export var stride_length: float = 0.65
+## Whether a footfall plays a sound.
+@export var footsteps_on: bool = true
+## Whether the camera bobs with the walk.
+@export var bob_on: bool = true
+## Metres the camera drops at a footfall.
+@export var bob_height: float = 0.04
+## Metres the camera leans to the side, one full lean every two steps.
+@export var bob_sway: float = 0.02
+
 @export_group('Light')
 ## The distance from the camera, in metres, where the light reaches black. Sections are built a
 ## little past it, so the end of the corridor is always in darkness.
-@export var light_range: float = 20.0
+@export var light_range: float = 8.0
 ## The light's `light_energy`.
 @export_range(0.0, 16.0) var light_energy: float = 0.25
 ## The light's `omni_attenuation`. Higher values make the nearest surface brighter and the fade
@@ -69,15 +83,29 @@ const GROUP: StringName = &'corridors'
 ## The most hit lights shown at once. Each extra light costs another draw of every object it reaches in
 ## the Compatibility renderer.
 const MAX_HIT_LIGHTS: int = 4
+## More movement than this in one frame, in metres, is a host reseating the corridor, not a walk.
+const MAX_FRAME_MOVE: float = 2.0
+## Walking speed, in metres per second, below which the corridor counts as stopped.
+const MIN_WALK_SPEED: float = 0.05
+## Seconds over which `walk_speed` eases toward what was measured this frame.
+const SPEED_EASE_TIME: float = 0.12
+
+signal footstep(index: int)   ## each time a foot lands, with the running count since the walk was last reset
 
 var player_z: float = 0.0               ## continuous forward position, in sections
 var velocity: float = 0.0               ## eased sections per second; ramps over ramp_time
+## Metres walked, counting movement in both directions.
+var walk_distance: float = 0.0
+## Current walking speed, in metres per second.
+var walk_speed: float = 0.0
 var forward_held: bool = false
 var back_held: bool = false
 
 var _sections: Dictionary = {}   # absolute section index -> Node3D
 var _flicker_noise: FastNoiseLite = FastNoiseLite.new()
 var _flicker_time: float = 0.0
+var _last_player_z: float = 0.0
+var _step_count: int = 0
 
 @onready var _viewport: SubViewport = $SubViewport
 @onready var _camera: Camera3D = $SubViewport/Camera
@@ -139,6 +167,7 @@ func _build() -> void:
   _display.texture = _viewport.get_texture()
   _display.centered = true
   _display.position = Vector2.ZERO
+  _last_player_z = player_z
   _layout()
 
 
@@ -156,6 +185,49 @@ func _process(delta: float) -> void:
   _flicker_time += delta
   _light.light_energy = light_energy * flicker_level(_flicker_time)
   _layout()
+  _update_walk(delta)
+
+
+## Measure how far `player_z` actually moved this frame and, from that distance, fire a footstep
+## and bob the camera. Reads `player_z`, not `velocity`, so it works whichever host moved the
+## corridor (the testbed eases `velocity`; the fight approach writes `player_z` straight).
+func _update_walk(delta: float) -> void:
+  var section_length: float = piece_source.section_length if piece_source != null else 3.0
+  var moved: float = absf(player_z - _last_player_z) * section_length
+  _last_player_z = player_z
+  # A jump this big is a host reseating the corridor, not a walk; it must not count as distance
+  # or fire a footstep.
+  if moved > MAX_FRAME_MOVE:
+    return
+  walk_distance += moved
+  # A host moves the corridor from _physics_process while this runs in _process, so one frame may
+  # see two physics ticks of movement and the next none; easing keeps the bob steady.
+  var measured: float = moved / maxf(delta, 0.0001)
+  var ease_rate: float = maxf(walk_speed, measured) / SPEED_EASE_TIME
+  walk_speed = move_toward(walk_speed, measured, ease_rate * delta)
+  var phase: float = walk_distance / maxf(stride_length, 0.01)
+  if floori(phase) > _step_count and walk_speed >= MIN_WALK_SPEED:
+    _step_count = floori(phase)
+    footstep.emit(_step_count)
+    if footsteps_on:
+      SfxManager.play_footstep()
+  if not bob_on:
+    _camera.position = Vector3.ZERO
+    return
+  # Steps per second, capped at one, so the camera settles level as a walk stops.
+  var weight: float = clampf(walk_speed / maxf(stride_length, 0.01), 0.0, 1.0)
+  _camera.position.y = -bob_height * (0.5 + 0.5 * cos(TAU * phase)) * weight
+  _camera.position.x = bob_sway * sin(PI * phase) * weight
+
+
+## Put the walk back to nothing: for a host reseating the corridor (a new fight, a jump). The
+## camera is levelled too, so the corridor opens standing still.
+func reset_walk() -> void:
+  walk_distance = 0.0
+  walk_speed = 0.0
+  _step_count = 0
+  _last_player_z = player_z
+  _camera.position = Vector3.ZERO
 
 
 func set_forward_held(held: bool) -> void:

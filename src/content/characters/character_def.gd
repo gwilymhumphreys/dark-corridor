@@ -15,3 +15,4 @@ var starting_item_ids: Array = []    # the run-start board, left-to-right
 var starting_relic_id: String = ''   # the signature starting relic (the most build-defining — design)
 var starting_potion_ids: Array = []  # run-start potions (design: usually 0; the seed carries one)
 var starting_enchants: Array = []    # [{ 'item_index': int, 'enchant_id': String }] applied at start
+var stride_length: float = 0.65      # metres covered per footstep; sets the walking pace

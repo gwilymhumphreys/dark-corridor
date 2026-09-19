@@ -263,11 +263,13 @@ const EVENT_WANDERER_DECLINE_HEAL_FRACTION: float = 0.15   # the "walk on alone"
 # Enemy images vary in size, so each is sized to this on-screen height (px, inside the corridor
 # SubViewport) when arrived at depth 0; perspective makes it smaller further away.
 const ENEMY_PAINTED_HEIGHT: float = 640.0
-# The approach (docs/history/phase4_plan.md Step 7): the enemy stands still this many corridor cells
-# deep (a speck at the vanishing point) and the player walks up to it over this many seconds, so
-# the enemy grows to full size as the corridor moves past; the boards activate on arrival.
-const APPROACH_DEPTH_START: float = 5.0
-const APPROACH_DURATION: float = 5.0
+# The approach (docs/history/phase4_plan.md Step 7): the enemy stands still and the player walks
+# up to it over this many seconds at a cautious walking pace, so the enemy grows to full size as
+# the corridor moves past; the boards activate on arrival. Change the two together: the depth
+# divided by the duration is the approach's pace, and it has to match Corridor3D.speed or the
+# footsteps fall out of step with a free walk.
+const APPROACH_DEPTH_START: float = 1.4
+const APPROACH_DURATION: float = 6.0
 
 
 # ── Delivery visual hold (presentation lifetime; docs/systems/vfx_driver.md) ─────────────

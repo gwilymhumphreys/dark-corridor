@@ -14,8 +14,14 @@ setting needed) defines:
 - **Master**
 - **Music** → Master
 - **Effects** → Master
+- **World** → Effects, carrying an `AudioEffectReverb`
 
-So music and effects volume are controlled independently — see **Prefs** below.
+So music and effects volume are controlled independently — see **Prefs** below. World sounds
+route through Effects, so the effects volume covers them and `Prefs` needs no extra key.
+
+**Why World is separate.** Sounds coming from inside the corridor need its echo; interface
+sounds are not in the room and must stay dry, so they cannot share a bus. The reverb is set for
+a stone corridor and is tuned in the editor's audio panel.
 
 ## Prefs (`src/autoloads/prefs.gd`)
 
@@ -61,6 +67,10 @@ API:
 - `play_ui_hover()` / `play_ui_click()` — the shared UI bank.
 - `play_impact()` — a hit landing in combat, played once per landing by the
   [VFX wall](vfx_driver.md). Guarded, so a burst of hits in the same moment makes one sound.
+- `play_world(stream, pitch, volume_db)` — a one-shot through the World bus, so it gets the
+  corridor's echo. `play_guarded_world(key, ...)` is its cooldown-guarded form.
+- `play_footstep()` — one footstep from the world bank, guarded. The corridor calls it on each
+  footfall ([corridor_3d.md](corridors/corridor_3d.md)); nothing else decides the pacing.
 
 **Variant folders.** The UI bank loads every sound in the `UI_*_DIR` folders, and each play
 picks one at random, so a repeated action doesn't repeat the same recording. Drop a file in or
@@ -68,6 +78,14 @@ delete one and the pool changes with no code change:
 
 - `assets/sound-effects/ui/hover/` — 8 page turns
 - `assets/sound-effects/ui/click/` — 6 book closes and 2 book drops
+- `assets/sound-effects/world/footsteps/steps/` — single footsteps, one per footfall
+
+`assets/sound-effects/world/footsteps/walk_loop.*` beside that folder is a ready-made looping
+walk cut from the same recording. Nothing plays it: it is there in case a walk is ever needed
+without a corridor driving it.
+
+Wav files must be 8-bit or 16-bit PCM; a 24-bit one imports as silence without failing the
+import. See [godot_notes.md](godot_notes.md#importing-assets).
 
 **No lead-in.** Every interface sound is trimmed so it starts at the first sample. The
 recordings arrive with up to a third of a second of room tone before the sound itself, which on a

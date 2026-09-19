@@ -55,10 +55,18 @@ way.
 | --- | --- | --- |
 | Footsteps, Tile, Male Sneakers, Slow Pace, by SpliceSound, CC0 | `assets/sound-effects/world/footsteps/` | https://freesound.org/s/170506/ |
 
-The original 22.7-second recording is kept as `tile_slow.wav`. `walk_loop.wav`
-is a 7.238-second section cut from it, holding eleven evenly spaced steps, and
-`walk_loop.mp3` is the same section encoded smaller. The recording is dry, so
-any echo is added by an audio bus effect rather than being in the file.
+One recording of a slow walk on tile, cut up into its individual steps. `steps/` holds
+one file per step, as `.wav` and `.mp3`, with a single gain applied across the set so
+their relative levels are unchanged; two scuffs that were far louder than the rest were
+left out. `walk_loop.*` beside it is a continuous looping walk cut from the same
+recording, with the gaps stretched to a slower pace.
+
+The recording is dry, so the corridor's echo comes from the World bus rather than being
+in the files ([audio.md](../systems/audio.md)).
+
+The source recording and the scripts that cut it are in
+`../dark-corridor-design/sound/footsteps/`, outside this repository, so the cut can be
+redone without downloading it again.
 
 ## Art
 

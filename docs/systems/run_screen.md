@@ -208,8 +208,9 @@ The **approach** (`run_screen` APPROACHING state): the enemy stands still at `AP
 and the player walks up to it over `APPROACH_DURATION`. Each frame `run_screen._walk(travelled)` sets
 the corridor's walk distance (`CombatCorridor.set_walk_distance`, which moves `player_z`) and the
 enemy's depth to `APPROACH_DEPTH_START - travelled`, so the corridor moves past while the enemy grows
-from a speck into full view. The distance is eased with `smoothstep`, so the walk starts and ends
-softly. It runs off `_physics_process` (so the headless test walks it), and the **fight clock is not
+to full size. The enemy starts near the edge of the corridor light's reach, so it is dim at the
+start of the walk and brightens as the player closes on it. The distance is eased with `smoothstep`,
+so the walk starts and ends softly. It runs off `_physics_process` (so the headless test walks it), and the **fight clock is not
 ticked until arrival**, so combat is frozen during the walk. Constants in `src/data/balance.gd`.
 
 ## Overlays

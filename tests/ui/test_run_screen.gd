@@ -5,6 +5,10 @@ extends GutTest
 ## whole run resolves fast. The autotest remains the broader headless backstop; this
 ## confirms the screen's FSM glue (enter beat → fight/rest → draft → advance → win).
 
+## One second of delta per step, enough to walk past `Balance.APPROACH_DURATION` however that
+## is tuned, so retiming the approach does not break every fight test in this file.
+const APPROACH_STEPS: int = int(ceil(Balance.APPROACH_DURATION)) + 1
+
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
@@ -61,7 +65,7 @@ func test_fight_beat_approaches_then_fights() -> void:
   # it walks in. (The opening beat auto-rolls to a fight.)
   var screen := _mount_into_fight(1)
   assert_eq(screen._state, RunScreen.State.APPROACHING, 'a fight beat starts in the approach')
-  for _i in 6:   # 6s of delta walks past APPROACH_DURATION
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'combat begins on arrival')
   screen.free()
@@ -73,7 +77,7 @@ func test_a_fight_opens_at_the_current_battle_speed() -> void:
   Game.start_run(1)
   Game.set_battle_speed_index(2)   # ×3 before the screen mounts
   var screen := _mount_into_fight(-1)   # -1: run already started above
-  for _i in 6:   # walk the approach into the fight
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[2], 0.00001,
@@ -83,7 +87,7 @@ func test_a_fight_opens_at_the_current_battle_speed() -> void:
 
 func test_battle_speed_dial_retimes_the_live_fight() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[0], 0.00001,
@@ -96,7 +100,7 @@ func test_battle_speed_dial_retimes_the_live_fight() -> void:
 
 func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:   # walk the approach into the fight
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   # Granted here: no authored character starts with a potion, and this test is about the throw.
@@ -116,7 +120,7 @@ func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
 
 func test_escape_toggles_pause_during_a_fight() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:   # walk the approach into the fight
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   screen._unhandled_input(_escape())
@@ -130,7 +134,7 @@ func test_escape_toggles_pause_during_a_fight() -> void:
 
 func test_space_pauses_without_the_menu_and_shows_the_paused_panel() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   screen._unhandled_input(_space())
   assert_true(screen._paused, 'Space pauses')
@@ -173,7 +177,7 @@ func test_closing_a_debug_panel_keeps_a_pause_the_player_chose() -> void:
 
 func test_escape_during_a_space_pause_raises_the_menu_and_stays_paused() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   screen._unhandled_input(_space())
   screen._unhandled_input(_escape())
@@ -190,7 +194,7 @@ func test_escape_during_a_space_pause_raises_the_menu_and_stays_paused() -> void
 
 func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   screen._toggle_pause()
   var frozen: float = screen._cm.timekeeper.sim_time
@@ -205,7 +209,7 @@ func test_pause_freezes_the_clock_and_resume_restores_it() -> void:
 
 func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   screen._toggle_pause()
   screen._quit_to_menu()
@@ -216,7 +220,7 @@ func test_quit_to_menu_returns_to_title_with_the_save_intact() -> void:
 
 func test_settings_opens_over_the_pause_menu_and_closes_back() -> void:
   var screen := _mount_into_fight(1)
-  for _i in 6:
+  for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   screen._toggle_pause()
   assert_not_null(screen._pause_menu, 'paused')

@@ -43,6 +43,9 @@ func _ready() -> void:
   $SubViewport.add_child(_corridor)
   _corridor.apply_settings(DebugPanels.corridor_settings, DebugPanels.environment_settings)
   _walk_start = _corridor.player_z
+  if Game.run != null and Game.run.character != null:
+    _corridor.stride_length = Game.run.character.stride_length
+  _corridor.reset_walk()
   _enemies.append(_corridor.add_enemy(MonsterImages.random_texture()))
   _actors.append(null)
   _arrange()

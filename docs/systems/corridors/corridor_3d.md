@@ -32,8 +32,52 @@ testbed (`src/scenes/corridor_testbed.tscn`).
 - A host can set `player_z` itself instead of holding a direction. `CombatCorridor.set_walk_distance`
   does this for the fight approach ([run_screen.md](../run_screen.md#enemies-in-the-corridor)), so
   the walk's timing comes from `Balance.APPROACH_DURATION` rather than `speed`.
-- The camera and light never move. Each frame `_layout` places section `i` with its near edge
-  `i - player_z` sections past depth 0, which keeps positions small however long the run is.
+- The light never moves. The camera only moves for the head bob below. Each frame `_layout` places
+  section `i` with its near edge `i - player_z` sections past depth 0, which keeps positions small
+  however long the run is.
+
+## The walk
+
+Footsteps and the head bob are driven by how far the corridor has actually moved, not by
+`velocity`. They have to be: a fight approach has its host write `player_z` straight, which leaves
+`velocity` at zero for the whole walk, so anything reading it would be silent through every fight.
+
+`_update_walk` runs at the end of `_process`. It measures the change in `player_z` since the last
+frame, converts it to metres with the piece source's section length, and adds it to
+`walk_distance`. Movement in either direction counts, so backing up still makes footsteps. A change
+larger than `MAX_FRAME_MOVE` is a host reseating the corridor rather than a walk, so it is ignored.
+`walk_speed` eases toward what was measured, because a host moving the corridor from
+`_physics_process` gives some frames two ticks of movement and others none.
+
+`stride_length` is how far one footstep carries, in metres. Dividing the distance walked by it
+gives the walk's phase, and both the sound and the bob read that one number, so they cannot drift
+apart.
+
+- **A footfall** is the phase passing a whole number while the corridor is moving faster than
+  `MIN_WALK_SPEED`. It emits `footstep(index)` and, when `footsteps_on`, plays a step through
+  `SfxManager.play_footstep()` ([audio.md](../audio.md)). At most one lands per frame.
+- **The bob** moves the camera down at each footfall and back up between them, and leans it to
+  alternate sides, one full lean every two steps. It is scaled by the walk's speed, so the camera
+  settles level as a walk stops.
+- `reset_walk()` clears the distance, the speed and the camera, for a host starting a new walk.
+  `CombatCorridor` calls it when a fight is built. A rebuild through `apply_settings` deliberately
+  does not reset: doing so mid-approach would jump the phase and land a footstep that should
+  not happen.
+
+`CombatCorridor` overwrites `stride_length` from the run character's `stride_length`, so characters
+walk at their own pace. The corridor's own default is what the testbed and the tests use.
+
+`unproject()` is what the enemy HUD anchors are built from, so a bobbing camera moves them. The
+HUDs are hidden throughout the approach and fade in on arrival, by which point the walk has stopped
+and the camera is level again, so this does not show.
+
+| Export | Controls |
+|---|---|
+| `stride_length` | Metres covered per footstep. The host overwrites it from the run's character |
+| `footsteps_on` | Whether a footfall plays a sound |
+| `bob_on` | Whether the camera bobs with the walk |
+| `bob_height` | How far the camera drops at a footfall |
+| `bob_sway` | How far the camera leans to the side |
 
 ## Light
 
@@ -53,6 +97,9 @@ chose it over four lights on the walls, floor and ceiling, which looked almost t
   `light_energy` times that level, which stays between `1 - flicker_amount` and 1.
 - `_apply_light()` copies the exports to the light node when the corridor is built; call it after
   changing them at runtime.
+- The default look preset carries the light settings and is loaded at startup, so it overrides what
+  the scene holds ([look_presets.md](../look_presets.md)). The scene's values only apply when no
+  preset loads. Keep the two the same so the editor shows what the game shows.
 
 | Export | Controls |
 |---|---|

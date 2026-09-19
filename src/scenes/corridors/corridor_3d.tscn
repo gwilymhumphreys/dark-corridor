@@ -24,6 +24,7 @@ fog_density = 0.06
 position = Vector2(1280, 720)
 script = ExtResource("1")
 piece_source = SubResource("Resource_pieces")
+light_range = 8.0
 
 [node name="SubViewport" type="SubViewport" parent="."]
 own_world_3d = true
@@ -39,7 +40,7 @@ fov = 70.0
 [node name="Light" type="OmniLight3D" parent="SubViewport"]
 light_energy = 0.25
 light_specular = 0.0
-omni_range = 20.0
+omni_range = 8.0
 omni_attenuation = 1.5
 
 [node name="Sections" type="Node3D" parent="SubViewport"]

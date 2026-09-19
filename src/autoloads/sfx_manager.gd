@@ -8,6 +8,10 @@ extends Node
 ## triggers (e.g. hover), and each play gets a small random pitch jitter so
 ## repeats don't sound robotic.
 ##
+## World sounds (such as footsteps) play through a second player on the World
+## bus, which carries the corridor's reverb; interface sounds stay dry on the
+## Effects bus.
+##
 ## Every play_* helper no-ops gracefully when its stream is missing, so callers
 ## (such as the UI juice node) work fine before any audio assets exist. Drop
 ## files in the UI_*_DIR folders and they join that sound's pool automatically;
@@ -15,6 +19,7 @@ extends Node
 ## repeat the same recording. A sound kept as both .wav and .mp3 counts once.
 
 const BUS_EFFECTS: String = 'Effects'
+const BUS_WORLD: String = 'World'
 const POLYPHONY: int = 32
 const COOLDOWN_TIME: float = 0.08
 const PITCH_JITTER_MIN: float = 0.92
@@ -24,6 +29,8 @@ const PITCH_JITTER_MAX: float = 1.08
 # that sound. An empty or missing folder leaves the helper a silent no-op.
 const UI_HOVER_DIR: String = 'res://assets/sound-effects/ui/hover/'
 const UI_CLICK_DIR: String = 'res://assets/sound-effects/ui/click/'
+## World sound bank. The footstep pool: one sound per file, picked at random per footfall.
+const WORLD_FOOTSTEP_DIR: String = 'res://assets/sound-effects/world/footsteps/steps/'
 ## Audio file extensions, most preferred first. A sound is kept in the repository as both the
 ## original .wav and a much smaller .mp3; the same name with two extensions is one sound, not two
 ## variants. The web build prefers the mp3 so the player downloads less, everything else prefers
@@ -40,11 +47,14 @@ const COMBAT_IMPACT_PATH: String = 'res://assets/sound-effects/combat/impact.mp3
 
 var _poly_player: AudioStreamPlayer
 var _poly_playback: AudioStreamPlaybackPolyphonic
+var _world_player: AudioStreamPlayer
+var _world_playback: AudioStreamPlaybackPolyphonic
 var _cooldowns: Dictionary = {}
 
 var _ui_hover_streams: Array[AudioStream] = []
 var _ui_click_streams: Array[AudioStream] = []
 var _impact_stream: AudioStream
+var _footstep_streams: Array[AudioStream] = []
 
 
 func _ready() -> void:
@@ -58,16 +68,25 @@ func _process(delta: float) -> void:
   _update_cooldowns(delta)
 
 
-func _create_player() -> void:
+## A configured polyphonic stream player for `bus_name`: not autoplayed, for the reason in
+## _ensure_playing. Returns it without a parent so the caller can add it.
+func _make_poly_player(bus_name: String) -> AudioStreamPlayer:
   var poly: AudioStreamPolyphonic = AudioStreamPolyphonic.new()
   poly.polyphony = POLYPHONY
-  _poly_player = AudioStreamPlayer.new()
-  _poly_player.stream = poly
-  if AudioServer.get_bus_index(BUS_EFFECTS) != -1:
-    _poly_player.bus = BUS_EFFECTS
-  # Not autoplayed: the first play() starts it (_ensure_poly_playing). A playback started with
+  var player: AudioStreamPlayer = AudioStreamPlayer.new()
+  player.stream = poly
+  if AudioServer.get_bus_index(bus_name) != -1:
+    player.bus = bus_name
+  # Not autoplayed: the first play starts it (_ensure_playing). A playback started with
   # nothing to play is never released under the headless dummy audio driver and leaks at exit.
+  return player
+
+
+func _create_player() -> void:
+  _poly_player = _make_poly_player(BUS_EFFECTS)
   add_child(_poly_player)
+  _world_player = _make_poly_player(BUS_WORLD)
+  add_child(_world_player)
 
 
 func _load_ui_bank() -> void:
@@ -83,6 +102,7 @@ func _load_ui_bank() -> void:
   _ui_hover_streams = _load_folder(UI_HOVER_DIR)
   _ui_click_streams = _load_folder(UI_CLICK_DIR)
   _impact_stream = _try_load(COMBAT_IMPACT_PATH)
+  _footstep_streams = _load_folder(WORLD_FOOTSTEP_DIR)
 
 
 func _try_load(path: String) -> AudioStream:
@@ -135,12 +155,25 @@ func _pick(streams: Array[AudioStream]) -> AudioStream:
 func play(stream: AudioStream, pitch: float = -1.0, volume_db: float = 0.0) -> int:
   if stream == null:
     return -1
-  _ensure_poly_playing()
+  _poly_playback = _ensure_playing(_poly_player, _poly_playback)
   if _poly_playback == null:
     return -1
   if pitch < 0.0:
     pitch = randf_range(PITCH_JITTER_MIN, PITCH_JITTER_MAX)
   return _poly_playback.play_stream(stream, 0.0, volume_db, pitch)
+
+
+## Play a one-shot through the world channel, which carries the corridor reverb. A negative
+## pitch picks a random jitter, as `play()` does. Returns the stream id, or -1 if nothing played.
+func play_world(stream: AudioStream, pitch: float = -1.0, volume_db: float = 0.0) -> int:
+  if stream == null:
+    return -1
+  _world_playback = _ensure_playing(_world_player, _world_playback)
+  if _world_playback == null:
+    return -1
+  if pitch < 0.0:
+    pitch = randf_range(PITCH_JITTER_MIN, PITCH_JITTER_MAX)
+  return _world_playback.play_stream(stream, 0.0, volume_db, pitch)
 
 
 ## Cooldown-guarded one-shot keyed by `key`. Repeated calls within
@@ -153,6 +186,18 @@ func play_guarded(key: String, stream: AudioStream, pitch: float = -1.0, volume_
   _cooldowns[key] = COOLDOWN_TIME
   set_process(true)
   play(stream, pitch, volume_db)
+
+
+## Cooldown-guarded one-shot through the world channel, keyed by `key`. Repeated calls within
+## COOLDOWN_TIME are dropped.
+func play_guarded_world(key: String, stream: AudioStream, pitch: float = -1.0, volume_db: float = 0.0) -> void:
+  if stream == null:
+    return
+  if _cooldowns.has(key):
+    return
+  _cooldowns[key] = COOLDOWN_TIME
+  set_process(true)
+  play_world(stream, pitch, volume_db)
 
 
 func play_ui_hover() -> void:
@@ -169,21 +214,30 @@ func play_impact() -> void:
   play_guarded('combat_impact', _impact_stream)
 
 
-func _ensure_poly_playing() -> void:
-  if _poly_player == null:
-    return
-  # Each play() makes a new playback, so fetch the handle every time the player starts; a handle
-  # kept from before a stop would play nothing. Also fetch it if it is still missing.
-  if not _poly_player.playing:
-    _poly_player.play()
-    _poly_playback = null
-  if _poly_playback == null:
-    _poly_playback = _poly_player.get_stream_playback() as AudioStreamPlaybackPolyphonic
+## A footstep landing in the corridor. Guarded, so two footfalls in one frame make one sound.
+func play_footstep() -> void:
+  play_guarded_world('footstep', _pick(_footstep_streams))
+
+
+## Start `player` if it is not playing and return its playback. Each play() makes a new playback,
+## so fetch the handle every time the player starts; a handle kept from before a stop would play
+## nothing. Also fetch it if `playback` is still missing. Returns `playback` unchanged if the
+## player is null.
+func _ensure_playing(player: AudioStreamPlayer, playback: AudioStreamPlaybackPolyphonic) -> AudioStreamPlaybackPolyphonic:
+  if player == null:
+    return playback
+  if not player.playing:
+    player.play()
+    playback = null
+  if playback == null:
+    playback = player.get_stream_playback() as AudioStreamPlaybackPolyphonic
+  return playback
 
 
 func _notification(what: int) -> void:
   if what == NOTIFICATION_APPLICATION_FOCUS_IN:
-    _ensure_poly_playing()
+    _poly_playback = _ensure_playing(_poly_player, _poly_playback)
+    _world_playback = _ensure_playing(_world_player, _world_playback)
 
 
 func _update_cooldowns(delta: float) -> void:
@@ -203,7 +257,12 @@ func _exit_tree() -> void:
   if _poly_player:
     _poly_player.stop()
     _poly_player.stream = null
+  _world_playback = null
+  if _world_player:
+    _world_player.stop()
+    _world_player.stream = null
   _ui_hover_streams.clear()
   _ui_click_streams.clear()
   _impact_stream = null
+  _footstep_streams.clear()
   _cooldowns.clear()
