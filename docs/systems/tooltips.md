@@ -13,8 +13,9 @@ holds the design rationale, the ratified decisions, and the prior-art lineage
 ## What the player sees
 
 - **Main panel** (nearest the item) — name (rarity-tinted), generated effect lines
-  with **live values** and inline keyword **chips**, an optional authored flavor
-  line, and a stat block (cooldown, plus a crit-chance line for an item with one).
+  with **live values**, inline keyword **chips** and inline mechanic **glyphs** (attack /
+  heal), an optional authored flavor line, and a stat block (cooldown, plus a
+  crit-chance line for an item with one).
 - **Keyword column** (cards beside the main panel) — one card per keyword the item
   references (statuses + mechanics), **all shown at once**.
 - **Per-keyword tooltip** — hovering a chip pops a Godot built-in custom tooltip
@@ -28,7 +29,7 @@ The cluster shows/hides as a unit; it is opaque (a scale reveal, no fade) and
 | File | Role |
 |------|------|
 | `tooltip_cluster.gd` (+`.tscn`) | The cluster, on its own `CanvasLayer` (layer **50**, below pause's 100). Owns the main panel + keyword column, runs the hide-bridge state machine, positions/clamps, rebuilds on item change, clears its `Item` ref on hide + `_exit_tree`. |
-| `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
+| `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip / icon segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
 | `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content (tinted name + description). Returned bare by a chip's `_make_custom_tooltip`; wrapped in a `PanelContainer` for the column. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
 | `keyword_chip.gd` (+`.tscn`) | Inline `PanelContainer` (icon + tinted name) in the body. Sets `tooltip_text = <id>` and overrides `_make_custom_tooltip` → a frameless `keyword_card`. Its icon is dressed by kind, see below. |
 | `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, lines, flavor, stat_lines, keyword_ids}`. **Instance** (not static) because the line templates call `tr()`. |
@@ -135,6 +136,18 @@ it through `InterfaceLook.element_material`, which keeps the effects that would 
 its palette colour switched off ([interface_look.md](interface_look.md)). A status or `kw:*`
 icon is painted pack art with its own colours, so it keeps white modulate and
 `InterfaceLook.material`, the picture material.
+
+### The inline icon segment
+
+A line segment of `{'t': 'icon', 'id': <slot>}` is rendered by `TooltipPanel._icon_rect` as a
+`TextureRect`: the slot's [icon](mechanics.md#iconslots), tinted with the mechanic's colour
+(`MechanicRegistry.get_mechanic(id).color()`) and drawn through `InterfaceLook.element_material`
+(the same treatment a chip gives a mechanic glyph), sized square to the row's font height so the
+glyph matches the text beside it. A slot with no texture (an unknown id) yields an empty rect
+rather than an error. The **attack** and **heal** effect lines carry their mechanic's glyph
+(`10 <glyph> to the enemy`, `<glyph> <glyph>`), in place of the old word; the other mechanics
+still use a keyword chip. The stat block is deliberately left a plain joined label — a glyph in
+it (e.g. `charge_time` beside `Every {0}s`) is a later step.
 
 ## Built-in custom tooltip — the double-panel contract
 

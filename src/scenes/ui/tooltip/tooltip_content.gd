@@ -10,6 +10,7 @@ class_name TooltipContent
 ##   {'t': 'text',  's': String}                          — literal copy
 ##   {'t': 'value', 's': String, 'changed': bool, 'dir': int}  — a live number (dir: +1 up / -1 down)
 ##   {'t': 'chip',  'id': String}                         — a keyword reference (status or mechanic)
+##   {'t': 'icon',  'id': String}                         — a mechanic glyph (an IconSlots id, e.g. attack / heal)
 
 
 ## Build the full content Dictionary for `item`:
@@ -44,14 +45,18 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
   var value_seg: Dictionary = _value_seg(item, effect)
   match effect.kind:
     Delivery.Kind.MECHANIC:
-      # Attack and heal keep their line templates; the status mechanics (shield, and later
-      # poison / burn / bleed / regen) use the status templates with the mechanic id as the chip.
+      # Attack and heal carry their mechanic's inline glyph in place of the old word; the status
+      # mechanics (shield, and later poison / burn / bleed / regen) use the status templates with
+      # the mechanic id as the chip.
       if effect.mechanic == AttackMechanic.ID:
+        var icon_seg: Dictionary = {'t': 'icon', 'id': effect.mechanic}
         if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-          return _interpolate(tr('Deal {0} damage to all enemies'), [value_seg])
-        return _interpolate(tr('Deal {0} damage to {1}'), [value_seg, _shape_text(effect.shape)])
+          return _interpolate(tr('{0} {1} to all enemies'), [value_seg, icon_seg])
+        return _interpolate(tr('{0} {1} to {2}'), [value_seg, icon_seg, _shape_text(effect.shape)])
       if effect.mechanic == HealMechanic.ID:
-        return _interpolate(tr('Heal {0}'), [value_seg])
+        # No tr(): the line is a value and a glyph with no words, so there is nothing to
+        # translate and "{0} {1}" would be a meaningless entry in the translation template.
+        return _interpolate('{0} {1}', [value_seg, {'t': 'icon', 'id': effect.mechanic}])
       # Charge and decharge move an item's cooldown bar by seconds, so their line names the
       # target items and the seconds, not a stack count.
       if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:

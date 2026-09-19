@@ -660,15 +660,11 @@ msgid "Keyword"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Deal {0} damage to all enemies"
+msgid "{0} {1} to all enemies"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Deal {0} damage to {1}"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Heal {0}"
+msgid "{0} {1} to {2}"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd

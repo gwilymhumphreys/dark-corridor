@@ -43,7 +43,7 @@ func _build_lines(lines: Array) -> void:
     box.add_child(_build_line(line))
 
 
-## One effect line: a flow of text / value / chip segments. HFlowContainer (not HBox) so a long
+## One effect line: a flow of text / value / chip / icon segments. HFlowContainer (not HBox) so a long
 ## line wraps WITHIN the fixed panel width instead of stretching the panel past PANEL_WIDTH.
 func _build_line(line: Array) -> HFlowContainer:
   var row := HFlowContainer.new()
@@ -60,6 +60,8 @@ func _build_line(line: Array) -> HFlowContainer:
         var chip: KeywordChip = KEYWORD_CHIP.instantiate()
         row.add_child(chip)
         chip.setup(seg['id'])
+      'icon':
+        row.add_child(_icon_rect(seg['id']))
   return row
 
 
@@ -81,6 +83,27 @@ func _value_label(seg: Dictionary) -> Label:
   label.mouse_filter = Control.MOUSE_FILTER_IGNORE
   label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
   return label
+
+
+## A mechanic glyph inline in an effect line (e.g. the attack / heal lines): the slot's icon, tinted
+## with the mechanic's colour and drawn through the element material so a pixel stays on its palette
+## colour. Sized square to the row's font height, so the glyph matches the text beside it. An unknown
+## slot has no texture and no mechanic — the rect is returned empty rather than erroring.
+func _icon_rect(slot_id: String) -> TextureRect:
+  var rect := TextureRect.new()
+  var path: String = IconSlots.icon_for(slot_id)
+  if path != '':
+    rect.texture = load(path) as Texture2D
+  if MechanicRegistry.has(slot_id):
+    rect.modulate = MechanicRegistry.get_mechanic(slot_id).color()
+  rect.material = InterfaceLook.element_material
+  var size: int = get_theme_default_font().get_height(get_theme_default_font_size())
+  rect.custom_minimum_size = Vector2(size, size)
+  rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+  rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+  rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+  rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  return rect
 
 
 func _set_flavor(flavor: String) -> void:
