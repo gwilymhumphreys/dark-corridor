@@ -74,12 +74,30 @@ portrait looks like it is breathing.
 
 - It is on the character select cards (`character_card.tscn`), the player
   portrait in the framed combat view, and the ally slots.
-- The frames around those portraits have `clip_contents = true` so the picture
-  never spills past the frame as it grows.
-- `amount` is how much larger the picture gets at the top of the breath and
-  `period` is how long one full breath takes; the defaults are in the script.
-  The scale never goes below the resting size, so the frame is always filled.
+- `amount` is how much the picture is magnified at the top of the breath and
+  `period` is how long one full breath takes; the defaults are in the script. The
+  zoom never goes below 1, so the frame is always filled.
 - Each node starts at a random point in the cycle, so several portraits on
   screen do not breathe in unison.
-- Like `UIJuice`, it animates the visual-only `offset_transform_scale` and
-  restores the resting size in `_exit_tree()`.
+
+### Why the zoom is in the shader
+
+Unlike `UIJuice`, this does not scale the node. It sets the `picture_zoom`
+instance uniform on the parent's canvas item with
+`RenderingServer.canvas_item_set_instance_shader_parameter`, and
+`interface_look.gdshader` applies it to the image lookup
+([interface_look.md](interface_look.md)). `PortraitBreath` sets it back to 1 in
+`_exit_tree()`.
+
+Scaling the node instead would change its size on screen every frame, and the
+pixelate, halftone, hatching and grain patterns are laid out in screen pixels
+from the node's corner. The number of pixelate cells across the node would then
+change every frame, leaving a strip of a different width along the right and
+bottom edge that kept shifting, and the other patterns would drift across the
+picture. Zooming inside the shader keeps the node's size fixed, so those patterns
+stay still and the picture moves through them. It also means the picture cannot
+overflow its frame, so the frame needs no `clip_contents`.
+
+`picture_zoom` is in `InterfaceLookAutoload.NODE_UNIFORMS`, so it is not treated
+as a look setting: it does not appear in the Interface tab and is not saved in a
+look preset.

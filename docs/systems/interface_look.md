@@ -43,6 +43,12 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   fades still work.
 - Distances are in screen pixels, as in the corridor look. Halftone dots, hatching lines and grain are laid
   out from the node's corner, so they move with an animated node; scanlines are laid out on the screen.
+- `picture_zoom` is an instance uniform set per node, not a look setting (`NODE_UNIFORMS`, so it is left
+  out of `defaults()`, the Interface tab and presets). Above 1 the shader reads a smaller part of the
+  image, so the picture fills the node magnified while the node keeps its size, and the pixelate,
+  halftone, hatching and grain patterns stay where they are. `PortraitBreath` drives it for the portrait
+  breathing ([ui_juice.md](ui_juice.md#portrait-breathing)). It is applied to the image lookup after the
+  pixelate grid is worked out, and below 1 would read outside the image, so nothing sets it there.
 - The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the portrait palette
   ([interface_palette.md](interface_palette.md#images)) and are written to the picture materials only
   (`InterfaceLook.picture_materials`). It runs after the look effects and before picture wear. Its palette, colour matching and on/off dithering switch are set by `DebugPanels` and are not
@@ -113,6 +119,7 @@ In a preset, the interface part has an `interface_shader` section listing every 
 | `InterfaceLook.picture_materials` | Both picture materials, which the palette clamp is written to |
 | `InterfaceLook.element_material` | The material the interface elements that are not pictures are drawn through |
 | `InterfaceLook.set_setting(uniform, value)` | Set one setting on all three materials |
+| `picture_zoom` | Per-node instance uniform: zoom on the image, driven by `PortraitBreath` |
 | `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the shader and include code (the shared effects, the palette clamp's dither settings, picture wear) |
 | `InterfaceLook.reset()`, `write_look(file)`, `read_look(file)` | Reset, and the interface part of a preset |
 | `InterfaceLook.copy_from_corridor()`, `copy_to_corridor()` | Copy shared settings between the looks |

@@ -73,6 +73,12 @@ uniform float picture_creases_amount : hint_range(0.0, 1.0, 0.01) = 0.22;
 uniform float picture_creases_angle : hint_range(0.0, 180.0, 1.0) = 91.0;
 group_uniforms;
 
+// A zoom on the picture inside the node, set per node (docs/systems/ui_juice.md, the portrait breathing).
+// 1.0 is no zoom, above 1.0 samples a smaller part of the image so it fills the node magnified. The node
+// keeps its size on screen, so the pixelate, halftone, hatching and grain patterns stay put and the
+// picture moves inside them. Below 1.0 would read outside the image, so nothing sets it there.
+instance uniform float picture_zoom = 1.0;
+
 // The node's colour (its ColorRect colour and modulate), kept from the vertex stage.
 varying vec4 node_colour;
 // Position in the node's own pixels, before screen scaling, as panel wear measures it.
@@ -142,11 +148,15 @@ void fragment() {
   }
   vec2 pixel = floor(local / block) * block;
 
-  vec4 source = texture(TEXTURE, uv);
+  // The zoom is applied to the image lookup only, after the pixelate grid has been worked out, so the
+  // grid stays where it is and the picture moves through it.
+  vec2 image_uv = (uv - 0.5) / max(picture_zoom, 0.001) + 0.5;
+
+  vec4 source = texture(TEXTURE, image_uv);
   vec3 colour = source.rgb;
   if (colour_fringe_on) {
-    vec2 offset = (uv - 0.5) * 2.0 * colour_fringe_amount * uv_per_pixel;
-    colour = vec3(texture(TEXTURE, uv + offset).r, colour.g, texture(TEXTURE, uv - offset).b);
+    vec2 offset = (image_uv - 0.5) * 2.0 * colour_fringe_amount * uv_per_pixel;
+    colour = vec3(texture(TEXTURE, image_uv + offset).r, colour.g, texture(TEXTURE, image_uv - offset).b);
   }
   // A modulate brighter than white makes the node glow (docs/systems/interface_glow.md). The effects run
   // on the colour up to white, and the extra brightness is put back at the end.

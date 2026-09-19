@@ -204,3 +204,9 @@ func test_the_element_material_is_not_clamped_to_the_portrait_palette() -> void:
   DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE)
   var count: Variant = InterfaceLook.element_material.get_shader_parameter('colour_count')
   assert_true(count == null or count == 0, 'the interface elements keep their own colours')
+
+
+func test_the_per_node_zoom_is_not_a_look_setting() -> void:
+  for uniform: String in InterfaceLookAutoload.NODE_UNIFORMS:
+    assert_false(InterfaceLook.defaults().has(uniform),
+      '%s is set per node, so it is not in the panel or a preset' % uniform)

@@ -1,7 +1,7 @@
 extends GutTest
-## PortraitBreath (docs/systems/ui_juice.md → Portrait breathing): the parent Control's visual-only
-## scale rises above 1 and comes back down, never drops below 1, and returns to 1 when the node leaves
-## the tree. A non-Control parent disables it.
+## PortraitBreath (docs/systems/ui_juice.md → Portrait breathing): the `picture_zoom` instance uniform on
+## the parent's canvas item rises above 1 and comes back down, never drops below 1, and goes back to 1
+## when the node leaves the tree. A parent that is not a CanvasItem disables it.
 
 
 var _nodes: Array = []
@@ -20,6 +20,11 @@ func _host(node: Node) -> Node:
   return node
 
 
+func _zoom(item: CanvasItem) -> float:
+  return RenderingServer.canvas_item_get_instance_shader_parameter(
+    item.get_canvas_item(), PortraitBreath.UNIFORM)
+
+
 func _breathing_rect(amount: float, period: float) -> Array:
   var rect := TextureRect.new()
   var breath := PortraitBreath.new()
@@ -30,33 +35,41 @@ func _breathing_rect(amount: float, period: float) -> Array:
   return [rect, breath]
 
 
-func test_scale_stays_between_one_and_one_plus_amount_across_a_full_cycle() -> void:
+func test_zoom_stays_between_one_and_one_plus_amount_across_a_full_cycle() -> void:
   var parts: Array = _breathing_rect(0.02, 4.0)
   var rect: TextureRect = parts[0]
   var breath: PortraitBreath = parts[1]
-  assert_true(rect.offset_transform_enabled, 'the offset transform is switched on')
   var highest: float = 1.0
   for i in 40:
     breath._process(0.1)
-    var s: float = rect.offset_transform_scale.x
-    assert_between(s, 1.0, 1.02, 'scale stays inside the breath range')
-    highest = maxf(highest, s)
-  assert_almost_eq(highest, 1.02, 0.001, 'the breath reaches its full size somewhere in the cycle')
+    var z: float = _zoom(rect)
+    assert_between(z, 1.0, 1.02, 'the zoom stays inside the breath range')
+    highest = maxf(highest, z)
+  assert_almost_eq(highest, 1.02, 0.001, 'the breath reaches its full zoom somewhere in the cycle')
 
 
-func test_scale_returns_to_one_when_the_node_leaves_the_tree() -> void:
+func test_the_node_is_not_scaled_so_it_cannot_overflow_its_frame() -> void:
   var parts: Array = _breathing_rect(0.05, 4.0)
   var rect: TextureRect = parts[0]
   var breath: PortraitBreath = parts[1]
   breath._process(1.0)
-  assert_ne(rect.offset_transform_scale.x, 1.0, 'the breath moved the scale off its resting size')
+  assert_eq(rect.offset_transform_scale, Vector2.ONE, 'the zoom is in the shader, not on the node')
+  assert_eq(rect.scale, Vector2.ONE, 'the layout scale is untouched')
+
+
+func test_zoom_returns_to_one_when_the_node_leaves_the_tree() -> void:
+  var parts: Array = _breathing_rect(0.05, 4.0)
+  var rect: TextureRect = parts[0]
+  var breath: PortraitBreath = parts[1]
+  breath._process(1.0)
+  assert_ne(_zoom(rect), 1.0, 'the breath moved the zoom off 1')
   breath.free()
-  assert_eq(rect.offset_transform_scale, Vector2.ONE, 'the resting size is restored')
+  assert_almost_eq(_zoom(rect), 1.0, 0.0001, 'the zoom is back to 1')
 
 
-func test_a_non_control_parent_disables_the_breath() -> void:
+func test_a_parent_that_is_not_a_canvas_item_disables_the_breath() -> void:
   var holder := Node.new()
   var breath := PortraitBreath.new()
   holder.add_child(breath)
   _host(holder)
-  assert_false(breath.is_processing(), 'processing is off without a Control to scale')
+  assert_false(breath.is_processing(), 'processing is off without a canvas item to zoom')

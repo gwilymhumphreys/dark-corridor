@@ -20,7 +20,6 @@ offset_right = 250.0
 offset_bottom = 160.0
 mouse_filter = 2
 theme_type_variation = &"PanelSlot"
-clip_contents = true
 
 [node name="Image" type="TextureRect" parent="Portrait"]
 material = ExtResource("interface_framed_material")

@@ -15,6 +15,9 @@ const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'ditherin
 ## Effect groups in the shared include that the interface look shader does not use, so they are not
 ## settings.
 const UNUSED_GROUPS: Array[String] = ['bloom']
+## Instance uniforms set per node rather than on the material, so they are not settings either:
+## `picture_zoom` is driven by `PortraitBreath` (docs/systems/ui_juice.md).
+const NODE_UNIFORMS: Array[String] = ['picture_zoom']
 ## Switches left off on `element_material`, so an interface element keeps the colour the interface
 ## palette gave it. Everything else is set on every material.
 const ELEMENT_OFF_UNIFORMS: Array[String] = ['grade_on', 'colour_ramp_on', 'posterize_on',
@@ -67,13 +70,14 @@ func set_setting(uniform: String, value: Variant) -> void:
 
 ## Every interface look setting with a default in the shared effects include, the palette clamp include
 ## (its dither pattern, size and supersample) or in the interface look shader's own picture wear
-## (uniform name -> value), except the groups in `UNUSED_GROUPS`, the mark colours and
-## `PALETTE_UNIFORMS`.
+## (uniform name -> value), except the groups in `UNUSED_GROUPS`, the mark colours,
+## `PALETTE_UNIFORMS` and `NODE_UNIFORMS`.
 func defaults() -> Dictionary:
   if _defaults.is_empty():
     var code: String = EFFECTS_INCLUDE.code + '\n' + PALETTE_INCLUDE.code + '\n' + material.shader.code
     var skip: Array[String] = COLOUR_UNIFORMS.duplicate()
     skip.append_array(PALETTE_UNIFORMS)
+    skip.append_array(NODE_UNIFORMS)
     var all: Dictionary = PrintLookAutoload._uniform_defaults(code, skip)
     for uniform: String in all:
       var unused: bool = false
