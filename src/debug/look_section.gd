@@ -33,5 +33,10 @@ func add_row(row: LookRow) -> void:
   $Rows.add_child(row)
 
 
+## Add a node that is not a LookRow (the Icons tab's samples) to the section's rows.
+func add_node(node: Control) -> void:
+  $Rows.add_child(node)
+
+
 func _on_title_pressed() -> void:
   _rows.visible = not _rows.visible

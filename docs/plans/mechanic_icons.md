@@ -307,22 +307,33 @@ picking an icon writes `chosen.cfg`, and the choice survives a restart.
 **Goal.** See the chosen icon and colour where they actually appear, without
 leaving the panel.
 
-**Files.** `src/debug/icon_panel.gd` and `icon_panel.tscn`.
+**Files.** `src/debug/icon_panel.gd` (the `icon_panel.tscn` is unchanged: the
+samples are built in code in `rebuild()`, the way the tab already builds its
+rows).
 
-A "Samples" section below the rows, rebuilt whenever the slot or its icon
-changes:
+A "Samples" section below the Choose rows, opened with `set_open(true)` and
+rebuilt whenever the slot or its icon changes (so no extra wiring). A single
+`VBoxContainer` of labelled rows is added to the section's `Rows` node through a
+small public `LookSection.add_node(node: Control)`. Three samples, each a label
+plus its content:
 
-- The glyph alone at three sizes, so the small end is visible.
-- A `KeywordChip` for the slot.
-- One tooltip effect line built through `TooltipContent`, using the icon
-  segment, for example `10 <glyph> to the enemy`.
-- A `StatusNumbers` strip, for the slot colour on a number rather than a shape.
+- **Sizes** — the glyph at 16, 24 and 40 pixels side by side, so the small end
+  is visible. Each a `TextureRect` on `InterfaceLook.element_material`, tinted
+  with the slot colour.
+- **Chip** — a `KeywordChip` for the slot, `setup` deferred to its `ready` so it
+  runs once the chip is in the tree.
+- **In text** — an `HBoxContainer` holding a `Label` reading `10`, the glyph at
+  the label's font height, and a `Label` reading `to the enemy`, so the glyph
+  can be judged against text at its real size.
 
-`charge_time` and `card` have no `Mechanic` class, so the chip and the status
-numbers are hidden for those two and only the glyph sizes and the effect line
-show.
+The slot colour is the mechanic's colour, or plain white (`Colours.UI_TEXT`) for
+a slot that is not a mechanic. `charge_time` and `card` have no `Mechanic`
+class, so they have no keyword chip: for those two the Chip sample is left out
+entirely and only Sizes and In text show.
 
-**Must not change.** The Choose rows from step 7.
+**Must not change.** The Choose rows from step 7, `LookSection.setup`,
+`set_switch`, `set_open` and `add_row` (only `add_node` is added), or anything
+outside `src/debug/`.
 
 **Done when** changing either dropdown updates every sample at once.
 

@@ -17,7 +17,7 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
-| Icons | F6 | Which icon each [icon slot](mechanics.md#iconslots) uses |
+| Icons | F6 | Which icon each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice |
 
 The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The five above line up
 with the parts, but a tab that saves its own files rather than being part of a
@@ -49,7 +49,8 @@ preset has no `Part`.
 - The palette folder is scanned the first time the Corridor or Interface tab opens, so headless tests
   and autotest runs do no extra work.
 - Every section starts closed, whether or not its effect is on; clicking a section's title shows its
-  rows. `LookSection.set_open` overrides that; the Icons tab opens its only section.
+  rows. `LookSection.set_open` overrides that; the Icons tab opens both of its sections (Choose and
+  Samples), so its rows are usable without a click.
 - Built as `.tscn` scenes, styled by the project theme, with a `UIJuice` node on each control.
 - English only. `tools/extract_pot.gd` skips `src/debug/`, so panel labels stay out of the translation
   files.

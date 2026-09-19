@@ -97,7 +97,7 @@ func _icon_rect(slot_id: String) -> TextureRect:
   if MechanicRegistry.has(slot_id):
     rect.modulate = MechanicRegistry.get_mechanic(slot_id).color()
   rect.material = InterfaceLook.element_material
-  var size: int = get_theme_default_font().get_height(get_theme_default_font_size())
+  var size: int = roundi(get_theme_default_font().get_height(get_theme_default_font_size()))
   rect.custom_minimum_size = Vector2(size, size)
   rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
   rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
