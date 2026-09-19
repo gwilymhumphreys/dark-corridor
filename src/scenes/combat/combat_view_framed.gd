@@ -232,12 +232,12 @@ func _drop_missing(widgets: Dictionary, present: Array) -> void:
 
 ## Bring the enemy HUDs up when the fight starts — they stay hidden through the approach so the
 ## readouts appear with the boards rather than riding in with the walk.
-func show_enemies() -> void:
+func show_enemies(duration: float = ENEMY_FADE_IN) -> void:
   if _enemies_shown:
     return
   _enemies_shown = true
   for hud in _enemy_huds.values():
-    (hud as EnemyHud).fade_in(ENEMY_FADE_IN)
+    (hud as EnemyHud).fade_in(duration)
 
 
 ## Pin each enemy HUD's bottom-centre just above its corridor sprite (enemy_anchor), so the HUD

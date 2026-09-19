@@ -45,17 +45,7 @@ void fragment() {
   // Screen position in pixels, snapped to the visible pixel size, for the patterns below.
   vec2 pixel = floor(FRAGCOORD.xy / block) * block;
 
-  vec3 colour;
-  if (colour_fringe_on) {
-    vec2 offset = (uv - 0.5) * 2.0 * colour_fringe_amount * texel;
-    colour = vec3(
-      SOURCE(uv + offset).r,
-      SOURCE(uv).g,
-      SOURCE(uv - offset).b
-    );
-  } else {
-    colour = SOURCE(uv);
-  }
+  vec3 colour = SOURCE(uv);
 
   if (bloom_on) {
     vec3 glow = vec3(0.0);

@@ -33,8 +33,9 @@ func set_walk_distance(_sections: float) -> void:
   pass
 
 
-## The fight has started (the approach is over): show the enemy readouts, hidden until now.
-func show_enemies() -> void:
+## Show the enemy readouts, hidden until now, fading them up over `duration` seconds. Called near
+## the end of the approach so they are up by the time the fight starts.
+func show_enemies(_duration: float = 0.0) -> void:
   pass
 
 

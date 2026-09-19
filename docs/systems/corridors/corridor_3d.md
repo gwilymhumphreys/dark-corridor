@@ -67,9 +67,10 @@ apart.
 `CombatCorridor` overwrites `stride_length` from the run character's `stride_length`, so characters
 walk at their own pace. The corridor's own default is what the testbed and the tests use.
 
-`unproject()` is what the enemy HUD anchors are built from, so a bobbing camera moves them. The
-HUDs are hidden throughout the approach and fade in on arrival, by which point the walk has stopped
-and the camera is level again, so this does not show.
+`unproject()` is what the enemy HUD anchors are built from, so a bobbing camera moves them. The HUDs
+are hidden for most of the approach and fade in over its last stretch, so they are on screen while
+the player is still walking and the camera is still bobbing. They ride the bob with the enemy
+sprite they are pinned to.
 
 | Export | Controls |
 |---|---|

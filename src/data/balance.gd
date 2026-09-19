@@ -270,6 +270,13 @@ const ENEMY_PAINTED_HEIGHT: float = 640.0
 # footsteps fall out of step with a free walk.
 const APPROACH_DEPTH_START: float = 1.4
 const APPROACH_DURATION: float = 6.0
+# How much the walk speeds up and slows down over its length. The distance walked is a blend
+# between a straight line and a smoothstep: 0 holds one steady speed the whole way, 1 is a full
+# smoothstep, which starts and ends at a standstill and runs half again as fast in the middle.
+const APPROACH_EASE: float = 0.5
+# The enemy's name, health and items fade up over the end of the walk instead of appearing when
+# the fight starts. This is how long that fade takes; it finishes as the player arrives.
+const ENEMY_REVEAL_DURATION: float = 2.0
 
 
 # ── Delivery visual hold (presentation lifetime; docs/systems/vfx_driver.md) ─────────────

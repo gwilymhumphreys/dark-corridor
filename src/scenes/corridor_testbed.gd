@@ -84,7 +84,8 @@ func _process(delta: float) -> void:
     return
   _monster_elapsed += delta
   var t: float = clampf(_monster_elapsed / Balance.APPROACH_DURATION, 0.0, 1.0)
-  var travelled: float = Balance.APPROACH_DEPTH_START * smoothstep(0.0, 1.0, t)
+  var eased: float = lerpf(t, smoothstep(0.0, 1.0, t), Balance.APPROACH_EASE)
+  var travelled: float = Balance.APPROACH_DEPTH_START * eased
   _corridor.player_z = _walk_start_z + travelled
   _monster.position = _corridor.enemy_position(Balance.APPROACH_DEPTH_START - travelled, 0.0)
   if t >= 1.0:

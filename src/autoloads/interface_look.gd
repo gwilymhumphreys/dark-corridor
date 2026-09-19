@@ -20,8 +20,7 @@ const UNUSED_GROUPS: Array[String] = ['bloom']
 const NODE_UNIFORMS: Array[String] = ['picture_zoom']
 ## Switches left off on `element_material`, so an interface element keeps the colour the interface
 ## palette gave it. Everything else is set on every material.
-const ELEMENT_OFF_UNIFORMS: Array[String] = ['grade_on', 'colour_ramp_on', 'posterize_on',
-  'colour_fringe_on']
+const ELEMENT_OFF_UNIFORMS: Array[String] = ['grade_on', 'colour_ramp_on', 'posterize_on']
 ## Switches left off on `framed_material`: a picture inside a panel frame has the frame's panel wear
 ## around it (docs/systems/panel_wear.md), so it takes no picture wear of its own.
 const FRAMED_OFF_UNIFORMS: Array[String] = ['picture_wear_on']

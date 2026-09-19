@@ -71,6 +71,19 @@ func test_fight_beat_approaches_then_fights() -> void:
   screen.free()
 
 
+func test_enemy_readouts_fade_up_before_arrival() -> void:
+  # The enemy's name, health and items are revealed over the end of the walk, so they are
+  # already up when the fight starts rather than appearing with it.
+  var screen := _mount_into_fight(1)
+  var view: CombatViewFramed = screen._view as CombatViewFramed
+  assert_false(view._enemies_shown, 'the readouts are down when the walk begins')
+  # Walk to the moment the reveal is due, a whisker inside it so float error cannot land short.
+  screen._physics_process(Balance.APPROACH_DURATION - Balance.ENEMY_REVEAL_DURATION + 0.01)
+  assert_true(view._enemies_shown, 'the reveal starts before arrival')
+  assert_eq(screen._state, RunScreen.State.APPROACHING, 'the walk is still going')
+  screen.free()
+
+
 func test_a_fight_opens_at_the_current_battle_speed() -> void:
   # The dial is a Game session preference; a fight beginning after it was set inherits
   # it as the Timekeeper's base scale.

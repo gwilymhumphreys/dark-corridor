@@ -25,7 +25,6 @@ of a [look preset](look_presets.md).
 | Group | Does |
 |---|---|
 | Pixelate | Draws the image in larger square pixels; the palette dithering follows the pixel size |
-| Colour fringe | Separates red and blue towards the edges |
 | Bloom | Adds a blurred glow of pixels brighter than a threshold |
 | Grade | Exposure, contrast around a pivot, saturation, gamma, black and white points, tint |
 | Colour ramp | Replaces each pixel by brightness with a dark, middle and light colour |

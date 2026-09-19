@@ -165,8 +165,8 @@ func _on_event_picked(index: int) -> void:
 
 # The corridor approach (docs/history/phase4_plan.md Step 7): the enemy stands still at
 # APPROACH_DEPTH_START and the player walks up to it, so the corridor moves past while the enemy
-# grows from a speck into full view. The fight clock is NOT ticked yet, so combat is frozen until
-# arrival. Driven off _physics_process (not a Tween) so the headless run-screen test advances it
+# grows to full size and brightens as it comes into the corridor light. The fight clock is NOT
+# ticked yet, so combat is frozen until arrival. Driven off _physics_process (not a Tween) so the headless run-screen test advances it
 # with the same manual ticks that drive the fights.
 func _begin_approach() -> void:
   _state = State.APPROACHING
@@ -183,7 +183,7 @@ func _walk(travelled: float) -> void:
 
 func _arrive() -> void:
   _walk(Balance.APPROACH_DEPTH_START)
-  _view.show_enemies()       # the enemy readouts fade up now, not during the walk
+  _view.show_enemies()       # a backstop: normally the fade already started during the walk
   _stats.update_from(_log)   # seed at 0 before the first tick
   _stats.show()              # the live Dealt / Taken readout is up only during the fight
   _state = State.FIGHTING   # boards activate — the clock starts ticking next frame
@@ -201,7 +201,12 @@ func _physics_process(delta: float) -> void:
       _approach_elapsed += delta
       var t: float = clampf(_approach_elapsed / Balance.APPROACH_DURATION, 0.0, 1.0)
       # Eased so the walk starts and ends softly rather than snapping into motion.
-      _walk(Balance.APPROACH_DEPTH_START * smoothstep(0.0, 1.0, t))
+      var eased: float = lerpf(t, smoothstep(0.0, 1.0, t), Balance.APPROACH_EASE)
+      _walk(Balance.APPROACH_DEPTH_START * eased)
+      # The enemy's readouts start fading up before arrival, so they are there by the first tick.
+      # show_enemies only acts the first time, so calling it every frame from here is harmless.
+      if Balance.APPROACH_DURATION - _approach_elapsed <= Balance.ENEMY_REVEAL_DURATION:
+        _view.show_enemies(Balance.ENEMY_REVEAL_DURATION)
       if t >= 1.0:
         _arrive()
     State.FIGHTING:

@@ -26,7 +26,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   - `interface_element_material.tres` (`InterfaceLook.element_material`) draws the interface elements
     that are not pictures: the item value pills and the HP bars. These are filled with colours from the
     [interface palette](interface_palette.md), so the effects that would move a pixel off its palette
-    colour are kept off on this material: grade, colour ramp, posterize and colour fringe
+    colour are kept off on this material: grade, colour ramp and posterize
     (`ELEMENT_OFF_UNIFORMS`), and no palette clamp colours are written to it, so its colour count stays
     0. Halftone, hatching, vignette, grain, scanlines, pixelate and picture wear all apply.
 - Every setting goes through `InterfaceLook.set_setting()`, which writes it to all three materials

@@ -118,9 +118,10 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   draws the optional border and overlay ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — the enemy's **name**
   (`Actor.display_name`, `tr()`'d), then a **status-icon row + HP bar + status numbers**, then its
-  **item cells**. The HUD is **hidden through the approach** and fades in over `ENEMY_FADE_IN`
-  seconds when the fight starts (the run screen calls `CombatView.show_enemies` on arrival); a
-  summon that spawns mid-fight fades in the same way. Each OUTSIDE-set status shows as a `status_icon.tscn`:
+  **item cells**. The HUD is **hidden for most of the approach** and fades in over the last
+  `Balance.ENEMY_REVEAL_DURATION` seconds of the walk, so it is up when the fight starts (the run
+  screen calls `CombatView.show_enemies`); a summon that spawns mid-fight fades in over the shorter
+  `ENEMY_FADE_IN` instead. Each OUTSIDE-set status shows as a `status_icon.tscn`:
   the status's icon on a square of its colour. The mechanic statuses (shield, poison, burn,
   bleed, regen) show as **stack counts beside the HP bar** (`status_numbers.tscn`,
   `StatusNumbers` — one label per mechanic status in its colour, numbers untranslated).
@@ -209,8 +210,12 @@ and the player walks up to it over `APPROACH_DURATION`. Each frame `run_screen._
 the corridor's walk distance (`CombatCorridor.set_walk_distance`, which moves `player_z`) and the
 enemy's depth to `APPROACH_DEPTH_START - travelled`, so the corridor moves past while the enemy grows
 to full size. The enemy starts near the edge of the corridor light's reach, so it is dim at the
-start of the walk and brightens as the player closes on it. The distance is eased with `smoothstep`,
-so the walk starts and ends softly. It runs off `_physics_process` (so the headless test walks it), and the **fight clock is not
+start of the walk and brightens as the player closes on it. The distance walked is a blend between a
+straight line and a `smoothstep`, set by `Balance.APPROACH_EASE`, so the walk starts and ends softly
+without a large swing in speed. Over the last `Balance.ENEMY_REVEAL_DURATION` seconds of the walk the
+run screen calls `CombatView.show_enemies`, which fades each enemy's name, health and items up over
+that same time, so the readouts are in place when the fight starts. It only acts the first time, so
+the run screen can call it every frame. It runs off `_physics_process` (so the headless test walks it), and the **fight clock is not
 ticked until arrival**, so combat is frozen during the walk. Constants in `src/data/balance.gd`.
 
 ## Overlays

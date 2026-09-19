@@ -154,10 +154,6 @@ void fragment() {
 
   vec4 source = texture(TEXTURE, image_uv);
   vec3 colour = source.rgb;
-  if (colour_fringe_on) {
-    vec2 offset = (image_uv - 0.5) * 2.0 * colour_fringe_amount * uv_per_pixel;
-    colour = vec3(texture(TEXTURE, image_uv + offset).r, colour.g, texture(TEXTURE, image_uv - offset).b);
-  }
   // A modulate brighter than white makes the node glow (docs/systems/interface_glow.md). The effects run
   // on the colour up to white, and the extra brightness is put back at the end.
   float glow_brightness = max(max(node_colour.r, node_colour.g), max(node_colour.b, 1.0));

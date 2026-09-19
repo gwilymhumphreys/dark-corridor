@@ -4,20 +4,14 @@
 // can be copied from one look to the other.
 //
 // Each effect is a uniform group whose first uniform is `<group>_on`; the look panels build one section
-// per group. Effects that read the image at other positions (pixelate, colour fringe, bloom)
-// sample in each shader, because TEXTURE cannot be passed to a function. The interface look does not
+// per group. Effects that read the image at other positions (pixelate, bloom) sample in each shader,
+// because TEXTURE cannot be passed to a function. The interface look does not
 // use bloom, and its panel does not show it.
 
 group_uniforms pixelate;
 uniform bool pixelate_on = false;
 // The size of one visible pixel, in screen pixels.
 uniform float pixelate_size : hint_range(1.0, 16.0, 1.0) = 3.0;
-group_uniforms;
-
-group_uniforms colour_fringe;
-uniform bool colour_fringe_on = false;
-// How far the red and blue channels separate at the edge of the image, in screen pixels.
-uniform float colour_fringe_amount : hint_range(0.0, 16.0, 0.1) = 3.0;
 group_uniforms;
 
 group_uniforms bloom;
