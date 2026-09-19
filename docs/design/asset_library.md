@@ -29,6 +29,7 @@ fragment rather than the exact name.
 | `monsters/` | Painted monster images, sold in dated volumes. Folder names are mojibake from a Japanese archive, so search by file name rather than browsing. |
 | `StoneCursorWenrexa/` | Twenty stone mouse cursors at 32x32, as `PNG/01.png` to `20.png` and the same set as `.ico`. `01.png` is the plain pointer the game uses. |
 | `palettes/` | GIMP `.gpl` palettes. The ones in use are copied into `assets/palettes/`. |
+| game-icons.net | Not a local folder: single-colour silhouette SVGs fetched from https://github.com/game-icons/icons. Rasterised to white-on-transparent PNG into `assets/icons/mechanics/`, and tinted at runtime. These are the only icons that stay readable at the 16 to 28 pixels an icon gets inside text. |
 | `example games/` | Screenshots from Dungeon Master and Eye of the Beholder, kept as reference for the corridor look. |
 | `dark-corridor.aseprite`, `ui.aseprite` | The owner's own drawings. |
 
@@ -54,6 +55,7 @@ no-background versions so the worn frame shows behind the figure.
 | --- | --- |
 | Character and enemy portraits | `assets/portraits/characters/`, `assets/portraits/enemies/` |
 | Item, potion, status and keyword icons | `assets/icons/items/`, `assets/icons/potions/`, `assets/icons/statuses/`, `assets/icons/keywords/` |
+| Mechanic and slot glyphs | `assets/icons/mechanics/<slot>/`, one folder of candidates per [icon slot](../systems/mechanics.md#iconslots) |
 | Monster images, cut out of their black backgrounds | `assets/monsters/cut_out/` |
 | Interface sheets | `assets/ui/` |
 | Mouse cursors | `assets/ui/cursors/` |

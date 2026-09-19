@@ -30,7 +30,7 @@ The cluster shows/hides as a unit; it is opaque (a scale reveal, no fade) and
 | `tooltip_cluster.gd` (+`.tscn`) | The cluster, on its own `CanvasLayer` (layer **50**, below pause's 100). Owns the main panel + keyword column, runs the hide-bridge state machine, positions/clamps, rebuilds on item change, clears its `Item` ref on hide + `_exit_tree`. |
 | `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
 | `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content (tinted name + description). Returned bare by a chip's `_make_custom_tooltip`; wrapped in a `PanelContainer` for the column. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
-| `keyword_chip.gd` (+`.tscn`) | Inline `PanelContainer` (icon + tinted name) in the body. Sets `tooltip_text = <id>` and overrides `_make_custom_tooltip` → a frameless `keyword_card`. |
+| `keyword_chip.gd` (+`.tscn`) | Inline `PanelContainer` (icon + tinted name) in the body. Sets `tooltip_text = <id>` and overrides `_make_custom_tooltip` → a frameless `keyword_card`. Its icon is dressed by kind, see below. |
 | `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, lines, flavor, stat_lines, keyword_ids}`. **Instance** (not static) because the line templates call `tr()`. |
 
 Supporting: `src/content/keywords/keyword_catalog.gd` (the keyword id → card map).
@@ -125,6 +125,16 @@ one home per mechanic, [mechanics.md](mechanics.md)), a **status** id from its `
 subclass, and a **mechanic keyword** id (`kw:*`) from entries authored in the catalog. An id
 absent from the catalog yields no card, silently — that absence is how the owner gates a
 mechanic keyword.
+
+### Dressing a chip's icon
+
+The three kinds of entry bring two kinds of icon, and `KeywordChip._dress_icon` treats them
+oppositely. A mechanic's icon is an [icon slot](mechanics.md#iconslots) glyph: a white shape
+under `res://assets/icons/mechanics/`, so the chip tints it with the keyword's colour and draws
+it through `InterfaceLook.element_material`, which keeps the effects that would move a pixel off
+its palette colour switched off ([interface_look.md](interface_look.md)). A status or `kw:*`
+icon is painted pack art with its own colours, so it keeps white modulate and
+`InterfaceLook.material`, the picture material.
 
 ## Built-in custom tooltip — the double-panel contract
 

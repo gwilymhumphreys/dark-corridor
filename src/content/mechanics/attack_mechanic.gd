@@ -10,7 +10,7 @@ func _init() -> void:
   id = ID
   name_key = 'Attack'
   desc_key = 'Deals damage to the target.'   # PLACEHOLDER desc — owner writes
-  icon = 'res://assets/icons/items/skill_strong_attack_nb.png'   # PLACEHOLDER icon
+  icon = IconSlots.icon_for(ID)
   status_id = ''
 
 

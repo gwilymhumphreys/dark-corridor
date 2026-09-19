@@ -11,7 +11,7 @@ func _init() -> void:
   id = ID
   name_key = 'Bleed'
   desc_key = 'Each time the holder is hit by an attack, it takes damage and loses a stack.'   # PLACEHOLDER desc — owner writes
-  icon = 'res://assets/icons/statuses/skill_bleeding_nb.png'
+  icon = IconSlots.icon_for(ID)
   status_id = 'bleed'
 
 

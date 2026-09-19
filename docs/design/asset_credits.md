@@ -77,6 +77,7 @@ in here before release.
 | Pack | Files in the game | Source |
 | --- | --- | --- |
 | 6000 Fantasy Icons | Icons and portraits under `assets/icons/`, `assets/portraits/` | not recorded yet |
+| game-icons.net | The flat glyphs under `assets/icons/mechanics/` | https://github.com/game-icons/icons |
 | Monster volumes | `assets/monsters/cut_out/` | not recorded yet |
 | UI Bundle (`BlackandWhiteUI.png`) | `assets/ui/` | not recorded yet |
 | Palettes | `assets/palettes/` | not recorded yet |

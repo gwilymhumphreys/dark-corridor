@@ -18,6 +18,10 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
 
+The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The five above line up
+with the parts, but a tab that saves its own files rather than being part of a
+preset has no `Part`.
+
 ## Behaviour
 
 - A tab's key opens the panel on that tab, switches to it if another tab is showing, and closes the
@@ -99,7 +103,7 @@ approach instead of the fight.
 
 | Member | Use |
 |---|---|
-| `toggle_tab(tab: int)`, `is_panel_open()` | Open, switch or close the panel; `tab` is a `LookPresets.Part` |
+| `toggle_tab(tab: int)`, `is_panel_open()` | Open, switch or close the panel; `tab` is a `DebugPanels.Tab` |
 | `refresh_panels()` | Show the current settings in every tab after they change elsewhere |
 | `panels_open_changed` (signal) | Emitted with true when the panel opens and false when it closes |
 | `corridor_settings`, `environment_settings` | Corridor exports and corridor camera Environment properties (property -> value), applied when a corridor is built |

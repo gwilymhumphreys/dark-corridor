@@ -10,7 +10,7 @@ func _init() -> void:
   id = ID
   name_key = 'Heal'
   desc_key = 'Restores health.'   # PLACEHOLDER desc — owner writes
-  icon = 'res://assets/icons/potions/alchemy_31_bigheal_flask.png'   # PLACEHOLDER icon
+  icon = IconSlots.icon_for(ID)
   status_id = ''
 
 

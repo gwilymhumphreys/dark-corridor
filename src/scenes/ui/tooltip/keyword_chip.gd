@@ -6,6 +6,8 @@ extends PanelContainer
 ## pops the keyword's full card, positioned + clamped by the engine (_make_custom_tooltip).
 
 const KEYWORD_CARD: PackedScene = preload('res://src/scenes/ui/tooltip/keyword_card.tscn')
+## Icons under this folder are icon slot glyphs; see `_dress_icon`.
+const GLYPH_DIR: String = 'res://assets/icons/mechanics/'
 
 var _id: String = ''
 
@@ -23,9 +25,24 @@ func setup(id: String) -> void:
   var icon_path: String = entry['icon']
   icon_rect.texture = load(icon_path) as Texture2D if icon_path != '' else null
   icon_rect.visible = icon_rect.texture != null
+  _dress_icon(icon_rect, icon_path, entry['color'])
   name_label.text = tr(entry['name_key'])
   name_label.add_theme_color_override('font_color', entry['color'])
   tooltip_text = id   # non-empty triggers the built-in tooltip; the id IS the card lookup key
+
+
+## A chip's icon is one of two kinds, and they want opposite treatment. An icon slot's glyph
+## (docs/systems/mechanics.md) is a white shape, so it is tinted with the keyword's colour and
+## drawn through the element material, which keeps grade, colour ramp and posterize off so the
+## pixel stays on its palette colour. Every other icon is painted pack art with its own colours,
+## so it keeps white modulate and the picture material.
+func _dress_icon(icon_rect: TextureRect, icon_path: String, colour: Color) -> void:
+  if icon_path.begins_with(GLYPH_DIR):
+    icon_rect.modulate = colour
+    icon_rect.material = InterfaceLook.element_material
+  else:
+    icon_rect.modulate = Color.WHITE
+    icon_rect.material = InterfaceLook.material
 
 
 ## Godot calls this when the built-in tooltip is about to show, passing our tooltip_text (the id).

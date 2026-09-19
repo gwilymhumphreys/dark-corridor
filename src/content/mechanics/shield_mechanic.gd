@@ -11,7 +11,7 @@ func _init() -> void:
   id = ID
   name_key = 'Shield'
   desc_key = 'Absorbs incoming damage, then wears off.'   # PLACEHOLDER desc — owner writes
-  icon = 'res://assets/icons/statuses/skill_shield_block_nb.png'
+  icon = IconSlots.icon_for(ID)
   status_id = 'shield'
 
 

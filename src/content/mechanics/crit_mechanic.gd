@@ -12,7 +12,7 @@ func _init() -> void:
   id = ID
   name_key = 'Crit'
   desc_key = 'A chance to double the values of this item\'s effects when it fires.'   # PLACEHOLDER desc — owner writes
-  icon = 'res://assets/icons/items/skill_strong_attack_nb.png'   # PLACEHOLDER icon
+  icon = IconSlots.icon_for(ID)
 
 
 func color() -> Color:

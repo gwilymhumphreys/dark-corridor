@@ -32,21 +32,25 @@ const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
 ## Palette clamp uniforms set from the palette rows and the palette sections of a preset, so they are
 ## not corridor look settings.
 const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'dithering']
-## Tab titles, by tab. The tabs are in `LookPresets.Part` order.
+## The panel's tabs, in the order they sit in `debug_panels.tscn`. A tab is not the same thing as a
+## `LookPresets.Part`: the five look tabs happen to line up with the parts, but a tab that saves its
+## own files instead of being part of a preset has no `Part`.
+enum Tab { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK }
+## Tab titles, by tab.
 const TAB_TITLES: Dictionary = {
-  LookPresets.Part.CORRIDOR: 'Corridor (F1)',
-  LookPresets.Part.INTERFACE: 'Interface (F2)',
-  LookPresets.Part.PRINT: 'Print (F3)',
-  LookPresets.Part.BACKGROUND: 'Background (F4)',
-  LookPresets.Part.FEEDBACK: 'Feedback (F5)',
+  Tab.CORRIDOR: 'Corridor (F1)',
+  Tab.INTERFACE: 'Interface (F2)',
+  Tab.PRINT: 'Print (F3)',
+  Tab.BACKGROUND: 'Background (F4)',
+  Tab.FEEDBACK: 'Feedback (F5)',
 }
 ## The tab each key opens.
 const TAB_KEYS: Dictionary = {
-  KEY_F1: LookPresets.Part.CORRIDOR,
-  KEY_F2: LookPresets.Part.INTERFACE,
-  KEY_F3: LookPresets.Part.PRINT,
-  KEY_F4: LookPresets.Part.BACKGROUND,
-  KEY_F5: LookPresets.Part.FEEDBACK,
+  KEY_F1: Tab.CORRIDOR,
+  KEY_F2: Tab.INTERFACE,
+  KEY_F3: Tab.PRINT,
+  KEY_F4: Tab.BACKGROUND,
+  KEY_F5: Tab.FEEDBACK,
 }
 
 ## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the corridor
@@ -172,15 +176,15 @@ func _apply_command_line() -> void:
   if '--interface-dither' in args:
     _on_interface_dithering_toggled(true)
   if '--look-panel' in args:
-    toggle_tab(LookPresets.Part.CORRIDOR)
+    toggle_tab(Tab.CORRIDOR)
   elif '--interface-panel' in args:
-    toggle_tab(LookPresets.Part.INTERFACE)
+    toggle_tab(Tab.INTERFACE)
   elif '--print-panel' in args:
-    toggle_tab(LookPresets.Part.PRINT)
+    toggle_tab(Tab.PRINT)
   elif '--background-panel' in args:
-    toggle_tab(LookPresets.Part.BACKGROUND)
+    toggle_tab(Tab.BACKGROUND)
   elif '--feedback-panel' in args:
-    toggle_tab(LookPresets.Part.FEEDBACK)
+    toggle_tab(Tab.FEEDBACK)
   _sync_controls()
 
 
@@ -226,7 +230,7 @@ func _input(event: InputEvent) -> void:
   get_viewport().set_input_as_handled()
 
 
-## Open the panel on `tab` (a `LookPresets.Part`), or close it if it is already showing that tab.
+## Open the panel on `tab` (a `Tab`), or close it if it is already showing that tab.
 func toggle_tab(tab: int) -> void:
   if _panel_layer.visible and _tabs.current_tab == tab:
     _panel_layer.visible = false
@@ -251,19 +255,19 @@ func is_panel_open() -> bool:
 # Fill a tab when it shows: its controls, and the palette lists the first time.
 func _open_tab(tab: int) -> void:
   match tab:
-    LookPresets.Part.CORRIDOR:
+    Tab.CORRIDOR:
       if not _palettes_scanned:
         _scan_palettes()
       _look_panel.open()
-    LookPresets.Part.INTERFACE:
+    Tab.INTERFACE:
       if not _palettes_scanned:
         _scan_palettes()
       _interface_look_panel.open()
-    LookPresets.Part.PRINT:
+    Tab.PRINT:
       _print_panel.open()
-    LookPresets.Part.BACKGROUND:
+    Tab.BACKGROUND:
       _background_panel.open()
-    LookPresets.Part.FEEDBACK:
+    Tab.FEEDBACK:
       _feedback_panel.open()
 
 

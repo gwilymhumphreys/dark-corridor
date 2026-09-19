@@ -43,9 +43,10 @@ Poison, burn, bleed and regen are statuses that are also mechanics: their effect
 from their mechanic so the text is written once. Burn and poison extend `PeriodicStatus` (a tick
 damage-over-time, and Mass fuel); regen and bleed extend `StatusEffect` directly and are not fuel.
 
-**The descriptions and seven of the icons are placeholders**, marked `# PLACEHOLDER` in the mechanic
-classes. They are the text the tooltip keyword cards show the player, so the player is not yet told
-the real rules. Writing them is the owner's work.
+**The descriptions are placeholders**, marked `# PLACEHOLDER desc` in the mechanic classes. They
+are the text the tooltip keyword cards show the player, so the player is not yet told the real
+rules. Writing them is the owner's work. The icons come from `IconSlots` (see below), so they
+can be changed at runtime.
 
 ## Shield
 
@@ -177,7 +178,7 @@ only `mechanic` (plus value, shape, travel, flags), not `status_id` or `color`:
 |---|---|
 | `id` | The mechanic id, such as `'attack'`. |
 | `name_key`, `desc_key` | Translatable name and description, set by plain assignment in `_init` so `tools/extract_pot.gd` finds them. |
-| `icon` | A `res://` icon path. |
+| `icon` | A `res://` icon path, set from `IconSlots.icon_for(ID)` in `_init`. |
 | `status_id` | The status the mechanic applies (`'shield'`), or empty for mechanics that act directly (attack, heal). |
 | `color() -> Color` | Returns the mechanic's `Colours` variable. It is a function so a palette applied at runtime is read each time. |
 | `shield_multiplier() -> float` | How much shield a hit of this mechanic uses. 1.0 by default. |
@@ -197,6 +198,25 @@ combat log, status icons and combat summary read them.
 | `has(id)` | Whether the id is a registered mechanic. |
 | `get_mechanic(id)` | The shared instance. Pushes an error and returns null for an unknown id. |
 | `shield_multiplier(id)` | The mechanic's shield multiplier, or 1.0 for an empty or unknown id. |
+| `refresh_icons()` | Sets `icon` on every already-built instance from `IconSlots.icon_for(id)`. Does nothing if nothing is built yet. |
+
+## IconSlots
+
+`IconSlots` (`icon_slots.gd`) is a static class that owns the game's icon slots. Each mechanic id
+is a slot, plus two non-mechanic slots (`charge_time`, `card`). Each slot has a folder of candidate
+icons and a default. A chosen icon is saved to `chosen.cfg` and read back lazily on first use; a
+missing file is not an error, so every slot falls back to its default.
+
+| Function | Returns |
+|---|---|
+| `icon_for(slot)` | The chosen path if one is set, else the slot's default, else `''` for an unknown slot. |
+| `candidates(slot)` | Every `.png` in the slot's folder, sorted by file name. In an exported build returns the default alone. |
+| `display_name(slot)` | The slot's display name, first letter upper-cased. |
+| `set_icon(slot, path)` | Records the chosen icon and saves `chosen.cfg`. |
+| `reset()` | Drops in-memory choices so the next read re-reads `chosen.cfg`. |
+
+The five statuses that copy a mechanic's icon in `_init` need no special handling: a status built
+after a change already has the new icon.
 
 ## Colours
 

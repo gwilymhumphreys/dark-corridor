@@ -10,7 +10,7 @@ func _init() -> void:
   id = ID
   name_key = 'Burn'
   desc_key = 'Deals damage over time, losing a stack each tick.'   # PLACEHOLDER desc — owner writes
-  icon = 'res://assets/icons/keywords/skill_absorbing_fire_nb.png'   # PLACEHOLDER icon
+  icon = IconSlots.icon_for(ID)
   status_id = 'burn'
 
 

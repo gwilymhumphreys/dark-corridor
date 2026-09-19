@@ -10,7 +10,7 @@ func _init() -> void:
   id = ID
   name_key = 'Decharge'
   desc_key = 'Empties that many seconds of an item\'s cooldown bar.'   # PLACEHOLDER desc — owner writes
-  icon = 'res://assets/icons/statuses/skill_shackle_nb.png'   # PLACEHOLDER icon
+  icon = IconSlots.icon_for(ID)
 
 
 func color() -> Color:
