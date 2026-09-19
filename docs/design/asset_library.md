@@ -25,7 +25,7 @@ fragment rather than the exact name.
 | --- | --- |
 | `6000FantasyIcons/` | The 6000 Fantasy Icons pack, about 8,500 PNGs. All icons and portraits come from here. Subfolders below. |
 | `Free - Raven Fantasy Icons/` | Pixel-art icon set at 16x16, 32x32 and 64x64, plus full spritesheets. Not used in the game at present. |
-| `UI Bundle/` | Interface themes as single sheets, including `BlackandWhiteUI.png`, the one the game uses. |
+| `UI Bundle/` | Interface themes as single sheets, including `BlackandWhiteUI.png`, which the game started from. The theme no longer draws any of it ([ui_theme.md](../systems/ui_theme.md)); the mouse cursors in the same folder are still used. |
 | `monsters/` | Painted monster images, sold in dated volumes. Folder names are mojibake from a Japanese archive, so search by file name rather than browsing. |
 | `StoneCursorWenrexa/` | Twenty stone mouse cursors at 32x32, as `PNG/01.png` to `20.png` and the same set as `.ico`. `01.png` is the plain pointer the game uses. |
 | `palettes/` | GIMP `.gpl` palettes. The ones in use are copied into `assets/palettes/`. |

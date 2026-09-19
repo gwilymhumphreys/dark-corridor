@@ -109,6 +109,11 @@ func item_at(point: Vector2) -> Item:
   return null
 
 
+## `item`'s cell, for the hover highlight the tooltip poll drives (docs/systems/control_feedback.md).
+func cell_at(item: Item) -> ItemCell:
+  return _cells.get(item) as ItemCell
+
+
 ## The global rect of `item`'s cell — the tooltip's anchor.
 func cell_rect(item: Item) -> Rect2:
   if _cells.has(item):

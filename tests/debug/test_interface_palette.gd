@@ -9,6 +9,9 @@ const COLOURS_PATH: String = 'res://src/data/colours.gd'
 # A .gpl carries no alpha (PaletteLoader forces it to 1), so a Colours variable that uses alpha is
 # not settable from a palette and is left out of the files.
 const NOT_SETTABLE: Array[String] = ['COOLDOWN_FILL']
+# The theme itself holds no images any more (docs/systems/control_feedback.md), so the tests that
+# cover the image brightness ramp add one of their own under this type and drop it afterwards.
+const TEST_ART_TYPE: String = 'TestArt'
 
 
 func before_each() -> void:
@@ -17,6 +20,8 @@ func before_each() -> void:
 
 func after_each() -> void:
   TestCleanup.reset_all_managers()
+  if _theme().has_stylebox('panel', TEST_ART_TYPE):
+    _theme().clear_stylebox('panel', TEST_ART_TYPE)
 
 
 func after_all() -> void:
@@ -38,10 +43,19 @@ func _theme() -> Theme:
   return load(Prefs.THEME_PATH) as Theme
 
 
-func _panel_centre_pixel() -> Color:
-  # TooltipPanel stays textured pack art (unlike the flat panel types), so it still exercises the
-  # image brightness-ramp recolour.
-  var stylebox: StyleBoxTexture = _theme().get_stylebox('panel', 'TooltipPanel') as StyleBoxTexture
+# A textured style in the theme, filled with the panel grey, so the image brightness-ramp recolour has
+# something to work on. Dropped again in after_each.
+func _add_test_art() -> StyleBoxTexture:
+  var image: Image = Image.create_empty(4, 4, false, Image.FORMAT_RGBA8)
+  image.fill(Colours.UI_PANEL)
+  var stylebox: StyleBoxTexture = StyleBoxTexture.new()
+  stylebox.texture = ImageTexture.create_from_image(image)
+  _theme().set_stylebox('panel', TEST_ART_TYPE, stylebox)
+  return stylebox
+
+
+func _art_centre_pixel() -> Color:
+  var stylebox: StyleBoxTexture = _theme().get_stylebox('panel', TEST_ART_TYPE) as StyleBoxTexture
   var image: Image = stylebox.texture.get_image()
   return image.get_pixel(floori(image.get_width() * 0.5), floori(image.get_height() * 0.5))
 
@@ -123,19 +137,20 @@ func test_every_interface_palette_sets_the_same_colours_as_the_default() -> void
 
 
 func test_theme_is_unchanged_when_the_palette_sets_no_panel_or_text_colours() -> void:
-  var pixel: Color = _panel_centre_pixel()
+  _add_test_art()
+  var pixel: Color = _art_centre_pixel()
   var button_text: Color = _theme().get_color('font_color', 'Button')
   InterfacePalette.apply(_write_palette('effects_only.gpl', ['10 20 30 attack']))
-  assert_true(_panel_centre_pixel().is_equal_approx(pixel), 'panel image unchanged')
+  assert_true(_art_centre_pixel().is_equal_approx(pixel), 'panel image unchanged')
   assert_true(_theme().get_color('font_color', 'Button').is_equal_approx(button_text), 'button text unchanged')
 
 
 func test_panel_and_text_colours_recolour_the_theme_until_reset() -> void:
-  var stylebox: StyleBoxTexture = _theme().get_stylebox('panel', 'TooltipPanel') as StyleBoxTexture
+  var stylebox: StyleBoxTexture = _add_test_art()
   var original_texture: Texture2D = stylebox.texture
   var label_text: Color = _theme().get_color('font_color', 'Label')
   InterfacePalette.apply(_write_palette('panel.gpl', ['200 0 0 ui panel', '0 200 0 ui text']))
-  var pixel: Color = _panel_centre_pixel()
+  var pixel: Color = _art_centre_pixel()
   assert_gt(pixel.r, pixel.g + 0.2, 'panel greys moved towards the panel colour')
   assert_eq(_theme().get_color('font_color', 'Label'), Color8(0, 200, 0), 'white label text became the text colour')
   InterfacePalette.reset()

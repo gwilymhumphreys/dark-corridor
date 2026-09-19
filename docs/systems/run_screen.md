@@ -16,7 +16,7 @@ main.tscn (Main) ── main_controller.gd
    └─ outcome_screen.tscn    Victory / You Died → New Run / Return to Title
 ```
 
-**Title overlays.** Start Run raises **`character_select.tscn`** (one `character_card`
+**Title overlays.** Start raises **`character_select.tscn`** (one `character_card`
 per `CharacterCatalog.ids()` — personal name + role subtitle + a starting-kit hint; a pick →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below). Dev hooks skip

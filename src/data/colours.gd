@@ -94,3 +94,9 @@ static var UI_TEXT_PRESSED: Color = Color(0.5, 0.5, 0.5)
 static var UI_TEXT_DIM: Color = Color(0.6, 0.6, 0.66)
 static var UI_TEXT_BUTTON: Color = Color(0.75, 0.75, 0.75)
 static var UI_TEXT: Color = Color(1.0, 1.0, 1.0)
+
+# ── Control feedback (hover, selected and press; control_feedback.md) ────────
+static var UI_BUTTON: Color = Color(0.07, 0.07, 0.08)        # a button's resting fill
+static var UI_BUTTON_LIGHT: Color = Color(0.78, 0.77, 0.74)  # the wash that lifts that fill on hover and press
+static var UI_TEXT_BUTTON_DARK: Color = Color(0.06, 0.06, 0.07)  # button text once the fill is light
+static var UI_HIGHLIGHT: Color = Color(0.82, 0.8, 0.76)      # the border around a hovered or selected control

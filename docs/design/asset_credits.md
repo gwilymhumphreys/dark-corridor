@@ -49,6 +49,17 @@ URL. Only the sounds the game actually plays are copied into `assets/`. The user
 skill (`~/.claude/skills/sfx/`) fetched them and can fetch another uploader's library the same
 way.
 
+### Footsteps
+
+| Sound | Files in the game | Source |
+| --- | --- | --- |
+| Footsteps, Tile, Male Sneakers, Slow Pace, by SpliceSound, CC0 | `assets/sound-effects/world/footsteps/` | https://freesound.org/s/170506/ |
+
+The original 22.7-second recording is kept as `tile_slow.wav`. `walk_loop.wav`
+is a 7.238-second section cut from it, holding eleven evenly spaced steps, and
+`walk_loop.mp3` is the same section encoded smaller. The recording is dry, so
+any echo is added by an audio bus effect rather than being in the file.
+
 ## Art
 
 The art packs in use are listed in

@@ -4,9 +4,11 @@ shader_type canvas_item;
 // (folds are laid out for a whole screen, not a panel). Drawn by `WornStyleBox` into a canvas item
 // behind the control, so the wear covers only the panel's own style, not its text or children.
 // `panel_rect` and `panel_seed` are per-control instance uniforms, set by `PrintLook`, so one material
-// serves every worn panel with a different pattern arrangement each.
+// serves every worn panel with a different pattern arrangement each. The control highlight is drawn
+// here too, over the wear, from its own per-control instance uniforms (control_highlight.gdshaderinc).
 
 #include "res://src/shaders/print_wear.gdshaderinc"
+#include "res://src/shaders/control_highlight.gdshaderinc"
 
 // Set from Colours, so they are not look settings.
 uniform vec3 wear_dark_colour : source_color = vec3(0.2, 0.2, 0.2);
@@ -131,5 +133,7 @@ PrintWearSettings _panel_wear_settings() {
 void fragment() {
   vec2 local = local_position - panel_rect.xy;
   vec3 colour = print_panel_wear(COLOR.rgb, _panel_wear_settings(), local, panel_rect.zw, wear_dark_colour, wear_light_colour);
+  // The pointer feedback goes on last, over the worn panel (docs/systems/control_feedback.md).
+  colour = control_highlight(colour, local, panel_rect.zw, FRAGCOORD.xy);
   COLOR = vec4(colour, COLOR.a);
 }

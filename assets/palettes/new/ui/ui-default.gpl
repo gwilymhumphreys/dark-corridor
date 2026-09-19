@@ -22,6 +22,10 @@ Columns: 8
 153 153 168	ui text dim
 191 191 191	ui text button
 255 255 255	ui text
+ 18  18  20	ui button
+199 196 189	ui button light
+ 15  15  18	ui text button dark
+209 204 194	ui highlight
 # Combat view
  51  77 128	portrait player
 128  51  56	portrait enemy

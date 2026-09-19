@@ -1,26 +1,21 @@
 [gd_resource type="Theme" format=3]
 
-[ext_resource type="Texture2D" uid="uid://cjn4qyow2r4lk" path="res://assets/ui/btn-large-0.png" id="1_btn"]
-[ext_resource type="Texture2D" uid="uid://bxqxuwn6qow0c" path="res://assets/ui/panel-2-0.png" id="2_panel2"]
-[ext_resource type="Texture2D" uid="uid://bamuejnex628w" path="res://assets/ui/btn-unpressed-0.png" id="4_unchecked"]
-[ext_resource type="Texture2D" uid="uid://cdd1vvlcx7itj" path="res://assets/ui/btn-pressed-0.png" id="5_checked"]
 [ext_resource type="Script" path="res://src/ui/worn_style_box.gd" id="6_worn_style_box"]
 [ext_resource type="Script" path="res://src/ui/palette_style_box.gd" id="7_palette_style_box"]
 [ext_resource type="FontFile" uid="uid://bo4tk7fbr2tbk" path="res://assets/fonts/rakkas.ttf" id="8_font"]
 
-[sub_resource type="StyleBoxTexture" id="sb_panel2"]
-texture = ExtResource("2_panel2")
-texture_margin_left = 10.0
-texture_margin_top = 10.0
-texture_margin_right = 10.0
-texture_margin_bottom = 10.0
+[sub_resource type="StyleBoxFlat" id="pb_button"]
+script = ExtResource("7_palette_style_box")
+colour_name = "UI_BUTTON"
+bg_color = Color(0.07, 0.07, 0.08, 1)
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxTexture" id="sb_btn_wide"]
-texture = ExtResource("1_btn")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
+[sub_resource type="StyleBox" id="pb_button_worn"]
+script = ExtResource("6_worn_style_box")
+base = SubResource("pb_button")
 
 [sub_resource type="StyleBoxFlat" id="pb_flat"]
 script = ExtResource("7_palette_style_box")
@@ -108,15 +103,11 @@ Button/colors/font_focus_color = Color(0.75, 0.75, 0.75, 1)
 Button/colors/font_hover_color = Color(1, 1, 1, 1)
 Button/colors/font_hover_pressed_color = Color(0.5, 0.5, 0.5, 1)
 Button/colors/font_pressed_color = Color(0.5, 0.5, 0.5, 1)
-Button/styles/disabled = SubResource("sb_btn_wide")
-Button/styles/focus = SubResource("sb_btn_wide")
-Button/styles/hover = SubResource("sb_btn_wide")
-Button/styles/normal = SubResource("sb_btn_wide")
-Button/styles/pressed = SubResource("sb_btn_wide")
-CheckBox/icons/checked = ExtResource("5_checked")
-CheckBox/icons/radio_checked = ExtResource("5_checked")
-CheckBox/icons/radio_unchecked = ExtResource("4_unchecked")
-CheckBox/icons/unchecked = ExtResource("4_unchecked")
+Button/styles/disabled = SubResource("pb_button_worn")
+Button/styles/focus = SubResource("pb_button_worn")
+Button/styles/hover = SubResource("pb_button_worn")
+Button/styles/normal = SubResource("pb_button_worn")
+Button/styles/pressed = SubResource("pb_button_worn")
 Label/colors/font_color = Color(1, 1, 1, 1)
 LabelDim/base_type = &"Label"
 LabelDim/colors/font_color = Color(0.6, 0.6, 0.66, 1)
@@ -135,10 +126,4 @@ PanelSlot/styles/panel = SubResource("pb_slot_worn")
 PanelSmall/base_type = &"PanelContainer"
 PanelSmall/styles/panel = SubResource("pb_small_worn")
 TooltipLabel/colors/font_color = Color(1, 1, 1, 1)
-TooltipPanel/styles/panel = SubResource("sb_panel2")
-WideButton/base_type = &"Button"
-WideButton/styles/disabled = SubResource("sb_btn_wide")
-WideButton/styles/focus = SubResource("sb_btn_wide")
-WideButton/styles/hover = SubResource("sb_btn_wide")
-WideButton/styles/normal = SubResource("sb_btn_wide")
-WideButton/styles/pressed = SubResource("sb_btn_wide")
+TooltipPanel/styles/panel = SubResource("pb_framed_worn")

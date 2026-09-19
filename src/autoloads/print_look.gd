@@ -26,6 +26,9 @@ const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
 ]
 ## Panel wear uniforms set from `Colours` or per control by `PrintLook`, so they are not look settings.
 const PANEL_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_colour', 'panel_rect', 'panel_seed']
+# The control highlight shares the panel wear shader and material, but its settings are its own preset
+# part and its own tab (docs/systems/control_feedback.md). They stay out of `panel_defaults` on their
+# own, because that reads the shader's own code and an included file's uniforms are not in it.
 ## Border and corridor overlay uniforms set by `PrintFrame`, so they are not look settings.
 const PRINT_FRAME_UNIFORMS: Array[String] = ['border_colour', 'border_wear_colour', 'rect_size', 'paper_colour']
 ## Print frame settings that are not shader uniforms (setting -> default), from the Print tab,
@@ -82,6 +85,19 @@ func _exit_tree() -> void:
 ## frame, so a control drawing several styles in one frame (e.g. normal then focus) keeps both, and a
 ## resize leaves nothing from an earlier frame.
 func panel_wear_child(parent: RID) -> RID:
+  var child: RID = panel_child(parent)
+  var entry: Array = _panel_children[parent]
+  var frame: int = Engine.get_process_frames()
+  if entry[1] != frame:
+    RenderingServer.canvas_item_clear(child)
+    entry[1] = frame
+  return child
+
+
+## The same canvas item, without clearing it: for code that only sets instance uniforms on it, such as
+## the control highlight (docs/systems/control_feedback.md). Clearing it there would wipe the panel
+## drawn into it this frame.
+func panel_child(parent: RID) -> RID:
   if not _panel_children.has(parent):
     var child: RID = RenderingServer.canvas_item_create()
     RenderingServer.canvas_item_set_parent(child, parent)
@@ -90,12 +106,7 @@ func panel_wear_child(parent: RID) -> RID:
     _panel_seed_count += 1
     RenderingServer.canvas_item_set_instance_shader_parameter(child, 'panel_seed', float(_panel_seed_count))
     _panel_children[parent] = [child, -1]
-  var entry: Array = _panel_children[parent]
-  var frame: int = Engine.get_process_frames()
-  if entry[1] != frame:
-    RenderingServer.canvas_item_clear(entry[0])
-    entry[1] = frame
-  return entry[0]
+  return _panel_children[parent][0]
 
 
 # A control's canvas item is freed when it leaves the tree; free its worn-panel child with it.

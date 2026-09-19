@@ -37,8 +37,8 @@ Monsters: painted images from the monster collection in ../dark-corridor-design/
 Corridor walls: one tiling stone texture for now. Candidate PSX-style modular kits are listed in docs/plans/full_res_art_palette_clamp_3d_corridor.md.
 Icons: painted icons from the 6000 Fantasy Icons pack for items, potions, statuses and keywords, copied into assets/icons/. The agent picked a first icon for each; every pick is a placeholder for the owner to swap.
 Portraits: painted character portraits from the same pack (the versions without backgrounds, so the worn frame shows behind the figure), copied into assets/portraits/. Each character and enemy has one, shown on the character select cards, the player's combat portrait and the ally slots. The agent picked each one; every pick is a placeholder for the owner to swap.
-Interface frame: the Black and White UI pack, pixel art drawn at a ~360p scale on the full-resolution screen (decision #32). Panel frames will come from whichever UI theme is used.
-Font: Rakkas, a smooth font, chosen from a screenshot comparison. Other shortlisted fonts can be tried from the debug panel. No pixel font by default.
+Interface frame: no pack art. Panels and buttons are flat fills in palette colours with printed wear drawn on them, and a hovered or selected control takes a rough printed border (decision #40, docs/systems/control_feedback.md). What the frame finally looks like is still open.
+Font: Rakkas, a smooth font, chosen from a screenshot comparison. The other shortlisted fonts are kept in assets/fonts/candidates/; trying one means pointing the theme's default_font at it, since the debug panel's font dropdown was removed. No pixel font.
 No generative-AI assets.
 
 

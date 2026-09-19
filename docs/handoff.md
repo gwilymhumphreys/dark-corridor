@@ -64,7 +64,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
    `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
    self-attribution in git messages**). These OVERRIDE defaults.
 2. **[`decision_log.md`](decision_log.md)** — the canonical record: every decision
-   (numbered #1–#39) and what's still open. **Don't re-litigate anything in it.**
+   (numbered #1–#40) and what's still open. **Don't re-litigate anything in it.**
 3. **[`architecture.md`](systems/architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
 4. The per-system **PRDs** as needed (one per system in `docs/systems/`, spec +
@@ -170,7 +170,7 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
   (git-ignored), exit `0` = resolved / `1` = stuck-or-timeout. `--nosave --notutorial`
   are always passed. `--single-fight` runs one fight; `--encounters N` caps; flags in
   [`autotest.md`](systems/autotest.md).
-- **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn > _temp/run.txt 2>&1` → Start Run
+- **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn > _temp/run.txt 2>&1` → Start
   (append `-- --autostart` to skip the menu; `--shot [--shot-delay s]` screenshots). For look
   screenshots of a real fight add `--autofight --nosave --notutorial` and the look arguments in
   [debug_panel.md](systems/debug_panel.md#start-up-arguments).
@@ -204,7 +204,7 @@ resolution.
 | What | Doc |
 |---|---|
 | `Corridor3D`: real 3D corridor, one steady light at the camera, painted enemies as lit `Sprite3D` cut-outs, hit lights in the effect colour | [corridor_3d.md](systems/corridors/corridor_3d.md) |
-| Debug panel (F1 to F4 open its tabs): world palette (Corridor tab), interface palette and font choice (Interface tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
+| Debug panel (F1 to F5 open its tabs): world palette (Corridor tab), interface palette and font choice (Interface tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
 | Look presets: the whole look in one file, the default preset loaded at start-up, the history of past defaults; `assets/presets/` | [look_presets.md](systems/look_presets.md) |
 | F1 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog | [corridor_look.md](systems/corridor_look.md) |
 | F2 interface look: the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look | [interface_look.md](systems/interface_look.md) |
@@ -212,6 +212,7 @@ resolution.
 | World palette clamp (corridor only); the full-screen clamp was removed | [palette_clamp.md](systems/palette_clamp.md) |
 | Interface palette: a named `.gpl` recolours `Colours` and the theme; effects use its effect colours | [interface_palette.md](systems/interface_palette.md) |
 | F3 print tab: wear over the corridor, worn corridor edge, border, panel wear; F4 background tab: the worn record-sleeve background and its folds | [print_frame.md](systems/print_frame.md) · [background_wear.md](systems/background_wear.md) |
+| F5 feedback tab: how a control answers the pointer — the border on a hovered or selected control, the wash on a button's body, the press drop and the release pulse | [control_feedback.md](systems/control_feedback.md) |
 | Rakkas as the interface font (smooth, not pixel) | [ui_theme.md](systems/ui_theme.md) |
 
 **Open:** the effects style, which corridor look and palettes, whether the print style spreads to the

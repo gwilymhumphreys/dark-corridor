@@ -1,7 +1,7 @@
 # Look presets
 
 A look preset is one file holding the whole look of the game: corridor look and its palette, interface
-look with its palettes, print look and background wear. The default preset is what the game
+look with its palettes, print look, background wear and control feedback. The default preset is what the game
 starts with; the other presets are looks to compare, and the history keeps every past default.
 
 **Location:** `src/data/look_presets.gd` (class `LookPresets`), the preset bar in `src/debug/preset_bar.*`
@@ -10,7 +10,7 @@ starts with; the other presets are looks to compare, and the history keeps every
 
 ## Parts
 
-A preset is a `ConfigFile` in four parts. Each part matches one tab of the
+A preset is a `ConfigFile` in five parts. Each part matches one tab of the
 [debug panel](debug_panel.md), and each is written and read by the code that owns those settings, so a
 part can be loaded on its own.
 
@@ -20,6 +20,7 @@ part can be loaded on its own.
 | Interface | `interface_palette` (interface and portrait palettes, dithering switch), `interface_shader`, `interface_glow` | `DebugPanels.write_interface_palettes` / `read_interface_palettes` ([interface_palette.md](interface_palette.md)), `InterfaceLook.write_look` / `read_look` ([interface_look.md](interface_look.md)) |
 | Print | `print_panel`, `print_frame`, `print_layout` | `PrintLook.write_print_look` / `read_print_look` ([print_frame.md](print_frame.md)) |
 | Background | `print_background` | `PrintLook.write_background_look` / `read_background_look` ([background_wear.md](background_wear.md)) |
+| Feedback | `control_highlight`, `control_settings` | `ControlFeedback.write_look` / `read_look` ([control_feedback.md](control_feedback.md)) |
 
 - Writing lists every setting, changed or not, so two presets can be compared key by key.
 - Reading a part starts from that part's defaults (every effect off, the corridor scene's own light),
@@ -55,7 +56,7 @@ turns the part off with "Everything off".
 
 | Member | Use |
 |---|---|
-| `LookPresets.Part`, `ALL_PARTS`, `PART_SECTIONS` | The four parts and their sections |
+| `LookPresets.Part`, `ALL_PARTS`, `PART_SECTIONS` | The five parts and their sections |
 | `capture() -> ConfigFile`, `apply(file, parts)` | The current look as a file; set some parts from a file |
 | `save_preset(path) -> Error`, `load_preset(path, parts) -> bool` | Save the whole look; load some or all parts |
 | `load_default(folder) -> bool`, `make_default(source_name, folder, history_dir) -> String` | The default preset; `make_default` returns the history file's path, or `''` when there was no old default |

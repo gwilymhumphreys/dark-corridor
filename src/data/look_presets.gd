@@ -1,25 +1,26 @@
 class_name LookPresets
 extends RefCounted
-## Look presets (docs/systems/look_presets.md): one `ConfigFile` holding the whole look, in four parts
+## Look presets (docs/systems/look_presets.md): one `ConfigFile` holding the whole look, in five parts
 ## (corridor look with its palette, interface look with its palettes and font, print look, background
-## wear). The default preset loads when the game starts; pressing Make default first copies the old
-## default into the history folder.
+## wear, control feedback). The default preset loads when the game starts; pressing Make default first
+## copies the old default into the history folder.
 ##
 ## Each part's settings are written and read by the autoload that owns them, so a part can be loaded
 ## on its own. Reading a part starts from that part's defaults.
 
-enum Part { CORRIDOR, INTERFACE, PRINT, BACKGROUND }
+enum Part { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK }
 
 const PRESET_DIR: String = 'res://assets/presets'
 const HISTORY_DIR: String = 'res://assets/presets/history'
 const DEFAULT_NAME: String = 'default'
-const ALL_PARTS: Array[Part] = [Part.CORRIDOR, Part.INTERFACE, Part.PRINT, Part.BACKGROUND]
+const ALL_PARTS: Array[Part] = [Part.CORRIDOR, Part.INTERFACE, Part.PRINT, Part.BACKGROUND, Part.FEEDBACK]
 ## The sections each part writes. The `preset` section holds details about the file, not settings.
 const PART_SECTIONS: Dictionary = {
   Part.CORRIDOR: ['corridor_palette', 'corridor_shader', 'corridor_light', 'corridor_environment'],
   Part.INTERFACE: ['interface_palette', 'interface_shader', 'interface_glow'],
   Part.PRINT: ['print_panel', 'print_frame', 'print_layout'],
   Part.BACKGROUND: ['print_background'],
+  Part.FEEDBACK: ['control_highlight', 'control_settings'],
 }
 
 
@@ -32,6 +33,7 @@ static func capture() -> ConfigFile:
   InterfaceLook.write_look(file)
   PrintLook.write_print_look(file)
   PrintLook.write_background_look(file)
+  ControlFeedback.write_look(file)
   return file
 
 
@@ -48,6 +50,8 @@ static func apply(file: ConfigFile, parts: Array[Part] = ALL_PARTS) -> void:
     PrintLook.read_print_look(file)
   if Part.BACKGROUND in parts:
     PrintLook.read_background_look(file)
+  if Part.FEEDBACK in parts:
+    ControlFeedback.read_look(file)
 
 
 ## Save the current look to `path`, replacing any file there.

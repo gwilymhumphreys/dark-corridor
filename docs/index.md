@@ -19,7 +19,7 @@ The layout, by the kind of question you're answering:
 | Doc | Covers |
 |-----|--------|
 | [handoff.md](handoff.md) | Fresh-agent orientation: what the game is, build status, how to run and test, settled lessons, the engineering backlog. |
-| [decision_log.md](decision_log.md) | The canonical decision record (#1–#39): what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
+| [decision_log.md](decision_log.md) | The canonical decision record (#1–#40): what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
 | [documentation.md](documentation.md) | How the docs work: where each kind lives and the rules for writing them (sync with code in the same change, catalog every doc, intent not numbers, plan to system). |
 
 ## Systems (`docs/systems/`)
@@ -54,23 +54,24 @@ contracts (boundary hub)**, which every system doc links to.
 | [systems/tooltips.md](systems/tooltips.md) | The combat item tooltip: hovering a board item opens a main panel and a keyword column beside it, with per-keyword built-in custom tooltips, live values and the item-to-cluster mouse bridge. |
 | [systems/audio.md](systems/audio.md) | Audio: `SfxManager` (polyphonic one-shots, per-key cooldown, pitch jitter), `MusicManager` (shuffle and crossfade), the bus layout, and the volume and silent-run defaults in `Prefs`. |
 | [systems/cursor.md](systems/cursor.md) | The mouse cursor: the stone pointer replaces the operating system's cursor, with a brightened copy shown over clickable controls through the `Cursor` autoload and `mouse_default_cursor_shape`. |
-| [systems/ui_juice.md](systems/ui_juice.md) | The `UIJuice` drop-in node (press squash plus hover and click sounds for any Control, with presets and overrides) and `PortraitBreath`, the slow zoom on portraits. |
+| [systems/control_feedback.md](systems/control_feedback.md) | How a control answers the pointer: the printed border on a hovered or selected control, the wash that lights a button's body, the press drop and the release pulse; the F5 tab. |
+| [systems/ui_juice.md](systems/ui_juice.md) | The `UIJuice` drop-in node (press squash and drop, the hover and press highlight, and hover and click sounds for any Control, with presets and overrides) and `PortraitBreath`, the slow zoom on portraits. |
 | [systems/localization.md](systems/localization.md) | How player-facing text is authored (static `.tscn` auto-translate, dynamic `tr()`) and the headless POT pipeline. |
 | [systems/testing.md](systems/testing.md) | How tests are written: GUT conventions, the per-area `tests/` folders, `TestCleanup` for resetting autoloads between tests, and signal assertions. |
-| [systems/godot_notes.md](systems/godot_notes.md) | Godot 4 engine behaviours that have cost time here: reimporting after adding files or a `class_name`, `RichTextLabel` `fit_content` sizing, runtime cleanup in `_exit_tree()`, and the two known causes of scripts leaking at exit. |
+| [systems/godot_notes.md](systems/godot_notes.md) | Godot 4 engine behaviours that have cost time here: reimporting after adding files or a `class_name`, `RichTextLabel` `fit_content` sizing, shader built-ins and includes, runtime cleanup in `_exit_tree()`, and the two known causes of scripts leaking at exit. |
 | [systems/autotest.md](systems/autotest.md) | AutoTest mode: headless deterministic runs driven by draft strategies, with stuck and timeout guards and a markdown report of per-item fires, damage, shield and healing — what `tune` reads. |
 | [systems/delegate.md](systems/delegate.md) | Handing a planned change to the local model: the project's `.claude/delegate.json`, its denied paths, and the three verification stages (code-standards check, Godot reimport, GUT suite). |
-| [systems/debug_panel.md](systems/debug_panel.md) | The dev-only `DebugPanels` autoload: one panel with a preset bar and four tabs — F1 corridor, F2 interface, F3 print, F4 background wear — plus the start-up arguments used for screenshots. |
-| [systems/look_presets.md](systems/look_presets.md) | Look presets: the whole look in one file in three parts, the default preset loaded at start-up, the history folder kept by Make default, and the preset bar. |
+| [systems/debug_panel.md](systems/debug_panel.md) | The dev-only `DebugPanels` autoload: one panel with a preset bar and five tabs — F1 corridor, F2 interface, F3 print, F4 background wear, F5 control feedback — plus the start-up arguments used for screenshots. |
+| [systems/look_presets.md](systems/look_presets.md) | Look presets: the whole look in one file in five parts, the default preset loaded at start-up, the history folder kept by Make default, and the preset bar. |
 | [systems/corridor_look.md](systems/corridor_look.md) | The corridor look: a post-processing shader on the corridor image (grade, colour ramp, halftone, hatching, bloom, scanlines, grain, vignette, posterize, pixelate), the F1 tab built from its uniform groups, and the corridor light and Environment controls. |
 | [systems/interface_look.md](systems/interface_look.md) | The interface look: the corridor look's effects applied to interface images (icons, portraits, HP bars, value pills) through two shared materials, one for the pictures and one for the interface elements that keep their palette colour, the F2 tab, and copying settings to and from the corridor look. |
 | [systems/interface_glow.md](systems/interface_glow.md) | Making a specific interface node glow from code (`InterfaceGlow.set_glow`, `flash`) by raising `self_modulate` above white, with 2D HDR and a screen glow that is only on while something glows. |
 | [systems/palette_clamp.md](systems/palette_clamp.md) | The palette clamps: a screen shader snapping every pixel to a chosen palette and a world clamp on the combat corridor viewport, with RGB or OKLab matching and ordered dithering; `PaletteLoader` reads Lospec PNG strips and `.gpl` files. |
 | [systems/background_wear.md](systems/background_wear.md) | A shader drawing print wear (faded areas, specks, rubbed edges, creases, folds) on each screen's background rectangle, shared with the corridor overlay through `print_wear.gdshaderinc`; the F4 tab. |
 | [systems/print_frame.md](systems/print_frame.md) | The F3 Print tab (the screen sections' split point and padding) and `PrintFrame`, which draws a rough printed border behind it and an overlay carrying the background wear across the corridor. |
-| [systems/panel_wear.md](systems/panel_wear.md) | Print wear on UI panels, applied by default through the theme: `WornStyleBox` wraps a panel's stylebox and draws it worn through a shared `PrintLook.panel_material`. |
+| [systems/panel_wear.md](systems/panel_wear.md) | Print wear on UI panels, applied by default through the theme: `WornStyleBox` wraps a panel's stylebox and draws it worn through a shared `PrintLook.panel_material`, which also draws the control feedback. |
 | [systems/interface_palette.md](systems/interface_palette.md) | The interface palette: a named `.gpl` file replaces the `Colours` variables and recolours the theme's fonts, images and panels by brightness; `PaletteStyleBox`, `NamedColourRect` and `--ui-palette`. |
-| [systems/ui_theme.md](systems/ui_theme.md) | The `dark_corridor` theme: flat palette-following panel styles beside the textured pack-art ones, the chunky-UI-on-a-1440p-canvas approach, the `UI_SCALE` sizing unit, and Rakkas as the default font. |
+| [systems/ui_theme.md](systems/ui_theme.md) | The `dark_corridor` theme: flat palette-following panel and button styles with no pack art left, the chunky-UI-on-a-1440p-canvas approach, the `UI_SCALE` sizing unit, and Rakkas as the default font. |
 
 ### Corridors (`docs/systems/corridors/`)
 

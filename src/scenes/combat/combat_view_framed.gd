@@ -52,6 +52,7 @@ var _player: Actor
 var _enemy_huds: Dictionary = {}    # Actor -> EnemyHud
 var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
+var _hovered_cell: ItemCell = null  # the cell the tooltip poll last reported under the pointer
 var _throw_origins: Dictionary = {}  # Consumable -> the global centre of the slot it was thrown from
 var _cooldowns_shown: bool = true  # whether board cells show their cooldown fill (off outside a fight)
 var _cluster: TooltipCluster = null   # the floating item tooltip (its own CanvasLayer, layer 50)
@@ -419,13 +420,45 @@ func inspectable_at(point: Vector2) -> Dictionary:
 
 
 func update_inspection(target: Dictionary, point: Vector2) -> void:
+  _set_hovered_cell(target.get('item') as Item)
   if _cluster != null:
     _cluster.update_target(target, point)
 
 
 func stop_inspection() -> void:
+  _set_hovered_cell(null)
   if _cluster != null:
     _cluster.hide_cluster()
+
+
+# The cell the poll reports takes the hover highlight (docs/systems/control_feedback.md). Board items
+# take no mouse events of their own, so the poll is the only thing that knows which one is under the
+# pointer.
+func _set_hovered_cell(item: Item) -> void:
+  var cell: ItemCell = _cell_for(item)
+  if cell == _hovered_cell:
+    return
+  if is_instance_valid(_hovered_cell):
+    _hovered_cell.hovered = false
+  _hovered_cell = cell
+  if cell != null:
+    cell.hovered = true
+
+
+func _cell_for(item: Item) -> ItemCell:
+  if item == null:
+    return null
+  if _player_cells.has(item):
+    return _player_cells[item] as ItemCell
+  for hud in _enemy_huds.values():
+    var hud_cell: ItemCell = (hud as EnemyHud).cell_at(item)
+    if hud_cell != null:
+      return hud_cell
+  for slot in _ally_slots.values():
+    var slot_cell: ItemCell = (slot as AllySlot).cell_at(item)
+    if slot_cell != null:
+      return slot_cell
+  return null
 
 
 # --- layout lookups the VFX wall reads (global / screen space) ---------------

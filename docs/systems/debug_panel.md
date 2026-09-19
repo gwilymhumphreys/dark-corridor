@@ -5,8 +5,8 @@ one tab per part of the look, plus start-up arguments for screenshots of real fi
 screen, including the corridor testbed and combat sandbox.
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
-as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`
-and `background_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
+as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`,
+`background_panel.*` and `feedback_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
 
 ## Tabs
 
@@ -16,6 +16,7 @@ and `background_panel.*`. The palette rows are in the first two tab scenes, and 
 | Interface | F2 | The interface [palette rows](#palette-rows), the [interface look](interface_look.md) and [interface glow](interface_glow.md) |
 | Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
 | Background | F4 | [Background wear](background_wear.md) on every screen |
+| Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
 
 ## Behaviour
 
@@ -79,7 +80,9 @@ Read once at start-up from the user arguments (after `--`), after the default pr
 | `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
 | `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay or layout setting. Repeatable |
 | `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
-| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel` | Opens the panel on the Corridor, Interface, Print or Background tab |
+| `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
+| `--feedback-demo=<amount>` | Holds every control at that much hover, for screenshots of the feedback |
+| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel` | Opens the panel on the Corridor, Interface, Print, Background or Feedback tab |
 | `--glow-demo=<brightness>` | Every node drawn through the interface look material glows ([interface_glow.md](interface_glow.md)); read by `InterfaceGlow` |
 
 `--shot` saves into the project's gitignored `screenshots/` folder, one file per shot named with the

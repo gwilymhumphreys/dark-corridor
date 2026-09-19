@@ -16,9 +16,12 @@ const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'ditherin
 ## settings.
 const UNUSED_GROUPS: Array[String] = ['bloom']
 ## Switches left off on `element_material`, so an interface element keeps the colour the interface
-## palette gave it. Everything else is set on both materials.
+## palette gave it. Everything else is set on every material.
 const ELEMENT_OFF_UNIFORMS: Array[String] = ['grade_on', 'colour_ramp_on', 'posterize_on',
   'colour_fringe_on']
+## Switches left off on `framed_material`: a picture inside a panel frame has the frame's panel wear
+## around it (docs/systems/panel_wear.md), so it takes no picture wear of its own.
+const FRAMED_OFF_UNIFORMS: Array[String] = ['picture_wear_on']
 
 ## The material every interface image is drawn through (interface_look.gdshader). Scenes use the same
 ## resource file, so changing it here changes every image.
@@ -27,6 +30,12 @@ var material: ShaderMaterial = preload('res://src/shaders/interface_look_materia
 ## bars. It takes the same settings except `ELEMENT_OFF_UNIFORMS`, and no palette clamp colours are
 ## written to it, so its colours stay as the interface palette set them.
 var element_material: ShaderMaterial = preload('res://src/shaders/interface_element_material.tres')
+## The same shader on the pictures that sit inside a `PanelSlot` frame: the portraits and the item cell
+## icons. It takes the same settings except `FRAMED_OFF_UNIFORMS`.
+var framed_material: ShaderMaterial = preload('res://src/shaders/interface_framed_material.tres')
+## The materials pictures are drawn through. The palette clamp and its dithering are written to these
+## and not to `element_material`, whose colours stay as the interface palette set them.
+var picture_materials: Array[ShaderMaterial] = [material, framed_material]
 
 var _defaults: Dictionary = {}   # interface look uniform -> default value, read from the shader code
 
@@ -39,18 +48,21 @@ func _ready() -> void:
 ## Set picture wear's mark colours from `Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`, the same as
 ## panel wear. Called at start, and by `DebugPanels` after an interface palette is applied or reset.
 func push_wear_colours() -> void:
-  for look_material: ShaderMaterial in [material, element_material]:
+  for look_material: ShaderMaterial in [material, element_material, framed_material]:
     look_material.set_shader_parameter('picture_wear_dark_colour', Colours.UI_PANEL_WEAR)
     look_material.set_shader_parameter('picture_wear_light_colour', Colours.UI_PANEL_WEAR_LIGHT)
 
 
-## Set one interface look setting on both materials. The switches in `ELEMENT_OFF_UNIFORMS` are left
-## off on `element_material`. Everything that changes a setting goes through here: the panel rows,
-## presets, reset, the copy from the corridor look and `--interface-set=`.
+## Set one interface look setting on every material. The switches in `ELEMENT_OFF_UNIFORMS` are left
+## off on `element_material` and those in `FRAMED_OFF_UNIFORMS` on `framed_material`. Everything that
+## changes a setting goes through here: the panel rows, presets, reset, the copy from the corridor look
+## and `--interface-set=`.
 func set_setting(uniform: String, value: Variant) -> void:
   material.set_shader_parameter(uniform, value)
   if not ELEMENT_OFF_UNIFORMS.has(uniform):
     element_material.set_shader_parameter(uniform, value)
+  if not FRAMED_OFF_UNIFORMS.has(uniform):
+    framed_material.set_shader_parameter(uniform, value)
 
 
 ## Every interface look setting with a default in the shared effects include, the palette clamp include

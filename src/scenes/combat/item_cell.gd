@@ -30,7 +30,18 @@ var show_cooldown: bool = true:
     if is_node_ready():
       _update_cooldown()
 
+## True while the tooltip poll reports this cell as the one under the pointer. Board items take no
+## mouse events of their own (mouse_filter = ignore, docs/systems/tooltips.md), so the framed combat
+## view sets this instead of a `UIJuice` node doing it.
+var hovered: bool = false:
+  set(value):
+    if hovered == value:
+      return
+    hovered = value
+    _hover_to(1.0 if value else 0.0)
+
 @onready var _pills: HBoxContainer = $Pills
+@onready var _frame: Control = $Frame
 @onready var _icon: TextureRect = $Frame/Icon
 @onready var _cooldown: ColorRect = $Cooldown
 @onready var _temporary_tag: Control = $TemporaryTag
@@ -38,6 +49,8 @@ var show_cooldown: bool = true:
 var _timekeeper: Timekeeper = null     # the fight's clock; null = no recoil (sandbox/tests)
 var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurious recoil on bind
 var _recoil_start: float = -1.0        # render_time at the last fire; -1 = idle
+var _hover: float = 0.0                # how far the highlight has come in
+var _hover_tween: Tween
 static var _seed_count: int = 0        # a different tear in each cell
 
 
@@ -51,6 +64,8 @@ func _ready() -> void:
   cooldown_material.set_shader_parameter('line_colour', Colours.COOLDOWN_RING)
   _cooldown.material = cooldown_material
   _push_cooldown_size()
+  # The highlight goes on the frame, not the cell: the value pills hang outside the cell's rectangle.
+  ControlFeedback.attach(_frame, false)
 
 
 ## Shrink the cell (the enemy HUDs / ally slots use smaller cells than the player's board).
@@ -65,6 +80,9 @@ func set_cell_size(px: float) -> void:
 
 
 func _exit_tree() -> void:
+  if _hover_tween and _hover_tween.is_valid():
+    _hover_tween.kill()
+  _hover_tween = null
   # CLAUDE.md runtime cleanup: drop the live refs on free.
   item = null
   _timekeeper = null
@@ -170,3 +188,15 @@ func _push_cooldown_size() -> void:
 ## pivot, scaling keeps the visual centre fixed, so scale plays no part here.
 func cell_centre() -> Vector2:
   return global_position + cell_size * 0.5
+
+
+func _hover_to(amount: float) -> void:
+  if not is_node_ready():
+    return
+  if _hover_tween and _hover_tween.is_valid():
+    _hover_tween.kill()
+  var set_hover: Callable = func(value: float) -> void:
+    _hover = value
+    ControlFeedback.set_hover(_frame, value)
+  _hover_tween = create_tween()
+  _hover_tween.tween_method(set_hover, _hover, amount, ControlFeedback.setting_float('hover_time'))

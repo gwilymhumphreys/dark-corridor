@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/item_cell.gd" id="1"]
 [ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/value_pill.tscn" id="value_pill"]
+[ext_resource type="Material" path="res://src/shaders/interface_framed_material.tres" id="interface_framed_material"]
 
 [node name="ItemCell" type="Control"]
 custom_minimum_size = Vector2(120, 120)
@@ -23,7 +24,7 @@ mouse_filter = 2
 theme_type_variation = &"PanelSlot"
 
 [node name="Icon" type="TextureRect" parent="Frame"]
-material = ExtResource("interface_look_material")
+material = ExtResource("interface_framed_material")
 layout_mode = 2
 mouse_filter = 2
 expand_mode = 1

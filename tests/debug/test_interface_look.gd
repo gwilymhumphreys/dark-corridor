@@ -3,12 +3,18 @@ extends GutTest
 ## settings to and from the corridor look, and the scenes that draw through its material
 ## (docs/systems/interface_look.md).
 
-## Nodes drawn through `InterfaceLook.material`: the pictures.
+const INTERFACE_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
+
+## Nodes drawn through `InterfaceLook.material`: the pictures that are not inside a panel frame.
 const SCENE_NODES: Array[Array] = [
-  ['res://src/scenes/combat/item_cell.tscn', 'Frame/Icon'],
   ['res://src/scenes/combat/potion_slot.tscn', 'Icon'],
   ['res://src/scenes/combat/status_icon.tscn', 'Icon'],
   ['res://src/scenes/ui/tooltip/keyword_chip.tscn', 'Margin/Row/Icon'],
+]
+
+## Nodes drawn through `InterfaceLook.framed_material`: the pictures inside a `PanelSlot` frame.
+const FRAMED_SCENE_NODES: Array[Array] = [
+  ['res://src/scenes/combat/item_cell.tscn', 'Frame/Icon'],
   ['res://src/scenes/screens/character_card.tscn', 'Portrait/Image'],
   ['res://src/scenes/combat/ally_slot.tscn', 'Portrait/Image'],
   ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Portrait/Image'],
@@ -141,6 +147,15 @@ func test_interface_images_use_the_shared_material() -> void:
     root.free()
 
 
+func test_framed_pictures_use_the_framed_material() -> void:
+  for pair: Array in FRAMED_SCENE_NODES:
+    var scene: PackedScene = load(pair[0])
+    var root: Node = scene.instantiate()
+    assert_eq(root.get_node(pair[1]).material, InterfaceLook.framed_material,
+      '%s %s draws through the framed material' % [pair[0], pair[1]])
+    root.free()
+
+
 func test_interface_elements_use_the_element_material() -> void:
   for pair: Array in ELEMENT_SCENE_NODES:
     var scene: PackedScene = load(pair[0])
@@ -150,12 +165,14 @@ func test_interface_elements_use_the_element_material() -> void:
     root.free()
 
 
-func test_a_setting_is_written_to_both_materials() -> void:
+func test_a_setting_is_written_to_every_material() -> void:
   InterfaceLook.set_setting('hatching_on', true)
   assert_eq(InterfaceLook.material.get_shader_parameter('hatching_on'), true,
     'the images take the setting')
   assert_eq(InterfaceLook.element_material.get_shader_parameter('hatching_on'), true,
     'the interface elements take the setting')
+  assert_eq(InterfaceLook.framed_material.get_shader_parameter('hatching_on'), true,
+    'the framed pictures take the setting')
 
 
 func test_colour_changing_switches_stay_off_on_the_element_material() -> void:
@@ -165,6 +182,22 @@ func test_colour_changing_switches_stay_off_on_the_element_material() -> void:
       '%s is on for the images' % uniform)
     assert_ne(InterfaceLook.element_material.get_shader_parameter(uniform), true,
       '%s stays off for the interface elements' % uniform)
+
+
+func test_picture_wear_stays_off_on_the_framed_material() -> void:
+  for uniform: String in InterfaceLookAutoload.FRAMED_OFF_UNIFORMS:
+    InterfaceLook.set_setting(uniform, true)
+    assert_eq(InterfaceLook.material.get_shader_parameter(uniform), true,
+      '%s is on for the unframed pictures' % uniform)
+    assert_ne(InterfaceLook.framed_material.get_shader_parameter(uniform), true,
+      '%s stays off for the pictures inside a frame' % uniform)
+
+
+func test_the_framed_material_is_clamped_to_the_portrait_palette() -> void:
+  DebugPanels.set_interface_palette(INTERFACE_PALETTE)
+  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE)
+  assert_gt(InterfaceLook.framed_material.get_shader_parameter('colour_count'), 0,
+    'the framed pictures clamp to the portrait palette like the other pictures')
 
 
 func test_the_element_material_is_not_clamped_to_the_portrait_palette() -> void:

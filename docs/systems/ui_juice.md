@@ -1,8 +1,9 @@
 # UI Juice
 
 `UIJuice` (`src/ui/ui_juice.gd`) is a drop-in node that gives an interactive
-Control a centred squash on press, plus hover and click sounds. Hovering does not
-change the Control's size; hover feedback is the theme's hover colour only.
+Control a centred squash and a small drop on press, the highlight that answers the
+pointer ([control_feedback.md](control_feedback.md)), and hover and click sounds.
+Hovering does not change the Control's size.
 
 > Convention (CLAUDE.md): when adding new UI, add a UIJuice node to it.
 
@@ -14,8 +15,11 @@ in the Create Node dialog). It targets its parent, so no wiring is needed. Pick 
 
 - Works on any **Control** (the parent must be a Control, or juice disables
   itself with a warning). Hover sounds fire on any Control.
-- **Press** effects (squash and click sound) fire only on `BaseButton`, via its
-  `button_down` / `button_up` / `pressed` signals.
+- **Press** effects (squash, drop, click sound and the release pulse) fire only on
+  `BaseButton`, via its `button_down` / `button_up` / `pressed` signals.
+- **Hover and press feedback** is drawn by [control feedback](control_feedback.md).
+  The Preset decides the kind: BUTTON lights the whole body, CARD and ICON take the
+  border only.
 
 ## Presets
 
@@ -31,6 +35,13 @@ The values for each preset are in `_PRESETS` at the top of `ui_juice.gd`.
 
 Under the **Overrides** group, `press_scale` replaces the preset's squash size.
 It defaults to `-1`, which keeps the preset value.
+
+`highlight` overrides what the Preset decided: BORDER, FILL or NONE.
+`highlight_target` names a child Control to draw the highlight on instead of the
+parent — an item cell uses it to draw on its frame, because its value pills hang
+outside the cell's own rectangle. The timing of the hover, press and release
+effects is set in the [Feedback tab](control_feedback.md#the-feedback-tab); the
+squash size and timing stay in the presets here.
 
 ## Sounds
 
@@ -49,9 +60,10 @@ is wired.
 - **Centred scaling**: relies on `offset_transform_pivot_ratio`'s default of
   `(0.5, 0.5)`.
 - **Release**: letting go of the button returns the scale to `1` with a small
-  overshoot.
-- **Cleanup**: kills its tween and disconnects the parent's signals in
-  `_exit_tree()`.
+  overshoot. The press lands quickly and the release springs back, so the control
+  reads as pushed rather than dragged.
+- **Cleanup**: kills its tweens, disconnects the parent's signals and drops the
+  highlight in `_exit_tree()`.
 
 ## Portrait breathing
 

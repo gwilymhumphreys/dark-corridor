@@ -9,9 +9,10 @@ wired into the game.
 
 ## The theme
 
-A `Theme` resource of `StyleBoxTexture` 9-slices over the pack's PNGs
-(`assets/ui/*.png`), plus type **variations** controls opt into with
-`theme_type_variation`:
+A `Theme` resource of flat, palette-following styles, plus type **variations** controls opt into with
+`theme_type_variation`. It draws no pack art: the button, tooltip and checkbox images
+(`assets/ui/*.png`) were dropped when the [control feedback](control_feedback.md) took over hover,
+press and selection, and the files are no longer referenced.
 
 | Variation | Used by |
 |---|---|
@@ -19,14 +20,12 @@ A `Theme` resource of `StyleBoxTexture` 9-slices over the pack's PNGs
 | `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it. `PanelSlot` is the same, with smaller content margins |
 | `LabelDim` | dimmer section labels ("Potions", "Items") |
 
-`PanelFramed` is used by most overlay panels and by the tooltip panel
-(`tooltip_panel.tscn`) — the combat item tooltip is therefore also a flat
-background-coloured block now, over the corridor image instead of over another UI
-panel (owner's call whether that still reads well enough).
-
-Godot's own built-in tooltip popup (the `TooltipPanel` / `TooltipLabel` theme types
-the engine wraps a [tooltip](tooltips.md) custom node in) stays pack art; it is a
-separate theme entry from `PanelFramed`, its own `StyleBoxTexture`.
+`PanelFramed` is used by most overlay panels, by the tooltip panel
+(`tooltip_panel.tscn`) and by Godot's own built-in tooltip popup (the `TooltipPanel`
+theme type the engine wraps a [tooltip](tooltips.md) custom node in) — the combat
+item tooltip is therefore also a flat background-coloured block now, over the
+corridor image instead of over another UI panel (owner's call whether that still
+reads well enough).
 
 ### Flat, palette-following panels
 
@@ -37,8 +36,8 @@ new look from. Each is a `PaletteStyleBox` (`src/ui/palette_style_box.gd`, `clas
 PaletteStyleBox extends StyleBoxFlat`) with an exported `colour_name` naming the
 `Colours` variable it fills from (`'UI_BACKGROUND'` for all seven today), wrapped in
 a `WornStyleBox`. An [interface palette](interface_palette.md) sets its `bg_color`
-straight from that named colour, both when applied and on reset, instead of
-mapping it through the brightness ramp used for the remaining pack art.
+straight from that named colour, both when applied and on reset, rather than through
+the brightness ramp it uses for images.
 
 To add another flat, palette-following panel type: create a `StyleBoxFlat`
 sub-resource with `script = ExtResource(...)` pointing at `palette_style_box.gd`
@@ -46,10 +45,10 @@ sub-resource with `script = ExtResource(...)` pointing at `palette_style_box.gd`
 theme-loading note below), set its `colour_name` and `content_margin_*`, wrap it in
 a `WornStyleBox`, and point the type's style at the wrapper.
 
-To give a still-textured type panel wear, wrap its stylebox in a `WornStyleBox`
-sub-resource (`base` = the existing stylebox) and point the type's style at the
-wrapper instead. No other change is needed; `WornStyleBox` copies `base`'s content
-margins and minimum size, so layout is unaffected.
+To give any other stylebox panel wear, wrap it in a `WornStyleBox` sub-resource
+(`base` = the existing stylebox) and point the type's style at the wrapper instead.
+No other change is needed; `WornStyleBox` copies `base`'s content margins and
+minimum size, so layout is unaffected.
 
 **Theme-loading trap:** the default theme loads before autoloads and before the
 global class cache, so a script-backed stylebox in the `.tres` must be declared by
@@ -58,17 +57,18 @@ not by class name, and the script itself must not reference an autoload by its b
 identifier at load time (`WornStyleBox` looks up `PrintLook` by node path for this
 reason; `PaletteStyleBox` never reads `Colours` itself, so it has no such lookup).
 
-The theme's colours and images can be recoloured at runtime by an
+The theme's colours can be replaced at runtime by an
 [interface palette](interface_palette.md); its default `UI_PANEL_*` and `UI_TEXT_*`
 colours in `colours.gd` are the greys the theme uses, so keep them in step when
 the theme's greys change.
 
-**Buttons.** Every Button state uses the pack's black button art
-(`btn-large-0.png`). The art is pure black, so a stylebox tint cannot lighten it;
-the hover, pressed and disabled states are shown by the theme's `Button/colors/font_*`
-text colours instead. Hover feedback comes only from this colour change, because
-[UIJuice](ui_juice.md) does not resize on hover. The grey squares
-(`btn-unpressed-0.png` / `btn-pressed-0.png`) are the checkbox icons.
+**Buttons.** Every Button state draws the same flat fill, a `PaletteStyleBox` on
+`Colours.UI_BUTTON` wrapped in a `WornStyleBox`. Hover, press and selection are drawn
+over it by the [control feedback](control_feedback.md), and the text colour is tweened
+with them, so the theme's `Button/colors/font_*` entries only set the resting and
+disabled colours. The `WideButton` variation and the `CheckBox` icon entries were
+dropped with the pack art: no scene used either (the settings screen and the debug
+panel use `CheckButton`, which reads its own theme entries).
 
 Style UI through this theme (per `CLAUDE.md` "theme over code"); reserve runtime
 `add_theme_*_override` for genuinely per-instance **data** (e.g. a `value_pill`'s

@@ -12,7 +12,7 @@ theme for the whole interface; the [screen background](background_wear.md) and t
 (`src/autoloads/print_look.gd`, class `PrintLookAutoload`), which owns the material, settings, defaults
 and reset for panel wear alongside background wear and the print frame. Settings are in the Print tab
 ([print_frame.md](print_frame.md)), under headings that say they apply to item borders and other panels.
-The images inside panels have their own picture wear in the Interface tab ([interface_look.md](interface_look.md#picture-wear)).
+Images outside a panel frame have their own picture wear in the Interface tab ([interface_look.md](interface_look.md#picture-wear)).
 
 ## How it works
 
@@ -27,6 +27,11 @@ The images inside panels have their own picture wear in the Interface tab ([inte
   (for example normal then focus) keeps both, and a resize leaves nothing from an earlier frame.
   `PrintLook` frees a control's canvas item when the control leaves the tree, and frees every remaining
   one at its own exit.
+- The same shader and the same canvas item also draw the [control feedback](control_feedback.md):
+  the highlight is applied after the wear, from its own per-control instance uniforms. Its settings
+  are a separate preset part and a separate tab, and they stay out of `panel_defaults()` because that
+  reads the shader's own code, not the included file's. `PrintLook.panel_child()` hands out the same
+  canvas item without clearing it, for code that only sets instance uniforms on it.
 - Each canvas item gets a `panel_seed` instance uniform, a counter that increases with every panel
   created, so same-size panels do not look identical. The material also takes the panel's rectangle as
   an instance uniform, so the wear reads in the panel's own pixels: edge wear rubs the panel's own
@@ -40,8 +45,10 @@ The images inside panels have their own picture wear in the Interface tab ([inte
   palette-following `PaletteStyleBox` ([interface_palette.md](interface_palette.md),
   [ui_theme.md](ui_theme.md#flat-palette-following-panels)). `PanelSlot` is the frame behind icons and
   portraits. Godot's built-in `TooltipPanel` stays unwrapped pack art.
-- The picture inside a `PanelSlot` draws on top of the wear unworn. The [interface look](interface_look.md#picture-wear)
-  has a picture wear setting that draws the same wear on the picture itself.
+- The picture inside a `PanelSlot` draws on top of the wear unworn, and takes no picture wear of its
+  own: those pictures are drawn through `InterfaceLook.framed_material`, which keeps picture wear off
+  ([interface_look.md](interface_look.md#picture-wear)). The frame's wear is what shows around them.
+  Pictures outside a `PanelSlot` do take picture wear.
 - An [interface palette](interface_palette.md) sets `Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`,
   the panel's two mark colours; `PrintLook` pushes them into `panel_material` at start and whenever a
   palette is applied or reset. `InterfacePalette` also recolours a `WornStyleBox`'s wrapped `base` when

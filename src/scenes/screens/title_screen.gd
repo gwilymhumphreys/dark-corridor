@@ -42,7 +42,7 @@ func _autostart_character() -> String:
   return CharacterCatalog.DEFAULT
 
 
-# Start Run → the character-select screen; its pick supplies the character to Game.start_run.
+# Start → the character-select screen; its pick supplies the character to Game.start_run.
 func _open_select() -> void:
   if _select != null:
     return

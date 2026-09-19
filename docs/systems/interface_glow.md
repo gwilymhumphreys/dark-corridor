@@ -41,7 +41,7 @@ editing a preset file.
 | `InterfaceGlow.is_enabled() -> bool` | Whether the screen glow is on |
 | `InterfaceGlow.settings`, `setting(property)`, `apply_settings()`, `reset()` | Glow settings |
 
-`--glow-demo=<brightness>` makes every node drawn through the interface look material glow, for
+`--glow-demo=<brightness>` makes every node drawn through a picture material glow, for
 screenshots.
 
 Tests: `tests/debug/test_interface_glow.gd`.

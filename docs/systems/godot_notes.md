@@ -28,6 +28,21 @@ expected content, so the label computes its height at the right width from the s
 Deferred resizing, re-setting the text, updating `custom_minimum_size.x` after layout,
 and switching to a plain `Label` were all tried and did not work.
 
+## Shader built-ins and includes
+
+Two things about the Godot shading language that fail at compile time with a message that
+does not say why:
+
+- Built-ins such as `FRAGCOORD` exist only inside the function they belong to. A helper
+  function called from `fragment()` cannot read `FRAGCOORD`; the compiler says
+  `Unknown identifier in expression: 'FRAGCOORD'`. Pass it in as a parameter.
+- `#include` has no include guards. Including the same `.gdshaderinc` twice, directly and
+  through another include, redefines everything in it. Check what the file you are
+  including already pulls in.
+
+`Shader.code` is the file's own text, with the `#include` lines unexpanded, so code that
+reads uniform defaults out of shader source has to read each included file as well.
+
 ## Runtime cleanup
 
 Godot reports leaked objects at exit and can free an already-freed node at a scene
@@ -39,6 +54,13 @@ change. In `_exit_tree()`:
 | Signals, tweens, timers | Disconnect and stop them |
 | Arrays and dictionaries holding node references | Clear them |
 | Nodes owning render resources | Free with `call_deferred('queue_free')` |
+| Textures registered with a server (custom mouse cursors) | Unregister them and drop the reference in `_exit_tree()` |
+
+A "RID allocations of type 'N5GLES37TextureE' were leaked at exit" error, followed by
+"Parameter "RenderingServer::get_singleton()" is null" from `~ImageTexture`, means a texture
+was still referenced when the rendering server shut down. Find who holds it and release it
+during scene-tree teardown — for the custom mouse cursors that is `Cursor._exit_tree()`
+([cursor.md](cursor.md)).
 
 Avoid reparenting nodes during teardown. If a node must be reparented, store its
 original parent with `set_meta()` and put it back.

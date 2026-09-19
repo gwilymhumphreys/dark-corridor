@@ -5,8 +5,8 @@ extends Node
 ## that the corridor is drawn through: the corridor look shader, with its world palette clamp
 ## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
 ##
-## One panel with a preset bar and four tabs: corridor look with its palette (F1), interface look with
-## its palettes (F2), print look (F3) and background wear (F4); each key opens its tab, in
+## One panel with a preset bar and five tabs: corridor look with its palette (F1), interface look with
+## its palettes (F2), print look (F3), background wear (F4) and control feedback (F5); each key opens its tab, in
 ## debug builds only. Choices last for the session only, unless saved as a look preset
 ## (docs/systems/look_presets.md). The default preset loads at start-up.
 ## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
@@ -38,6 +38,7 @@ const TAB_TITLES: Dictionary = {
   LookPresets.Part.INTERFACE: 'Interface (F2)',
   LookPresets.Part.PRINT: 'Print (F3)',
   LookPresets.Part.BACKGROUND: 'Background (F4)',
+  LookPresets.Part.FEEDBACK: 'Feedback (F5)',
 }
 ## The tab each key opens.
 const TAB_KEYS: Dictionary = {
@@ -45,6 +46,7 @@ const TAB_KEYS: Dictionary = {
   KEY_F2: LookPresets.Part.INTERFACE,
   KEY_F3: LookPresets.Part.PRINT,
   KEY_F4: LookPresets.Part.BACKGROUND,
+  KEY_F5: LookPresets.Part.FEEDBACK,
 }
 
 ## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the corridor
@@ -81,6 +83,7 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _interface_look_panel: InterfaceLookPanel = $PanelLayer/Panel/Rows/Tabs/Interface
 @onready var _print_panel: PrintPanel = $PanelLayer/Panel/Rows/Tabs/Print
 @onready var _background_panel: BackgroundPanel = $PanelLayer/Panel/Rows/Tabs/Background
+@onready var _feedback_panel: FeedbackPanel = $PanelLayer/Panel/Rows/Tabs/Feedback
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
@@ -95,7 +98,8 @@ func _ready() -> void:
   _preset_bar.side_switched.connect(_switch_side)
   world_material.shader = LOOK_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
-  InterfaceLook.material.set_shader_parameter('dither_noise', BLUE_NOISE)
+  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
+    picture_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_palette(world_material, PackedColorArray())
   _world_option.item_selected.connect(_on_world_palette_selected)
@@ -114,9 +118,10 @@ func _ready() -> void:
 ## `--portrait-palette=<res path, corridor or interface>` sets the portrait palette,
 ## `--corridor-set=property=value` sets a corridor export, `--background-set=uniform=value` a background
 ## wear setting, `--panel-set=uniform=value` a panel wear setting, `--print-set=name=value` a border,
-## corridor overlay or layout setting, `--interface-set=uniform=value` an interface look setting.
-## `--look-panel`, `--interface-panel`, `--print-panel` and `--background-panel` open the panel on that
-## tab.
+## corridor overlay or layout setting, `--interface-set=uniform=value` an interface look setting,
+## `--feedback-set=name=value` a control feedback setting, `--feedback-demo=<amount>` holds every
+## control at that much hover for a screenshot. `--look-panel`, `--interface-panel`,
+## `--print-panel`, `--background-panel` and `--feedback-panel` open the panel on that tab.
 func _apply_command_line() -> void:
   var args: PackedStringArray = OS.get_cmdline_user_args()
   for arg: String in args:
@@ -154,6 +159,12 @@ func _apply_command_line() -> void:
       var interface_pair: PackedStringArray = arg.substr(16).split('=')
       if interface_pair.size() == 2 and InterfaceLook.defaults().has(interface_pair[0]):
         InterfaceLook.set_setting(interface_pair[0], str_to_var(interface_pair[1]))
+    elif arg.begins_with('--feedback-demo='):
+      ControlFeedback.set_demo(arg.substr(16).to_float())
+    elif arg.begins_with('--feedback-set='):
+      var feedback_pair: PackedStringArray = arg.substr(15).split('=')
+      if feedback_pair.size() == 2:
+        ControlFeedback.set_setting(feedback_pair[0], str_to_var(feedback_pair[1]))
   if '--perceptual' in args:
     _on_matching_selected(1)
   if '--dither' in args:
@@ -168,6 +179,8 @@ func _apply_command_line() -> void:
     toggle_tab(LookPresets.Part.PRINT)
   elif '--background-panel' in args:
     toggle_tab(LookPresets.Part.BACKGROUND)
+  elif '--feedback-panel' in args:
+    toggle_tab(LookPresets.Part.FEEDBACK)
   _sync_controls()
 
 
@@ -250,6 +263,8 @@ func _open_tab(tab: int) -> void:
       _print_panel.open()
     LookPresets.Part.BACKGROUND:
       _background_panel.open()
+    LookPresets.Part.FEEDBACK:
+      _feedback_panel.open()
 
 
 func _on_tab_changed(tab: int) -> void:
@@ -274,6 +289,7 @@ func refresh_panels() -> void:
   _interface_look_panel.refresh()
   _print_panel.refresh()
   _background_panel.refresh()
+  _feedback_panel.refresh()
 
 
 ## Rebuild the Corridor tab's controls after corridor look settings change elsewhere (the Interface
@@ -425,6 +441,7 @@ func reset_settings() -> void:
   PrintLook.reset_print_look()
   PrintLook.reset_background_look()
   InterfaceLook.reset()
+  ControlFeedback.reset()
   MonsterImages.forced_path = ''
   reset_palettes()
   _preset_bar.forget_loaded()
@@ -546,7 +563,7 @@ func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
 
 ## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
 ## colours with ''. Interface images are clamped to the portrait palette's colours through
-## `InterfaceLook.material`. Statuses in the current fight are recoloured, and
+## `InterfaceLook.picture_materials`. Statuses in the current fight are recoloured, and
 ## `interface_palette_changed` tells nodes that copied colours when built.
 func set_interface_palette(path: String) -> void:
   interface_palette = path
@@ -558,18 +575,19 @@ func set_interface_palette(path: String) -> void:
   _recolour_fight_statuses()
   PrintLook.push_wear_colours()
   InterfaceLook.push_wear_colours()
+  ControlFeedback.push_colours()
   interface_palette_changed.emit()
 
 
 ## Set what interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR` for the world
 ## palette, `PORTRAIT_SAME_AS_INTERFACE` for the interface palette, or a palette file path. The
-## colours are written into `InterfaceLook.material`.
+## colours are written into `InterfaceLook.picture_materials`.
 func set_portrait_palette(choice: String) -> void:
   portrait_palette = choice
   _apply_portrait_palette()
 
 
-# Writes the portrait palette's colours into `InterfaceLook.material`: the world palette's colours
+# Writes the portrait palette's colours into `InterfaceLook.picture_materials`: the world palette's colours
 # for `PORTRAIT_SAME_AS_CORRIDOR`, the interface palette's for `PORTRAIT_SAME_AS_INTERFACE`, the
 # named file's otherwise, and none for ''.
 func _apply_portrait_palette() -> void:
@@ -578,7 +596,9 @@ func _apply_portrait_palette() -> void:
     file = world_palette
   elif file == PORTRAIT_SAME_AS_INTERFACE:
     file = interface_palette
-  _write_palette(InterfaceLook.material, _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray())
+  var colours: PackedColorArray = _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
+  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
+    _write_palette(picture_material, colours)
 
 
 # Statuses copy their colour from `Colours` when created, so each one in the current fight takes the
@@ -716,7 +736,8 @@ func _on_portrait_palette_selected(index: int) -> void:
 func _on_matching_selected(index: int) -> void:
   _perceptual = index == 1
   world_material.set_shader_parameter('perceptual', _perceptual)
-  InterfaceLook.material.set_shader_parameter('perceptual', _perceptual)
+  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
+    picture_material.set_shader_parameter('perceptual', _perceptual)
 
 
 func _on_dithering_toggled(on: bool) -> void:
@@ -726,4 +747,5 @@ func _on_dithering_toggled(on: bool) -> void:
 
 func _on_interface_dithering_toggled(on: bool) -> void:
   _interface_dithering = on
-  InterfaceLook.material.set_shader_parameter('dithering', _interface_dithering)
+  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
+    picture_material.set_shader_parameter('dithering', _interface_dithering)

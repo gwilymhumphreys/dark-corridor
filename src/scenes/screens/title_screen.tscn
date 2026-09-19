@@ -59,7 +59,7 @@ custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 44
-text = "Start Run"
+text = "Start"
 
 [node name="Juice" type="Node" parent="Menu/StartButton"]
 script = ExtResource("2")

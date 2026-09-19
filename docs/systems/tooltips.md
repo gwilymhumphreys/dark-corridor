@@ -50,7 +50,10 @@ paradigm; the hide-bridge needs a per-frame cluster-rect check anyway):
    cells, then player cells, returning `{item, rect (global), side}` or `{}`. The rect
    is re-read each frame (enemy HUDs reposition every frame, so the cluster tracks a
    moving cell). Helpers: `EnemyHud`/`AllySlot` `item_at(point)` + `cell_rect(item)`.
-3. The view owns the cluster and feeds it the target via `update_target(target, mouse)`.
+3. The view owns the cluster and feeds it the target via `update_target(target, mouse)`, and sets
+   `hovered` on the target's `ItemCell` so it takes the hover highlight
+   ([control_feedback.md](control_feedback.md)). Board items take no mouse events of their own, so
+   this poll is the only thing that knows which cell the pointer is over.
 4. Keyword chips' built-in tooltips are entirely Godot-managed (no poll involvement).
 
 The base `combat_view.gd` declares `inspectable_at` / `update_inspection` /

@@ -652,7 +652,7 @@ msgid "Dark Corridor"
 msgstr ""
 
 #: src/scenes/screens/title_screen.tscn
-msgid "Start Run"
+msgid "Start"
 msgstr ""
 
 #: src/scenes/ui/tooltip/keyword_card.tscn

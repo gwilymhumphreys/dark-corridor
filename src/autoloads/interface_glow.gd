@@ -41,7 +41,7 @@ func _ready() -> void:
       _demo_brightness = arg.substr(12).to_float()
 
 
-# `--glow-demo=<brightness>` (dev, for screenshots): every node drawn through the interface look material
+# `--glow-demo=<brightness>` (dev, for screenshots): every node drawn through a picture material
 # glows, including nodes built later.
 func _process(_delta: float) -> void:
   # A node freed mid-flash takes its tween with it, so `_on_flash_finished` never runs; drop it here.
@@ -51,7 +51,7 @@ func _process(_delta: float) -> void:
     return
   for node: Node in get_tree().root.find_children('*', 'CanvasItem', true, false):
     var item: CanvasItem = node as CanvasItem
-    if item.material == InterfaceLook.material and not _glowing.has(item.get_instance_id()):
+    if InterfaceLook.picture_materials.has(item.material) and not _glowing.has(item.get_instance_id()):
       set_glow(item, _demo_brightness)
 
 

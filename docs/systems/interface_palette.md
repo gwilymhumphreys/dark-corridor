@@ -32,7 +32,7 @@ folder names the same set as `ui-default.gpl`.
 | `Colours` variables | Set by name. They are static variables so they can be replaced, but keep constant-style names. |
 | Colours placed in scenes | Health bars are `NamedColourRect` nodes, which copy their `Colours` variable (`colour_name`) when they enter the tree. Screen backgrounds are `ScreenBackground`, a `NamedColourRect` that also passes the [background wear](background_wear.md) mark colours. |
 | Theme font colours | Each is placed by brightness on the `UI_TEXT_*` colours, dark to light, blending between the two nearest. |
-| Theme images and flat panel colours | Every pixel of the theme's still-textured panel, button, item-cell and checkbox images is placed by brightness on the `UI_PANEL_*` colours in the same way. A [`WornStyleBox`](panel_wear.md) is recoloured through its wrapped `base`. The recoloured images are new textures; the files on disk are unchanged. |
+| Theme images | Every pixel of a textured theme entry is placed by brightness on the `UI_PANEL_*` colours in the same way, and a [`WornStyleBox`](panel_wear.md) is recoloured through its wrapped `base`. The recoloured images are new textures; the files on disk are unchanged. The theme itself holds no images now ([ui_theme.md](ui_theme.md)), so this applies only to one added later. |
 | `PaletteStyleBox` fills | The theme's flat, palette-following panel styles ([ui_theme.md](ui_theme.md#flat-palette-following-panels)) are a `PaletteStyleBox` (`src/ui/palette_style_box.gd`) naming a `Colours` variable in its `colour_name`. Its `bg_color` is set straight from that variable, not the `UI_PANEL_*` brightness ramp, both when a palette is applied and on reset. |
 | Interface images | Item, potion and status icons, keyword chip icons and character portraits are clamped to the portrait palette's colours, which by default are the interface palette's, see [Images](#images). The HP bars and item value pills are not: they are drawn through the [interface look](interface_look.md)'s element material, which is not clamped, so they keep the palette colour they are filled with. |
 | Panel wear mark colours | `Colours.UI_PANEL_WEAR` / `UI_PANEL_WEAR_LIGHT`, pushed into `PrintLook.panel_material` (`PrintLook.push_wear_colours()`) alongside the [background wear](background_wear.md) colours. |
@@ -49,10 +49,10 @@ coherent with the interface and stand out against the desaturated corridor.
 
 ## Images
 
-Interface images share `InterfaceLook.material` ([interface_look.md](interface_look.md)), whose shader
-includes the [palette clamp](palette_clamp.md). `DebugPanels.set_portrait_palette` writes the portrait
-palette's distinct colours into that material, so each pixel of those images becomes the nearest palette
-colour. The HP bars and value pills use `InterfaceLook.element_material`, which no palette is written
+Interface images are drawn through the picture materials, `InterfaceLook.picture_materials`
+([interface_look.md](interface_look.md)), whose shader includes the
+[palette clamp](palette_clamp.md). `DebugPanels.set_portrait_palette` writes the portrait palette's
+distinct colours into both of them, so each pixel of those images becomes the nearest palette colour. The HP bars and value pills use `InterfaceLook.element_material`, which no palette is written
 to, so they are left at the colours the interface palette gave them. The portrait palette is its own Interface tab choice: off, the world palette, the interface palette,
 or any palette file (default: the interface palette). The clamp follows the Corridor tab's colour matching
 (RGB or OKLab) and does not dither. With no colours the colour count is 0 and images are unchanged.

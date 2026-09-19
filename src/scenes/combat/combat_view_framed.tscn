@@ -5,10 +5,10 @@
 [ext_resource type="Script" path="res://src/vfx/vfx_driver.gd" id="4"]
 [ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="5"]
 [ext_resource type="Script" path="res://src/ui/print_frame.gd" id="6"]
-[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 [ext_resource type="Material" path="res://src/shaders/interface_element_material.tres" id="interface_element_material"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/status_numbers.tscn" id="status_numbers"]
 [ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
+[ext_resource type="Material" path="res://src/shaders/interface_framed_material.tres" id="interface_framed_material"]
 
 [node name="CombatViewFramed" type="Control"]
 layout_mode = 3
@@ -140,7 +140,7 @@ theme_type_variation = &"PanelSlot"
 clip_contents = true
 
 [node name="Image" type="TextureRect" parent="Portraits/PlayerPortrait/Portrait"]
-material = ExtResource("interface_look_material")
+material = ExtResource("interface_framed_material")
 layout_mode = 2
 mouse_filter = 2
 expand_mode = 1

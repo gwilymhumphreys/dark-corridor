@@ -23,6 +23,10 @@ visible.
   (`draft_overlay.gd`).
 - `apply()` is a no-op when the display server lacks
   `FEATURE_CUSTOM_CURSOR_SHAPE`, which covers the headless test and autotest runs.
+- On exit the autoload unregisters both cursors and drops its references
+  (`_exit_tree()`). The display server holds a reference to whatever was registered, so
+  without this the two textures are freed after the rendering server has shut down and are
+  reported as leaked at exit.
 
 ## Public API
 

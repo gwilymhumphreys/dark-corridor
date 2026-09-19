@@ -46,3 +46,15 @@ func _lighten(image: Image, amount: float) -> Image:
         lit.a = colour.a
         copy.set_pixel(x, y, lit)
   return copy
+
+
+## Hand the cursors back before the engine shuts down. The display server keeps a reference to
+## whatever was registered, so without this the two ImageTextures outlive the rendering server and
+## their GPU textures are reported as leaked at exit (docs/systems/godot_notes.md).
+func _exit_tree() -> void:
+  if not DisplayServer.has_feature(DisplayServer.FEATURE_CUSTOM_CURSOR_SHAPE):
+    return
+  Input.set_custom_mouse_cursor(null, Input.CURSOR_ARROW, HOTSPOT)
+  Input.set_custom_mouse_cursor(null, Input.CURSOR_POINTING_HAND, HOTSPOT)
+  _arrow = null
+  _hover = null

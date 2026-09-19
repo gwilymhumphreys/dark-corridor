@@ -16,7 +16,7 @@ the same setting. An empty `msgstr` falls back to the source string.
 `auto_translate_mode` translate their `text` automatically and re-translate on a
 locale change (the node keeps the source English and re-resolves it). So **static
 menu / label / button text lives in the `.tscn` as plain English — no `tr()`**.
-Examples: the title (`Dark Corridor` / `Start Run` / `Resume`), the draft overlay
+Examples: the title (`Dark Corridor` / `Start` / `Resume`), the draft overlay
 title (`Choose a reward`), the outcome buttons, the `You` portrait label. Set
 `auto_translate_mode = DISABLED` on a node whose text must NOT translate.
 
