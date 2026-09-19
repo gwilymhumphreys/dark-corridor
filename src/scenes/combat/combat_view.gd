@@ -39,6 +39,11 @@ func show_enemies(_duration: float = 0.0) -> void:
   pass
 
 
+## The fight has started (the approach is over): the boards start showing their cooldown fills.
+func begin_fight() -> void:
+  pass
+
+
 ## The hover surface for the slow-mo intent.
 func mouse_over_inspectable(_point: Vector2) -> bool:
   return false

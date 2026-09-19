@@ -184,6 +184,7 @@ func _walk(travelled: float) -> void:
 func _arrive() -> void:
   _walk(Balance.APPROACH_DEPTH_START)
   _view.show_enemies()       # a backstop: normally the fade already started during the walk
+  _view.begin_fight()        # the clock starts, so the boards' cooldown fills come on
   _stats.update_from(_log)   # seed at 0 before the first tick
   _stats.show()              # the live Dealt / Taken readout is up only during the fight
   _state = State.FIGHTING   # boards activate — the clock starts ticking next frame

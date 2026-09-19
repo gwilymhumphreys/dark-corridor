@@ -54,7 +54,7 @@ var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
 var _hovered_cell: ItemCell = null  # the cell the tooltip poll last reported under the pointer
 var _throw_origins: Dictionary = {}  # Consumable -> the global centre of the slot it was thrown from
-var _cooldowns_shown: bool = true  # whether board cells show their cooldown fill (off outside a fight)
+var _cooldowns_shown: bool = false  # whether board cells show their cooldown fill (off outside a fight)
 var _cluster: TooltipCluster = null   # the floating item tooltip (its own CanvasLayer, layer 50)
 var _shake_tween: Tween
 var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the fight's seeded one
@@ -113,7 +113,7 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _player = player
   _enemies_shown = false   # the HUDs stay hidden until show_enemies (the fight starting)
   _player_status_numbers.actor = player
-  _cooldowns_shown = cm != null
+  _cooldowns_shown = false   # the fight has not started yet; begin_fight turns the fills on
   if player.portrait != '':
     _portrait_image.texture = load(player.portrait)
   _build_player_items(player)
@@ -123,8 +123,6 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _refresh_player_hp()
   _vfx.setup(_cm, self)
   _vfx.big_hit.connect(_on_big_hit)
-  if _cm == null:
-    _set_cooldowns_shown(false)   # no fight (an event beat): the board shows no cooldown fill
   _cluster = TOOLTIP_CLUSTER.instantiate()
   add_child(_cluster)   # a CanvasLayer — renders in screen space regardless of this Control parent
 
@@ -198,7 +196,8 @@ func _sync_rosters() -> void:
       # Budget each HUD a per-enemy share of the corridor panel so a multi-enemy row
       # shrinks its item cells instead of overlapping neighbours / clipping off-panel.
       hud.setup(e, _cm.timekeeper, _corridor.size.x * HUD_WIDTH_MARGIN / maxf(enemies.size(), 1.0))
-      hud.visible = false   # up only once the fight starts; a mid-fight summon fades in as it spawns
+      hud.visible = false   # up only once the reveal starts; a mid-fight summon fades in as it spawns
+      hud.set_cooldowns_shown(_cooldowns_shown)
       if _enemies_shown:
         hud.fade_in(ENEMY_FADE_IN)
       _enemy_huds[e] = hud
@@ -208,6 +207,7 @@ func _sync_rosters() -> void:
       _pick_ally_box().add_child(slot)
       slot.setup(a, _cm.timekeeper)
       slot.fit_height(sections.section('Portraits').size.y)
+      slot.set_cooldowns_shown(_cooldowns_shown)
       _ally_slots[a] = slot
 
 
@@ -232,6 +232,12 @@ func _drop_missing(widgets: Dictionary, present: Array) -> void:
 
 ## Bring the enemy HUDs up when the fight starts — they stay hidden through the approach so the
 ## readouts appear with the boards rather than riding in with the walk.
+## The fight has started: the clock is running, so the boards start showing their cooldown fills.
+## Until now they were off, because a frozen fill over the icons reads as a bug during the walk.
+func begin_fight() -> void:
+  _set_cooldowns_shown(_cm != null)
+
+
 func show_enemies(duration: float = ENEMY_FADE_IN) -> void:
   if _enemies_shown:
     return
@@ -356,6 +362,8 @@ func _set_cooldowns_shown(shown: bool) -> void:
     (cell as ItemCell).show_cooldown = shown
   for slot in _ally_slots.values():
     (slot as AllySlot).set_cooldowns_shown(shown)
+  for hud in _enemy_huds.values():
+    (hud as EnemyHud).set_cooldowns_shown(shown)
 
 
 func _exit_tree() -> void:

@@ -181,6 +181,9 @@ func test_release_clears_the_cooldown_fills() -> void:
   var cell: ItemCell = view.get_node('Items/PlayerItems').get_child(0)
   cell.item.cooldown.accum = cell.item.cooldown.threshold * 0.5   # part-way through its cooldown
   cell._update_cooldown()
+  assert_false(cell.get_node('Cooldown').visible, 'no fill while the player is still walking in')
+  view.begin_fight()   # the run screen calls this on arrival
+  cell._update_cooldown()
   assert_true(cell.get_node('Cooldown').visible, 'a part-charged item shows its fill during the fight')
   view.release()
   cell._update_cooldown()

@@ -102,6 +102,13 @@ func fade_in(duration: float) -> void:
   _fade.tween_property(self, 'modulate:a', 1.0, duration)
 
 
+## Show or hide the cooldown fill on this enemy's item cells. Off until the fight starts, so the
+## readouts can fade up during the walk without a frozen fill sitting over the icons.
+func set_cooldowns_shown(shown: bool) -> void:
+  for cell in _cells.values():
+    (cell as ItemCell).show_cooldown = shown
+
+
 func hud_centre() -> Vector2:
   return global_position + size * 0.5
 

@@ -215,7 +215,9 @@ straight line and a `smoothstep`, set by `Balance.APPROACH_EASE`, so the walk st
 without a large swing in speed. Over the last `Balance.ENEMY_REVEAL_DURATION` seconds of the walk the
 run screen calls `CombatView.show_enemies`, which fades each enemy's name, health and items up over
 that same time, so the readouts are in place when the fight starts. It only acts the first time, so
-the run screen can call it every frame. It runs off `_physics_process` (so the headless test walks it), and the **fight clock is not
+the run screen can call it every frame. On arrival the run screen calls `CombatView.begin_fight`,
+which turns on the cooldown fills over the item icons. They are off until then: the fight clock is
+frozen during the walk, so a fill would sit motionless over the art. It runs off `_physics_process` (so the headless test walks it), and the **fight clock is not
 ticked until arrival**, so combat is frozen during the walk. Constants in `src/data/balance.gd`.
 
 ## Overlays
