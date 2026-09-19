@@ -202,6 +202,11 @@ the owner's domain to refine):
 | `DAMAGE`, single-target | `tr('Deal {0} damage to {1}')` |
 | `DAMAGE`, AOE | `tr('Deal {0} damage to all enemies')` |
 | `HEAL` | `tr('Heal {0}')` |
+
+The attack and heal templates above are no longer what the code does: both now carry an inline
+mechanic glyph instead of the words "damage" and "Heal"
+([mechanic_icons.md](mechanic_icons.md) step 5, [tooltips.md](../systems/tooltips.md)). The rest of
+this file is the original design and is not maintained.
 | `APPLY_STATUS`, SELF (e.g. block) | `tr('Gain {0}')` + chip |
 | `APPLY_STATUS`, opponent (e.g. poison) | `tr('Apply {0}')` + chip |
 | `SUMMON` | `tr('Summon')` + name |

@@ -17,5 +17,5 @@ STATUS=$?
 grep -nE 'SCRIPT ERROR|ERROR:|stuck|timed out' "$LOG" | head -20
 echo '--- summary'
 tail -30 "$LOG"
-echo "--- exit $STATUS (0 resolved, 1 stuck or timed out), full output in $LOG"
+echo "--- exit $STATUS (0 = resolved, 1 = stuck or timed out), full output in $LOG"
 exit $STATUS

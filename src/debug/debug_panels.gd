@@ -5,9 +5,9 @@ extends Node
 ## that the corridor is drawn through: the corridor look shader, with its world palette clamp
 ## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
 ##
-## One panel with a preset bar and five tabs: corridor look with its palette (F1), interface look with
-## its palettes (F2), print look (F3), background wear (F4) and control feedback (F5); each key opens its tab, in
-## debug builds only. Choices last for the session only, unless saved as a look preset
+## One panel with a preset bar and six tabs: corridor look with its palette (F1), interface look with
+## its palettes and the palette colours (F2), print look (F3), background wear (F4), control feedback
+## (F5) and the icon slots (F6); each key opens its tab, in debug builds only. Choices last for the session only, unless saved as a look preset
 ## (docs/systems/look_presets.md). The default preset loads at start-up.
 ## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
 
