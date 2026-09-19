@@ -52,3 +52,22 @@ is wired.
   overshoot.
 - **Cleanup**: kills its tween and disconnects the parent's signals in
   `_exit_tree()`.
+
+## Portrait breathing
+
+`PortraitBreath` (`src/ui/portrait_breath.gd`) is a second drop-in node, for
+portraits rather than buttons. Add it as a **child** of a portrait's
+`TextureRect` and the picture scales slowly up and back down forever, so a still
+portrait looks like it is breathing.
+
+- It is on the character select cards (`character_card.tscn`), the player
+  portrait in the framed combat view, and the ally slots.
+- The frames around those portraits have `clip_contents = true` so the picture
+  never spills past the frame as it grows.
+- `amount` is how much larger the picture gets at the top of the breath and
+  `period` is how long one full breath takes; the defaults are in the script.
+  The scale never goes below the resting size, so the frame is always filled.
+- Each node starts at a random point in the cycle, so several portraits on
+  screen do not breathe in unison.
+- Like `UIJuice`, it animates the visual-only `offset_transform_scale` and
+  restores the resting size in `_exit_tree()`.

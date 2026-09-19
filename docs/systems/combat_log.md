@@ -6,7 +6,7 @@ writes to at each mutation site (damage / heal / shield / status / fire / charge
 of reconstructing tallies from HP diffs. Session-only, combat-scoped, gone at fight teardown.
 
 **Engine:** Godot 4. **Built:** 2026-06-21 (data layer + presentation: the live HUD readout +
-the post-fight summary screen — see *Presentation*). Plan lineage: `docs/plans/combat_log.md`.
+the combat report — see *Presentation*). Plan lineage: `docs/plans/combat_log.md`.
 
 ---
 
@@ -125,18 +125,19 @@ is correctly excluded: no fight is live.)
 ## Presentation (built)
 
 Both surfaces read the live log; the run screen owns its lifetime (`run_screen.gd` creates a
-`CombatLog` per fight, assigns it to the live `CombatManager.combat_log`, and retains a ref so
-the summary can read it after the manager's teardown nulls its side). See
-[run_screen.md](run_screen.md).
+`CombatLog` per fight, assigns it to the live `CombatManager.combat_log`, and keeps the last
+finished fight's log in `_last_log`, so the report still reads after the manager's teardown
+nulls its side). See [run_screen.md](run_screen.md).
 
 - **Live HUD readout** — `combat_stats_readout.tscn` on the run-screen HUD: the player's
   running *Dealt · Taken* (net) this fight, refreshed each tick. Shown only while FIGHTING.
-- **Post-fight summary** — `combat_summary.tscn`, a `SUMMARY` FSM state parked before the draft
-  on a **won, non-final** fight (a loss / final win ends the run → the outcome screen instead).
-  Shows the player per-item damage report (Item · Fires · Damage · Shield · Healing, from
+- **Combat report** — `combat_summary.tscn`, raised and dismissed by the **Report** button in the
+  run screen's information section. It shows the **last finished fight** and parks nothing: a fight
+  resolves straight on to the reward draft, and the button stays available through the beats that
+  follow. Shows the player per-item damage report (Item · Fires · Damage · Shield · Healing, from
   `summary(PLAYER)` — Damage is **direct hits only**), a **Status damage** section (Status ·
   Damage, from `status_damage(PLAYER)`, hidden when no status dealt damage), and the ordered
-  event-log timeline (from `events`), with a Continue button.
+  event-log timeline (from `events`), with a Close button.
 
 ## Deferred / cut
 

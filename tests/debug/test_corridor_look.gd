@@ -33,8 +33,8 @@ func _panel() -> LookPanel:
 
 func test_defaults_are_read_from_the_shader_code() -> void:
   var defaults: Dictionary = DebugPanels.look_defaults()
-  assert_eq(defaults['warp_on'], false, 'a switch')
-  assert_almost_eq(defaults['warp_amount'], 0.08, 0.0001, 'a number')
+  assert_eq(defaults['grain_on'], false, 'a switch')
+  assert_almost_eq(defaults['grain_amount'], 0.06, 0.0001, 'a number')
   assert_eq(defaults['grade_tint'], Color(1.0, 1.0, 1.0), 'a colour')
   assert_eq(defaults['dither_pattern'], 0, 'a choice, read from the palette clamp include')
   assert_false(defaults.has('colour_count'), 'the palette uniforms set from the Palettes tab are not look settings')
@@ -71,13 +71,13 @@ func _group_count(shader: Shader) -> int:
   return groups
 
 
-func test_panel_has_a_section_per_effect_plus_light_and_environment() -> void:
+func test_panel_has_a_section_per_effect_plus_light_environment_and_fog() -> void:
   var panel: LookPanel = _panel()
   panel.rebuild()
   var groups: int = _group_count(DebugPanels.world_material.shader)
   var sections: Node = panel.get_node('Scroll/Sections')
   assert_gt(groups, 0, 'the look shader has effect groups')
-  assert_eq(sections.get_child_count(), groups + 2, 'one section per effect, then Light and Environment')
+  assert_eq(sections.get_child_count(), groups + 3, 'one section per effect, then Light, Environment and Fog')
   assert_null(_section('Background Specks'), 'the background wear is in the Print tab')
 
 
@@ -119,12 +119,12 @@ func test_folds_are_shown_only_while_a_run_screen_background_is_in_the_tree() ->
 func test_a_slider_changes_the_shader_setting() -> void:
   var panel: LookPanel = _panel()
   panel.rebuild()
-  var warp: LookSection = _section('Warp')
-  (warp.get_node('Header/Switch') as CheckButton).button_pressed = true
-  assert_eq(DebugPanels.world_material.get_shader_parameter('warp_on'), true, 'the header switch turns the effect on')
-  var row: LookRow = warp.get_node('Rows').get_child(0) as LookRow
+  var grain: LookSection = _section('Grain')
+  (grain.get_node('Header/Switch') as CheckButton).button_pressed = true
+  assert_eq(DebugPanels.world_material.get_shader_parameter('grain_on'), true, 'the header switch turns the effect on')
+  var row: LookRow = grain.get_node('Rows').get_child(0) as LookRow
   (row.get_node('Slider') as HSlider).value = 0.2
-  assert_almost_eq(DebugPanels.world_material.get_shader_parameter('warp_amount'), 0.2, 0.001, 'the slider sets the uniform')
+  assert_almost_eq(DebugPanels.world_material.get_shader_parameter('grain_amount'), 0.2, 0.001, 'the slider sets the uniform')
 
 
 func test_corridor_settings_apply_to_its_own_environment() -> void:
@@ -135,6 +135,19 @@ func test_corridor_settings_apply_to_its_own_environment() -> void:
   assert_true(first.environment().glow_enabled, 'an environment property is set')
   assert_false(second.environment().glow_enabled, 'other corridors keep their own environment')
   assert_true(first.is_in_group(Corridor3D.GROUP), 'corridors join the group the panel changes')
+
+
+func test_fog_section_is_dark_and_reaches_the_corridor() -> void:
+  var corridor: Corridor3D = _corridor()
+  _panel().rebuild()
+  var fog: LookSection = _section('Fog')
+  assert_not_null(fog, 'fog has its own section')
+  var scene_colour: Color = LookPanel.scene_values()[1]['fog_light_color']
+  assert_lt(scene_colour.v, 0.1, 'the corridor scene fogs to near black rather than to grey')
+  var first_row: LookRow = fog.get_node('Rows').get_child(0) as LookRow
+  assert_eq((first_row.get_node('Label') as Label).text, 'Enabled', 'row labels drop the fog prefix')
+  (first_row.get_node('Check') as CheckButton).button_pressed = true
+  assert_true(corridor.environment().fog_enabled, 'the row reaches the live corridor')
 
 
 func test_save_then_load_restores_the_look() -> void:

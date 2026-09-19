@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
 
 [node name="ChoiceCard" type="Button"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(280, 380)
 focus_mode = 0
 script = ExtResource("1")

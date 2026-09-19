@@ -34,7 +34,7 @@ folder names the same set as `ui-default.gpl`.
 | Theme font colours | Each is placed by brightness on the `UI_TEXT_*` colours, dark to light, blending between the two nearest. |
 | Theme images and flat panel colours | Every pixel of the theme's still-textured panel, button, item-cell and checkbox images is placed by brightness on the `UI_PANEL_*` colours in the same way. A [`WornStyleBox`](panel_wear.md) is recoloured through its wrapped `base`. The recoloured images are new textures; the files on disk are unchanged. |
 | `PaletteStyleBox` fills | The theme's flat, palette-following panel styles ([ui_theme.md](ui_theme.md#flat-palette-following-panels)) are a `PaletteStyleBox` (`src/ui/palette_style_box.gd`) naming a `Colours` variable in its `colour_name`. Its `bg_color` is set straight from that variable, not the `UI_PANEL_*` brightness ramp, both when a palette is applied and on reset. |
-| Interface images | Item, potion and status icons, keyword chip icons, character portraits, HP bars and item value pills (panel and number) are clamped to the portrait palette's colours, which by default are the interface palette's, see [Images](#images). |
+| Interface images | Item, potion and status icons, keyword chip icons and character portraits are clamped to the portrait palette's colours, which by default are the interface palette's, see [Images](#images). The HP bars and item value pills are not: they are drawn through the [interface look](interface_look.md)'s element material, which is not clamped, so they keep the palette colour they are filled with. |
 | Panel wear mark colours | `Colours.UI_PANEL_WEAR` / `UI_PANEL_WEAR_LIGHT`, pushed into `PrintLook.panel_material` (`PrintLook.push_wear_colours()`) alongside the [background wear](background_wear.md) colours. |
 
 The `UI_PANEL_*` and `UI_TEXT_*` defaults are the greys the theme already uses, so a palette that does
@@ -52,7 +52,8 @@ coherent with the interface and stand out against the desaturated corridor.
 Interface images share `InterfaceLook.material` ([interface_look.md](interface_look.md)), whose shader
 includes the [palette clamp](palette_clamp.md). `DebugPanels.set_portrait_palette` writes the portrait
 palette's distinct colours into that material, so each pixel of those images becomes the nearest palette
-colour. The portrait palette is its own Interface tab choice: off, the world palette, the interface palette,
+colour. The HP bars and value pills use `InterfaceLook.element_material`, which no palette is written
+to, so they are left at the colours the interface palette gave them. The portrait palette is its own Interface tab choice: off, the world palette, the interface palette,
 or any palette file (default: the interface palette). The clamp follows the Corridor tab's colour matching
 (RGB or OKLab) and does not dither. With no colours the colour count is 0 and images are unchanged.
 
@@ -70,8 +71,7 @@ Enemy images in the corridor are part of the corridor and use the [world clamp](
   statuses, and projectiles already in flight. The `--ui-palette=` start-up argument applies before
   anything is built.
 - The corridor and the enemy images in it are not changed. Text colours set in scenes as per-instance
-  overrides (the value pill's number and outline) are not recoloured by brightness, but the image clamp
-  still snaps them to the portrait palette.
+  overrides (the value pill's number and outline) are not recoloured by brightness.
 - Reads files with `FileAccess`, so debug runs only, like the [palette clamp](palette_clamp.md).
 
 ## Public API

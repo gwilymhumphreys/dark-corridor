@@ -1,7 +1,7 @@
 extends GutTest
 ## The [ and ] palette hotkeys step through the world palette list, skipping folder headings and
 ## wrapping through "Off"; ; and ' do the same for the interface palette list. The corridor and
-## interface parts of a preset hold their palette choices and the font, and the function keys open the
+## interface parts of a preset hold their palette choices, and the function keys open the
 ## panel's tabs
 ## (docs/systems/debug_panel.md).
 
@@ -134,6 +134,7 @@ func test_the_palette_sections_restore_the_same_choices() -> void:
   DebugPanels.set_interface_palette(INTERFACE_PALETTE)
   DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR)
   DebugPanels.set_dithering(true)
+  DebugPanels.set_interface_dithering(true)
   var file: ConfigFile = ConfigFile.new()
   DebugPanels.write_corridor_palette(file)
   DebugPanels.write_interface_palettes(file)
@@ -144,7 +145,8 @@ func test_the_palette_sections_restore_the_same_choices() -> void:
   assert_eq(DebugPanels.interface_palette, INTERFACE_PALETTE, 'interface palette restored')
   assert_eq(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR,
     'portrait palette restored')
-  assert_true(DebugPanels.is_dithering(), 'dithering restored')
+  assert_true(DebugPanels.is_dithering(), 'corridor dithering restored')
+  assert_true(DebugPanels.is_interface_dithering(), 'interface dithering restored')
 
 
 func test_a_tab_key_opens_its_tab_switches_tabs_and_closes_its_own_tab() -> void:

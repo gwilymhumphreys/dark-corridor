@@ -53,6 +53,7 @@ grow_vertical = 2
 theme_override_constants/separation = 40
 
 [node name="NewRunButton" type="Button" parent="Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(420, 110)
 layout_mode = 2
 focus_mode = 0
@@ -63,6 +64,7 @@ text = "New Run"
 script = ExtResource("2")
 
 [node name="TitleButton" type="Button" parent="Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(420, 110)
 layout_mode = 2
 focus_mode = 0

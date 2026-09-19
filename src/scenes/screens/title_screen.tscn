@@ -54,6 +54,7 @@ grow_vertical = 2
 theme_override_constants/separation = 40
 
 [node name="StartButton" type="Button" parent="Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
 focus_mode = 0
@@ -64,6 +65,7 @@ text = "Start Run"
 script = ExtResource("2")
 
 [node name="ResumeButton" type="Button" parent="Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
 focus_mode = 0
@@ -74,6 +76,7 @@ text = "Resume"
 script = ExtResource("2")
 
 [node name="SettingsButton" type="Button" parent="Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
 focus_mode = 0

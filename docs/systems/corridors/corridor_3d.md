@@ -42,6 +42,9 @@ chose it over four lights on the walls, floor and ceiling, which looked almost t
 
 - The environment has no ambient light and a black background, so everything past `light_range` is
   black. Code-built materials, kit models and enemy sprites are all lit by it.
+- The environment's fog is off in the scene. Its colour is set to nearly black, so turning it on in the
+  Corridor tab's Fog section ([corridor_look.md](../corridor_look.md#the-corridor-tab)) darkens the
+  corridor with distance instead of adding Godot's default grey haze.
 - Godot's omni light drops sharply to zero just before its range, so with a short `light_range` the fade
   to black looks abrupt.
 - Raising `light_attenuation` above 1 makes the nearest surface brighter, not darker.
@@ -159,8 +162,9 @@ look setting, kept until the effects pass decides on hit visuals.
   frame, `--shot-delay=SECONDS` to wait longer), printing `SHOT_SAVED:<path>`. `--view=WIDTHxHEIGHT`
   (before `--`) forces a fixed `view_size`. The debug panel's `--monster-image=` and `--world-palette=` also
   apply.
-- A real fight: `<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial
-  --corridor-set=light_energy=<value>` ([debug_panel.md](../debug_panel.md#start-up-arguments)).
+- A real fight: `<godot> --path . -- --autostart --autofight --shot --shot-delay 6 --nosave --notutorial
+  --corridor-set=light_energy=<value> > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt` ([debug_panel.md](../debug_panel.md#start-up-arguments)).
+  The redirect keeps the Godot output out of an agent's context; the `PreToolUse` hook requires it.
 - Light settings: edit the root node's "Light" exports in `corridor_3d.tscn`; fights and the testbed both
   build from that scene.
 - Headless reimport after adding or replacing textures: `tools/import.sh`.

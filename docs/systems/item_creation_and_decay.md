@@ -65,8 +65,10 @@ numbers are `ItemDef` / `Balance`, authored by the owner.
 **Driver:** the attack commons' rider — "on fire, create a chunk of flesh on my own board."
 
 **Presentation:** the player's item grid matches the board every frame, so a created item gets a
-cell as it is created and loses it when it decays, is consumed, or the fight ends. Its cell shows a
-"Temporary" tag on the bottom edge (`CombatManager.is_created_item`). See
+cell as it is created and loses it when it decays or is consumed. Its cell shows a "Temporary" tag
+on the bottom edge (`CombatManager.is_created_item`). At the end of the fight the created items are
+still on the board (they leave at the Combat manager's teardown, one advance later), so the combat
+view fades their cells away itself when the run screen releases it. See
 [`run_screen.md`](run_screen.md). Enemy HUDs and ally slots still build their cells once, so an item
 created on their boards has no cell yet. An arrival tell is not drawn.
 
@@ -129,8 +131,8 @@ is needed — a create→create chain cannot run away within a step (the created
 the current step's cooldown pass, so it first ticks next step).
 
 **Presentation (flag — lags the engine):** the item panel / cooldown ring should show activations
-remaining ([`tooltips.md`](tooltips.md)); removal wants a dissolve tell. Decay's activations-left
-renders like shield's count. Not yet drawn.
+remaining ([`tooltips.md`](tooltips.md)). Decay's activations-left renders like shield's count. Not
+yet drawn. A mid-fight decay removal still has no tell — only the end-of-fight fade above is built.
 
 ---
 

@@ -3,23 +3,28 @@ render_mode unshaded;
 // Interface look (docs/systems/interface_look.md): the corridor look's effects on interface images
 // (icons, character portraits, HP bars, item value pills), set as the material of those nodes only, so
 // other text is not affected. The settings and effect functions are shared with the corridor look
-// (look_effects.gdshaderinc); warp, bloom and vignette are not used here.
+// (look_effects.gdshaderinc); bloom is not used here.
 //
 // Each node is drawn on its own, so the effects work within the node's own rectangle. Distances are in
 // screen pixels, as in the corridor look. Dot, line and speck patterns are laid out from the node's
-// corner, so they move with a node that is animated.
+// corner, so they move with a node that is animated. The vignette darkens the corners of each node's
+// own rectangle rather than the corners of the screen.
 //
 // Picture wear draws the same print wear as panel wear (panel_wear.gdshader) on the image itself. It is
 // laid out in the node's own pixels, as panel wear is, so the same settings give marks of the same size.
 // Its settings are separate from panel wear's and start at panel wear's defaults.
 //
 // The interface palette clamp replaces each pixel with the nearest colour in the interface palette file
-// (docs/systems/interface_palette.md#images). DebugPanels sets its palette and matching; with no interface
-// palette its colour count is 0 and colours pass through.
+// (docs/systems/interface_palette.md#images). DebugPanels sets its palette, its matching and its
+// dithering switch; with no interface palette its colour count is 0 and colours pass through. Its dot
+// pattern, size and supersample are settings of this look, in the dithering group.
 
 #include "res://src/shaders/look_effects.gdshaderinc"
 #include "res://src/shaders/print_wear.gdshaderinc"
+
+group_uniforms dithering;
 #include "res://src/shaders/palette_clamp.gdshaderinc"
+group_uniforms;
 
 // Set from Colours by InterfaceLook, so they are not look settings.
 uniform vec3 picture_wear_dark_colour : source_color = vec3(0.2, 0.2, 0.2);
@@ -156,27 +161,18 @@ void fragment() {
     colour = apply_colour_ramp(colour);
   }
 
-  if (edges_on) {
-    vec2 step_size = uv_per_pixel * edges_width;
-    float top_left = luminance(texture(TEXTURE, uv + step_size * vec2(-1.0, -1.0)).rgb);
-    float top = luminance(texture(TEXTURE, uv + step_size * vec2(0.0, -1.0)).rgb);
-    float top_right = luminance(texture(TEXTURE, uv + step_size * vec2(1.0, -1.0)).rgb);
-    float left = luminance(texture(TEXTURE, uv + step_size * vec2(-1.0, 0.0)).rgb);
-    float right = luminance(texture(TEXTURE, uv + step_size * vec2(1.0, 0.0)).rgb);
-    float bottom_left = luminance(texture(TEXTURE, uv + step_size * vec2(-1.0, 1.0)).rgb);
-    float bottom = luminance(texture(TEXTURE, uv + step_size * vec2(0.0, 1.0)).rgb);
-    float bottom_right = luminance(texture(TEXTURE, uv + step_size * vec2(1.0, 1.0)).rgb);
-    float across = (top_right + 2.0 * right + bottom_right) - (top_left + 2.0 * left + bottom_left);
-    float down = (bottom_left + 2.0 * bottom + bottom_right) - (top_left + 2.0 * top + top_right);
-    colour = apply_edges(colour, across, down);
-  }
-
   if (halftone_on) {
     colour = apply_halftone(colour, pixel);
   }
 
   if (hatching_on) {
     colour = apply_hatching(colour, pixel);
+  }
+
+  if (vignette_on) {
+    float distance_from_centre = length(UV - 0.5);
+    float shade = smoothstep(vignette_size + vignette_softness, vignette_size, distance_from_centre);
+    colour *= mix(1.0, shade, vignette_amount);
   }
 
   if (grain_on) {

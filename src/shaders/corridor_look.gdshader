@@ -23,8 +23,8 @@ bool is_inside(vec2 uv) {
 }
 
 
-// The corridor image at `uv`, black outside it so warped edges read as the edge of a screen. A
-// macro because TEXTURE cannot be passed to a function.
+// The corridor image at `uv`, black outside it so an effect that samples past the edge reads the
+// edge of a screen. A macro because TEXTURE cannot be passed to a function.
 #define SOURCE(uv) (is_inside(uv) ? texture(TEXTURE, uv).rgb : vec3(0.0))
 
 
@@ -34,11 +34,6 @@ void fragment() {
   vec2 grid = FRAGCOORD.xy;
   float block = 1.0;
 
-  if (warp_on) {
-    vec2 centred = uv * 2.0 - 1.0;
-    centred *= 1.0 + warp_amount * dot(centred, centred);
-    uv = centred * 0.5 + 0.5;
-  }
   bool outside = !is_inside(uv);
 
   if (pixelate_on) {
@@ -82,21 +77,6 @@ void fragment() {
 
   if (colour_ramp_on) {
     colour = apply_colour_ramp(colour);
-  }
-
-  if (edges_on) {
-    vec2 step_size = texel * edges_width;
-    float top_left = luminance(SOURCE(uv + step_size * vec2(-1.0, -1.0)));
-    float top = luminance(SOURCE(uv + step_size * vec2(0.0, -1.0)));
-    float top_right = luminance(SOURCE(uv + step_size * vec2(1.0, -1.0)));
-    float left = luminance(SOURCE(uv + step_size * vec2(-1.0, 0.0)));
-    float right = luminance(SOURCE(uv + step_size * vec2(1.0, 0.0)));
-    float bottom_left = luminance(SOURCE(uv + step_size * vec2(-1.0, 1.0)));
-    float bottom = luminance(SOURCE(uv + step_size * vec2(0.0, 1.0)));
-    float bottom_right = luminance(SOURCE(uv + step_size * vec2(1.0, 1.0)));
-    float across = (top_right + 2.0 * right + bottom_right) - (top_left + 2.0 * left + bottom_left);
-    float down = (bottom_left + 2.0 * bottom + bottom_right) - (top_left + 2.0 * top + top_right);
-    colour = apply_edges(colour, across, down);
   }
 
   if (halftone_on) {

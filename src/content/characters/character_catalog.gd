@@ -48,15 +48,13 @@ static func _build() -> void:
 ## on the Spores counter (the Mass fuel) + spore appliers. SCAFFOLD — holds what's authored
 ## so far (the pool below is the authority; spore_druid.md tracks the running count); starts
 ## with Druid Staff. Still the owner's to fill: the signature starting relic (the most
-## build-defining — design), skills + more cards, the real select-screen blurb, and flipping
-## it into ids() once the pool is deep enough to draft.
+## build-defining — design), skills + more cards, and flipping it into ids() once the pool is deep enough to draft.
 static func _spore_druid() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = SPORE_DRUID
   d.name_key = 'Maren'                 # PLACEHOLDER personal name — owner's to rename
   d.subtitle_key = 'Rot Shepherd'      # the owner's lead role name (spore_druid.md); 'Spore Druid' stays the internal label
   d.portrait = 'res://assets/portraits/characters/shaman.png'   # PLACEHOLDER portrait — owner's to swap
-  d.blurb_key = 'Stack Spores, then spend them.'   # PLACEHOLDER hook — owner writes the real one
   d.item_pool = [
     ItemCatalog.DRUID_STAFF,
     ItemCatalog.SPORE_SPITTER,
@@ -77,8 +75,7 @@ static func _spore_druid() -> CharacterDef:
 ## after a couple of activations (the CREATE_ITEM + Decay seams, item_creation_and_decay.md). SCAFFOLD
 ## — the pool below is the authority (chunk-creating attacks, the self-harm producer + consumer, the
 ## Reclaim payoff, a bleed applier, and the bone shield spread); numbers + names are PLACEHOLDERS to
-## tune / rename (a Vermis display-name later). Still the owner's to fill: the signature relic, the
-## real select-screen blurb, more pool depth, and flipping it into ids() once it's non-degenerate to
+## tune / rename (a Vermis display-name later). Still the owner's to fill: the signature relic, more pool depth, and flipping it into ids() once it's non-degenerate to
 ## draft. Starts with a 3-item kit that seeds the loop + a survival floor: Cleaver (producer),
 ## Femur (shield), Carving Knife (fast producer) — the other characters' 3-item start floor.
 static func _fleshmancer() -> CharacterDef:
@@ -87,7 +84,6 @@ static func _fleshmancer() -> CharacterDef:
   d.name_key = 'Aldous'                # PLACEHOLDER personal name — owner's to rename
   d.subtitle_key = 'Disgraced Surgeon' # the owner's role name (2026-09-18); 'Fleshmancer' stays the internal label
   d.portrait = 'res://assets/portraits/characters/leper_nb.png'
-  d.blurb_key = 'Carve yourself into a churning board of flesh.'   # PLACEHOLDER hook — owner writes the real one
   d.item_pool = [
     ItemCatalog.FLESH_CARVING_KNIFE,
     ItemCatalog.FLESH_CLEAVER,

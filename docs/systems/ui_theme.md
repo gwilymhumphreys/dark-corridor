@@ -143,9 +143,10 @@ Notes for whoever adds fonts for other scripts:
 ### Font candidates
 
 `assets/fonts/candidates/` holds the other shortlisted free fonts (all from Google Fonts): Alegreya
-SC, Cinzel, Eczar and Germania One. Try one in game with the Font dropdown in the debug panel's Interface tab (F2) or the
-start-up argument `--font=<res path>` ([debug_panel.md](debug_panel.md)), which replace Rakkas for
-that session. None is named by the theme. Delete the folder once the choice is final.
+SC, Cinzel, Eczar and Germania One. None is named by the theme, and there is no longer a way to try
+one at runtime: the debug panel's Font dropdown and the `--font=` argument were removed on
+2026-09-18. To compare one, point the theme's `default_font` at it. Delete the folder once the choice
+is final.
 
 ### Font import settings
 

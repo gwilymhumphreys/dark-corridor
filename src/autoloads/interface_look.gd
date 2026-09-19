@@ -6,15 +6,27 @@ extends Node
 ## `InterfaceLook` autoload, after `PrintLook` and before `DebugPanels`, which keeps the interface tab.
 
 const EFFECTS_INCLUDE: ShaderInclude = preload('res://src/shaders/look_effects.gdshaderinc')
+const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
 ## Picture wear's mark colours, set from `Colours` rather than by the look.
 const COLOUR_UNIFORMS: Array[String] = ['picture_wear_dark_colour', 'picture_wear_light_colour']
+## Palette clamp uniforms set from the Interface tab's palette rows and its dithering switch
+## (`DebugPanels`), so they are not look settings.
+const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'dithering']
 ## Effect groups in the shared include that the interface look shader does not use, so they are not
 ## settings.
-const UNUSED_GROUPS: Array[String] = ['warp', 'bloom', 'vignette']
+const UNUSED_GROUPS: Array[String] = ['bloom']
+## Switches left off on `element_material`, so an interface element keeps the colour the interface
+## palette gave it. Everything else is set on both materials.
+const ELEMENT_OFF_UNIFORMS: Array[String] = ['grade_on', 'colour_ramp_on', 'posterize_on',
+  'colour_fringe_on']
 
 ## The material every interface image is drawn through (interface_look.gdshader). Scenes use the same
 ## resource file, so changing it here changes every image.
 var material: ShaderMaterial = preload('res://src/shaders/interface_look_material.tres')
+## The same shader on the interface elements that are not pictures: the item value pills and the HP
+## bars. It takes the same settings except `ELEMENT_OFF_UNIFORMS`, and no palette clamp colours are
+## written to it, so its colours stay as the interface palette set them.
+var element_material: ShaderMaterial = preload('res://src/shaders/interface_element_material.tres')
 
 var _defaults: Dictionary = {}   # interface look uniform -> default value, read from the shader code
 
@@ -27,17 +39,30 @@ func _ready() -> void:
 ## Set picture wear's mark colours from `Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`, the same as
 ## panel wear. Called at start, and by `DebugPanels` after an interface palette is applied or reset.
 func push_wear_colours() -> void:
-  material.set_shader_parameter('picture_wear_dark_colour', Colours.UI_PANEL_WEAR)
-  material.set_shader_parameter('picture_wear_light_colour', Colours.UI_PANEL_WEAR_LIGHT)
+  for look_material: ShaderMaterial in [material, element_material]:
+    look_material.set_shader_parameter('picture_wear_dark_colour', Colours.UI_PANEL_WEAR)
+    look_material.set_shader_parameter('picture_wear_light_colour', Colours.UI_PANEL_WEAR_LIGHT)
 
 
-## Every interface look setting with a default in the shared effects include or in the interface look
-## shader's own picture wear (uniform name -> value), except the groups in `UNUSED_GROUPS` and the mark
-## colours.
+## Set one interface look setting on both materials. The switches in `ELEMENT_OFF_UNIFORMS` are left
+## off on `element_material`. Everything that changes a setting goes through here: the panel rows,
+## presets, reset, the copy from the corridor look and `--interface-set=`.
+func set_setting(uniform: String, value: Variant) -> void:
+  material.set_shader_parameter(uniform, value)
+  if not ELEMENT_OFF_UNIFORMS.has(uniform):
+    element_material.set_shader_parameter(uniform, value)
+
+
+## Every interface look setting with a default in the shared effects include, the palette clamp include
+## (its dither pattern, size and supersample) or in the interface look shader's own picture wear
+## (uniform name -> value), except the groups in `UNUSED_GROUPS`, the mark colours and
+## `PALETTE_UNIFORMS`.
 func defaults() -> Dictionary:
   if _defaults.is_empty():
-    var code: String = EFFECTS_INCLUDE.code + '\n' + material.shader.code
-    var all: Dictionary = PrintLookAutoload._uniform_defaults(code, COLOUR_UNIFORMS)
+    var code: String = EFFECTS_INCLUDE.code + '\n' + PALETTE_INCLUDE.code + '\n' + material.shader.code
+    var skip: Array[String] = COLOUR_UNIFORMS.duplicate()
+    skip.append_array(PALETTE_UNIFORMS)
+    var all: Dictionary = PrintLookAutoload._uniform_defaults(code, skip)
     for uniform: String in all:
       var unused: bool = false
       for group: String in UNUSED_GROUPS:
@@ -69,7 +94,7 @@ func read_look(file: ConfigFile) -> void:
   var settings: Dictionary = defaults()
   for uniform: String in _section_keys(file, 'interface_shader'):
     if settings.has(uniform):
-      material.set_shader_parameter(uniform, file.get_value('interface_shader', uniform))
+      set_setting(uniform, file.get_value('interface_shader', uniform))
   for property: String in _section_keys(file, 'interface_glow'):
     if InterfaceGlowAutoload.DEFAULTS.has(property):
       InterfaceGlow.settings[property] = file.get_value('interface_glow', property)
@@ -82,7 +107,7 @@ func copy_from_corridor() -> void:
   var settings: Dictionary = defaults()
   for uniform: String in settings:
     if DebugPanels.look_defaults().has(uniform):
-      material.set_shader_parameter(uniform, DebugPanels.world_material.get_shader_parameter(uniform))
+      set_setting(uniform, DebugPanels.world_material.get_shader_parameter(uniform))
 
 
 ## Set every corridor look setting that the interface look also has to the interface look's current
@@ -98,7 +123,7 @@ func copy_to_corridor() -> void:
 func _write_defaults() -> void:
   var settings: Dictionary = defaults()
   for uniform: String in settings:
-    material.set_shader_parameter(uniform, settings[uniform])
+    set_setting(uniform, settings[uniform])
 
 
 func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:

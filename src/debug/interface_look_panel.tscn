@@ -60,28 +60,6 @@ popup/item_0/id = 0
 [node name="Juice" type="Node" parent="PaletteRows/PortraitPaletteRow/Option"]
 script = ExtResource("2")
 
-[node name="FontRow" type="HBoxContainer" parent="PaletteRows"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Label" type="Label" parent="PaletteRows/FontRow"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-text = "Font"
-vertical_alignment = 1
-
-[node name="Option" type="OptionButton" parent="PaletteRows/FontRow"]
-custom_minimum_size = Vector2(400, 48)
-layout_mode = 2
-focus_mode = 0
-item_count = 1
-selected = 0
-popup/item_0/text = "Game default"
-popup/item_0/id = 0
-
-[node name="Juice" type="Node" parent="PaletteRows/FontRow/Option"]
-script = ExtResource("2")
-
 [node name="CopyRow" type="HBoxContainer" parent="."]
 layout_mode = 2
 theme_override_constants/separation = 16

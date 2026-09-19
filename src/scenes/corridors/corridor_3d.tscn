@@ -17,6 +17,8 @@ background_mode = 1
 background_color = Color(0, 0, 0, 1)
 ambient_light_source = 1
 reflected_light_source = 1
+fog_light_color = Color(0.02, 0.02, 0.03, 1)
+fog_density = 0.06
 
 [node name="Corridor3D" type="Node2D"]
 position = Vector2(1280, 720)

@@ -3,19 +3,26 @@ extends GutTest
 ## settings to and from the corridor look, and the scenes that draw through its material
 ## (docs/systems/interface_look.md).
 
+## Nodes drawn through `InterfaceLook.material`: the pictures.
 const SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/item_cell.tscn', 'Frame/Icon'],
-  ['res://src/scenes/combat/value_pill.tscn', '.'],
-  ['res://src/scenes/combat/value_pill.tscn', 'Value'],
   ['res://src/scenes/combat/potion_slot.tscn', 'Icon'],
   ['res://src/scenes/combat/status_icon.tscn', 'Icon'],
   ['res://src/scenes/ui/tooltip/keyword_chip.tscn', 'Margin/Row/Icon'],
   ['res://src/scenes/screens/character_card.tscn', 'Portrait/Image'],
   ['res://src/scenes/combat/ally_slot.tscn', 'Portrait/Image'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Portrait/Image'],
+]
+
+## Nodes drawn through `InterfaceLook.element_material`: the interface elements that are not pictures.
+const ELEMENT_SCENE_NODES: Array[Array] = [
+  ['res://src/scenes/combat/value_pill.tscn', '.'],
+  ['res://src/scenes/combat/value_pill.tscn', 'Value'],
+  ['res://src/scenes/combat/ally_slot.tscn', 'Readout/HP/Background'],
   ['res://src/scenes/combat/ally_slot.tscn', 'Readout/HP/Fill'],
   ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Background'],
   ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Fill'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Portrait/Image'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Readout/HP/Background'],
   ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Readout/HP/Fill'],
 ]
 
@@ -35,11 +42,35 @@ func test_defaults_are_read_from_the_shared_effects_include() -> void:
   assert_true(defaults.has('scanlines_on'), 'scanlines are a setting')
 
 
-func test_defaults_leave_out_warp_bloom_and_vignette() -> void:
+func test_defaults_leave_out_bloom() -> void:
   for uniform: String in InterfaceLook.defaults():
-    assert_false(uniform.begins_with('warp_'), 'warp is not an interface effect')
     assert_false(uniform.begins_with('bloom_'), 'bloom is not an interface effect')
-    assert_false(uniform.begins_with('vignette_'), 'vignette is not an interface effect')
+
+
+func test_the_vignette_is_a_setting() -> void:
+  var defaults: Dictionary = InterfaceLook.defaults()
+  assert_eq(defaults['vignette_on'], false, 'the vignette is off by default')
+  assert_true(defaults.has('vignette_amount'), 'its settings are read from the shared include')
+
+
+func test_the_dither_pattern_is_a_setting_but_the_switch_is_not() -> void:
+  var defaults: Dictionary = InterfaceLook.defaults()
+  assert_eq(defaults['dither_pattern'], 0, 'read from the palette clamp include')
+  assert_true(defaults.has('dither_size'), 'the dot size is a setting')
+  assert_true(defaults.has('dither_supersample'), 'the supersample switch is a setting')
+  assert_false(defaults.has('dithering'), 'the dithering switch is kept by DebugPanels')
+  assert_false(defaults.has('colour_count'), 'the palette itself is not a look setting')
+  assert_false(defaults.has('perceptual'), 'colour matching is not a look setting')
+
+
+func test_interface_dithering_is_separate_from_the_corridors() -> void:
+  DebugPanels.set_interface_dithering(true)
+  assert_true(DebugPanels.is_interface_dithering(), 'the interface switch is on')
+  assert_eq(InterfaceLook.material.get_shader_parameter('dithering'), true,
+    'the interface clamp dithers')
+  assert_false(DebugPanels.is_dithering(), 'the corridor clamp is left alone')
+  assert_eq(DebugPanels.world_material.get_shader_parameter('dithering'), false,
+    'the corridor clamp does not dither')
 
 
 func test_save_then_load_restores_the_settings() -> void:
@@ -108,3 +139,35 @@ func test_interface_images_use_the_shared_material() -> void:
     assert_eq(root.get_node(pair[1]).material, InterfaceLook.material,
       '%s %s draws through the shared material' % [pair[0], pair[1]])
     root.free()
+
+
+func test_interface_elements_use_the_element_material() -> void:
+  for pair: Array in ELEMENT_SCENE_NODES:
+    var scene: PackedScene = load(pair[0])
+    var root: Node = scene.instantiate()
+    assert_eq(root.get_node(pair[1]).material, InterfaceLook.element_material,
+      '%s %s draws through the element material' % [pair[0], pair[1]])
+    root.free()
+
+
+func test_a_setting_is_written_to_both_materials() -> void:
+  InterfaceLook.set_setting('hatching_on', true)
+  assert_eq(InterfaceLook.material.get_shader_parameter('hatching_on'), true,
+    'the images take the setting')
+  assert_eq(InterfaceLook.element_material.get_shader_parameter('hatching_on'), true,
+    'the interface elements take the setting')
+
+
+func test_colour_changing_switches_stay_off_on_the_element_material() -> void:
+  for uniform: String in InterfaceLookAutoload.ELEMENT_OFF_UNIFORMS:
+    InterfaceLook.set_setting(uniform, true)
+    assert_eq(InterfaceLook.material.get_shader_parameter(uniform), true,
+      '%s is on for the images' % uniform)
+    assert_ne(InterfaceLook.element_material.get_shader_parameter(uniform), true,
+      '%s stays off for the interface elements' % uniform)
+
+
+func test_the_element_material_is_not_clamped_to_the_portrait_palette() -> void:
+  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE)
+  var count: Variant = InterfaceLook.element_material.get_shader_parameter('colour_count')
+  assert_true(count == null or count == 0, 'the interface elements keep their own colours')

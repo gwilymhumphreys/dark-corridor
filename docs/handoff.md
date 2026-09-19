@@ -337,7 +337,8 @@ replace-vs-multiply** open is now resolved → replace, with the battle-speed di
 Decision-AI: the Driver's **potion / choice / event** policies stay stubs until those beats exist.
 
 **Run / watch:** `<exe> --path . res://src/scenes/main.tscn > _temp/run.txt 2>&1` → Start
-Run; append `-- --autostart --shot [--shot-delay s]` to capture a frame. **Autotest:**
+Run; append `-- --autostart --shot [--shot-delay s]` to capture a frame (the 1.5s default
+catches the corridor approach — add `--autofight --shot-delay 6` for a mid-fight frame). **Autotest:**
 `tools/autotest.sh --seed 1 --strategy greedy-synergy --report autotest_results/r.md`.
 **Suite:** `tools/gut.sh`.
 

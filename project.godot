@@ -27,6 +27,7 @@ Game="*res://src/autoloads/game_manager.gd"
 PrintLook="*res://src/autoloads/print_look.gd"
 InterfaceLook="*res://src/autoloads/interface_look.gd"
 InterfaceGlow="*res://src/autoloads/interface_glow.gd"
+Cursor="*res://src/autoloads/cursor.gd"
 DebugPanels="*res://src/debug/debug_panels.tscn"
 
 [display]

@@ -41,6 +41,7 @@ text = "Paused"
 horizontal_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="Catcher/Panel/Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 90)
 layout_mode = 2
 focus_mode = 0
@@ -51,6 +52,7 @@ text = "Resume"
 script = ExtResource("2")
 
 [node name="SettingsButton" type="Button" parent="Catcher/Panel/Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 90)
 layout_mode = 2
 focus_mode = 0
@@ -61,6 +63,7 @@ text = "Settings"
 script = ExtResource("2")
 
 [node name="QuitButton" type="Button" parent="Catcher/Panel/Menu"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 90)
 layout_mode = 2
 focus_mode = 0

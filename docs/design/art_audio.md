@@ -54,7 +54,7 @@ Readability limits: text and item icons must stay readable. Panels, buttons, tex
 
 Looks being tried
 
-Corridor look (F1 tab of the debug panel): post-processing on the corridor image only. It covers grade, colour ramp, halftone, hatching, edge lines, bloom, warp, scanlines, grain, vignette, posterize, pixelate, and the world palette with dithering, plus fog and glow. Example looks are saved as presets in assets/presets/; their names are placeholders. Dithering in motion is one of the things being judged.
+Corridor look (F1 tab of the debug panel): post-processing on the corridor image only. It covers grade, colour ramp, halftone, hatching, edge lines, bloom, scanlines, grain, vignette, posterize, pixelate, and the world palette with dithering, plus fog and glow. Example looks are saved as presets in assets/presets/; their names are placeholders. Dithering in motion is one of the things being judged.
 Printed record sleeve (F4 Background tab): the screen background is drawn like a worn printed sleeve the owner liked. Rubbed edges, creases, subtle faded areas and sparse specks are on by default. Mottling, faint flecks and scratches were tried and removed.
 The same print wear can be carried over the corridor, with its edge worn away, and the corridor moved in from the screen edges. The owner's saved defaults have both on. A rough border around the corridor and folds across the sheet are available but not judged yet. Two red two-ink corridor looks go with this style.
 Interface look (F2 tab): the corridor look's effects on item and potion icons, portraits and health bars only, never on text or panels. Settings can be copied to and from the corridor look.

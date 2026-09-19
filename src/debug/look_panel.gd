@@ -36,10 +36,24 @@ const ENVIRONMENT_PROPERTIES: Dictionary = {
   'glow_strength': [0.0, 2.0, 0.01],
   'glow_bloom': [0.0, 1.0, 0.01],
   'glow_hdr_threshold': [0.0, 4.0, 0.01],
-  'fog_enabled': [],
-  'fog_light_color': [],
-  'fog_density': [0.0, 0.5, 0.001],
   'tonemap_exposure': [0.0, 4.0, 0.01],
+}
+## Environment fog properties shown in the Fog section, in the same form. `fog_mode` is a choice, so
+## its entry is the option names in order. The corridor scene's fog colour is nearly black, so
+## turning fog on hides the far end of the corridor in darkness instead of grey.
+const FOG_PROPERTIES: Dictionary = {
+  'fog_enabled': [],
+  'fog_mode': ['Exponential', 'Depth'],
+  'fog_light_color': [],
+  'fog_light_energy': [0.0, 4.0, 0.01],
+  'fog_density': [0.0, 1.0, 0.001],
+  'fog_aerial_perspective': [0.0, 1.0, 0.01],
+  'fog_sky_affect': [0.0, 1.0, 0.01],
+  'fog_height': [-8.0, 8.0, 0.1],
+  'fog_height_density': [-8.0, 8.0, 0.01],
+  'fog_depth_begin': [0.0, 40.0, 0.1],
+  'fog_depth_end': [0.0, 40.0, 0.1],
+  'fog_depth_curve': [0.0, 8.0, 0.01],
 }
 
 var _built: bool = false
@@ -52,6 +66,13 @@ func _exit_tree() -> void:
   _clear_sections()
 
 
+## Every Environment property the tab sets: the Environment section's and the Fog section's.
+static func environment_properties() -> Dictionary:
+  var properties: Dictionary = ENVIRONMENT_PROPERTIES.duplicate()
+  properties.merge(FOG_PROPERTIES)
+  return properties
+
+
 ## The corridor scene's own values for the Light and Environment properties, as
 ## [corridor property -> value, environment property -> value].
 static func scene_values() -> Array[Dictionary]:
@@ -61,7 +82,7 @@ static func scene_values() -> Array[Dictionary]:
   var environment_values: Dictionary = {}
   for property: String in CORRIDOR_PROPERTIES:
     corridor_values[property] = corridor.get(property)
-  for property: String in ENVIRONMENT_PROPERTIES:
+  for property: String in environment_properties():
     environment_values[property] = environment.get(property)
   corridor.free()
   return [corridor_values, environment_values]
@@ -91,6 +112,7 @@ func rebuild() -> void:
   var values: Array[Dictionary] = scene_values()
   _build_property_section('Light', CORRIDOR_PROPERTIES, values[0], DebugPanels.corridor_settings)
   _build_property_section('Environment', ENVIRONMENT_PROPERTIES, values[1], DebugPanels.environment_settings)
+  _build_property_section('Fog', FOG_PROPERTIES, values[1], DebugPanels.environment_settings, 'fog_')
 
 
 # One section per uniform group that has a setting in `defaults`; uniforms before the first group, or
@@ -107,10 +129,15 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
       continue
     if group == '':
       continue
-    # The palette clamp's dithering is kept by `DebugPanels`, which Backspace and presets also set.
-    if uniform == 'dithering' and look_material == DebugPanels.world_material:
-      section = section if section != null else _add_section(_section_title(group))
-      section.set_switch(DebugPanels.is_dithering(), DebugPanels.set_dithering)
+    # Each clamp's dithering switch is kept by `DebugPanels`, which Backspace and presets also set.
+    # The corridor and the interface have one each.
+    if uniform == 'dithering':
+      if look_material == DebugPanels.world_material:
+        section = section if section != null else _add_section(_section_title(group))
+        section.set_switch(DebugPanels.is_dithering(), DebugPanels.set_dithering)
+      elif look_material == InterfaceLook.material:
+        section = section if section != null else _add_section(_section_title(group))
+        section.set_switch(DebugPanels.is_interface_dithering(), DebugPanels.set_interface_dithering)
       continue
     if not defaults.has(uniform):
       continue
@@ -118,7 +145,13 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
     var value: Variant = look_material.get_shader_parameter(uniform)
     if value == null:
       value = defaults[uniform]
-    var set_value: Callable = func(new_value: Variant) -> void: look_material.set_shader_parameter(uniform, new_value)
+    # The interface look has a second material for the interface elements that are not pictures, which
+    # `InterfaceLook.set_setting` keeps in step.
+    var set_value: Callable = func(new_value: Variant) -> void:
+      if look_material == InterfaceLook.material:
+        InterfaceLook.set_setting(uniform, new_value)
+      else:
+        look_material.set_shader_parameter(uniform, new_value)
     if uniform == group + '_on':
       section.set_switch(value, set_value)
       continue
@@ -138,14 +171,16 @@ func _section_title(group: String) -> String:
   return group.capitalize()
 
 
-func _build_property_section(title: String, properties: Dictionary, scene: Dictionary, settings: Dictionary) -> void:
+# `prefix` is dropped from each row's label, so the Fog section reads Density rather than Fog density.
+func _build_property_section(title: String, properties: Dictionary, scene: Dictionary, settings: Dictionary,
+    prefix: String = '') -> void:
   var section: LookSection = _add_section(title)
   for property: String in properties:
     var value: Variant = settings.get(property, scene[property])
     var set_value: Callable = func(new_value: Variant) -> void:
       settings[property] = new_value
       DebugPanels.apply_corridor_settings()
-    section.add_row(_make_row(property.capitalize(), value, properties[property], set_value))
+    section.add_row(_make_row(property.trim_prefix(prefix).capitalize(), value, properties[property], set_value))
 
 
 func _add_section(title: String) -> LookSection:

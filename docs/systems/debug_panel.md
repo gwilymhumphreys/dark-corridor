@@ -12,7 +12,7 @@ and `background_panel.*`. The palette rows are in the first two tab scenes, and 
 
 | Tab | Key | Sets |
 |---|---|---|
-| Corridor | F1 | The corridor [palette rows](#palette-rows), the [corridor look](corridor_look.md), light and Environment |
+| Corridor | F1 | The corridor [palette rows](#palette-rows), the [corridor look](corridor_look.md), light, Environment and fog |
 | Interface | F2 | The interface [palette rows](#palette-rows), the [interface look](interface_look.md) and [interface glow](interface_glow.md) |
 | Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
 | Background | F4 | [Background wear](background_wear.md) on every screen |
@@ -35,12 +35,14 @@ and `background_panel.*`. The palette rows are in the first two tab scenes, and 
   `assets/palettes/shortlist/`, rewrites the palette's path in any preset or history file that uses it,
   then rescans the list and keeps that palette selected. It does nothing on "Off", for a palette
   already in the shortlist, or when a file of the same name is there.
-- Backspace turns the world clamp's dithering on or off, keeping the Dithering switch in step.
+- Backspace turns the world clamp's dithering on or off, keeping the Corridor tab's Dithering
+  switch in step. It does not touch the interface clamp, which has its own switch.
 - Changes last for the session only, unless saved as a preset. The default preset loads at start-up.
   `DebugPanels.reset_settings()` turns every part off; `TestCleanup.reset_all_managers()` calls it.
-- The palette folder is scanned the first time the Corridor or Interface tab opens, and the font folder
-  the first time the Interface tab opens, so headless tests and
-  autotest runs do no extra work.
+- The palette folder is scanned the first time the Corridor or Interface tab opens, so headless tests
+  and autotest runs do no extra work.
+- Every section starts closed, whether or not its effect is on; clicking a section's title shows its
+  rows.
 - Built as `.tscn` scenes, styled by the project theme, with a `UIJuice` node on each control.
 - English only. `tools/extract_pot.gd` skips `src/debug/`, so panel labels stay out of the translation
   files.
@@ -55,11 +57,10 @@ Rows at the top of the Corridor and Interface tabs, below "Take this part from".
 | Corridor | Colour matching | RGB or perceptual (OKLab) | World clamp and the portrait palette clamp |
 | Interface | Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`) | [Interface palette](interface_palette.md) |
 | Interface | Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file | [Interface images](interface_palette.md#images) |
-| Interface | Font | "Game default" (the `Prefs` font), then every font file in `assets/fonts/candidates/` | The project theme's default font ([ui_theme.md](ui_theme.md#font-candidates)) |
 
-The world clamp's dithering switch is the Dithering section header in the Corridor tab. Every control
-applies immediately. The corridor rows and dithering are saved in a preset's corridor part, and the
-interface rows in its interface part.
+Each clamp's dithering switch is the Dithering section header in its own tab, and the two are
+separate. Every control applies immediately. The corridor rows and its dithering are saved in a
+preset's corridor part, and the interface rows and its dithering in its interface part.
 
 ## Start-up arguments
 
@@ -69,9 +70,9 @@ Read once at start-up from the user arguments (after `--`), after the default pr
 |---|---|
 | `--preset=<name or res path>` | Loads a [preset](look_presets.md) before the other arguments, so they can override it |
 | `--world-palette=<res path>`, `--perceptual`, `--dither` | World clamp settings ([palette_clamp.md](palette_clamp.md)) |
+| `--interface-dither` | Turns dithering on for the interface clamp, which `--dither` does not touch |
 | `--corridor-set=property=value` | Sets any `Corridor3D` export (`corridor_settings`). Repeatable |
 | `--monster-image=<res path>` | Every enemy uses this image (`MonsterImages.forced_path`) |
-| `--font=<res path>` | The project theme's default font becomes this font file, replacing the one `Prefs` set ([ui_theme.md](ui_theme.md#font-candidates)) |
 | `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
 | `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
@@ -85,7 +86,11 @@ Read once at start-up from the user arguments (after `--`), after the default pr
 date and time (`src/debug/screenshot.gd`), and prints `SHOT_SAVED:<path>`.
 
 For example, a real fight with a saved preset:
-`<godot> --path . -- --autostart --autofight --shot --shot-delay 5 --nosave --notutorial --preset=candlelit`
+`<godot> --path . -- --autostart --autofight --shot --shot-delay 6 --nosave --notutorial --preset=candlelit > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt`
+
+The redirect keeps the Godot output out of an agent's context; the `PreToolUse` hook in
+`.claude/settings.json` requires it. A delay under about 6 seconds catches the corridor
+approach instead of the fight.
 
 ## Public API
 
@@ -96,17 +101,17 @@ For example, a real fight with a saved preset:
 | `panels_open_changed` (signal) | Emitted with true when the panel opens and false when it closes |
 | `corridor_settings`, `environment_settings` | Corridor exports and corridor camera Environment properties (property -> value), applied when a corridor is built |
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
-| `set_ui_font(path: String)`, `restore_default_font()`, `ui_font` | Use this font file as the project theme's default font, or put the theme's own font back; `ui_font` is the chosen path, or `''` when the theme's own font is in use |
 | `set_interface_palette(path: String)`, `interface_palette` | Apply an interface palette file; `''` goes back to the default colours. Also recolours statuses in the current fight |
 | `set_portrait_palette(choice: String)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path |
 | `interface_palette_changed` (signal) | Emitted after an interface palette is applied or reset; `NamedColourRect` copies its colour again |
 | `write_corridor_palette(file)`, `read_corridor_palette(file)` | The `corridor_palette` section of a [preset](look_presets.md)'s corridor part |
 | `write_interface_palettes(file)`, `read_interface_palettes(file)` | The `interface_palette` section of a preset's interface part |
-| `reset_palettes()` | Every palette choice, matching, dithering and the font back to their defaults |
+| `reset_palettes()` | Every palette choice, matching and both dithering switches back to their defaults |
 | `write_corridor_look(file)`, `read_corridor_look(file)`, `reset_look()` | The corridor part of a preset, and the corridor look defaults |
 | `world_palette`, `world_material` | The world clamp palette path (`''` when off) and the corridor look material corridors are drawn through |
 | `look_defaults() -> Dictionary`, `scene_values()` | Look shader uniform defaults, read from the shader code; the corridor scene's own light and Environment values |
 | `set_dithering(on)`, `is_dithering()` | The world clamp's dithering switch, kept in step with the panel |
+| `set_interface_dithering(on)`, `is_interface_dithering()` | The interface clamp's dithering switch, separate from the world clamp's |
 | `set_world_palette(path: String)` | Clamp the combat corridor to this palette file; `''` turns it off |
 | `cycle_palette(step: int)`, `cycle_interface_palette(step: int)`, `cycle_portrait_palette(step: int)` | Select the next (`1`) or previous (`-1`) world, interface or portrait palette |
 | `shortlist_palette()` | Move the selected world palette into `SHORTLIST_DIR` |

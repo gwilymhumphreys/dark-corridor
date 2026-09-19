@@ -80,7 +80,7 @@ Screenshot commands (Godot exe path in [`../handoff.md`](../handoff.md)):
 
 ```
 # A real fight under a look and a world palette
-<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --monster-image=res://assets/monsters/cut_out/bone_golem.png --look=res://assets/looks/<name>.cfg --world-palette=<path>
+<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 6 --monster-image=res://assets/monsters/cut_out/bone_golem.png --look=res://assets/looks/<name>.cfg --world-palette=<path> > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt
 ```
 
 ## Next task: palettes and effects on the interface

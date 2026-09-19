@@ -62,7 +62,7 @@ The owner has seen the made palettes' swatches and accepted their current bright
 - `DebugPanels` start-up arguments: `--world-palette=`, `--perceptual`, `--dither`, `--corridor-set=`,
   `--monster-image=` ([`debug_panel.md`](../systems/debug_panel.md#start-up-arguments)).
 - A real fight screenshot:
-  `<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 5 --monster-image=res://assets/monsters/cut_out/bone_golem.png --world-palette=<path>`.
+  `<godot> --path . -- --autostart --autofight --nosave --notutorial --shot --shot-delay 6 --monster-image=res://assets/monsters/cut_out/bone_golem.png --world-palette=<path> > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt`.
   The Godot exe path is in [`../handoff.md`](../handoff.md).
 - Earlier comparison pages and full-size screenshots are saved locally in `comparisons/` (ignored by
   git). See "Presenting results" below.

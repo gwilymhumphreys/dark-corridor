@@ -74,6 +74,7 @@ text = "Master volume"
 vertical_alignment = 1
 
 [node name="Slider" type="HSlider" parent="Panel/Rows/MasterRow"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -91,6 +92,7 @@ text = "Music volume"
 vertical_alignment = 1
 
 [node name="Slider" type="HSlider" parent="Panel/Rows/MusicRow"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -108,6 +110,7 @@ text = "Effects volume"
 vertical_alignment = 1
 
 [node name="Slider" type="HSlider" parent="Panel/Rows/EffectsRow"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -125,6 +128,7 @@ text = "Fullscreen"
 vertical_alignment = 1
 
 [node name="Check" type="CheckButton" parent="Panel/Rows/FullscreenRow"]
+mouse_default_cursor_shape = 2
 layout_mode = 2
 size_flags_vertical = 1
 focus_mode = 0
@@ -144,6 +148,7 @@ text = "Mute when unfocused"
 vertical_alignment = 1
 
 [node name="Check" type="CheckButton" parent="Panel/Rows/MuteRow"]
+mouse_default_cursor_shape = 2
 layout_mode = 2
 size_flags_vertical = 1
 focus_mode = 0
@@ -152,6 +157,7 @@ focus_mode = 0
 script = ExtResource("2")
 
 [node name="BackButton" type="Button" parent="Panel"]
+mouse_default_cursor_shape = 2
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5

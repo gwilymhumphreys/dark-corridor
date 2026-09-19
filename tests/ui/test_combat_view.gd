@@ -279,6 +279,33 @@ func test_an_item_created_during_the_fight_gets_a_cell_marked_temporary() -> voi
   cm.free()
 
 
+func test_temporary_things_fade_off_the_board_when_the_fight_ends() -> void:
+  # release() (the run screen's call at the end of a fight) starts the fade on everything that
+  # only existed for this fight: a created item's cell and a summon token's slot. The logic keeps
+  # both until the Combat manager's teardown, so the view drops them itself.
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(1000.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [])
+  cm.add_item(p, ItemCatalog.FLESH_CHUNK)
+  cm.add_actor(_spawn(20.0, [FixtureItems.attack()]), true)   # a combat-scoped summon token
+  view._process(0.0)
+  var chunk: Item = p.board[1]
+  assert_true(view._player_cells.has(chunk), 'the created item has a cell during the fight')
+  assert_eq(view._ally_slots.size(), 1, 'the token has a slot during the fight')
+  view.release()
+  assert_false(view._player_cells.has(chunk), 'the created item loses its cell at the end of the fight')
+  assert_eq(view._ally_slots.size(), 0, 'and the token loses its slot')
+  assert_true(chunk in p.board, 'the item itself is still on the board until the fight is torn down')
+  view._process(0.0)
+  assert_false(view._player_cells.has(chunk), 'the per-frame sync does not rebuild a faded cell')
+  assert_true(view._player_cells.has(p.board[0]), 'the drafted item keeps its cell')
+  cm.free()
+
+
 func test_a_thrown_consumable_starts_from_its_slot() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)

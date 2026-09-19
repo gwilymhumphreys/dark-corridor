@@ -22,16 +22,17 @@ const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overl
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 
-enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, SUMMARY, DRAFTING }
+enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING }
 
 var _run: RunManager
 var _cm: CombatManager
 var _view: CombatView   # the swappable surface — framed today, full-screen drops in here
-var _log: CombatLog     # the live fight's observation log; retained past teardown for the summary
+var _log: CombatLog       # the live fight's observation log
+var _last_log: CombatLog  # the last finished fight's log — what the Report button shows
 var _draft: DraftOverlay
 var _choice: ChoiceOverlay
 var _event: EventOverlay
-var _summary: CombatSummary
+var _summary: CombatSummary   # the combat report panel while it is open; null while hidden
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
@@ -44,6 +45,7 @@ var _settings: SettingsScreen = null
 @onready var _map: MapStrip = $HUD/Sections/Info/MapStrip
 @onready var _stats: CombatStatsReadout = $HUD/StatsReadout
 @onready var _gold: Label = $HUD/Sections/Info/GoldReadout
+@onready var _report_button: Button = $HUD/Sections/Info/ReportButton
 
 
 func _ready() -> void:
@@ -55,6 +57,7 @@ func _ready() -> void:
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
   DebugPanels.panels_open_changed.connect(_on_debug_panels_open_changed)
   _seed_demo_allies()   # dev hook (`--allies N`): populate the ally slots for inspection
+  _report_button.pressed.connect(_toggle_report)
   _map.setup(RunMap.TOTAL_BEATS, _run.position)
   _refresh_gold()       # seed the HUD from run-state (covers a resumed run's banked gold)
   _enter_beat()
@@ -74,6 +77,8 @@ func _seed_demo_allies() -> void:
 
 
 func _exit_tree() -> void:
+  _log = null
+  _last_log = null   # CLAUDE.md runtime cleanup: the report's data goes with the screen
   if Game.battle_speed_changed.is_connected(_on_battle_speed_changed):
     Game.battle_speed_changed.disconnect(_on_battle_speed_changed)
   if DebugPanels.panels_open_changed.is_connected(_on_debug_panels_open_changed):
@@ -208,15 +213,13 @@ func _physics_process(delta: float) -> void:
         # the corridor under the reward panel. Stop drawing them now.
         _view.release()
         _stats.hide()
-        var won: bool = _cm.player_won()
         _state = State.IDLE
-        # On a WON fight that isn't the run's last beat, show the post-fight summary before the
-        # draft (it parks the FSM, like the draft/event overlays). On a loss — or the final
-        # win — the run has ended; skip straight on (Game swaps to the death/win screen).
-        if won and not _run.is_ended():
-          _show_summary()
-        else:
-          _after_beat()
+        # The fight's log becomes the one the Report button shows. Nothing parks here: the
+        # run goes straight on to the reward draft, and the player reads the report when
+        # they want to (docs/systems/combat_log.md).
+        _last_log = _log
+        _report_button.show()
+        _after_beat()
       else:
         _cm.tick(delta)
         _stats.update_from(_log)
@@ -235,8 +238,8 @@ func _on_battle_speed_changed(speed: float) -> void:
     _cm.timekeeper.set_base_scale(speed)
 
 
-# Item tooltips are shown whenever a combat view is up: during the approach, the fight, the summary,
-# the reward draft and events (docs/systems/tooltips.md). They are hidden only while the pause menu is open.
+# Item tooltips are shown whenever a combat view is up: during the approach, the fight, the combat
+# report, the reward draft and events (docs/systems/tooltips.md). They are hidden only while the pause menu is open.
 # Slow-mo-on-hover intent (docs/systems/ui_layout.md "one verb"): while fighting, hovering any
 # inspectable — a board item (either side) or a potion — asks the Combat manager to slow the clock
 # (both sides) to read it.
@@ -253,7 +256,7 @@ func _process(_delta: float) -> void:
 
 
 # The item the tooltip should describe: a reward icon on the draft panel first, otherwise a board
-# item — but not one hidden behind the draft panel (in the corridor area) or the summary panel.
+# item — but not one hidden behind the draft panel (in the corridor area) or the combat report.
 func _inspection_target(mouse: Vector2) -> Dictionary:
   if _draft != null:
     var reward: Dictionary = _draft.inspectable_at(mouse)
@@ -379,21 +382,31 @@ func _after_beat() -> void:
     _advance()
 
 
-# The post-fight summary (docs/systems/combat_log.md): raise the damage report + event log
-# and park until Continue. Reads the retained _log (the CombatManager may already be torn
-# down — our ref keeps the data alive). Only reached on a won, non-final fight.
-func _show_summary() -> void:
-  _state = State.SUMMARY
+# The combat report (docs/systems/combat_log.md): the damage report + event log of the last
+# finished fight, raised and dismissed by the Report button in the information section. It
+# parks nothing — the run carries on behind it. The log is held in _last_log, so the report
+# still reads after the CombatManager has been torn down.
+func _toggle_report() -> void:
+  if _summary != null:
+    _hide_report()
+  else:
+    _show_report()
+
+
+func _show_report() -> void:
+  if _last_log == null:
+    return
   _summary = COMBAT_SUMMARY.instantiate()
-  add_child(_summary)   # on top of the combat view
-  _summary.continue_pressed.connect(_on_summary_continued)
-  _summary.setup(_log)
+  add_child(_summary)   # on top of the combat view; the HUD CanvasLayer stays above it
+  _summary.close_pressed.connect(_hide_report)
+  _summary.setup(_last_log)
 
 
-func _on_summary_continued() -> void:
+func _hide_report() -> void:
+  if _summary == null:
+    return
   _summary.queue_free()
   _summary = null
-  _after_beat()
 
 
 # The draft is a player choice (a draft-pick intent): raise the 1-of-3 overlay and
@@ -432,6 +445,7 @@ func _refresh_gold() -> void:
 
 
 func _advance() -> void:
+  _hide_report()   # the next beat is starting; the report is back behind its button
   _teardown_combat_view()
   _run.advance()
   _map.mark_position(_run.position)
@@ -442,7 +456,7 @@ func _advance() -> void:
 
 func _build_combat_view() -> void:
   # Attach a fresh observation log to the fight (docs/systems/combat_log.md). We hold our own
-  # ref so the post-fight summary can read it after the CombatManager teardown nulls its side.
+  # ref so the combat report can read it after the CombatManager teardown nulls its side.
   _log = CombatLog.new()
   _cm.combat_log = _log
   _mount_view(_cm)
@@ -475,7 +489,7 @@ func _on_potion_thrown(index: int) -> void:
 
 func _teardown_combat_view() -> void:
   _stats.hide()
-  _log = null   # drop our ref; the summary (if any) is done, so the log can free
+  _log = null   # drop the live ref; _last_log keeps the finished fight's numbers for the report
   if _view != null:
     _view.release()      # stop the VFX wall reading the CombatManager we're about to free
     _view.queue_free()   # deferred — the view holds render resources (CLAUDE.md)

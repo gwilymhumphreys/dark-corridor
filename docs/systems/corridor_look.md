@@ -1,7 +1,7 @@
 # Corridor look
 
 A dev-only post-processing shader and panel for trying looks on the corridor walls and enemy images:
-colour grading, a colour ramp, halftone, hatching, edge lines, bloom, screen effects, plus the corridor
+colour grading, a colour ramp, halftone, hatching, bloom, screen effects, plus the corridor
 light and camera Environment. Every shader effect is off by default. Settings are saved in the corridor part
 of a [look preset](look_presets.md).
 
@@ -24,13 +24,11 @@ of a [look preset](look_presets.md).
 
 | Group | Does |
 |---|---|
-| Warp | Bulges the image like a curved screen; corners go black |
 | Pixelate | Draws the image in larger square pixels; the palette dithering follows the pixel size |
 | Colour fringe | Separates red and blue towards the edges |
 | Bloom | Adds a blurred glow of pixels brighter than a threshold |
 | Grade | Exposure, contrast around a pivot, saturation, gamma, black and white points, tint |
 | Colour ramp | Replaces each pixel by brightness with a dark, middle and light colour |
-| Edges | Draws lines where brightness changes sharply |
 | Halftone | Dots on a plain ground, larger where brighter |
 | Hatching | Line layers in three directions by brightness: light lines on dark, or dark lines over the image |
 | Vignette | Darkens towards the edges |
@@ -46,14 +44,16 @@ of a [look preset](look_presets.md).
   `<group>_on`, a float gets a slider using its `hint_range`, an int with `hint_enum` a dropdown, a bool a
   switch, a `source_color` a colour button. Adding a uniform to a group adds its control with no panel
   changes. The Dithering header switch is the world clamp's `dithering` switch (`DebugPanels.set_dithering`),
-  which Backspace also sets. A section starts expanded when its effect is on; clicking the
+  which Backspace also sets. Every section starts closed, whether or not its effect is on; clicking the
   title shows or hides it.
 - Defaults come from the shader and include code (`DebugPanels.look_defaults()`), because the rendering
   server does not report them when running headless. `PALETTE_UNIFORMS` (colour count, matching, the
   dithering switch) are left out; `DebugPanels` writes them in the preset's `corridor_palette` section.
-- Two more sections set the corridor: **Light** (`Corridor3D` exports) and **Environment** (properties of
-  the corridor camera's `Environment`, including Godot's glow and fog). Their lists are
-  `CORRIDOR_PROPERTIES` and `ENVIRONMENT_PROPERTIES` in `look_panel.gd`. Changes go into
+- Three more sections set the corridor: **Light** (`Corridor3D` exports), **Environment** (properties of
+  the corridor camera's `Environment`: Godot's glow and the tonemap exposure) and **Fog** (the same
+  `Environment`'s fog properties, with the `fog_` prefix dropped from the row labels). Their lists are
+  `CORRIDOR_PROPERTIES`, `ENVIRONMENT_PROPERTIES` and `FOG_PROPERTIES` in `look_panel.gd`; presets and
+  `scene_values()` use `environment_properties()`, which is the last two merged. Changes go into
   `DebugPanels.corridor_settings` and `environment_settings` and are applied to every corridor in the
   `Corridor3D.GROUP` group; corridors built later apply them too.
 - A group with no settings gets no section. The Print tab ([print_frame.md](print_frame.md)) and the
@@ -68,7 +68,7 @@ the corridor scene's own values, and leaves the palettes and the other parts unc
 For a screenshot of a saved preset (arguments in [debug_panel.md](debug_panel.md#start-up-arguments)):
 
 ```
-<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --still --monster --shot-delay=3 --preset=<name>
+<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --still --monster --shot-delay=3 --preset=<name> > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt
 ```
 
 Tests: `tests/debug/test_corridor_look.gd`.

@@ -5,44 +5,60 @@ portraits, HP bars, item value pills) separately from the [corridor look](corrid
 and panels, and the corridor, are not affected.
 
 **Location:** `src/shaders/interface_look.gdshader`, `src/shaders/look_effects.gdshaderinc` (the effects
-shared with the corridor look), `src/shaders/interface_look_material.tres`, `InterfaceLook`
+shared with the corridor look), `src/shaders/interface_look_material.tres` and
+`src/shaders/interface_element_material.tres`, `InterfaceLook`
 (`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the Interface tab in
 `src/debug/interface_look_panel.*`. Saved in the interface part of a [look preset](look_presets.md).
 
 ## How it works
 
-- Every interface image node uses the same material file, `interface_look_material.tres`, set in its
-  scene. Godot shares one loaded copy of the file, and `InterfaceLook.material` holds it, so a setting
-  changed there changes every image at once.
+- There are two material files on the same shader, each set in the scene of the nodes that use it.
+  Godot shares one loaded copy of each file, so a setting changed on it changes every node using it
+  at once.
+  - `interface_look_material.tres` (`InterfaceLook.material`) draws the pictures: icons and portraits.
+  - `interface_element_material.tres` (`InterfaceLook.element_material`) draws the interface elements
+    that are not pictures: the item value pills and the HP bars. These are filled with colours from the
+    [interface palette](interface_palette.md), so the effects that would move a pixel off its palette
+    colour are kept off on this material: grade, colour ramp, posterize and colour fringe
+    (`ELEMENT_OFF_UNIFORMS`), and no palette clamp colours are written to it, so its colour count stays
+    0. Halftone, hatching, vignette, grain, scanlines, pixelate and picture wear all apply.
+- Every setting goes through `InterfaceLook.set_setting()`, which writes it to both materials except
+  for the switches above. There is one Interface tab and one set of settings; the split is in code, not
+  in the panel or the preset.
 - The shader includes `look_effects.gdshaderinc`, which holds the effect settings and functions used by
   both looks under the same names. That is what lets settings be copied between the two looks.
-- Each node is drawn on its own, so effects work inside the node's rectangle only. Effects that need the
-  whole screen are left out: warp, vignette and bloom (`UNUSED_GROUPS` in `interface_look.gd`), and the
-  palette dithering. Glow on specific nodes is a separate system, [interface glow](interface_glow.md).
-  Its settings are in this tab's Glow section and saved in the preset's `interface_glow` section.
+- Each node is drawn on its own, so effects work inside the node's rectangle only. Bloom is left out
+  for that reason (`UNUSED_GROUPS` in `interface_look.gd`): its glow would be cut off at the node's
+  edge. The vignette is included even though it is per node, so it darkens the corners of each icon or
+  portrait rather than the corners of the screen. Glow on specific nodes is a separate system,
+  [interface glow](interface_glow.md), with no section in this tab.
 - The shader keeps the node's alpha and colour (a `ColorRect`'s colour, modulate), so HP bar colours and
   fades still work.
 - Distances are in screen pixels, as in the corridor look. Halftone dots, hatching lines and grain are laid
   out from the node's corner, so they move with an animated node; scanlines are laid out on the screen.
 - The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the portrait palette
-  ([interface_palette.md](interface_palette.md#images)). It runs after the look effects and before picture
-  wear. Its settings are not look settings.
-- The material is also present in release builds, with every effect off.
+  ([interface_palette.md](interface_palette.md#images)) and are written to the pictures' material only. It runs after the look effects and before picture
+  wear. Its palette, colour matching and on/off dithering switch are set by `DebugPanels` and are not
+  look settings; its dither pattern, size and supersample are, and appear in the Dithering section.
+  The interface dithering switch is separate from the corridor's, so Backspace and `--dither` do not
+  touch it.
+- Both materials are also present in release builds, with every effect off.
 
-| Element | Scene and node |
-|---|---|
-| Item icons (combat boards, draft rewards) | `item_cell.tscn` `Frame/Icon` |
-| Potion icons | `potion_slot.tscn` `Icon` |
-| Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` |
-| Character portraits | `combat_view_framed.tscn` player portrait `Image`, `ally_slot.tscn` `Left/Portrait/Image`, `character_card.tscn` `Portrait/Image` |
-| HP bars | `Background` and `Fill` under `HP` in `combat_view_framed.tscn`, `ally_slot.tscn`, `enemy_hud.tscn` |
-| Item value pills (the numbers on items) | `value_pill.tscn` root panel and its `Value` label |
+| Element | Scene and node | Material |
+|---|---|---|
+| Item icons (combat boards, draft rewards) | `item_cell.tscn` `Frame/Icon` | images |
+| Potion icons | `potion_slot.tscn` `Icon` | images |
+| Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` | images |
+| Character portraits | `combat_view_framed.tscn` player portrait `Image`, `ally_slot.tscn` `Left/Portrait/Image`, `character_card.tscn` `Portrait/Image` | images |
+| HP bars | `Background` and `Fill` under `HP` in `combat_view_framed.tscn`, `ally_slot.tscn`, `enemy_hud.tscn` | elements |
+| Item value pills (the numbers on items) | `value_pill.tscn` root panel and its `Value` label | elements |
 
 On a pill's number the shader runs on each letter as drawn from the font's texture, so dot, line and
 speck patterns are laid out from each letter rather than from the pill's corner.
 
-To add an element, set its node's `material` to `interface_look_material.tres` in the scene and add it to
-`SCENE_NODES` in the test. A node with its own material needs a child node for the image instead.
+To add an element, set its node's `material` to `interface_look_material.tres` or
+`interface_element_material.tres` in the scene and add it to `SCENE_NODES` or `ELEMENT_SCENE_NODES` in
+the test. A node with its own material needs a child node for the image instead.
 
 ## Picture wear
 
@@ -72,7 +88,7 @@ F2 opens the [debug panel](debug_panel.md) on this tab. It is built like the
 | Button | Does |
 |---|---|
 | Copy from corridor look | Every interface look setting the corridor look also has takes the corridor look's value |
-| Copy to corridor look | The reverse; corridor-only settings (warp, bloom, vignette, dithering) are left alone |
+| Copy to corridor look | The reverse; corridor-only settings (bloom) and each look's own dithering switch are left alone |
 
 In a preset, the interface part has an `interface_shader` section listing every setting and an
 `interface_glow` section for the glow settings.
@@ -81,8 +97,10 @@ In a preset, the interface part has an `interface_shader` section listing every 
 
 | Member | Use |
 |---|---|
-| `InterfaceLook.material` | The shared material |
-| `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the include code |
+| `InterfaceLook.material` | The material the pictures are drawn through |
+| `InterfaceLook.element_material` | The material the interface elements that are not pictures are drawn through |
+| `InterfaceLook.set_setting(uniform, value)` | Set one setting on both materials |
+| `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the shader and include code (the shared effects, the palette clamp's dither settings, picture wear) |
 | `InterfaceLook.reset()`, `write_look(file)`, `read_look(file)` | Reset, and the interface part of a preset |
 | `InterfaceLook.copy_from_corridor()`, `copy_to_corridor()` | Copy shared settings between the looks |
 

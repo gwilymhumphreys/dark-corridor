@@ -62,6 +62,10 @@ in here before release.
 | Monster volumes | `assets/monsters/cut_out/` | not recorded yet |
 | UI Bundle (`BlackandWhiteUI.png`) | `assets/ui/` | not recorded yet |
 | Palettes | `assets/palettes/` | not recorded yet |
+| Cursors Pack 3 [RPG, RTS, MMO, TPS], by Wenrexa | `assets/ui/cursors/stone_pointer.png` | https://wenrexa.itch.io/cursors-pack-03 |
+
+Cursors Pack 3 is CC0, so attribution is not required; the row is kept for the
+record. Its itch.io page states that no generative AI was used.
 
 ## Fonts
 

@@ -23,14 +23,6 @@ msgstr "Rot Shepherd"
 msgid "Disgraced Surgeon"
 msgstr "Disgraced Surgeon"
 
-#: src/content/characters/character_catalog.gd
-msgid "Stack Spores, then spend them."
-msgstr "Stack Spores, then spend them."
-
-#: src/content/characters/character_catalog.gd
-msgid "Carve yourself into a churning board of flesh."
-msgstr "Carve yourself into a churning board of flesh."
-
 #: src/content/consumables/consumable_catalog.gd
 msgid "Healing Draught"
 msgstr "Healing Draught"
@@ -572,8 +564,8 @@ msgid "Event log"
 msgstr "Event log"
 
 #: src/scenes/screens/combat_summary.tscn
-msgid "Continue"
-msgstr "Continue"
+msgid "Close"
+msgstr "Close"
 
 #: src/scenes/screens/draft_overlay.gd
 msgid "+{0} gold"
@@ -626,6 +618,10 @@ msgstr "Gold: {0}"
 #: src/scenes/screens/run_screen.tscn
 msgid "Gold: 0"
 msgstr "Gold: 0"
+
+#: src/scenes/screens/run_screen.tscn
+msgid "Report"
+msgstr "Report"
 
 #: src/scenes/screens/settings_screen.tscn
 msgid "Master volume"

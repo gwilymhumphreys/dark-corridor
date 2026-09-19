@@ -23,8 +23,6 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
     if screen._event != null:
       screen._on_event_picked(0)    # the event's binary choice
-    elif screen._summary != null:
-      screen._on_summary_continued()   # dismiss the post-fight summary (a won fight parks here)
     elif screen._draft != null:
       screen._on_draft_picked(0)    # stand in for the player picking the first card
     else:
@@ -39,17 +37,21 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   screen.free()
 
 
-func test_a_won_fight_raises_the_post_fight_summary() -> void:
-  # On a won (non-final) fight the screen parks in SUMMARY before the draft; Continue dismisses it.
+func test_a_finished_fight_offers_its_report_on_the_hud() -> void:
+  # A fight no longer parks the run: it resolves straight on to the draft, and its log stays
+  # available behind the Report button, which toggles the report panel open and shut.
   var screen := _mount_into_fight(1)
   var guard: int = 0
-  while screen._summary == null and Game.phase == GameManagerAutoload.Phase.RUN and guard < 400:
+  while screen._last_log == null and Game.phase == GameManagerAutoload.Phase.RUN and guard < 400:
     screen._physics_process(1.0)
     guard += 1
-  assert_not_null(screen._summary, 'a won fight raises the post-fight summary')
-  assert_eq(screen._state, RunScreen.State.SUMMARY, 'the FSM parks in SUMMARY')
-  screen._on_summary_continued()
-  assert_null(screen._summary, 'Continue dismisses the summary')
+  assert_not_null(screen._last_log, 'the finished fight left its log for the report')
+  assert_true(screen._report_button.visible, 'the Report button is up once a fight has finished')
+  assert_null(screen._summary, 'the report is not raised on its own')
+  screen._toggle_report()
+  assert_not_null(screen._summary, 'the Report button raises the report')
+  screen._toggle_report()
+  assert_null(screen._summary, 'pressing it again puts the report away')
   screen.free()
 
 

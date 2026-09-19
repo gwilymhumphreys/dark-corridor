@@ -1,21 +1,21 @@
 class_name CombatSummary
 extends Control
-## The post-fight summary (docs/systems/combat_log.md): on a won fight (before the draft) it
-## shows the player's per-item damage report + the ordered event-log timeline, read from the
-## fight's CombatLog. It reads the log and emits `continue_pressed` — the run screen forwards
-## that to the rest of the after-beat flow. Writes no game state.
+## The combat report (docs/systems/combat_log.md): the player's per-item damage report + the
+## ordered event-log timeline of the last finished fight, read from its CombatLog. The run
+## screen raises and dismisses it from the Report button on the HUD; Close emits
+## `close_pressed`. It reads the log and writes no game state.
 
-signal continue_pressed
+signal close_pressed
 
 @onready var _rows: GridContainer = $Panel/Margin/Body/Columns/Report/RowsScroll/Rows
 @onready var _status_section: VBoxContainer = $Panel/Margin/Body/Columns/Report/StatusDamage
 @onready var _status_rows: GridContainer = $Panel/Margin/Body/Columns/Report/StatusDamage/StatusRows
 @onready var _events: VBoxContainer = $Panel/Margin/Body/Columns/Log/EventsScroll/Events
-@onready var _continue: Button = $Panel/Margin/Body/Footer/ContinueButton
+@onready var _close: Button = $Panel/Margin/Body/Footer/CloseButton
 
 
 func _ready() -> void:
-  _continue.pressed.connect(_on_continue)
+  _close.pressed.connect(_on_close)
 
 
 ## Populate from the fight's log. Call after the screen is in the tree.
@@ -96,5 +96,5 @@ func _format_event(ev: Dictionary) -> String:
   return t
 
 
-func _on_continue() -> void:
-  continue_pressed.emit()
+func _on_close() -> void:
+  close_pressed.emit()

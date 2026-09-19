@@ -54,8 +54,9 @@ func _has_flag(flag: String) -> bool:
   return flag in OS.get_cmdline_args() or flag in OS.get_cmdline_user_args()
 
 
-## `--shot-delay <seconds>` overrides the default capture delay (e.g. to grab a later
-## fight or the win screen). Defaults to 1.5s (mid first-fight).
+## `--shot-delay <seconds>` overrides the default capture delay. The default of 1.5s
+## lands during the corridor approach, before the first fight starts; pair `--autofight`
+## with about 6s for a mid-fight frame, or longer for a later fight or the win screen.
 func _shot_delay() -> float:
   var args: Array = []
   args.append_array(OS.get_cmdline_args())

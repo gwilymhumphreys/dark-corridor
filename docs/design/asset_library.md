@@ -27,6 +27,7 @@ fragment rather than the exact name.
 | `Free - Raven Fantasy Icons/` | Pixel-art icon set at 16x16, 32x32 and 64x64, plus full spritesheets. Not used in the game at present. |
 | `UI Bundle/` | Interface themes as single sheets, including `BlackandWhiteUI.png`, the one the game uses. |
 | `monsters/` | Painted monster images, sold in dated volumes. Folder names are mojibake from a Japanese archive, so search by file name rather than browsing. |
+| `StoneCursorWenrexa/` | Twenty stone mouse cursors at 32x32, as `PNG/01.png` to `20.png` and the same set as `.ico`. `01.png` is the plain pointer the game uses. |
 | `palettes/` | GIMP `.gpl` palettes. The ones in use are copied into `assets/palettes/`. |
 | `example games/` | Screenshots from Dungeon Master and Eye of the Beholder, kept as reference for the corridor look. |
 | `dark-corridor.aseprite`, `ui.aseprite` | The owner's own drawings. |
@@ -55,6 +56,7 @@ no-background versions so the worn frame shows behind the figure.
 | Item, potion, status and keyword icons | `assets/icons/items/`, `assets/icons/potions/`, `assets/icons/statuses/`, `assets/icons/keywords/` |
 | Monster images, cut out of their black backgrounds | `assets/monsters/cut_out/` |
 | Interface sheets | `assets/ui/` |
+| Mouse cursors | `assets/ui/cursors/` |
 | Palettes | `assets/palettes/` |
 
 Copy the file, rename it to `snake_case` (keeping the `_nb` suffix, so

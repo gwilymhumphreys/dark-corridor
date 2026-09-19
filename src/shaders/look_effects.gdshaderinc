@@ -4,15 +4,9 @@
 // can be copied from one look to the other.
 //
 // Each effect is a uniform group whose first uniform is `<group>_on`; the look panels build one section
-// per group. Effects that read the image at other positions (warp, pixelate, colour fringe, bloom,
-// edges) sample in each shader, because TEXTURE cannot be passed to a function. The interface look does
-// not use warp, bloom or vignette, and its panel does not show them.
-
-group_uniforms warp;
-uniform bool warp_on = false;
-// How far the edges bulge outward, like a curved screen. Corners go black.
-uniform float warp_amount : hint_range(0.0, 0.5, 0.005) = 0.08;
-group_uniforms;
+// per group. Effects that read the image at other positions (pixelate, colour fringe, bloom)
+// sample in each shader, because TEXTURE cannot be passed to a function. The interface look does not
+// use bloom, and its panel does not show it.
 
 group_uniforms pixelate;
 uniform bool pixelate_on = false;
@@ -60,16 +54,6 @@ uniform vec3 colour_ramp_light : source_color = vec3(1.0, 0.95, 0.85);
 // The brightness that maps to the middle colour.
 uniform float colour_ramp_middle_point : hint_range(0.01, 0.99, 0.01) = 0.3;
 uniform float colour_ramp_amount : hint_range(0.0, 1.0, 0.01) = 1.0;
-group_uniforms;
-
-group_uniforms edges;
-uniform bool edges_on = false;
-// How sharp a brightness change must be to draw a line.
-uniform float edges_threshold : hint_range(0.0, 2.0, 0.01) = 0.3;
-// Line width, in screen pixels.
-uniform float edges_width : hint_range(0.5, 6.0, 0.1) = 1.0;
-uniform vec3 edges_colour : source_color = vec3(0.0, 0.0, 0.0);
-uniform float edges_amount : hint_range(0.0, 1.0, 0.01) = 1.0;
 group_uniforms;
 
 group_uniforms halftone;
@@ -186,14 +170,6 @@ vec3 apply_colour_ramp(vec3 colour) {
     mapped = mix(colour_ramp_middle, colour_ramp_light, (level - colour_ramp_middle_point) / (1.0 - colour_ramp_middle_point));
   }
   return mix(colour, mapped, colour_ramp_amount);
-}
-
-
-// `across` and `down` are the horizontal and vertical brightness changes (a Sobel filter), sampled by
-// the shader.
-vec3 apply_edges(vec3 colour, float across, float down) {
-  float edge = smoothstep(edges_threshold, edges_threshold + 0.1, length(vec2(across, down)));
-  return mix(colour, edges_colour, edge * edges_amount);
 }
 
 

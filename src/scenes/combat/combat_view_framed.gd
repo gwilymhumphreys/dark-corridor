@@ -20,6 +20,7 @@ const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
 const PORTRAIT_MIN_SIZE: float = 40.0   # the player portrait shrinks to fit its section, down to this
 const ENEMY_FADE_IN: float = 0.25       # seconds an enemy HUD takes to fade up when the fight starts
+const TEMPORARY_FADE_OUT: float = 0.45  # seconds a temporary item's cell / a token's slot takes to fade away at fight end
 # A big hit pauses the fight and shakes this view, both growing with VfxDriver.big_hit_strength.
 const HIT_PAUSE_MIN: float = 0.05     # real seconds
 const HIT_PAUSE_MAX: float = 0.15
@@ -57,6 +58,7 @@ var _cluster: TooltipCluster = null   # the floating item tooltip (its own Canva
 var _shake_tween: Tween
 var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the fight's seeded one
 var _enemies_shown: bool = false   # false through the approach: the enemy HUDs stay hidden
+var _fading_out: Dictionary = {}   # Item/Actor -> true while its widget fades away at fight end; not rebuilt
 
 
 func _ready() -> void:
@@ -163,7 +165,7 @@ func _sync_player_items() -> void:
       _player_items.remove_child(cell)
       cell.queue_free()
   for item: Item in _player.board:
-    if not _player_cells.has(item):
+    if not _player_cells.has(item) and not _fading_out.has(item):
       _add_player_cell(item)
 
 
@@ -200,7 +202,7 @@ func _sync_rosters() -> void:
         hud.fade_in(ENEMY_FADE_IN)
       _enemy_huds[e] = hud
   for a in player_side:
-    if a != _player and not _ally_slots.has(a):   # the player keeps its centre-bottom portrait
+    if a != _player and not _ally_slots.has(a) and not _fading_out.has(a):   # the player keeps its centre-bottom portrait
       var slot: AllySlot = ALLY_SLOT.instantiate()
       _pick_ally_box().add_child(slot)
       slot.setup(a, _cm.timekeeper)
@@ -300,11 +302,51 @@ func release() -> void:
   _vfx.combat = null
   _corridor.show_hits([], 0.0)
   _set_cooldowns_shown(false)   # the fight is over, so clear the fills left at its last moment
+  _fade_out_temporary()         # the created items and summon tokens leave with the fight
   _throw_origins.clear()
   # Drop the hovered Item ref BEFORE the run frees the CombatManager + its items (the Actor↔Item
   # cycle is broken at dissolve() — the cluster must not retain an Item across teardown).
   if _cluster != null:
     _cluster.hide_cluster()
+
+
+## Fade away everything that only existed for this fight: each created item's cell on the player's
+## board (CombatManager.is_created_item) and each summon token's ally slot. The logic keeps them
+## until the Combat manager's teardown at the next advance, so without this they would sit on the
+## board through the reward draft and then vanish with the view. The widget is dropped from the
+## lookup maps at once — it is no longer hoverable or a VFX target — and `_fading_out` stops the
+## per-frame sync rebuilding it while it fades.
+func _fade_out_temporary() -> void:
+  if _cm == null:
+    return
+  for item: Item in _player_cells.keys():
+    if _cm.is_created_item(item):
+      var cell: ItemCell = _player_cells[item]
+      cell.item = null   # stop it reading an Item the fight is about to dissolve
+      _player_cells.erase(item)
+      _fading_out[item] = true
+      _fade_out_and_free(cell)
+  var allies: Array = _cm.allies
+  for actor: Actor in _ally_slots.keys():
+    if actor != _player and actor not in allies:   # on the player's side but not run-scoped: a summon token
+      _fading_out[actor] = true
+      _fade_out_and_free(_ally_slots[actor])
+      _ally_slots.erase(actor)
+
+
+## Fade a widget out where it stands and free it. It keeps its place in its container until it is
+## freed, so the board reflows once at the end rather than snapping the moment the fade starts.
+## The scale runs on the visual-only offset transform (CLAUDE.md), so the container keeps laying
+## the widget out at its full size while it shrinks.
+func _fade_out_and_free(widget: Control) -> void:
+  widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  widget.offset_transform_enabled = true
+  widget.offset_transform_pivot_ratio = Vector2(0.5, 0.5)
+  var tween: Tween = create_tween()
+  tween.set_parallel()
+  tween.tween_property(widget, 'modulate:a', 0.0, TEMPORARY_FADE_OUT)
+  tween.tween_property(widget, 'offset_transform_scale', Vector2(0.7, 0.7), TEMPORARY_FADE_OUT).set_ease(Tween.EASE_IN)
+  tween.chain().tween_callback(widget.queue_free)
 
 
 func _set_cooldowns_shown(shown: bool) -> void:
@@ -330,6 +372,7 @@ func _exit_tree() -> void:
   _enemy_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()
+  _fading_out.clear()
   _throw_origins.clear()
   _cluster = null
 

@@ -244,7 +244,7 @@ main.tscn  (Main, Node)                 main_controller swaps screens off Game.p
    │   │     ├─ Portrait · HP · PotionSlots
    │   │     └─ combat_stats_readout   live Dealt · Taken (reads the CombatLog)
    │   └─ OverlayLayer       draft / event / 1D-map (choice overlay dormant)
-   ├─ combat_summary.tscn    post-fight per-item report + event timeline (reads the CombatLog)
+   ├─ combat_summary.tscn    the combat report: per-item report + event timeline (reads the CombatLog)
    └─ outcome_screen.tscn    death + win
 ```
 

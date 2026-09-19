@@ -17,7 +17,7 @@ main.tscn (Main) ── main_controller.gd
 ```
 
 **Title overlays.** Start Run raises **`character_select.tscn`** (one `character_card`
-per `CharacterCatalog.ids()` — personal name + role subtitle + blurb + a starting-kit hint; a pick →
+per `CharacterCatalog.ids()` — personal name + role subtitle + a starting-kit hint; a pick →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below). Dev hooks skip
 the menu: `--autostart` (default-character run), `--select`, `--settings`.
@@ -41,7 +41,7 @@ screen is the one real-time client: each `_physics_process` it calls
 ```
 IDLE → enter beat (auto-rolled or fixed — a live encounter already) → begin beat
                     begin:  event?  EVENTING (await option pick) → after-beat
-                            fight?  APPROACHING → FIGHTING ─(resolved)→ [won & run continues? SUMMARY (await Continue)] → after-beat
+                            fight?  APPROACHING → FIGHTING ─(resolved)→ after-beat
                             rest?   resolves on begin → after-beat
 after-beat: pending draft? DRAFTING (await pick OR skip-for-gold) ; else advance → enter beat
 run_ended → Game → outcome screen
@@ -58,18 +58,22 @@ It **polls `cm.is_resolved()`** (never reacts inside the `resolved` signal), so 
 fight is torn down + advanced safely — the run fulfils the outcome (reward / run-end)
 via its own signal chain *during* the resolving tick. Slow-mo-on-hover is a
 `cm.request_slowmo` intent, only while FIGHTING. The item tooltip is fed every frame a combat view
-exists (approach, fight, summary, draft) and hidden only while the pause menu is open
+exists (approach, fight, report, draft) and hidden only while the pause menu is open
 ([tooltips.md](tooltips.md)).
 
 **Combat log surfaces** (the watchable read of [combat_log.md](combat_log.md)). On building the
 fight the screen creates a `CombatLog` and assigns it to the live `CombatManager.combat_log`,
-keeping its own ref (`_log`) so the summary survives the manager's teardown. A small
-`combat_stats_readout.tscn` on the HUD shows the player's running **Dealt · Taken** (net),
-refreshed each tick, visible only while FIGHTING. On a **won, non-final** fight the FSM parks in
-**SUMMARY** — `combat_summary.tscn` (the per-item damage report from `summary(PLAYER)` + the
-event-log timeline from `events` + a Continue button) — *before* the draft; **Continue** resumes
-to `after-beat`. A loss or the **final** win ends the run instead (the outcome screen), so the
-summary is skipped there.
+keeping its own ref (`_log`). A small `combat_stats_readout.tscn` on the HUD shows the player's
+running **Dealt · Taken** (net), refreshed each tick, visible only while FIGHTING. When a fight
+resolves, its log becomes `_last_log` — the fight the **Report** button shows — and the run goes
+straight on to `after-beat`; nothing parks. Holding `_last_log` separately from `_log` is what lets
+the report outlive the `CombatManager`'s teardown at the next advance.
+
+**Combat report** — `combat_summary.tscn` (the per-item damage report from `summary(PLAYER)` + the
+event-log timeline from `events` + a Close button), raised and dismissed by the **Report** button in
+the information section. The button appears once a fight has finished and stays through the beats
+that follow, so the last fight can be read during the draft, an event or the next approach. The run
+keeps running behind the panel; opening the next beat (`_advance`) puts the report away.
 
 **Battle-speed + pause (the player's clock controls).** Both are presentation-only —
 the headless autotest mounts none of this:
@@ -137,6 +141,12 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   the board every frame (`_sync_player_items`), so an item created during the fight gains a cell with a
   "Temporary" tag on its bottom edge, and a decayed or consumed item loses its cell,
   with the **potion slots** (`potion_slot.tscn`, the potion's icon on the potion colour) above it.
+  **Temporary things fade out when the fight ends.** A created item stays on the board and a summon
+  token stays on the roster until the `CombatManager` is torn down at the next advance, so
+  `release()` drops them from the view itself: each created item's cell
+  (`CombatManager.is_created_item`) and each token's ally slot is taken out of the lookup maps at
+  once — no longer hoverable or a VFX target — and fades and shrinks away over `TEMPORARY_FADE_OUT`
+  seconds before freeing. The per-frame sync does not rebuild a widget that is fading.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (the portrait,
   and beside it a column of the name, the HP bar + status numbers, and the item cells, whose size
   shrinks so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
@@ -211,8 +221,9 @@ HUD and item tooltips keep working around them. An event beat has no fight, so t
 builds the combat view for it with no `CombatManager` (`bind(null, ...)`: the player's side, no
 enemies). When a fight resolves, the run screen calls `view.release()` at once so the last hits'
 numbers and rings don't stay frozen in the corridor under the reward panel. `release()` also clears the item
-cells' cooldown fills (`ItemCell.show_cooldown`), and a view built without a fight never shows them. The choice overlay and
-the post-fight summary are still full-screen.
+cells' cooldown fills (`ItemCell.show_cooldown`) and fades away the fight's temporary things (below).
+A view built without a fight never shows the fills. The choice overlay and the combat report are still
+full-screen.
 
 - **Draft** — `draft_overlay.tscn` shows each reward as an `ItemCell` (the same icon and value
   pills as the board, with a `UIJuice` node) after a fight; hovering one shows the item tooltip, and
@@ -227,6 +238,8 @@ the post-fight summary are still full-screen.
   for off-screen beats; `mark_position` on each advance.
 - **Speed button** — `speed_button.tscn` in the information section: an always-visible
   ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
+- **Report button** — beside the speed button in the information section: hidden until the first
+  fight has finished, then a toggle that raises and hides the combat report of the last fight.
 - **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque
   centered panel (no translucent scrim) + Resume / Settings /
   Quit-to-menu; its full-rect Catcher swallows input so the paused board can't be clicked

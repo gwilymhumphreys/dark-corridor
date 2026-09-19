@@ -1,7 +1,7 @@
 # Look presets
 
 A look preset is one file holding the whole look of the game: corridor look and its palette, interface
-look with its palettes and font, print look and background wear. The default preset is what the game
+look with its palettes, print look and background wear. The default preset is what the game
 starts with; the other presets are looks to compare, and the history keeps every past default.
 
 **Location:** `src/data/look_presets.gd` (class `LookPresets`), the preset bar in `src/debug/preset_bar.*`
@@ -17,7 +17,7 @@ part can be loaded on its own.
 | Part | Sections | Written and read by |
 |---|---|---|
 | Corridor | `corridor_palette` (world palette, colour matching, dithering), `corridor_shader`, `corridor_light`, `corridor_environment` | `DebugPanels.write_corridor_palette` / `read_corridor_palette` ([palette_clamp.md](palette_clamp.md)), `DebugPanels.write_corridor_look` / `read_corridor_look` ([corridor_look.md](corridor_look.md)) |
-| Interface | `interface_palette` (interface and portrait palettes, font), `interface_shader`, `interface_glow` | `DebugPanels.write_interface_palettes` / `read_interface_palettes` ([interface_palette.md](interface_palette.md)), `InterfaceLook.write_look` / `read_look` ([interface_look.md](interface_look.md)) |
+| Interface | `interface_palette` (interface and portrait palettes, dithering switch), `interface_shader`, `interface_glow` | `DebugPanels.write_interface_palettes` / `read_interface_palettes` ([interface_palette.md](interface_palette.md)), `InterfaceLook.write_look` / `read_look` ([interface_look.md](interface_look.md)) |
 | Print | `print_panel`, `print_frame`, `print_layout` | `PrintLook.write_print_look` / `read_print_look` ([print_frame.md](print_frame.md)) |
 | Background | `print_background` | `PrintLook.write_background_look` / `read_background_look` ([background_wear.md](background_wear.md)) |
 

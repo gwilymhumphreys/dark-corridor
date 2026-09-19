@@ -6,7 +6,7 @@ extends Node
 ## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
 ##
 ## One panel with a preset bar and four tabs: corridor look with its palette (F1), interface look with
-## its palettes and font (F2), print look (F3) and background wear (F4); each key opens its tab, in
+## its palettes (F2), print look (F3) and background wear (F4); each key opens its tab, in
 ## debug builds only. Choices last for the session only, unless saved as a look preset
 ## (docs/systems/look_presets.md). The default preset loads at start-up.
 ## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
@@ -24,7 +24,6 @@ const PORTRAIT_SAME_AS_CORRIDOR: String = 'corridor'
 const PORTRAIT_SAME_AS_INTERFACE: String = 'interface'
 ## The first item id in the portrait palette option that names a palette file.
 const PORTRAIT_FIRST_FILE_ID: int = 3
-const FONT_DIR: String = 'res://assets/fonts/candidates'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
@@ -64,16 +63,13 @@ var interface_palette: String = ''
 ## What interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR`,
 ## `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path.
 var portrait_palette: String = PORTRAIT_SAME_AS_INTERFACE
-## The font file chosen in the panel or with `--font=`, or '' for the game's default font.
-var ui_font: String = ''
 
 var _palette_paths: Array[String] = []   # item id - 1 -> palette path in the world palette option (id 0 = Off)
 var _interface_palette_paths: Array[String] = []   # item id - 1 -> `.gpl` path in the interface palette option
-var _font_paths: Array[String] = []   # item id - 1 -> font path in the font option (id 0 = game default)
-var _default_font: Font = null   # the theme's own default font, kept so the panel can put it back
 var _palettes_scanned: bool = false
 var _perceptual: bool = false
 var _dithering: bool = false
+var _interface_dithering: bool = false   # the interface clamp's dithering switch
 var _look_defaults: Dictionary = {}   # look shader uniform -> default value, read from its code
 var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Environment values, read once
 
@@ -89,7 +85,6 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
 @onready var _portrait_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/PortraitPaletteRow/Option
-@onready var _font_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/FontRow/Option
 
 func _ready() -> void:
   _panel_layer.visible = false
@@ -100,12 +95,12 @@ func _ready() -> void:
   _preset_bar.side_switched.connect(_switch_side)
   world_material.shader = LOOK_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
+  InterfaceLook.material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_palette(world_material, PackedColorArray())
   _world_option.item_selected.connect(_on_world_palette_selected)
   _interface_option.item_selected.connect(_on_interface_palette_selected)
   _portrait_option.item_selected.connect(_on_portrait_palette_selected)
-  _font_option.item_selected.connect(_on_font_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _sync_controls()
   LookPresets.load_default()
@@ -114,8 +109,8 @@ func _ready() -> void:
 
 ## Dev hooks for screenshots, applied after the default preset: `--preset=<name or res path>` loads a
 ## preset (applied first, so the other arguments can override it), `--world-palette=<res path>` sets
-## the world clamp, `--perceptual` and `--dither` set the matching and dithering, `--font=<res path>`
-## sets the UI font, `--ui-palette=<res path>` applies an interface palette,
+## the world clamp, `--perceptual` and `--dither` set the matching and the world clamp's dithering,
+## `--interface-dither` the interface clamp's, `--ui-palette=<res path>` applies an interface palette,
 ## `--portrait-palette=<res path, corridor or interface>` sets the portrait palette,
 ## `--corridor-set=property=value` sets a corridor export, `--background-set=uniform=value` a background
 ## wear setting, `--panel-set=uniform=value` a panel wear setting, `--print-set=name=value` a border,
@@ -139,8 +134,6 @@ func _apply_command_line() -> void:
         corridor_settings[pair[0]] = str_to_var(pair[1])
     elif arg.begins_with('--monster-image='):
       MonsterImages.forced_path = arg.substr(16)
-    elif arg.begins_with('--font='):
-      set_ui_font(arg.substr(7))
     elif arg.begins_with('--ui-palette='):
       set_interface_palette(arg.substr(13))
     elif arg.begins_with('--portrait-palette='):
@@ -160,11 +153,13 @@ func _apply_command_line() -> void:
     elif arg.begins_with('--interface-set='):
       var interface_pair: PackedStringArray = arg.substr(16).split('=')
       if interface_pair.size() == 2 and InterfaceLook.defaults().has(interface_pair[0]):
-        InterfaceLook.material.set_shader_parameter(interface_pair[0], str_to_var(interface_pair[1]))
+        InterfaceLook.set_setting(interface_pair[0], str_to_var(interface_pair[1]))
   if '--perceptual' in args:
     _on_matching_selected(1)
   if '--dither' in args:
     _on_dithering_toggled(true)
+  if '--interface-dither' in args:
+    _on_interface_dithering_toggled(true)
   if '--look-panel' in args:
     toggle_tab(LookPresets.Part.CORRIDOR)
   elif '--interface-panel' in args:
@@ -179,7 +174,6 @@ func _apply_command_line() -> void:
 func _exit_tree() -> void:
   _palette_paths.clear()
   _interface_palette_paths.clear()
-  _font_paths.clear()
   InterfacePalette.reset()
 
 
@@ -241,7 +235,7 @@ func is_panel_open() -> bool:
   return _panel_layer.visible
 
 
-# Fill a tab when it shows: its controls, and the palette and font lists the first time.
+# Fill a tab when it shows: its controls, and the palette lists the first time.
 func _open_tab(tab: int) -> void:
   match tab:
     LookPresets.Part.CORRIDOR:
@@ -251,8 +245,6 @@ func _open_tab(tab: int) -> void:
     LookPresets.Part.INTERFACE:
       if not _palettes_scanned:
         _scan_palettes()
-      if _font_option.item_count <= 1:
-        _scan_fonts()
       _interface_look_panel.open()
     LookPresets.Part.PRINT:
       _print_panel.open()
@@ -402,11 +394,11 @@ func read_corridor_palette(file: ConfigFile) -> void:
 
 
 ## Write the interface's palette choices into a preset's interface part: the interface and portrait
-## palettes and the font.
+## palettes and the interface clamp's dithering switch.
 func write_interface_palettes(file: ConfigFile) -> void:
   file.set_value('interface_palette', 'interface_palette', interface_palette)
   file.set_value('interface_palette', 'portrait_palette', portrait_palette)
-  file.set_value('interface_palette', 'font', ui_font)
+  file.set_value('interface_palette', 'dithering', _interface_dithering)
 
 
 ## Set the interface's palette choices from a preset file written by `write_interface_palettes`.
@@ -414,16 +406,13 @@ func write_interface_palettes(file: ConfigFile) -> void:
 func read_interface_palettes(file: ConfigFile) -> void:
   set_interface_palette(file.get_value('interface_palette', 'interface_palette', ''))
   set_portrait_palette(file.get_value('interface_palette', 'portrait_palette', PORTRAIT_SAME_AS_INTERFACE))
-  var font: String = file.get_value('interface_palette', 'font', '')
-  if font != '':
-    set_ui_font(font)
-  elif ui_font != '':
-    restore_default_font()
+  _on_interface_dithering_toggled(file.get_value('interface_palette', 'dithering', false))
   _sync_controls()
+  _interface_look_panel.refresh()
 
 
 ## Palettes back to their defaults: world clamp off, no interface palette, portrait palette same as
-## interface, RGB matching, no dithering, the game's own font.
+## interface, RGB matching, no dithering in either clamp.
 func reset_palettes() -> void:
   read_corridor_palette(ConfigFile.new())
   read_interface_palettes(ConfigFile.new())
@@ -494,6 +483,16 @@ func is_dithering() -> bool:
   return _dithering
 
 
+## Turn dithering on or off for the interface clamp, which is separate from the corridor's. The
+## Interface tab's Dithering switch shows it after a refresh.
+func set_interface_dithering(on: bool) -> void:
+  _on_interface_dithering_toggled(on)
+
+
+func is_interface_dithering() -> bool:
+  return _interface_dithering
+
+
 ## Apply `corridor_settings` and `environment_settings` to every corridor on screen.
 func apply_corridor_settings() -> void:
   for corridor: Corridor3D in get_tree().get_nodes_in_group(Corridor3D.GROUP):
@@ -515,7 +514,7 @@ func write_corridor_look(file: ConfigFile) -> void:
     file.set_value('corridor_shader', uniform, world_material.get_shader_parameter(uniform))
   for property: String in LookPanel.CORRIDOR_PROPERTIES:
     file.set_value('corridor_light', property, corridor_settings.get(property, scene_values()[0][property]))
-  for property: String in LookPanel.ENVIRONMENT_PROPERTIES:
+  for property: String in LookPanel.environment_properties():
     file.set_value('corridor_environment', property, environment_settings.get(property, scene_values()[1][property]))
 
 
@@ -543,27 +542,6 @@ func _write_look_defaults() -> void:
 
 func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
   return file.get_section_keys(section) if file.has_section(section) else PackedStringArray()
-
-
-## Use the font file at `path` as the project theme's default font, for comparing fonts. It replaces
-## the theme's own default font until `restore_default_font()` puts that back.
-func set_ui_font(path: String) -> void:
-  var font: Font = load(path) as Font
-  if font == null:
-    push_warning('[DebugPanels] could not load font %s' % path)
-    return
-  var theme: Theme = load(Prefs.THEME_PATH) as Theme
-  if _default_font == null:
-    _default_font = theme.default_font
-  theme.set_default_font(font)
-  ui_font = path
-
-
-## Put the theme's own default font back, undoing `set_ui_font()`.
-func restore_default_font() -> void:
-  ui_font = ''
-  if _default_font != null:
-    (load(Prefs.THEME_PATH) as Theme).set_default_font(_default_font)
 
 
 ## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
@@ -688,10 +666,8 @@ func _scan_palettes() -> void:
   _sync_controls()
 
 
-# Shows the current palette, matching and font choices in the tabs' controls, without applying anything.
+# Shows the current palette and matching choices in the tabs' controls, without applying anything.
 func _sync_controls() -> void:
-  if _font_option.item_count > 1:
-    _font_option.select(maxi(_font_option.get_item_index(_font_paths.find(ui_font) + 1), 0))
   _matching_option.select(1 if _perceptual else 0)
   if _palettes_scanned:
     _world_option.select(maxi(_world_option.get_item_index(_palette_paths.find(world_palette) + 1), 0))
@@ -737,29 +713,6 @@ func _on_portrait_palette_selected(index: int) -> void:
       set_portrait_palette(_palette_paths[id - PORTRAIT_FIRST_FILE_ID])
 
 
-# The font folder is scanned when the panel first opens, like the palettes. Deleting a font file
-# removes its option.
-func _scan_fonts() -> void:
-  _font_option.clear()
-  _font_paths.clear()
-  _font_option.add_item('Game default', 0)
-  if DirAccess.dir_exists_absolute(FONT_DIR):
-    for file: String in DirAccess.get_files_at(FONT_DIR):
-      if file.get_extension().to_lower() in ['ttf', 'otf']:
-        _font_paths.append(FONT_DIR.path_join(file))
-        _font_option.add_item(file.get_basename(), _font_paths.size())
-  _font_option.select(maxi(_font_option.get_item_index(_font_paths.find(ui_font) + 1), 0))
-
-
-# "Game default" (id 0) puts back the theme's own font.
-func _on_font_selected(index: int) -> void:
-  var id: int = _font_option.get_item_id(index)
-  if id <= 0:
-    restore_default_font()
-    return
-  set_ui_font(_font_paths[id - 1])
-
-
 func _on_matching_selected(index: int) -> void:
   _perceptual = index == 1
   world_material.set_shader_parameter('perceptual', _perceptual)
@@ -769,3 +722,8 @@ func _on_matching_selected(index: int) -> void:
 func _on_dithering_toggled(on: bool) -> void:
   _dithering = on
   world_material.set_shader_parameter('dithering', _dithering)
+
+
+func _on_interface_dithering_toggled(on: bool) -> void:
+  _interface_dithering = on
+  InterfaceLook.material.set_shader_parameter('dithering', _interface_dithering)

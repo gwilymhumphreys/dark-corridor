@@ -48,6 +48,27 @@ theme_override_font_sizes/font_size = 36
 text = "Gold: 0"
 vertical_alignment = 1
 
+[node name="ReportButton" type="Button" parent="HUD/Sections/Info"]
+visible = false
+mouse_default_cursor_shape = 2
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -330.0
+offset_top = -70.0
+offset_right = -130.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Report"
+
+[node name="Juice" type="Node" parent="HUD/Sections/Info/ReportButton"]
+script = ExtResource("5")
+
 [node name="SpeedButton" parent="HUD/Sections/Info" instance=ExtResource("3")]
 offset_left = -110.0
 offset_top = -70.0

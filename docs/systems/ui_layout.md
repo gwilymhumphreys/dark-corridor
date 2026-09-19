@@ -32,7 +32,7 @@ Mock up one of each with placeholder items; decide on feel. Everything below hol
 
 ## Screen sections
 
-The run screen is split into four sections that match the folds in the paper background: the corridor top left, the potions and the player's items top right, the portraits lower left, and the run information (map, gold, battle-speed button) lower right.
+The run screen is split into four sections that match the folds in the paper background: the corridor top left, the potions and the player's items top right, the portraits lower left, and the run information (map, gold, battle-speed button, combat-report button) lower right.
 
 **Location:** `src/ui/screen_sections.gd` (class `ScreenSections`) and `screen_sections.tscn`.
 

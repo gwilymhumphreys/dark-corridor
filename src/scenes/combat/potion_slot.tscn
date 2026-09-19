@@ -5,6 +5,7 @@
 [ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
 
 [node name="PotionSlot" type="Button"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(96, 96)
 focus_mode = 0
 script = ExtResource("3")

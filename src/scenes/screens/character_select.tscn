@@ -70,6 +70,7 @@ alignment = 1
 theme_override_constants/separation = 48
 
 [node name="BackButton" type="Button" parent="Panel"]
+mouse_default_cursor_shape = 2
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5

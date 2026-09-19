@@ -148,12 +148,13 @@ theme_override_constants/separation = 4
 layout_mode = 2
 alignment = 1
 
-[node name="ContinueButton" type="Button" parent="Panel/Margin/Body/Footer"]
+[node name="CloseButton" type="Button" parent="Panel/Margin/Body/Footer"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 96)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 40
-text = "Continue"
+text = "Close"
 
-[node name="Juice" type="Node" parent="Panel/Margin/Body/Footer/ContinueButton"]
+[node name="Juice" type="Node" parent="Panel/Margin/Body/Footer/CloseButton"]
 script = ExtResource("2")

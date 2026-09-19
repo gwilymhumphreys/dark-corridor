@@ -1,8 +1,8 @@
 class_name LookSection
 extends VBoxContainer
 ## One section of a look tab of the debug panel (docs/systems/corridor_look.md): a header with an optional on/off
-## switch and a title button that shows or hides the section's rows. Rows start hidden unless the
-## section's effect is on.
+## switch and a title button that shows or hides the section's rows. Rows always start hidden; the
+## title button shows and hides them.
 
 @onready var _rows: VBoxContainer = $Rows
 
@@ -15,12 +15,10 @@ func setup(title: String) -> void:
   ($Header/Switch as CheckButton).visible = false
 
 
-## Show the header switch, set to `on`, calling `changed(on: bool)` when toggled. A section that
-## starts switched on starts expanded.
+## Show the header switch, set to `on`, calling `changed(on: bool)` when toggled.
 func set_switch(on: bool, changed: Callable) -> void:
   var switch: CheckButton = $Header/Switch
   switch.visible = true
-  ($Rows as VBoxContainer).visible = on
   switch.set_pressed_no_signal(on)
   switch.toggled.connect(changed)
 

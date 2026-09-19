@@ -1,10 +1,12 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/character_card.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
 [ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
+[ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
 
 [node name="CharacterCard" type="Button"]
+mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 490)
 focus_mode = 0
 script = ExtResource("1")
@@ -18,6 +20,7 @@ offset_right = 250.0
 offset_bottom = 160.0
 mouse_filter = 2
 theme_type_variation = &"PanelSlot"
+clip_contents = true
 
 [node name="Image" type="TextureRect" parent="Portrait"]
 material = ExtResource("interface_look_material")
@@ -25,6 +28,9 @@ layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="Breath" type="Node" parent="Portrait/Image"]
+script = ExtResource("portrait_breath")
 
 [node name="Name" type="Label" parent="."]
 layout_mode = 1
@@ -51,24 +57,11 @@ theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Blurb" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 24.0
-offset_top = 266.0
-offset_right = 336.0
-offset_bottom = 380.0
-mouse_filter = 2
-theme_override_font_sizes/font_size = 26
-horizontal_alignment = 1
-vertical_alignment = 0
-autowrap_mode = 2
-
 [node name="Kit" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 0
 offset_left = 24.0
-offset_top = 390.0
+offset_top = 276.0
 offset_right = 336.0
 offset_bottom = 470.0
 mouse_filter = 2

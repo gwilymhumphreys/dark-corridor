@@ -14,7 +14,7 @@ signal big_hit(strength: float)   # a hit of at least BIG_HIT_DAMAGE landed; str
 
 const BIG_HIT_DAMAGE: float = 200.0   # the smallest hit that pauses and shakes the screen
 const BIGGEST_HIT_DAMAGE: float = 2000.0   # the hit that pauses and shakes the most
-const ARC_HEIGHT: float = 0.15   # how high a projectile's path rises, as a fraction of the distance it flies
+const ARC_HEIGHT: float = 0.05  # how high a projectile's path rises, as a fraction of the distance it flies
 
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos

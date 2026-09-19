@@ -23,14 +23,6 @@ msgstr ""
 msgid "Disgraced Surgeon"
 msgstr ""
 
-#: src/content/characters/character_catalog.gd
-msgid "Stack Spores, then spend them."
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Carve yourself into a churning board of flesh."
-msgstr ""
-
 #: src/content/consumables/consumable_catalog.gd
 msgid "Healing Draught"
 msgstr ""
@@ -572,7 +564,7 @@ msgid "Event log"
 msgstr ""
 
 #: src/scenes/screens/combat_summary.tscn
-msgid "Continue"
+msgid "Close"
 msgstr ""
 
 #: src/scenes/screens/draft_overlay.gd
@@ -625,6 +617,10 @@ msgstr ""
 
 #: src/scenes/screens/run_screen.tscn
 msgid "Gold: 0"
+msgstr ""
+
+#: src/scenes/screens/run_screen.tscn
+msgid "Report"
 msgstr ""
 
 #: src/scenes/screens/settings_screen.tscn
