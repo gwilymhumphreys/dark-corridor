@@ -59,7 +59,9 @@ const FOG_PROPERTIES: Dictionary = {
 var _built: bool = false
 
 @onready var _sections: VBoxContainer = $Scroll/Sections
-@onready var _part_row: PresetPartRow = $PartRow
+## Null on a tab that is not a look preset part, so it has no "Take this part from" row (the Icons
+## tab). `@onready` resolves before any `open()` override runs, so this must not assume the node.
+@onready var _part_row: PresetPartRow = get_node_or_null('PartRow')
 
 
 func _exit_tree() -> void:
@@ -92,7 +94,8 @@ static func scene_values() -> Array[Dictionary]:
 func open() -> void:
   if not _built:
     rebuild()
-  _part_row.list_presets()
+  if _part_row != null:
+    _part_row.list_presets()
 
 
 ## After settings change outside the tab: rebuild now if the tab is showing, otherwise on the next

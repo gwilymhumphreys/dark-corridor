@@ -14,6 +14,9 @@ extends Node
 ## Emitted after an interface palette is applied or reset, so nodes that copied `Colours` when built
 ## can copy them again.
 signal interface_palette_changed
+## Emitted after an icon slot's icon changes, so nodes that copied one when built can take the new
+## one.
+signal icons_changed
 ## Emitted with true when the panel opens and false when it closes. The run screen pauses on it.
 signal panels_open_changed(open: bool)
 
@@ -35,7 +38,7 @@ const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'ditherin
 ## The panel's tabs, in the order they sit in `debug_panels.tscn`. A tab is not the same thing as a
 ## `LookPresets.Part`: the five look tabs happen to line up with the parts, but a tab that saves its
 ## own files instead of being part of a preset has no `Part`.
-enum Tab { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK }
+enum Tab { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, ICONS }
 ## Tab titles, by tab.
 const TAB_TITLES: Dictionary = {
   Tab.CORRIDOR: 'Corridor (F1)',
@@ -43,6 +46,7 @@ const TAB_TITLES: Dictionary = {
   Tab.PRINT: 'Print (F3)',
   Tab.BACKGROUND: 'Background (F4)',
   Tab.FEEDBACK: 'Feedback (F5)',
+  Tab.ICONS: 'Icons (F6)',
 }
 ## The tab each key opens.
 const TAB_KEYS: Dictionary = {
@@ -51,6 +55,7 @@ const TAB_KEYS: Dictionary = {
   KEY_F3: Tab.PRINT,
   KEY_F4: Tab.BACKGROUND,
   KEY_F5: Tab.FEEDBACK,
+  KEY_F6: Tab.ICONS,
 }
 
 ## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the corridor
@@ -88,6 +93,7 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _print_panel: PrintPanel = $PanelLayer/Panel/Rows/Tabs/Print
 @onready var _background_panel: BackgroundPanel = $PanelLayer/Panel/Rows/Tabs/Background
 @onready var _feedback_panel: FeedbackPanel = $PanelLayer/Panel/Rows/Tabs/Feedback
+@onready var _icon_panel: IconPanel = $PanelLayer/Panel/Rows/Tabs/Icons
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
@@ -125,7 +131,8 @@ func _ready() -> void:
 ## corridor overlay or layout setting, `--interface-set=uniform=value` an interface look setting,
 ## `--feedback-set=name=value` a control feedback setting, `--feedback-demo=<amount>` holds every
 ## control at that much hover for a screenshot. `--look-panel`, `--interface-panel`,
-## `--print-panel`, `--background-panel` and `--feedback-panel` open the panel on that tab.
+## `--print-panel`, `--background-panel`, `--feedback-panel` and `--icon-panel` open the panel on
+## that tab.
 func _apply_command_line() -> void:
   var args: PackedStringArray = OS.get_cmdline_user_args()
   for arg: String in args:
@@ -185,6 +192,8 @@ func _apply_command_line() -> void:
     toggle_tab(Tab.BACKGROUND)
   elif '--feedback-panel' in args:
     toggle_tab(Tab.FEEDBACK)
+  elif '--icon-panel' in args:
+    toggle_tab(Tab.ICONS)
   _sync_controls()
 
 
@@ -269,6 +278,8 @@ func _open_tab(tab: int) -> void:
       _background_panel.open()
     Tab.FEEDBACK:
       _feedback_panel.open()
+    Tab.ICONS:
+      _icon_panel.open()
 
 
 func _on_tab_changed(tab: int) -> void:
@@ -619,6 +630,31 @@ func _recolour_fight_statuses() -> void:
       statuses.append_array(item.statuses)
     for status: StatusEffect in statuses:
       status.color = ((status.get_script() as GDScript).new() as StatusEffect).color
+
+
+## Choose the icon for `slot` (docs/systems/mechanics.md). Saves the choice, writes it into the
+## shared Mechanic instances, and tells anything holding a copy to take the new one.
+func set_slot_icon(slot: String, path: String) -> void:
+  IconSlots.set_icon(slot, path)
+  MechanicRegistry.refresh_icons()
+  _refresh_fight_status_icons()
+  icons_changed.emit()
+
+
+# Statuses copy their icon from their mechanic's icon when created, so each one in the current fight
+# takes the icon a new status of its class would have.
+func _refresh_fight_status_icons() -> void:
+  if Game.run == null or Game.run.combat_manager() == null:
+    return
+  var fight: CombatManager = Game.run.combat_manager()
+  for actor: Actor in [fight.player] + fight.enemies + fight.allies:
+    if actor == null:
+      continue
+    var statuses: Array[StatusEffect] = actor.statuses.duplicate()
+    for item: Item in actor.board:
+      statuses.append_array(item.statuses)
+    for status: StatusEffect in statuses:
+      status.icon = ((status.get_script() as GDScript).new() as StatusEffect).icon
 
 
 # `colours` without repeats, in their first order. Interface palettes name the same colour for several

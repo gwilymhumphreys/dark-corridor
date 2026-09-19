@@ -6,7 +6,7 @@ screen, including the corridor testbed and combat sandbox.
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
 as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`,
-`background_panel.*` and `feedback_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
+`background_panel.*`, `feedback_panel.*` and `icon_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
 
 ## Tabs
 
@@ -17,6 +17,7 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
+| Icons | F6 | Which icon each [icon slot](mechanics.md#iconslots) uses |
 
 The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The five above line up
 with the parts, but a tab that saves its own files rather than being part of a
@@ -31,7 +32,8 @@ preset has no `Part`.
   (`panels_open_changed`, handled by the run screen). Closing does not resume a pause the player chose
   with Space or Escape. A panel opened by a start-up argument does not pause, so screenshot runs keep
   playing.
-- Every tab starts with a "Take this part from" row ([look_presets.md](look_presets.md#the-preset-bar)).
+- Every look tab starts with a "Take this part from" row ([look_presets.md](look_presets.md#the-preset-bar)).
+  The Icons tab has none, because it is not a preset part; `LookPanel` treats that row as optional.
 - The palette keys below are ignored while a text field (the preset name) has focus.
 - `]` and `[` select the next and previous entry in the World palette list, `'` and `;` in the
   Interface palette list and `.` and `,` in the Portrait palette list, with the panel open or closed,
@@ -47,7 +49,7 @@ preset has no `Part`.
 - The palette folder is scanned the first time the Corridor or Interface tab opens, so headless tests
   and autotest runs do no extra work.
 - Every section starts closed, whether or not its effect is on; clicking a section's title shows its
-  rows.
+  rows. `LookSection.set_open` overrides that; the Icons tab opens its only section.
 - Built as `.tscn` scenes, styled by the project theme, with a `UIJuice` node on each control.
 - English only. `tools/extract_pot.gd` skips `src/debug/`, so panel labels stay out of the translation
   files.
@@ -86,7 +88,7 @@ Read once at start-up from the user arguments (after `--`), after the default pr
 | `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
 | `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
 | `--feedback-demo=<amount>` | Holds every control at that much hover, for screenshots of the feedback |
-| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel` | Opens the panel on the Corridor, Interface, Print, Background or Feedback tab |
+| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel` | Opens the panel on the Corridor, Interface, Print, Background, Feedback or Icons tab |
 | `--glow-demo=<brightness>` | Every node drawn through the interface look material glows ([interface_glow.md](interface_glow.md)); read by `InterfaceGlow` |
 
 `--shot` saves into the project's gitignored `screenshots/` folder, one file per shot named with the
@@ -108,6 +110,8 @@ approach instead of the fight.
 | `panels_open_changed` (signal) | Emitted with true when the panel opens and false when it closes |
 | `corridor_settings`, `environment_settings` | Corridor exports and corridor camera Environment properties (property -> value), applied when a corridor is built |
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
+| `set_slot_icon(slot: String, path: String)` | Choose an [icon slot](mechanics.md#iconslots)'s icon: saves it, writes it into the shared `Mechanic` instances, and updates statuses in the current fight |
+| `icons_changed` (signal) | Emitted after an icon slot's icon changes, so a node that copied one when built can take the new one |
 | `set_interface_palette(path: String)`, `interface_palette` | Apply an interface palette file; `''` goes back to the default colours. Also recolours statuses in the current fight |
 | `set_portrait_palette(choice: String)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path |
 | `interface_palette_changed` (signal) | Emitted after an interface palette is applied or reset; `NamedColourRect` copies its colour again |

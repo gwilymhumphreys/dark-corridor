@@ -23,6 +23,12 @@ func set_switch(on: bool, changed: Callable) -> void:
   switch.toggled.connect(changed)
 
 
+## Show or hide the section's rows without clicking the title. A tab with only one short section
+## (the Icons tab) opens it, so there is nothing to click before its rows are usable.
+func set_open(open: bool) -> void:
+  ($Rows as VBoxContainer).visible = open
+
+
 func add_row(row: LookRow) -> void:
   $Rows.add_child(row)
 
