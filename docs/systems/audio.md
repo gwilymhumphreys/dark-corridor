@@ -80,10 +80,6 @@ delete one and the pool changes with no code change:
 - `assets/sound-effects/ui/click/` — 6 book closes and 2 book drops
 - `assets/sound-effects/world/footsteps/steps/` — single footsteps, one per footfall
 
-`assets/sound-effects/world/footsteps/walk_loop.*` beside that folder is a ready-made looping
-walk cut from the same recording. Nothing plays it: it is there in case a walk is ever needed
-without a corridor driving it.
-
 Wav files must be 8-bit or 16-bit PCM; a 24-bit one imports as silence without failing the
 import. See [godot_notes.md](godot_notes.md#importing-assets).
 

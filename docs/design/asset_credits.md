@@ -58,8 +58,7 @@ way.
 One recording of a slow walk on tile, cut up into its individual steps. `steps/` holds
 one file per step, as `.wav` and `.mp3`, with a single gain applied across the set so
 their relative levels are unchanged; two scuffs that were far louder than the rest were
-left out. `walk_loop.*` beside it is a continuous looping walk cut from the same
-recording, with the gaps stretched to a slower pace.
+left out.
 
 The recording is dry, so the corridor's echo comes from the World bus rather than being
 in the files ([audio.md](../systems/audio.md)).

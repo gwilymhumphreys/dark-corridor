@@ -139,8 +139,6 @@ only applies when no preset is loaded, so the two are kept the same.
 
 - `assets/sound-effects/world/footsteps/steps/` holds 24 steps as `.wav` and `.mp3`, cut
   from the one recording, with a common gain so their relative levels are untouched.
-- `walk_loop.wav` / `.mp3` stay as a ready-made loop in case a walk ever needs one without
-  a corridor driving it.
 - `tile_slow.wav`, the 3.3 MB source recording, moves to
   `../dark-corridor-design/sound/footsteps/` with the cutting script, following the rule
   that only sounds the game plays live in `assets/`.
