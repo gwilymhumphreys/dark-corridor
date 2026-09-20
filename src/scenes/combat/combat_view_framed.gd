@@ -427,10 +427,10 @@ func inspectable_at(point: Vector2) -> Dictionary:
   return {}
 
 
-func update_inspection(target: Dictionary, point: Vector2) -> void:
+func update_inspection(target: Dictionary) -> void:
   _set_hovered_cell(target.get('item') as Item)
   if _cluster != null:
-    _cluster.update_target(target, point)
+    _cluster.update_target(target)
 
 
 func stop_inspection() -> void:

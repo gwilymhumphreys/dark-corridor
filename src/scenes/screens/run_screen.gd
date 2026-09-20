@@ -197,6 +197,8 @@ func _arrive() -> void:
 func _physics_process(delta: float) -> void:
   if _paused:
     return   # pause freezes BOTH the approach walk and the fight clock
+  if _view == null:
+    return   # the view was torn down under us (quit to menu, run end) — nothing to drive
   match _state:
     State.APPROACHING:
       _approach_elapsed += delta
@@ -256,7 +258,7 @@ func _process(_delta: float) -> void:
     _view.stop_inspection()   # the pause menu's layer-100 Catcher covers the screen
     return
   var mouse: Vector2 = get_global_mouse_position()
-  _view.update_inspection(_inspection_target(mouse), mouse)   # the hide-bridge ticks here
+  _view.update_inspection(_inspection_target(mouse))
   if not _paused and _state == State.FIGHTING and _cm != null and not _cm.is_resolved():
     _cm.request_slowmo(_view.mouse_over_inspectable(mouse))
 

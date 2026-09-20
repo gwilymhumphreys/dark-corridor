@@ -3,8 +3,9 @@ extends CanvasLayer
 ## The tooltip cluster (docs/systems/tooltips.md): a main item panel plus a stacked column of keyword
 ## cards, shown/hidden as a unit beside the hovered board item. Lives on its own CanvasLayer
 ## (layer 50, below the pause menu's 100). Owned by the combat view, which feeds it a target every
-## frame via update_target; the cluster runs the item↔cluster hide-bridge, positions + clamps the
-## cluster, and rebuilds content when the target item changes. Opaque (no alpha) — a scale reveal.
+## frame via update_target; the cluster positions + clamps itself and rebuilds content when the
+## target item changes, and hides as soon as the cursor leaves the item. Opaque (no alpha) — a scale
+## reveal. Nothing in the cluster is interactive: it takes no mouse input at all.
 ##
 ## Coordinate space: positions with the cell's global rect and clamps to the viewport rect, assuming
 ## the run-screen UI has NO custom canvas transform (it has no camera). If a transform is ever added,
@@ -15,7 +16,6 @@ const KEYWORD_CARD: PackedScene = preload('res://src/scenes/ui/tooltip/keyword_c
 
 const GAP: float = 16.0          # item↔cluster and panel↔column gap
 const MARGIN: float = 12.0       # screen-edge clamp
-const HIDE_DELAY: float = 0.12   # the mouse-bridge hide-timer (seconds)
 const REVEAL_SCALE: float = 0.92
 
 enum Side { LEFT, RIGHT }
@@ -27,8 +27,6 @@ var _column: VBoxContainer = null
 var _current_item: Item = null
 var _side: int = Side.LEFT
 var _anchor_rect: Rect2 = Rect2()    # the hovered cell's global rect (re-read each frame; cells move)
-var _cluster_rect: Rect2 = Rect2()   # the placed, UNSCALED cluster rect — the bridge reads this
-var _hide_timer: float = -1.0
 var _pending_show: bool = false      # rebuilt this frame; reveal next frame once wrapped sizes settle
 var _reveal: Tween = null
 
@@ -53,8 +51,8 @@ func _exit_tree() -> void:
 
 
 ## Fed every frame by the view. `target` is {} (no cell under the cursor) or {item, rect, side}.
-## Drives show / retarget / the hide-bridge. `mouse` is the global cursor (the bridge hold test).
-func update_target(target: Dictionary, mouse: Vector2) -> void:
+## Drives show / retarget / hide.
+func update_target(target: Dictionary) -> void:
   if not target.is_empty() and is_instance_valid(target['item']):
     var item: Item = target['item']
     _anchor_rect = target['rect']
@@ -77,29 +75,14 @@ func update_target(target: Dictionary, mouse: Vector2) -> void:
       visible = true
     else:
       _reposition(_side)   # same item — track a moving cell (enemy HUDs reposition every frame)
-    _hide_timer = -1.0
     return
-  # No cell under the cursor: hold while the mouse is over the cell-or-cluster span (the bridge,
-  # so the cursor can travel onto the panel to hover chips); otherwise tick the hide-timer.
-  if not visible:
-    _current_item = null   # don't retain an Item ref while hidden (e.g. mouse left mid-reveal-defer)
-    _pending_show = false
-    return
-  if _anchor_rect.merge(_cluster_rect).has_point(mouse):
-    _hide_timer = -1.0
-    return
-  if _hide_timer < 0.0:
-    _hide_timer = HIDE_DELAY
-  _hide_timer -= get_process_delta_time()
-  if _hide_timer <= 0.0:
-    hide_cluster()
+  hide_cluster()   # no cell under the cursor
 
 
 func hide_cluster() -> void:
   visible = false
   _current_item = null
   _pending_show = false
-  _hide_timer = -1.0
 
 
 func _rebuild(item: Item) -> void:
@@ -112,6 +95,7 @@ func _rebuild(item: Item) -> void:
   for id: String in keyword_ids:
     var wrap := PanelContainer.new()
     wrap.theme_type_variation = 'PanelFramed'
+    wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var card: KeywordCard = KEYWORD_CARD.instantiate()
     wrap.add_child(card)
     _column.add_child(wrap)
@@ -147,7 +131,6 @@ func _reposition(side: int) -> void:
 
   _body.position = Vector2(x, y)
   _body.size = Vector2(cluster_w, cluster_h)
-  _cluster_rect = Rect2(_body.position, _body.size)
 
   # Main panel nearest the item; keyword column on the outer side.
   if place_left:   # item is to the RIGHT of the cluster

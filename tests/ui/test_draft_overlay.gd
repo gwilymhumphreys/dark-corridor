@@ -30,12 +30,11 @@ func test_overlay_lists_the_offer_and_emits_the_pick() -> void:
   assert_eq(overlay.get_node('Panel/Cards').get_child_count(), 3, 'one card per candidate')
 
   watch_signals(overlay)
-  var cell: ItemCell = overlay.get_node('Panel/Cards').get_child(1)
-  assert_eq(cell.item.def, offer[1], 'each reward is shown as a board item icon')
-  var click := InputEventMouseButton.new()
-  click.button_index = MOUSE_BUTTON_LEFT
-  click.pressed = false
-  cell.gui_input.emit(click)   # the player picks the 2nd reward
+  var option: RewardOption = overlay.get_node('Panel/Cards').get_child(1)
+  assert_eq(option.item().def, offer[1], 'each reward is shown as a board item icon')
+  assert_true(option is Button, 'a reward option is a button, so it gets the press juice')
+  assert_true(option.get_node('Juice') is UIJuice, 'and the juice node that answers the pointer')
+  option.pressed.emit()   # the player picks the 2nd reward
   assert_signal_emitted_with_parameters(overlay, 'picked', [1])
 
 

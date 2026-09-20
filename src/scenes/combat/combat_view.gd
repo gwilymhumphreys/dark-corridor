@@ -57,7 +57,7 @@ func inspectable_at(_point: Vector2) -> Dictionary:
 
 ## Driven each frame by the run screen — feeds the cluster the hover target the run screen chose
 ## (a board item from inspectable_at, a reward icon from the draft overlay, or {}).
-func update_inspection(_target: Dictionary, _point: Vector2) -> void:
+func update_inspection(_target: Dictionary) -> void:
   pass
 
 

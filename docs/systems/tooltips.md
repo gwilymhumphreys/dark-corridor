@@ -1,9 +1,9 @@
 # Tooltips
 
 The combat item tooltip (gen 3, built). Hover a board item → a **cluster** appears
-beside it; hover a keyword **chip** inside it → a Godot built-in tooltip pops that
-keyword's card. Scope: board `Item`s (player cells + enemy-HUD cells + ally-slot
-cells) and the reward icons on the draft overlay. Potions (Consumables, not Items)
+beside it: a main panel plus one card per keyword the item references. Scope: board
+`Item`s (player cells + enemy-HUD cells + ally-slot cells) and the reward icons on the
+draft overlay. Potions (Consumables, not Items)
 are a follow-on — the builder is `Item`-typed.
 
 Shipped from [`docs/plans/tooltip_system.md`](../plans/tooltip_system.md), which
@@ -18,30 +18,32 @@ holds the design rationale, the ratified decisions, and the prior-art lineage
   (cooldown, plus a crit-chance line for an item with one).
 - **Keyword column** (cards beside the main panel) — one card per keyword the item
   references (statuses + mechanics), **all shown at once**.
-- **Per-keyword tooltip** — hovering a chip pops a Godot built-in custom tooltip
-  with that keyword's full card, positioned + clamped by the engine.
 
 The cluster shows/hides as a unit; it is opaque (a scale reveal, no fade) and
-**suppressed while the pause menu is open**.
+**suppressed while the pause menu is open**. Nothing in it is interactive — the whole
+cluster ignores the mouse, so it never swallows a click on what is underneath, and it
+hides the moment the cursor leaves the item's cell. The chips inside it do **not** carry
+the per-keyword pop-up tooltip (the column already shows every card at once); a chip used
+elsewhere in the interface can still ask for one, see below.
 
 ## The pieces (`src/scenes/ui/tooltip/`)
 
 | File | Role |
 |------|------|
-| `tooltip_cluster.gd` (+`.tscn`) | The cluster, on its own `CanvasLayer` (layer **50**, below pause's 100). Owns the main panel + keyword column, runs the hide-bridge state machine, positions/clamps, rebuilds on item change, clears its `Item` ref on hide + `_exit_tree`. |
+| `tooltip_cluster.gd` (+`.tscn`) | The cluster, on its own `CanvasLayer` (layer **50**, below pause's 100). Owns the main panel + keyword column, positions/clamps, rebuilds on item change, hides when the target is empty, clears its `Item` ref on hide + `_exit_tree`. |
 | `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip / icon segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
-| `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content (tinted name + description). Returned bare by a chip's `_make_custom_tooltip`; wrapped in a `PanelContainer` for the column. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
-| `keyword_chip.gd` (+`.tscn`) | Inline `PanelContainer` (icon + tinted name) in the body. Sets `tooltip_text = <id>` and overrides `_make_custom_tooltip` → a frameless `keyword_card`. Its icon is dressed by kind, see below. |
+| `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content (tinted name + description). Wrapped in a `PanelContainer` for the column; returned bare by a hoverable chip's `_make_custom_tooltip`. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
+| `keyword_chip.gd` (+`.tscn`) | `PanelContainer` tag (icon + tinted name), used inline in the body and standalone elsewhere. `setup(id, hoverable = false)`: inert to the mouse by default, or, with `hoverable = true`, `MOUSE_FILTER_STOP` + `tooltip_text = <id>` so the built-in per-keyword tooltip pops. Its icon is dressed by kind, see below. |
 | `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, type_line, lines, flavor, stat_lines, keyword_ids}`. **Instance** (not static) because the line templates and the type line call `tr()`. |
 
 Supporting: `src/content/keywords/keyword_catalog.gd` (the keyword id → card map).
 
 ## Data flow (who drives what)
 
-A **point-poll**, reusing the run screen's existing slow-mo hover (one hover
-paradigm; the hide-bridge needs a per-frame cluster-rect check anyway):
+A **point-poll**, reusing the run screen's existing slow-mo hover (one hover paradigm,
+and the cluster has to re-read a moving cell's rect every frame anyway):
 
-1. `run_screen.gd::_process` drives `view.update_inspection(target, mouse)` every frame a
+1. `run_screen.gd::_process` drives `view.update_inspection(target)` every frame a
    combat view exists — during the approach, the fight, the post-fight summary and the reward
    draft — and calls `view.stop_inspection()` only while the pause menu is open. The run screen
    picks the target: a reward icon from `DraftOverlay.inspectable_at` first; nothing when the
@@ -51,25 +53,27 @@ paradigm; the hide-bridge needs a per-frame cluster-rect check anyway):
    cells, then player cells, returning `{item, rect (global), side}` or `{}`. The rect
    is re-read each frame (enemy HUDs reposition every frame, so the cluster tracks a
    moving cell). Helpers: `EnemyHud`/`AllySlot` `item_at(point)` + `cell_rect(item)`.
-3. The view owns the cluster and feeds it the target via `update_target(target, mouse)`, and sets
+3. The view owns the cluster and feeds it the target via `update_target(target)`, and sets
    `hovered` on the target's `ItemCell` so it takes the hover highlight
    ([control_feedback.md](control_feedback.md)). Board items take no mouse events of their own, so
    this poll is the only thing that knows which cell the pointer is over.
-4. Keyword chips' built-in tooltips are entirely Godot-managed (no poll involvement).
+4. The run screen passes only the target; there is no cursor position to track once the cluster
+   is placed, because the cluster has no hover behaviour of its own.
 
 The base `combat_view.gd` declares `inspectable_at` / `update_inspection` /
 `stop_inspection` as no-ops; the framed view overrides them.
 
-## The mouse-bridge hide-timer
+## Showing and hiding
 
-The cluster sits beside the item with a gap. The poll considers the cluster alive
-while the mouse is over **the cell rect OR the cluster rect** (their bounding merge
-bridges the gap). Leaving that merged region starts a short hide-timer; re-entering
-cancels it. This exists *because the chips are hoverable* — the cursor must be able
-to leave the cell and land on the panel. The built-in keyword tips need no bridge
-(non-interactive). State in `tooltip_cluster.gd`: `_current_item`, `_anchor_rect`,
-`_cluster_rect`, `_hide_timer` (ticked off `get_process_delta_time()` inside
-`update_target`, which the view calls every frame).
+The cluster follows the poll's target directly: a new item rebuilds and reveals it, the same item
+repositions it, an empty target hides it at once. There is no hover grace period and no travel
+path onto the panel, because the player never needs to reach the cluster with the cursor. State in
+`tooltip_cluster.gd`: `_current_item`, `_anchor_rect`, `_pending_show`.
+
+An earlier version held the cluster open while the mouse was over the merge of the cell rect and
+the cluster rect, so the cursor could travel onto the panel to hover a chip. It was removed with
+the chips' pop-up tooltips: it misbehaved when moving between items, and the keyword column made it
+unnecessary.
 
 ## Positioning
 
@@ -151,15 +155,18 @@ rather than an error. The **attack** and **heal** effect lines carry their mecha
 still use a keyword chip. The stat block is deliberately left a plain joined label — a glyph in
 it (e.g. `charge_time` beside `Every {0}s`) is a later step.
 
-## Built-in custom tooltip — the double-panel contract
+## Hoverable chips outside the item tooltip — the double-panel contract
 
-A chip sets a non-empty `tooltip_text` (the keyword id, the lookup key) and overrides
-`_make_custom_tooltip(for_text)` to return a **frameless** `keyword_card`. Godot wraps
-the returned node in the theme's `TooltipPanel`, so `TooltipPanel` / `TooltipLabel` are
-styled **opaque** in `dark_corridor.tres` (the theme panel is the only frame; the
-returned node is frameless). The column cards are NOT Godot tooltips, so they wrap the
-*same* `keyword_card` scene in their own `PanelContainer`. Unknown id →
-`_make_custom_tooltip` returns `null` (no tip); the chip still renders its name.
+A chip built with `setup(id, true)` sets a non-empty `tooltip_text` (the keyword id, the lookup
+key); its `_make_custom_tooltip(for_text)` override returns a **frameless** `keyword_card`. Godot
+wraps the returned node in the theme's `TooltipPanel`, so `TooltipPanel` / `TooltipLabel` are
+styled **opaque** in `dark_corridor.tres` (the theme panel is the only frame; the returned node is
+frameless). The column cards are NOT Godot tooltips, so they wrap the *same* `keyword_card` scene
+in their own `PanelContainer`. Unknown id → `_make_custom_tooltip` returns `null` (no tip); the
+chip still renders its name.
+
+The item tooltip's own chips are built without `hoverable`, so this path is unused there. The
+debug Icons tab (`src/debug/icon_panel.gd`) is the current user.
 
 ## Owner's domain (content, scaffolded as marked placeholders)
 
@@ -204,5 +211,5 @@ covers the real hover wiring.
 
 ## Settings
 
-`project.godot` sets `gui/timers/tooltip_delay_sec = 0` (this system is the only
-consumer — no hover delay on the keyword tips).
+`project.godot` sets `gui/timers/tooltip_delay_sec = 0` — no hover delay on a built-in
+tooltip anywhere in the game, which is what a hoverable keyword chip wants.

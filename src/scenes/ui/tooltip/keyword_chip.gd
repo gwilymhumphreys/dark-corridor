@@ -1,9 +1,13 @@
 class_name KeywordChip
 extends PanelContainer
-## An inline keyword chip in the main panel's body (docs/systems/tooltips.md): a small framed tag
-## (icon + tinted name) standing in for a status / mechanic the item references. Discrete Control
-## (not RichTextLabel markup) so it can carry Godot's built-in per-keyword tooltip — hovering it
-## pops the keyword's full card, positioned + clamped by the engine (_make_custom_tooltip).
+## A small framed tag (icon + tinted name) standing in for a status / mechanic
+## (docs/systems/tooltips.md). Used inline in the item tooltip's effect lines, and standalone
+## elsewhere in the interface.
+##
+## A chip can optionally carry Godot's built-in per-keyword tooltip: hovering it pops the keyword's
+## full card, positioned + clamped by the engine (_make_custom_tooltip). That is OFF by default and
+## off inside the item tooltip, whose keyword column already shows every card at once. Pass
+## `hoverable = true` in the places that want the pop-up instead.
 
 const KEYWORD_CARD: PackedScene = preload('res://src/scenes/ui/tooltip/keyword_card.tscn')
 ## Icons under this folder are icon slot glyphs; see `_dress_icon`.
@@ -12,8 +16,10 @@ const GLYPH_DIR: String = 'res://assets/icons/mechanics/'
 var _id: String = ''
 
 
-func setup(id: String) -> void:
+## `hoverable` turns on the built-in per-keyword tooltip; the chip is inert to the mouse otherwise.
+func setup(id: String, hoverable: bool = false) -> void:
   _id = id
+  mouse_filter = Control.MOUSE_FILTER_STOP if hoverable else Control.MOUSE_FILTER_IGNORE
   var name_label: Label = $Margin/Row/Name
   var icon_rect: TextureRect = $Margin/Row/Icon
   var entry: Dictionary = KeywordCatalog.get_entry(id)
@@ -28,7 +34,7 @@ func setup(id: String) -> void:
   _dress_icon(icon_rect, icon_path, entry['color'])
   name_label.text = tr(entry['name_key'])
   name_label.add_theme_color_override('font_color', entry['color'])
-  tooltip_text = id   # non-empty triggers the built-in tooltip; the id IS the card lookup key
+  tooltip_text = id if hoverable else ''   # non-empty triggers the built-in tooltip; the id is the card key
 
 
 ## A chip's icon is one of two kinds, and they want opposite treatment. An icon slot's glyph

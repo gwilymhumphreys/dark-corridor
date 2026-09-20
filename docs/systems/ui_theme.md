@@ -18,6 +18,7 @@ press and selection, and the files are no longer referenced.
 |---|---|
 | `PanelSlot` | the frame behind a picture: item cells (`item_cell.tscn`), potion slots, character portraits (combat, ally slots, character select cards) and keyword chips |
 | `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it. `PanelSlot` is the same, with smaller content margins |
+| `ButtonBare` | a button that draws no body of its own (`StyleBoxEmpty` in every state): used where the button only carries the click and the juice, and something inside it is the picture — the reward options in the draft overlay (`reward_option.tscn`) |
 | `LabelDim` | dimmer section labels ("Potions", "Items") |
 
 `PanelFramed` is used by most overlay panels, by the tooltip panel

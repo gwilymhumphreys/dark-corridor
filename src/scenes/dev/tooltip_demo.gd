@@ -39,7 +39,7 @@ func _process(_delta: float) -> void:
     return
   # Force the cluster to track the cell (mouse = the cell centre, so the bridge holds it open).
   var rect: Rect2 = _cell.get_global_rect()
-  _cluster.update_target({'item': _item, 'rect': rect, 'side': TooltipCluster.Side.LEFT}, rect.get_center())
+  _cluster.update_target({'item': _item, 'rect': rect, 'side': TooltipCluster.Side.LEFT})
 
 
 func _exit_tree() -> void:

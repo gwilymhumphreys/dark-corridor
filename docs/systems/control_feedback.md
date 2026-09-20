@@ -38,7 +38,7 @@ Saved as the feedback part of a [look preset](look_presets.md).
 
 | Control | Driven by |
 |---|---|
-| Buttons, character and choice cards, potion slots, debug panel rows | `UIJuice` on `mouse_entered` / `mouse_exited` and the `BaseButton` press signals |
+| Buttons, character and choice cards, potion slots, reward options, debug panel rows | `UIJuice` on `mouse_entered` / `mouse_exited` and the `BaseButton` press signals |
 | Board item cells | `ItemCell.hovered`, set by `combat_view_framed.gd` from the tooltip hover poll — board items take no mouse events of their own ([tooltips.md](tooltips.md)) |
 | Selection | Nothing yet. `set_selected` is there for a screen that keeps a chosen control marked |
 

@@ -95,6 +95,8 @@ content_margin_bottom = 6.0
 script = ExtResource("6_worn_style_box")
 base = SubResource("pb_slot")
 
+[sub_resource type="StyleBoxEmpty" id="pb_bare"]
+
 [resource]
 default_font = ExtResource("8_font")
 Button/colors/font_color = Color(0.75, 0.75, 0.75, 1)
@@ -108,6 +110,12 @@ Button/styles/focus = SubResource("pb_button_worn")
 Button/styles/hover = SubResource("pb_button_worn")
 Button/styles/normal = SubResource("pb_button_worn")
 Button/styles/pressed = SubResource("pb_button_worn")
+ButtonBare/base_type = &"Button"
+ButtonBare/styles/disabled = SubResource("pb_bare")
+ButtonBare/styles/focus = SubResource("pb_bare")
+ButtonBare/styles/hover = SubResource("pb_bare")
+ButtonBare/styles/normal = SubResource("pb_bare")
+ButtonBare/styles/pressed = SubResource("pb_bare")
 Label/colors/font_color = Color(1, 1, 1, 1)
 LabelDim/base_type = &"Label"
 LabelDim/colors/font_color = Color(0.6, 0.6, 0.66, 1)

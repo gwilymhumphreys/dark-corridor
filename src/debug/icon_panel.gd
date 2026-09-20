@@ -80,7 +80,7 @@ func _build_sizes_sample(slot: String) -> HBoxContainer:
 func _build_chip_row(slot: String) -> HBoxContainer:
   var row := _build_sample_row('Chip')
   var chip: KeywordChip = KEYWORD_CHIP.instantiate()
-  chip.ready.connect(func() -> void: chip.setup(slot))
+  chip.ready.connect(func() -> void: chip.setup(slot, true))
   row.add_child(chip)
   return row
 

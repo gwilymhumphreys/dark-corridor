@@ -302,9 +302,9 @@ func test_draft_rewards_are_inspectable_in_the_corridor() -> void:
   screen._show_draft()
   await get_tree().process_frame   # let the containers place the reward icon
   assert_eq(screen._draft.get_parent(), screen._view.corridor_area(), 'the reward panel is in the corridor area')
-  var cell: ItemCell = screen._draft.get_node('Panel/Cards').get_child(0)
-  var target: Dictionary = screen._inspection_target(cell.get_global_rect().get_center())
-  assert_eq(target.get('item'), cell.item, 'hovering a reward targets its item for the tooltip')
+  var option: RewardOption = screen._draft.get_node('Panel/Cards').get_child(0)
+  var target: Dictionary = screen._inspection_target(option.get_global_rect().get_center())
+  assert_eq(target.get('item'), option.item(), 'hovering a reward targets its item for the tooltip')
   screen.free()
 
 

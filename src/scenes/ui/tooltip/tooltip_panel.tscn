@@ -4,6 +4,7 @@
 
 [node name="TooltipPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(360, 0)
+mouse_filter = 2
 theme_type_variation = &"PanelFramed"
 script = ExtResource("1")
 

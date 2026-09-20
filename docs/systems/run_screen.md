@@ -235,9 +235,12 @@ cells' cooldown fills (`ItemCell.show_cooldown`) and fades away the fight's temp
 A view built without a fight never shows the fills. The choice overlay and the combat report are still
 full-screen.
 
-- **Draft** — `draft_overlay.tscn` shows each reward as an `ItemCell` (the same icon and value
-  pills as the board, with a `UIJuice` node) after a fight; hovering one shows the item tooltip, and
-  clicking it emits `picked(index)` → `RunManager.apply_draft_pick`. The **gold button** in the
+- **Draft** — `draft_overlay.tscn` shows each reward as a `RewardOption` (`reward_option.tscn`)
+  after a fight: a button around the same `ItemCell` the board uses (the same icon and value pills),
+  with a `UIJuice` node drawing the highlight on the cell's frame, so a reward hovers, presses and
+  sounds like every other control the player picks ([control_feedback.md](control_feedback.md)). The
+  button itself draws nothing (the `ButtonBare` theme variation). Hovering one shows the item
+  tooltip, and pressing it emits `picked(index)` → `RunManager.apply_draft_pick`. The **gold button** in the
   panel's bottom right (`'+{0} gold'`, the amount from `Balance.GOLD_SKIP`) emits `skipped` →
   `RunManager.apply_draft_skip` instead, banking gold and
   refreshing the gold HUD before advancing (decision #33). Both paths then advance.

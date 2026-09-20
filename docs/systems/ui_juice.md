@@ -7,6 +7,14 @@ Hovering does not change the Control's size.
 
 > Convention (CLAUDE.md): when adding new UI, add a UIJuice node to it.
 
+**Anything the player can pick is a `BaseButton` with a UIJuice node** — a menu button, a
+card, a potion slot, a reward option. Handling the click with `gui_input` on a plain Control
+skips the press squash, the release pulse and the click sound, so a control the player chooses
+with is never built that way. When the thing the player picks is a picture rather than a button
+body, put it inside a button using the `ButtonBare` theme variation
+([ui_theme.md](ui_theme.md)), which draws nothing, and point `highlight_target` at the panel
+that does draw — `reward_option.tscn` wraps an `ItemCell` this way.
+
 ## Usage
 
 Add a `UIJuice` node as a **child** of the Control you want juiced (it appears
