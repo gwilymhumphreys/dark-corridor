@@ -289,7 +289,7 @@ still chewing through shield, which is information the screen currently only sho
 a number.
 
 The owner's word for this is armour, which is the shield status
-(`docs/design/armourer.md`). Only the attack mechanic varies its sound. Poison, burn
+(`docs/design/smith.md`). Only the attack mechanic varies its sound. Poison, burn
 and bleed also drain shield, but they tick rather than hit.
 
 ### A variant is a subfolder of the mechanic

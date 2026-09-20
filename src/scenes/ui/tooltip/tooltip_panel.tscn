@@ -22,16 +22,20 @@ theme_override_constants/separation = 8
 [node name="Title" type="Label" parent="Margin/Body"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 28
+theme_type_variation = &"LabelMedium"
 text = "Item"
 autowrap_mode = 3
 
 [node name="TypeLine" type="Label" parent="Margin/Body"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"LabelSmall"
 text = "Weapon"
 autowrap_mode = 3
+
+[node name="Charge" type="VBoxContainer" parent="Margin/Body"]
+layout_mode = 2
+mouse_filter = 2
 
 [node name="Lines" type="VBoxContainer" parent="Margin/Body"]
 layout_mode = 2
@@ -46,9 +50,3 @@ bbcode_enabled = true
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
-
-[node name="StatBlock" type="Label" parent="Margin/Body"]
-modulate = Color(0.75, 0.75, 0.78, 1)
-layout_mode = 2
-mouse_filter = 2
-text = "Every 1s"

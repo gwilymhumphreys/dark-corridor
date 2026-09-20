@@ -34,7 +34,7 @@ offset_top = 260.0
 offset_right = 700.0
 offset_bottom = 380.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 110
+theme_type_variation = &"LabelDisplay"
 horizontal_alignment = 1
 
 [node name="Menu" type="VBoxContainer" parent="."]
@@ -57,7 +57,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(420, 110)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 44
+theme_type_variation = &"ButtonHeading"
 text = "New Run"
 
 [node name="Juice" type="Node" parent="Menu/NewRunButton"]
@@ -68,7 +68,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(420, 110)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 44
+theme_type_variation = &"ButtonHeading"
 text = "Return to Title"
 
 [node name="Juice" type="Node" parent="Menu/TitleButton"]

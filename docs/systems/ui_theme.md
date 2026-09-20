@@ -113,6 +113,48 @@ free to move sub-pixel**: `offset_transform_*` is visual-only and returns to the
 integer rest pose, so press squashes / slides glide smoothly without disturbing
 layout.
 
+## The text ladder and the text size setting
+
+Every font size in the game comes from one of **seven named rungs**, defined in
+`src/ui/text_size.gd` (`class_name TextSize`, static only) and written into the theme:
+
+| Rung | Size | Where it is used |
+|---|---|---|
+| `Small` | 18 | status numbers, the tooltip's type line, ally slot readouts |
+| `Body` | 24 | **the theme's default size** — tooltip effect lines, keyword descriptions, HP readouts, anything with no variation |
+| `Medium` | 30 | the tooltip title, keyword card names, enemy names, section titles, the settings Back button |
+| `Large` | 36 | the settings row labels, the gold readout, the pause menu buttons |
+| `Heading` | 44 | screen titles and menu buttons |
+| `Title` | 64 | the pause menu title |
+| `Display` | 96 | the title and outcome screens |
+
+`Body` is the theme's `default_font_size`, so a Control with no variation already has the right
+size — including a `RichTextLabel`, whose text is always body copy here. It is chosen to **match
+the inline icon size**: an icon in a tooltip line is drawn at exactly the body font's height
+([tooltips.md](tooltips.md)), so text and icons read as one line and move together.
+
+A scene takes a rung through `theme_type_variation`, never a number:
+`theme_type_variation = &"LabelMedium"` on a Label, `&"ButtonHeading"` on a Button. The theme
+defines a variation for each rung a scene actually uses — six for Label, three for Button — listed
+in `TextSize.VARIATIONS`. **Do not write `theme_override_font_sizes/font_size` in a scene**: a
+hardcoded number does not move with the player's text size setting.
+
+### The setting
+
+The settings screen has a **Text size** slider: a percentage from 75% to 200%, default 100%.
+`Prefs.set_text_scale` stores it and calls `TextSize.apply`, which writes `rung size x scale` into
+the theme resource for the default size and every variation. Every Control reads that resource, so
+one call resizes the whole interface live — including the settings screen the slider is on.
+
+The base sizes live in `TextSize.SIZES`, not in the `.tres`, so applying a scale twice is never
+cumulative and the authored ladder cannot drift. The `.tres` holds the same numbers at 100% so the
+Godot editor shows the real sizes. `TestCleanup.reset_all_managers` puts the authored ladder back,
+because the theme is a shared resource and a test that changed the size would otherwise leak it.
+
+**Three places deliberately do not scale**: `ValuePill` and `ItemIcon` (the numbers on a board item,
+sized to fit a fixed cell, so scaling them would overflow the cell) and the damage numbers on the
+wall (`damage_number_drawer.gd`, drawn into the corridor image rather than the interface).
+
 ## Fonts
 
 The UI font is **Rakkas** (`assets/fonts/rakkas.ttf`, a free Google Font), chosen
@@ -166,7 +208,7 @@ Godot 4.7, so per-font/per-viewport oversampling applies (`FontFile.oversampling
 ## Status
 
 - **Built:** `Consts.UI_SCALE` / `UI_BASE_RESOLUTION`; Rakkas as the theme's
-  default font.
+  default font; the seven-rung text ladder and the text size slider.
 - **On hold:** reworking UI chrome onto the ×4 grid. The pixel-art direction was set
   aside on 2026-09-16; whether the interface frame and item icons stay pixel art is
   open ([art_audio.md](../design/art_audio.md)).

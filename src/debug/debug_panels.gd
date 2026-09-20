@@ -578,8 +578,9 @@ func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
 
 ## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
 ## colours with ''. Interface images are clamped to the portrait palette's colours through
-## `InterfaceLook.picture_materials`. Statuses in the current fight are recoloured, and
-## `interface_palette_changed` tells nodes that copied colours when built.
+## `InterfaceLook.picture_materials`. Statuses in the current fight are recoloured, the mouse
+## cursor is rebuilt on the new colours, and `interface_palette_changed` tells nodes that copied
+## colours when built.
 func set_interface_palette(path: String) -> void:
   interface_palette = path
   if path == '':
@@ -591,6 +592,7 @@ func set_interface_palette(path: String) -> void:
   PrintLook.push_wear_colours()
   InterfaceLook.push_wear_colours()
   ControlFeedback.push_colours()
+  Cursor.apply()
   interface_palette_changed.emit()
 
 

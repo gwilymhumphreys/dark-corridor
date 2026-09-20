@@ -20,10 +20,10 @@ theme_override_constants/separation = 60
 mouse_default_cursor_shape = 2
 focus_mode = 0
 text = "◄ Back"
-theme_override_font_sizes/font_size = 48
+theme_type_variation = &"ButtonHeading"
 
 [node name="ForwardButton" type="Button" parent="UILayer/ButtonRow"]
 mouse_default_cursor_shape = 2
 focus_mode = 0
 text = "Forward ►"
-theme_override_font_sizes/font_size = 48
+theme_type_variation = &"ButtonHeading"

@@ -65,6 +65,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 | Character portraits | `combat_view_framed.tscn` player portrait `Image`, `ally_slot.tscn` `Portrait/Image`, `character_card.tscn` `Portrait/Image` | framed pictures |
 | HP bars | `Background` and `Fill` under `HP` in `combat_view_framed.tscn`, `ally_slot.tscn`, `enemy_hud.tscn` | elements |
 | Item value pills (the numbers on items) | `value_pill.tscn` root panel and its `Value` label | elements |
+| The mouse cursor ([cursor.md](cursor.md)) | `mouse_cursor.tscn` `Hand` | images |
 
 On a pill's number the shader runs on each letter as drawn from the font's texture, so dot, line and
 speck patterns are laid out from each letter rather than from the pill's corner.

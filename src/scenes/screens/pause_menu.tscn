@@ -36,7 +36,7 @@ theme_override_constants/separation = 30
 
 [node name="Title" type="Label" parent="Catcher/Panel/Menu"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
+theme_type_variation = &"LabelTitle"
 text = "Paused"
 horizontal_alignment = 1
 
@@ -45,7 +45,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 90)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 36
+theme_type_variation = &"ButtonLarge"
 text = "Resume"
 
 [node name="Juice" type="Node" parent="Catcher/Panel/Menu/ResumeButton"]
@@ -56,7 +56,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 90)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 36
+theme_type_variation = &"ButtonLarge"
 text = "Settings"
 
 [node name="Juice" type="Node" parent="Catcher/Panel/Menu/SettingsButton"]
@@ -67,7 +67,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 90)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 36
+theme_type_variation = &"ButtonLarge"
 text = "Quit to Menu"
 
 [node name="Juice" type="Node" parent="Catcher/Panel/Menu/QuitButton"]

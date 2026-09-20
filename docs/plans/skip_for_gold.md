@@ -8,7 +8,7 @@
 
 ## Why
 
-A slow-weapon synergy build (the Armourer's big-slow-attacks archetype — [`../design/armourer.md`](../design/armourer.md))
+A slow-weapon synergy build (the Smith's big-slow-attacks archetype — [`../design/smith.md`](../design/smith.md))
 shouldn't be *forced* to take a fast weapon that wrecks its synergy. The 1-of-3 draft is currently no-skip
 (taking one is always correct). The skip is the escape hatch; gold is a small consolation so skipping isn't
 pure feel-bad, and it's the first **source** of a future gold economy.

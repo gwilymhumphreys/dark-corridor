@@ -343,7 +343,7 @@ Update these in the same change as the code, following [documentation.md](../doc
   `systems/run_screen.md`: keyword cards, drawers keyed by mechanic, colour names, health bar numbers.
 - `systems/combat_log.md`, `systems/autotest.md`: the shield renames, the new strategy names and
   families.
-- `design/game_design.md`, `design/armourer.md`, `design/mechanic_ideas.md`,
+- `design/game_design.md`, `design/smith.md`, `design/mechanic_ideas.md`,
   `design/authoring.md`: block to shield, bleed's new trigger, and how to write an effect with
   `mechanic`.
 - `handoff.md`: the "Last updated" line.

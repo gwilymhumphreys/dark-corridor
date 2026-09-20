@@ -277,8 +277,8 @@ instead.
 `KeywordCatalog.has` / `get_entry` resolve a **mechanic** id from its `Mechanic` class (name /
 desc / colour / icon), so all ten mechanics have cards
 ([tooltips.md](tooltips.md)). `TooltipContent.keyword_ids` adds each effect's mechanic id (attack and
-heal included) and `crit` for an item with a crit chance, and the tooltip stat block gets a
-`'Crit chance: {0}%'` line for such an item.
+heal included) and `crit` for an item with a crit chance, and such an item gets an extra effect
+line reading its chance as a percentage beside the crit glyph.
 
 ## Content
 

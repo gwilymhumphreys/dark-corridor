@@ -37,7 +37,7 @@ offset_top = 36.0
 offset_right = 460.0
 offset_bottom = 104.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 44
+theme_type_variation = &"LabelHeading"
 horizontal_alignment = 1
 
 [node name="Prose" type="Label" parent="Panel"]
@@ -50,7 +50,7 @@ offset_top = 128.0
 offset_right = 460.0
 offset_bottom = 320.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 28
+theme_type_variation = &"LabelMedium"
 horizontal_alignment = 1
 autowrap_mode = 2
 

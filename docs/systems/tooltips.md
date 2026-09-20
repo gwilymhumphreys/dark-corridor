@@ -12,29 +12,41 @@ holds the design rationale, the ratified decisions, and the prior-art lineage
 
 ## What the player sees
 
-- **Main panel** (nearest the item) — name (rarity-tinted), a type line (the item's type tags,
-  hidden when it has none), generated effect lines with **live values**, inline keyword **chips** and
-  inline mechanic **glyphs** (attack / heal), an optional authored flavor line, and a stat block
-  (cooldown, plus a crit-chance line for an item with one).
+- **Main panel** (nearest the item) — four parts, in this order: the name (rarity-tinted), a type
+  line (the item's type tags, hidden when it has none), the charge time beside the `charge_time`
+  glyph, and the generated effect lines. An optional authored flavor line sits under them.
 - **Keyword column** (cards beside the main panel) — one card per keyword the item
-  references (statuses + mechanics), **all shown at once**.
+  references (statuses + mechanics), **all shown at once**. A card is the keyword's icon and its
+  tinted name on one row, with its description under them.
 
 The cluster shows/hides as a unit; it is opaque (a scale reveal, no fade) and
 **suppressed while the pause menu is open**. Nothing in it is interactive — the whole
 cluster ignores the mouse, so it never swallows a click on what is underneath, and it
-hides the moment the cursor leaves the item's cell. The chips inside it do **not** carry
-the per-keyword pop-up tooltip (the column already shows every card at once); a chip used
-elsewhere in the interface can still ask for one, see below.
+hides the moment the cursor leaves the item's cell. It holds no keyword **chips**: a keyword
+inside an effect line is drawn as a bare icon, and the column beside it already shows every
+card at once. A chip used elsewhere in the interface can still carry a pop-up card, see below.
+
+### The effect lines
+
+A **basic apply** — an effect that applies to a single actor in the direction its mechanic already
+implies (yourself, or the enemy in front of you), spends no fuel and is not unblockable — reads as
+its **value and its icon**, with no words at all (`TooltipContent._is_basic_apply`). An item's crit
+chance reads as one more line in the same shape: the percentage beside the crit glyph.
+
+Anything more complicated — an item target, all enemies, a summon, a trigger, a charge or decharge
+— keeps a **worded line** for now, with an icon where a keyword chip used to be. Those strings are
+the owner's to design as the effects that need them are authored.
 
 ## The pieces (`src/scenes/ui/tooltip/`)
 
 | File | Role |
 |------|------|
 | `tooltip_cluster.gd` (+`.tscn`) | The cluster, on its own `CanvasLayer` (layer **50**, below pause's 100). Owns the main panel + keyword column, positions/clamps, rebuilds on item change, hides when the target is empty, clears its `Item` ref on hide + `_exit_tree`. |
-| `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip / icon segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
-| `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content (tinted name + description). Wrapped in a `PanelContainer` for the column; returned bare by a hoverable chip's `_make_custom_tooltip`. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
-| `keyword_chip.gd` (+`.tscn`) | `PanelContainer` tag (icon + tinted name), used inline in the body and standalone elsewhere. `setup(id, hoverable = false)`: inert to the mouse by default, or, with `hoverable = true`, `MOUSE_FILTER_STOP` + `tooltip_text = <id>` so the built-in per-keyword tooltip pops. Its icon is dressed by kind, see below. |
-| `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, type_line, lines, flavor, stat_lines, keyword_ids}`. **Instance** (not static) because the line templates and the type line call `tr()`. |
+| `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its charge row and its line rows (text / value / icon segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
+| `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content: the icon and the tinted name on one row, the description under them. Wrapped in a `PanelContainer` for the column; returned bare by a hoverable chip's `_make_custom_tooltip`. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
+| `keyword_chip.gd` (+`.tscn`) | `PanelContainer` tag (icon + tinted name), used **outside** the item tooltip. `setup(id, hoverable = false)`: inert to the mouse by default, or, with `hoverable = true`, `MOUSE_FILTER_STOP` + `tooltip_text = <id>` so the built-in per-keyword tooltip pops. |
+| `keyword_icon.gd` | `class_name KeywordIcon`, static only: the one rule for drawing a keyword's icon. `dress(rect, path, colour)` sets the modulate and material by kind (see below); `make(id, size)` returns a ready square `TextureRect`. Shared by the chip, the card and the panel's inline icons. |
+| `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, type_line, charge_line, lines, flavor, keyword_ids}`. **Instance** (not static) because the line templates and the type line call `tr()`. |
 
 Supporting: `src/content/keywords/keyword_catalog.gd` (the keyword id → card map).
 
@@ -103,9 +115,9 @@ tooltip computes display values with **separate pure methods** on `Item`:
   (`StatusManager.modify_outgoing`, e.g. Weak). Pure.
 - `base_value(effect)` — the authored value × enchant mult (a permanent modifier).
 
-The builder highlights a value when `display_value != base_value` (a single accent +
-a ▲/▼ direction glyph — the colour treatment is a placeholder, the owner's call; the
-B&W theme makes literal green/red clash). **Consume-scaling is excluded from v1** —
+The builder marks a value as `changed` when `display_value != base_value`, and the panel tints it
+with a single accent colour (a placeholder, the owner's call). It used to carry a ▲/▼ glyph as
+well, for direction; that was dropped once the mechanic's icon sat beside the number. **Consume-scaling is excluded from v1** —
 reading it correctly needs a non-mutating stack peek (`StatusManager` has no
 read-only stack getter); a static consume number would mislead.
 
@@ -133,27 +145,31 @@ one home per mechanic, [mechanics.md](mechanics.md)), a **status** id from its `
 subclass, and a **mechanic keyword** id (`kw:*`) from entries authored in the catalog. An id
 absent from the catalog yields no card, silently.
 
-### Dressing a chip's icon
+### Dressing an icon
 
-The three kinds of entry bring two kinds of icon, and `KeywordChip._dress_icon` treats them
+The three kinds of entry bring two kinds of icon, and `KeywordIcon.dress` treats them
 oppositely. A mechanic's icon is an [icon slot](mechanics.md#iconslots) glyph: a white shape
-under `res://assets/icons/mechanics/`, so the chip tints it with the keyword's colour and draws
-it through `InterfaceLook.element_material`, which keeps the effects that would move a pixel off
+under `res://assets/icons/mechanics/`, so it is tinted with the keyword's colour and drawn
+through `InterfaceLook.element_material`, which keeps the effects that would move a pixel off
 its palette colour switched off ([interface_look.md](interface_look.md)). A status or `kw:*`
 icon is painted pack art with its own colours, so it keeps white modulate and
 `InterfaceLook.material`, the picture material.
 
+Every icon in the tooltip goes through this one function — the chip's, the card's and the panel's
+inline ones.
+
 ### The inline icon segment
 
-A line segment of `{'t': 'icon', 'id': <slot>}` is rendered by `TooltipPanel._icon_rect` as a
-`TextureRect`: the slot's [icon](mechanics.md#iconslots), tinted with the mechanic's colour
-(`MechanicRegistry.get_mechanic(id).color()`) and drawn through `InterfaceLook.element_material`
-(the same treatment a chip gives a mechanic glyph), sized square to the row's font height so the
-glyph matches the text beside it. A slot with no texture (an unknown id) yields an empty rect
-rather than an error. The **attack** and **heal** effect lines carry their mechanic's glyph
-(`10 <glyph> to the enemy`, `<glyph> <glyph>`), in place of the old word; the other mechanics
-still use a keyword chip. The stat block is deliberately left a plain joined label — a glyph in
-it (e.g. `charge_time` beside `Every {0}s`) is a later step.
+A line segment of `{'t': 'icon', 'id': <id>}` is rendered by `TooltipPanel` through
+`KeywordIcon.make`. The id is a **keyword** id (a mechanic, a status or a `kw:` id) when
+`KeywordCatalog` has an entry for it, and otherwise an **icon slot** id such as `charge_time`,
+which has no keyword card and so is drawn in `Colours.UI_TEXT_DIM`. An id that resolves to neither
+yields an empty rect rather than an error.
+
+An icon is drawn at exactly the body font's height (`TooltipPanel.ICON_SCALE`, one), so it is as
+tall as the line it sits in. The body size is chosen to match the icons
+([ui_theme.md](ui_theme.md#the-text-ladder-and-the-text-size-setting)), and both follow the player's
+text size setting, since the size is read from the theme each time a line is built.
 
 ## Hoverable chips outside the item tooltip — the double-panel contract
 
@@ -165,8 +181,8 @@ frameless). The column cards are NOT Godot tooltips, so they wrap the *same* `ke
 in their own `PanelContainer`. Unknown id → `_make_custom_tooltip` returns `null` (no tip); the
 chip still renders its name.
 
-The item tooltip's own chips are built without `hoverable`, so this path is unused there. The
-debug Icons tab (`src/debug/icon_panel.gd`) is the current user.
+The item tooltip holds no chips, so this path is unused there. The debug Icons tab
+(`src/debug/icon_panel.gd`) is the current user.
 
 ## Owner's domain (content, scaffolded as marked placeholders)
 
@@ -179,10 +195,10 @@ debug Icons tab (`src/debug/icon_panel.gd`) is the current user.
   Labels). Authored description/flavor text may therefore use BBCode — notably a
   font-relative inline icon, `[img height=1em]res://path/icon.png[/img]` (Godot
   4.7 `em` unit scales the icon to the text). **Caveat:** with BBCode on, a literal
-  `[` in copy is parsed as a tag — escape it as `[lb]`. Interactive inline keyword
-  references are still real `keyword_chip` nodes in the effect lines, not BBCode,
-  because chips carry the built-in per-keyword tooltip.
-- The generated-line baseline copy (templates + shape phrases in `tooltip_content.gd`).
+  `[` in copy is parsed as a tag — escape it as `[lb]`. An inline keyword reference in an effect
+  line is a real `KeywordIcon` node, not BBCode.
+- The generated-line baseline copy (templates + shape phrases in `tooltip_content.gd`), and the
+  strings for the effects that are not a basic apply, as those effects are authored.
 - The changed-value highlight + rarity-tint colour treatment (a theme call).
 
 ### Filtered target phrases

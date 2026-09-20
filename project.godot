@@ -28,7 +28,7 @@ PrintLook="*res://src/autoloads/print_look.gd"
 InterfaceLook="*res://src/autoloads/interface_look.gd"
 InterfaceGlow="*res://src/autoloads/interface_glow.gd"
 ControlFeedback="*res://src/autoloads/control_feedback.gd"
-Cursor="*res://src/autoloads/cursor.gd"
+Cursor="*res://src/scenes/ui/mouse_cursor.tscn"
 DebugPanels="*res://src/debug/debug_panels.tscn"
 
 [display]

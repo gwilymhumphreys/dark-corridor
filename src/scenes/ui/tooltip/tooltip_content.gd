@@ -1,21 +1,21 @@
 class_name TooltipContent
 ## The tooltip content builder (docs/systems/tooltips.md): turns an Item into the structured
-## content the main panel renders — a title, generated effect LINES (each a list of segments:
-## plain text, a live VALUE, or a keyword CHIP), an optional authored flavor line, a stat block,
-## and the catalog-gated keyword id list for the column. Pure data: no nodes, no side effects
+## content the main panel renders — a title, a type line, a charge-time line, generated effect
+## LINES (each a list of segments: plain text, a live VALUE, or a keyword ICON), an optional
+## authored flavor line, and the catalog-gated keyword id list for the column. Pure data: no nodes, no side effects
 ## (values come from Item.display_value / base_value, which never mutate). Copy here is the
 ## baseline — templates and shape phrases are the owner's to refine.
 ##
 ## A line is an Array of segment Dictionaries:
 ##   {'t': 'text',  's': String}                          — literal copy
-##   {'t': 'value', 's': String, 'changed': bool, 'dir': int}  — a live number (dir: +1 up / -1 down)
-##   {'t': 'chip',  'id': String}                         — a keyword reference (status or mechanic)
-##   {'t': 'icon',  'id': String}                         — a mechanic glyph (an IconSlots id, e.g. attack / heal)
+##   {'t': 'value', 's': String, 'changed': bool}       — a live number ('changed': not the base value)
+##   {'t': 'icon',  'id': String}                         — a keyword's icon (a mechanic, a status,
+##                                                          or an icon slot such as charge_time)
 
 
 ## Build the full content Dictionary for `item`:
-##   {title, rarity, panel_color, type_line: String, lines: Array[Array], flavor: String,
-##    stat_lines: Array[String], keyword_ids: Array[String]}
+##   {title, rarity, panel_color, type_line: String, charge_line: Array, lines: Array[Array],
+##    flavor: String, keyword_ids: Array[String]}
 ## INSTANCE method (call `TooltipContent.new().build(item)`) because tr() — used by the line
 ## templates and the type line — is an Object method unavailable from a static context.
 func build(item: Item) -> Dictionary:
@@ -24,11 +24,20 @@ func build(item: Item) -> Dictionary:
     'rarity': item.def.rarity,
     'panel_color': item.def.panel_color,
     'type_line': _type_line(item.def.types),
+    'charge_line': _charge_line(item),
     'lines': _effect_lines(item),
     'flavor': tr(item.def.description_key) if item.def.description_key != '' else '',
-    'stat_lines': _stat_lines(item),
     'keyword_ids': keyword_ids(item),
   }
+
+
+## The charge-time line: the item's cooldown in seconds beside the charge_time glyph. No tr() —
+## the line is a number and an icon, so there is nothing to translate.
+static func _charge_line(item: Item) -> Array:
+  return [
+    {'t': 'text', 's': fmt(item.def.cooldown) + 's'},
+    {'t': 'icon', 'id': IconSlots.CHARGE_TIME},
+  ]
 
 
 ## The type line: each of `types` as its singular display name (translated), joined. An item with
@@ -51,69 +60,73 @@ func _effect_lines(item: Item) -> Array:
     var line: Array = _trigger_line(sub)
     if not line.is_empty():
       lines.append(line)
+  # An item's crit chance reads as one more effect line: the percentage beside the crit glyph.
+  if item.def.crit_chance > 0.0:
+    lines.append([
+      {'t': 'text', 's': fmt(item.def.crit_chance * 100.0) + '%'},
+      {'t': 'icon', 'id': CritMechanic.ID},
+    ])
   return lines
 
 
+## One effect's line. A basic apply (see `_is_basic_apply`) is the value and the icon, with no
+## words at all. Anything more complicated keeps a worded line for now — the owner designs those
+## strings when the effects that need them are authored.
 func _effect_line(item: Item, effect: ItemEffect) -> Array:
   var value_seg: Dictionary = _value_seg(item, effect)
   match effect.kind:
     Delivery.Kind.MECHANIC:
-      # Attack and heal carry their mechanic's inline glyph in place of the old word; the status
-      # mechanics (shield, and later poison / burn / bleed / regen) use the status templates with
-      # the mechanic id as the chip.
-      if effect.mechanic == AttackMechanic.ID:
-        var icon_seg: Dictionary = {'t': 'icon', 'id': effect.mechanic}
-        if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-          return _interpolate(tr('{0} {1} to all enemies'), [value_seg, icon_seg])
-        return _interpolate(tr('{0} {1} to {2}'), [value_seg, icon_seg, _shape_text(effect.shape, effect.target_filter)])
-      if effect.mechanic == HealMechanic.ID:
-        # No tr(): the line is a value and a glyph with no words, so there is nothing to
-        # translate and "{0} {1}" would be a meaningless entry in the translation template.
-        return _interpolate('{0} {1}', [value_seg, {'t': 'icon', 'id': effect.mechanic}])
-      # Charge and decharge move an item's cooldown bar by seconds, so their line names the
-      # target items and the seconds, not a stack count.
+      var icon_seg: Dictionary = {'t': 'icon', 'id': effect.mechanic}
+      # Charge and decharge move an item's cooldown bar by seconds, so their line names the target
+      # items and the seconds, not a stack count. They always target items, never an actor.
       if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:
         return _interpolate(tr('{0} {1} by {2}s'),
-            [{'t': 'chip', 'id': effect.mechanic}, _shape_text(effect.shape, effect.target_filter), value_seg])
-      var chip: Dictionary = {'t': 'chip', 'id': effect.mechanic}
-      if effect.shape == ItemEffect.Shape.SELF:
-        return _interpolate(tr('Gain {0} {1}'), [value_seg, chip])
-      return _interpolate(tr('Apply {0} {1}'), [value_seg, chip])
+            [icon_seg, _shape_text(effect.shape, effect.target_filter), value_seg])
+      if _is_basic_apply(effect):
+        return [value_seg, icon_seg]
+      if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
+        return _interpolate(tr('{0} {1} to all enemies'), [value_seg, icon_seg])
+      return _interpolate(tr('{0} {1} to {2}'), [value_seg, icon_seg, _shape_text(effect.shape, effect.target_filter)])
     Delivery.Kind.APPLY_STATUS:
-      var chip: Dictionary = {'t': 'chip', 'id': effect.status_id}
-      if effect.shape == ItemEffect.Shape.SELF:
-        return _interpolate(tr('Gain {0} {1}'), [value_seg, chip])
-      return _interpolate(tr('Apply {0} {1}'), [value_seg, chip])
+      var status_seg: Dictionary = {'t': 'icon', 'id': effect.status_id}
+      if _is_basic_apply(effect):
+        return [value_seg, status_seg]
+      if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
+        return _interpolate(tr('{0} {1} to all enemies'), [value_seg, status_seg])
+      return _interpolate(tr('{0} {1} to {2}'), [value_seg, status_seg, _shape_text(effect.shape, effect.target_filter)])
     Delivery.Kind.SUMMON:
       return _interpolate(tr('Summon {0}'), [_summon_text(effect)])
   return []
 
 
+## True when an effect's line can be just its value and its icon: it applies to a single actor in
+## the direction its mechanic already implies (yourself, or the enemy in front of you), spends no
+## fuel, and is not unblockable. Everything else takes a worded line.
+static func _is_basic_apply(effect: ItemEffect) -> bool:
+  if effect.consume_id != '':
+    return false
+  if (effect.flags & Delivery.Flag.UNBLOCKABLE) != 0:
+    return false
+  match effect.shape:
+    ItemEffect.Shape.SELF, ItemEffect.Shape.OPPONENT_LEFTMOST:
+      return true
+  return false
+
+
 func _trigger_line(sub: Dictionary) -> Array:
   # An ITEM_DESTROYED trigger is the Reclaim keyword (the destroy-payoff; tooltips.md), not generic.
   if sub.get('event', -1) == EventBus.Event.ITEM_DESTROYED:
-    return _interpolate(tr('{0} as your items are destroyed'), [{'t': 'chip', 'id': KeywordCatalog.RECLAIM}])
+    return _interpolate(tr('{0} as your items are destroyed'), [{'t': 'icon', 'id': KeywordCatalog.RECLAIM}])
   var filter: Variant = sub.get('filter', null)
   if filter is String and filter != '':
-    return _interpolate(tr('When {0} is applied'), [{'t': 'chip', 'id': filter}])
+    return _interpolate(tr('When {0} is applied'), [{'t': 'icon', 'id': filter}])
   return _interpolate(tr('On trigger'), [])
 
 
 static func _value_seg(item: Item, effect: ItemEffect) -> Dictionary:
   var disp: float = item.display_value(effect)
   var base: float = item.base_value(effect)
-  var changed: bool = not is_equal_approx(disp, base)
-  var dir: int = 0
-  if changed:
-    dir = 1 if disp > base else -1
-  return {'t': 'value', 's': fmt(disp), 'changed': changed, 'dir': dir}
-
-
-func _stat_lines(item: Item) -> Array:
-  var lines: Array = [tr('Every {0}s').format([fmt(item.def.cooldown)])]
-  if item.def.crit_chance > 0.0:
-    lines.append(tr('Crit chance: {0}%').format([fmt(item.def.crit_chance * 100.0)]))
-  return lines
+  return {'t': 'value', 's': fmt(disp), 'changed': not is_equal_approx(disp, base)}
 
 
 ## The target phrase an effect line's {2} / {1} placeholder stands in for. The actor shapes (SELF,
@@ -301,7 +314,7 @@ static func _add_keyword(ids: Array[String], id: String) -> void:
 
 ## Replace {0}, {1}, … in a (translated) template with the supplied segments, splitting the literal
 ## text around them into 'text' segments. The translated template controls word order, so the value
-## and chip land wherever the translator places their placeholder.
+## and icon land wherever the translator places their placeholder.
 static func _interpolate(template: String, args: Array) -> Array:
   var segs: Array = []
   var buf: String = ''

@@ -649,8 +649,7 @@ static func _flesh_skull() -> ItemDef:
 ## Mighty Blow (PLACEHOLDER name — owner's to rename) — the Smith's empower SKILL (docs/design/
 ## smith.md → The empower engine): a plain-cooldown metronome that on each fire applies the
 ## 'empowered' status to SELF (banks one charge — it stacks). Each charge doubles the next WEAPON
-## attack (EmpoweredStatus consumes one charge per weapon fire). AUTHORED BUT UN-POOLED — the Smith
-## character isn't built yet, so this isn't in any item_pool. COMMON.
+## attack (EmpoweredStatus consumes one charge per weapon fire). In the Smith's item_pool. COMMON.
 static func _mighty_blow() -> ItemDef:
   var d := ItemDef.new()
   d.id = MIGHTY_BLOW
@@ -673,8 +672,8 @@ static func _mighty_blow() -> ItemDef:
 ## Smith big slow weapons (PLACEHOLDER names — owner's to rename) — the empower-payoff ladder
 ## (docs/design/smith.md): three heavy single-target attacks on 5s/6s/7s cooldowns with similar DPS
 ## but a rising PER-HIT, so the slowest is the prime target for Mighty Blow's double. Plain weapons
-## (no rider) — the identity is the per-hit ladder, not extra effects. AUTHORED BUT UN-POOLED (no
-## Smith character yet). COMMON. Numbers -> Balance (placeholders for /tune).
+## (no rider) — the identity is the per-hit ladder, not extra effects. In the Smith's item_pool.
+## COMMON. Numbers -> Balance (placeholders for /tune).
 static func _smith_broadaxe() -> ItemDef:
   var d := ItemDef.new()
   d.id = SMITH_BROADAXE

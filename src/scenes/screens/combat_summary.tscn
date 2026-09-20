@@ -40,7 +40,7 @@ theme_override_constants/separation = 28
 
 [node name="Title" type="Label" parent="Panel/Margin/Body"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_type_variation = &"LabelHeading"
 text = "Combat Report"
 horizontal_alignment = 1
 
@@ -56,7 +56,7 @@ theme_override_constants/separation = 14
 
 [node name="ReportTitle" type="Label" parent="Panel/Margin/Body/Columns/Report"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_type_variation = &"LabelMedium"
 text = "Your items"
 
 [node name="RowsScroll" type="ScrollContainer" parent="Panel/Margin/Body/Columns/Report"]
@@ -105,7 +105,6 @@ theme_override_constants/separation = 10
 
 [node name="StatusTitle" type="Label" parent="Panel/Margin/Body/Columns/Report/StatusDamage"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Status damage"
 
 [node name="StatusRows" type="GridContainer" parent="Panel/Margin/Body/Columns/Report/StatusDamage"]
@@ -131,7 +130,7 @@ theme_override_constants/separation = 14
 
 [node name="LogTitle" type="Label" parent="Panel/Margin/Body/Columns/Log"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_type_variation = &"LabelMedium"
 text = "Event log"
 
 [node name="EventsScroll" type="ScrollContainer" parent="Panel/Margin/Body/Columns/Log"]
@@ -153,7 +152,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(360, 96)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 40
+theme_type_variation = &"ButtonHeading"
 text = "Close"
 
 [node name="Juice" type="Node" parent="Panel/Margin/Body/Footer/CloseButton"]

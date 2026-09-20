@@ -12,27 +12,27 @@ script = ExtResource("1")
 [node name="Shield" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"LabelSmall"
 
 [node name="Poison" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"LabelSmall"
 
 [node name="Burn" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"LabelSmall"
 
 [node name="Bleed" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"LabelSmall"
 
 [node name="Regen" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"LabelSmall"
 
 [node name="Juice" type="Node" parent="."]
 script = ExtResource("2")

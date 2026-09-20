@@ -1,8 +1,8 @@
 extends GutTest
-## The tooltip content builder's icon segment (docs/systems/tooltips.md, docs/plans/
-## mechanic_icons.md step 5): the attack and heal effect lines carry their mechanic's inline
-## glyph (a segment with 't' == 'icon') in place of the old "damage" / "Heal" word, while the
-## other mechanics still use a keyword chip and are untouched.
+## The tooltip content builder's lines (docs/systems/tooltips.md): a basic apply is a value and
+## an icon segment with no words, the charge-time line is the cooldown beside the charge_time
+## glyph, an item's crit chance is one more effect line, and a more complicated effect keeps its
+## worded line with an icon in place of the old keyword chip.
 
 var _actors: Array = []
 
@@ -80,16 +80,13 @@ func _heal_def() -> ItemDef:
   return def
 
 
-func test_attack_line_has_an_icon_segment_and_no_damage_word() -> void:
+## A single-target attack is a basic apply: a value and the attack glyph, no words at all.
+func test_attack_line_is_a_value_and_the_attack_glyph() -> void:
   var it: Item = Item.new(FixtureItems.attack(), _actor(100.0))
-  var content: Dictionary = TooltipContent.new().build(it)
-  var line: Array = content['lines'][0]
-  var icon: Dictionary = _first_segment(line, 'icon')
-  assert_true(icon != {}, 'the attack line carries an icon segment')
-  assert_eq(icon.get('id'), AttackMechanic.ID, 'the icon is the attack glyph')
-  for seg: Dictionary in line:
-    if seg['t'] == 'text':
-      assert_false(seg['s'].find('damage') != -1, 'no text segment says "damage": %s' % seg['s'])
+  var line: Array = TooltipContent.new().build(it)['lines'][0]
+  assert_eq(line.size(), 2, 'a single-target attack line has two segments')
+  assert_eq(line[1]['id'], AttackMechanic.ID, 'the icon is the attack glyph')
+  assert_true(_first_segment(line, 'text') == {}, 'a basic apply line has no words')
 
 
 func test_heal_line_has_an_icon_segment() -> void:
@@ -101,12 +98,49 @@ func test_heal_line_has_an_icon_segment() -> void:
   assert_eq(icon.get('id'), HealMechanic.ID, 'the icon is the heal glyph')
 
 
-func test_shield_line_still_uses_a_chip_not_an_icon() -> void:
+## A self-shield is a basic apply: the line is exactly a value and the shield icon, no words.
+func test_basic_apply_line_is_a_value_and_an_icon_only() -> void:
   var it: Item = Item.new(FixtureItems.shield(), _actor(100.0))
   var content: Dictionary = TooltipContent.new().build(it)
   var line: Array = content['lines'][0]
-  assert_true(_first_segment(line, 'chip') != {}, 'the shield line still carries a keyword chip')
-  assert_true(_first_segment(line, 'icon') == {}, 'the shield line has no icon segment')
+  assert_eq(line.size(), 2, 'a basic apply line has two segments')
+  assert_eq(line[0]['t'], 'value', 'the first segment is the value')
+  assert_eq(line[1]['t'], 'icon', 'the second segment is the icon')
+  assert_eq(line[1]['id'], ShieldMechanic.ID, 'the icon is the shield glyph')
+
+
+## An effect that is not a basic apply keeps its worded line, with an icon where the chip used to be.
+func test_complex_effect_keeps_a_worded_line_with_an_icon() -> void:
+  var it: Item = Item.new(_attack_def([ItemType.WEAPON], [AttackMechanic.ID]), _actor(100.0))
+  var line: Array = TooltipContent.new().build(it)['lines'][0]
+  assert_true(_first_segment(line, 'icon') != {}, 'the all-enemies line carries an icon segment')
+  assert_true(_first_segment(line, 'text') != {}, 'the all-enemies line still has words')
+  assert_true(_first_segment(line, 'chip') == {}, 'no keyword chip is left in a tooltip line')
+
+
+## The charge-time line: the item's cooldown in seconds beside the charge_time glyph.
+func test_charge_line_is_the_cooldown_and_the_charge_time_glyph() -> void:
+  var it: Item = Item.new(_heal_def(), _actor(100.0))
+  var line: Array = TooltipContent.new().build(it)['charge_line']
+  assert_eq(line[0]['s'], '2s', 'the charge line reads the cooldown in seconds')
+  assert_eq(line[1]['id'], IconSlots.CHARGE_TIME, 'the charge line carries the charge_time glyph')
+
+
+## An item's crit chance is one more effect line: the percentage beside the crit glyph.
+func test_crit_chance_is_an_effect_line() -> void:
+  var def: ItemDef = _heal_def()
+  def.crit_chance = 0.25
+  var it: Item = Item.new(def, _actor(100.0))
+  var lines: Array = TooltipContent.new().build(it)['lines']
+  var last: Array = lines[lines.size() - 1]
+  assert_eq(last[0]['s'], '25%', 'the crit line reads the chance as a percentage')
+  assert_eq(last[1]['id'], CritMechanic.ID, 'the crit line carries the crit glyph')
+
+
+## No crit chance, no crit line.
+func test_no_crit_chance_adds_no_line() -> void:
+  var it: Item = Item.new(_heal_def(), _actor(100.0))
+  assert_eq(TooltipContent.new().build(it)['lines'].size(), 1, 'an item with no crit chance has one line')
 
 
 ## The keyword column leads with the item's authored mechanics list: an authored mechanic appears

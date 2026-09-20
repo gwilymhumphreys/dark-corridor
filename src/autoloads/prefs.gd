@@ -3,7 +3,7 @@ extends Node
 ## Session preferences persisted to disk (autoload `Prefs`) — SEPARATE from the run Save
 ## (that stores run-state only, and is cleared on death/win). A thin ConfigFile wrapper at
 ## user://: audio bus volumes (Master / Music / Interface / Game, each a 0..1 linear level) + mute-when-
-## unfocused, and the display mode (fullscreen vs windowed).
+## unfocused, the display mode (fullscreen vs windowed), and the interface text scale.
 ## set_*() applies the change AND writes through immediately; load + apply happen at boot.
 ## `disabled` skips the disk write — TestCleanup sets it so tests never touch user://. The owner
 ## extends this with further video / accessibility keys as settings grow.
@@ -11,9 +11,11 @@ extends Node
 const PATH: String = 'user://dark_corridor_prefs.cfg'
 const SECTION_AUDIO: String = 'audio'
 const SECTION_DISPLAY: String = 'display'
+const SECTION_INTERFACE: String = 'interface'
 
 # The project UI theme (project.godot gui/theme/custom). It names the UI font as its default font
-# (docs/systems/ui_theme.md). Mutating the cached resource propagates to every Control using it.
+# and holds the text ladder's sizes (docs/systems/ui_theme.md). Mutating the cached resource
+# propagates to every Control using it, which is how the text scale reaches the whole interface.
 const THEME_PATH: String = 'res://assets/themes/dark_corridor.tres'
 
 # Each audio key → its AudioServer bus (from default_bus_layout.tres) and default 0..1 level.
@@ -45,6 +47,7 @@ func _ready() -> void:
   load_prefs()
   apply_audio()
   apply_display()
+  apply_text_scale()
   if is_silent_run():
     _set_master_muted(true)
 
@@ -137,6 +140,25 @@ func set_fullscreen(on: bool) -> void:
 func apply_display() -> void:
   var mode: int = DisplayServer.WINDOW_MODE_FULLSCREEN if is_fullscreen() else DisplayServer.WINDOW_MODE_WINDOWED
   DisplayServer.window_set_mode(mode)
+
+
+## The stored interface text scale: a multiple of the `TextSize` ladder, 1.0 being the authored
+## sizes. Out-of-range stored values are clamped by `TextSize.apply`.
+func text_scale() -> float:
+  return float(_config.get_value(SECTION_INTERFACE, 'text_scale', TextSize.DEFAULT_SCALE))
+
+
+## Set the interface text scale: store it, apply it to the theme, persist (unless disabled).
+func set_text_scale(value: float) -> void:
+  _config.set_value(SECTION_INTERFACE, 'text_scale', clampf(value, TextSize.MIN_SCALE, TextSize.MAX_SCALE))
+  apply_text_scale()
+  save_prefs()
+
+
+## Write the stored text scale into the theme resource (called at boot + on change). Every Control
+## reads that resource, so the whole interface resizes at once.
+func apply_text_scale() -> void:
+  TextSize.apply(load(THEME_PATH) as Theme, text_scale())
 
 
 func load_prefs() -> void:

@@ -32,6 +32,22 @@ A shared neutral pool of workhorse commons (StS colorless model) + per-character
 
 **None to systems.** `Draft` already pulls from “the pool” and is category-blind (architecture: Draftable contract). Scoping the pool to a character is a content-organisation change, not a systems change.
 
+## Poison, bleed and burn reach every character (owner, 2026-09-21)
+
+Every character should have some access to poison, bleed and burn, so those three are always an
+option for a build rather than one character's property, and so they carry synergies that cut
+across characters.
+
+This sits on top of the model above rather than replacing it: the three are damage-over-time
+mechanics any pool can hold, not a workhorse commons tier, so it does not reopen the hybrid
+rejected above. The line to hold is the same one — this stays a handful of shared axes, not a
+neutral layer characters depend on.
+
+**Open:** whether the access comes from the colorless pool, from a few appliers authored into each
+character's own pool, or both. Authoring them per character keeps each one in that character's
+fiction, which the colorless route cannot do; the colorless route is less work and guarantees the
+access is really there. Undecided.
+
 ## Watch
 
 - **Directions per character is a starting peg, not a number.** Too few → drafts forced; too many → dilution returns inside one character. Interacts with skip-for-gold (#33) / no-cap in ways paper can’t predict — resolve in prototype.

@@ -167,7 +167,7 @@ const FLESH_SKULL_SHIELD: float = 15.0
 # Smith big slow weapons (PLACEHOLDER numbers — /tune's job; docs/design/smith.md → The empower
 # engine). A ladder of heavy single-target attacks on 5s/6s/7s cooldowns with SIMILAR DPS but a rising
 # PER-HIT (DPS ≈ cooldown + 3): the slowest lands the biggest single hit, so it is the best target for
-# the Mighty Blow empower's double. Authored but UN-POOLED (the Smith character isn't built yet).
+# the Mighty Blow empower's double. In the Smith's item_pool.
 const SMITH_BROADAXE_COOLDOWN: float = 5.0      # fast pole — DPS 8, per-hit 40 (doubled 80)
 const SMITH_BROADAXE_DAMAGE: float = 40.0
 const SMITH_WARHAMMER_COOLDOWN: float = 6.0     # mid — DPS 9, per-hit 54 (doubled 108)

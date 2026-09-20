@@ -34,7 +34,7 @@ offset_top = 220.0
 offset_right = 700.0
 offset_bottom = 320.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 96
+theme_type_variation = &"LabelDisplay"
 text = "Dark Corridor"
 horizontal_alignment = 1
 
@@ -58,7 +58,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 44
+theme_type_variation = &"ButtonHeading"
 text = "Start"
 
 [node name="Juice" type="Node" parent="Menu/StartButton"]
@@ -69,7 +69,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 44
+theme_type_variation = &"ButtonHeading"
 text = "Resume"
 
 [node name="Juice" type="Node" parent="Menu/ResumeButton"]
@@ -80,7 +80,7 @@ mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 44
+theme_type_variation = &"ButtonHeading"
 text = "Settings"
 
 [node name="Juice" type="Node" parent="Menu/SettingsButton"]

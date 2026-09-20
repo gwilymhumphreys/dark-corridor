@@ -49,7 +49,7 @@ func test_weapon_keyword_ids_include_its_attack_mechanic() -> void:
   assert_true(AttackMechanic.ID in ids, 'the weapon\'s attack mechanic is a keyword')
 
 
-func test_crit_item_has_the_crit_keyword_and_a_crit_stat_line() -> void:
+func test_crit_item_has_the_crit_keyword_and_a_crit_line() -> void:
   var def := ItemDef.new()
   def.id = 'test_keyword_crit'
   def.crit_chance = 0.25
@@ -65,8 +65,9 @@ func test_crit_item_has_the_crit_keyword_and_a_crit_stat_line() -> void:
   var ids: Array[String] = TooltipContent.keyword_ids(it)
   assert_true(CritMechanic.ID in ids, 'an item that authored crit carries the crit keyword')
   var content: Dictionary = TooltipContent.new().build(it)
-  assert_true(content['stat_lines'].any(func(line: String) -> bool: return line.begins_with('Crit chance:')),
-      'the stat block has a crit line')
+  assert_true(content['lines'].any(func(line: Array) -> bool:
+      return line.any(func(seg: Dictionary) -> bool: return seg['t'] == 'icon' and seg['id'] == CritMechanic.ID)),
+      'an effect line carries the crit glyph')
 
 
 func test_no_crit_item_has_no_crit_keyword_or_line() -> void:
@@ -74,5 +75,6 @@ func test_no_crit_item_has_no_crit_keyword_or_line() -> void:
   var ids: Array[String] = TooltipContent.keyword_ids(it)
   assert_false(CritMechanic.ID in ids, 'no crit chance, no crit keyword')
   var content: Dictionary = TooltipContent.new().build(it)
-  assert_false(content['stat_lines'].any(func(line: String) -> bool: return line.begins_with('Crit chance:')),
-      'no crit chance, no crit stat line')
+  assert_false(content['lines'].any(func(line: Array) -> bool:
+      return line.any(func(seg: Dictionary) -> bool: return seg['t'] == 'icon' and seg['id'] == CritMechanic.ID)),
+      'no crit chance, no crit line')

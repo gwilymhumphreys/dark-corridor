@@ -18,7 +18,7 @@ offset_left = 40.0
 offset_top = 40.0
 offset_right = 1200.0
 offset_bottom = 92.0
-theme_override_font_sizes/font_size = 32
+theme_type_variation = &"LabelMedium"
 text = "Combat sandbox — hover an item to slow time · R to restart"
 
 [node name="Result" type="Label" parent="."]
@@ -26,6 +26,6 @@ offset_left = 980.0
 offset_top = 120.0
 offset_right = 1580.0
 offset_bottom = 240.0
-theme_override_font_sizes/font_size = 96
+theme_type_variation = &"LabelDisplay"
 horizontal_alignment = 1
 vertical_alignment = 1

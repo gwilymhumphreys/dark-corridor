@@ -10,6 +10,10 @@ class_name IconSlots
 ## to its default.
 
 
+## The slot for an item's `cooldown` — the one slot the tooltip draws that is not a keyword.
+const CHARGE_TIME: String = 'charge_time'
+
+
 const SLOTS: Array[String] = [
   'attack', 'shield', 'heal', 'poison', 'burn', 'bleed',
   'regen', 'crit', 'charge', 'decharge', 'charge_time', 'card',

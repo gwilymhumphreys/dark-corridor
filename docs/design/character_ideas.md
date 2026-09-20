@@ -23,10 +23,15 @@
 > elementalist (the on-ramp) · mech (legible fiction, but the heat economy is a new concept) —
 > a portfolio, not three competitors for one slot.
 >
-> **Update (owner, 2026-07-04): the Armourer (promoted — [`armourer.md`](armourer.md)) takes the
-> low-load on-ramp slot; the Elementalist leans *into* summon-interaction complexity.** So the
-> "elementalist = the on-ramp" read above is superseded — the on-ramp is a *legibility-load* role,
-> now the Armourer's. See [Complexity vs. distinctness](#cross-cutting--resource-economies).
+> **Update (owner, 2026-07-04): the Armourer (promoted) takes the low-load on-ramp slot; the
+> Elementalist leans *into* summon-interaction complexity.** So the "elementalist = the on-ramp"
+> read above is superseded — the on-ramp is a *legibility-load* role. See
+> [Complexity vs. distinctness](#cross-cutting--resource-economies).
+>
+> **Update (owner, 2026-09-21): the Smith (promoted — [`smith.md`](smith.md)) absorbs the
+> Armourer** and takes the on-ramp slot with it, along with the shield stack-and-spend pillar and
+> the authored empower engine. `armourer.md` was retired into `smith.md`; references to "the
+> Armourer" elsewhere in this file mean the Smith now.
 
 ---
 
@@ -38,22 +43,23 @@ status-identity engine (spores), not warrior/mage/rogue.
 
 ---
 
-## Armourer — **promoted (2026-07-04)**
+## Smith — **promoted (2026-09-21)**, absorbing the Armourer
 
-Has its own working file: [`armourer.md`](armourer.md). The roster's **on-ramp / starter** — the
-low-load anchor. Shield **stack/spend** ("armour is ammo"),
-one clean engine + two simple threads (weapon synergy / strength, tbd). Deliberately the *legible*
-character: obvious-home shield taken on purpose (the Ironclad slot), highest theme→mechanic affordance
-on the roster. Its mechanical ancestor is *Spiked Shield / Retributive Shield* below — the Armourer is
-the **simple** use of shield, that entry the spicy retributive one (only one shield character likely
-ships).
+Has its own working file: [`smith.md`](smith.md). The roster's **on-ramp / starter** and the
+character the select screen leads with. Promoted from the *Executioner / Blacksmith* entry below,
+and it absorbed the **Armourer** — that entry's on-ramp role, its shield stack-and-spend pillar
+("armour is ammo") and its authored empower engine all moved into `smith.md`, and `armourer.md`
+was retired. Weapons, armour and skills, with no second resource to track: the skills buff the
+items instead. Its mechanical ancestor is *Spiked Shield / Retributive Shield* below — the Smith
+is the **simple** use of shield, that entry the spicy retributive one (only one shield character
+likely ships).
 
 ---
 
 ## Wizard / Elementalist — *parked (resource-economy character; direction chosen 2026-06-12)*
 
-- **Update (owner, 2026-07-04): no longer the on-ramp — leans *into* complexity.** The Armourer
-  (promoted — [`armourer.md`](armourer.md)) takes the low-load anchor slot; the Elementalist has
+- **Update (owner, 2026-07-04): no longer the on-ramp — leans *into* complexity.** The on-ramp
+  character (now the Smith — [`smith.md`](smith.md)) takes the low-load anchor slot; the Elementalist has
   "more room" to get complex via **summon interactions** (the mana × summons coupling, its open
   purchase/durable/few/invested corner). The "deliberately-legible on-ramp" framing throughout this
   entry is downgraded accordingly — legible *fiction* still, but no longer the roster's *simplest*
@@ -212,8 +218,9 @@ ships).
 
 ## Spiked Shield / Retributive Shield — *parked (new 2026-06-16; engine found, fiction open)*
 
-- **Update (owner, 2026-07-04): the shield-character slot is now the Armourer** (promoted —
-  [`armourer.md`](armourer.md)), which takes the **simple** stack/spend use of shield as the roster's
+- **Update (owner, 2026-07-04, revised 2026-09-21): the shield-character slot is the on-ramp
+  character, now the Smith** (promoted — [`smith.md`](smith.md)), which takes the **simple**
+  stack/spend use of shield as the roster's
   on-ramp. This entry is the **spicier** use — thorns / charge off *absorbed-damage flow* (needs the
   unbuilt on-absorb seam noted below). Only one shield character likely ships; kept here as salvageable
   (a relic / item / later variant), not pursued as its own character for now.
@@ -382,66 +389,14 @@ ships).
 
 ---
 
-## Executioner / Blacksmith — *parked (new 2026-09-20; shape sketched, name open)*
+## Executioner / Blacksmith — **promoted 2026-09-21 as the Smith**
 
-- **Concept (owner, musing — nothing set):** a straightforward martial character built from
-  **weapons, skills and armour**, reusing elements of the [Armourer](armourer.md) rather than
-  inventing a new engine. Working names floated: **Executioner** and **Blacksmith**.
-- **The defining constraint (owner): no extra resource to manage.** Every other roster concept
-  accumulates and spends something the player tracks separately — spores, flesh chunks, heat, mana.
-  This one does not. Its skills instead **buff its own weapons and armour over the course of a
-  fight**, so the thing that accumulates lives *on the items*, not in a counter beside them. That is
-  the identity, and it is a genuinely different answer to the
-  [resource question](#cross-cutting--resource-economies) rather than an absence of one.
-- **Three loose card directions (owner — "general ideas for card direction", not set):**
-  1. **Go wide** — many weapons or tools on the board, buffs that hit the whole set.
-  2. **Go tall** — a single weapon invested in heavily.
-  3. **Shield synergy** — the third direction, shape open.
-  Wide and tall pull against each other on purpose, the same way the Spore Druid's Mass and Self do.
-  That is a real draft decision as long as both halves stay viable; the watch is the usual one, that
-  tuning quietly kills one and the choice turns out to be fake.
-- **Build cost differs sharply across the three** (verified against the code 2026-09-20):
-  - **Go wide is free.** An actor-targeted status scoped by item type tag already works — this is
-    the #35 seam, and `EmpoweredStatus` is a working example ("double the next `weapon` attack").
-    "All my weapons hit harder for the rest of the fight" is authoring only, today.
-  - **Go tall needs a small piece of engine.** Buffing *one specific item* wants an item-targeted
-    **value modifier**. `Item.statuses` exists and is consulted for **gating** (silence) and the
-    **use-status drain** (decay), but `Item._resolve_effect` never asks the item's own statuses to
-    modify a value — only the owner's, via `StatusManager.modify_outgoing`. See the doc-vs-code note
-    logged in [`../systems/item.md`](../systems/item.md).
-  - **Shield synergy is nearly free** — shield needs the one-line `is_fuel()` override to join the
-    built consume seam, then spender items. Same finding as the Armourer's.
-- **"Armour that does damage" — three readings, very different costs.** An `armour`-tagged item whose
-  effect is an attack is **free** (type tags are inert labels). **Spending shield for damage** is the
-  nearly-free consume seam above — but it is the Armourer's own signature pillar, so taking it here
-  takes it from there. **Thorns / damage when your shield absorbs** needs the unbuilt on-absorb seam
-  and belongs to [Spiked Shield](#spiked-shield--retributive-shield--parked-new-2026-06-16-engine-found-fiction-open).
-- **"Skills as a primary card type" — clarified.** There is no player-activated action in this combat
-  model; every item owns a cooldown ticker and fires itself, and `skill` is an inert label. So a
-  skill-heavy pool means items whose effect is a self-buff or utility on a metronome, like Mighty
-  Blow. That shape is authorable now. It is not a button the player presses, and making it one would
-  be a large systems change.
-- **Blacksmith has unclaimed prior art.** The retired [Blade Mage](#blade-mage--steel-mage--retired-2026-06-13-absorbed-by-the-mech)
-  left "the temper/consume/merge weapon-interaction ideas" explicitly unclaimed by the Mech. It also
-  left the bar this concept has to clear: every character holds weapons, so "lots of weapons" is not
-  an identity unless the weapons **act on each other**. Blacksmith has a native verb for that (forge,
-  temper, reforge, consume one weapon to improve another). Executioner does not.
-- **Risk — Blacksmith collides with the Fleshmancer.** That character is already the item-economy one:
-  its attacks create Chunks of Flesh on its own board, they decay, and other cards eat them — it uses
-  both the create and consume seams. A smith who forges items onto the board and consumes them is the
-  same machine in a different costume. A real distinction is available — the Fleshmancer makes
-  disposable fodder in bulk, a smith would improve one thing durably, which also feeds *go tall* —
-  but it has to be chosen deliberately, not assumed.
-- **Risk — Executioner is a job title, not a recombination.** The [influence lens](influence_dcc.md)
-  asks for two recognisable things from different domains fused so both stay readable. Executioner
-  alone is a fantasy-trope role; it would need a second domain attached, and picking that domain is
-  the open question. Smaller flag: the execute verb is already spoken for on paper by the Spore
-  Druid's parked **Lethal** spore.
-- **Risk — the on-ramp slot is taken.** The Armourer already holds the low-load starter role. This
-  concept would need to be straightforward in a *different* way, not the same way, or the two compete
-  for one slot.
-- **Roster-tone note.** Both names lean grim-trade rather than body-horror, which is a counterweight
-  to the flesh/horror consolidation flagged on the Meat entry above.
+Promoted to its own working file: [`smith.md`](smith.md), where it merged with the Armourer. The
+shape sketched here — weapons, armour and skills, no second resource to manage, with go wide, go
+tall and shield as the card directions — moved there in full, along with the build-cost findings
+for each direction and the risks flagged against it. *Executioner* was dropped as a name: it is a
+job title rather than a recombination, and the execute verb is already spoken for by the Spore
+Druid's parked Lethal spore.
 
 ---
 
@@ -575,8 +530,8 @@ single signature action.
 
 **Complexity vs. distinctness — two separate budgets (owner, 2026-07-04).** How much a character
 makes you *learn* (new-concept / legibility load) is independent of how *weird* it looks and reads
-(fictional distinctness). A character can be mechanically light but tonally strange (the **Armourer**:
-one clean stack/spend engine, a fused-plates fiction), or mechanically deep but legible (the
+(fictional distinctness). A character can be mechanically light but tonally strange (the **Smith**:
+one clean stack/spend engine, a layered-plates fiction), or mechanically deep but legible (the
 **Elementalist**). The **on-ramp** is a *load* choice, not a *weirdness* choice — so "have a simple
 starter" does **not** mean "have a generic one." Pick the anchor by load; keep its fiction distinct.
 

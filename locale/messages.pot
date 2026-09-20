@@ -16,11 +16,19 @@ msgid "Aldous"
 msgstr ""
 
 #: src/content/characters/character_catalog.gd
+msgid "Orrin"
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
 msgid "Rot Shepherd"
 msgstr ""
 
 #: src/content/characters/character_catalog.gd
 msgid "Disgraced Surgeon"
+msgstr ""
+
+#: src/content/characters/character_catalog.gd
+msgid "Smith"
 msgstr ""
 
 #: src/content/consumables/consumable_catalog.gd
@@ -640,6 +648,10 @@ msgid "Game volume"
 msgstr ""
 
 #: src/scenes/screens/settings_screen.tscn
+msgid "Text size"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
 msgid "Fullscreen"
 msgstr ""
 
@@ -664,23 +676,15 @@ msgid "Keyword"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} {1} by {2}s"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "{0} {1} to all enemies"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "{0} {1} to {2}"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "{0} {1} by {2}s"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Gain {0} {1}"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Apply {0} {1}"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
@@ -697,14 +701,6 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "On trigger"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Every {0}s"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "Crit chance: {0}%"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
@@ -765,8 +761,4 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_panel.tscn
 msgid "Weapon"
-msgstr ""
-
-#: src/scenes/ui/tooltip/tooltip_panel.tscn
-msgid "Every 1s"
 msgstr ""

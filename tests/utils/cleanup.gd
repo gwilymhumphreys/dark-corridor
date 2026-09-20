@@ -1,7 +1,8 @@
 class_name TestCleanup
 extends RefCounted
 ## Resets autoload / manager state between tests: frees the live run (Game), clears
-## the autotest's Save.disabled, and keeps Prefs off disk. Mirrors a-machine's
+## the autotest's Save.disabled, keeps Prefs off disk, and puts the authored text ladder back into
+## the shared theme. Mirrors a-machine's
 ## TestCleanup pattern (docs/systems/testing.md). File is NOT named `test_*` so GUT does
 ## not collect it as a test case.
 
@@ -23,6 +24,9 @@ static func reset_all_managers() -> void:
   Game.reset()
   Save.disabled = false   # an autotest run may have set it (nosave); clear for the next test
   Prefs.disabled = true   # tests never write the prefs file to disk (in-memory + bus only)
+  # The text ladder is written into the shared theme RESOURCE, so a test that changed the text size
+  # would leave every later test measuring the wrong sizes. Put the authored ladder back.
+  TextSize.apply(load(PrefsAutoload.THEME_PATH) as Theme, TextSize.DEFAULT_SCALE)
   DebugPanels.reset_settings()   # clamp off, scaled corridor, painted enemies
   _dissolve_registered_actors()
 

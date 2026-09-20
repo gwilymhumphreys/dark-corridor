@@ -96,12 +96,13 @@ the headless autotest mounts none of this:
   Opening a [debug panel](debug_panel.md) pauses the same way, and closing the last one resumes
   unless the player paused or raised the menu in the meantime.
 
-**Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Effects), a
-mute-when-unfocused toggle and a fullscreen toggle, all bound to the **`Prefs`** autoload, which
-applies each change (bus level / window mode / focus-mute) and persists it to `user://` (a ConfigFile,
-**separate** from the run `Save`). Opened from the title and the pause menu; Close emits
-`closed` and the opener frees it. See
-[audio](audio.md).
+**Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Interface / Game), a
+text size slider, a mute-when-unfocused toggle and a fullscreen toggle, all bound to the **`Prefs`**
+autoload, which applies each change (bus level / theme text sizes / window mode / focus-mute) and
+persists it to `user://` (a ConfigFile, **separate** from the run `Save`). The rows sit in a
+`ScrollContainer` so the screen stays usable at the largest text size. Opened from the title and the
+pause menu; Close emits `closed` and the opener frees it. See [audio](audio.md) and the
+[text ladder](ui_theme.md#the-text-ladder-and-the-text-size-setting).
 
 ## The framed combat view
 

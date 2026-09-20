@@ -90,7 +90,6 @@ theme_override_constants/separation = 8
 [node name="PotionsLabel" type="Label" parent="Items"]
 layout_mode = 2
 theme_type_variation = &"LabelDim"
-theme_override_font_sizes/font_size = 26
 text = "Potions"
 
 [node name="Potions" type="HBoxContainer" parent="Items"]
@@ -106,7 +105,6 @@ mouse_filter = 2
 [node name="ItemsLabel" type="Label" parent="Items"]
 layout_mode = 2
 theme_type_variation = &"LabelDim"
-theme_override_font_sizes/font_size = 26
 text = "Items"
 
 [node name="PlayerItems" type="GridContainer" parent="Items"]
@@ -155,7 +153,7 @@ theme_override_constants/separation = 10
 
 [node name="Name" type="Label" parent="Portraits/PlayerPortrait/Readout"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_type_variation = &"LabelMedium"
 text = "You"
 
 [node name="HP" type="Control" parent="Portraits/PlayerPortrait/Readout"]
@@ -193,7 +191,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 vertical_alignment = 1
 

@@ -119,7 +119,7 @@ static func _smith() -> CharacterDef:
   d.id = SMITH
   d.name_key = 'Orrin'                 # PLACEHOLDER personal name — owner's to rename
   d.subtitle_key = 'Smith'             # PLACEHOLDER role line — owner's to rename
-  d.portrait = ''                      # no portrait yet — none of the existing five fits a smith
+  d.portrait = 'res://assets/portraits/characters/warrior_nb.png'   # PLACEHOLDER portrait — owner's to swap
   d.item_pool = [
     ItemCatalog.MIGHTY_BLOW,
     ItemCatalog.SMITH_BROADAXE,

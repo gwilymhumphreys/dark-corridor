@@ -18,7 +18,7 @@ offset_bottom = -40.0
 grow_horizontal = 0
 grow_vertical = 0
 focus_mode = 0
-theme_override_font_sizes/font_size = 40
+theme_type_variation = &"ButtonHeading"
 text = "1x"
 script = ExtResource("1")
 
