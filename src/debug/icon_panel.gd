@@ -158,3 +158,6 @@ func _on_icon_changed(new_index: int) -> void:
     return
   _icon_index = new_index
   DebugPanels.set_slot_icon(slot, candidates[new_index])
+  # Rebuild so the Samples section shows the icon just chosen. Deferred because this runs from the
+  # Icon dropdown's signal, and rebuilding frees that dropdown.
+  rebuild.call_deferred()

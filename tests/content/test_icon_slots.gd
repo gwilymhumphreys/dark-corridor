@@ -3,26 +3,24 @@ extends GutTest
 ## each, and the file the choices are saved to. Nothing else uses it yet.
 ##
 ## The tests write `CHOSEN_PATH`, so they put the file back as they found it (or delete the one
-## they created) in `after_each` — per docs/systems/testing.md.
-
-
-var _had_chosen_file: bool = false
-var _chosen_file_text: String = ''
+## they created) in `after_each`, through `TestCleanup` — per docs/systems/testing.md.
 
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
   IconSlots.reset()
-  _snapshot_chosen_file()
+  TestCleanup.snapshot_chosen_icons()
 
 
 func after_each() -> void:
   TestCleanup.reset_all_managers()
-  IconSlots.reset()
-  _restore_chosen_file()
+  TestCleanup.restore_chosen_icons()
 
 
 func test_icon_for_returns_the_default_when_nothing_is_chosen() -> void:
+  # The developer may have chosen icons in the Icons tab, which leaves `CHOSEN_PATH` on disk, so
+  # clear it first rather than assuming there is none. `after_each` puts the file back.
+  TestCleanup.clear_chosen_icons()
   assert_eq(IconSlots.icon_for('attack'), IconSlots.DEFAULTS['attack'], 'an unset slot is its default')
   assert_eq(IconSlots.icon_for('heal'), IconSlots.DEFAULTS['heal'], 'an unset slot is its default')
   assert_eq(IconSlots.icon_for('card'), IconSlots.DEFAULTS['card'], 'an unset slot is its default')
@@ -57,18 +55,3 @@ func test_candidates_lists_the_pngs_in_the_slot_folder() -> void:
 func test_display_name_spells_the_slot() -> void:
   assert_eq(IconSlots.display_name('charge_time'), 'Charge time', 'underscores become spaces, first letter capitals')
   assert_eq(IconSlots.display_name('attack'), 'Attack', 'a single word is capitalised')
-
-
-func _snapshot_chosen_file() -> void:
-  _had_chosen_file = FileAccess.file_exists(IconSlots.CHOSEN_PATH)
-  if _had_chosen_file:
-    _chosen_file_text = FileAccess.get_file_as_string(IconSlots.CHOSEN_PATH)
-
-
-func _restore_chosen_file() -> void:
-  if _had_chosen_file:
-    var file: FileAccess = FileAccess.open(IconSlots.CHOSEN_PATH, FileAccess.WRITE)
-    file.store_string(_chosen_file_text)
-    file.close()
-  elif FileAccess.file_exists(IconSlots.CHOSEN_PATH):
-    DirAccess.remove_absolute(ProjectSettings.globalize_path(IconSlots.CHOSEN_PATH))

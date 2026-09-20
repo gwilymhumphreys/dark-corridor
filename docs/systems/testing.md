@@ -35,6 +35,13 @@ A test that builds an `Actor` without a `RunManager` should register it with
 the player side; without that call the actor's reference cycle with its items stays
 alive. See [actor.md](actor.md) for the lifetime rules.
 
+A test that changes an icon choice writes `IconSlots.CHOSEN_PATH`, which
+`reset_all_managers()` does not touch, so the choice would survive into the next
+run. Call `TestCleanup.snapshot_chosen_icons()` in `before_each` and
+`TestCleanup.restore_chosen_icons()` in `after_each`. A test that needs no icon
+to be chosen calls `TestCleanup.clear_chosen_icons()` after the snapshot,
+because the developer may have chosen icons in the Icons tab.
+
 ## Signals
 
 ```gdscript
