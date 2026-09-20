@@ -541,6 +541,193 @@ func test_own_item_shapes_with_no_other_items_yield_no_targets() -> void:
   assert_eq(cm._resolve_targets(random, p).size(), 0, 'no other items → OWN_ITEM_RANDOM resolves nothing')
 
 
+# --- target filters ---------------------------------
+# The filter sits between the pool and the pick: build the pool, drop the items that fail,
+# then draw / keep from what is left. The tests below pin that order — a filter can never
+# change what an unfiltered shape resolves, and a filtered random draw is decided by the
+# filter, not by the RNG.
+
+func test_type_filter_narrows_an_own_board_pool() -> void:
+  # A type-tag filter on ALL_OWN_ITEMS drops the non-matching items (here the shield) from the
+  # pool, keeps the matching weapon, and still excludes the firing item.
+  var p := Actor.new(100.0)
+  var a1 := Item.new(FixtureItems.attack(), p)   # the firing item (WEAPON)
+  p.board.append(a1)
+  var sh := Item.new(FixtureItems.shield(), p)    # ARMOUR — excluded by the filter
+  p.board.append(sh)
+  var a2 := Item.new(FixtureItems.attack(), p)   # the other WEAPON — kept
+  p.board.append(a2)
+  var e := Actor.new(100.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  var f := TargetFilter.new()
+  f.add_type(ItemType.WEAPON)
+  var payload := Payload.new()
+  payload.shape = ItemEffect.Shape.ALL_OWN_ITEMS
+  payload.source = a1
+  payload.target_filter = f
+  var targets: Array = cm._resolve_targets(payload, p)
+  assert_true(a2 in targets, 'the matching weapon survives the filter')
+  assert_false(sh in targets, 'the non-matching shield is dropped from the pool')
+  assert_false(a1 in targets, 'the firing item is still excluded')
+  assert_eq(targets.size(), 1, 'only the matching weapon remains')
+
+
+func test_mechanic_filter_decides_a_random_opponent_pick() -> void:
+  # A mechanic filter on OPPONENT_ITEM_RANDOM narrows the pool to the poison item, so the pick
+  # is the poison item on EVERY seed — the filter, not the draw, decides.
+  var f := TargetFilter.new()
+  f.add_mechanic(PoisonMechanic.ID)
+  for s in 25:
+    var p := Actor.new(1000.0)
+    var e := _spawn(1000.0, [
+      FixtureItems.attack(),
+      FixtureItems.attack(),
+      FixtureItems.attack(),
+      FixtureItems.poison(),
+    ])
+    var cm := CombatManager.new(p, [e], s * 13 + 1)
+    _made.append(cm)
+    cm.start()
+    var payload := Payload.new()
+    payload.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+    payload.target_filter = f
+    var targets: Array = cm._resolve_targets(payload, p)
+    assert_eq(targets.size(), 1, 'one opponent item is picked')
+    assert_true(targets[0] is Item and targets[0].def.id == 'fixture_poison',
+        'the poison item is the pick on this seed')
+
+
+func test_filter_matching_nothing_resolves_no_targets() -> void:
+  # A filter that matches nothing empties the pool — resolution yields no targets, no fallback.
+  var p := Actor.new(1000.0)
+  # Enemy holds only attacks; there is no poison item anywhere to match.
+  var e := _spawn(1000.0, [FixtureItems.attack(), FixtureItems.attack()])
+  var cm := _manager(p, [e])
+  cm.start()
+  var f := TargetFilter.new()
+  f.add_mechanic(PoisonMechanic.ID)
+  var payload := Payload.new()
+  payload.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  payload.target_filter = f
+  assert_eq(cm._resolve_targets(payload, p).size(), 0, 'nothing matches → no targets, no fallback')
+
+
+func test_filtered_pick_reaches_across_enemies() -> void:
+  # The opponent-item pool spans every living enemy: a filter that only the SECOND enemy's
+  # board satisfies still lands on that item across seeds.
+  var f := TargetFilter.new()
+  f.add_mechanic(PoisonMechanic.ID)
+  for s in 15:
+    var p := Actor.new(1000.0)
+    var e1 := _spawn(1000.0, [FixtureItems.attack(), FixtureItems.attack()])   # no poison
+    var e2 := _spawn(1000.0, [FixtureItems.attack(), FixtureItems.poison()])   # holds the poison
+    var cm := CombatManager.new(p, [e1, e2], s * 7 + 3)
+    _made.append(cm)
+    cm.start()
+    var poison_item: Item = e2.board[1]
+    var payload := Payload.new()
+    payload.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+    payload.target_filter = f
+    var targets: Array = cm._resolve_targets(payload, p)
+    assert_eq(targets.size(), 1, 'one item picked across the combined pool')
+    assert_same(targets[0], poison_item, 'the pick reaches the second enemy\'s poison item')
+
+
+func test_dead_enemys_items_are_not_picked() -> void:
+  # The opponent pool is built from the LIVING opponents only, so a matching item on a slain
+  # enemy is never in the pool — a filter that only it satisfied resolves to nothing.
+  var p := Actor.new(1000.0)
+  var e1 := _spawn(40.0, [FixtureItems.poison()])   # the only enemy holding poison
+  var e2 := _spawn(1000.0, [FixtureItems.attack()])
+  var cm := _manager(p, [e1, e2])
+  cm.start()
+  e1.take_damage(40.0)   # slay the poison-holder the way the existing tests do
+  assert_false(e1.is_alive(), 'the poison-holder is dead')
+  var f := TargetFilter.new()
+  f.add_mechanic(PoisonMechanic.ID)
+  var payload := Payload.new()
+  payload.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  payload.target_filter = f
+  assert_eq(cm._resolve_targets(payload, p).size(), 0, 'a dead enemy\'s items are not in the pool')
+
+
+func test_filter_mode_all_and_any_change_which_items_survive() -> void:
+  # Both fixtures are tagged WEAPON; only the poison uses the poison mechanic. In Mode.ALL every
+  # condition must pass → only the poison item survives (the attack lacks the mechanic). In
+  # Mode.ANY one condition passing is enough → both survive (each is a WEAPON).
+  var p := Actor.new(1000.0)
+  var e := _spawn(1000.0, [FixtureItems.attack(), FixtureItems.poison()])
+  var cm := _manager(p, [e])
+  cm.start()
+  var attack_item: Item = e.board[0]
+  var poison_item: Item = e.board[1]
+
+  var all := TargetFilter.new()
+  all.add_type(ItemType.WEAPON)
+  all.add_mechanic(PoisonMechanic.ID)   # mode stays Mode.ALL
+  var all_payload := Payload.new()
+  all_payload.shape = ItemEffect.Shape.ALL_OPPONENT_ITEMS
+  all_payload.target_filter = all
+  var all_targets: Array = cm._resolve_targets(all_payload, p)
+  assert_true(poison_item in all_targets, 'the poison item passes both conditions (Mode.ALL)')
+  assert_false(attack_item in all_targets, 'the attack passes the type but not the mechanic')
+
+  all.mode = TargetFilter.Mode.ANY   # same conditions, now OR
+  var any_targets: Array = cm._resolve_targets(all_payload, p)
+  assert_true(poison_item in any_targets, 'the poison item still passes (Mode.ANY)')
+  assert_true(attack_item in any_targets, 'the attack now passes on the type alone (Mode.ANY)')
+
+
+func test_unfiltered_shapes_resolve_exactly_as_before() -> void:
+  # A null target_filter is a no-op: every shape resolves exactly as it did before the filter
+  # step existed. The regression guard for every existing (unfiltered) item.
+  var p := Actor.new(1000.0)
+  p.board.append(Item.new(FixtureItems.attack(), p))
+  p.board.append(Item.new(FixtureItems.attack(), p))
+  p.board.append(Item.new(FixtureItems.attack(), p))
+  var e := _spawn(1000.0, [FixtureItems.attack(), FixtureItems.attack(), FixtureItems.attack()])
+  var cm := _manager(p, [e])
+  cm.start()
+
+  var random := Payload.new()   # target_filter left null
+  random.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  var rt: Array = cm._resolve_targets(random, p)
+  assert_eq(rt.size(), 1, 'an unfiltered OPPONENT_ITEM_RANDOM still draws one item')
+  assert_true(e.board.has(rt[0]), 'the drawn item is one of the enemy\'s items')
+
+  var all := Payload.new()
+  all.shape = ItemEffect.Shape.ALL_OWN_ITEMS
+  all.source = p.board[1]
+  var at: Array = cm._resolve_targets(all, p)
+  assert_eq(at.size(), 2, 'an unfiltered ALL_OWN_ITEMS still resolves every other own item')
+
+  var actor := Payload.new()
+  actor.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  assert_eq(cm._resolve_targets(actor, p), [e], 'an unfiltered actor shape is unchanged')
+
+
+func test_charge_fixture_charges_only_the_weapons() -> void:
+  # The worked example, driven through a real fight rather than _resolve_targets: the charge
+  # fixture is filtered to WEAPON, so a fire moves the weapon's cooldown bar and leaves the
+  # armour's alone. The two targets are given a cooldown longer than the run so they never fire
+  # and reset their own bars, which would hide the effect.
+  var weapon_def: ItemDef = FixtureItems.attack()
+  weapon_def.cooldown = 999.0
+  var armour_def: ItemDef = FixtureItems.shield()
+  armour_def.cooldown = 999.0
+  var p := _spawn(1000.0, [FixtureItems.charge_your_weapons(), weapon_def, armour_def])
+  var e := _spawn(1000.0, [FixtureItems.attack()])
+  var cm := _manager(p, [e])
+  cm.start()
+  for _i in 400:
+    cm.sim_step()
+  # Both bars accrue one per step from time alone, so the armour sits at exactly the step count.
+  # Only the weapon is ahead of that, and the gap is the charge the filter let through.
+  assert_eq(p.board[2].cooldown.accum, 400.0, 'the armour accrued time only: the filter excluded it')
+  assert_gt(p.board[1].cooldown.accum, p.board[2].cooldown.accum, 'the weapon was charged on top')
+
+
 func test_dot_tick_through_shield_does_not_skip_a_later_status() -> void:
   # A poison tick calls take_damage, which can erase a depleted shield from the SAME
   # status list the step-pass is walking. A naive in-place loop would then skip the

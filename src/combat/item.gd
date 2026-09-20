@@ -9,7 +9,8 @@ extends RefCounted
 var def: ItemDef
 var owner: Actor               # board membership (self-target; opponent resolution)
 var cooldown: Ticker
-var statuses: Array[StatusEffect] = []   # item-targeted instances (silence, +damage, …)
+var statuses: Array[StatusEffect] = []   # item-targeted instances (silence = gate, decay = use-status).
+                                         # NOTE: value modifiers are NOT read from here — see docs/systems/item.md.
 var enchant: Enchantment = null          # one enchant slot
 
 

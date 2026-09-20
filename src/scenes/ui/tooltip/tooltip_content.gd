@@ -14,20 +14,33 @@ class_name TooltipContent
 
 
 ## Build the full content Dictionary for `item`:
-##   {title, rarity, panel_color, lines: Array[Array], flavor: String, stat_lines: Array[String],
-##    keyword_ids: Array[String]}
+##   {title, rarity, panel_color, type_line: String, lines: Array[Array], flavor: String,
+##    stat_lines: Array[String], keyword_ids: Array[String]}
 ## INSTANCE method (call `TooltipContent.new().build(item)`) because tr() — used by the line
-## templates — is an Object method unavailable from a static context.
+## templates and the type line — is an Object method unavailable from a static context.
 func build(item: Item) -> Dictionary:
   return {
     'title': tr(item.def.name_key),
     'rarity': item.def.rarity,
     'panel_color': item.def.panel_color,
+    'type_line': _type_line(item.def.types),
     'lines': _effect_lines(item),
     'flavor': tr(item.def.description_key) if item.def.description_key != '' else '',
     'stat_lines': _stat_lines(item),
     'keyword_ids': keyword_ids(item),
   }
+
+
+## The type line: each of `types` as its singular display name (translated), joined. An item with
+## no tags gives '' (the panel then hides the line).
+func _type_line(types: Array[String]) -> String:
+  var names: Array[String] = []
+  for tag: String in types:
+    var name: String = ItemType.display_name(tag)
+    if name != '':
+      names.append(tr(name))
+  # PLACEHOLDER — the joining word is the owner's call (how several tags read together is undecided)
+  return ', '.join(names)
 
 
 func _effect_lines(item: Item) -> Array:
@@ -52,7 +65,7 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
         var icon_seg: Dictionary = {'t': 'icon', 'id': effect.mechanic}
         if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
           return _interpolate(tr('{0} {1} to all enemies'), [value_seg, icon_seg])
-        return _interpolate(tr('{0} {1} to {2}'), [value_seg, icon_seg, _shape_text(effect.shape)])
+        return _interpolate(tr('{0} {1} to {2}'), [value_seg, icon_seg, _shape_text(effect.shape, effect.target_filter)])
       if effect.mechanic == HealMechanic.ID:
         # No tr(): the line is a value and a glyph with no words, so there is nothing to
         # translate and "{0} {1}" would be a meaningless entry in the translation template.
@@ -61,7 +74,7 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
       # target items and the seconds, not a stack count.
       if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:
         return _interpolate(tr('{0} {1} by {2}s'),
-            [{'t': 'chip', 'id': effect.mechanic}, _shape_text(effect.shape), value_seg])
+            [{'t': 'chip', 'id': effect.mechanic}, _shape_text(effect.shape, effect.target_filter), value_seg])
       var chip: Dictionary = {'t': 'chip', 'id': effect.mechanic}
       if effect.shape == ItemEffect.Shape.SELF:
         return _interpolate(tr('Gain {0} {1}'), [value_seg, chip])
@@ -103,9 +116,21 @@ func _stat_lines(item: Item) -> Array:
   return lines
 
 
-## The single-target DAMAGE line's {1} target phrase. Baseline copy (owner refines). Literal tr()
-## calls (not a lookup table) so each phrase is POT-extractable.
-func _shape_text(shape: int) -> Dictionary:
+## The target phrase an effect line's {2} / {1} placeholder stands in for. The actor shapes (SELF,
+## ALL_OPPONENTS, the default "the enemy") are baseline copy and ignore `filter` — a filter narrows
+## an ITEM pool, not an actor. The four item shapes read differently when `filter` is non-empty: a
+## template with the filter's term in the gap ("all your {0} items"). A null or empty filter, or one
+## whose term resolves to nothing, falls back to the unfiltered baseline phrase. Baseline copy is the
+## owner's — every unfiltered phrase is byte-for-byte unchanged; the literal tr() calls (not a lookup
+## table) keep each phrase and template POT-extractable.
+func _shape_text(shape: int, filter: TargetFilter = null) -> Dictionary:
+  if filter != null and not filter.is_empty() and _shape_has_item_pool(shape):
+    var term: String = _filter_term(filter)
+    if term != '':
+      var template: String = _filtered_template(shape)
+      if template != '':
+        return {'t': 'text', 's': template.format([term])}
+  # Actor shapes, an empty/null filter, or an unresolvable filter term: the unfiltered phrase.
   var phrase: String
   match shape:
     ItemEffect.Shape.SELF:
@@ -125,6 +150,69 @@ func _shape_text(shape: int) -> Dictionary:
   return {'t': 'text', 's': phrase}
 
 
+## True when the shape targets an item pool (a filter can narrow it), false for actor shapes.
+func _shape_has_item_pool(shape: int) -> bool:
+  match shape:
+    ItemEffect.Shape.OPPONENT_ITEM_RANDOM, ItemEffect.Shape.ALL_OPPONENT_ITEMS, \
+    ItemEffect.Shape.OWN_ITEM_RANDOM, ItemEffect.Shape.ALL_OWN_ITEMS:
+      return true
+  return false
+
+
+## The filtered-template literal for an item shape (owner's copy; '' for a shape with no filter form).
+func _filtered_template(shape: int) -> String:
+  match shape:
+    ItemEffect.Shape.OPPONENT_ITEM_RANDOM:
+      return tr('a random enemy {0} item')
+    ItemEffect.Shape.ALL_OPPONENT_ITEMS:
+      return tr('all enemy {0} items')
+    ItemEffect.Shape.OWN_ITEM_RANDOM:
+      return tr('a random {0} item of yours')
+    ItemEffect.Shape.ALL_OWN_ITEMS:
+      return tr('all your {0} items')
+  return ''
+
+
+## The word or words a filter's conditions resolve to — the term that fills {0} in an item shape's
+## filtered template. A TYPE condition is its singular display name; a MECHANIC condition is the
+## mechanic's name (an id that does not resolve is skipped, so a bad id cannot crash a tooltip).
+## Several terms join with the mode's translated joining word. '' when no condition resolves —
+## the caller then falls back to the unfiltered phrase rather than emit an empty {0}.
+func _filter_term(filter: TargetFilter) -> String:
+  var terms: Array[String] = []
+  for condition: Dictionary in filter.conditions:
+    var term: String = _condition_term(condition)
+    if term != '':
+      terms.append(term)
+  if terms.is_empty():
+    return ''
+  if terms.size() == 1:
+    return terms[0]
+  return _join_terms(terms, filter.mode)
+
+
+## The translated joining word for several filter terms, by mode (' and ' / ' or ').
+func _join_terms(terms: Array[String], mode: int) -> String:
+  # PLACEHOLDER — the joining word is the owner's call
+  var joiner: String = tr(' and ') if mode == TargetFilter.Mode.ALL else tr(' or ')
+  return joiner.join(terms)
+
+
+## The term one condition resolves to: a TYPE id's lowercased singular display name, or a MECHANIC
+## id's lowercased mechanic name ('' when the id does not resolve).
+func _condition_term(condition: Dictionary) -> String:
+  var id: String = condition.get('id', '')
+  match condition.get('kind', TargetFilter.Kind.TYPE):
+    TargetFilter.Kind.TYPE:
+      var name: String = ItemType.display_name(id)
+      return tr(name).to_lower() if name != '' else ''
+    TargetFilter.Kind.MECHANIC:
+      if not MechanicRegistry.has(id):
+        return ''
+      return tr(MechanicRegistry.get_mechanic(id).name_key).to_lower()
+  return ''
+
+
 func _summon_text(effect: ItemEffect) -> Dictionary:
   if effect.summon_def_id != '':
     var enemy_def: EnemyDef = EnemyCatalog.get_def(effect.summon_def_id)
@@ -135,29 +223,32 @@ func _summon_text(effect: ItemEffect) -> Dictionary:
 
 # --- keyword extraction (catalog-gated) --------------------------------------
 
-## The keyword ids referenced by `item`, deduped, mechanics + statuses first (in effect order)
-## then mechanic keywords (fixed order), keeping only those present in KeywordCatalog
-## (docs/systems/tooltips.md). An absent id is silently dropped — that is how a mechanic keyword
-## is enabled (by authoring its catalog entry).
+## The keyword ids referenced by `item`, deduped (docs/systems/tooltips.md), built in three parts in
+## this order, keeping only those present in KeywordCatalog (an absent id is silently dropped — that
+## is how a mechanic keyword is gated off):
+##   1. the authored `mechanics` list, in its own (alphabetical) order;
+##   2. the derived non-mechanic ids, in effect order — an `APPLY_STATUS` effect's `status_id`, then
+##      its `consume_id`, then each trigger subscription's `filter` when it is a String (statuses such
+##      as weak, vulnerable, blind and spores);
+##   3. the structural keywords, in `KeywordCatalog.MECHANIC_ORDER` (only those this item references).
+## `_add_keyword` dedupes and gates every addition, so an id appearing in more than one part is added once.
 static func keyword_ids(item: Item) -> Array[String]:
   var ids: Array[String] = []
-  # In effect order: applied statuses, each effect's mechanic (attack / heal included), then
-  # consumed-fuel statuses.
+  # 1. The authored mechanics list, in its own order (authored alphabetically; not re-sorted here).
+  for mechanic_id: String in item.def.mechanics:
+    _add_keyword(ids, mechanic_id)
+  # 2. The derived non-mechanic ids, in effect order: applied statuses, consumed-fuel statuses, then
+  #    trigger filters. Dropping this would remove those keyword cards from every status-applier.
   for effect: ItemEffect in item.def.effects:
     if effect.kind == Delivery.Kind.APPLY_STATUS:
       _add_keyword(ids, effect.status_id)
-    if effect.mechanic != '':
-      _add_keyword(ids, effect.mechanic)
     if effect.consume_id != '':
       _add_keyword(ids, effect.consume_id)
-  # An item with a crit chance carries the crit keyword.
-  if item.def.crit_chance > 0.0:
-    _add_keyword(ids, CritMechanic.ID)
   for sub: Dictionary in item.def.trigger_subs:
     var filter: Variant = sub.get('filter', null)
     if filter is String:
       _add_keyword(ids, filter)
-  # Then mechanic keywords, in the catalog's fixed order — only those this item actually references.
+  # 3. The structural keywords, in the catalog's fixed order — only those this item references.
   for mech: String in KeywordCatalog.MECHANIC_ORDER:
     if _item_uses_mechanic(item, mech):
       _add_keyword(ids, mech)

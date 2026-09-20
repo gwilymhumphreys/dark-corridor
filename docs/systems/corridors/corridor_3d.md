@@ -31,7 +31,8 @@ testbed (`src/scenes/corridor_testbed.tscn`).
 - `velocity` eases toward `speed` over `ramp_time`; `player_z` is the position in sections.
 - A host can set `player_z` itself instead of holding a direction. `CombatCorridor.set_walk_distance`
   does this for the fight approach ([run_screen.md](../run_screen.md#enemies-in-the-corridor)), so
-  the walk's timing comes from `Balance.APPROACH_DURATION` rather than `speed`.
+  the walk's timing comes from `Balance.APPROACH_DURATION` rather than `speed` (see
+  [the walking pace](#the-walking-pace)).
 - The light never moves. The camera only moves for the head bob below. Each frame `_layout` places
   section `i` with its near edge `i - player_z` sections past depth 0, which keeps positions small
   however long the run is.
@@ -67,10 +68,11 @@ apart.
 `CombatCorridor` overwrites `stride_length` from the run character's `stride_length`, so characters
 walk at their own pace. The corridor's own default is what the testbed and the tests use.
 
-`unproject()` is what the enemy HUD anchors are built from, so a bobbing camera moves them. The HUDs
-are hidden for most of the approach and fade in over its last stretch, so they are on screen while
-the player is still walking and the camera is still bobbing. They ride the bob with the enemy
-sprite they are pinned to.
+`unproject()` is what the enemy HUD anchors are built from, and they are taken with its
+`ignore_bob` argument, which unprojects the point as if the camera were level. The HUDs fade in over
+the last stretch of the approach, so they are on screen while the player is still walking; without
+this they would bob along with the image and the text would be hard to read. `enemy_centre()`, which
+the hit effects use, keeps the bob so its hits land on the sprite where it is drawn.
 
 | Export | Controls |
 |---|---|
@@ -79,6 +81,29 @@ sprite they are pinned to.
 | `bob_on` | Whether the camera bobs with the walk |
 | `bob_height` | How far the camera drops at a footfall |
 | `bob_sway` | How far the camera leans to the side |
+
+## The walking pace
+
+Four values decide how a walk looks and sounds, and they only agree if they are changed together.
+
+| Value | Where it lives | What it sets |
+|---|---|---|
+| `speed` | `Corridor3D` export | Sections per second of a held-direction walk (the testbed and any host that holds a direction) |
+| `section_length` | the piece source | Metres per section, which turns `speed` into metres per second |
+| `stride_length` | `CharacterDef` per character, with a default export on `Corridor3D` | Metres per footstep, so it sets how often a footstep lands and how fast the bob cycles |
+| `APPROACH_DEPTH_START`, `APPROACH_DURATION` | `Balance` | The fight approach's pace, since the host writes `player_z` over a fixed number of seconds instead of using `speed` |
+
+Rules for changing them:
+
+- The approach's pace is the depth divided by the duration. Keep it equal to `speed`, or a fight
+  walks at a different pace from a free walk and its footsteps come at a different rate.
+- Raising `speed` shortens the gap between footsteps, because the gap is `stride_length` divided by
+  the speed in metres per second. If the steps then sound too quick, lengthen the character's
+  `stride_length` rather than slowing the walk back down.
+- `bob_height` and `bob_sway` are distances, not rates. A faster walk bobs the camera more often,
+  not further.
+- `Balance.APPROACH_EASE` makes the approach start and end slower and run faster in the middle, so
+  its footsteps speed up and slow down over the walk. The pace above is its average.
 
 ## Light
 

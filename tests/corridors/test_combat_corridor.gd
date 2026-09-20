@@ -66,6 +66,18 @@ func test_enemy_anchor_sits_above_the_sprite() -> void:
   assert_eq(corridor.enemy_anchor(0), anchor, 'the anchor stays put during the approach')
 
 
+func test_enemy_anchor_ignores_the_head_bob() -> void:
+  var corridor: CombatCorridor = _host()
+  var corridor_3d: Corridor3D = corridor.corridor()
+  var camera: Camera3D = corridor_3d.get_node('SubViewport/Camera')
+  var anchor: Vector2 = corridor.enemy_anchor(0)
+  var centre: Vector2 = corridor.enemy_centre(0)
+  camera.position = Vector3(0.02, -0.04, 0.0)
+  assert_almost_eq(corridor.enemy_anchor(0).x, anchor.x, 0.01, 'the HUD anchor does not sway with the bob')
+  assert_almost_eq(corridor.enemy_anchor(0).y, anchor.y, 0.01, 'the HUD anchor does not bob')
+  assert_true(corridor.enemy_centre(0).y != centre.y, 'the sprite centre still follows the bob')
+
+
 func test_each_enemy_keeps_its_own_sprite() -> void:
   var corridor: CombatCorridor = _host()
   var placeholder: Sprite3D = corridor._enemies[0]

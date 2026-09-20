@@ -1,8 +1,8 @@
 extends GutTest
 ## The tooltip keyword catalog + content builder (docs/systems/tooltips.md, docs/plans/
 ## mechanics.md step 7): a mechanic id resolves to its Mechanic's card (name / desc / colour /
-## icon), a weapon's keyword ids include its attack mechanic, and an item with a crit chance
-## carries the crit keyword + a crit stat line.
+## icon), a weapon's keyword ids include its attack mechanic, and an item that authored crit into
+## its mechanics list carries the crit keyword + a crit stat line.
 
 
 var _actors: Array = []
@@ -53,6 +53,9 @@ func test_crit_item_has_the_crit_keyword_and_a_crit_stat_line() -> void:
   var def := ItemDef.new()
   def.id = 'test_keyword_crit'
   def.crit_chance = 0.25
+  # Crit is an authored mechanic now, not derived from crit_chance. Attack is listed too:
+  # the floor is that every mechanic an effect deals appears in the list.
+  def.mechanics = [AttackMechanic.ID, CritMechanic.ID]
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
   hit.value = 10.0
@@ -60,7 +63,7 @@ func test_crit_item_has_the_crit_keyword_and_a_crit_stat_line() -> void:
   def.effects = [hit]
   var it: Item = Item.new(def, _actor(100.0))
   var ids: Array[String] = TooltipContent.keyword_ids(it)
-  assert_true(CritMechanic.ID in ids, 'an item with a crit chance carries the crit keyword')
+  assert_true(CritMechanic.ID in ids, 'an item that authored crit carries the crit keyword')
   var content: Dictionary = TooltipContent.new().build(it)
   assert_true(content['stat_lines'].any(func(line: String) -> bool: return line.begins_with('Crit chance:')),
       'the stat block has a crit line')

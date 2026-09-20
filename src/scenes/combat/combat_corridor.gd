@@ -109,7 +109,8 @@ func set_walk_distance(sections: float) -> void:
 
 
 ## The global screen point just above enemy `index`'s sprite at its arrived depth, where the combat
-## view pins that enemy's HUD (bottom-centred there). It does not move during the approach.
+## view pins that enemy's HUD (bottom-centred there). It does not move during the approach, and the
+## head bob is left out of it, so the HUD stays still while the enemy image bobs.
 func enemy_anchor(index: int) -> Vector2:
   var n: int = _enemies.size()
   if n == 0:
@@ -117,7 +118,7 @@ func enemy_anchor(index: int) -> Vector2:
   index = clampi(index, 0, n - 1)
   var sprite: Sprite3D = _enemies[index]
   var top: Vector3 = _enemy_position(index, n, 0.0) + Vector3(0.0, _half_height(sprite), 0.0)
-  return global_position + size * 0.5 + _corridor.unproject(top) - Vector2(0.0, HUD_GAP)
+  return global_position + size * 0.5 + _corridor.unproject(top, true) - Vector2(0.0, HUD_GAP)
 
 
 ## The global screen point at the centre of enemy `index`'s sprite, where the VFX wall lands its

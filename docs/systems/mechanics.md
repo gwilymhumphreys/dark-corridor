@@ -140,9 +140,11 @@ The combat log gets a `charge` event through `CombatLog.on_charge`, holding the 
 (negative for a decharge) and the affected item's `name_key`. There is no per-item tally — charge
 moves no health, shield or status. The combat summary draws it as a signed number of seconds.
 
-**Open:** scoping which items they can pick — by item type tag, or a named item, rather than any
-item on the board. The owner has asked for this; it is not built, and it belongs with the target
-shapes rather than with the mechanics.
+**Scoping which items they pick is built.** An effect can carry a target filter that narrows the
+pool by item type tag and by mechanic before the pick, so a charge can be aimed at your weapons or
+at the enemy's poison items rather than at any item on the board. It lives with the target shapes,
+not with the mechanics — see [item.md](item.md#targeting-declare-a-shape-dont-resolve-a-target).
+Naming a specific item definition as the target is still not built.
 
 ## The APPLIED event
 

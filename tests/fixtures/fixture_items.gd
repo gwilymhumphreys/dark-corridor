@@ -21,12 +21,20 @@ const SHIELD_VALUE: float = 8.0
 const POISON_COOLDOWN: float = 1.6
 const POISON_STACKS: float = 3.0
 
+# The two filtered fixtures below. Fixture constants like the ones above: they are not pulled from
+# Balance, because a tuning pass must not be able to move what a test asserts.
+const CHARGE_COOLDOWN: float = 3.0
+const CHARGE_SECONDS: float = 1.0
+const SILENCE_COOLDOWN: float = 4.0
+const SILENCE_DURATION: float = 2.0
+
 
 ## A single-target attack that travels — the generic attacker.
 static func attack() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_attack'
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Fixture Blade'
   d.icon = 'res://assets/icons/items/old_sword.png'
   d.cooldown = ATTACK_COOLDOWN
@@ -55,6 +63,7 @@ static func shield() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_shield'
   d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
   d.name_key = 'Fixture Guard'
   d.icon = 'res://assets/icons/items/metal_shield_1.png'
   d.cooldown = SHIELD_COOLDOWN
@@ -72,6 +81,7 @@ static func poison() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_poison'
   d.types = [ItemType.WEAPON]
+  d.mechanics = [PoisonMechanic.ID]
   d.name_key = 'Fixture Fang'
   d.icon = 'res://assets/icons/items/loot_26_spiderteeth.png'
   d.cooldown = POISON_COOLDOWN
@@ -82,4 +92,49 @@ static func poison() -> ItemDef:
   pois.travel = ATTACK_TRAVEL
   d.effects = [pois]
   d.panel_color = Colours.POISON
+  return d
+
+
+## A charge item narrowed to your WEAPON items — the worked example of a type-tag target filter
+## ("all your weapons"). It charges every weapon on its owner's board and leaves the rest alone.
+## A fixture, not a catalog card: real items are the owner's to author.
+static func charge_your_weapons() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = 'fixture_charge_your_weapons'
+  d.types = [ItemType.SKILL]
+  d.mechanics = [ChargeMechanic.ID]
+  d.name_key = 'Fixture Whetstone'
+  d.cooldown = CHARGE_COOLDOWN
+  var f := TargetFilter.new()
+  f.add_type(ItemType.WEAPON)
+  var push := ItemEffect.new()
+  push.mechanic = ChargeMechanic.ID
+  push.value = CHARGE_SECONDS
+  push.shape = ItemEffect.Shape.ALL_OWN_ITEMS
+  push.target_filter = f
+  d.effects = [push]
+  d.panel_color = Colours.ARCANE
+  return d
+
+
+## A silence aimed at one enemy POISON item — the worked example of a mechanic target filter
+## ("a random enemy poison item"). It picks at random from the enemy items that poison, so it does
+## nothing against a board with none. A fixture, not a catalog card.
+static func silence_enemy_poison_item() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = 'fixture_silence_enemy_poison_item'
+  d.types = [ItemType.SPELL]
+  d.mechanics = []
+  d.name_key = 'Fixture Muzzle'
+  d.cooldown = SILENCE_COOLDOWN
+  var f := TargetFilter.new()
+  f.add_mechanic(PoisonMechanic.ID)
+  var hush := ItemEffect.new()
+  hush.kind = Delivery.Kind.APPLY_STATUS
+  hush.status_id = 'silence'
+  hush.duration = SILENCE_DURATION
+  hush.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  hush.target_filter = f
+  d.effects = [hush]
+  d.panel_color = Colours.ARCANE
   return d

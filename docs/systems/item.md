@@ -23,7 +23,7 @@ What it **is not**:
 
 ## Definition vs. instance
 
-- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`. (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
+- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `mechanics` (the authored list of mechanic ids the item counts as — see [The mechanics list](#the-mechanics-list)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`. (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
 - **Item instance** — runtime, on a board: a definition + live `Ticker` state + its one enchant (if any) + its item-targeted statuses. **Duplicates stack independently** — two of the same definition are two instances, each its own Ticker, firing twice (design).
 
 ---
@@ -46,7 +46,7 @@ When the item's `Ticker` crosses — its accumulator filled step-by-step, plus a
 
 1. **Gate check** — item-targeted gate statuses (e.g. *silence*) can suppress the fire (`StatusManager`). A gated item's cooldown **freezes** (decision #30): the Combat manager skips its accrual while a gate status sits on it, so a lifting gate never releases a banked burst — the first fire lands one full cooldown after the lift. (The in-`fire()` gate check stays as a backstop.)
 2. **Fire** — reset the cooldown; play the fire-emote (recoil / flash — combat_model.md). The fire is an event others can trigger off.
-3. **Resolve payload(s)** — for each of the item's effects, apply value modifiers (item-targeted statuses like *+2 damage* or *triggers-twice*, via `StatusManager`) and enchant hooks → a **payload** `(kind, value)`, plus its target-shape and `travel_time`. The outgoing-damage modifier stage receives **the firing item itself** (`StatusManager.modify_outgoing(owner, value, self)`, #35) so an actor-targeted status can scope to a weapon attack — the Armourer empower doubles only `weapon`-tagged damage; Weak scales any. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns.
+3. **Resolve payload(s)** — for each of the item's effects, apply the enchant's permanent multiplier and the **owner's** outgoing-value statuses (`StatusManager`) → a **payload** `(kind, value)`, plus its target-shape and `travel_time`. The outgoing-damage modifier stage receives **the firing item itself** (`StatusManager.modify_outgoing(owner, value, self)`, #35) so an actor-targeted status can scope to a weapon attack — the Armourer empower doubles only `weapon`-tagged damage; Weak scales any. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns.
 4. **Hand them up** — the item returns its payload(s) + shape + travel to the `Combat manager`, which resolves the shape and spawns a `combat_model.md` **Delivery** per target. The item never calls up.
 
 A fire may yield several payloads (a rare combining damage + heal); each becomes its own Delivery (fire-rate and travel are decoupled — combat_model.md).
@@ -67,13 +67,17 @@ An effect declares a **relative target-shape**, not a resolved target:
 - **own-item-random** — one *random* item on the owner's own board, for the [charge and decharge mechanics](mechanics.md#charge-and-decharge). Same seeded RNG as the opponent case. The **firing item is left out of the pool**, so an item that charges its own board cannot charge itself.
 - **all-own-items** — every other item on the owner's own board (again without the firing item). Only the owner's board — an ally's items are not included.
 
+The four **item** shapes are resolved by the `Combat manager` as **pool, then filter, then pick**: a pool builder (the living opponents' boards, or the owner's own board), an optional **target filter** (`TargetFilter`) that drops the pool items an effect rejects, and the pick (one at random via the seeded RNG for the two `-random` shapes, or all survivors). The filter applies to **item** pools only — the actor shapes (`self`, `opponent-leftmost`, `all-opponents`) ignore it (a filter on one is an authoring mistake, warned once and ignored). An unfiltered shape (a null or empty filter) resolves exactly as it did before the filter step; an empty result after filtering yields no Delivery, like an empty pool.
+
 The `Combat manager` (which knows sides + ordering) resolves the shape to actual target(s) **at spawn** and locks the Delivery onto them (a single target that dies mid-flight → fizzle, per combat_model.md; an item target removed from the board before arrival fizzles the same way). Shape is **per-effect** (a rare's damage = opponent, its heal = self). This is what keeps Items downward-clean — no `Item → Combat manager` dependency; the item declares, the manager (above) resolves. *(Ally-targeting — e.g. an enemy buffing another enemy — is a possible future shape the Combat manager would resolve; not in the prototype.)*
 
 ---
 
 ## Item-targeted statuses
 
-Items hold their own statuses (`StatusManager` rules; instances on the item): value modifiers (+damage), charges (triggers-twice-next), gates (silence), timed item-buffs. The fire pipeline consults them (steps 1, 3). Like every status, item-targeted statuses are **combat-scoped** (decision #26) — cleared at the fight's teardown, never carried between fights; the *permanent* item modifier is an **Enchantment** (one slot, below).
+Items hold their own statuses (`StatusManager` rules; instances on the item). **Two kinds are implemented today:** **gates** (silence — consulted at step 1, `Item.is_gated`) and **use-statuses** (Decay — drained after the fire, step 5). 
+
+**Not implemented: item-targeted *value* modifiers.** An item-level "+2 damage" or "triggers twice next" status has no effect — `Item._resolve_effect` scales a payload by the enchant and by `StatusManager.modify_outgoing(owner, …)`, which iterates the **owner's** statuses only and never consults `Item.statuses`. A buff that raises the damage of *all* the owner's weapons already works as an actor-targeted status scoped by type tag (`EmpoweredStatus`, #35); a buff aimed at **one specific item** would need this seam added. Wiring it means calling the item's own statuses in `_resolve_effect` and mirroring that in the pure `display_value` preview path. Like every status, item-targeted statuses are **combat-scoped** (decision #26) — cleared at the fight's teardown, never carried between fights; the *permanent* item modifier is an **Enchantment** (one slot, below).
 
 ---
 
@@ -102,11 +106,33 @@ Synergy is the core decision mechanism (design). The item side:
 
 ---
 
+## The mechanics list
+
+`ItemDef.mechanics` is an **array of mechanic string ids** ([mechanics.md](mechanics.md)) naming what
+the item counts as: its identity, not a summary of its effects. A target filter matches against it
+("a random enemy poison item"), and the tooltip's keyword column is seeded from it.
+
+- **Authored, not derived.** The list is written by hand rather than computed from the effects,
+  because the awkward cases are judgment calls rather than facts about the data. An item that
+  charges when poison is applied **is** a poison item; an item that creates a bleeding dagger is
+  **not** a bleed item. No rule produces both, and a rule set covering fuel, summons, creation and
+  enchants would grow without ever matching how the cards play. The question the author answers is
+  "should *your poison items* pick this one up".
+- **One checked floor.** `tests/content/test_pool_integrity.gd` requires that every mechanic an
+  effect deals or applies — an effect's `mechanic`, a `status_id` that is also a mechanic id, and
+  `crit` when `crit_chance` is set — appears in the list. The check is one-way: an item may list
+  more than that, which is the point of authoring it, but never less. Nothing above the floor is
+  checked, so `consume_id`, trigger filters and created items are the author's call.
+- **Alphabetical.** The list is written sorted by id, and the sweep enforces it, because it seeds
+  the tooltip keyword column and an arbitrary-but-fixed order keeps a mechanic in the same relative
+  place on every item.
+
 ## Item type tags
 
 `ItemDef.types` is an **array of type-tag string ids** (a Bazaar-style tag set) drawn from **five tags** — `weapon` · `armour` · `skill` · `spell` · `trinket` (the `ItemType` consts). The axis is the **source / vessel of the effect** (weapon = an attack; armour = self-shield; skill = an active ability; spell = a cast effect; trinket = a passive / utility bearer).
 
-- **Mostly-inert labels.** The fire pipeline itself never branches on `types`; a tag has no *inherent* effect. But a **status can now read tag membership** — the firing item is threaded into the outgoing-damage / actor-fire hooks (#35), and the Armourer empower (`EmpoweredStatus`) uses `types.has(ItemType.WEAPON)` to double only weapon attacks. Tags remain the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2"); the empower is the first to key off one.
+- **Read in three places.** The fire pipeline itself never branches on `types`, so a tag still has no *inherent* effect, but three things read tag membership: a status can (the firing item is threaded into the outgoing-damage / actor-fire hooks, #35 — the Armourer empower, `EmpoweredStatus`, uses `types.has(ItemType.WEAPON)` to double only weapon attacks); a **target filter** can, which is how "all your weapons" is targeted; and the tooltip shows an item's tags as a type line. Tags are the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2").
+- **Display names.** `ItemType.display_name` / `display_name_plural` give each tag its word, singular and plural. Placeholder copy — the owner's to write.
 - **An array, not a single field** — most items carry exactly one tag; the array just lets a rare carry more later. A synergy checks `types.has('weapon')`.
 - **Items only.** Tags live on `ItemDef`; **Relic / Enchantment / Consumable are separate `Draftable` categories** (#21) and stay untagged.
 
@@ -140,7 +166,7 @@ Each item exposes its effect-family colour + value for the panel (usually one; r
 - **Size** — whether to ship size-as-tempo and how many sizes (art doc: a leaning to test).
 - **Ally-targeting shape** — only if enemies ever buff/heal allies; the Combat manager would resolve it; not in the prototype.
 - **Item-target shapes — added (resolved 2026-06-05):** `opponent-item-random` (one random enemy item; selection **random via seeded RNG**, provisional) and `all-opponent-items`.
-- **Own-board item shapes — added (2026-09-18):** `own-item-random` and `all-own-items`, for charge and decharge. Narrowing which of your items they can pick (by item type tag, or a named item) is not built; the owner has asked for it.
+- **Own-board item shapes — added (2026-09-18):** `own-item-random` and `all-own-items`, for charge and decharge. **Narrowing which items they pick is now built** — a per-effect **target filter** narrows the pool by item type tag and/or mechanic before the pick (see [Targeting](#targeting-declare-a-shape-dont-resolve-a-target)). Naming a *specific* item definition as a target (rather than a tag or a mechanic) is still not built.
 
 ## Dependencies
 

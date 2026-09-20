@@ -18,6 +18,11 @@ var rarity: int = Rarity.COMMON
 # (Bazaar-style tag set); most items carry exactly one. Values are ItemType consts. Items only —
 # relics / consumables / enchants are separate Draftable categories and stay untagged.
 var types: Array[String] = []
+# The mechanic ids (MechanicRegistry) this item counts as (docs/systems/item.md) — used by targeting
+# filters and by the tooltip keyword column. Authored, not derived from the effects (the author's
+# judgment about what the item is). Written in alphabetical order; tests/content/test_pool_integrity.gd
+# checks both the order and the floor (every mechanic an effect deals or applies is listed).
+var mechanics: Array[String] = []
 var cooldown: float = 1.0          # seconds -> Ticker threshold
 var effects: Array[ItemEffect] = []   # one usually; rares combine
 # Array[{ event:int (EventBus.Event), amount:float, filter:Variant (a status string id),

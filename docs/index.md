@@ -19,7 +19,7 @@ The layout, by the kind of question you're answering:
 | Doc | Covers |
 |-----|--------|
 | [handoff.md](handoff.md) | Fresh-agent orientation: what the game is, build status, how to run and test, settled lessons, the engineering backlog. |
-| [decision_log.md](decision_log.md) | The canonical decision record (#1–#40): what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
+| [decision_log.md](decision_log.md) | The canonical decision record (#1–#41): what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
 | [documentation.md](documentation.md) | How the docs work: where each kind lives and the rules for writing them (sync with code in the same change, catalog every doc, intent not numbers, plan to system). |
 
 ## Systems (`docs/systems/`)
@@ -36,8 +36,8 @@ contracts (boundary hub)**, which every system doc links to.
 | [systems/actor.md](systems/actor.md) | The symmetric combatant: HP, a board of items, a status list. Player and enemy are the same type. |
 | [systems/mechanics.md](systems/mechanics.md) | One class per combat rule (attack, shield, heal, poison, burn, bleed, regen, crit, charge, decharge) holding its name, description, icon, colour and landing behaviour, plus `MechanicRegistry`, the mechanic colours, and `IconSlots` (the twelve icon slots and the icon chosen for each). |
 | [systems/status_manager.md](systems/status_manager.md) | The status system: a stateless facade over polymorphic `StatusEffect` classes, one file per status; stacking, the incoming-damage pipeline (amplify then absorb), the hook interface. |
-| [systems/item.md](systems/item.md) | The board participant: data-defined, owns a Ticker; the fire pipeline (gate, fire, resolve, target-shape), own-side trigger source filters, rarity, size, the one enchant slot, duplicate stacking. |
-| [systems/combat_manager.md](systems/combat_manager.md) | The per-fight orchestrator: rosters and ordering, the Timekeeper lifecycle, the central tick, target-shape resolution, the trigger event bus, player input-intents. |
+| [systems/item.md](systems/item.md) | The board participant: data-defined, owns a Ticker; the fire pipeline (gate, fire, resolve, target-shape), target filters and the authored mechanics list, own-side trigger source filters, rarity, size, the one enchant slot, duplicate stacking. |
+| [systems/combat_manager.md](systems/combat_manager.md) | The per-fight orchestrator: rosters and ordering, the Timekeeper lifecycle, the central tick, target resolution as pool then filter then pick, the trigger event bus, player input-intents. |
 | [systems/combat_log.md](systems/combat_log.md) | The per-fight observation log: a combat-scoped sink written at each mutation site, holding side-aware per-item tallies and an ordered event timeline; read by the autotest, the live HUD and the combat report. |
 | [systems/game_manager.md](systems/game_manager.md) | The session singleton (autoload `Game`): the game-state machine, run lifecycle, and save-lifecycle calls. |
 | [systems/run_manager.md](systems/run_manager.md) | The descent: the map of acts and beats, encounter sequencing and corridor advance, player run-state, the HP economy, snapshot and rehydrate. |

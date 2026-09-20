@@ -45,6 +45,17 @@ static func get_def(id: String) -> ItemDef:
   return _defs[id]
 
 
+## Every authored item id. For the content sweeps in tests, which must cover the whole catalog
+## rather than a hand-kept list that a new item would silently fall off.
+static func all_ids() -> Array[String]:
+  if _defs.is_empty():
+    _build()
+  var ids: Array[String] = []
+  for id: String in _defs:
+    ids.append(id)
+  return ids
+
+
 ## Copy the colours of freshly built definitions onto the cached ones, so items and draft offers
 ## that already hold a definition show the current `Colours` (docs/systems/interface_palette.md).
 static func refresh_colours() -> void:
@@ -95,6 +106,7 @@ static func _poison_dagger() -> ItemDef:
   var d := ItemDef.new()
   d.id = POISON_DAGGER
   d.types = [ItemType.WEAPON]   # dagger vessel; applies poison rather than direct damage (owner: confirm)
+  d.mechanics = [PoisonMechanic.ID]
   d.name_key = 'Venom Fang'
   d.icon = 'res://assets/icons/items/loot_26_spiderteeth.png'
   d.cooldown = Balance.POISON_APPLIER_COOLDOWN
@@ -112,6 +124,7 @@ static func _avenger() -> ItemDef:
   var d := ItemDef.new()
   d.id = AVENGER
   d.types = [ItemType.ARMOUR]
+  d.mechanics = [PoisonMechanic.ID, ShieldMechanic.ID]   # poison: charges off it (owner, 2026-09-20)
   d.name_key = 'Spite Ward'
   d.icon = 'res://assets/icons/items/skull_shield.png'
   d.cooldown = Balance.SPITE_WARD_COOLDOWN
@@ -138,6 +151,7 @@ static func _hex_bolt() -> ItemDef:
   var d := ItemDef.new()
   d.id = HEX_BOLT
   d.types = [ItemType.SPELL]   # arcane hex/silence (owner: confirm spell vs skill)
+  d.mechanics = []
   d.name_key = 'Hex Bolt'
   d.icon = 'res://assets/icons/items/skill_shadow_curse_nb.png'
   d.cooldown = Balance.HEX_BOLT_COOLDOWN
@@ -160,6 +174,7 @@ static func _sunder() -> ItemDef:
   var d := ItemDef.new()
   d.id = SUNDER
   d.types = [ItemType.SKILL]   # martial debuff (Vulnerable) — owner: confirm skill vs spell vs weapon
+  d.mechanics = []
   d.name_key = 'Sundering Bolt'
   d.icon = 'res://assets/icons/items/skill_break_medium_armor_nb.png'
   d.cooldown = Balance.SUNDER_COOLDOWN
@@ -186,6 +201,7 @@ static func _pocket_shrooms() -> ItemDef:
   var d := ItemDef.new()
   d.id = POCKET_SHROOMS
   d.types = [ItemType.WEAPON]   # damage-primary attack (also blinds); thematically shrooms (owner: confirm)
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Pocket Shrooms'
   d.icon = 'res://assets/icons/items/herbalism_24_stinkymushroom.png'
   d.rarity = ItemDef.Rarity.RARE
@@ -217,6 +233,7 @@ static func _druid_staff() -> ItemDef:
   var d := ItemDef.new()
   d.id = DRUID_STAFF
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Druid Staff'
   d.icon = 'res://assets/icons/items/staff_v2_02.png'
   d.cooldown = Balance.DRUID_STAFF_COOLDOWN
@@ -245,6 +262,7 @@ static func _spore_spitter() -> ItemDef:
   var d := ItemDef.new()
   d.id = SPORE_SPITTER
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Spore Spitter'         # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/herbalism_28_stinkymushroom.png'
   d.cooldown = Balance.SPORE_SPITTER_COOLDOWN
@@ -272,6 +290,7 @@ static func _capped_cudgel() -> ItemDef:
   var d := ItemDef.new()
   d.id = CAPPED_CUDGEL
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Capped Cudgel'         # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/club_v2_02.png'
   d.cooldown = Balance.CAPPED_CUDGEL_COOLDOWN
@@ -292,6 +311,7 @@ static func _bloomhammer() -> ItemDef:
   var d := ItemDef.new()
   d.id = BLOOMHAMMER
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Bloomhammer'           # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/wooden_hammer.png'
   d.cooldown = Balance.BLOOMHAMMER_COOLDOWN
@@ -321,6 +341,7 @@ static func _wilt_frond() -> ItemDef:
   var d := ItemDef.new()
   d.id = WILT_FROND
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Wilt Frond'             # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/herbalism_20_sickflower.png'
   d.cooldown = Balance.WILT_FROND_COOLDOWN
@@ -351,6 +372,7 @@ static func _flesh_chunk() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_CHUNK
   d.types = [ItemType.WEAPON]   # created token that auto-attacks for damage (owner: confirm)
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Chunk of Flesh'        # owner's term — rename if desired
   d.icon = 'res://assets/icons/items/res_149_meet.png'
   d.cooldown = Balance.FLESH_CHUNK_COOLDOWN
@@ -374,6 +396,7 @@ static func _flesh_carving_knife() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_CARVING_KNIFE
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Carving Knife'
   d.icon = 'res://assets/icons/items/dagger_01.png'
   d.cooldown = Balance.FLESH_CARVING_KNIFE_COOLDOWN
@@ -399,6 +422,7 @@ static func _flesh_cleaver() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_CLEAVER
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Cleaver'               # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/dagger_38.png'
   d.cooldown = Balance.FLESH_CLEAVER_COOLDOWN
@@ -425,6 +449,7 @@ static func _flesh_bone_saw() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_BONE_SAW
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Bone Saw'             # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/loot_12_saw.png'
   d.cooldown = Balance.FLESH_BONE_SAW_COOLDOWN
@@ -458,6 +483,7 @@ static func _flesh_explosion() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_EXPLOSION
   d.types = [ItemType.SPELL]   # AOE detonation payoff, not a hand weapon (owner: confirm spell vs weapon)
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Flesh Explosion'       # owner's name
   d.icon = 'res://assets/icons/items/skill_blood_boiling_nb.png'
   d.rarity = ItemDef.Rarity.UNCOMMON
@@ -487,6 +513,7 @@ static func _flesh_flensing_hook() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_FLENSING_HOOK
   d.types = [ItemType.SKILL]   # active self-harm flesh producer, no enemy attack (owner: confirm)
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Flensing Hook'         # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/hook.png'
   d.cooldown = Balance.FLESH_FLENSING_HOOK_COOLDOWN
@@ -520,6 +547,7 @@ static func _flesh_skin_graft() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_SKIN_GRAFT
   d.types = [ItemType.SKILL]   # active self-heal / flesh consumer (no heal tag exists) (owner: confirm)
+  d.mechanics = [HealMechanic.ID]
   d.name_key = 'Skin Graft'            # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/loot_99_needle.png'
   d.cooldown = Balance.FLESH_SKIN_GRAFT_COOLDOWN
@@ -544,6 +572,7 @@ static func _flesh_bone_spear() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_BONE_SPEAR
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID, BleedMechanic.ID]
   d.name_key = 'Bone Spear'            # owner's name
   d.icon = 'res://assets/icons/items/spear_27.png'
   d.cooldown = Balance.FLESH_BONE_SPEAR_COOLDOWN
@@ -570,6 +599,7 @@ static func _flesh_rib() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_RIB
   d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
   d.name_key = 'Rib'                   # owner's name
   d.icon = 'res://assets/icons/items/loot_22_remains.png'
   d.cooldown = Balance.FLESH_RIB_COOLDOWN
@@ -586,6 +616,7 @@ static func _flesh_femur() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_FEMUR
   d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
   d.name_key = 'Femur'                 # owner's name
   d.icon = 'res://assets/icons/items/loot_23_bone.png'
   d.cooldown = Balance.FLESH_FEMUR_COOLDOWN
@@ -602,6 +633,7 @@ static func _flesh_skull() -> ItemDef:
   var d := ItemDef.new()
   d.id = FLESH_SKULL
   d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
   d.name_key = 'Skull'                 # owner's name
   d.icon = 'res://assets/icons/items/quest_24_scull.png'
   d.cooldown = Balance.FLESH_SKULL_COOLDOWN
@@ -623,6 +655,7 @@ static func _mighty_blow() -> ItemDef:
   var d := ItemDef.new()
   d.id = MIGHTY_BLOW
   d.types = [ItemType.SKILL]
+  d.mechanics = []
   d.name_key = 'Mighty Blow'           # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/skill_strong_attack_nb.png'
   d.cooldown = Balance.MIGHTY_BLOW_COOLDOWN
@@ -646,6 +679,7 @@ static func _armourer_broadaxe() -> ItemDef:
   var d := ItemDef.new()
   d.id = ARMOURER_BROADAXE
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Broadaxe'              # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/axe_hard_2.png'
   d.cooldown = Balance.ARMOURER_BROADAXE_COOLDOWN
@@ -663,6 +697,7 @@ static func _armourer_warhammer() -> ItemDef:
   var d := ItemDef.new()
   d.id = ARMOURER_WARHAMMER
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/war_hammer.png'
   d.cooldown = Balance.ARMOURER_WARHAMMER_COOLDOWN
@@ -680,6 +715,7 @@ static func _armourer_greatsword() -> ItemDef:
   var d := ItemDef.new()
   d.id = ARMOURER_GREATSWORD
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Greatsword'           # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/sword_twohanded_1.png'
   d.cooldown = Balance.ARMOURER_GREATSWORD_COOLDOWN
@@ -697,6 +733,7 @@ static func _enemy_claw() -> ItemDef:
   var d := ItemDef.new()
   d.id = ENEMY_CLAW
   d.types = [ItemType.WEAPON]
+  d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Claw'
   d.icon = 'res://assets/icons/items/loot_183_claw.png'
   d.cooldown = Balance.ENEMY_CLAW_COOLDOWN

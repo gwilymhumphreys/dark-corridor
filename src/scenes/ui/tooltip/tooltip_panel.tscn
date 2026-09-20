@@ -25,6 +25,13 @@ theme_override_font_sizes/font_size = 28
 text = "Item"
 autowrap_mode = 3
 
+[node name="TypeLine" type="Label" parent="Margin/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+text = "Weapon"
+autowrap_mode = 3
+
 [node name="Lines" type="VBoxContainer" parent="Margin/Body"]
 layout_mode = 2
 mouse_filter = 2

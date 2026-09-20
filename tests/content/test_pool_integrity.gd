@@ -20,6 +20,14 @@ const ENCOUNTER_IDS: Array = [
   EncounterCatalog.EVENT_WANDERER,
 ]
 
+const ITEM_TYPE_IDS: Array = [
+  ItemType.WEAPON,
+  ItemType.ARMOUR,
+  ItemType.SKILL,
+  ItemType.SPELL,
+  ItemType.TRINKET,
+]
+
 
 func test_character_pools_and_kits_resolve() -> void:
   for character_id in CHARACTER_IDS:
@@ -82,3 +90,77 @@ func test_draftable_item_effects_reference_registered_statuses() -> void:
         assert_true(StatusRegistry.has(effect.status_id), '%s: status %s is registered' % [item_id, effect.status_id])
       if effect.consume_id != '':
         assert_true(StatusRegistry.has(effect.consume_id), '%s: consume target %s is registered' % [item_id, effect.consume_id])
+
+
+## Every mechanic id in an item's authored mechanics list resolves in the MechanicRegistry.
+## A typo'd id would silently never match a target filter, so it fails here instead.
+func test_item_mechanics_list_resolves() -> void:
+  for item_id in ItemCatalog.all_ids():
+    var def: ItemDef = ItemCatalog.get_def(item_id)
+    for mechanic_id in def.mechanics:
+      assert_true(MechanicRegistry.has(mechanic_id), '%s: mechanic id %s resolves' % [item_id, mechanic_id])
+
+
+## Every authored mechanics list is sorted alphabetically by id string and holds no duplicates.
+## The failure message prints the correctly sorted list so fixing it is a copy and paste.
+func test_item_mechanics_list_sorted_and_unique() -> void:
+  for item_id in ItemCatalog.all_ids():
+    var def: ItemDef = ItemCatalog.get_def(item_id)
+    var sorted: Array[String] = []
+    for id: String in def.mechanics:
+      sorted.append(id)
+    sorted.sort()
+    var deduped: Array[String] = []
+    for id: String in def.mechanics:
+      if not deduped.has(id):
+        deduped.append(id)
+    assert_eq(deduped.size(), def.mechanics.size(),
+        '%s: mechanics list holds no duplicates' % item_id)
+    assert_true(def.mechanics == sorted,
+        '%s: mechanics list is sorted; correct value: %s' % [item_id, sorted])
+
+
+## The floor: every mechanic an effect deals (its `mechanic` field), applies as a status that is
+## also a registered mechanic (`status_id`), or via `crit_chance > 0` (CritMechanic.ID) must be
+## listed in the item's authored mechanics list. One-way only — an item may list more.
+func test_item_mechanics_floor_is_covered() -> void:
+  for item_id in ItemCatalog.all_ids():
+    var def: ItemDef = ItemCatalog.get_def(item_id)
+    for effect in def.effects:
+      if effect.mechanic != '':
+        assert_true(def.mechanics.has(effect.mechanic),
+            '%s: effect mechanic %s is listed' % [item_id, effect.mechanic])
+      if effect.status_id != '' and MechanicRegistry.has(effect.status_id):
+        assert_true(def.mechanics.has(effect.status_id),
+            '%s: status-as-mechanic %s is listed' % [item_id, effect.status_id])
+    if def.crit_chance > 0.0:
+      assert_true(def.mechanics.has(CritMechanic.ID),
+          '%s: crit chance set but %s not listed' % [item_id, CritMechanic.ID])
+
+
+## Every target filter condition names an id that resolves: TYPE conditions name an ItemType const,
+## MECHANIC conditions resolve in the MechanicRegistry. No catalog item sets a filter yet, so today
+## this rests on the two filtered fixtures; it is the guard for when the owner authors one.
+func test_item_target_filter_ids_resolve() -> void:
+  # The catalog first, then the two filtered fixtures — which are the only authored filters today,
+  # so without them this sweep would pass without asserting anything at all.
+  var defs: Array[ItemDef] = []
+  for item_id in ItemCatalog.all_ids():
+    defs.append(ItemCatalog.get_def(item_id))
+  defs.append(FixtureItems.charge_your_weapons())
+  defs.append(FixtureItems.silence_enemy_poison_item())
+  for def: ItemDef in defs:
+    var item_id: String = def.id
+    for effect in def.effects:
+      if effect.target_filter == null:
+        continue
+      for condition: Dictionary in effect.target_filter.conditions:
+        var kind: int = condition.get('kind', TargetFilter.Kind.TYPE)
+        var id: String = condition.get('id', '')
+        match kind:
+          TargetFilter.Kind.TYPE:
+            assert_true(ITEM_TYPE_IDS.has(id),
+                '%s: target filter TYPE condition id %s is a valid ItemType' % [item_id, id])
+          TargetFilter.Kind.MECHANIC:
+            assert_true(MechanicRegistry.has(id),
+                '%s: target filter MECHANIC condition id %s resolves' % [item_id, id])

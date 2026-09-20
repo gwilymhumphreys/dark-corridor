@@ -641,6 +641,15 @@ func _status_source_side(st: StatusEffect, holder) -> int:
 ## Resolve a payload's relative shape into concrete targets, relative to `owner_actor`
 ## (the firing item's owner, or a thrown consumable's thrower).
 func _resolve_targets(p: Payload, owner_actor: Actor) -> Array:
+  # A target filter applies to item pools only. On an actor shape it is an authoring mistake
+  # that must not be silent — warn once, then resolve the actor shape exactly as it would
+  # without a filter (the filter is ignored; resolution carries on). A null filter, or one
+  # whose conditions are empty, warns nothing (is_empty() covers both).
+  if p.target_filter != null and not p.target_filter.is_empty():
+    if p.shape == ItemEffect.Shape.SELF \
+        or p.shape == ItemEffect.Shape.OPPONENT_LEFTMOST \
+        or p.shape == ItemEffect.Shape.ALL_OPPONENTS:
+      _warn_ignored_filter(p.shape)
   match p.shape:
     ItemEffect.Shape.SELF:
       return [owner_actor]
@@ -650,13 +659,13 @@ func _resolve_targets(p: Payload, owner_actor: Actor) -> Array:
     ItemEffect.Shape.ALL_OPPONENTS:
       return _living_opponents(owner_actor)
     ItemEffect.Shape.OPPONENT_ITEM_RANDOM:
-      return _random_opponent_item(owner_actor)
+      return _pick_random(_filter_items(_all_opponent_items(owner_actor), p.target_filter))
     ItemEffect.Shape.ALL_OPPONENT_ITEMS:
-      return _all_opponent_items(owner_actor)
+      return _filter_items(_all_opponent_items(owner_actor), p.target_filter)
     ItemEffect.Shape.OWN_ITEM_RANDOM:
-      return _random_own_item(owner_actor, p.source)
+      return _pick_random(_filter_items(_all_own_items(owner_actor, p.source), p.target_filter))
     ItemEffect.Shape.ALL_OWN_ITEMS:
-      return _all_own_items(owner_actor, p.source)
+      return _filter_items(_all_own_items(owner_actor, p.source), p.target_filter)
     _:
       # A future shape with no resolver — warn ONCE so an authored item using it isn't a
       # silent no-op (it would fire nothing with no clue why).
@@ -674,6 +683,20 @@ func _warn_unhandled_shape(shape: int) -> void:
     return
   _warned_shapes[shape] = true
   push_warning('[CombatManager] target shape %d has no resolver; the effect fires nothing.' % shape)
+
+
+var _warned_filter_shapes: Dictionary = {}   # actor shapes already warned about for carrying a filter (no log spam)
+
+
+## Warn once per actor shape that carries a target filter — a content-authoring aid. A filter
+## applies to item pools only, so on an actor shape it is an authoring mistake; the effect still
+## resolves (the filter is ignored), but the mistake must not be silent. The tick loop would
+## otherwise call this every step the offending item fires.
+func _warn_ignored_filter(shape: int) -> void:
+  if _warned_filter_shapes.has(shape):
+    return
+  _warned_filter_shapes[shape] = true
+  push_warning('[CombatManager] target shape %d ignores its target filter (filters apply to item pools only).' % shape)
 
 
 ## Is a Delivery's target still a valid landing site? An Actor must be alive; an Item's
@@ -731,14 +754,15 @@ func _all_opponent_items(actor: Actor) -> Array:
   return out
 
 
-## One random Item from that pool, chosen on the seeded per-fight RNG (decision #14:
-## item-target selection is random, unlike the deterministic leftmost actor rule; the
-## seed keeps the fight bit-reproducible). [] when no opponent has a board item.
-func _random_opponent_item(actor: Actor) -> Array:
-  var pool: Array = _all_opponent_items(actor)
-  if pool.is_empty():
-    return []
-  return [pool[rng.randi_range(0, pool.size() - 1)]]
+## Keep only the pool items the filter accepts. A null or empty filter keeps the pool as it is.
+func _filter_items(pool: Array, filter: TargetFilter) -> Array:
+  if filter == null or filter.is_empty():
+    return pool
+  var out: Array = []
+  for it in pool:
+    if filter.matches(it):
+      out.append(it)
+  return out
 
 
 ## Every Item on the firing actor's OWN board, minus the firing item itself. The own-side twin
@@ -754,11 +778,13 @@ func _all_own_items(actor: Actor, firing_item) -> Array:
   return out
 
 
-## One random Item from that pool, chosen on the seeded per-fight RNG, like
-## `_random_opponent_item` (decision #14: item-target selection is random but reproducible).
-## [] when the owner holds no other item.
-func _random_own_item(actor: Actor, firing_item) -> Array:
-  var pool: Array = _all_own_items(actor, firing_item)
+## One Item from the pool, chosen on the seeded per-fight RNG (decision #14: item-target
+## selection is random, unlike the deterministic leftmost actor rule; the seed keeps the
+## fight bit-reproducible). The draw is flat across the pool's items — not across the
+## owning actors — so an enemy holding four items is four times as likely to be picked as
+## one holding one: that is the reading a player gets from "a random enemy item". [] when
+## the pool is empty.
+func _pick_random(pool: Array) -> Array:
   if pool.is_empty():
     return []
   return [pool[rng.randi_range(0, pool.size() - 1)]]

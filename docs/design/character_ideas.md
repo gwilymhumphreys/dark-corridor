@@ -382,6 +382,69 @@ ships).
 
 ---
 
+## Executioner / Blacksmith — *parked (new 2026-09-20; shape sketched, name open)*
+
+- **Concept (owner, musing — nothing set):** a straightforward martial character built from
+  **weapons, skills and armour**, reusing elements of the [Armourer](armourer.md) rather than
+  inventing a new engine. Working names floated: **Executioner** and **Blacksmith**.
+- **The defining constraint (owner): no extra resource to manage.** Every other roster concept
+  accumulates and spends something the player tracks separately — spores, flesh chunks, heat, mana.
+  This one does not. Its skills instead **buff its own weapons and armour over the course of a
+  fight**, so the thing that accumulates lives *on the items*, not in a counter beside them. That is
+  the identity, and it is a genuinely different answer to the
+  [resource question](#cross-cutting--resource-economies) rather than an absence of one.
+- **Three loose card directions (owner — "general ideas for card direction", not set):**
+  1. **Go wide** — many weapons or tools on the board, buffs that hit the whole set.
+  2. **Go tall** — a single weapon invested in heavily.
+  3. **Shield synergy** — the third direction, shape open.
+  Wide and tall pull against each other on purpose, the same way the Spore Druid's Mass and Self do.
+  That is a real draft decision as long as both halves stay viable; the watch is the usual one, that
+  tuning quietly kills one and the choice turns out to be fake.
+- **Build cost differs sharply across the three** (verified against the code 2026-09-20):
+  - **Go wide is free.** An actor-targeted status scoped by item type tag already works — this is
+    the #35 seam, and `EmpoweredStatus` is a working example ("double the next `weapon` attack").
+    "All my weapons hit harder for the rest of the fight" is authoring only, today.
+  - **Go tall needs a small piece of engine.** Buffing *one specific item* wants an item-targeted
+    **value modifier**. `Item.statuses` exists and is consulted for **gating** (silence) and the
+    **use-status drain** (decay), but `Item._resolve_effect` never asks the item's own statuses to
+    modify a value — only the owner's, via `StatusManager.modify_outgoing`. See the doc-vs-code note
+    logged in [`../systems/item.md`](../systems/item.md).
+  - **Shield synergy is nearly free** — shield needs the one-line `is_fuel()` override to join the
+    built consume seam, then spender items. Same finding as the Armourer's.
+- **"Armour that does damage" — three readings, very different costs.** An `armour`-tagged item whose
+  effect is an attack is **free** (type tags are inert labels). **Spending shield for damage** is the
+  nearly-free consume seam above — but it is the Armourer's own signature pillar, so taking it here
+  takes it from there. **Thorns / damage when your shield absorbs** needs the unbuilt on-absorb seam
+  and belongs to [Spiked Shield](#spiked-shield--retributive-shield--parked-new-2026-06-16-engine-found-fiction-open).
+- **"Skills as a primary card type" — clarified.** There is no player-activated action in this combat
+  model; every item owns a cooldown ticker and fires itself, and `skill` is an inert label. So a
+  skill-heavy pool means items whose effect is a self-buff or utility on a metronome, like Mighty
+  Blow. That shape is authorable now. It is not a button the player presses, and making it one would
+  be a large systems change.
+- **Blacksmith has unclaimed prior art.** The retired [Blade Mage](#blade-mage--steel-mage--retired-2026-06-13-absorbed-by-the-mech)
+  left "the temper/consume/merge weapon-interaction ideas" explicitly unclaimed by the Mech. It also
+  left the bar this concept has to clear: every character holds weapons, so "lots of weapons" is not
+  an identity unless the weapons **act on each other**. Blacksmith has a native verb for that (forge,
+  temper, reforge, consume one weapon to improve another). Executioner does not.
+- **Risk — Blacksmith collides with the Fleshmancer.** That character is already the item-economy one:
+  its attacks create Chunks of Flesh on its own board, they decay, and other cards eat them — it uses
+  both the create and consume seams. A smith who forges items onto the board and consumes them is the
+  same machine in a different costume. A real distinction is available — the Fleshmancer makes
+  disposable fodder in bulk, a smith would improve one thing durably, which also feeds *go tall* —
+  but it has to be chosen deliberately, not assumed.
+- **Risk — Executioner is a job title, not a recombination.** The [influence lens](influence_dcc.md)
+  asks for two recognisable things from different domains fused so both stay readable. Executioner
+  alone is a fantasy-trope role; it would need a second domain attached, and picking that domain is
+  the open question. Smaller flag: the execute verb is already spoken for on paper by the Spore
+  Druid's parked **Lethal** spore.
+- **Risk — the on-ramp slot is taken.** The Armourer already holds the low-load starter role. This
+  concept would need to be straightforward in a *different* way, not the same way, or the two compete
+  for one slot.
+- **Roster-tone note.** Both names lean grim-trade rather than body-horror, which is a counterweight
+  to the flesh/horror consolidation flagged on the Meat entry above.
+
+---
+
 ## Cross-cutting — resource economies
 
 A chassis several ideas share — worth holding as its own lever rather than re-deriving per

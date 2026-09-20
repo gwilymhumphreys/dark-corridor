@@ -9,6 +9,9 @@ extends RefCounted
 var kind: int = Delivery.Kind.MECHANIC
 var value: float = 0.0
 var shape: int = ItemEffect.Shape.OPPONENT_LEFTMOST
+# The optional target-filter narrowing (docs/systems/item.md) — carried straight through from the
+# effect, unmodified (like the shape; it is shared read-only authored data, not deep-copied).
+var target_filter: TargetFilter = null
 var travel: float = 0.0
 var mechanic: String = ''
 var status_id: String = ''
@@ -48,6 +51,7 @@ static func from_effect(effect: ItemEffect) -> Payload:
   payload.kind = effect.kind
   payload.value = effect.value
   payload.shape = effect.shape
+  payload.target_filter = effect.target_filter
   payload.travel = effect.travel
   payload.mechanic = effect.mechanic
   payload.status_id = effect.status_id

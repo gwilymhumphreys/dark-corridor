@@ -1,9 +1,10 @@
 class_name TooltipPanel
 extends PanelContainer
 ## The main item panel of the tooltip cluster (docs/systems/tooltips.md): the item's name (rarity-
-## tinted), its generated effect lines (live values + inline keyword chips), an optional authored
-## flavor line, and a stat block (cooldown). Opaque — the framed stylebox is the only surface (no
-## alpha). Fed a TooltipContent.build() Dictionary; rebuilds its line rows each time.
+## tinted), its type line (the item's type tags), its generated effect lines (live values + inline
+## keyword chips), an optional authored flavor line, and a stat block (cooldown). Opaque — the framed
+## stylebox is the only surface (no alpha). Fed a TooltipContent.build() Dictionary; rebuilds its line
+## rows each time.
 
 const KEYWORD_CHIP: PackedScene = preload('res://src/scenes/ui/tooltip/keyword_chip.tscn')
 
@@ -20,6 +21,7 @@ func set_content(content: Dictionary) -> void:
   var title: Label = $Margin/Body/Title
   title.text = content['title']
   title.add_theme_color_override('font_color', _rarity_tint(content['rarity']))
+  _set_type_line(content['type_line'])
   _build_lines(content['lines'])
   _set_flavor(content['flavor'])
   _set_stats(content['stat_lines'])
@@ -111,6 +113,14 @@ func _set_flavor(flavor: String) -> void:
   label.custom_minimum_size.x = PANEL_WIDTH - BODY_MARGIN * 2.0   # fit_content height at the real width
   label.text = flavor
   label.visible = flavor != ''
+
+
+## The type line: the item's type tags as a plain label under the title. Hidden when the string is
+## empty, so an untagged item shows no gap between the title and the effect lines.
+func _set_type_line(type_line: String) -> void:
+  var label: Label = $Margin/Body/TypeLine
+  label.text = type_line
+  label.visible = type_line != ''
 
 
 func _set_stats(stat_lines: Array) -> void:

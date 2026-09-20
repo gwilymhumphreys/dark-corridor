@@ -732,8 +732,36 @@ msgid "the enemy"
 msgstr "the enemy"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "a random enemy {0} item"
+msgstr "a random enemy {0} item"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "all enemy {0} items"
+msgstr "all enemy {0} items"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "a random {0} item of yours"
+msgstr "a random {0} item of yours"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "all your {0} items"
+msgstr "all your {0} items"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid " and "
+msgstr " and "
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid " or "
+msgstr " or "
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "an ally"
 msgstr "an ally"
+
+#: src/scenes/ui/tooltip/tooltip_panel.tscn
+msgid "Weapon"
+msgstr "Weapon"
 
 #: src/scenes/ui/tooltip/tooltip_panel.tscn
 msgid "Every 1s"

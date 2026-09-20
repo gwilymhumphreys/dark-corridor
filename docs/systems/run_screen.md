@@ -185,7 +185,8 @@ the corridor light, so they come out of the dark on the approach. The container 
 - **Several enemies** share one depth, each `DEPTH_STEP` metres further than the one before, so
   overlapping sprites are never drawn at the same distance.
 - **HUD anchor:** `enemy_anchor(i)` unprojects the top centre of sprite `i` at its arrived depth and
-  adds `HUD_GAP`. It does not move during the approach. The corridor image is 1:1 with the container,
+  adds `HUD_GAP`. It does not move during the approach, and it leaves the head bob out, so the HUD
+  holds still while the enemy image bobs. The corridor image is 1:1 with the container,
   so the unprojected point plus the container's centre is the global screen point. `enemy_centre(i)`
   is the same unprojection of the sprite's live centre, which is where `actor_pos` sends projectiles,
   impacts and damage numbers, so a hit lands on the creature rather than on the readout above it.
@@ -206,7 +207,8 @@ dark outline, and each image is cropped to its visible part. Dark areas inside a
 see-through too. Re-run the tool after adding or changing an image in `assets/monsters/`.
 
 The **approach** (`run_screen` APPROACHING state): the enemy stands still at `APPROACH_DEPTH_START`
-and the player walks up to it over `APPROACH_DURATION`. Each frame `run_screen._walk(travelled)` sets
+and the player walks up to it over `APPROACH_DURATION`, which is set to keep the approach at the same
+pace as a free walk ([the walking pace](corridors/corridor_3d.md#the-walking-pace)). Each frame `run_screen._walk(travelled)` sets
 the corridor's walk distance (`CombatCorridor.set_walk_distance`, which moves `player_z`) and the
 enemy's depth to `APPROACH_DEPTH_START - travelled`, so the corridor moves past while the enemy grows
 to full size. The enemy starts near the edge of the corridor light's reach, so it is dim at the

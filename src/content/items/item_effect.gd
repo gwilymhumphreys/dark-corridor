@@ -2,7 +2,8 @@ class_name ItemEffect
 extends RefCounted
 ## One authored effect of an item (docs/systems/item.md). An item fires one payload per
 ## effect. Carries a relative target-SHAPE (not a resolved target — the Combat
-## manager resolves it) + the payload kind/value + travel + presentation.
+## manager resolves it) plus an optional target-FILTER that narrows the shape's pool,
+## + the payload kind/value + travel + presentation.
 
 enum Shape { SELF, OPPONENT_LEFTMOST, ALL_OPPONENTS, OPPONENT_ITEM_RANDOM, ALL_OPPONENT_ITEMS,
     OWN_ITEM_RANDOM, ALL_OWN_ITEMS }
@@ -10,6 +11,10 @@ enum Shape { SELF, OPPONENT_LEFTMOST, ALL_OPPONENTS, OPPONENT_ITEM_RANDOM, ALL_O
 var kind: int = Delivery.Kind.MECHANIC
 var value: float = 0.0
 var shape: int = Shape.OPPONENT_LEFTMOST
+# Optional narrowing of the target pool (docs/systems/item.md) — applied by the Combat manager after
+# the shape picks the pool and before it picks the targets. Null = no filtering. Item pools only;
+# actor shapes ignore it.
+var target_filter: TargetFilter = null
 var travel: float = 0.0          # seconds (0 = instant; docs/systems/combat_model.md's zero case)
 var mechanic: String = ''        # for kind == MECHANIC (MechanicRegistry id; docs/systems/mechanics.md)
 var status_id: String = ''       # for kind == APPLY_STATUS (string id, #23)

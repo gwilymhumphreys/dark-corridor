@@ -20,9 +20,9 @@ const GROUP: StringName = &'corridors'
 @export var auto_view_size: bool = true
 ## The on-screen rectangle the corridor fills, in local pixels, centred on this node's origin.
 @export var view_size: Vector2 = Vector2(1280.0, 1280.0)
-## Sections per second at full glide: a cautious walking pace, about 0.7 metres per second with a
+## Sections per second at full glide: a steady walking pace, about 0.9 metres per second with a
 ## 3 metre section.
-@export var speed: float = 0.233
+@export var speed: float = 0.3
 ## Seconds to ease the speed in and out.
 @export var ramp_time: float = 0.3
 ## Whether the corridor polls the move_forward / move_back actions itself (the testbed). Hosts
@@ -361,9 +361,12 @@ func pixels_to_metres(pixels: float) -> float:
 
 
 ## Where the 3D `point` appears on screen, in this node's local coordinates (origin at the view's
-## centre).
-func unproject(point: Vector3) -> Vector2:
-  return _camera.unproject_position(point) - Vector2(_viewport.size) * 0.5
+## centre). With `ignore_bob`, the point is unprojected as if the camera were level, so what is
+## pinned to it holds still while the walk bobs the image. The camera only ever moves sideways and
+## up and down, so shifting the point by the camera's position undoes the bob exactly.
+func unproject(point: Vector3, ignore_bob: bool = false) -> Vector2:
+  var target: Vector3 = (point + _camera.position) if ignore_bob else point
+  return _camera.unproject_position(target) - Vector2(_viewport.size) * 0.5
 
 
 # Sections behind depth 0 still in front of the camera (plus one so the nearest is never missing).

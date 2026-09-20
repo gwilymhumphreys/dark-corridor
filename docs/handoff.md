@@ -64,7 +64,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
    `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
    self-attribution in git messages**). These OVERRIDE defaults.
 2. **[`decision_log.md`](decision_log.md)** — the canonical record: every decision
-   (numbered #1–#40) and what's still open. **Don't re-litigate anything in it.**
+   (numbered #1–#41) and what's still open. **Don't re-litigate anything in it.**
 3. **[`architecture.md`](systems/architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
 4. The per-system **PRDs** as needed (one per system in `docs/systems/`, spec +

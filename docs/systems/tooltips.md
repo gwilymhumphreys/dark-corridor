@@ -12,10 +12,10 @@ holds the design rationale, the ratified decisions, and the prior-art lineage
 
 ## What the player sees
 
-- **Main panel** (nearest the item) — name (rarity-tinted), generated effect lines
-  with **live values**, inline keyword **chips** and inline mechanic **glyphs** (attack /
-  heal), an optional authored flavor line, and a stat block (cooldown, plus a
-  crit-chance line for an item with one).
+- **Main panel** (nearest the item) — name (rarity-tinted), a type line (the item's type tags,
+  hidden when it has none), generated effect lines with **live values**, inline keyword **chips** and
+  inline mechanic **glyphs** (attack / heal), an optional authored flavor line, and a stat block
+  (cooldown, plus a crit-chance line for an item with one).
 - **Keyword column** (cards beside the main panel) — one card per keyword the item
   references (statuses + mechanics), **all shown at once**.
 - **Per-keyword tooltip** — hovering a chip pops a Godot built-in custom tooltip
@@ -32,7 +32,7 @@ The cluster shows/hides as a unit; it is opaque (a scale reveal, no fade) and
 | `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its line rows (text / value / chip / icon segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
 | `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content (tinted name + description). Returned bare by a chip's `_make_custom_tooltip`; wrapped in a `PanelContainer` for the column. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
 | `keyword_chip.gd` (+`.tscn`) | Inline `PanelContainer` (icon + tinted name) in the body. Sets `tooltip_text = <id>` and overrides `_make_custom_tooltip` → a frameless `keyword_card`. Its icon is dressed by kind, see below. |
-| `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, lines, flavor, stat_lines, keyword_ids}`. **Instance** (not static) because the line templates call `tr()`. |
+| `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, type_line, lines, flavor, stat_lines, keyword_ids}`. **Instance** (not static) because the line templates and the type line call `tr()`. |
 
 Supporting: `src/content/keywords/keyword_catalog.gd` (the keyword id → card map).
 
@@ -107,25 +107,27 @@ read-only stack getter); a static consume number would mislead.
 
 ## Keywords (catalog-gated)
 
-`TooltipContent.keyword_ids(item)` collects candidate ids and keeps only those present
-in `KeywordCatalog` (mechanics + statuses in effect order, then mechanic keywords in a
-fixed order):
+`TooltipContent.keyword_ids(item)` builds the column in three parts and keeps only the ids present
+in `KeywordCatalog` (an absent id yields no card — that absence is how the owner gates a mechanic
+keyword):
 
-- per effect: `APPLY_STATUS` → its `status_id`; a `MECHANIC` effect → its **mechanic id**
-  (attack and heal included, so they get cards); `consume_id` → that status + `kw:fuel`;
-  `SUMMON` → `kw:summon`; AOE shapes → `kw:aoe`; item-target shapes → `kw:item_target`;
-  the `UNBLOCKABLE` flag → `kw:unblockable`.
-- an item with a crit chance → `crit` (after the effect ids).
-- `trigger_subs` → `kw:trigger` + each sub's `filter` (a status id); an **`ITEM_DESTROYED`** sub
-  instead surfaces **`kw:reclaim`** (Reclaim, the destroy-payoff keyword — the Fleshmancer's;
-  `character_ideas.md`), not generic `kw:trigger`, and its trigger line renders the Reclaim chip.
-- `item.enchant` → `kw:enchant`.
+- **The authored `mechanics` list** (`ItemDef.mechanics`, alphabetical) — the mechanic ids the item
+  counts as, including crit (an item with a crit chance lists `crit` like any other mechanic; the
+  floor check in `test_pool_integrity.gd` enforces it).
+- **The derived non-mechanic ids**, in effect order: an `APPLY_STATUS` effect's `status_id`
+  (weak, vulnerable, …); each effect's `consume_id`; and each `trigger_subs` entry's `filter`
+  (a status id).
+- **The structural keywords**, in `KeywordCatalog.MECHANIC_ORDER` (only those the item references):
+  `consume_id` set → `kw:fuel`; `SUMMON` → `kw:summon`; AOE shapes → `kw:aoe`; item-target shapes
+  → `kw:item_target`; the `UNBLOCKABLE` flag → `kw:unblockable`; `trigger_subs` → `kw:trigger`
+  (an **`ITEM_DESTROYED`** sub instead surfaces **`kw:reclaim`**, the destroy-payoff keyword —
+  the Fleshmancer's; `character_ideas.md`, and its trigger line renders the Reclaim chip);
+  `item.enchant` → `kw:enchant`.
 
 `KeywordCatalog` resolves a **mechanic** id from its `Mechanic` class (name/desc/color/icon —
 one home per mechanic, [mechanics.md](mechanics.md)), a **status** id from its `StatusEffect`
 subclass, and a **mechanic keyword** id (`kw:*`) from entries authored in the catalog. An id
-absent from the catalog yields no card, silently — that absence is how the owner gates a
-mechanic keyword.
+absent from the catalog yields no card, silently.
 
 ### Dressing a chip's icon
 
@@ -175,6 +177,18 @@ returned node is frameless). The column cards are NOT Godot tooltips, so they wr
   because chips carry the built-in per-keyword tooltip.
 - The generated-line baseline copy (templates + shape phrases in `tooltip_content.gd`).
 - The changed-value highlight + rarity-tint colour treatment (a theme call).
+
+### Filtered target phrases
+
+An effect's target phrase names what its `target_filter` narrows to (`tooltip_content.gd::_shape_text`).
+The **actor** shapes (self / all opponents / the enemy) ignore the filter — a filter narrows an item
+pool, not an actor — and read their unfiltered baseline phrase. The four **item** shapes read the
+unfiltered phrase ("all your items") when the filter is null or empty, and a filtered phrase with the
+filter's term in the gap ("all your weapon items") when it is not: a `TYPE` condition contributes its
+lowercased singular type display name, a `MECHANIC` condition the lowercased mechanic name (an id that
+does not resolve is skipped, so a bad id never crashes a tooltip), and several terms join with a
+mode-dependent translated word (` and ` / ` or `). A filter whose term resolves to nothing falls back
+to the unfiltered phrase rather than emit an empty gap.
 
 ## Dev host
 
