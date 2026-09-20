@@ -10,7 +10,7 @@ extends Node
 ##
 ## World sounds (such as footsteps) play through a second player on the World
 ## bus, which carries the corridor's reverb; interface sounds stay dry on the
-## Effects bus.
+## Interface bus.
 ##
 ## Every play_* helper no-ops gracefully when its stream is missing, so callers
 ## (such as the UI juice node) work fine before any audio assets exist. Drop
@@ -18,7 +18,8 @@ extends Node
 ## each play picks one of the pool at random so a repeated action doesn't
 ## repeat the same recording. A sound kept as both .wav and .mp3 counts once.
 
-const BUS_EFFECTS: String = 'Effects'
+const BUS_INTERFACE: String = 'Interface'
+const BUS_GAME: String = 'Game'
 const BUS_WORLD: String = 'World'
 const POLYPHONY: int = 32
 const COOLDOWN_TIME: float = 0.08
@@ -83,7 +84,7 @@ func _make_poly_player(bus_name: String) -> AudioStreamPlayer:
 
 
 func _create_player() -> void:
-  _poly_player = _make_poly_player(BUS_EFFECTS)
+  _poly_player = _make_poly_player(BUS_INTERFACE)
   add_child(_poly_player)
   _world_player = _make_poly_player(BUS_WORLD)
   add_child(_world_player)

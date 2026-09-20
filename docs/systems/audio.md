@@ -13,11 +13,13 @@ setting needed) defines:
 
 - **Master**
 - **Music** → Master
-- **Effects** → Master
-- **World** → Effects, carrying an `AudioEffectReverb`
+- **Interface** → Master
+- **Game** → Master
+- **World** → Game, carrying an `AudioEffectReverb`
 
-So music and effects volume are controlled independently — see **Prefs** below. World sounds
-route through Effects, so the effects volume covers them and `Prefs` needs no extra key.
+Music, interface and game volume are each controlled independently — see **Prefs** below.
+Nothing routes directly to Game yet; it is the bus the game volume sits on, so a combat sound
+that should not have reverb has somewhere dry to go without another bus change.
 
 **Why World is separate.** Sounds coming from inside the corridor need its echo; interface
 sounds are not in the room and must stay dry, so they cannot share a bus. The reverb is set for
@@ -28,7 +30,7 @@ a stone corridor and is tuned in the editor's audio panel.
 The settings autoload — persists per-player **volume** preferences to `user://` (a
 `ConfigFile`, **separate** from the run `Save`, which holds run-state only and is cleared
 on death/win). It stores a 0..1 linear level per audio key (`master` / `music` /
-`effects`), applies each to its bus via `AudioServer.set_bus_volume_db` (`linear_to_db`;
+`interface` / `game`), applies each to its bus via `AudioServer.set_bus_volume_db` (`linear_to_db`;
 0 → −80 dB silence), and re-applies them at boot. A key the player has never set falls back
 to its default in `AUDIO_DEFAULTS`. `set_volume(key, value)` clamps, applies,
 and writes through immediately; `disabled` (mirrors `Save.disabled` — the tests / a nosave
@@ -44,7 +46,7 @@ already muted. The flags are the `SILENT_ARGS` constant in `prefs.gd`.
 ## SfxManager (`src/autoloads/sfx_manager.gd`)
 
 One-shot sound effects through a single `AudioStreamPolyphonic` player (many
-overlapping sounds, cheap). Routes to the **Effects** bus.
+overlapping sounds, cheap). Routes to the **Interface** bus.
 
 - **Cooldown** — a short per-key guard stops the same sound machine-gunning on
   rapid triggers (e.g. hover).

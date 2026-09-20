@@ -632,7 +632,11 @@ msgid "Music volume"
 msgstr ""
 
 #: src/scenes/screens/settings_screen.tscn
-msgid "Effects volume"
+msgid "Interface volume"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Game volume"
 msgstr ""
 
 #: src/scenes/screens/settings_screen.tscn

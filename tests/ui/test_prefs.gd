@@ -32,8 +32,10 @@ func test_set_volume_stores_and_clamps() -> void:
 
 
 func test_set_volume_applies_to_the_bus() -> void:
-  Prefs.set_volume('effects', 0.5)
-  assert_almost_eq(_bus_db('effects'), linear_to_db(0.5), 0.01, 'the Effects bus tracks the linear level (as dB)')
+  Prefs.set_volume('interface', 0.5)
+  assert_almost_eq(_bus_db('interface'), linear_to_db(0.5), 0.01, 'the Interface bus tracks the linear level (as dB)')
+  Prefs.set_volume('game', 0.5)
+  assert_almost_eq(_bus_db('game'), linear_to_db(0.5), 0.01, 'the Game bus tracks the linear level (as dB)')
 
 
 func test_zero_volume_is_silence_not_negative_infinity() -> void:

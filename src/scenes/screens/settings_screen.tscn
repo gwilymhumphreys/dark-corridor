@@ -98,18 +98,36 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
-[node name="EffectsRow" type="HBoxContainer" parent="Panel/Rows"]
+[node name="InterfaceRow" type="HBoxContainer" parent="Panel/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Rows/EffectsRow"]
+[node name="Label" type="Label" parent="Panel/Rows/InterfaceRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
-text = "Effects volume"
+text = "Interface volume"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Panel/Rows/EffectsRow"]
+[node name="Slider" type="HSlider" parent="Panel/Rows/InterfaceRow"]
+mouse_default_cursor_shape = 2
+custom_minimum_size = Vector2(640, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+
+[node name="GameRow" type="HBoxContainer" parent="Panel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="Label" type="Label" parent="Panel/Rows/GameRow"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Game volume"
+vertical_alignment = 1
+
+[node name="Slider" type="HSlider" parent="Panel/Rows/GameRow"]
 mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2

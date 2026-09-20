@@ -1,6 +1,6 @@
 class_name SettingsScreen
 extends Control
-## The settings screen — audio volume sliders (Master / Music / Effects), a mute-when-unfocused
+## The settings screen — audio volume sliders (Master / Music / Interface / Game), a mute-when-unfocused
 ## toggle and a fullscreen toggle, all bound to `Prefs` (which applies + persists each change).
 ## Opened from the title screen and the in-run pause menu; Close emits `closed` (the opener frees
 ## it). Static labels auto-translate from the .tscn; this only wires the controls. Reads/writes
@@ -15,7 +15,8 @@ signal closed()
 const SLIDERS: Dictionary = {
   'MasterRow': 'master',
   'MusicRow': 'music',
-  'EffectsRow': 'effects',
+  'InterfaceRow': 'interface',
+  'GameRow': 'game',
 }
 
 @onready var _rows: VBoxContainer = $Panel/Rows

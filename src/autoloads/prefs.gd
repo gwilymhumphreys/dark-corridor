@@ -2,7 +2,7 @@ class_name PrefsAutoload
 extends Node
 ## Session preferences persisted to disk (autoload `Prefs`) — SEPARATE from the run Save
 ## (that stores run-state only, and is cleared on death/win). A thin ConfigFile wrapper at
-## user://: audio bus volumes (Master / Music / Effects, each a 0..1 linear level) + mute-when-
+## user://: audio bus volumes (Master / Music / Interface / Game, each a 0..1 linear level) + mute-when-
 ## unfocused, and the display mode (fullscreen vs windowed).
 ## set_*() applies the change AND writes through immediately; load + apply happen at boot.
 ## `disabled` skips the disk write — TestCleanup sets it so tests never touch user://. The owner
@@ -20,12 +20,14 @@ const THEME_PATH: String = 'res://assets/themes/dark_corridor.tres'
 const AUDIO_BUSES: Dictionary = {
   'master': 'Master',
   'music': 'Music',
-  'effects': 'Effects',
+  'interface': 'Interface',
+  'game': 'Game',
 }
 const AUDIO_DEFAULTS: Dictionary = {
   'master': 0.5,
   'music': 0.5,
-  'effects': 0.5,
+  'interface': 0.5,
+  'game': 0.5,
 }
 
 # Command-line flags that mean nobody is listening: the autotest harness and a --shot screenshot
