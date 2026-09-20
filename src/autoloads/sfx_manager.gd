@@ -53,8 +53,6 @@ const DUMMY_DRIVER: String = 'Dummy'
 ## Command-line flags for runs that play no sound — the autotest harness and a --shot screenshot
 ## capture. Prefs mutes the Master bus for these; here they also skip loading the sound files.
 const SILENT_ARGS: Array[String] = ['--autotest', '--shot']
-# Combat. No file is in the project yet, so play_impact() is silent until one is dropped here.
-const COMBAT_IMPACT_PATH: String = 'res://assets/sound-effects/combat/impact.mp3'
 
 # Bus name -> its AudioStreamPlayer, and bus name -> its playback handle. Made on first use,
 # so a bus nothing ever plays on gets no player. See _ensure_playing for why that matters.
@@ -70,15 +68,12 @@ var _silent: bool = false
 
 var _cooldowns: Dictionary = {}
 
-var _impact_stream: AudioStream
-
 
 func _ready() -> void:
   _silent = _is_silent_run()
   if not _silent:
     for path: String in PRELOAD_FOLDERS:
       _banks[path] = _load_folder(SOUND_ROOT + path + '/')
-    _impact_stream = _try_load(COMBAT_IMPACT_PATH)
   # Only process while cooldowns are pending; re-enabled in play_guarded().
   set_process(false)
 
@@ -306,12 +301,6 @@ func play_ui_click() -> void:
   play_sound_guarded('ui_click', 'ui/click')
 
 
-## A hit landing in combat. Guarded, so a burst of hits in the same moment makes one sound
-## instead of a pile.
-func play_impact() -> void:
-  play_guarded('combat_impact', _impact_stream)
-
-
 ## A footstep landing in the corridor. Guarded, so two footfalls in one frame make one sound.
 func play_footstep() -> void:
   play_sound_guarded('footstep', 'world/footsteps/steps')
@@ -360,5 +349,4 @@ func _exit_tree() -> void:
   _players.clear()
   _playbacks.clear()
   _banks.clear()
-  _impact_stream = null
   _cooldowns.clear()

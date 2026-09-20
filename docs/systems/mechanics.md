@@ -1,7 +1,7 @@
 # Mechanics
 
 A mechanic is a named combat rule, such as attack or shield, with one class holding its name,
-description, icon, colour and what happens when a delivery using it lands. Item effects name the
+description, icon, colour, sound and what happens when a delivery using it lands. Item effects name the
 mechanic they use, so items, relics and enchantments can refer to them ("your poison items", "when
 you shield"). The owner's decision is #38 in [decision_log.md](../decision_log.md); the model is the
 card battler grail, which has a small fixed set of keywords that most of its cards are written in
@@ -10,6 +10,15 @@ terms of.
 **Location:** `src/content/mechanics/`
 
 All ten are built: attack, heal, shield, poison, burn, bleed, regen, crit, charge and decharge.
+
+## Sound
+
+`Mechanic.sound_key()` returns the folder of recordings played when a delivery of the mechanic
+lands, which is `mechanics/` followed by the mechanic id. No subclass overrides it, so a new
+mechanic gets a sound by existing: make a folder of that name under `assets/sound-effects/` and
+it plays. A mechanic with no folder falls back to a shared default rather than going silent.
+The [VFX wall](vfx_driver.md) plays it on the landing frame. See [audio.md](audio.md) for the
+folder scheme.
 
 ## Words used here
 

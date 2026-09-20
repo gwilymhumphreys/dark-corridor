@@ -92,8 +92,6 @@ API:
 - `play_ui_hover()` / `play_ui_click()` / `play_footstep()` — the three named sounds, each one
   guarded `play_sound` call. The corridor calls `play_footstep()` on each footfall
   ([corridor_3d.md](corridors/corridor_3d.md)); nothing else decides the pacing.
-- `play_impact()` — a hit landing in combat, played once per landing by the
-  [VFX wall](vfx_driver.md). Guarded, so a burst of hits in the same moment makes one sound.
 - `play(stream, pitch, volume_db)` and `play_guarded(key, stream, ...)` — play a stream the
   caller already holds, on the Interface bus. [UIJuice](ui_juice.md) uses these for a node's
   own hover or click sound. `play_world` and `play_guarded_world` are the World bus forms.
@@ -116,9 +114,6 @@ button reads as lag rather than as silence. Trim any new one before adding it.
 groups by that name and takes a single file per sound, preferring the `.mp3` on web (so the
 player downloads less) and the `.wav` everywhere else. The preference lists are
 `EXTENSIONS_BY_SIZE` and `EXTENSIONS_BY_QUALITY`.
-
-The combat impact sound is a single file at `COMBAT_IMPACT_PATH`
-(`assets/sound-effects/combat/impact.mp3`). No file is there yet, so `play_impact()` is silent.
 
 **Nothing is loaded in a silent run.** Like `MusicManager` below, the bank is skipped under the
 headless dummy audio driver and in `--autotest` / `--shot` runs. The dummy driver never releases

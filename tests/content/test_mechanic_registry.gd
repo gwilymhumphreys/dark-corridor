@@ -66,3 +66,19 @@ func test_each_mechanic_colour_matches_its_colours_variable() -> void:
   assert_eq(MechanicRegistry.get_mechanic(ChargeMechanic.ID).color(), Colours.CHARGE, 'charge')
   assert_eq(MechanicRegistry.get_mechanic(DechargeMechanic.ID).color(), Colours.DECHARGE, 'decharge')
   assert_eq(MechanicRegistry.get_mechanic(CritMechanic.ID).color(), Colours.CRIT, 'crit')
+
+
+## Every mechanic's sound folder is its id under mechanics/, and each one is distinct, so two
+## mechanics can never end up sharing a sound by accident.
+func test_each_mechanic_sound_key_is_its_id() -> void:
+  var ids: Array[String] = [
+    AttackMechanic.ID, HealMechanic.ID, ShieldMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID,
+    RegenMechanic.ID, BleedMechanic.ID, ChargeMechanic.ID, DechargeMechanic.ID, CritMechanic.ID,
+  ]
+  var seen: Dictionary = {}
+  for id: String in ids:
+    var key: String = MechanicRegistry.get_mechanic(id).sound_key()
+    assert_eq(key, 'mechanics/' + id, id + ' plays its own folder')
+    assert_eq(SfxManager.bus_for(key), SfxManagerAutoload.BUS_WORLD, id + ' carries the corridor reverb')
+    assert_false(seen.has(key), 'no two mechanics share a sound folder')
+    seen[key] = true

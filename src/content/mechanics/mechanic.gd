@@ -18,6 +18,13 @@ func color() -> Color:
   return Color.WHITE
 
 
+## The sound folder played when a delivery of this mechanic lands, under
+## assets/sound-effects/. A mechanic with no folder of its own falls back to the
+## mechanics fallback folder, so a new mechanic is never silent.
+func sound_key() -> String:
+  return 'mechanics/' + id
+
+
 ## How much of a shield a hit of this mechanic uses (1.0 = normal). Poison, burn and bleed
 ## return their constants.
 func shield_multiplier() -> float:

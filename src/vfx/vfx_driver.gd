@@ -127,10 +127,21 @@ func _sound_new_impacts() -> void:
     if not d.landed or d.fizzled or not _impact_drawers.has(_impact_key(d)) or _sounded.has(id):
       continue
     _sounded[id] = true
-    SfxManager.play_impact()
+    SfxManager.play_sound(_sound_key_of(d))
     var strength: float = big_hit_strength(d)
     if strength >= 0.0:
       big_hit.emit(strength)
   for id: int in _sounded.keys():
     if not live.has(id):
       _sounded.erase(id)
+
+
+## The sound folder a landing delivery plays. A mechanic names its own folder; a status
+## application uses its status id. The empty string is only reached by a delivery naming a
+## mechanic the registry does not have, and play_sound ignores it.
+func _sound_key_of(d: Delivery) -> String:
+  if d.kind == Delivery.Kind.MECHANIC and MechanicRegistry.has(d.mechanic):
+    return MechanicRegistry.get_mechanic(d.mechanic).sound_key()
+  if d.kind == Delivery.Kind.APPLY_STATUS and d.status_id != '':
+    return 'statuses/' + d.status_id
+  return ''
