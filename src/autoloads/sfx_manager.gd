@@ -204,12 +204,23 @@ func play_sound(path: String, pitch: float = -1.0, volume_db: float = 0.0) -> in
   var bank: Array[AudioStream] = _bank_for(path)
   if bank.is_empty():
     _warn_once('missing:' + path, 'SfxManager: no sounds found in folder "%s"' % path)
-    var fallback_path: String = path if path.find('/') < 0 else path.left(path.find('/')) + '/' + FALLBACK_FOLDER
-    if fallback_path != path:
-      bank = _bank_for(fallback_path)
+    # A variant folder (two or more slashes) falls back to its parent before the category
+    # fallback, so an empty variant such as mechanics/attack/shielded plays mechanics/attack.
+    # A one-slash path's parent is the category folder itself, which holds only subfolders,
+    # so it goes straight to the category fallback.
+    if path.count('/') >= 2:
+      var parent_path: String = path.left(path.rfind('/'))
+      bank = _bank_for(parent_path)
       if bank.is_empty():
-        _warn_once('missing:' + fallback_path,
-            'SfxManager: no sounds found in fallback folder "%s"' % fallback_path)
+        _warn_once('missing:' + parent_path,
+            'SfxManager: no sounds found in folder "%s"' % parent_path)
+    if bank.is_empty():
+      var fallback_path: String = path if path.find('/') < 0 else path.left(path.find('/')) + '/' + FALLBACK_FOLDER
+      if fallback_path != path:
+        bank = _bank_for(fallback_path)
+        if bank.is_empty():
+          _warn_once('missing:' + fallback_path,
+              'SfxManager: no sounds found in fallback folder "%s"' % fallback_path)
   if bank.is_empty():
     return -1
   var stream: AudioStream = _pick(bank)

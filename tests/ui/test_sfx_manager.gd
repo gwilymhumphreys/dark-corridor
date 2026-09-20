@@ -43,5 +43,15 @@ func test_an_existing_folder_loads_its_recordings() -> void:
       'the click folder loads the recordings in it')
 
 
+func test_shielded_attack_folder_loads_its_recordings() -> void:
+  assert_false(SfxManager._bank_for('mechanics/attack/shielded').is_empty(),
+      'the shielded attack folder loads the recordings in it')
+
+
+func test_missing_variant_folder_loads_an_empty_bank() -> void:
+  assert_true(SfxManager._bank_for('mechanics/attack/nonexistent').is_empty(),
+      'a variant folder that does not exist gives no recordings')
+
+
 func test_play_sound_ignores_an_empty_path() -> void:
   assert_eq(SfxManager.play_sound(''), -1, 'an empty path plays nothing')

@@ -71,6 +71,12 @@ func has_evasion(actor) -> bool:
   return false
 
 
+## Whether `target` currently holds any of status `id`. A read, so callers can branch on it
+## without touching the status list.
+func has_status(target, id: String) -> bool:
+  return _find(target, id) != null
+
+
 ## Spend up to `amount` of `id` from `target` as Mass fuel (docs/systems/spore_engine.md Cap 1), returning how
 ## many were removed (so the consuming effect scales by what it found). Only fuel statuses (stacked
 ## DoT / the Spores counter) spend; others return 0. A drained instance is removed.

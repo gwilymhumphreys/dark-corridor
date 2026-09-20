@@ -20,8 +20,9 @@ func color() -> Color:
 
 ## The sound folder played when a delivery of this mechanic lands, under
 ## assets/sound-effects/. A mechanic with no folder of its own falls back to the
-## mechanics fallback folder, so a new mechanic is never silent.
-func sound_key() -> String:
+## mechanics fallback folder, so a new mechanic is never silent. Takes the delivery so a
+## mechanic can vary its sound by what landed; `AttackMechanic` is the one that does.
+func sound_key(_delivery: Delivery) -> String:
   return 'mechanics/' + id
 
 

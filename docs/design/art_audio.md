@@ -126,7 +126,7 @@ Contrasts the soundtrack. Quiet, ambient, dripping under the synth during the wa
 Footfall audio sells corridor movement when the visuals alone might not.
 Doubles as the second readability channel (see cascade readability above) — per-effect-family sounds let the player hear their build’s texture.
 
-Where effects come from: Freesound, searched by description through the user-scoped `sfx` skill (`~/.claude/skills/sfx/`), which downloads a chosen sound straight into `assets/sound-effects/`. Files stay as the `.mp3` that is downloaded, since Godot plays mp3 natively. Sounds made with generative AI are excluded, as are non-commercial licences. In the project now: hover and click, both from SpaceJoe's book foley recordings (see asset_credits.md) — a page turn for hover, a book close or drop for click, picked at random from a folder of variants each time. Combat has no sound yet.
+Where effects come from: Freesound, searched by description through the user-scoped `sfx` skill (`~/.claude/skills/sfx/`), which downloads a chosen sound straight into `assets/sound-effects/`. Files stay as the `.mp3` that is downloaded, since Godot plays mp3 natively. Sounds made with generative AI are excluded, as are non-commercial licences. In the project now: hover and click, both from SpaceJoe's book foley recordings (see asset_credits.md) — a page turn for hover, a book close or drop for click, picked at random from a folder of variants each time. Combat has the attack sound: a sword on wood for a hit on an unshielded target and a sword on metal for a hit on a shielded one, so the player hears whether they are still working through shield. Every other mechanic is still silent.
 
 
 Cohesion across mixed asset sources

@@ -67,6 +67,21 @@ The source recording and the scripts that cut it are in
 `../dark-corridor-design/sound/footsteps/`, outside this repository, so the cut can be
 redone without downloading it again.
 
+### Combat
+
+| Sound | Files in the game | Source |
+| --- | --- | --- |
+| Sword_Hit_Wood, by timmy_h123, CC BY | `assets/sound-effects/mechanics/attack/` | https://freesound.org/s/160411/ and /160412/ |
+| Sword_Hit_Metal, by timmy_h123, CC BY | `assets/sound-effects/mechanics/attack/shielded/` | https://freesound.org/s/160393/ to /160413/ |
+
+The attack sound. A hit on an unshielded target plays a sword on wood; a hit on a
+shielded one plays a sword on metal ([mechanics.md](../systems/mechanics.md)). Both
+families come from one recording session by the same person, which is why they sit
+together.
+
+They were uploaded as 24-bit 96kHz, which Godot imports as silence without failing, so
+each was converted to 16-bit 48kHz before being added ([godot_notes.md](../systems/godot_notes.md)).
+
 ## Art
 
 The art packs in use are listed in

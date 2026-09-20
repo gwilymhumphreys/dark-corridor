@@ -75,10 +75,26 @@ func test_each_mechanic_sound_key_is_its_id() -> void:
     AttackMechanic.ID, HealMechanic.ID, ShieldMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID,
     RegenMechanic.ID, BleedMechanic.ID, ChargeMechanic.ID, DechargeMechanic.ID, CritMechanic.ID,
   ]
+  # A bare Delivery, whose target is null, so every mechanic gives its plain key, attack included.
+  var delivery: Delivery = Delivery.new()
   var seen: Dictionary = {}
   for id: String in ids:
-    var key: String = MechanicRegistry.get_mechanic(id).sound_key()
+    var key: String = MechanicRegistry.get_mechanic(id).sound_key(delivery)
     assert_eq(key, 'mechanics/' + id, id + ' plays its own folder')
     assert_eq(SfxManager.bus_for(key), SfxManagerAutoload.BUS_WORLD, id + ' carries the corridor reverb')
     assert_false(seen.has(key), 'no two mechanics share a sound folder')
     seen[key] = true
+
+
+## The attack mechanic varies its sound by the target: a shielded actor gets the
+## blade-on-metal hit, an unshielded one the plain hit.
+func test_attack_sound_key_varies_with_the_target_shield() -> void:
+  var attack: AttackMechanic = MechanicRegistry.get_mechanic(AttackMechanic.ID)
+  var plain: Delivery = Delivery.new()
+  plain.target = Actor.new(50.0)
+  assert_eq(attack.sound_key(plain), 'mechanics/attack', 'an unshielded target plays the plain hit')
+  var shielded_target: Actor = Actor.new(50.0)
+  StatusManager.apply(shielded_target, ShieldStatus.ID, 5.0)
+  var shielded: Delivery = Delivery.new()
+  shielded.target = shielded_target
+  assert_eq(attack.sound_key(shielded), 'mechanics/attack/shielded', 'a shielded target plays the blade-on-metal hit')

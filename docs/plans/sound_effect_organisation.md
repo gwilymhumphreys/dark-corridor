@@ -278,3 +278,112 @@ Chosen through the `sfx` skill, so this stays here.
 - Whether the corridor reverb smears a cascade. The fix if it does is less wet on the World
   bus, or routing mechanic sounds dry to Game.
 - Whether `run/` belongs on Interface or Game. It is one line in `BUS_BY_CATEGORY`.
+
+---
+
+## Section 5 — a different attack sound when the target has shield
+
+An attack landing on a shielded target plays a blade-on-metal hit; one landing on an
+unshielded target plays a duller hit. This tells the player by ear whether they are
+still chewing through shield, which is information the screen currently only shows in
+a number.
+
+The owner's word for this is armour, which is the shield status
+(`docs/design/armourer.md`). Only the attack mechanic varies its sound. Poison, burn
+and bleed also drain shield, but they tick rather than hit.
+
+### A variant is a subfolder of the mechanic
+
+```
+assets/sound-effects/mechanics/attack/            the plain hit
+assets/sound-effects/mechanics/attack/shielded/   the hit that strikes shield
+```
+
+`_load_folder` skips subdirectories, so the two folders do not read each other's
+files. The category is still the first path segment, so the bus is unchanged.
+
+### When the shield is read
+
+At the moment the sound plays, not when the hit lands. `CombatManager._land` sets
+`landed` and then applies the damage, so a hit that empties a shield leaves the
+target unshielded by the time the VFX wall sees it, and that hit plays the plain
+sound. The owner accepted that: reading it at land time would mean recording the
+result on `Delivery` and threading it through the damage pipeline, for a difference
+of one hit per shield.
+
+### `src/autoloads/status_manager.gd`
+
+Add a public query beside `has_evasion`:
+
+```gdscript
+## Whether `target` currently holds any of status `id`. A read, so callers can branch on it
+## without touching the status list.
+func has_status(target, id: String) -> bool:
+  return _find(target, id) != null
+```
+
+### `src/content/mechanics/mechanic.gd`
+
+`sound_key()` takes the delivery, so any mechanic can vary its sound by what the
+delivery did. The base ignores it.
+
+```gdscript
+func sound_key(_delivery: Delivery) -> String:
+  return 'mechanics/' + id
+```
+
+### `src/content/mechanics/attack_mechanic.gd`
+
+Override it. This is the first override, and the reason `sound_key` is a function
+rather than a field.
+
+```gdscript
+func sound_key(delivery: Delivery) -> String:
+  if delivery.target is Actor and StatusManager.has_status(delivery.target, ShieldStatus.ID):
+    return 'mechanics/attack/shielded'
+  return 'mechanics/attack'
+```
+
+### `src/autoloads/sfx_manager.gd`
+
+A folder with no recordings currently falls back to its category's `_default`. Insert
+the parent folder before that, so `mechanics/attack/shielded` falls back to
+`mechanics/attack` and only then to `mechanics/_default`. A variant folder that is
+empty or deleted then plays its base sound instead of going silent, which makes
+adding a future variant cost nothing.
+
+Only a path with two or more slashes has a parent to try. `mechanics/attack` goes
+straight to the category default, because its parent would be the `mechanics/` folder
+itself, which holds only subfolders and never has recordings of its own.
+
+### `src/vfx/vfx_driver.gd`
+
+`_sound_key_of` passes the delivery through: `sound_key(d)` instead of `sound_key()`.
+
+### Tests
+
+- `tests/content/test_mechanic_registry.gd`: the existing loop test passes a bare
+  `Delivery.new()`, whose target is null, so every mechanic still gives its plain key.
+  Add a test building `Actor.new(50.0)` as the delivery target, with and without
+  `StatusManager.apply(a, ShieldStatus.ID, 5.0)`, asserting the attack mechanic gives
+  `mechanics/attack/shielded` and `mechanics/attack` respectively. `tests/combat/
+  test_actor.gd` shows the pattern.
+- `tests/ui/test_sfx_manager.gd`: `_bank_for` on an empty variant folder is empty,
+  and the fallback path chosen for a two-slash path is its parent rather than the
+  category default.
+
+### Docs
+
+`docs/systems/mechanics.md`, `docs/systems/audio.md` and
+`docs/systems/vfx_driver.md` all describe `sound_key` or the fallback order.
+
+### Verify
+
+`tools/import.sh`, then `tools/gut.sh`.
+
+## Choosing the recordings
+
+Candidates go into the folder and the owner deletes the ones that should not play,
+since the folder is the whole configuration. Nothing else lists them. Afterwards,
+build the `.mp3` beside each surviving `.wav` and write the credits from what is left
+rather than from what was downloaded.

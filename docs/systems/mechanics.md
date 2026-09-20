@@ -13,12 +13,23 @@ All ten are built: attack, heal, shield, poison, burn, bleed, regen, crit, charg
 
 ## Sound
 
-`Mechanic.sound_key()` returns the folder of recordings played when a delivery of the mechanic
-lands, which is `mechanics/` followed by the mechanic id. No subclass overrides it, so a new
-mechanic gets a sound by existing: make a folder of that name under `assets/sound-effects/` and
-it plays. A mechanic with no folder falls back to a shared default rather than going silent.
-The [VFX wall](vfx_driver.md) plays it on the landing frame. See [audio.md](audio.md) for the
+`Mechanic.sound_key(delivery)` returns the folder of recordings played when a delivery of the
+mechanic lands, which is `mechanics/` followed by the mechanic id. A new mechanic gets a sound
+by existing: make a folder of that name under `assets/sound-effects/` and it plays. A mechanic
+with no folder falls back to a shared default rather than going silent. The
+[VFX wall](vfx_driver.md) plays it on the landing frame. See [audio.md](audio.md) for the
 folder scheme.
+
+It takes the delivery so a mechanic can vary its sound by what landed. Attack is the only one
+that does: a hit on a target holding shield plays `mechanics/attack/shielded` instead of
+`mechanics/attack`, so the player hears whether they are still working through shield. The
+shield is read when the sound plays rather than when the hit landed, so the hit that empties a
+shield plays the plain sound. Reading it at landing time would mean recording the result on the
+delivery and threading it through the damage pipeline, for a difference of one hit per shield.
+
+A variant lives in a subfolder of the mechanic's own folder. The folder loader ignores
+subdirectories, so the two do not read each other's files, and an empty variant folder falls
+back to its parent, which means a variant can be added or removed without touching code.
 
 ## Words used here
 

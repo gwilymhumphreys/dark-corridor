@@ -141,7 +141,7 @@ func _sound_new_impacts() -> void:
 ## mechanic the registry does not have, and play_sound ignores it.
 func _sound_key_of(d: Delivery) -> String:
   if d.kind == Delivery.Kind.MECHANIC and MechanicRegistry.has(d.mechanic):
-    return MechanicRegistry.get_mechanic(d.mechanic).sound_key()
+    return MechanicRegistry.get_mechanic(d.mechanic).sound_key(d)
   if d.kind == Delivery.Kind.APPLY_STATUS and d.status_id != '':
     return 'statuses/' + d.status_id
   return ''

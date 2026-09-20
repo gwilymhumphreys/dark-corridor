@@ -18,6 +18,15 @@ func color() -> Color:
   return Colours.ATTACK
 
 
+## A hit on a shielded target rings off metal; one on an unshielded target does not. The
+## shield is read now rather than when the hit landed, so a hit that emptied a shield plays
+## the plain sound (docs/plans/sound_effect_organisation.md Section 5).
+func sound_key(delivery: Delivery) -> String:
+  if delivery.target is Actor and StatusManager.has_status(delivery.target, ShieldStatus.ID):
+    return 'mechanics/attack/shielded'
+  return 'mechanics/attack'
+
+
 func land(delivery: Delivery, combat: CombatManager) -> void:
   if delivery.target is Actor:   # damage/heal are actor-targeted; item shapes carry statuses
     var dealt: float = delivery.target.take_damage(delivery.value, delivery.flags, AttackMechanic.ID)

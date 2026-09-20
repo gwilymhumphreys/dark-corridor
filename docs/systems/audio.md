@@ -73,9 +73,13 @@ category uses the Interface bus.
 - **Folders load once** — the first play of a path scans its folder and caches the result,
   empty included, so a folder that does not exist is not rescanned. `PRELOAD_FOLDERS` loads
   the sounds that answer an input at boot instead, because a load pause would read as lag.
-- **Fallback** — a folder with no recordings falls back to its category's `_default` folder,
-  so a newly authored mechanic or status is never silent. Debug builds warn once per path so
-  a typo is visible.
+- **Fallback** — a folder with no recordings falls back to its parent folder and then to its
+  category's `_default` folder, so a newly authored mechanic or status is never silent. A path
+  with only one slash has no parent worth trying, since a category folder holds only
+  subfolders. Debug builds warn once per path so a typo is visible.
+- **Variants** — a subfolder of a sound is a variant of it, played when the code asks for the
+  longer path. `mechanics/attack/shielded` is the hit that strikes shield, and it falls back to
+  `mechanics/attack` when it holds nothing. The bus comes from the original path either way.
 - **Graceful no-op** — a missing folder plays nothing and returns -1, so callers (for example
   [UIJuice](ui_juice.md)) work before any audio assets exist.
 - **Starts on first play** — a player is not autoplayed; the first real play starts it. A
