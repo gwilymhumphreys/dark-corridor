@@ -406,7 +406,7 @@ func _fire_item(it: Item, arrived: Array) -> void:
   # Drain the item's use-statuses AFTER its payload(s) are spawned (docs/systems/item.md fire
   # pipeline): decay spends one activation, so the final fire still lands, then removes the item at 0.
   _drain_uses(it)
-  # Any actor-level fire-status (the Armourer empower) cashes out on the OWNER's activation — the
+  # Any actor-level fire-status (the Smith empower) cashes out on the OWNER's activation — the
   # actor twin of the item-use drain above. The firing item is threaded in so a status can scope to
   # a weapon attack (the empower spends a charge). After the payload. (Bleed no longer fires here —
   # it triggers on attacks landing on the holder, in the attack mechanic's land.)
@@ -421,7 +421,7 @@ func _drain_uses(it: Item) -> void:
     s.on_holder_fired(it, _ctx)
 
 
-## After an item fires, drain its OWNER's actor-level fire-statuses (the Armourer empower) — the actor
+## After an item fires, drain its OWNER's actor-level fire-statuses (the Smith empower) — the actor
 ## twin of _drain_uses (which drains the fired item's own use-statuses). Each spends its charge and
 ## decays; a drained one is removed. The firing `item` is passed so a status can scope to a weapon
 ## attack (empower). Mirrors the DoT-tick path (a wall visual + a combat-log entry, since neither

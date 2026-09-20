@@ -1,6 +1,6 @@
 class_name ItemCatalog
 ## The item definitions (decision #23 — authored in GDScript, keyed by Id). Lazily built once.
-## Every character's cards live here (the Spore Druid's, the Fleshmancer's, the Armourer's), plus
+## Every character's cards live here (the Spore Druid's, the Fleshmancer's, the Smith's), plus
 ## the enemy claw (enemy boards only) and a few unpooled items kept as the working examples of a
 ## seam: POISON_DAGGER applies poison, AVENGER triggers on it, HEX_BOLT targets an enemy ITEM
 ## (#14/#20) and SUNDER applies Vulnerable (#6).
@@ -29,9 +29,9 @@ const FLESH_RIB := 'flesh_rib'
 const FLESH_FEMUR := 'flesh_femur'
 const FLESH_SKULL := 'flesh_skull'
 const MIGHTY_BLOW := 'mighty_blow'
-const ARMOURER_BROADAXE := 'armourer_broadaxe'
-const ARMOURER_WARHAMMER := 'armourer_warhammer'
-const ARMOURER_GREATSWORD := 'armourer_greatsword'
+const SMITH_BROADAXE := 'smith_broadaxe'
+const SMITH_WARHAMMER := 'smith_warhammer'
+const SMITH_GREATSWORD := 'smith_greatsword'
 
 static var _defs: Dictionary = {}
 
@@ -97,9 +97,9 @@ static func _build() -> void:
   _defs[FLESH_FEMUR] = _flesh_femur()
   _defs[FLESH_SKULL] = _flesh_skull()
   _defs[MIGHTY_BLOW] = _mighty_blow()
-  _defs[ARMOURER_BROADAXE] = _armourer_broadaxe()
-  _defs[ARMOURER_WARHAMMER] = _armourer_warhammer()
-  _defs[ARMOURER_GREATSWORD] = _armourer_greatsword()
+  _defs[SMITH_BROADAXE] = _smith_broadaxe()
+  _defs[SMITH_WARHAMMER] = _smith_warhammer()
+  _defs[SMITH_GREATSWORD] = _smith_greatsword()
 
 
 static func _poison_dagger() -> ItemDef:
@@ -646,10 +646,10 @@ static func _flesh_skull() -> ItemDef:
   return d
 
 
-## Mighty Blow (PLACEHOLDER name — owner's to rename) — the Armourer's empower SKILL (docs/design/
-## armourer.md → The empower engine): a plain-cooldown metronome that on each fire applies the
+## Mighty Blow (PLACEHOLDER name — owner's to rename) — the Smith's empower SKILL (docs/design/
+## smith.md → The empower engine): a plain-cooldown metronome that on each fire applies the
 ## 'empowered' status to SELF (banks one charge — it stacks). Each charge doubles the next WEAPON
-## attack (EmpoweredStatus consumes one charge per weapon fire). AUTHORED BUT UN-POOLED — the Armourer
+## attack (EmpoweredStatus consumes one charge per weapon fire). AUTHORED BUT UN-POOLED — the Smith
 ## character isn't built yet, so this isn't in any item_pool. COMMON.
 static func _mighty_blow() -> ItemDef:
   var d := ItemDef.new()
@@ -670,22 +670,22 @@ static func _mighty_blow() -> ItemDef:
   return d
 
 
-## Armourer big slow weapons (PLACEHOLDER names — owner's to rename) — the empower-payoff ladder
-## (docs/design/armourer.md): three heavy single-target attacks on 5s/6s/7s cooldowns with similar DPS
+## Smith big slow weapons (PLACEHOLDER names — owner's to rename) — the empower-payoff ladder
+## (docs/design/smith.md): three heavy single-target attacks on 5s/6s/7s cooldowns with similar DPS
 ## but a rising PER-HIT, so the slowest is the prime target for Mighty Blow's double. Plain weapons
 ## (no rider) — the identity is the per-hit ladder, not extra effects. AUTHORED BUT UN-POOLED (no
-## Armourer character yet). COMMON. Numbers -> Balance (placeholders for /tune).
-static func _armourer_broadaxe() -> ItemDef:
+## Smith character yet). COMMON. Numbers -> Balance (placeholders for /tune).
+static func _smith_broadaxe() -> ItemDef:
   var d := ItemDef.new()
-  d.id = ARMOURER_BROADAXE
+  d.id = SMITH_BROADAXE
   d.types = [ItemType.WEAPON]
   d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Broadaxe'              # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/axe_hard_2.png'
-  d.cooldown = Balance.ARMOURER_BROADAXE_COOLDOWN
+  d.cooldown = Balance.SMITH_BROADAXE_COOLDOWN
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
-  hit.value = Balance.ARMOURER_BROADAXE_DAMAGE
+  hit.value = Balance.SMITH_BROADAXE_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
   d.effects = [hit]
@@ -693,17 +693,17 @@ static func _armourer_broadaxe() -> ItemDef:
   return d
 
 
-static func _armourer_warhammer() -> ItemDef:
+static func _smith_warhammer() -> ItemDef:
   var d := ItemDef.new()
-  d.id = ARMOURER_WARHAMMER
+  d.id = SMITH_WARHAMMER
   d.types = [ItemType.WEAPON]
   d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/war_hammer.png'
-  d.cooldown = Balance.ARMOURER_WARHAMMER_COOLDOWN
+  d.cooldown = Balance.SMITH_WARHAMMER_COOLDOWN
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
-  hit.value = Balance.ARMOURER_WARHAMMER_DAMAGE
+  hit.value = Balance.SMITH_WARHAMMER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
   d.effects = [hit]
@@ -711,17 +711,17 @@ static func _armourer_warhammer() -> ItemDef:
   return d
 
 
-static func _armourer_greatsword() -> ItemDef:
+static func _smith_greatsword() -> ItemDef:
   var d := ItemDef.new()
-  d.id = ARMOURER_GREATSWORD
+  d.id = SMITH_GREATSWORD
   d.types = [ItemType.WEAPON]
   d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Greatsword'           # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/sword_twohanded_1.png'
-  d.cooldown = Balance.ARMOURER_GREATSWORD_COOLDOWN
+  d.cooldown = Balance.SMITH_GREATSWORD_COOLDOWN
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
-  hit.value = Balance.ARMOURER_GREATSWORD_DAMAGE
+  hit.value = Balance.SMITH_GREATSWORD_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
   d.effects = [hit]

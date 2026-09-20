@@ -1,5 +1,5 @@
 extends GutTest
-## The Armourer empower engine (docs/design/armourer.md → The empower engine) + its fire-pipeline seam
+## The Smith empower engine (docs/design/smith.md → The empower engine) + its fire-pipeline seam
 ## (the firing item is threaded into modify_outgoing / on_owner_item_fired so a status can scope to a
 ## WEAPON attack). Proves: the double is weapon-scoped (not spells/skills), one charge is spent per
 ## weapon attack (2 charges → 2 doubled → expires), modify_outgoing stays PURE on the preview path,
@@ -134,9 +134,9 @@ func test_mighty_blow_charges_stack_on_repeat() -> void:
 
 func test_the_three_big_weapons_are_authored_correctly() -> void:
   var specs := [
-    [ItemCatalog.ARMOURER_BROADAXE, Balance.ARMOURER_BROADAXE_COOLDOWN, Balance.ARMOURER_BROADAXE_DAMAGE],
-    [ItemCatalog.ARMOURER_WARHAMMER, Balance.ARMOURER_WARHAMMER_COOLDOWN, Balance.ARMOURER_WARHAMMER_DAMAGE],
-    [ItemCatalog.ARMOURER_GREATSWORD, Balance.ARMOURER_GREATSWORD_COOLDOWN, Balance.ARMOURER_GREATSWORD_DAMAGE],
+    [ItemCatalog.SMITH_BROADAXE, Balance.SMITH_BROADAXE_COOLDOWN, Balance.SMITH_BROADAXE_DAMAGE],
+    [ItemCatalog.SMITH_WARHAMMER, Balance.SMITH_WARHAMMER_COOLDOWN, Balance.SMITH_WARHAMMER_DAMAGE],
+    [ItemCatalog.SMITH_GREATSWORD, Balance.SMITH_GREATSWORD_COOLDOWN, Balance.SMITH_GREATSWORD_DAMAGE],
   ]
   for spec in specs:
     var d: ItemDef = ItemCatalog.get_def(spec[0])

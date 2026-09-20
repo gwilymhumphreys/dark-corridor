@@ -5,6 +5,7 @@ class_name CharacterCatalog
 
 const SPORE_DRUID := 'spore_druid'
 const FLESHMANCER := 'fleshmancer'
+const SMITH := 'smith'
 
 ## The character a run opens on when none is chosen: the title-screen autostart, the save-resume
 ## fallback, and the autotest's baseline. The Fleshmancer holds it because its pool is the deepest.
@@ -32,7 +33,8 @@ static func has(id: String) -> bool:
 ## The roster ids in display order — the character-select screen enumerates this. The Fleshmancer
 ## leads: it is DEFAULT (the autostart and the autotest baseline) and has the deeper pool. Both
 ## characters' numbers and names are still placeholders to /tune and rename. Add an id here once
-## its pool is deep enough to play.
+## its pool is deep enough to play. The Smith is authored but deliberately absent (owner,
+## 2026-09-21): it goes FIRST in this list, and takes DEFAULT, once it has a playable pool.
 static func ids() -> Array:
   if _defs.is_empty():
     _build()
@@ -42,6 +44,7 @@ static func ids() -> Array:
 static func _build() -> void:
   _defs[SPORE_DRUID] = _spore_druid()
   _defs[FLESHMANCER] = _fleshmancer()
+  _defs[SMITH] = _smith()
 
 
 ## Spore Druid — the first real character (spore_druid.md). Status-identity: its kit is built
@@ -98,6 +101,33 @@ static func _fleshmancer() -> CharacterDef:
   ]
   d.starting_item_ids = [ItemCatalog.FLESH_CLEAVER, ItemCatalog.FLESH_FEMUR, ItemCatalog.FLESH_CARVING_KNIFE]
   d.starting_relic_id = ''                          # no signature relic yet (the owner's to design)
+  d.starting_potion_ids = []
+  d.starting_enchants = []
+  return d
+
+
+## Smith (PLACEHOLDER label — owner's to rename; smith.md) — the roster's on-ramp character,
+## promoted 2026-09-21 and absorbing the former Armourer, whose authored items are its pool below.
+## Its identity is that it manages no separate resource: its skills buff its own weapons and armour
+## over a fight, so what accumulates sits on the items rather than in a counter beside them.
+## SCAFFOLD — holds the empower engine authored so far (Mighty Blow + the three big weapons, whose
+## per-hit ladder makes the slowest the best thing to double). Still the owner's to fill: the
+## shield-spend line, the go-wide / go-tall split, the signature relic, a portrait, and the real
+## 3-item starting kit. NOT in ids() yet — see the note there.
+static func _smith() -> CharacterDef:
+  var d := CharacterDef.new()
+  d.id = SMITH
+  d.name_key = 'Orrin'                 # PLACEHOLDER personal name — owner's to rename
+  d.subtitle_key = 'Smith'             # PLACEHOLDER role line — owner's to rename
+  d.portrait = ''                      # no portrait yet — none of the existing five fits a smith
+  d.item_pool = [
+    ItemCatalog.MIGHTY_BLOW,
+    ItemCatalog.SMITH_BROADAXE,
+    ItemCatalog.SMITH_WARHAMMER,
+    ItemCatalog.SMITH_GREATSWORD,
+  ]
+  d.starting_item_ids = [ItemCatalog.SMITH_BROADAXE]   # PLACEHOLDER — the 3-item floor is unauthored
+  d.starting_relic_id = ''                             # no signature relic yet (the owner's to design)
   d.starting_potion_ids = []
   d.starting_enchants = []
   return d

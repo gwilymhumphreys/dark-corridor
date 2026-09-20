@@ -71,8 +71,8 @@ redone without downloading it again.
 
 | Sound | Files in the game | Source |
 | --- | --- | --- |
-| Sword_Hit_Wood, by timmy_h123, CC BY | `assets/sound-effects/mechanics/attack/` | https://freesound.org/s/160411/ and /160412/ |
-| Sword_Hit_Metal, by timmy_h123, CC BY | `assets/sound-effects/mechanics/attack/shielded/` | https://freesound.org/s/160393/ to /160413/ |
+| Sword_Hit_Wood 01 and 02, by timmy_h123, CC BY | `assets/sound-effects/mechanics/attack/` | https://freesound.org/s/160412/ and /160411/ |
+| Sword_Hit_Metal 01, 02, 15 and 19, by timmy_h123, CC BY | `assets/sound-effects/mechanics/attack/shielded/` | https://freesound.org/s/160396/, /160395/, /160409/ and /160404/ |
 
 The attack sound. A hit on an unshielded target plays a sword on wood; a hit on a
 shielded one plays a sword on metal ([mechanics.md](../systems/mechanics.md)). Both
@@ -81,6 +81,9 @@ together.
 
 They were uploaded as 24-bit 96kHz, which Godot imports as silence without failing, so
 each was converted to 16-bit 48kHz before being added ([godot_notes.md](../systems/godot_notes.md)).
+
+The uploader's other 64 recordings are archived at `../dark-corridor-design/sound/timmy_h123/`
+([asset_library.md](asset_library.md)), which is where to look for more variants.
 
 ## Art
 

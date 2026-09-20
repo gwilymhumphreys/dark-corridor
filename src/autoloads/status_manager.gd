@@ -52,7 +52,7 @@ func advance_status(status: StatusEffect, target, ctx = null) -> bool:
 
 
 ## The product of `actor`'s outgoing-damage modifiers (#6) applied to an outgoing DAMAGE value at
-## fire time (Weak scales it down; the Armourer empower doubles a weapon attack). Folds each status's
+## fire time (Weak scales it down; the Smith empower doubles a weapon attack). Folds each status's
 ## modify_outgoing in list order. `item` is the firing item (optional, default null) so a status can
 ## scope to a weapon attack; pure (this runs in the tooltip-preview path too — no state mutation).
 func modify_outgoing(actor, amount: float, item = null, ctx = null) -> float:

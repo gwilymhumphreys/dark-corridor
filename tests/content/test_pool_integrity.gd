@@ -4,9 +4,11 @@ extends GutTest
 ## HERE instead of crashing mid-draft or mid-spawn. Catalog get_def hard-errors on an
 ## unknown id, which is exactly the failure this sweep surfaces at test time.
 
+# Every AUTHORED character, rostered or not — the Smith is authored but not yet in ids().
 const CHARACTER_IDS: Array = [
   CharacterCatalog.SPORE_DRUID,
   CharacterCatalog.FLESHMANCER,
+  CharacterCatalog.SMITH,
 ]
 
 const ENCOUNTER_IDS: Array = [

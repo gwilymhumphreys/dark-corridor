@@ -36,7 +36,7 @@ static var STATUS_BLIND: Color = Color(0.9, 0.9, 0.55)
 static var STATUS_SILENCE: Color = Color(0.5, 0.5, 0.5)
 static var STATUS_SPORES: Color = Color(0.45, 0.8, 0.7)     # placeholder fungal teal — owner re-tints
 static var STATUS_DECAY: Color = Color(0.55, 0.4, 0.35)     # placeholder rot brown — owner re-tints
-static var STATUS_EMPOWERED: Color = Color(0.95, 0.75, 0.2) # placeholder might gold (Armourer empower) — owner re-tints
+static var STATUS_EMPOWERED: Color = Color(0.95, 0.75, 0.2) # placeholder might gold (Smith empower) — owner re-tints
 
 # ── Combat payloads / item panels ────────────────────────────────────────────
 static var ARCANE: Color = Color(0.5, 0.2, 0.7)             # Hex Bolt (item-targeting)
