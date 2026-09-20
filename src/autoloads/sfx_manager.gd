@@ -3,20 +3,20 @@ extends Node
 
 ## Lightweight one-shot sound effect player.
 ##
-## A single polyphonic stream player handles many overlapping sounds cheaply.
-## A short per-key cooldown stops the same sound machine-gunning on rapid
-## triggers (e.g. hover), and each play gets a small random pitch jitter so
-## repeats don't sound robotic.
+## A sound is named by its folder path under assets/sound-effects/ — play_sound('ui/hover') —
+## and adding a sound is a folder of recordings with no code change. Each play picks one of
+## the folder's recordings at random and applies a small pitch jitter so repeats don't sound
+## robotic. A short per-key cooldown (play_sound_guarded) stops the same sound
+## machine-gunning on rapid triggers such as hover.
 ##
-## World sounds (such as footsteps) play through a second player on the World
-## bus, which carries the corridor's reverb; interface sounds stay dry on the
-## Interface bus.
+## The folder's first path segment picks its audio bus: interface sounds are not in the room
+## and stay dry on the Interface bus; everything else goes through World, which carries the
+## corridor's reverb.
 ##
-## Every play_* helper no-ops gracefully when its stream is missing, so callers
-## (such as the UI juice node) work fine before any audio assets exist. Drop
-## files in the UI_*_DIR folders and they join that sound's pool automatically;
-## each play picks one of the pool at random so a repeated action doesn't
-## repeat the same recording. A sound kept as both .wav and .mp3 counts once.
+## Every play no-ops gracefully when its folder has no recordings, so callers (such as the
+## UI juice node) work fine before any audio assets exist. A folder without recordings falls
+## back to its category's _default folder, so a newly authored mechanic or status is never
+## silent. A sound kept as both .wav and .mp3 counts once.
 
 const BUS_INTERFACE: String = 'Interface'
 const BUS_GAME: String = 'Game'
@@ -25,13 +25,23 @@ const POLYPHONY: int = 32
 const COOLDOWN_TIME: float = 0.08
 const PITCH_JITTER_MIN: float = 0.92
 const PITCH_JITTER_MAX: float = 1.08
-
-# Shared default UI sound bank. Every audio file in the folder is a variant of
-# that sound. An empty or missing folder leaves the helper a silent no-op.
-const UI_HOVER_DIR: String = 'res://assets/sound-effects/ui/hover/'
-const UI_CLICK_DIR: String = 'res://assets/sound-effects/ui/click/'
-## World sound bank. The footstep pool: one sound per file, picked at random per footfall.
-const WORLD_FOOTSTEP_DIR: String = 'res://assets/sound-effects/world/footsteps/steps/'
+const SOUND_ROOT: String = 'res://assets/sound-effects/'
+## A sound's first path segment picks its bus. Interface sounds are not in the room and stay
+## dry; everything else goes through World, which carries the corridor's reverb.
+const BUS_BY_CATEGORY: Dictionary = {
+  'ui': BUS_INTERFACE,
+  'run': BUS_INTERFACE,
+  'world': BUS_WORLD,
+  'mechanics': BUS_WORLD,
+  'statuses': BUS_WORLD,
+  'combat': BUS_WORLD,
+}
+## Played when a folder does not exist, so a newly authored mechanic or status is never
+## silent. Looked for as the category followed by this name, e.g. 'mechanics/_default'.
+const FALLBACK_FOLDER: String = '_default'
+## Loaded at boot rather than on first play, because these answer an input directly and a
+## load pause would read as lag.
+const PRELOAD_FOLDERS: Array[String] = ['ui/hover', 'ui/click', 'world/footsteps/steps']
 ## Audio file extensions, most preferred first. A sound is kept in the repository as both the
 ## original .wav and a much smaller .mp3; the same name with two extensions is one sound, not two
 ## variants. The web build prefers the mp3 so the player downloads less, everything else prefers
@@ -46,27 +56,48 @@ const SILENT_ARGS: Array[String] = ['--autotest', '--shot']
 # Combat. No file is in the project yet, so play_impact() is silent until one is dropped here.
 const COMBAT_IMPACT_PATH: String = 'res://assets/sound-effects/combat/impact.mp3'
 
-var _poly_player: AudioStreamPlayer
-var _poly_playback: AudioStreamPlaybackPolyphonic
-var _world_player: AudioStreamPlayer
-var _world_playback: AudioStreamPlaybackPolyphonic
+# Bus name -> its AudioStreamPlayer, and bus name -> its playback handle. Made on first use,
+# so a bus nothing ever plays on gets no player. See _ensure_playing for why that matters.
+var _players: Dictionary = {}
+var _playbacks: Dictionary = {}
+# Folder path (e.g. 'ui/hover') -> Array[AudioStream]. An empty array is cached too, so a
+# folder that does not exist is not rescanned on every play.
+var _banks: Dictionary = {}
+# Folder paths already warned about, so a missing folder warns once rather than every play.
+var _warned: Dictionary = {}
+# True when nothing is listening (headless dummy driver, --autotest or --shot). Set in _ready.
+var _silent: bool = false
+
 var _cooldowns: Dictionary = {}
 
-var _ui_hover_streams: Array[AudioStream] = []
-var _ui_click_streams: Array[AudioStream] = []
 var _impact_stream: AudioStream
-var _footstep_streams: Array[AudioStream] = []
 
 
 func _ready() -> void:
-  _create_player()
-  _load_ui_bank()
+  _silent = _is_silent_run()
+  if not _silent:
+    for path: String in PRELOAD_FOLDERS:
+      _banks[path] = _load_folder(SOUND_ROOT + path + '/')
+    _impact_stream = _try_load(COMBAT_IMPACT_PATH)
   # Only process while cooldowns are pending; re-enabled in play_guarded().
   set_process(false)
 
 
 func _process(delta: float) -> void:
   _update_cooldowns(delta)
+
+
+## True when no audio is ever heard in this run: the headless dummy driver, which never
+## releases a playback (a sound played during a test would be reported as leaked at exit), or
+## an autotest / screenshot run. Both skip decoding the sound files too.
+func _is_silent_run() -> bool:
+  if AudioServer.get_driver_name() == DUMMY_DRIVER:
+    return true
+  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
+  for flag: String in SILENT_ARGS:
+    if flag in args:
+      return true
+  return false
 
 
 ## A configured polyphonic stream player for `bus_name`: not autoplayed, for the reason in
@@ -83,27 +114,21 @@ func _make_poly_player(bus_name: String) -> AudioStreamPlayer:
   return player
 
 
-func _create_player() -> void:
-  _poly_player = _make_poly_player(BUS_INTERFACE)
-  add_child(_poly_player)
-  _world_player = _make_poly_player(BUS_WORLD)
-  add_child(_world_player)
+## The player on `bus_name`, made with _make_poly_player on first use and stored in _players.
+func _player_on(bus_name: String) -> AudioStreamPlayer:
+  if not _players.has(bus_name):
+    var player: AudioStreamPlayer = _make_poly_player(bus_name)
+    add_child(player)
+    _players[bus_name] = player
+  return _players[bus_name]
 
 
-func _load_ui_bank() -> void:
-  # Headless runs get the dummy driver, which never releases a playback, so a
-  # sound played during a test is reported as leaked at exit. Autotest and
-  # screenshot runs are silent too, so neither needs the files decoded.
-  if AudioServer.get_driver_name() == DUMMY_DRIVER:
-    return
-  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
-  for flag: String in SILENT_ARGS:
-    if flag in args:
-      return
-  _ui_hover_streams = _load_folder(UI_HOVER_DIR)
-  _ui_click_streams = _load_folder(UI_CLICK_DIR)
-  _impact_stream = _try_load(COMBAT_IMPACT_PATH)
-  _footstep_streams = _load_folder(WORLD_FOOTSTEP_DIR)
+## The streams in the folder `path` under assets/sound-effects/, loaded on the first call and
+## cached after, empty included, so a missing folder is not rescanned on every play.
+func _bank_for(path: String) -> Array[AudioStream]:
+  if not _banks.has(path):
+    _banks[path] = _load_folder(SOUND_ROOT + path + '/')
+  return _banks[path]
 
 
 func _try_load(path: String) -> AudioStream:
@@ -151,17 +176,86 @@ func _pick(streams: Array[AudioStream]) -> AudioStream:
   return streams[randi() % streams.size()]
 
 
+## Warn once per `key`, in debug builds only, so a typo is not silently inaudible without
+## spamming a release log. A missing folder and an unknown category are separate keys for the
+## same path, so reporting one does not silence the other.
+func _warn_once(key: String, message: String) -> void:
+  if _warned.has(key):
+    return
+  _warned[key] = true
+  if OS.is_debug_build():
+    push_warning(message)
+
+
+## The bus a folder path plays on. The first path segment is the category; an unrecognised
+## one uses the interface bus. Public so the mapping can be tested without an audio device.
+func bus_for(path: String) -> String:
+  var slash: int = path.find('/')
+  var category: String = path if slash < 0 else path.left(slash)
+  if not BUS_BY_CATEGORY.has(category):
+    _warn_once('category:' + path,
+        'SfxManager: unknown sound category "%s" in "%s"; using the interface bus' % [category, path])
+    return BUS_INTERFACE
+  return BUS_BY_CATEGORY[category]
+
+
+## Play one sound from the folder `path` under assets/sound-effects/, chosen at random from
+## the recordings in it, with the usual random pitch jitter. A folder with no sounds falls
+## back to its category's `FALLBACK_FOLDER`. A negative pitch picks a random jitter; pass a
+## value to override. Returns the polyphonic stream id, or -1 if nothing played.
+func play_sound(path: String, pitch: float = -1.0, volume_db: float = 0.0) -> int:
+  if _silent or path == '':
+    return -1
+  var bank: Array[AudioStream] = _bank_for(path)
+  if bank.is_empty():
+    _warn_once('missing:' + path, 'SfxManager: no sounds found in folder "%s"' % path)
+    var fallback_path: String = path if path.find('/') < 0 else path.left(path.find('/')) + '/' + FALLBACK_FOLDER
+    if fallback_path != path:
+      bank = _bank_for(fallback_path)
+      if bank.is_empty():
+        _warn_once('missing:' + fallback_path,
+            'SfxManager: no sounds found in fallback folder "%s"' % fallback_path)
+  if bank.is_empty():
+    return -1
+  var stream: AudioStream = _pick(bank)
+  if stream == null:
+    return -1
+  var bus_name: String = bus_for(path)
+  var player: AudioStreamPlayer = _player_on(bus_name)
+  _playbacks[bus_name] = _ensure_playing(player, _playbacks.get(bus_name, null))
+  var playback: AudioStreamPlaybackPolyphonic = _playbacks[bus_name]
+  if playback == null:
+    return -1
+  if pitch < 0.0:
+    pitch = randf_range(PITCH_JITTER_MIN, PITCH_JITTER_MAX)
+  return playback.play_stream(stream, 0.0, volume_db, pitch)
+
+
+## Cooldown-guarded `play_sound`, keyed by `key`. Repeated calls within COOLDOWN_TIME are
+## dropped. Use for rapid triggers like hover.
+func play_sound_guarded(key: String, path: String, pitch: float = -1.0,
+    volume_db: float = 0.0) -> void:
+  if path == '':
+    return
+  if _cooldowns.has(key):
+    return
+  _cooldowns[key] = COOLDOWN_TIME
+  set_process(true)
+  play_sound(path, pitch, volume_db)
+
+
 ## Play a one-shot. A negative pitch picks a random jitter; pass a value to
 ## override. Returns the polyphonic stream id, or -1 if nothing played.
 func play(stream: AudioStream, pitch: float = -1.0, volume_db: float = 0.0) -> int:
   if stream == null:
     return -1
-  _poly_playback = _ensure_playing(_poly_player, _poly_playback)
-  if _poly_playback == null:
+  var player: AudioStreamPlayer = _player_on(BUS_INTERFACE)
+  _playbacks[BUS_INTERFACE] = _ensure_playing(player, _playbacks.get(BUS_INTERFACE, null))
+  if _playbacks[BUS_INTERFACE] == null:
     return -1
   if pitch < 0.0:
     pitch = randf_range(PITCH_JITTER_MIN, PITCH_JITTER_MAX)
-  return _poly_playback.play_stream(stream, 0.0, volume_db, pitch)
+  return _playbacks[BUS_INTERFACE].play_stream(stream, 0.0, volume_db, pitch)
 
 
 ## Play a one-shot through the world channel, which carries the corridor reverb. A negative
@@ -169,12 +263,13 @@ func play(stream: AudioStream, pitch: float = -1.0, volume_db: float = 0.0) -> i
 func play_world(stream: AudioStream, pitch: float = -1.0, volume_db: float = 0.0) -> int:
   if stream == null:
     return -1
-  _world_playback = _ensure_playing(_world_player, _world_playback)
-  if _world_playback == null:
+  var player: AudioStreamPlayer = _player_on(BUS_WORLD)
+  _playbacks[BUS_WORLD] = _ensure_playing(player, _playbacks.get(BUS_WORLD, null))
+  if _playbacks[BUS_WORLD] == null:
     return -1
   if pitch < 0.0:
     pitch = randf_range(PITCH_JITTER_MIN, PITCH_JITTER_MAX)
-  return _world_playback.play_stream(stream, 0.0, volume_db, pitch)
+  return _playbacks[BUS_WORLD].play_stream(stream, 0.0, volume_db, pitch)
 
 
 ## Cooldown-guarded one-shot keyed by `key`. Repeated calls within
@@ -201,12 +296,14 @@ func play_guarded_world(key: String, stream: AudioStream, pitch: float = -1.0, v
   play_world(stream, pitch, volume_db)
 
 
+## A hover on a UI control. Guarded, so sweeping the pointer across a menu makes one sound.
 func play_ui_hover() -> void:
-  play_guarded('ui_hover', _pick(_ui_hover_streams))
+  play_sound_guarded('ui_hover', 'ui/hover')
 
 
+## A click on a UI control. Guarded, so a double click makes one sound.
 func play_ui_click() -> void:
-  play_guarded('ui_click', _pick(_ui_click_streams))
+  play_sound_guarded('ui_click', 'ui/click')
 
 
 ## A hit landing in combat. Guarded, so a burst of hits in the same moment makes one sound
@@ -217,7 +314,7 @@ func play_impact() -> void:
 
 ## A footstep landing in the corridor. Guarded, so two footfalls in one frame make one sound.
 func play_footstep() -> void:
-  play_guarded_world('footstep', _pick(_footstep_streams))
+  play_sound_guarded('footstep', 'world/footsteps/steps')
 
 
 ## Start `player` if it is not playing and return its playback. Each play() makes a new playback,
@@ -237,8 +334,8 @@ func _ensure_playing(player: AudioStreamPlayer, playback: AudioStreamPlaybackPol
 
 func _notification(what: int) -> void:
   if what == NOTIFICATION_APPLICATION_FOCUS_IN:
-    _poly_playback = _ensure_playing(_poly_player, _poly_playback)
-    _world_playback = _ensure_playing(_world_player, _world_playback)
+    for bus_name: String in _players:
+      _playbacks[bus_name] = _ensure_playing(_players[bus_name], _playbacks.get(bus_name, null))
 
 
 func _update_cooldowns(delta: float) -> void:
@@ -254,16 +351,14 @@ func _update_cooldowns(delta: float) -> void:
 
 
 func _exit_tree() -> void:
-  _poly_playback = null
-  if _poly_player:
-    _poly_player.stop()
-    _poly_player.stream = null
-  _world_playback = null
-  if _world_player:
-    _world_player.stop()
-    _world_player.stream = null
-  _ui_hover_streams.clear()
-  _ui_click_streams.clear()
+  for bus_name: String in _players:
+    _playbacks[bus_name] = null
+    var player: AudioStreamPlayer = _players[bus_name]
+    if player:
+      player.stop()
+      player.stream = null
+  _players.clear()
+  _playbacks.clear()
+  _banks.clear()
   _impact_stream = null
-  _footstep_streams.clear()
   _cooldowns.clear()

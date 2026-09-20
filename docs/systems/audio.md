@@ -45,38 +45,60 @@ already muted. The flags are the `SILENT_ARGS` constant in `prefs.gd`.
 
 ## SfxManager (`src/autoloads/sfx_manager.gd`)
 
-One-shot sound effects through a single `AudioStreamPolyphonic` player (many
-overlapping sounds, cheap). Routes to the **Interface** bus.
+One-shot sound effects through `AudioStreamPolyphonic` players, one per audio bus, made on
+first use.
 
-- **Cooldown** — a short per-key guard stops the same sound machine-gunning on
-  rapid triggers (e.g. hover).
-- **Pitch jitter** — each play gets a small random pitch so repeats don't sound
-  robotic. Pass an explicit pitch to override.
-- **Graceful no-op** — every `play_*` helper does nothing when its stream is
-  missing, so callers (e.g. [UIJuice](ui_juice.md)) work before any audio
-  assets exist.
-- **Starts on first play** — the player is not autoplayed; the first real `play`
-  starts it. A playback started with nothing to play is never released under the
-  headless dummy audio driver and is reported as leaked at exit. Each start makes a
-  new playback, so the playback handle is fetched again every time the player starts.
+A sound is named by its folder path under `assets/sound-effects/`, and `play_sound(path)`
+picks one recording from that folder at random. Adding a sound is a folder with recordings in
+it and no code change at all. The folder names match ids the code already has, so there is no
+second list of sound names to keep in step.
+
+| Folder | The key is | Bus |
+|---|---|---|
+| `ui/` | the interface action (`hover`, `click`) | Interface |
+| `run/` | the run or map event (`victory`, `draft_pick`) | Interface |
+| `world/` | the corridor sound (`footsteps/steps`) | World |
+| `mechanics/` | the mechanic id (`attack`, `bleed`) | World |
+| `statuses/` | the status id (`weak`, `vulnerable`) | World |
+| `combat/` | a combat event with no id of its own (`death`, `shield_break`) | World |
+
+The first path segment is the category and picks the bus (`BUS_BY_CATEGORY`). An unrecognised
+category uses the Interface bus.
+
+- **Pitch jitter** — each play gets a small random pitch so repeats don't sound robotic. Pass
+  an explicit pitch to override.
+- **Cooldown** — `play_sound_guarded` drops a repeat of the same key within `COOLDOWN_TIME`.
+  Use it for rapid triggers such as hover. Combat sounds are deliberately unguarded, so a
+  cascade is heard as every hit that lands.
+- **Folders load once** — the first play of a path scans its folder and caches the result,
+  empty included, so a folder that does not exist is not rescanned. `PRELOAD_FOLDERS` loads
+  the sounds that answer an input at boot instead, because a load pause would read as lag.
+- **Fallback** — a folder with no recordings falls back to its category's `_default` folder,
+  so a newly authored mechanic or status is never silent. Debug builds warn once per path so
+  a typo is visible.
+- **Graceful no-op** — a missing folder plays nothing and returns -1, so callers (for example
+  [UIJuice](ui_juice.md)) work before any audio assets exist.
+- **Starts on first play** — a player is not autoplayed; the first real play starts it. A
+  playback started with nothing to play is never released under the headless dummy audio
+  driver and is reported as leaked at exit. Each start makes a new playback, so the handle is
+  fetched again every time the player starts.
 
 API:
 
-- `play(stream, pitch := -1.0, volume_db := 0.0)` — generic one-shot (negative
-  pitch = random jitter).
-- `play_guarded(key, stream, pitch, volume_db)` — same, but cooldown-guarded by
-  `key`.
-- `play_ui_hover()` / `play_ui_click()` — the shared UI bank.
+- `play_sound(path, pitch := -1.0, volume_db := 0.0)` — one sound from the folder `path`
+  (negative pitch = random jitter). Returns the stream id, or -1 if nothing played.
+- `play_sound_guarded(key, path, pitch, volume_db)` — same, cooldown-guarded by `key`.
+- `bus_for(path)` — the bus a folder path plays on.
+- `play_ui_hover()` / `play_ui_click()` / `play_footstep()` — the three named sounds, each one
+  guarded `play_sound` call. The corridor calls `play_footstep()` on each footfall
+  ([corridor_3d.md](corridors/corridor_3d.md)); nothing else decides the pacing.
 - `play_impact()` — a hit landing in combat, played once per landing by the
   [VFX wall](vfx_driver.md). Guarded, so a burst of hits in the same moment makes one sound.
-- `play_world(stream, pitch, volume_db)` — a one-shot through the World bus, so it gets the
-  corridor's echo. `play_guarded_world(key, ...)` is its cooldown-guarded form.
-- `play_footstep()` — one footstep from the world bank, guarded. The corridor calls it on each
-  footfall ([corridor_3d.md](corridors/corridor_3d.md)); nothing else decides the pacing.
+- `play(stream, pitch, volume_db)` and `play_guarded(key, stream, ...)` — play a stream the
+  caller already holds, on the Interface bus. [UIJuice](ui_juice.md) uses these for a node's
+  own hover or click sound. `play_world` and `play_guarded_world` are the World bus forms.
 
-**Variant folders.** The UI bank loads every sound in the `UI_*_DIR` folders, and each play
-picks one at random, so a repeated action doesn't repeat the same recording. Drop a file in or
-delete one and the pool changes with no code change:
+**What is in the project now:**
 
 - `assets/sound-effects/ui/hover/` — 8 page turns
 - `assets/sound-effects/ui/click/` — 6 book closes and 2 book drops
