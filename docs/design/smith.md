@@ -129,8 +129,10 @@ it fires it applies a self-buff that doubles the next weapon attack.
 - **The role that falls out.** Big doubled hits overkill small enemies, so the build is aimed at
   bosses and elites and is soft against swarms.
 
-The three weapons follow the built damage-per-second curve, so per-hit climbs while damage per
-second stays close and the slowest weapon is the prime empower target. The numbers are
+The three weapons sit on the item budget curve ([`item_heuristics.md`](item_heuristics.md)), so
+per-hit climbs while damage per second climbs more slowly and the slowest weapon is the prime
+empower target. Mighty Blow is priced against the slowest weapon it can reach rather than an
+average one, because a charge is worth whatever it doubles. The numbers are
 placeholders for `/tune` and live in `Balance` (`SMITH_BROADAXE_*`, `SMITH_WARHAMMER_*`,
 `SMITH_GREATSWORD_*`, `MIGHTY_BLOW_COOLDOWN`, `MIGHTY_BLOW_CHARGES`, `EMPOWER_MULT`). Mighty
 Blow's cooldown is the uptime knob: slower rations the empower, faster banks charges.

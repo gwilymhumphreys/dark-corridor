@@ -1,53 +1,215 @@
 # Item Tuning Heuristics
 
-> **Guidelines for the *starting* properties of new items — not fixed rules.** They give a
-> first number to react to, so a new item lands roughly on-budget instead of guessed from
-> scratch. Real balance is decided in tuning (the `/tune` skill, real fights); any item may
-> deliberately break a heuristic for a reason. Numbers live in `src/data/balance.gd`; this doc
-> records the *reasoning* (per the docs-describe-systems-not-numbers rule).
+> **Starting properties for new items, not fixed rules.** They give a first number to react to,
+> so a new item lands roughly on budget instead of being guessed from scratch. Real balance is
+> decided in tuning (the `/tune` skill, real fights), and any item may break a heuristic for a
+> reason. Every rate below is a starting point the owner ratifies or changes.
 
-## The DPS curve — `DPS = cooldown + 3`
+An item is priced in two steps. Work out its budget from its cooldown, then spend the budget on
+what the item does.
 
-A pure-damage attack's expected DPS rises **+1 per second of cooldown**, anchored at the
-**2s = 5 DPS** baseline (Capped Cudgel — 10 dmg / 2s). So 1s→4, 2s→5, 3s→6, 4s→7, 5s→8.
+The arithmetic is built, in `ItemPoints` (`src/data/item_points.gd`): `rate(cooldown)`,
+`budget(cooldown)` and `spend(item_def)`, which prices an authored item by its effects. The rates
+and the curve constants are in `Balance`. `EnemyDef.points()` uses it to price an enemy.
 
-**Why slow items need *more* DPS** (not the same): a slow item gives up value to —
-- **Overkill** — a big hit into a near-dead target wastes the damage past 0 HP. Fast small hits spend almost exactly to the kill.
-- **Trigger density** — anything per-*hit* (on-hit relics, the Spores-applied event, charge-pushers) fires per swing, not per damage. Slow weapons swing rarely → fewer procs.
-- **Commitment** — fast weapons contribute immediately and can be redirected; a slow weapon front-loads a long wind-up.
+The Smith is the character these rules are being applied to first. The Spore Druid and the
+Fleshmancer were authored before the mechanics were revised, so their items are off this curve in
+places; they are revisited once the Smith is playable.
 
-**Applicability:** linear holds across the **1–6s** authoring range. The tail must taper — overkill/trigger loss is bounded, so a pure +1/s line would make ultra-slow weapons (10s+) oppressive nukes. Revisit the slope if anything slower than ~6s is authored.
+## Points
 
-## Effect riders cost DPS
+**Points** are the shared unit all the rules are written in. One point is one damage from a
+single-target attack. Every other mechanic has an exchange rate into points, so a multi-mechanic
+item is priced by adding up what each part costs rather than by a separate rule per combination.
 
-A non-damage effect bolted onto an attack is paid for by **dropping the item's damage below
-its curve DPS**. The damage portion = `(curve DPS − effect cost) × cooldown`.
+Health appears in the rules three times and at three different rates, because the three are not the
+same thing. See [Health is three rates](#health-is-three-rates).
 
-**Effect cost depends on the effect** — there's no flat rate. Starting points:
-- **Generic timed debuff (e.g. Weak): ~2 DPS.** First example: a 4s attack applying Weak → curve DPS 7, minus 2 = 5 DPS of damage = 20 dmg, plus the Weak.
-- **Blinding: ~2.7 DPS** *(recorded from code — implied by Pocket Shrooms: 10 dmg / 3s = 3.3 DPS
-  against a curve 6, paying for the 2s blind; owner to ratify or retune).*
-- More costs get added here as items are authored and tuned.
+## The budget curve
 
-**Spores are free.** A Spores rider costs **0 DPS** — a Spores applier pays its full curve DPS
-in damage *and* stacks Spores. Rationale: Spores do nothing on their own (pure Mass ammo,
-[`spore_druid.md`](spore_druid.md)); their value is realized only by a Mass payoff the player
-must *also* draft, so the applier alone isn't getting a free effect. Revisit if Spores ever
-earn a solo effect.
+An item's budget is how many points it may spend, and it comes from its cooldown alone.
 
-## The shield curve — `shield/sec = cooldown + 2` *(recorded from code, owner to ratify)*
+```
+rate(t)   = 26 / (1 + e^(−0.33 × (t − 6.4)))    points per second at a cooldown of t seconds
+budget(t) = t × rate(t)                          points the item may spend
+```
 
-The self-shield items follow a parallel curve, **anchored at 2s = 4 shield/sec** and rising
-**+1 per second of cooldown**, mirroring the weapon line's fast-taxed / slow-rewarded shape. The
-worked example is the Fleshmancer's bone shield spread in `src/data/balance.gd`: Rib 1s→3, Femur
-2s→4, Skull 3s→5. This section records what the authored numbers already do — it lived only in a
-`balance.gd` comment; the rule itself is the owner's to keep or change.
+The rate rises with the cooldown, slowly at first, steepest around a 6.4 second cooldown, then
+flattening towards a ceiling of 26 points per second that is effectively reached by 30 seconds.
+Because the budget is the rate multiplied by the cooldown, the total climbs steeply: 2 seconds is
+worth 10 points, 10 seconds is worth 199, and 20 seconds is worth 514.
+
+The rate rises because a slow item loses value to **overkill** (damage past 0 HP is wasted, while
+fast small hits spend almost exactly to the kill), to **trigger density** (anything per-hit fires
+per swing, not per damage), and to **commitment** (a fast item contributes immediately and can be
+redirected). It flattens at the top because those losses are bounded. A 20 second weapon is not
+four times as wasteful as a 5 second one.
+
+| Cooldown | Rate | Budget |
+|---|---|---|
+| 1s | 3.75 | 3.7 |
+| 2s | 4.93 | 9.9 |
+| 3s | 6.39 | 19.2 |
+| 4s | 8.11 | 32.4 |
+| 5s | 10.05 | 50.2 |
+| 6s | 12.14 | 72.9 |
+| 7s | 14.28 | 100.0 |
+| 8s | 16.35 | 130.8 |
+| 10s | 19.93 | 199.3 |
+| 15s | 24.56 | 368.4 |
+| 20s | 25.71 | 514.2 |
+
+**Long cooldowns need large enemy health pools.** A 10 second item spends 199 points, which the
+current placeholder enemies cannot absorb, so most of it would be overkill. Enemy health is going
+up to match — see the next section for what it has to be.
+
+## Pricing an enemy
+
+A point of damage removes a point of enemy health, so an enemy is priced in the same currency as
+an item.
+
+```
+enemy points = health + the points its items spend
+```
+
+That is one number for how much of a problem an enemy is: the damage the player has to spend to
+kill it, plus the value of what it does back. Enemy items are priced on the same curve as the
+player's, so a weapon is worth the same whoever is holding it, and an encounter can be budgeted by
+adding up the enemies in it.
+
+### Setting health from a target fight length
+
+Only the points a board spends on **damage** kill an enemy, and an item on the curve spends its
+budget at its rate, so a board's damage output is the sum of the rates of its damage items.
+
+```
+enemy health = the board's damage points per second × the seconds it should survive
+```
+
+| Board | Points per second | Health for a 10 second kill |
+|---|---|---|
+| 2 items, 3s and 4s cooldowns | 14.5 | 145 |
+| 4 items, 3s to 6s | 36.7 | 367 |
+| 6 items, 2s to 7s | 55.9 | 559 |
+
+Three things push the real fight longer than the division suggests, and are why the figure is a
+floor rather than a target. The enemy's own shield and healing add to its effective health. The
+killing blow wastes whatever it deals past zero. And a board never spends its whole budget on
+damage.
+
+This is the reason the placeholder health values in `Balance.ENEMY_*_HP` are being raised. A
+40 health regular enemy dies to a mid board in about a second.
+
+## Spending the budget
+
+Every cost is a flat number of points for what the item delivers each time it fires.
+
+| Mechanic | Points | Notes |
+|---|---|---|
+| Attack, single target | 1 per damage | The definition of a point. |
+| Attack, all opponents | 1.5 per damage | Fights run 1 to 4 enemies, most 1 to 2 ([enemy.md](../systems/enemy.md)), so it is dead weight often enough to be worth less than two targets. |
+| Heal | 0.75 per health restored | An item buys more healing than damage per point. See below. |
+| Self-damage | gives back 1.5 per health | An item that hurts its own holder spends a run resource, so it gets back more than it costs the enemy. See below. |
+| Shield, self | 1.25 per shield | Worth more than health, because it takes the hit before health does and is never wasted on overheal. |
+| Poison | 1 per eventual damage | N stacks deal `N × (N + 1) / 2` damage in total, because a tick deals its stacks and then loses one. It drains double shield, which is treated as cancelling out the delay. |
+| Burn | 0.75 per eventual damage | The same total as poison, but it drains half shield instead of double. |
+| Bleed | 0.5 per eventual damage | The same total again, but it only cashes out when the holder is hit by an attack, so it needs a weapon alongside it. |
+| Charge, own item | 6 per second of bar | Roughly the rate of a mid-cooldown item, which is what a second is worth to whatever receives it. |
+| Decharge, enemy item | 6 per second of bar | |
+| Spores | 0 | See below. |
+
+Regen and crit are not on this table. Regen never loses stacks, so its value depends on how long
+the fight runs rather than on what it applies, which is covered under the open questions below.
+Crit is not a cost at all: a crit chance of `c` multiplies the item's expected output, so divide
+the budget by `1 + c × (CRIT_MULTIPLIER − 1)` before spending it.
+
+**Spores cost nothing.** A Spores applier pays its full budget in damage and stacks Spores on top.
+Spores do nothing alone ([spore_druid.md](spore_druid.md)) and their value is only realised by a
+Mass payoff the player has to draft as well, so the applier by itself is not getting a free effect.
+Revisit this if Spores ever earn an effect of their own.
+
+## Health is three rates
+
+Health is not one quantity, so it does not get one rate. Assigning enemy health a point value says
+nothing about what an item should pay to heal.
+
+**Enemy health is 1 point per health, and this is forced rather than chosen.** A point is one damage
+and one damage removes one enemy health, so the exchange is fixed by the definition. This is the
+rate that prices enemies.
+
+**Healing costs 0.75 points per health restored**, so an item buys more healing than it buys damage.
+Healing is capped by the damage that has already landed, so any excess is wasted, and it arrives
+after the hit rather than before it. Shield is priced above it at 1.25 for the opposite reasons: it
+takes the hit before health does and is never wasted on overheal. This is the rate most likely to
+move, because player health carries between fights while shield does not, which pulls healing's
+value back up. It should settle somewhere between healing and shield once fights run long enough to
+see whether in-combat healing matters at all.
+
+**Self-damage gives back 1.5 points per health spent.** Player health is the run's attrition
+resource rather than a pool that refills each fight, so an item that carves its holder costs more
+than the same number of points would cost an enemy. This is what prices Flensing Hook.
+
+**Maximum health is not priced here.** It persists for the whole run rather than for one fight, so
+it is worth more again than any of the three, and the things that grant it are relics rather than
+items. It needs its own rate once relics are priced.
+
+## Worked examples
+
+A 4 second attack that also applies 3 poison has a budget of 32.4 points. Three poison stacks deal
+6 damage in total, at 1 point each, so 6 points. That leaves 26.4 points of damage.
+
+A 2 second self-shield has a budget of 9.9 points, which at 1.25 points per shield is 7.9 shield.
+The authored Femur is 8.
+
+## The Smith against the curve
+
+The empower engine ([smith.md](smith.md)) is the first thing these rules have to hold up for.
+
+The weapon ladder is well under budget, because it was authored on an older, much flatter curve. On
+this one a 5 second weapon is 50 damage, a 6 second weapon is 73, and a 7 second weapon is 100,
+against the 40, 54 and 70 in `src/data/balance.gd`. The shape of the ladder does not change, with
+per-hit climbing faster than damage per second. The numbers are the owner's to set in tuning.
+
+Mighty Blow prices differently from the rest, because a charge is worth whatever weapon it doubles.
+When its cooldown is at or below the weapon's, every weapon fire is doubled, so the empower adds
+exactly that weapon's rate in points per second. Against the 7 second weapon that is 14.28 points
+per second, while Mighty Blow's own rate at a 5 second cooldown is 10.05, so it runs about 40 per
+cent over.
+
+This means an empower has to be priced against the **slowest** weapon it can reach, not an average
+one. The ladder is built so the slowest weapon is the best empower target, so the gap is the
+intended power ceiling rather than a mistake. Mighty Blow's cooldown is the dial that sets it.
+
+## Parked
+
+**Weak, Vulnerable, Blind and Silence are parked** and are not priced here. They are timed statuses
+outside the mechanic set, they predate the revised mechanics, and whether they stay in the game at
+all is undecided. Items that currently apply them (Wilt Frond, Pocket Shrooms, Hex Bolt, Sundering
+Bolt) are left alone.
+
+One thing is worth keeping for when they come back. A timed debuff cannot be priced as a flat cost,
+because its value is the fraction of the fight it is active for: a 2 second Weak from a 2 second item
+is always on, and the same Weak from an 8 second item is on a quarter of the time. It needs a cost
+in points per second of cooldown, so that a slow item does not buy the same debuff cheaply.
 
 ## Status durations are per-application
 
-A timed status's **duration rides the application** — an applier sets `ItemEffect.duration` and it
-flows through to the status instance (the 2026-06-10 status refactor). So "apply 2s Weak" is just
-this item's `duration = 2.0`; a different item can apply a longer Weak. The `Balance` constants
-(`STATUS_WEAK_DURATION`, …) are now *default durations an applier reuses*, not a global the status
-owns. Re-applying a timed status **stacks** (extends the timer) by default. (Non-timed statuses —
-shield, poison, spores — ignore `duration`; their `count` is the magnitude.)
+A timed status's duration rides the application. An applier sets `ItemEffect.duration` and it flows
+through to the status instance, so a different item can apply a longer version of the same status.
+The `Balance` duration constants are defaults an applier reuses, not a global the status owns.
+Re-applying a timed status extends the timer. Non-timed statuses, meaning shield, poison and spores,
+ignore `duration`, and their `count` is the magnitude.
+
+## What this leaves unpriced
+
+These need the owner's decision before the rules cover a whole character. None of them block the
+Smith.
+
+- **Chunk of Flesh creation.** A chunk fires twice for 1 damage, so its literal output is 2 points,
+  but the Fleshmancer's creators are authored as though a chunk were worth far more. See the pricing
+  note in `src/data/balance.gd`.
+- **Regen.** It never loses stacks, so one stack heals for the rest of the fight. Pricing it needs an
+  assumed remaining fight length, and at the current per-tick heal one stack would cost more than a
+  5 second item's whole budget. That suggests regen wants to decay, or to heal less per tick.
+- **Relics**, which are not on the item curve at all, including the maximum health they grant.
+- **Creating and consuming items**, and **summons**.

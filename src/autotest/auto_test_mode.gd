@@ -37,6 +37,9 @@ var strategy: String = 'first-viable'
 var single_fight: bool = false              # --single-fight: the Phase-2 one-fight path
 var encounters: int = 0                     # --encounters N: cap beats (0 = play the whole map)
 var character: String = CharacterCatalog.DEFAULT   # --character <id>: who to play (run mode only)
+# --enemies <id,id,...>: pin every generated fight to this composition, so a tuning run reads one
+# fight rather than generation noise (docs/plans/encounter_points_budget.md). Empty = generate.
+var pinned_enemies: PackedStringArray = PackedStringArray()
 # Run artifacts default into a project-local, git-ignored dir (autotest_results/)
 # so they're easy to find but never committed; --log / --report override.
 var log_path: String = OUTPUT_DIR + '/autotest_log.txt'
@@ -134,6 +137,7 @@ func run_full() -> Dictionary:
   Save.disabled = nosave   # honour the forced nosave: never clobber the real run slot
   logger = AutoTestLogger.new()
   driver = AutoTestDriver.new(strategy, seed_value)
+  RunManager.pinned_enemy_ids = _pinned_enemy_ids()   # before the run starts — beat 0 draws at once
   Game.start_run(seed_value, character)
   var run: RunManager = Game.run
   logger.log_event('run_started', { 'seed': seed_value, 'character': character })
@@ -402,6 +406,9 @@ func _parse_args() -> void:
         push_warning('[AutoTest] unknown --character "%s" — falling back to %s' % [character, CharacterCatalog.DEFAULT])
         character = CharacterCatalog.DEFAULT
       i += 1
+    elif arg == '--enemies':
+      pinned_enemies = _value(args, i).split(',', false)
+      i += 1
     elif arg == '--single-fight':
       single_fight = true
     i += 1
@@ -409,3 +416,18 @@ func _parse_args() -> void:
 
 func _value(args: Array, i: int) -> String:
   return args[i + 1] if i + 1 < args.size() else ''
+
+
+## The --enemies composition as EnemyCatalog ids, dropping any id that does not resolve so a typo
+## warns instead of crashing mid-spawn. Empty means every fight generates normally.
+func _pinned_enemy_ids() -> Array[String]:
+  var ids: Array[String] = []
+  for raw: String in pinned_enemies:
+    var id: String = raw.strip_edges()
+    if id.is_empty():
+      continue
+    if not EnemyCatalog.has(id):
+      push_warning('[AutoTest] unknown --enemies id "%s" — ignored' % id)
+      continue
+    ids.append(id)
+  return ids

@@ -11,6 +11,14 @@ const SPORE_THRALL := 'spore_thrall'
 static var _defs: Dictionary = {}
 
 
+## Whether the id resolves, for a caller validating authored or command-line input without
+## tripping get_def's error on a typo.
+static func has(id: String) -> bool:
+  if _defs.is_empty():
+    _build()
+  return _defs.has(id)
+
+
 static func get_def(id: String) -> EnemyDef:
   if _defs.is_empty():
     _build()

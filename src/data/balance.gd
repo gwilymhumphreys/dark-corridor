@@ -25,6 +25,10 @@ const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3
 
 # ── Actor ────────────────────────────────────────────────────────────────────
 const PLAYER_START_HP: float = 100.0
+# BLOCKED ON CONTENT: enemy health should be the player's damage points per second times the
+# seconds the enemy should last (docs/design/item_heuristics.md), which puts a beat-0 fight at ~170
+# points. It cannot rise until the player's items and starting boards are brought onto the budget
+# curve — they currently sit about 5x under it, so raising these makes the first fight unwinnable.
 const ENEMY_PLACEHOLDER_HP: float = 40.0
 # Placeholder enemy tiers for the multi-act map (#1) — HP only; the owner authors real
 # enemies + boss signature mechanics. A brute is a beefier regular; a boss is tankier
@@ -90,10 +94,9 @@ const BLOOMHAMMER_COOLDOWN: float = 5.0          # slow burst — 8 DPS + dumps 
 const BLOOMHAMMER_DAMAGE: float = 40.0
 const BLOOMHAMMER_SPORE_STACKS: float = 2.0
 
-# Wilt Frond (PLACEHOLDER name) — a Weak-applier attack: 4s cooldown → curve DPS 7, minus a
-# 2 DPS effect tax for the Weakness rider = 5 DPS of damage = 20 dmg, plus 2s Weak. Per the
-# item heuristics (docs/design/item_heuristics.md): effect cost ~2 DPS, Weak duration is the
-# status's global 2s. Starting properties — to be adjusted in tuning.
+# Wilt Frond (PLACEHOLDER name) — a Weak-applier attack: 20 damage on a 4s cooldown, plus 2s Weak.
+# Weak is PARKED and deliberately unpriced (docs/design/item_heuristics.md), so this item is left as
+# authored until the timed debuffs are decided on.
 const WILT_FROND_COOLDOWN: float = 4.0
 const WILT_FROND_DAMAGE: float = 20.0
 const WILT_FROND_WEAK_STACKS: float = 1.0         # presence count (duration = STATUS_WEAK_DURATION)
@@ -165,14 +168,15 @@ const FLESH_SKULL_COOLDOWN: float = 3.0     # slow, rewarded — 5 shield/sec
 const FLESH_SKULL_SHIELD: float = 15.0
 
 # Smith big slow weapons (PLACEHOLDER numbers — /tune's job; docs/design/smith.md → The empower
-# engine). A ladder of heavy single-target attacks on 5s/6s/7s cooldowns with SIMILAR DPS but a rising
-# PER-HIT (DPS ≈ cooldown + 3): the slowest lands the biggest single hit, so it is the best target for
-# the Mighty Blow empower's double. In the Smith's item_pool.
-const SMITH_BROADAXE_COOLDOWN: float = 5.0      # fast pole — DPS 8, per-hit 40 (doubled 80)
+# engine). A ladder of heavy single-target attacks on 5s/6s/7s cooldowns with a rising PER-HIT: the
+# slowest lands the biggest single hit, so it is the best target for the Mighty Blow empower's
+# double. In the Smith's item_pool. These values came off an older, flatter curve and sit well UNDER
+# the revised budget curve (docs/design/item_heuristics.md), which puts 5s/6s/7s at 50/73/100.
+const SMITH_BROADAXE_COOLDOWN: float = 5.0      # fast pole — per-hit 40 (doubled 80); on curve = 50
 const SMITH_BROADAXE_DAMAGE: float = 40.0
-const SMITH_WARHAMMER_COOLDOWN: float = 6.0     # mid — DPS 9, per-hit 54 (doubled 108)
+const SMITH_WARHAMMER_COOLDOWN: float = 6.0     # mid — per-hit 54 (doubled 108); on curve = 73
 const SMITH_WARHAMMER_DAMAGE: float = 54.0
-const SMITH_GREATSWORD_COOLDOWN: float = 7.0    # slow pole — DPS 10, per-hit 70 (doubled 140, the boss-breaker)
+const SMITH_GREATSWORD_COOLDOWN: float = 7.0    # slow pole — per-hit 70 (doubled 140, the boss-breaker); on curve = 100
 const SMITH_GREATSWORD_DAMAGE: float = 70.0
 
 # Mighty Blow (PLACEHOLDER — /tune) — the empower skill: a plain-cooldown metronome that banks a
@@ -285,3 +289,41 @@ const ENEMY_REVEAL_DURATION: float = 2.0
 # This bounds the in-flight Delivery set so it can't grow unbounded over a long
 # fight. Keep this >= the longest VFX visual duration (DamageNumberDrawer.duration()).
 const DELIVERY_VISUAL_HOLD: float = 1.0
+
+
+# ── Item points (docs/design/item_heuristics.md) ─────────────────────────────
+# The budget curve: an item's points per second of cooldown is a rising curve that flattens
+# towards POINTS_RATE_CEILING and is steepest at POINTS_RATE_MIDPOINT seconds. Its budget is that
+# rate times its cooldown. The arithmetic is in ItemPoints. PLACEHOLDER — the owner tunes in /tune.
+const POINTS_RATE_CEILING: float = 26.0
+const POINTS_RATE_STEEPNESS: float = 0.33
+const POINTS_RATE_MIDPOINT: float = 6.4
+# What one unit of each mechanic costs in points. One point is one damage from a single-target
+# attack. Self-damage is a credit rather than a cost. PLACEHOLDER — the owner tunes in /tune.
+const POINTS_PER_DAMAGE: float = 1.0
+const POINTS_PER_AOE_DAMAGE: float = 1.5
+const POINTS_PER_SELF_DAMAGE: float = 1.5
+const POINTS_PER_HEAL: float = 0.75
+const POINTS_PER_SHIELD: float = 1.25
+const POINTS_PER_POISON_DAMAGE: float = 1.0
+const POINTS_PER_BURN_DAMAGE: float = 0.75
+const POINTS_PER_BLEED_DAMAGE: float = 0.5
+const POINTS_PER_CHARGE_SECOND: float = 6.0
+
+
+# ── Encounter budgets (docs/plans/encounter_points_budget.md) ────────────────
+# The target points a fight is worth is calculated from an ESTIMATE of the player's board at that
+# beat, not from the actual board, so drafting well stays rewarded. RunMap.target_points does the
+# arithmetic. Every one of these is an estimate — PLACEHOLDER, the owner tunes in /tune.
+const POINTS_STARTING_ITEMS: float = 3.0        # the intended starting board floor
+const POINTS_DRAFTS_PER_BEAT: float = 0.84      # measured: a full autotest run ends on 41 items
+const POINTS_AVERAGE_ITEM_COOLDOWN: float = 4.0 # the cooldown taken as an average draft
+const POINTS_DAMAGE_FRACTION: float = 0.7       # the share of a board's output that is damage
+const POINTS_FIGHT_SECONDS: float = 10.0        # how long a regular fight should last
+# How much harder the curve gets than the raw board estimate, across the whole run. This is the one
+# knob covering synergies, relics and enchants — they are deliberately not modelled.
+const POINTS_SYNERGY_GROWTH: float = 0.5
+const POINTS_ELITE_MULTIPLIER: float = 1.5      # an elite's target, on the same curve
+# How far under the target a drawn set may stop. The draw adds enemies until it is within this
+# fraction of the target, so it overshoots rather than undershoots.
+const POINTS_TARGET_TOLERANCE: float = 0.15

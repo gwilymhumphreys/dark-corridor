@@ -106,9 +106,15 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 > † **Placeholder name** — agent-coined, owner's to rename (also flagged in the def's `name_key` comment).
 
-> **DPS curve: `DPS = cooldown + 3`** (+1 DPS per second of cooldown, anchored at 2s = 5 DPS baseline). Slow items need *more* printed DPS to be worth a slot, because big hits lose value to **overkill** (damage past 0 HP wasted) and **fewer per-hit triggers** (on-hit procs / Spores-applied events fire per swing, not per damage). The cooldown axis is *also* the Spore-accrual axis (fast = fast fuel). Linear holds across the **1–6s** authoring range; the tail must taper (overkill/trigger loss is bounded) or ultra-slow weapons run away. Spore-carriers pay a tax off the line. **Authored to be adjusted in tuning.**
+> **Item budgets come from the cooldown** ([`item_heuristics.md`](item_heuristics.md)): an item's
+> budget in points rises with its cooldown, quickly at first and then more slowly, because a slow
+> item loses value to overkill and to firing fewer per-hit triggers. For the Spore Druid the
+> cooldown axis is also the Spore-accrual axis, so fast weapons are fast fuel. Spores cost nothing,
+> so a Spores carrier still gets its full budget in damage.
 >
-> **Outlier:** Druid Staff (10 dmg / 3s = 3.3 DPS) sits well under the line — by it the 3s starter wants 18 dmg. Left as-is (it's the starter) pending the owner's call.
+> **These items predate the revised curve** and have not been re-tuned. Spore Spitter and Capped
+> Cudgel are close to it, Bloomhammer and Druid Staff are under, and Wilt Frond applies Weak, which
+> is parked and unpriced. The Smith is being brought onto the curve first.
 
 ### Skills
 

@@ -35,6 +35,9 @@ const EASY_BEATS_END: int = 2
 # From this beat on, a rolled combat may be an elite (the deeper combat pool includes one).
 const ELITE_FROM_BEAT: int = 6
 
+# The most enemies a generated fight may hold (docs/systems/encounter.md — 1 to 4, most 1 to 2).
+const MAX_ENEMIES_PER_FIGHT: int = 4
+
 
 static func act_of(position: int) -> int:
   @warning_ignore('integer_division')
@@ -94,3 +97,42 @@ static func event_pool(beat: int) -> Array:
   if beat <= EASY_BEATS_END:
     return []
   return [EncounterCatalog.EVENT_SHRINE, EncounterCatalog.EVENT_WANDERER]
+
+
+## The points a fight at `position` should be worth (docs/plans/encounter_points_budget.md). Fixed:
+## calculated from an ESTIMATE of the player's board at that beat rather than from the actual board,
+## so drafting well stays rewarded. The estimate is a starting board plus one drafted item per
+## regular fight won, converted to damage per second and multiplied by the target fight length. The
+## synergy factor is the single knob covering everything the estimate cannot see.
+static func target_points(position: int) -> float:
+  var items: float = Balance.POINTS_STARTING_ITEMS + Balance.POINTS_DRAFTS_PER_BEAT * float(position)
+  var damage: float = items * ItemPoints.rate(Balance.POINTS_AVERAGE_ITEM_COOLDOWN) * Balance.POINTS_DAMAGE_FRACTION
+  var through_run: float = float(position) / float(maxi(TOTAL_BEATS - 1, 1))
+  var synergy: float = 1.0 + Balance.POINTS_SYNERGY_GROWTH * through_run
+  return damage * Balance.POINTS_FIGHT_SECONDS * synergy
+
+
+## The EnemyCatalog ids a generated fight in this act draws from. EMPTY until the owner authors
+## per-act enemy pools — a fight with no pool keeps its EncounterDef's authored enemy_ids, so the
+## generator is dormant rather than drawing the wrong-sized enemies. The points range each act
+## should cover is in docs/plans/encounter_points_budget.md.
+static func enemy_pool(_act: int) -> Array[String]:
+  return []
+
+
+## Draw enemies from `pool` until their points reach `target`, up to MAX_ENEMIES_PER_FIGHT
+## (docs/plans/encounter_points_budget.md). The draw is random and ignores composition — a mix is
+## picked on points alone, and positioning is handled later. It stops once within
+## Balance.POINTS_TARGET_TOLERANCE of the target, so it overshoots rather than undershoots. An empty
+## pool draws nothing, which leaves the fight's authored composition in place.
+static func draw_enemies(pool: Array[String], target: float, rng: RandomNumberGenerator) -> Array[String]:
+  var ids: Array[String] = []
+  if pool.is_empty():
+    return ids
+  var floor_points: float = target * (1.0 - Balance.POINTS_TARGET_TOLERANCE)
+  var total: float = 0.0
+  while ids.size() < MAX_ENEMIES_PER_FIGHT and total < floor_points:
+    var picked: String = pool[rng.randi_range(0, pool.size() - 1)]
+    ids.append(picked)
+    total += EnemyCatalog.get_def(picked).points()
+  return ids

@@ -47,6 +47,9 @@ The `Run manager` instantiates the picked Encounter; it resolves by type, then r
 
 ## Composition & ordering (the fight case)
 
+**A fight's enemies can be generated against a points target** instead of coming from the def. The `Run manager` draws from the act's enemy pool until the drawn set's points reach the beat's target (`RunMap.target_points` / `RunMap.draw_enemies`; [`../plans/encounter_points_budget.md`](../plans/encounter_points_budget.md)), and passes the ids to the `Encounter`, which uses them in place of `EncounterDef.enemy_ids`. The def still supplies the location frame, the type and the reward. The draw is random and ignores composition — positioning comes later. **The pools are empty until the owner authors them**, so every fight currently uses its authored `enemy_ids`; a boss is never generated.
+
+
 A fight Encounter spawns **1–4 enemies** (most 1–2; group fights authored to give AOE a reason — design) and places them in a **left-to-right order** before handing the set to the `Combat manager` (which owns runtime ordering + the leftmost-targeting rule). Spatial composition is the puzzle — "tank in front of DPS," "adds before the boss." This resolves the composition/ordering authoring the [Enemy PRD](enemy.md) deferred here.
 
 ## Telegraph (the option's advertisement — DORMANT with the choice layer)

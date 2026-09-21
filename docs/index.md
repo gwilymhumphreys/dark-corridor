@@ -100,7 +100,8 @@ unless asked.** The authoring how-to is the bridge to implementation.
 | [design/mechanic_ideas.md](design/mechanic_ideas.md) | Uncommitted mechanics sampled from other games — status rules, triggers and costs — each with its source game and a sounding-board read. |
 | [design/card_pool_targets.md](design/card_pool_targets.md) | Card-pool breadth targets per character: signals by combat role, never quotas; the skew inverts for status-identity characters. |
 | [design/per_character_pools.md](design/per_character_pools.md) | Why item pools split per character (decision #27): the colorless layer was rejected though individual colorless items are allowed, and enemies and reward relics stay shared. |
-| [design/item_heuristics.md](design/item_heuristics.md) | Item tuning heuristics as starting numbers rather than rules: the DPS curve, rider costs, spores free. Real balance is decided in `/tune`. |
+| [design/item_heuristics.md](design/item_heuristics.md) | Item tuning heuristics as starting numbers rather than rules: points, the budget curve, per-application and uptime costs per mechanic. Real balance is decided in `/tune`. |
+| [design/item_name_reference.md](design/item_name_reference.md) | Diablo 2 base weapon and armour names, grouped by kind, as a list to pull from when naming our own items. |
 | [design/authoring.md](design/authoring.md) | Content authoring guide (companion to the `/content` skill): the def and catalog pattern, string ids, pool membership, and the import and POT gotchas. |
 
 ## Plans (`docs/plans/`)

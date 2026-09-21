@@ -29,7 +29,10 @@ var _combat_seed: int = 0
 var _allies: Array = []
 
 
-func _init(encounter_def: EncounterDef, player_actor: Actor, combat_seed: int = 0, ally_actors: Array = []) -> void:
+## `generated_enemy_ids`, when non-empty, replaces the def's authored `enemy_ids` — the Run manager
+## assembles a fight against a points target (docs/plans/encounter_points_budget.md) and hands the
+## drawn set in. Everything else on the def, the location frame and the reward, still applies.
+func _init(encounter_def: EncounterDef, player_actor: Actor, combat_seed: int = 0, ally_actors: Array = [], generated_enemy_ids: Array[String] = []) -> void:
   def = encounter_def
   player = player_actor
   _combat_seed = combat_seed   # the per-fight RNG seed, handed to the CombatManager on begin()
@@ -37,7 +40,8 @@ func _init(encounter_def: EncounterDef, player_actor: Actor, combat_seed: int = 
   # Enemies are spawned at creation so the corridor can render them approaching
   # from depth (presentation; the logical beat resolves on arrival via begin()).
   if def.type == EncounterDef.Type.FIGHT:
-    for enemy_id in def.enemy_ids:
+    var ids: Array[String] = generated_enemy_ids if not generated_enemy_ids.is_empty() else def.enemy_ids
+    for enemy_id: String in ids:
       enemies.append(_spawn_enemy(enemy_id))
 
 

@@ -52,6 +52,15 @@ var _ally_def_ids: Array[String] = []  # parallel to `allies` — each ally's En
 
 var _current: Encounter = null
 var _current_def_id: String = ''    # the resolved EncounterDef id for the current beat (resume)
+# The enemies drawn for the current beat (docs/plans/encounter_points_budget.md). Empty for a
+# non-fight, a boss, or an unpooled act — the Encounter then uses the def's authored enemy_ids.
+# Saved, because the RNG state is written AFTER the draw, so a resume cannot redraw the same set.
+var _current_enemy_ids: Array[String] = []
+
+## Dev and test only (docs/systems/autotest.md): when non-empty, EVERY fight uses these EnemyCatalog
+## ids — bosses and authored compositions included — so a tuning run reads one composition rather
+## than generation noise. Static so the autotest can set it before a run starts. Never set in play.
+static var pinned_enemy_ids: Array[String] = []
 # The COMBAT/EVENT anti-repeat streak for ROLL beats (run-state — saved so resume reproduces the
 # rolls). `_roll_streak_count == 0` means no streak (base 50/50); otherwise `_roll_streak` is the
 # type on the streak and the count is the bias depth.
@@ -376,16 +385,36 @@ func outcome() -> int:
 ## the encounter is live at once). Clears any prior beat's transient state.
 func _enter_beat(pos: int) -> void:
   _current_def_id = ''
+  _current_enemy_ids = []
   var spec: Dictionary = RunMap.beat_spec(pos)
   if spec['kind'] == RunMap.BeatKind.FIXED:
     _current_def_id = spec['id']
+    _current_enemy_ids = _draw_enemies(EncounterCatalog.get_def(_current_def_id))
     _create_current_encounter()
   else:
     _roll_beat(spec['combat_pool'], spec['event_pool'])
 
 
 func _create_current_encounter() -> void:
-  _current = Encounter.new(EncounterCatalog.get_def(_current_def_id), player, _combat_seed_for(position), allies)
+  _current = Encounter.new(EncounterCatalog.get_def(_current_def_id), player, _combat_seed_for(position), allies, _current_enemy_ids)
+
+
+## Draw the enemies for a generated fight (docs/plans/encounter_points_budget.md): add enemies from
+## the act's pool on the run RNG until their points reach the beat's target, up to the enemy limit.
+## The draw is random and ignores composition — positioning is handled later. Returns empty, leaving
+## the def's authored enemy_ids in place, for a non-fight, for a boss (hand-authored) and for an
+## empty pool.
+func _draw_enemies(def: EncounterDef) -> Array[String]:
+  if def.type != EncounterDef.Type.FIGHT:
+    return []
+  if not pinned_enemy_ids.is_empty():
+    return pinned_enemy_ids.duplicate()
+  if _current_def_id == RunMap.boss_for(RunMap.act_of(position)):
+    return []
+  var target: float = RunMap.target_points(position)
+  if def.reward == EncounterDef.Reward.ELITE:
+    target *= Balance.POINTS_ELITE_MULTIPLIER
+  return RunMap.draw_enemies(RunMap.enemy_pool(RunMap.act_of(position)), target, rng)
 
 
 ## Roll a ROLL beat's content (run_map bands): pick COMBAT or EVENT via the anti-repeat weighted
@@ -401,6 +430,7 @@ func _roll_beat(combat_pool: Array, event_pool: Array) -> void:
   else:
     pool = combat_pool if _roll_type() == RollType.COMBAT else event_pool
   _current_def_id = pool[rng.randi_range(0, pool.size() - 1)]
+  _current_enemy_ids = _draw_enemies(EncounterCatalog.get_def(_current_def_id))
   _create_current_encounter()
 
 
@@ -472,6 +502,7 @@ func snapshot() -> Dictionary:
     # The current beat's resolution: the rolled/fixed encounter id (resume re-enters it, never
     # re-rolled) + the COMBAT/EVENT streak so the NEXT beat's roll reproduces on resume.
     'current_def_id': _current_def_id,
+    'current_enemy_ids': _current_enemy_ids,   # the drawn set — the RNG has already moved past it
     'roll_streak': _roll_streak,
     'roll_streak_count': _roll_streak_count,
     # RNG full state as strings — a JSON double can't hold a 64-bit value exactly.
@@ -523,6 +554,9 @@ func rehydrate(snap: Dictionary) -> bool:
   _pending_choice = []
   # Restore the current beat's resolution + the roll streak exactly — never re-roll (no save-scum).
   _current_def_id = str(snap['current_def_id'])
+  _current_enemy_ids = []
+  for enemy_id: Variant in snap.get('current_enemy_ids', []):
+    _current_enemy_ids.append(str(enemy_id))
   _roll_streak = int(snap.get('roll_streak', RollType.COMBAT))
   _roll_streak_count = int(snap.get('roll_streak_count', 0))
   _create_current_encounter()
