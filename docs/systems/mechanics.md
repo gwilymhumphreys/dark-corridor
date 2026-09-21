@@ -20,6 +20,11 @@ with no folder falls back to a shared default rather than going silent. The
 [VFX wall](vfx_driver.md) plays it on the landing frame. See [audio.md](audio.md) for the
 folder scheme.
 
+Attack overrides it, because a hit varies by what swung and what it struck: the firing item's
+`attack_sound` picks the folder and a shielded target adds `shielded` below it. A landing attack
+also plays a second sound for the target itself, and a projectile plays a third while it is in
+flight. The three layers are described in [audio.md](audio.md#the-three-layers-of-an-attack).
+
 It takes the delivery so a mechanic can vary its sound by what landed. Attack is the only one
 that does: a hit on a target holding shield plays `mechanics/attack/shielded` instead of
 `mechanics/attack`, so the player hears whether they are still working through shield. The

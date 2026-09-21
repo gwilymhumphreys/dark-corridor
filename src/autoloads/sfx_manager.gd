@@ -39,6 +39,14 @@ const BUS_BY_CATEGORY: Dictionary = {
 ## Played when a folder does not exist, so a newly authored mechanic or status is never
 ## silent. Looked for as the category followed by this name, e.g. 'mechanics/_default'.
 const FALLBACK_FOLDER: String = '_default'
+## A sound folder may hold this file, containing one number: how many decibels to adjust that
+## sound by. It balances a sound against the others without re-encoding the recordings, which
+## matters because peak level is a poor guide to how loud something sounds — a sharp hit and a
+## spread-out rustle at the same peak are not heard as equally loud.
+const VOLUME_FILE: String = 'volume.cfg'
+## A folder volume is clamped to this range, so a mistyped value cannot silence a sound or deafen.
+const VOLUME_MIN_DB: float = -40.0
+const VOLUME_MAX_DB: float = 12.0
 ## Loaded at boot rather than on first play, because these answer an input directly and a
 ## load pause would read as lag.
 const PRELOAD_FOLDERS: Array[String] = ['ui/hover', 'ui/click', 'world/footsteps/steps']
@@ -61,6 +69,9 @@ var _playbacks: Dictionary = {}
 # Folder path (e.g. 'ui/hover') -> Array[AudioStream]. An empty array is cached too, so a
 # folder that does not exist is not rescanned on every play.
 var _banks: Dictionary = {}
+# Folder path -> its volume adjustment in decibels. A folder with no VOLUME_FILE caches 0.0,
+# so a folder without one is not rescanned on every play.
+var _volumes: Dictionary = {}
 # Folder paths already warned about, so a missing folder warns once rather than every play.
 var _warned: Dictionary = {}
 # True when nothing is listening (headless dummy driver, --autotest or --shot). Set in _ready.
@@ -165,6 +176,28 @@ func _load_folder(dir_path: String) -> Array[AudioStream]:
   return streams
 
 
+## The volume adjustment for the folder `path`, in decibels, read from its VOLUME_FILE and
+## cached. A folder without the file, or with one that does not read as a number, adjusts by 0.
+func _volume_for(path: String) -> float:
+  if _volumes.has(path):
+    return _volumes[path]
+  var db: float = 0.0
+  var file_path: String = SOUND_ROOT + path + '/' + VOLUME_FILE
+  if FileAccess.file_exists(file_path):
+    var text: String = FileAccess.get_file_as_string(file_path).strip_edges()
+    if text.is_valid_float():
+      db = clampf(text.to_float(), VOLUME_MIN_DB, VOLUME_MAX_DB)
+      if db != text.to_float():
+        _warn_once('volume:' + path,
+            'SfxManager: %s in "%s" is outside %.0f to %.0f dB; clamped to %.1f' % [
+              VOLUME_FILE, path, VOLUME_MIN_DB, VOLUME_MAX_DB, db])
+    else:
+      _warn_once('volume:' + path,
+          'SfxManager: %s in "%s" is not a number; using 0 dB' % [VOLUME_FILE, path])
+  _volumes[path] = db
+  return db
+
+
 func _pick(streams: Array[AudioStream]) -> AudioStream:
   if streams.is_empty():
     return null
@@ -194,38 +227,58 @@ func bus_for(path: String) -> String:
   return BUS_BY_CATEGORY[category]
 
 
+## The folder whose recordings a request for `path` actually plays, or '' when nothing does.
+## An empty folder falls back to its parent, then that parent's parent and so on, so a variant
+## such as mechanics/attack/blade/shielded that has not been filled in yet plays the nearest
+## folder above it that has. The category's FALLBACK_FOLDER is the last resort, so a newly
+## authored mechanic or status is never silent.
+##
+## `fall_back` false means an empty folder plays nothing at all. A layer that is optional rather
+## than a variant of its parent needs this: an empty mechanics/attack/travel must stay silent,
+## because falling back would play the hit sound during the flight instead.
+func _resolve_folder(path: String, fall_back: bool = true) -> String:
+  if not fall_back:
+    if _bank_for(path).is_empty():
+      _warn_once('missing:' + path, 'SfxManager: no sounds found in folder "%s"' % path)
+      return ''
+    return path
+  var candidate: String = path
+  while true:
+    if not _bank_for(candidate).is_empty():
+      return candidate
+    _warn_once('missing:' + candidate, 'SfxManager: no sounds found in folder "%s"' % candidate)
+    if candidate.count('/') < 2:
+      break
+    candidate = candidate.left(candidate.rfind('/'))
+  var slash: int = path.find('/')
+  if slash < 0:
+    return ''
+  var fallback_path: String = path.left(slash) + '/' + FALLBACK_FOLDER
+  if fallback_path == path or _bank_for(fallback_path).is_empty():
+    _warn_once('missing:' + fallback_path,
+        'SfxManager: no sounds found in fallback folder "%s"' % fallback_path)
+    return ''
+  return fallback_path
+
+
 ## Play one sound from the folder `path` under assets/sound-effects/, chosen at random from
-## the recordings in it, with the usual random pitch jitter. A folder with no sounds falls
-## back to its category's `FALLBACK_FOLDER`. A negative pitch picks a random jitter; pass a
-## value to override. Returns the polyphonic stream id, or -1 if nothing played.
-func play_sound(path: String, pitch: float = -1.0, volume_db: float = 0.0) -> int:
+## the recordings in it, with the usual random pitch jitter. An empty folder falls back up its
+## parents and then to its category's `FALLBACK_FOLDER` (_resolve_folder). `volume_db` is added
+## to the played folder's own adjustment (_volume_for) rather than replacing it. A negative
+## pitch picks a random jitter; pass a value to override. `fall_back` false makes an empty
+## folder silent instead. Returns the polyphonic stream id, or -1 if nothing played.
+func play_sound(path: String, pitch: float = -1.0, volume_db: float = 0.0,
+    fall_back: bool = true) -> int:
   if _silent or path == '':
     return -1
-  var bank: Array[AudioStream] = _bank_for(path)
-  if bank.is_empty():
-    _warn_once('missing:' + path, 'SfxManager: no sounds found in folder "%s"' % path)
-    # A variant folder (two or more slashes) falls back to its parent before the category
-    # fallback, so an empty variant such as mechanics/attack/shielded plays mechanics/attack.
-    # A one-slash path's parent is the category folder itself, which holds only subfolders,
-    # so it goes straight to the category fallback.
-    if path.count('/') >= 2:
-      var parent_path: String = path.left(path.rfind('/'))
-      bank = _bank_for(parent_path)
-      if bank.is_empty():
-        _warn_once('missing:' + parent_path,
-            'SfxManager: no sounds found in folder "%s"' % parent_path)
-    if bank.is_empty():
-      var fallback_path: String = path if path.find('/') < 0 else path.left(path.find('/')) + '/' + FALLBACK_FOLDER
-      if fallback_path != path:
-        bank = _bank_for(fallback_path)
-        if bank.is_empty():
-          _warn_once('missing:' + fallback_path,
-              'SfxManager: no sounds found in fallback folder "%s"' % fallback_path)
-  if bank.is_empty():
+  var played_path: String = _resolve_folder(path, fall_back)
+  if played_path == '':
     return -1
+  var bank: Array[AudioStream] = _bank_for(played_path)
   var stream: AudioStream = _pick(bank)
   if stream == null:
     return -1
+  volume_db += _volume_for(played_path)
   var bus_name: String = bus_for(path)
   var player: AudioStreamPlayer = _player_on(bus_name)
   _playbacks[bus_name] = _ensure_playing(player, _playbacks.get(bus_name, null))
@@ -360,4 +413,5 @@ func _exit_tree() -> void:
   _players.clear()
   _playbacks.clear()
   _banks.clear()
+  _volumes.clear()
   _cooldowns.clear()

@@ -23,6 +23,12 @@ var types: Array[String] = []
 # judgment about what the item is). Written in alphabetical order; tests/content/test_pool_integrity.gd
 # checks both the order and the floor (every mechanic an effect deals or applies is listed).
 var mechanics: Array[String] = []
+# The folder under mechanics/attack/ whose recordings this item's attacks play
+# (docs/systems/audio.md) — 'blade' and 'blunt' to start with, and any other name works by
+# making the folder. Sound only: nothing but the sound layer reads it, which is what separates
+# it from `types` above, whose values are synergy labels content may key off. Empty = the plain
+# mechanics/attack folder.
+var attack_sound: String = ''
 var cooldown: float = 1.0          # seconds -> Ticker threshold
 var effects: Array[ItemEffect] = []   # one usually; rares combine
 # Array[{ event:int (EventBus.Event), amount:float, filter:Variant (a status string id),

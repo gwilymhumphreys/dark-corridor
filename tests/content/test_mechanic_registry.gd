@@ -98,3 +98,33 @@ func test_attack_sound_key_varies_with_the_target_shield() -> void:
   var shielded: Delivery = Delivery.new()
   shielded.target = shielded_target
   assert_eq(attack.sound_key(shielded), 'mechanics/attack/shielded', 'a shielded target plays the blade-on-metal hit')
+
+
+func test_attack_sound_uses_the_items_weapon_folder() -> void:
+  var attacker: Actor = Actor.new(100.0)
+  var target: Actor = Actor.new(100.0)
+  var def: ItemDef = ItemDef.new()
+  def.attack_sound = 'blade'
+  var item: Item = Item.new(def, attacker)
+  var delivery: Delivery = Delivery.new()
+  delivery.mechanic = AttackMechanic.ID
+  delivery.source = item
+  delivery.target = target
+  assert_eq(MechanicRegistry.get_mechanic(AttackMechanic.ID).sound_key(delivery),
+      'mechanics/attack/blade', 'a blade item plays the blade folder')
+  attacker.dissolve()
+  target.dissolve()
+
+
+func test_attack_sound_without_a_weapon_folder_is_the_plain_path() -> void:
+  var attacker: Actor = Actor.new(100.0)
+  var target: Actor = Actor.new(100.0)
+  var item: Item = Item.new(ItemDef.new(), attacker)
+  var delivery: Delivery = Delivery.new()
+  delivery.mechanic = AttackMechanic.ID
+  delivery.source = item
+  delivery.target = target
+  assert_eq(MechanicRegistry.get_mechanic(AttackMechanic.ID).sound_key(delivery),
+      'mechanics/attack', 'an item naming no weapon folder plays the plain attack folder')
+  attacker.dissolve()
+  target.dissolve()

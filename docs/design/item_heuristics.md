@@ -188,10 +188,9 @@ reach.** Both sides use the same budget function, so the two match exactly.
 There is a catch the curve does not capture: an item is worth nothing if the fight ends before its
 first cooldown. Measured with the autotest at the current enemy health, an act 1 fight lasts about
 5.6 seconds, so the Warhammer and Mighty Blow never fire at all and the Smith plays as a Broadaxe
-and nothing else. Raising enemy health to the target the plan sets (a beat 0 fight at about 170
-points) stretches the fight to 6.6 seconds, which is enough for the Warhammer and the Greatsword
-but still short of Mighty Blow's 7. Slow items need fights long enough to reach them, and that is
-set by enemy health, not by the item budget.
+and nothing else. At the enemy health the plan sets (a beat 0 grunt at about 164), the Smith's
+regular fights last about 10 to 16 seconds and the Warhammer and Mighty Blow both fire. Slow items
+need fights long enough to reach them, and that is set by enemy health, not by the item budget.
 
 The cooldown matters more than it looks, because charges stack with no cap. At a cooldown below the
 weapon's, the overspend is not a fixed amount — it grows with the board. With a single Greatsword,

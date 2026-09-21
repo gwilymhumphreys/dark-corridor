@@ -26,9 +26,10 @@ const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3
 # ── Actor ────────────────────────────────────────────────────────────────────
 const PLAYER_START_HP: float = 100.0
 # BLOCKED ON CONTENT: enemy health should be the player's damage points per second times the
-# seconds the enemy should last (docs/design/item_heuristics.md), which puts a beat-0 fight at ~340
-# points. It cannot rise until the player's items and starting boards are brought onto the budget
-# curve — they currently sit about 5x under it, so raising these makes the first fight unwinnable.
+# seconds the enemy should last (docs/design/item_heuristics.md), which puts a beat-0 grunt at ~164.
+# Tested at that health on 2026-09-21: the Smith wins most seeds, but the Fleshmancer's items sit far
+# under the curve (its first fight takes about 50 seconds), the Spore Druid has no shield or healing
+# to survive a 20 second fight, and the grunt's Claw was sized for 5 second fights, not 20.
 const ENEMY_PLACEHOLDER_HP: float = 40.0
 # Placeholder enemy tiers for the multi-act map (#1) — HP only; the owner authors real
 # enemies + boss signature mechanics. A brute is a beefier regular; a boss is tankier

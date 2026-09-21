@@ -19,7 +19,7 @@ What it **is not**: not a subclass of `Actor`; not a new combat mechanism; not t
 
 ## Enemy definition (data)
 
-An enemy is authored as an `EnemyDef` (#23): **HP** (max), a `name_key`, and an **ordered board** of Item ids (`item_ids`). `EnemyDef.points()` prices it for encounter assembly — its health plus what its items spend, in the units of [`item_heuristics.md`](../design/item_heuristics.md). `Encounter` instantiates an `Actor` from the def and gives it the Items. `portrait` is the image an ally slot shows for the Actor (enemies in the corridor use the monster images instead). **Tier / signature** are authoring conventions, not yet `EnemyDef` fields.
+An enemy is authored as an `EnemyDef` (#23): **HP** (max), a `name_key`, and an **ordered board** of Item ids (`item_ids`). `EnemyDef.points()` prices it for encounter assembly — its health plus what its items spend, in the units of [`item_heuristics.md`](../design/item_heuristics.md). `Encounter` instantiates an `Actor` from the def and gives it the Items. `portrait` is the image an ally slot shows for the Actor (enemies in the corridor use the monster images instead). `hurt_sound` names the folder of recordings played when this enemy is struck, which is how one enemy sounds different from another when hit; empty uses the shared folder ([audio.md](audio.md#the-three-layers-of-an-attack)). Both are copied onto the Actor as presentation and combat ignores them. **Tier / signature** are authoring conventions, not yet `EnemyDef` fields.
 
 ---
 

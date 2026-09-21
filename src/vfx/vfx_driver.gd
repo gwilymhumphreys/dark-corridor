@@ -15,10 +15,14 @@ signal big_hit(strength: float)   # a hit of at least BIG_HIT_DAMAGE landed; str
 const BIG_HIT_DAMAGE: float = 200.0   # the smallest hit that pauses and shakes the screen
 const BIGGEST_HIT_DAMAGE: float = 2000.0   # the hit that pauses and shakes the most
 const ARC_HEIGHT: float = 0.05  # how high a projectile's path rises, as a fraction of the distance it flies
+## Played when a struck actor names no hurt sound of its own, so the target layer works before
+## any enemy has a voice.
+const DEFAULT_HURT_SOUND: String = 'combat/hurt'
 
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
 var _sounded: Dictionary = {}   # Delivery instance id -> true, so each landing sounds once
+var _launched: Dictionary = {}  # Delivery instance id -> true, so each flight sounds once
 var _projectile: EffectDrawer
 var _damage_number: DamageNumberDrawer
 var _impact_drawers: Dictionary = {}   # mechanic id (or Delivery.Kind.APPLY_STATUS) -> EffectDrawer
@@ -50,6 +54,7 @@ func _exit_tree() -> void:
   combat = null
   layout = null
   _sounded.clear()
+  _launched.clear()
 
 
 func _draw() -> void:
@@ -123,17 +128,53 @@ func _sound_new_impacts() -> void:
   for d in combat.deliveries():
     var id: int = d.get_instance_id()
     live[id] = true
+    if not d.landed and not d.fizzled and not _launched.has(id):
+      _launched[id] = true
+      # No fallback: an unfilled travel folder stays silent rather than playing the hit sound.
+      SfxManager.play_sound(_travel_key_of(d), -1.0, 0.0, false)
     # Summons and created items have no impact to hear, as they have none to see.
     if not d.landed or d.fizzled or not _impact_drawers.has(_impact_key(d)) or _sounded.has(id):
       continue
     _sounded[id] = true
     SfxManager.play_sound(_sound_key_of(d))
+    SfxManager.play_sound(_hurt_key_of(d))
     var strength: float = big_hit_strength(d)
     if strength >= 0.0:
       big_hit.emit(strength)
   for id: int in _sounded.keys():
     if not live.has(id):
       _sounded.erase(id)
+  for id: int in _launched.keys():
+    if not live.has(id):
+      _launched.erase(id)
+
+
+## The folder for the target layer of a hit (docs/systems/audio.md): the sound the thing being
+## struck makes, played alongside the weapon layer so the two are heard as one event. An actor
+## with no `hurt_sound` uses the shared folder. Only a landed attack on an actor has anything to
+## hurt — an item target, a heal, an evaded hit and a damage-over-time tick's visual-only
+## delivery all return the empty string, which play_sound ignores.
+func _hurt_key_of(d: Delivery) -> String:
+  if d.mechanic != AttackMechanic.ID or d.evaded or d.visual_only:
+    return ''
+  if not (d.target is Actor):
+    return ''
+  return d.target.hurt_sound if d.target.hurt_sound != '' else DEFAULT_HURT_SOUND
+
+
+## The folder for the travel layer (docs/systems/audio.md): a soft sound while a projectile is in
+## flight, played once when it launches. A delivery with no travel time has no flight to cover, and
+## a summon or a created item draws no projectile, so both return the empty string. The folder is
+## the mechanic's own, without the weapon and shield variants the landing uses, because the
+## flight is the same whatever it arrives at.
+func _travel_key_of(d: Delivery) -> String:
+  if d.kind == Delivery.Kind.SUMMON or d.kind == Delivery.Kind.CREATE_ITEM:
+    return ''
+  if d.travel == null or d.travel.threshold <= 0:
+    return ''
+  if d.kind != Delivery.Kind.MECHANIC or not MechanicRegistry.has(d.mechanic):
+    return ''
+  return 'mechanics/' + d.mechanic + '/travel'
 
 
 ## The sound folder a landing delivery plays. A mechanic names its own folder; a status

@@ -73,13 +73,46 @@ category uses the Interface bus.
 - **Folders load once** — the first play of a path scans its folder and caches the result,
   empty included, so a folder that does not exist is not rescanned. `PRELOAD_FOLDERS` loads
   the sounds that answer an input at boot instead, because a load pause would read as lag.
-- **Fallback** — a folder with no recordings falls back to its parent folder and then to its
-  category's `_default` folder, so a newly authored mechanic or status is never silent. A path
-  with only one slash has no parent worth trying, since a category folder holds only
-  subfolders. Debug builds warn once per path so a typo is visible.
+- **Fallback** — a folder with no recordings falls back to its parent, then that parent's
+  parent and so on, and last to its category's `_default` folder, so a newly authored mechanic
+  or status is never silent. A path with only one slash has no parent worth trying, since a
+  category folder holds only subfolders. Debug builds warn once per path so a typo is visible.
+  Passing `fall_back` as false makes an empty folder silent instead, which is what an optional
+  layer needs: an unfilled `mechanics/attack/travel` must play nothing rather than play the hit
+  sound during the flight.
+- **Volume per folder** — a folder may hold a `volume.cfg` containing one number, how many
+  decibels to adjust that sound by. It is added to whatever a caller passes rather than
+  replacing it, and it is read from the folder that actually played after any fallback. This is
+  how one sound is balanced against another without re-encoding the recordings, which matters
+  because peak level is a poor guide to loudness — a sharp hit and a spread-out rustle at the
+  same peak are not heard as equally loud. A value outside `VOLUME_MIN_DB` to `VOLUME_MAX_DB`
+  is clamped and warned about, and a file that does not read as a number adjusts by nothing.
 - **Variants** — a subfolder of a sound is a variant of it, played when the code asks for the
   longer path. `mechanics/attack/shielded` is the hit that strikes shield, and it falls back to
   `mechanics/attack` when it holds nothing. The bus comes from the original path either way.
+
+### The three layers of an attack
+
+A hit is not one sound. [VfxDriver](vfx_driver.md) plays up to three, and each is a folder that
+can be left empty:
+
+| Layer | When | Folder |
+| --- | --- | --- |
+| Travel | Once, when a projectile launches, if the delivery has travel time | `mechanics/<mechanic id>/travel` |
+| Weapon | On landing | `mechanics/attack/<weapon>/`, with `shielded/` below it |
+| Target | On landing, alongside the weapon layer | the struck actor's `hurt_sound`, or `combat/hurt` |
+
+The weapon and target layers land at the same instant and are heard as one event: one says what
+was swung, the other says what was struck. The travel layer is a separate, earlier event, so it
+is the one most likely to crowd a cascade — its `volume.cfg` is the control for that, and
+emptying its folder silences it with no code change.
+
+The weapon folder comes from the firing item's `attack_sound` ([item.md](item.md)), so a blade
+and a mace differ. A thrown consumable has no firing item and plays the plain folder. The target
+folder comes from the struck actor's `hurt_sound`, copied from its definition the way `portrait`
+is; an actor that names none uses the shared folder. Only a landed, unevaded attack on an actor
+plays the target layer — an item target, a heal and a damage-over-time tick have nothing to
+hurt.
 - **Graceful no-op** — a missing folder plays nothing and returns -1, so callers (for example
   [UIJuice](ui_juice.md)) work before any audio assets exist.
 - **Starts on first play** — a player is not autoplayed; the first real play starts it. A
@@ -89,8 +122,9 @@ category uses the Interface bus.
 
 API:
 
-- `play_sound(path, pitch := -1.0, volume_db := 0.0)` — one sound from the folder `path`
-  (negative pitch = random jitter). Returns the stream id, or -1 if nothing played.
+- `play_sound(path, pitch := -1.0, volume_db := 0.0, fall_back := true)` — one sound from the
+  folder `path` (negative pitch = random jitter). Returns the stream id, or -1 if nothing
+  played.
 - `play_sound_guarded(key, path, pitch, volume_db)` — same, cooldown-guarded by `key`.
 - `bus_for(path)` — the bus a folder path plays on.
 - `play_ui_hover()` / `play_ui_click()` / `play_footstep()` — the three named sounds, each one

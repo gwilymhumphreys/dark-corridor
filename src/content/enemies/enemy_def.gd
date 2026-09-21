@@ -8,6 +8,9 @@ extends RefCounted
 var id: String = ''
 var name_key: String = ''
 var portrait: String = ''            # res:// path of the portrait shown in an ally slot (assets/portraits/enemies/); empty = none
+# The folder under assets/sound-effects/ whose recordings play when this enemy is hit
+# (docs/systems/audio.md). Empty = the shared combat/hurt folder.
+var hurt_sound: String = ''
 var max_hp: float = Balance.ENEMY_PLACEHOLDER_HP
 var item_ids: Array[String] = []     # Array[String] -> ItemCatalog ids, in board order
 

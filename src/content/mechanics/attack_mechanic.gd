@@ -18,13 +18,21 @@ func color() -> Color:
   return Colours.ATTACK
 
 
-## A hit on a shielded target rings off metal; one on an unshielded target does not. The
-## shield is read now rather than when the hit landed, so a hit that emptied a shield plays
+## The weapon layer of a hit (docs/systems/audio.md): the firing item's `attack_sound` picks
+## the folder, and a shielded target adds `/shielded` below it, because a hit on a shielded
+## target rings off metal and one on an unshielded target does not. A thrown consumable has no
+## firing item and uses the plain folder. An empty folder falls back up its parents, so a
+## weapon whose folder is not filled in still sounds.
+##
+## The shield is read now rather than when the hit landed, so a hit that emptied a shield plays
 ## the plain sound (docs/plans/sound_effect_organisation.md Section 5).
 func sound_key(delivery: Delivery) -> String:
+  var path: String = 'mechanics/attack'
+  if delivery.source is Item and delivery.source.def != null and delivery.source.def.attack_sound != '':
+    path += '/' + delivery.source.def.attack_sound
   if delivery.target is Actor and StatusManager.has_status(delivery.target, ShieldStatus.ID):
-    return 'mechanics/attack/shielded'
-  return 'mechanics/attack'
+    path += '/shielded'
+  return path
 
 
 func land(delivery: Delivery, combat: CombatManager) -> void:

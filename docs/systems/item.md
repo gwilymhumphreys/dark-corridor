@@ -140,6 +140,20 @@ Decision + rationale: [decision_log.md #34](../decision_log.md).
 
 ---
 
+## Attack sound
+
+`ItemDef.attack_sound` names the folder under `assets/sound-effects/mechanics/attack/` whose
+recordings this item's attacks play — `blade` and `blunt` to start with, and any other name
+works by making the folder. Empty means the plain attack folder.
+
+It is deliberately separate from `types`. A type tag is part of the synergy vocabulary that
+content reads, so adding `blade` there would make it something an item could key off. Nothing
+but the sound layer reads `attack_sound`. If a blade synergy is ever wanted, it becomes a type
+tag then; until it does, telling a sword from a mace is a sound decision alone. The folder
+scheme and the other two layers of a hit: [audio.md](audio.md).
+
+---
+
 ## Presentation (reads, doesn't live here)
 
 Each item exposes its effect-family colour + value for the panel (usually one; rare items may show more than one), and its `Ticker` for the cooldown fill. Border = rarity; build-anchor = a separate highlight (glow), never size or border. The item emits a fire-reaction (recoil/flash) the presentation plays. Items don't draw.
