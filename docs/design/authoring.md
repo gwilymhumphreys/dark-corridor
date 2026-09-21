@@ -81,6 +81,10 @@ a poison applier, an enemy-named attack), not from the catalog, so tuning or ren
 break them. Reach for a real catalog item in a test only when the test is about that card, or about
 the catalog itself. Adding a card needs no test change.
 
+Tests that play a whole run use the fixture character and fixture enemies from `FixtureRun`
+([`testing.md`](../systems/testing.md#fixtures)), so re-rostering, tuning or re-pricing a character
+or an enemy cannot break them either.
+
 ## After authoring
 
 - **Added a new `class_name` script?** Run a headless `--import --exit` once or the test suite won't

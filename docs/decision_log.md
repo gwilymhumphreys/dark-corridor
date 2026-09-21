@@ -98,3 +98,5 @@ The full catalog (with keywords) is [`index.md`](index.md): system specs in `doc
 The prototype loop is built. The live engineering backlog is in
 [handoff.md](handoff.md#your-task-the-non-content-engineering-backlog), and the order
 it was built in is recorded in [history/build_log.md](history/build_log.md).
+
+42. **The Smith is the default character, enemy health is on the points curve, and whole-run tests use a fixture (2026-09-21).** `CharacterCatalog.DEFAULT` is the Smith, because it is the character being balanced first; it stays out of the character-select roster until the owner adds it. `Balance.ENEMY_*_HP` is raised to the curve's beat 0 target, which the Smith handles on most seeds; the Fleshmancer and the Spore Druid lose early on many seeds and are the owner's to revisit later. Tests that play a run, an encounter or an autotest now use a fixture character and fixture enemies installed into the catalogs by `FixtureRun`, extending the item fixtures from #39, so a balance or roster change cannot break them. Homes: [`testing.md`](systems/testing.md) / [`design/smith.md`](design/smith.md).

@@ -24,10 +24,10 @@ is a legibility-load choice, not a weirdness choice: the two are separate budget
 [`character_ideas.md` → Complexity vs. distinctness](character_ideas.md)), so the Smith can be
 mechanically light and still have a distinct fiction.
 
-**Roster position (owner, 2026-09-21).** The Smith goes **first** in `CharacterCatalog.ids()`, and
-takes `CharacterCatalog.DEFAULT` — the autostart, the save-resume fallback and the autotest
-baseline — once it has a playable pool. It is authored but held out of `ids()` until then, so the
-select screen does not offer a character with four cards.
+**Roster position (owner, 2026-09-21).** The Smith is `CharacterCatalog.DEFAULT` — the
+autostart, the save-resume fallback and the autotest baseline — because it is the character being
+balanced first. It goes **first** in `CharacterCatalog.ids()` once the owner adds it to the select
+screen; until then it is authored but not offered there.
 
 **Name:** *Smith* is the owner's working concept label, as *Fleshmancer* and *Armourer* were. A
 display name in the same register as the rest of the roster comes later. The internal id and this
@@ -199,4 +199,4 @@ run start (`starting_item_types`). Which three it gets changes every run.
 **Still to build:** the rest of the armour line (shield made fuel-eligible, then the spender items
 that turn shield into attacks), the go-tall skills and the item-targeted modifier they need, the
 cross-cutting cards, the poison, bleed and burn access, the signature starting relic, a portrait,
-enough pool depth to draft, and then the move into `ids()` and `DEFAULT`.
+enough pool depth to draft, and then the move into `ids()`.

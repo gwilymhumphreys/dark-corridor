@@ -25,17 +25,17 @@ const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3
 
 # ── Actor ────────────────────────────────────────────────────────────────────
 const PLAYER_START_HP: float = 100.0
-# BLOCKED ON CONTENT: enemy health should be the player's damage points per second times the
-# seconds the enemy should last (docs/design/item_heuristics.md), which puts a beat-0 grunt at ~164.
-# Tested at that health on 2026-09-21: the Smith wins most seeds, but the Fleshmancer's items sit far
-# under the curve (its first fight takes about 50 seconds), the Spore Druid has no shield or healing
-# to survive a 20 second fight, and the grunt's Claw was sized for 5 second fights, not 20.
-const ENEMY_PLACEHOLDER_HP: float = 40.0
+# Enemy health is the player's damage points per second times the seconds the enemy should last
+# (docs/design/item_heuristics.md): a beat-0 grunt is a 170-point enemy less the points its Claw
+# spends. Set for the Smith, whose items are on the curve. The Fleshmancer's items are still far under
+# it and the Spore Druid has no shield or healing, so both lose early on many seeds (owner's to
+# revisit). The Claw was sized for 5 second fights and has not been re-priced for 20.
+const ENEMY_PLACEHOLDER_HP: float = 164.0
 # Placeholder enemy tiers for the multi-act map (#1) — HP only; the owner authors real
 # enemies + boss signature mechanics. A brute is a beefier regular; a boss is tankier
 # with two items.
-const ENEMY_BRUTE_HP: float = 70.0
-const ENEMY_BOSS_HP: float = 140.0
+const ENEMY_BRUTE_HP: float = 290.0
+const ENEMY_BOSS_HP: float = 575.0
 # A summon/token actor (docs/systems/spore_engine.md Cap 3) — low HP, disposable. Placeholder; the
 # owner authors the real saprolings / boss adds (and uses it as a draftable ally too).
 const ENEMY_SPORE_THRALL_HP: float = 15.0

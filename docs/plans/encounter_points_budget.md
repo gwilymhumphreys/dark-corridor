@@ -121,10 +121,10 @@ continuous across them.
 3. ~~Add `points()` to `EnemyDef`, as `max_hp` plus the spend of its items.~~ **Done.**
 4. ~~Add `RunMap.target_points(position)`, `RunMap.enemy_pool(act)` and `RunMap.draw_enemies`.~~ **Done.**
 5. ~~Generate in `RunManager._enter_beat`, pass the ids to `Encounter`, and add them to the snapshot.~~ **Done.**
-6. **Blocked on content.** Raise `Balance.ENEMY_*_HP`. The player's items and starting boards sit
-   about 5x under the budget curve, so raising enemy health to the target makes the first fight
-   unwinnable. The curve assumes a 3 item board putting out 5.67 damage per second per item; the
-   Spore Druid starts with one item putting out 3.33. Bringing items onto the curve comes first.
+6. ~~Raise `Balance.ENEMY_*_HP`.~~ **Done** for the Smith, the default character, whose items are
+   on the curve. The Fleshmancer's items are still far under it and the Spore Druid has no defence,
+   so both lose early on about half their seeds; they are the owner's to revisit. The grunt's Claw
+   was sized for 5 second fights and has not been re-priced for 20.
 7. Author enough enemies per act to fill the pools. This is the owner's. `RunMap.enemy_pool` returns
    empty until then, which leaves every fight on its authored composition.
 8. ~~Give the autotest a way to pin a composition.~~ **Done** — `--enemies grunt,grunt`.

@@ -12,6 +12,7 @@ const APPROACH_STEPS: int = int(ceil(Balance.APPROACH_DURATION)) + 1
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureRun.install()
 
 
 func after_each() -> void:
@@ -19,7 +20,7 @@ func after_each() -> void:
 
 
 func test_run_screen_drives_a_full_run_to_a_win() -> void:
-  Game.start_run(1)
+  Game.start_run(1, FixtureCharacter.ID)
   var screen: Control = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
   add_child(screen)   # _ready enters the first beat + builds the first fight
 
@@ -87,7 +88,7 @@ func test_enemy_readouts_fade_up_before_arrival() -> void:
 func test_a_fight_opens_at_the_current_battle_speed() -> void:
   # The dial is a Game session preference; a fight beginning after it was set inherits
   # it as the Timekeeper's base scale.
-  Game.start_run(1)
+  Game.start_run(1, FixtureCharacter.ID)
   Game.set_battle_speed_index(2)   # ×3 before the screen mounts
   var screen := _mount_into_fight(-1)   # -1: run already started above
   for _i in APPROACH_STEPS:
@@ -252,7 +253,7 @@ func test_settings_opens_over_the_pause_menu_and_closes_back() -> void:
 # a fresh run first.
 func _mount_into_fight(seed_value: int) -> RunScreen:
   if seed_value >= 0:
-    Game.start_run(seed_value)
+    Game.start_run(seed_value, FixtureCharacter.ID)
   var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
   add_child(screen)
   return screen
@@ -261,7 +262,7 @@ func _mount_into_fight(seed_value: int) -> RunScreen:
 # Mount the run screen into an EVENT beat. Beats auto-roll (events are positional + rare), so drive
 # the current beat to an event directly — the event overlay is the unit under test here.
 func _mount_into_event(seed_value: int) -> RunScreen:
-  Game.start_run(seed_value)
+  Game.start_run(seed_value, FixtureCharacter.ID)
   Game.run._teardown_current()
   Game.run._current_def_id = EncounterCatalog.EVENT_SHRINE
   Game.run._create_current_encounter()

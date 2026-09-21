@@ -9,6 +9,7 @@ var _modes: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureRun.install()
 
 
 func after_each() -> void:
@@ -21,6 +22,7 @@ func after_each() -> void:
 
 func _mode() -> AutoTestMode:
   var m := AutoTestMode.new()   # never added to the tree, so _ready/quit don't fire
+  m.character = FixtureCharacter.ID
   _modes.append(m)
   return m
 

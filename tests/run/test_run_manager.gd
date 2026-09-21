@@ -10,6 +10,7 @@ var _runs: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureRun.install()
   Save.clear()
 
 
@@ -81,8 +82,8 @@ func _play_to_end(run: RunManager, pick: int) -> void:
 
 func test_full_run_reaches_won_and_grows_the_board() -> void:
   var run := _run()
-  run.start(1)
-  assert_eq(run.player.board.size(), 3, 'starting board: weapon, armor, poison dagger')
+  run.start(1, FixtureCharacter.ID)
+  assert_eq(run.player.board.size(), 3, 'the fixture character has a three-item starting board')
   _play_to_end(run, 0)
   assert_true(run.is_ended(), 'the run resolved')
   assert_eq(run.outcome(), RunManager.Outcome.WON, 'the compounding build clears the multi-act map')
@@ -91,7 +92,7 @@ func test_full_run_reaches_won_and_grows_the_board() -> void:
 
 func test_draft_pick_lands_on_the_board() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   _play_one_beat(run, 0)   # beat 0: fight win → draft → advance
   assert_eq(run.player.board.size(), 4, 'the drafted item was added to the board')
   assert_eq(run.position, 1, 'and the run advanced a beat')
@@ -99,7 +100,7 @@ func test_draft_pick_lands_on_the_board() -> void:
 
 func test_starting_relic_grants_combat_start_shield() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   # Granted here: no authored character has a starting relic yet, and this is about the hook.
   run.relics.append(Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD)))
   # beat 0 auto-rolls to a live (easy) fight — begin it; relics apply at fight start, before any step
@@ -110,7 +111,7 @@ func test_starting_relic_grants_combat_start_shield() -> void:
 
 func test_loss_ends_run_died() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run.relics.clear()       # drop the protective relic so the glass player actually dies
   run.player.hp = 1.0
   watch_signals(run)
@@ -122,7 +123,7 @@ func test_loss_ends_run_died() -> void:
 
 func test_save_and_rehydrate_reproduces_the_continuation() -> void:
   var run_a := _run()
-  run_a.start(7)
+  run_a.start(7, FixtureCharacter.ID)
   _play_one_beat(run_a, 0)        # clear beat 0; position now 1 (a draft still ahead at beat 1)
   var snap: Dictionary = run_a.snapshot()
   _play_to_end(run_a, 0)
@@ -140,7 +141,7 @@ func test_save_and_rehydrate_reproduces_the_continuation() -> void:
 func test_relic_reward_grants_a_relic_from_the_pool() -> void:
   # The RELIC reward (a mid-boss / guaranteed-relic beat) grants a relic — it was a stub.
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   var before: int = run.relics.size()
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
   assert_eq(run.relics.size(), before + 1, 'a relic was granted')
@@ -151,7 +152,7 @@ func test_relic_reward_grants_a_relic_from_the_pool() -> void:
 func test_elite_reward_grants_a_relic_and_a_draft() -> void:
   # An elite is richer than a regular fight: a relic AND a draft (reward asymmetry, #2).
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   var before: int = run.relics.size()
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.ELITE)
   assert_eq(run.relics.size(), before + 1, 'an elite grants a relic')
@@ -160,7 +161,7 @@ func test_elite_reward_grants_a_relic_and_a_draft() -> void:
 
 func test_max_hp_relic_grant_raises_max_and_current_hp() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   var before_max: float = run.player.max_hp
   var before_hp: float = run.player.hp
   var charm := Relic.new(RelicCatalog.get_def(RelicCatalog.VITAL_CHARM))
@@ -172,17 +173,17 @@ func test_max_hp_relic_grant_raises_max_and_current_hp() -> void:
 
 func test_relic_grant_is_deterministic_by_seed() -> void:
   var run_a := _run()
-  run_a.start(99)
+  run_a.start(99, FixtureCharacter.ID)
   run_a._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
   var run_b := _run()
-  run_b.start(99)
+  run_b.start(99, FixtureCharacter.ID)
   run_b._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
   assert_eq(run_a.relics[-1].def.id, run_b.relics[-1].def.id, 'same seed grants the same relic (no save-scum)')
 
 
 func test_granted_relic_survives_save_and_resume() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
   var granted_id: String = run.relics[-1].def.id
   var max_after: float = run.player.max_hp
@@ -202,7 +203,7 @@ func test_per_fight_seed_is_seed_based_not_stream_based() -> void:
   # evolving run stream — so it is resume-stable and doesn't shift as draft draws consume
   # the stream (decision #20).
   var run := _run()
-  run.start(42)
+  run.start(42, FixtureCharacter.ID)
   var s0: int = run._combat_seed_for(2)
   run.rng.randi()
   run.rng.randi()                     # advance the run stream
@@ -211,13 +212,13 @@ func test_per_fight_seed_is_seed_based_not_stream_based() -> void:
 
 func test_per_fight_seeds_differ_by_beat() -> void:
   var run := _run()
-  run.start(42)
+  run.start(42, FixtureCharacter.ID)
   assert_ne(run._combat_seed_for(0), run._combat_seed_for(1), 'each beat gets its own combat stream')
 
 
 func test_fight_rng_is_seeded_from_the_beat_seed() -> void:
   var run := _run()
-  run.start(5)
+  run.start(5, FixtureCharacter.ID)
   run.begin_current()                 # beat 0 auto-rolls to a live, seeded fight
   assert_eq(run.combat_manager().rng.seed, run._combat_seed_for(0),
     'the fight RNG is seeded from the derived per-beat seed')
@@ -227,7 +228,7 @@ func test_resumed_run_derives_the_same_per_fight_seed() -> void:
   # End to end: a fight re-entered from a save uses the identical combat seed, so its
   # random targeting replays exactly (no save-scumming a bad random outcome).
   var run := _run()
-  run.start(7)
+  run.start(7, FixtureCharacter.ID)
   _play_one_beat(run, 0)              # advance to beat 1
   var seed_a: int = run._combat_seed_for(run.position)
   var snap: Dictionary = run.snapshot()
@@ -242,7 +243,7 @@ func test_resumed_run_derives_the_same_per_fight_seed() -> void:
 
 func test_ally_persists_through_save_and_resume() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run.add_ally(EnemyCatalog.SPORE_THRALL)
   run.allies[0].take_damage(5.0)   # mid-run damage — deliberately NOT persisted
   var run_b := _run()
@@ -256,7 +257,7 @@ func test_ally_persists_through_save_and_resume() -> void:
 
 func test_between_act_full_heal_revives_allies() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run.add_ally(EnemyCatalog.SPORE_THRALL)
   run.allies[0].take_damage(10.0)
   run.position = RunMap.BEATS_PER_ACT - 1
@@ -268,7 +269,7 @@ func test_run_scoped_allies_revive_to_full_each_fight() -> void:
   # Allies revive between combats (only the player carries HP attrition) — a downed ally enters
   # the next fight at full HP.
   var run := _run()
-  run.start(5)
+  run.start(5, FixtureCharacter.ID)
   run.add_ally(EnemyCatalog.SPORE_THRALL)
   run.allies[0].take_damage(run.allies[0].max_hp)   # down it
   assert_false(run.allies[0].is_alive(), 'the ally is downed')
@@ -278,7 +279,7 @@ func test_run_scoped_allies_revive_to_full_each_fight() -> void:
 
 func test_add_ally_mid_fight_joins_the_live_combat() -> void:
   var run := _run()
-  run.start(5)
+  run.start(5, FixtureCharacter.ID)
   run.begin_current()                     # beat 0 auto-rolls to a fight
   var cm: CombatManager = run.combat_manager()
   assert_not_null(cm, 'a live fight is running')
@@ -291,7 +292,7 @@ func test_add_ally_mid_fight_joins_the_live_combat() -> void:
 
 func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run.add_ally(EnemyCatalog.SPORE_THRALL)
   var weak_ally: WeakRef = weakref(run.allies[0])
   var weak_item: WeakRef = weakref(run.allies[0].board[0])
@@ -316,7 +317,7 @@ func test_recruit_event_adds_a_run_scoped_ally() -> void:
   # The ADD_ALLY option, routed through RunManager.pick_event_option, recruits a run-scoped
   # ally (the event-driven acquisition path) — it then joins every later fight + persists.
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   assert_eq(run.allies.size(), 0, 'no allies before the event')
   _resolve_event(run, EncounterCatalog.EVENT_WANDERER, 0)   # 'Let it join you'
   assert_eq(run.allies.size(), 1, 'the recruit event added a run-scoped ally')
@@ -325,7 +326,7 @@ func test_recruit_event_adds_a_run_scoped_ally() -> void:
 
 func test_recruit_event_declined_adds_no_ally() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run.player.take_damage(30.0)
   var hurt: float = run.player.hp
   _resolve_event(run, EncounterCatalog.EVENT_WANDERER, 1)   # 'Walk on alone'
@@ -335,7 +336,7 @@ func test_recruit_event_declined_adds_no_ally() -> void:
 
 func test_add_ally_respects_the_four_slot_cap() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   for _i in RunManager.MAX_ALLIES:
     run.add_ally(EnemyCatalog.SPORE_THRALL)
   assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'the four ally slots fill')
@@ -350,7 +351,7 @@ func test_opening_beat_auto_rolls_a_live_fight() -> void:
   # Beats auto-roll their content — no player choice. The easy opener (0 .. EASY_BEATS_END) is
   # forced combat, so the run opens straight into a live fight.
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   assert_false(run.has_pending_choice(), 'no choice — beats auto-roll')
   assert_not_null(run.current_encounter(), 'the opening beat has a live encounter at once')
   assert_true(run.current_encounter().is_fight(), 'the easy opener is forced combat')
@@ -360,7 +361,7 @@ func test_rolled_beat_and_streak_survive_resume() -> void:
   # The current beat's rolled def + the COMBAT/EVENT streak round-trip the snapshot, so a resumed
   # run re-enters the same encounter and reproduces the next beat's roll (no save-scum).
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run._roll_streak = RunManager.RollType.EVENT
   run._roll_streak_count = 2
   var def_id: String = run._current_def_id
@@ -375,7 +376,7 @@ func test_roll_bias_force_breaks_a_maxed_streak() -> void:
   # The −ROLL_BIAS_STEP-per-repeat bias: after 5 straight rolls the streaking type's chance floors
   # at 0 (50 − 10×5), so the next roll MUST land the other type and reset the streak (count 1).
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run._roll_streak = RunManager.RollType.COMBAT
   run._roll_streak_count = 5
   assert_eq(run._roll_type(), RunManager.RollType.EVENT, 'a maxed combat streak forces an event')
@@ -399,7 +400,7 @@ func test_fixed_beats_are_boss_and_relic_others_roll() -> void:
 
 func test_crossing_into_a_new_act_full_heals() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run.position = RunMap.BEATS_PER_ACT - 1   # the act-0 boss beat
   run.player.hp = 10.0
   run.advance()                              # cross into act 1
@@ -409,7 +410,7 @@ func test_crossing_into_a_new_act_full_heals() -> void:
 
 func test_no_full_heal_within_an_act() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run.player.hp = 10.0
   run.advance()                              # beat 0 → 1, same act
   assert_almost_eq(run.player.hp, 10.0, 0.0001, 'HP persists between beats inside an act')
@@ -419,7 +420,7 @@ func test_player_actor_and_board_free_after_run_teardown() -> void:
   # The run-lifetime player + its board must free at run end — the Actor<->Item
   # cycle (board <-> owner) has to be broken and the run's own ref dropped.
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   var weak_player: WeakRef = weakref(run.player)
   var weak_item: WeakRef = weakref(run.player.board[0])
   run.teardown()
@@ -431,7 +432,7 @@ func test_starting_kit_saves_and_rehydrates() -> void:
   # A relic + an enchant + a potion all round-trip through the snapshot. No authored character
   # starts with an enchant or a potion, so this grants them the way a reward would.
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   _grant_enchant_and_potion(run)
   run.relics.append(Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD)))
   assert_not_null(run.player.board[0].enchant, 'the enchant is on the first board item')
@@ -451,7 +452,7 @@ func test_starting_kit_saves_and_rehydrates() -> void:
 
 func test_throw_potion_heals_and_empties_the_slot() -> void:
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   _grant_enchant_and_potion(run)
   run.begin_current()                  # beat 0 auto-rolls to a live fight
   run.player.take_damage(40.0)
@@ -464,7 +465,7 @@ func test_throw_potion_heals_and_empties_the_slot() -> void:
 
 func test_throw_potion_outside_a_fight_is_rejected() -> void:
   var run := _run()
-  run.start(1)                         # beat created but not begun → no live fight
+  run.start(1, FixtureCharacter.ID)                         # beat created but not begun → no live fight
   _grant_enchant_and_potion(run)
   assert_false(run.throw_potion(0), 'a potion only resolves through a live fight')
   assert_eq(run.potions.size(), 1, 'and stays in the slot')
@@ -473,7 +474,7 @@ func test_throw_potion_outside_a_fight_is_rejected() -> void:
 func test_drafts_draw_from_the_characters_pool() -> void:
   # #27: a reward draft pulls from the chosen character's item pool, not one global pool.
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   assert_true(run.has_pending_draft(), 'a fight win offers a draft')
   for d in run.pending_draft():
@@ -483,7 +484,7 @@ func test_drafts_draw_from_the_characters_pool() -> void:
 func test_draft_pool_is_character_plus_colorless() -> void:
   # The shared colorless pool is appended to the character's own pool at draft time (#27).
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   var pool: Array = run._draft_pool()
   for id in run.character.item_pool:
     assert_true(pool.has(id), 'the draft pool includes the character pool')
@@ -507,18 +508,18 @@ func test_start_with_a_chosen_character_uses_its_kit() -> void:
 
 func test_character_round_trips_through_the_snapshot() -> void:
   var run := _run()
-  run.start(1)
-  assert_eq(run.character.id, CharacterCatalog.DEFAULT, 'the run starts on the chosen character')
+  run.start(1, FixtureCharacter.ID)
+  assert_eq(run.character.id, FixtureCharacter.ID, 'the run starts on the chosen character')
   var snap: Dictionary = run.snapshot()
-  assert_eq(snap['character'], CharacterCatalog.DEFAULT, 'the character id is saved')
+  assert_eq(snap['character'], FixtureCharacter.ID, 'the character id is saved')
   var run_b := _run()
   run_b.rehydrate(snap)
-  assert_eq(run_b.character.id, CharacterCatalog.DEFAULT, 'and restored on resume (its pool feeds future drafts)')
+  assert_eq(run_b.character.id, FixtureCharacter.ID, 'and restored on resume (its pool feeds future drafts)')
 
 
 func test_advance_autosaves_the_entry_point() -> void:
   var run := _run()
-  run.start(3)
+  run.start(3, FixtureCharacter.ID)
   _play_one_beat(run, 0)          # beat 0 is a fight (draft) → begin, fight, draft, advance (saves at entry)
   var saved: Dictionary = Save.read()
   assert_false(saved.is_empty(), 'a save exists at the encounter entry')
@@ -532,7 +533,7 @@ func test_rehydrate_refuses_a_truncated_snapshot() -> void:
   var run := _run()
   assert_false(run.rehydrate({ 'hp': 50.0, 'max_hp': 100.0 }), 'a truncated snapshot is refused')
   var complete := _run()
-  complete.start(5)
+  complete.start(5, FixtureCharacter.ID)
   assert_true(_run().rehydrate(complete.snapshot()), 'a complete snapshot rehydrates')
 
 
@@ -540,7 +541,7 @@ func test_advance_past_an_unconsumed_draft_drops_the_offer() -> void:
   # The consume-before-advance invariant: a caller that advances past a pending draft has a flow
   # bug — the offer is dropped (loudly) rather than carried unsaved into the next beat.
   var run := _run()
-  run.start(3)
+  run.start(3, FixtureCharacter.ID)
   # Measured before the fight: items created mid-fight (the default character makes some) are
   # stripped at teardown, so the board returns to this size unless the draft was added.
   var board_size: int = run.player.board.size()
@@ -560,7 +561,7 @@ func test_skip_banks_gold_and_clears_offer() -> void:
   # Skipping the draft banks a fixed amount of gold (Balance.GOLD_SKIP) instead of taking a card,
   # leaves the board untouched, clears the offer, and lets the run advance.
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   assert_true(run.has_pending_draft(), 'a fight win offers a draft')
   var board_size: int = run.player.board.size()
@@ -575,7 +576,7 @@ func test_skip_banks_gold_and_clears_offer() -> void:
 func test_gold_survives_save_and_resume() -> void:
   # Gold rides the snapshot and restores exactly; a pre-gold snapshot rehydrates to 0 (no migration).
   var run := _run()
-  run.start(1)
+  run.start(1, FixtureCharacter.ID)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   run.apply_draft_skip()
   var banked: int = run.gold
@@ -594,7 +595,7 @@ func test_gold_survives_save_and_resume() -> void:
 func test_skip_draws_no_run_rng() -> void:
   # The gold is a fixed amount, so a skip leaves the run RNG where a pick would.
   var run := _run()
-  run.start(99)
+  run.start(99, FixtureCharacter.ID)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   var state_before: int = run.rng.state
   run.apply_draft_skip()

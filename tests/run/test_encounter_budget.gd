@@ -64,7 +64,7 @@ func test_a_draw_reaches_its_target_within_the_enemy_limit() -> void:
   var total: float = 0.0
   for id: String in ids:
     total += EnemyCatalog.get_def(id).points()
-  assert_gt(total, target * (1.0 - Balance.POINTS_TARGET_TOLERANCE), 'reaches the target')
+  assert_gte(total, target * (1.0 - Balance.POINTS_TARGET_TOLERANCE), 'reaches the target')
 
 
 func test_a_draw_stops_at_the_enemy_limit() -> void:
@@ -76,17 +76,19 @@ func test_a_draw_stops_at_the_enemy_limit() -> void:
 
 
 func test_the_pin_overrides_the_draw() -> void:
+  FixtureRun.install()
   RunManager.pinned_enemy_ids = [EnemyCatalog.GRUNT, EnemyCatalog.GRUNT]
   var run: RunManager = RunManager.new()
-  run.start(99, CharacterCatalog.DEFAULT)
+  run.start(99, FixtureCharacter.ID)
   assert_eq(run.current_encounter().enemies.size(), 2, 'the pinned composition is used as given')
   run.teardown()
   run.free()
 
 
 func test_the_drawn_set_survives_a_reload() -> void:
+  FixtureRun.install()
   var run: RunManager = RunManager.new()
-  run.start(7, CharacterCatalog.DEFAULT)
+  run.start(7, FixtureCharacter.ID)
   var before: int = run.current_encounter().enemies.size()
   var snap: Dictionary = run.snapshot()
   run.teardown()

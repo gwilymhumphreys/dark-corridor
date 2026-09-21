@@ -59,9 +59,8 @@ four times as wasteful as a 5 second one.
 | 15s | 24.56 | 368.4 |
 | 20s | 25.71 | 514.2 |
 
-**Long cooldowns need large enemy health pools.** A 10 second item spends 199 points, which the
-current placeholder enemies cannot absorb, so most of it would be overkill. Enemy health is going
-up to match — see the next section for what it has to be.
+**Long cooldowns need large enemy health pools.** A 10 second item spends 199 points, so an enemy
+with too little health turns most of it into overkill. The next section sets enemy health to match.
 
 ## Pricing an enemy
 
@@ -101,8 +100,8 @@ floor rather than a target. The enemy's own shield and healing add to its effect
 killing blow wastes whatever it deals past zero. And a board never spends its whole budget on
 damage.
 
-This is the reason the placeholder health values in `Balance.ENEMY_*_HP` are being raised. A
-40 health regular enemy dies to a mid board in about a second, against a 20 second target.
+The placeholder health values in `Balance.ENEMY_*_HP` are set from this for a beat 0 fight, so a
+starting board takes roughly the target time to kill a regular enemy.
 
 ## Spending the budget
 
@@ -186,11 +185,11 @@ The general rule: **an empower's cooldown equals the cooldown of the biggest per
 reach.** Both sides use the same budget function, so the two match exactly.
 
 There is a catch the curve does not capture: an item is worth nothing if the fight ends before its
-first cooldown. Measured with the autotest at the current enemy health, an act 1 fight lasts about
-5.6 seconds, so the Warhammer and Mighty Blow never fire at all and the Smith plays as a Broadaxe
-and nothing else. At the enemy health the plan sets (a beat 0 grunt at about 164), the Smith's
-regular fights last about 10 to 16 seconds and the Warhammer and Mighty Blow both fire. Slow items
-need fights long enough to reach them, and that is set by enemy health, not by the item budget.
+first cooldown. At the old placeholder enemy health an act 1 fight lasted about 5.6 seconds, so
+the Warhammer and Mighty Blow never fired and the Smith played as a Broadaxe and nothing else. With
+enemy health on the curve, the Smith's regular fights last about 10 to 16 seconds and both fire.
+Slow items need fights long enough to reach them, and that is set by enemy health, not by the item
+budget.
 
 The cooldown matters more than it looks, because charges stack with no cap. At a cooldown below the
 weapon's, the overspend is not a fixed amount — it grows with the board. With a single Greatsword,

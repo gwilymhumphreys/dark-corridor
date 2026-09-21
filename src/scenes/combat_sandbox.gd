@@ -28,8 +28,9 @@ func _ready() -> void:
 func _build_fight() -> void:
   # The default character's starting kit, so the sandbox shows real cards without a fixed list
   # here going stale every time that kit changes.
+  var board_rng := RandomNumberGenerator.new()
   _player = _spawn(Balance.PLAYER_START_HP,
-      CharacterCatalog.get_def(CharacterCatalog.DEFAULT).starting_item_ids)
+      CharacterCatalog.starting_board(CharacterCatalog.get_def(CharacterCatalog.DEFAULT), board_rng))
   _enemy = _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
 
   _cm = CombatManager.new(_player, [_enemy])

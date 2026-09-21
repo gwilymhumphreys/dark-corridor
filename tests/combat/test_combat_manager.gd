@@ -5,6 +5,10 @@ extends GutTest
 ## the reference cycles.
 
 
+# A grunt weaker than the player, so a fight between equal fixture attacks has a known winner. Fixed
+# here rather than read from Balance, because these tests check the fight engine, not enemy tuning.
+const WEAK_ENEMY_HP: float = 40.0
+
 var _made: Array = []
 
 
@@ -59,7 +63,7 @@ func _item_has_status(item: Item, id: String) -> bool:
 
 func _run_basic() -> Dictionary:
   var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.attack()])
+  var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
   var steps := cm.run_headless()
@@ -810,7 +814,7 @@ func test_item_cooldowns_reset_each_fight() -> void:
 
 func test_teardown_clears_combat_state() -> void:
   var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.poison()])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.attack()])
+  var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
   cm.run_headless()
@@ -827,7 +831,7 @@ func test_tick_drives_fight_to_resolution() -> void:
   # whole sim-steps (steps_due) and runs them. Same verdict as run_headless, just
   # off a clock instead of a raw loop.
   var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.attack()])
+  var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
   var guard := 0
@@ -843,7 +847,7 @@ func test_request_slowmo_sets_and_clears_the_dial() -> void:
   # The slow-mo-on-hover intent: the view never writes the dial — it asks, and the
   # manager sets / clears its Timekeeper's momentary override (back to base, not x1).
   var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.attack()])
+  var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
   cm.request_slowmo(true)
@@ -1175,7 +1179,7 @@ func test_physics_process_drives_tick_when_mounted() -> void:
   # _physics_process delegates to tick(). Mount it, run a couple of physics frames,
   # and confirm the clock advanced. Not via _manager — we own its lifetime here.
   var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.attack()])
+  var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
   cm.timekeeper.set_base_scale(20.0)   # many sim-steps per physics frame

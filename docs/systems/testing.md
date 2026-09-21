@@ -17,6 +17,27 @@ For the headless end-to-end harness that drives a whole run, see
 - Work with the real autoloads. Do not mock them.
 - Collected directories and log level come from `.gutconfig.json`.
 
+## Fixtures
+
+Tests use fixture content from `tests/fixtures/` instead of authored content, so tuning, renaming or
+re-rostering real content cannot change a test's result. Fixture numbers are constants in the
+fixture files and are never read from `Balance`.
+
+| File | What it gives |
+|---|---|
+| `fixture_items.gd` | `FixtureItems`: an attack, an enemy attack, a shield, a poison applier and two filtered-target items, as fresh `ItemDef`s. |
+| `fixture_character.gd` | `FixtureCharacter`: a character with a fixed starting board and a pool of fixture items only. |
+| `fixture_enemies.gd` | `FixtureEnemies`: an enemy with fixed health and one fixture attack. |
+| `fixture_run.gd` | `FixtureRun.install()`: adds the fixture items and character to the catalogs and replaces every authored enemy with the fixture enemy under the same id. |
+
+A test that plays a run, an encounter or an autotest calls `FixtureRun.install()` in `before_each`
+and passes `FixtureCharacter.ID` to `run.start`, `Game.start_run` or `AutoTestMode.character`. The
+map, encounters, events and relic rewards stay real; the fixture character beats the fixture
+enemies by a wide margin so that they cannot change a result. Keep that margin if you change either.
+
+Use real content only when the test is about that content: a specific card, a character's pool, the
+catalog itself.
+
 ## Resetting state between tests
 
 `TestCleanup` (`tests/utils/cleanup.gd`) resets the autoloads that hold state
@@ -28,7 +49,8 @@ func before_each() -> void:
 ```
 
 `reset_all_managers()` frees the live run held by `Game`, re-enables saving,
-keeps `Prefs` in memory rather than on disk, and resets the debug panel settings.
+keeps `Prefs` in memory rather than on disk, resets the debug panel settings, and
+removes the run fixtures if a test installed them.
 
 A test that builds an `Actor` without a `RunManager` should register it with
 `TestCleanup.dissolve_at_reset(actor)`. In the game `RunManager.teardown` dissolves

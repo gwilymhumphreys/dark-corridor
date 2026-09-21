@@ -9,6 +9,7 @@ var _encs: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureRun.install()
 
 
 func after_each() -> void:

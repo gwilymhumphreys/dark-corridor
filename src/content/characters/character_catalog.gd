@@ -8,8 +8,9 @@ const FLESHMANCER := 'fleshmancer'
 const SMITH := 'smith'
 
 ## The character a run opens on when none is chosen: the title-screen autostart, the save-resume
-## fallback, and the autotest's baseline. The Fleshmancer holds it because its pool is the deepest.
-const DEFAULT := FLESHMANCER
+## fallback, and the autotest's baseline. The Smith holds it because it is the character being
+## balanced first (owner, 2026-09-21); the other two are not yet on the points curve.
+const DEFAULT := SMITH
 
 static var _defs: Dictionary = {}
 
@@ -30,11 +31,10 @@ static func has(id: String) -> bool:
   return _defs.has(id)
 
 
-## The roster ids in display order — the character-select screen enumerates this. The Fleshmancer
-## leads: it is DEFAULT (the autostart and the autotest baseline) and has the deeper pool. Both
+## The roster ids in display order — the character-select screen enumerates this. Both
 ## characters' numbers and names are still placeholders to /tune and rename. Add an id here once
-## its pool is deep enough to play. The Smith is authored but deliberately absent (owner,
-## 2026-09-21): it goes FIRST in this list, and takes DEFAULT, once it has a playable pool.
+## its pool is deep enough to play. The Smith is DEFAULT but deliberately absent from this list
+## (owner, 2026-09-21): it goes FIRST here once the owner adds it to the character select.
 static func ids() -> Array:
   if _defs.is_empty():
     _build()

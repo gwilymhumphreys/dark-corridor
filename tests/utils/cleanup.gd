@@ -29,6 +29,7 @@ static func reset_all_managers() -> void:
   TextSize.apply(load(PrefsAutoload.THEME_PATH) as Theme, TextSize.DEFAULT_SCALE)
   DebugPanels.reset_settings()   # clamp off, scaled corridor, painted enemies
   _dissolve_registered_actors()
+  FixtureRun.uninstall()   # a test that installed the run fixtures gets the authored catalogs back
 
 
 ## Dissolve `actor` at the next reset_all_managers() if it is still alive then. Use it for

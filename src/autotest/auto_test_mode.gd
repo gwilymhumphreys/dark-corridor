@@ -36,7 +36,7 @@ var stuck_threshold_seconds: float = 10.0   # flat total-HP this long = stuck (p
 var strategy: String = 'first-viable'
 var single_fight: bool = false              # --single-fight: the Phase-2 one-fight path
 var encounters: int = 0                     # --encounters N: cap beats (0 = play the whole map)
-var character: String = CharacterCatalog.DEFAULT   # --character <id>: who to play (run mode only)
+var character: String = CharacterCatalog.DEFAULT   # --character <id>: who to play (both modes)
 # --enemies <id,id,...>: pin every generated fight to this composition, so a tuning run reads one
 # fight rather than generation noise (docs/plans/encounter_points_budget.md). Empty = generate.
 var pinned_enemies: PackedStringArray = PackedStringArray()
@@ -287,14 +287,14 @@ func _live_actors(cm: CombatManager) -> Array:
 
 # --- fight construction -----------------------------------------------------
 
-## A default player board — the default character's starting kit, as the sandbox uses — vs the
+## A default player board — the chosen character's starting kit, as the sandbox uses — vs the
 ## authored grunt. Enemy names are kept beside the actors for the log/report (the Actor itself is
 ## name-blind). A test that needs a particular board overrides this.
 func _build_fight() -> Dictionary:
   var player := Actor.new(Balance.PLAYER_START_HP)
   var board_rng := RandomNumberGenerator.new()
   board_rng.seed = seed_value
-  for id in CharacterCatalog.starting_board(CharacterCatalog.get_def(CharacterCatalog.DEFAULT), board_rng):
+  for id in CharacterCatalog.starting_board(CharacterCatalog.get_def(character), board_rng):
     player.board.append(Item.new(ItemCatalog.get_def(id), player))
 
   var grunt: EnemyDef = EnemyCatalog.get_def(EnemyCatalog.GRUNT)

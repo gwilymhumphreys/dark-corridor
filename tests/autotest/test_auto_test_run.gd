@@ -11,6 +11,7 @@ var _modes: Array = []
 func before_each() -> void:
   Save.clear()
   TestCleanup.reset_all_managers()
+  FixtureRun.install()
 
 
 func after_each() -> void:
@@ -25,6 +26,7 @@ func after_each() -> void:
 func _mode(seed_value: int = 1) -> AutoTestMode:
   var m := AutoTestMode.new()   # never added to the tree → _ready/quit don't fire
   m.seed_value = seed_value
+  m.character = FixtureCharacter.ID
   _modes.append(m)
   return m
 
@@ -66,9 +68,9 @@ func test_run_full_takes_and_logs_drafts() -> void:
 
 
 func test_run_full_throws_the_starting_potion() -> void:
-  # No authored character starts with a potion, so one is put in the default character's kit for
-  # this test and taken back out afterwards — the Driver's throw path needs a potion to throw.
-  var character: CharacterDef = CharacterCatalog.get_def(CharacterCatalog.DEFAULT)
+  # The fixture character starts with no potion, so one is put in its kit for this test and taken
+  # back out afterwards — the Driver's throw path needs a potion to throw.
+  var character: CharacterDef = CharacterCatalog.get_def(FixtureCharacter.ID)
   var original: Array = character.starting_potion_ids
   character.starting_potion_ids = [ConsumableCatalog.HEALING_DRAUGHT]
   var m := _mode(1)
@@ -118,7 +120,7 @@ func test_run_full_keeps_a_firing_non_damage_item_off_the_trap_list() -> void:
   # test_auto_test_mode.gd, which can fix the board.)
   var m := _mode(1)
   var r := m.run_full()
-  var shield_name: String = ItemCatalog.get_def(ItemCatalog.FLESH_FEMUR).name_key
+  var shield_name: String = FixtureItems.shield().name_key
   var row: Dictionary = {}
   for candidate in m.logger._item_contribution_rows(r['summary']):
     if candidate['name'] == shield_name:
@@ -163,7 +165,7 @@ func test_run_full_with_saving_on_autosaves() -> void:
 
 func test_resume_mid_run_finishes_the_descent() -> void:
   # Resume smoke: play part of a run, reload from the autosave, and finish it.
-  Game.start_run(3)
+  Game.start_run(3, FixtureCharacter.ID)
   _play_one_beat(Game.run, 0)            # beat 0 cleared; autosaved at the next beat
   assert_eq(Game.run.position, 1)
   assert_true(Game.resume_run(), 'the autosave is resumable')
@@ -176,9 +178,9 @@ func test_resume_mid_run_finishes_the_descent() -> void:
 
 func test_shield_is_tallied_per_item_for_the_report() -> void:
   # Defensive items must be RANKABLE, not just trap-cleared by firing: the run summary
-  # carries shield-applied per item (the bone shield is in the default character's starting kit).
+  # carries shield-applied per item (the fixture shield is in the fixture character's starting kit).
   var r := _mode(1).run_full()
-  var armor_name: String = ItemCatalog.get_def(ItemCatalog.FLESH_FEMUR).name_key
+  var armor_name: String = FixtureItems.shield().name_key
   assert_gt(float(r['summary']['shield_by_item'].get(armor_name, 0.0)), 0.0,
       'the shield item shows its applied shield in the summary')
 

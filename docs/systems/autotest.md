@@ -66,13 +66,13 @@ Each run writes a raw log + a markdown report to **`autotest_results/`** (projec
 | `--strategy S` | draft strategy: `first-viable` (default) · `random` · `damage` / `shield` / `poison` (family) · `greedy-synergy` (+ `scaling` alias; `burn` is its own family). **Live** (seeded). |
 | `--timeout N` | max game-seconds before fail |
 | `--wall-timeout N` | max real-seconds (hang watchdog) |
-| `--character C` | which character to play (run mode only; validated against authored characters, falls back to the default on an unknown id) |
+| `--character C` | which character to play (the run, or the single fight's starting board; validated against authored characters, falls back to the default on an unknown id) |
 | `--enemies a,b,…` | pin every fight, bosses included, to this composition of `EnemyCatalog` ids, so a tuning run reads one fight rather than generation noise. An unknown id warns and is dropped. Omitted = fights generate normally ([`../plans/encounter_points_budget.md`](../plans/encounter_points_budget.md)) |
 | `--log PATH` / `--report PATH` | raw events / markdown analysis |
 | `--nosave --notutorial` | always (fresh-user run); `nosave` disables `Save.write` so a headless run never clobbers the real run slot |
 | `--headless` | Godot flag (before `--`) |
 
-**Live now:** `--autotest --seed --speed --timeout --wall-timeout --encounters --single-fight --strategy --character --log --report` (+ forced nosave / notutorial). `--seed` is live in run mode (seeds the run RNG + the Driver's strategy RNG); `--strategy` is live (real seeded draft strategies); `--character` is live in run mode (it picks the character whose pool the run drafts from; single-fight builds a fixed board, so it ignores it); `--speed` stays inert (the direct `sim_step` loop ignores the dial). `--acts` arrives with multi-act maps (later).
+**Live now:** `--autotest --seed --speed --timeout --wall-timeout --encounters --single-fight --strategy --character --log --report` (+ forced nosave / notutorial). `--seed` is live in run mode (seeds the run RNG + the Driver's strategy RNG); `--strategy` is live (real seeded draft strategies); `--character` is live in both modes (in run mode it picks the character whose pool the run drafts from; single-fight builds that character's starting board); `--speed` stays inert (the direct `sim_step` loop ignores the dial). `--acts` arrives with multi-act maps (later).
 
 ## What it tests (real design risks)
 

@@ -7,6 +7,7 @@ extends GutTest
 func before_each() -> void:
   Save.clear()
   TestCleanup.reset_all_managers()
+  FixtureRun.install()
 
 
 func after_each() -> void:
@@ -40,7 +41,7 @@ func _play_to_end(run: RunManager, pick: int) -> void:
 # --- tests ------------------------------------------------------------------
 
 func test_start_run_enters_run_phase() -> void:
-  Game.start_run(1)
+  Game.start_run(1, FixtureCharacter.ID)
   assert_eq(Game.phase, GameManagerAutoload.Phase.RUN)
   assert_not_null(Game.run, 'a live run exists')
   assert_eq(Game.run.position, 0)
@@ -48,7 +49,7 @@ func test_start_run_enters_run_phase() -> void:
 
 
 func test_win_sets_win_phase_and_clears_save() -> void:
-  Game.start_run(1)
+  Game.start_run(1, FixtureCharacter.ID)
   _play_to_end(Game.run, 0)
   assert_eq(Game.phase, GameManagerAutoload.Phase.WIN)
   assert_false(Save.has_save(), 'a win clears the run save')
@@ -56,7 +57,7 @@ func test_win_sets_win_phase_and_clears_save() -> void:
 
 
 func test_death_sets_death_phase_and_clears_save() -> void:
-  Game.start_run(1)
+  Game.start_run(1, FixtureCharacter.ID)
   Game.run.relics.clear()
   Game.run.player.hp = 1.0
   _play_one_beat(Game.run, 0)
@@ -65,7 +66,7 @@ func test_death_sets_death_phase_and_clears_save() -> void:
 
 
 func test_resume_rebuilds_from_the_save() -> void:
-  Game.start_run(5)
+  Game.start_run(5, FixtureCharacter.ID)
   _play_one_beat(Game.run, 0)        # advance autosaves at the new beat (position 1)
   var resumed := Game.resume_run()
   assert_true(resumed, 'a usable save resumes')
@@ -79,9 +80,9 @@ func test_resume_with_no_save_returns_false() -> void:
 
 
 func test_starting_a_run_replaces_the_previous() -> void:
-  Game.start_run(1)
+  Game.start_run(1, FixtureCharacter.ID)
   var first := Game.run
-  Game.start_run(2)
+  Game.start_run(2, FixtureCharacter.ID)
   assert_false(is_instance_valid(first), 'the previous run was torn down')
   assert_eq(Game.run.position, 0, 'the new run is fresh')
 
