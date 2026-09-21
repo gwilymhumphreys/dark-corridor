@@ -38,11 +38,11 @@ belong in `Balance`:
 
 | Factor | Starting value | Where it comes from |
 |---|---|---|
-| `STARTING_ITEMS` | 3 | The intended starting board floor. The Smith currently ships 1, marked placeholder. |
+| `STARTING_ITEMS` | 3 | The starting board floor. Every character now draws three items at run start from its type constraints. |
 | `DRAFTS_PER_BEAT` | 0.84 | Measured, not estimated: a full autotest run ends on a 41 item board from a 3 item start over 45 beats. |
 | `AVERAGE_ITEM_RATE` | 8.11 | The budget curve's rate at a 4 second cooldown, taken as the average draft. |
 | `DAMAGE_FRACTION` | 0.7 | The share of a board's output that is damage rather than shield or healing. |
-| `FIGHT_SECONDS` | 10 | How long a regular fight should last. |
+| `FIGHT_SECONDS` | 20 | How long a regular fight should last. It does not change across the run. |
 | `SYNERGY_GROWTH` | 0.5 | How much harder the curve gets than the raw board estimate, to cover synergies, relics and enchants without modelling them. |
 
 The synergy factor is the one knob that covers everything the estimate cannot see. It is a single
@@ -50,27 +50,27 @@ multiplier that grows through the run rather than a model of what combines with 
 
 | Beat | Act.beat | Estimated items | Target |
 |---|---|---|---|
-| 0 | 1.0 | 3.0 | 170 |
-| 7 | 1.7 | 8.9 | 544 |
-| 14 | 1.14 | 14.8 | 971 |
-| 22 | 2.7 | 21.5 | 1523 |
-| 29 | 2.14 | 27.4 | 2064 |
-| 37 | 3.7 | 34.1 | 2747 |
-| 44 | 3.14 | 40.0 | 3401 |
+| 0 | 1.0 | 3.0 | 340 |
+| 7 | 1.7 | 8.9 | 1088 |
+| 14 | 1.14 | 14.8 | 1941 |
+| 22 | 2.7 | 21.5 | 3047 |
+| 29 | 2.14 | 27.4 | 4128 |
+| 37 | 3.7 | 34.1 | 5493 |
+| 44 | 3.14 | 40.0 | 6802 |
 
 Elites take a multiplier on the same curve rather than a curve of their own. Bosses are hand-authored
 and not generated.
 
 ### What an enemy should be worth
 
-The pools have to be banded, because one flat pool cannot serve a target of 170 and a target of 2252
+The pools have to be banded, because one flat pool cannot serve a target of 340 and a target of 4128
 within a 1 to 4 enemy limit. Taking a two-enemy fight as typical, this is the range to author to:
 
 | Act | Target range | Typical enemy |
 |---|---|---|
-| 1 | 170 to 971 | 85 to 485 |
-| 2 | 1036 to 2064 | 518 to 1032 |
-| 3 | 2145 to 3401 | 1073 to 1700 |
+| 1 | 340 to 1941 | 170 to 971 |
+| 2 | 2072 to 4128 | 1036 to 2064 |
+| 3 | 4291 to 6802 | 2145 to 3401 |
 
 ## The generator
 

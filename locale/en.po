@@ -215,6 +215,22 @@ msgstr "Greatsword"
 msgid "Claw"
 msgstr "Claw"
 
+#: src/content/items/item_catalog.gd
+msgid "Vambraces"
+msgstr "Vambraces"
+
+#: src/content/items/item_catalog.gd
+msgid "Sallet"
+msgstr "Sallet"
+
+#: src/content/items/item_catalog.gd
+msgid "Kite Shield"
+msgstr "Kite Shield"
+
+#: src/content/items/item_catalog.gd
+msgid "Breast Plate"
+msgstr "Breast Plate"
+
 #: src/content/keywords/keyword_catalog.gd
 msgid "Fuel"
 msgstr "Fuel"

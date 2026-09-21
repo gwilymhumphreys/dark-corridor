@@ -41,6 +41,29 @@ static func ids() -> Array:
   return [FLESHMANCER, SPORE_DRUID]
 
 
+## The run-start board for a character: its fixed `starting_item_ids`, or — when it lists
+## `starting_item_types` — one random item of each type, drawn from its own pool on `rng`. Each
+## slot draws a DISTINCT item, so a repeated type asks for two different items of it. A type with
+## nothing left in the pool is skipped with a warning rather than crashing, which keeps a
+## half-authored character startable. Both the run and the autotest sandbox build boards through
+## here, so there is one definition of what a character opens with.
+static func starting_board(def: CharacterDef, rng: RandomNumberGenerator) -> Array:
+  if def.starting_item_types.is_empty():
+    return def.starting_item_ids.duplicate()
+  var ids: Array = []
+  for type: String in def.starting_item_types:
+    var candidates: Array = []
+    for item_id: String in def.item_pool:
+      var item_def: ItemDef = ItemCatalog.get_def(item_id)
+      if item_def != null and item_def.types.has(type) and not ids.has(item_id):
+        candidates.append(item_id)
+    if candidates.is_empty():
+      push_warning('CharacterCatalog: %s has no unused "%s" item for its starting board' % [def.id, type])
+      continue
+    ids.append(candidates[rng.randi_range(0, candidates.size() - 1)])
+  return ids
+
+
 static func _build() -> void:
   _defs[SPORE_DRUID] = _spore_druid()
   _defs[FLESHMANCER] = _fleshmancer()
@@ -66,7 +89,9 @@ static func _spore_druid() -> CharacterDef:
     ItemCatalog.WILT_FROND,
     ItemCatalog.POCKET_SHROOMS,
   ]
-  d.starting_item_ids = [ItemCatalog.DRUID_STAFF]
+  # Three weapons, drawn per run. FORCED BY THE POOL: every Spore Druid item is weapon-typed, so
+  # there is no skill or armour to ask for. Revisit once its skills and armour are authored.
+  d.starting_item_types = [ItemType.WEAPON, ItemType.WEAPON, ItemType.WEAPON]
   d.starting_relic_id = ''                          # no signature relic yet (the owner's to design)
   d.starting_potion_ids = []
   d.starting_enchants = []
@@ -99,7 +124,10 @@ static func _fleshmancer() -> CharacterDef:
     ItemCatalog.FLESH_FEMUR,
     ItemCatalog.FLESH_SKULL,
   ]
-  d.starting_item_ids = [ItemCatalog.FLESH_CLEAVER, ItemCatalog.FLESH_FEMUR, ItemCatalog.FLESH_CARVING_KNIFE]
+  # Two weapons and an armour item, drawn per run — the shape of the kit that was authored here
+  # (two chunk producers plus a shield). PLACEHOLDER mix: swap a weapon for ItemType.SKILL or
+  # ItemType.SPELL if the opening should carry one.
+  d.starting_item_types = [ItemType.WEAPON, ItemType.WEAPON, ItemType.ARMOUR]
   d.starting_relic_id = ''                          # no signature relic yet (the owner's to design)
   d.starting_potion_ids = []
   d.starting_enchants = []
@@ -111,9 +139,9 @@ static func _fleshmancer() -> CharacterDef:
 ## Its identity is that it manages no separate resource: its skills buff its own weapons and armour
 ## over a fight, so what accumulates sits on the items rather than in a counter beside them.
 ## SCAFFOLD — holds the empower engine authored so far (Mighty Blow + the three big weapons, whose
-## per-hit ladder makes the slowest the best thing to double). Still the owner's to fill: the
-## shield-spend line, the go-wide / go-tall split, the signature relic, a portrait, and the real
-## 3-item starting kit. NOT in ids() yet — see the note there.
+## per-hit ladder makes the slowest the best thing to double) and the armour ladder beside it.
+## Still the owner's to fill: the go-wide / go-tall split, the signature relic, a portrait, and the
+## real 3-item starting kit. NOT in ids() yet — see the note there.
 static func _smith() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = SMITH
@@ -125,8 +153,13 @@ static func _smith() -> CharacterDef:
     ItemCatalog.SMITH_BROADAXE,
     ItemCatalog.SMITH_WARHAMMER,
     ItemCatalog.SMITH_GREATSWORD,
+    ItemCatalog.SMITH_VAMBRACES,
+    ItemCatalog.SMITH_SALLET,
+    ItemCatalog.SMITH_KITE_SHIELD,
+    ItemCatalog.SMITH_BREAST_PLATE,
   ]
-  d.starting_item_ids = [ItemCatalog.SMITH_BROADAXE]   # PLACEHOLDER — the 3-item floor is unauthored
+  # One weapon, one skill and one armour item, drawn per run (the owner's constraint).
+  d.starting_item_types = [ItemType.WEAPON, ItemType.SKILL, ItemType.ARMOUR]
   d.starting_relic_id = ''                             # no signature relic yet (the owner's to design)
   d.starting_potion_ids = []
   d.starting_enchants = []

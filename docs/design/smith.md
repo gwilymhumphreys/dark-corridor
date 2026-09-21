@@ -132,10 +132,11 @@ it fires it applies a self-buff that doubles the next weapon attack.
 The three weapons sit on the item budget curve ([`item_heuristics.md`](item_heuristics.md)), so
 per-hit climbs while damage per second climbs more slowly and the slowest weapon is the prime
 empower target. Mighty Blow is priced against the slowest weapon it can reach rather than an
-average one, because a charge is worth whatever it doubles. The numbers are
-placeholders for `/tune` and live in `Balance` (`SMITH_BROADAXE_*`, `SMITH_WARHAMMER_*`,
-`SMITH_GREATSWORD_*`, `MIGHTY_BLOW_COOLDOWN`, `MIGHTY_BLOW_CHARGES`, `EMPOWER_MULT`). Mighty
-Blow's cooldown is the uptime knob: slower rations the empower, faster banks charges.
+average one, because a charge is worth whatever it doubles. That sets its cooldown: one cooldown
+cycle adds one weapon's per-hit damage, so the cooldown has to be the one whose budget equals the
+biggest per-hit the Smith can reach, which is the slowest weapon's. The numbers live in `Balance`
+(`SMITH_BROADAXE_*`, `SMITH_WARHAMMER_*`, `SMITH_GREATSWORD_*`, `MIGHTY_BLOW_COOLDOWN`,
+`MIGHTY_BLOW_CHARGES`, `EMPOWER_MULT`).
 
 **Terminology:** "attack" is the act of dealing damage; "weapon attack" is an attack from a
 weapon-typed item.
@@ -177,8 +178,8 @@ charge belongs on `on_owner_item_fired`, which only runs on a real fire.
 **Location:** `CharacterCatalog._smith()` (`src/content/characters/character_catalog.gd`), items in
 `ItemCatalog`, numbers in `Balance`, the status in `src/content/statuses/empowered_status.gd`.
 
-The empower engine and the three big weapons are built and in the Smith's pool. All names and
-numbers are placeholders.
+The empower engine, the three big weapons and the four armour items are built and in the Smith's
+pool. The names are placeholders; the numbers are on the budget curve.
 
 - **`EmpoweredStatus`** (id `empowered`) — a consumed counter. `modify_outgoing` doubles a
   `weapon`-tagged attack while a charge is banked and stays pure; `on_owner_item_fired` spends one
@@ -187,9 +188,15 @@ numbers are placeholders.
   to self, stacking.
 - **The three big weapons** (`smith_broadaxe`, `smith_warhammer`, `smith_greatsword`, all
   `[weapon]`) — single-target, opponent-leftmost, on a rising cooldown and per-hit ladder.
+- **The four armour items** (`smith_vambraces`, `smith_sallet`, `smith_kite_shield`,
+  `smith_breast_plate`, all `[armour]`) — plain shield-to-self on a rising cooldown and shield
+  ladder, the defensive counterpart to the weapon ladder. Names come from
+  [`item_name_reference.md`](item_name_reference.md) and are the owner's to change.
 
-**Still to build:** the armour stack-and-spend line (shield made fuel-eligible, then spender
-items), the go-tall skills and the item-targeted modifier they need, the cross-cutting cards, the
-poison, bleed and burn access, the real three-item starting kit — a shield generator, a
-shield-spending attack and a weapon, the floor the other characters get — the signature starting
-relic, a portrait, enough pool depth to draft, and then the move into `ids()` and `DEFAULT`.
+The Smith opens on **one weapon, one skill and one armour item**, drawn at random from its pool at
+run start (`starting_item_types`). Which three it gets changes every run.
+
+**Still to build:** the rest of the armour line (shield made fuel-eligible, then the spender items
+that turn shield into attacks), the go-tall skills and the item-targeted modifier they need, the
+cross-cutting cards, the poison, bleed and burn access, the signature starting relic, a portrait,
+enough pool depth to draft, and then the move into `ids()` and `DEFAULT`.

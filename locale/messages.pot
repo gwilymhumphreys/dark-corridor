@@ -215,6 +215,22 @@ msgstr ""
 msgid "Claw"
 msgstr ""
 
+#: src/content/items/item_catalog.gd
+msgid "Vambraces"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Sallet"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Kite Shield"
+msgstr ""
+
+#: src/content/items/item_catalog.gd
+msgid "Breast Plate"
+msgstr ""
+
 #: src/content/keywords/keyword_catalog.gd
 msgid "Fuel"
 msgstr ""

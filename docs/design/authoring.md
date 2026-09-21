@@ -63,7 +63,11 @@ for each def's fields and how it resolves.
   timed status, sets `duration` (per-application). See [status PRD](../systems/status_manager.md).
 
 - A **character** is a `CharacterDef` (`characters/character_catalog.gd`): its own `item_pool`,
-  starting board, starting relic, starting potions/enchants. Its display is two lines on the select
+  starting board, starting relic, starting potions/enchants. The starting board is normally written
+  as **type constraints** (`starting_item_types`, e.g. `[WEAPON, SKILL, ARMOUR]`) rather than fixed
+  ids: one random item of each listed type is drawn from the character's own pool at run start, so
+  every run opens differently. Repeating a type asks for two of it, and each slot draws a distinct
+  item. `starting_item_ids` still works for a fixed opening and is used when no types are set. Its display is two lines on the select
   screen: `name_key` is the character's personal name, `subtitle_key` the role beneath it
   (`'Rot Shepherd'`). The `id` stays the internal working label (`spore_druid`) and never displays. Adding a character = a def + registering
   it; the run picks one at `start`.

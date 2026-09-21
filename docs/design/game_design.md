@@ -28,7 +28,7 @@ A short, draft-heavy auto-combat dungeon descent: walk forward through a single 
 
 ```
 Walk forward (2-3s)
-  → Encounter (10-15s combat, OR non-combat event)
+  → Encounter (~20s combat, OR non-combat event)
   → Draft 1-of-3 (each slot a low chance of an enchant or potion instead of an item, 5-10s)
   → repeat through 3 acts (~15 encounters each)
   → die or beat final boss
@@ -53,7 +53,7 @@ Each act holds a boss (telegraphed ahead of time), a guaranteed relic at the act
 ### Default behavior
 
 - Fully auto. No player input by default. Drafts are the game; combat is the readout.
-- Target duration: 10-15 seconds for regular fights, longer for elites and bosses (board-vs-board mutual cascades take time to resolve). Cascade-speeds-up-with-engine-growth applies as a trend, but mutual-engine fights raise the floor.
+- Target duration: about 20 seconds for regular fights, early and late alike, and longer for elites and bosses (board-vs-board mutual cascades take time to resolve). Fights do not get shorter or longer as the run goes on: the enemy points budget grows with the player's board to hold the length steady (`Balance.POINTS_FIGHT_SECONDS`). Cascade-speeds-up-with-engine-growth applies as a trend, but mutual-engine fights raise the floor.
 - Combat readability is the design pressure. Player needs to see what their build is doing or the next draft has no information basis. Item activations need clear visual/audio tells; damage numbers, item triggers, status effects must overlay the combat scene cleanly.
 ### Multi-enemy fights and targeting
 

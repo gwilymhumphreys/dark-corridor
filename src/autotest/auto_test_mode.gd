@@ -292,7 +292,9 @@ func _live_actors(cm: CombatManager) -> Array:
 ## name-blind). A test that needs a particular board overrides this.
 func _build_fight() -> Dictionary:
   var player := Actor.new(Balance.PLAYER_START_HP)
-  for id in CharacterCatalog.get_def(CharacterCatalog.DEFAULT).starting_item_ids:
+  var board_rng := RandomNumberGenerator.new()
+  board_rng.seed = seed_value
+  for id in CharacterCatalog.starting_board(CharacterCatalog.get_def(CharacterCatalog.DEFAULT), board_rng):
     player.board.append(Item.new(ItemCatalog.get_def(id), player))
 
   var grunt: EnemyDef = EnemyCatalog.get_def(EnemyCatalog.GRUNT)

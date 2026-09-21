@@ -1,6 +1,14 @@
 # Plan — Starting Loadout Draft
 
-> **Status: planned, not built (2026-06-24).** A run-opening mechanic the owner floated: after
+> **Status: partly shipped (2026-09-21).** The *randomised opening board* is built, without the
+> choice: a character lists `starting_item_types` and `CharacterCatalog.starting_board` draws one
+> item of each from its pool on the run RNG. What is still unbuilt is the **1-of-3 choice** below —
+> the offer, the UI overlay and the pending-offer path. The constraint model also changed: the rule
+> is now per-character type constraints, not the single "at least one attacking item" rule. If the
+> choice is built later, it should generate its three sets through `starting_board` rather than a
+> second generator.
+>
+> **Original status: planned, not built (2026-06-24).** A run-opening mechanic the owner floated: after
 > character select, the player chooses **1 of 3 randomly-generated starting sets**, each a bundle of
 > **3 items** with **at least one attacking item**. Replaces the hand-authored fixed starting kit so
 > the first fights aren't dull and the opening is a real decision. Plans aren't catalogued in the

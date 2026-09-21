@@ -32,6 +32,10 @@ const MIGHTY_BLOW := 'mighty_blow'
 const SMITH_BROADAXE := 'smith_broadaxe'
 const SMITH_WARHAMMER := 'smith_warhammer'
 const SMITH_GREATSWORD := 'smith_greatsword'
+const SMITH_VAMBRACES := 'smith_vambraces'
+const SMITH_SALLET := 'smith_sallet'
+const SMITH_KITE_SHIELD := 'smith_kite_shield'
+const SMITH_BREAST_PLATE := 'smith_breast_plate'
 
 static var _defs: Dictionary = {}
 
@@ -100,6 +104,10 @@ static func _build() -> void:
   _defs[SMITH_BROADAXE] = _smith_broadaxe()
   _defs[SMITH_WARHAMMER] = _smith_warhammer()
   _defs[SMITH_GREATSWORD] = _smith_greatsword()
+  _defs[SMITH_VAMBRACES] = _smith_vambraces()
+  _defs[SMITH_SALLET] = _smith_sallet()
+  _defs[SMITH_KITE_SHIELD] = _smith_kite_shield()
+  _defs[SMITH_BREAST_PLATE] = _smith_breast_plate()
 
 
 static func _poison_dagger() -> ItemDef:
@@ -743,4 +751,76 @@ static func _enemy_claw() -> ItemDef:
   hit.travel = Balance.WEAPON_TRAVEL
   d.effects = [hit]
   d.panel_color = Colours.ATTACK
+  return d
+
+
+## Smith armour (names pulled from docs/design/item_name_reference.md — the owner renames) — the
+## armour line (docs/design/smith.md): four plain shield items on a rising cooldown and shield
+## ladder, the defensive counterpart to the weapon ladder. No rider; the identity is the ladder.
+## Each spends its full budget from the curve. In the Smith's item_pool. COMMON.
+static func _smith_vambraces() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = SMITH_VAMBRACES
+  d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
+  d.name_key = 'Vambraces'
+  d.icon = 'res://assets/icons/items/gloves_01.png'
+  d.cooldown = Balance.SMITH_VAMBRACES_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.mechanic = ShieldMechanic.ID
+  blk.value = Balance.SMITH_VAMBRACES_SHIELD
+  blk.shape = ItemEffect.Shape.SELF
+  d.effects = [blk]
+  d.panel_color = Colours.SHIELD
+  return d
+
+
+static func _smith_sallet() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = SMITH_SALLET
+  d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
+  d.name_key = 'Sallet'
+  d.icon = 'res://assets/icons/items/helm_footman_1.png'
+  d.cooldown = Balance.SMITH_SALLET_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.mechanic = ShieldMechanic.ID
+  blk.value = Balance.SMITH_SALLET_SHIELD
+  blk.shape = ItemEffect.Shape.SELF
+  d.effects = [blk]
+  d.panel_color = Colours.SHIELD
+  return d
+
+
+static func _smith_kite_shield() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = SMITH_KITE_SHIELD
+  d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
+  d.name_key = 'Kite Shield'
+  d.icon = 'res://assets/icons/items/metal_shield_1.png'
+  d.cooldown = Balance.SMITH_KITE_SHIELD_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.mechanic = ShieldMechanic.ID
+  blk.value = Balance.SMITH_KITE_SHIELD_SHIELD
+  blk.shape = ItemEffect.Shape.SELF
+  d.effects = [blk]
+  d.panel_color = Colours.SHIELD
+  return d
+
+
+static func _smith_breast_plate() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = SMITH_BREAST_PLATE
+  d.types = [ItemType.ARMOUR]
+  d.mechanics = [ShieldMechanic.ID]
+  d.name_key = 'Breast Plate'
+  d.icon = 'res://assets/icons/items/leather_chest_1.png'
+  d.cooldown = Balance.SMITH_BREAST_PLATE_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.mechanic = ShieldMechanic.ID
+  blk.value = Balance.SMITH_BREAST_PLATE_SHIELD
+  blk.shape = ItemEffect.Shape.SELF
+  d.effects = [blk]
+  d.panel_color = Colours.SHIELD
   return d

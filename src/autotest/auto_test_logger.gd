@@ -223,7 +223,7 @@ func write_report(path: String, summary: Dictionary) -> void:
   lines.append('')
   lines.append('Total incoming (gross, pre-shield): **%.1f**' % summary['total_incoming'])
 
-  # Per-encounter breakdown (run mode) — duration vs the ~10–15s window + HP attrition.
+  # Per-encounter breakdown (run mode) — duration vs the ~20s target + HP attrition.
   if not summary['encounters'].is_empty():
     lines.append('')
     lines.append('## Encounters')

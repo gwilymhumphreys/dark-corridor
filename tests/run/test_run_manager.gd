@@ -498,7 +498,11 @@ func test_start_with_a_chosen_character_uses_its_kit() -> void:
   var run := _run()
   run.start(1, CharacterCatalog.SPORE_DRUID)
   assert_eq(run.character.id, CharacterCatalog.SPORE_DRUID, 'the run opens in the chosen character')
-  assert_eq(_board_ids(run.player), [ItemCatalog.DRUID_STAFF], 'and its own starting board')
+  var ids: Array = _board_ids(run.player)
+  assert_eq(ids.size(), 3, 'and a three-item starting board drawn from its constraints')
+  for id: String in ids:
+    assert_true(CharacterCatalog.get_def(CharacterCatalog.SPORE_DRUID).item_pool.has(id),
+      'every starting item comes from its own pool')
 
 
 func test_character_round_trips_through_the_snapshot() -> void:

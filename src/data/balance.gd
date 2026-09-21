@@ -26,7 +26,7 @@ const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3
 # ── Actor ────────────────────────────────────────────────────────────────────
 const PLAYER_START_HP: float = 100.0
 # BLOCKED ON CONTENT: enemy health should be the player's damage points per second times the
-# seconds the enemy should last (docs/design/item_heuristics.md), which puts a beat-0 fight at ~170
+# seconds the enemy should last (docs/design/item_heuristics.md), which puts a beat-0 fight at ~340
 # points. It cannot rise until the player's items and starting boards are brought onto the budget
 # curve — they currently sit about 5x under it, so raising these makes the first fight unwinnable.
 const ENEMY_PLACEHOLDER_HP: float = 40.0
@@ -167,22 +167,36 @@ const FLESH_FEMUR_SHIELD: float = 8.0
 const FLESH_SKULL_COOLDOWN: float = 3.0     # slow, rewarded — 5 shield/sec
 const FLESH_SKULL_SHIELD: float = 15.0
 
-# Smith big slow weapons (PLACEHOLDER numbers — /tune's job; docs/design/smith.md → The empower
-# engine). A ladder of heavy single-target attacks on 5s/6s/7s cooldowns with a rising PER-HIT: the
-# slowest lands the biggest single hit, so it is the best target for the Mighty Blow empower's
-# double. In the Smith's item_pool. These values came off an older, flatter curve and sit well UNDER
-# the revised budget curve (docs/design/item_heuristics.md), which puts 5s/6s/7s at 50/73/100.
-const SMITH_BROADAXE_COOLDOWN: float = 5.0      # fast pole — per-hit 40 (doubled 80); on curve = 50
-const SMITH_BROADAXE_DAMAGE: float = 40.0
-const SMITH_WARHAMMER_COOLDOWN: float = 6.0     # mid — per-hit 54 (doubled 108); on curve = 73
-const SMITH_WARHAMMER_DAMAGE: float = 54.0
-const SMITH_GREATSWORD_COOLDOWN: float = 7.0    # slow pole — per-hit 70 (doubled 140, the boss-breaker); on curve = 100
-const SMITH_GREATSWORD_DAMAGE: float = 70.0
+# Smith big slow weapons (docs/design/smith.md → The empower engine). A ladder of heavy
+# single-target attacks on 5s/6s/7s cooldowns with a rising PER-HIT: the slowest lands the biggest
+# single hit, so it is the best target for the Mighty Blow empower's double. In the Smith's
+# item_pool. Each spends its full budget from the curve in docs/design/item_heuristics.md.
+const SMITH_BROADAXE_COOLDOWN: float = 5.0      # fast pole — per-hit 50 (doubled 100)
+const SMITH_BROADAXE_DAMAGE: float = 50.0
+const SMITH_WARHAMMER_COOLDOWN: float = 6.0     # mid — per-hit 73 (doubled 146)
+const SMITH_WARHAMMER_DAMAGE: float = 73.0
+const SMITH_GREATSWORD_COOLDOWN: float = 7.0    # slow pole — per-hit 100 (doubled 200, the boss-breaker)
+const SMITH_GREATSWORD_DAMAGE: float = 100.0
 
-# Mighty Blow (PLACEHOLDER — /tune) — the empower skill: a plain-cooldown metronome that banks a
-# charge to double the next weapon attack (docs/design/smith.md). Cooldown is the uptime knob
-# (slower rations the empower, faster banks charges). Charges-per-fire stacks by proc count (#default).
-const MIGHTY_BLOW_COOLDOWN: float = 5.0
+# Smith armour (docs/design/smith.md → The armour line). A ladder of plain shield items on
+# 3s/4s/5s/6s cooldowns, each spending its full budget from the curve in
+# docs/design/item_heuristics.md at Balance.POINTS_PER_SHIELD points per shield. Names are pulled
+# from docs/design/item_name_reference.md — the owner renames. In the Smith's item_pool.
+const SMITH_VAMBRACES_COOLDOWN: float = 3.0
+const SMITH_VAMBRACES_SHIELD: float = 15.0
+const SMITH_SALLET_COOLDOWN: float = 4.0
+const SMITH_SALLET_SHIELD: float = 26.0
+const SMITH_KITE_SHIELD_COOLDOWN: float = 5.0
+const SMITH_KITE_SHIELD_SHIELD: float = 40.0
+const SMITH_BREAST_PLATE_COOLDOWN: float = 6.0
+const SMITH_BREAST_PLATE_SHIELD: float = 58.0
+
+# Mighty Blow — the empower skill: a plain-cooldown metronome that banks a charge to double the
+# next weapon attack (docs/design/smith.md). Cooldown is the uptime knob (slower rations the
+# empower, faster banks charges). Charges-per-fire stacks by proc count (#default). The cooldown
+# matches the Greatsword's, which is what puts it on budget: one cycle adds one weapon's per-hit
+# damage, and the Greatsword's 100 is exactly budget(7) (docs/design/item_heuristics.md).
+const MIGHTY_BLOW_COOLDOWN: float = 7.0
 const MIGHTY_BLOW_CHARGES: float = 1.0             # empower charges banked per fire (count on the counter)
 
 
@@ -319,7 +333,7 @@ const POINTS_STARTING_ITEMS: float = 3.0        # the intended starting board fl
 const POINTS_DRAFTS_PER_BEAT: float = 0.84      # measured: a full autotest run ends on 41 items
 const POINTS_AVERAGE_ITEM_COOLDOWN: float = 4.0 # the cooldown taken as an average draft
 const POINTS_DAMAGE_FRACTION: float = 0.7       # the share of a board's output that is damage
-const POINTS_FIGHT_SECONDS: float = 10.0        # how long a regular fight should last
+const POINTS_FIGHT_SECONDS: float = 20.0        # how long a regular fight should last, early or late
 # How much harder the curve gets than the raw board estimate, across the whole run. This is the one
 # knob covering synergies, relics and enchants — they are deliberately not modelled.
 const POINTS_SYNERGY_GROWTH: float = 0.5

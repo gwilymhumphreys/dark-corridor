@@ -86,11 +86,15 @@ budget at its rate, so a board's damage output is the sum of the rates of its da
 enemy health = the board's damage points per second × the seconds it should survive
 ```
 
-| Board | Points per second | Health for a 10 second kill |
+A regular fight is meant to last about 20 seconds (`Balance.POINTS_FIGHT_SECONDS`), and that
+length does not change across the run — the enemy budget grows with the player's board to hold it
+steady.
+
+| Board | Points per second | Health for a 20 second kill |
 |---|---|---|
-| 2 items, 3s and 4s cooldowns | 14.5 | 145 |
-| 4 items, 3s to 6s | 36.7 | 367 |
-| 6 items, 2s to 7s | 55.9 | 559 |
+| 2 items, 3s and 4s cooldowns | 14.5 | 290 |
+| 4 items, 3s to 6s | 36.7 | 734 |
+| 6 items, 2s to 7s | 55.9 | 1118 |
 
 Three things push the real fight longer than the division suggests, and are why the figure is a
 floor rather than a target. The enemy's own shield and healing add to its effective health. The
@@ -98,7 +102,7 @@ killing blow wastes whatever it deals past zero. And a board never spends its wh
 damage.
 
 This is the reason the placeholder health values in `Balance.ENEMY_*_HP` are being raised. A
-40 health regular enemy dies to a mid board in about a second.
+40 health regular enemy dies to a mid board in about a second, against a 20 second target.
 
 ## Spending the budget
 
@@ -165,20 +169,36 @@ The authored Femur is 8.
 
 The empower engine ([smith.md](smith.md)) is the first thing these rules have to hold up for.
 
-The weapon ladder is well under budget, because it was authored on an older, much flatter curve. On
-this one a 5 second weapon is 50 damage, a 6 second weapon is 73, and a 7 second weapon is 100,
-against the 40, 54 and 70 in `src/data/balance.gd`. The shape of the ladder does not change, with
-per-hit climbing faster than damage per second. The numbers are the owner's to set in tuning.
+The weapon ladder is on the curve. The 5 second Broadaxe is 50 damage, the 6 second Warhammer is
+73, and the 7 second Greatsword is 100. The shape of the ladder is unchanged, with per-hit climbing
+faster than damage per second.
+
+The armour ladder is priced the same way, through the shield rate: the shield an item applies is
+its budget divided by `Balance.POINTS_PER_SHIELD`. That gives 15 shield at 3 seconds (Vambraces),
+26 at 4 (Sallet), 40 at 5 (Kite Shield) and 58 at 6 (Breast Plate).
 
 Mighty Blow prices differently from the rest, because a charge is worth whatever weapon it doubles.
-When its cooldown is at or below the weapon's, every weapon fire is doubled, so the empower adds
-exactly that weapon's rate in points per second. Against the 7 second weapon that is 14.28 points
-per second, while Mighty Blow's own rate at a 5 second cooldown is 10.05, so it runs about 40 per
-cent over.
+One cooldown cycle banks one charge, and that charge adds exactly one weapon's per-hit damage. So
+the empower's budget for a cycle has to cover the biggest per-hit it can reach. The biggest is the
+Greatsword's 100, which is `budget(7)`, so the empower's cooldown is 7 seconds.
 
-This means an empower has to be priced against the **slowest** weapon it can reach, not an average
-one. The ladder is built so the slowest weapon is the best empower target, so the gap is the
-intended power ceiling rather than a mistake. Mighty Blow's cooldown is the dial that sets it.
+The general rule: **an empower's cooldown equals the cooldown of the biggest per-hit weapon it can
+reach.** Both sides use the same budget function, so the two match exactly.
+
+There is a catch the curve does not capture: an item is worth nothing if the fight ends before its
+first cooldown. Measured with the autotest at the current enemy health, an act 1 fight lasts about
+5.6 seconds, so the Warhammer and Mighty Blow never fire at all and the Smith plays as a Broadaxe
+and nothing else. Raising enemy health to the target the plan sets (a beat 0 fight at about 170
+points) stretches the fight to 6.6 seconds, which is enough for the Warhammer and the Greatsword
+but still short of Mighty Blow's 7. Slow items need fights long enough to reach them, and that is
+set by enemy health, not by the item budget.
+
+The cooldown matters more than it looks, because charges stack with no cap. At a cooldown below the
+weapon's, the overspend is not a fixed amount — it grows with the board. With a single Greatsword,
+a 5 second empower is capped by how often the Greatsword fires, so it adds 14.28 points per second
+against an allowed 10.05. With enough weapons to consume every charge, it adds 100 every 5 seconds,
+which is 20 per second against the same 10.05. Matching the cooldown removes the difference: at 7
+seconds both cases come out at 14.28.
 
 ## Parked
 
