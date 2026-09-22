@@ -1,7 +1,8 @@
 extends GutTest
 ## Encounter assembly against a points target (docs/plans/encounter_points_budget.md). Checks the
 ## target curve's shape, that a generated fight reaches its target within the enemy limit, that a
-## boss keeps its authored composition, and that the drawn set survives a save and reload.
+## boss takes its act boss list or keeps its authored composition, and that the drawn set survives
+## a save and reload.
 
 var _pin_before: Array[String] = []
 
@@ -31,18 +32,6 @@ func test_target_ends_far_above_where_it_starts() -> void:
   var first: float = RunMap.target_points(0)
   var last: float = RunMap.target_points(RunMap.TOTAL_BEATS - 1)
   assert_gt(last, first * 10.0, 'the last beat is worth more than ten times the first')
-
-
-func test_every_act_pool_id_resolves() -> void:
-  # The pools are empty until the owner authors them, which leaves the generator dormant. Whatever
-  # goes into them has to resolve, so a typo fails here instead of crashing mid-spawn.
-  for act: int in range(RunMap.ACTS):
-    var pool: Array[String] = RunMap.enemy_pool(act)
-    var unknown: Array[String] = []
-    for id: String in pool:
-      if not EnemyCatalog.has(id):
-        unknown.append(id)
-    assert_eq(unknown, [] as Array[String], 'act %d pool ids all resolve' % act)
 
 
 func test_an_empty_pool_draws_nothing() -> void:
@@ -101,3 +90,32 @@ func test_the_drawn_set_survives_a_reload() -> void:
   assert_eq(resumed.current_encounter().enemies.size(), before, 'the same fight comes back')
   resumed.teardown()
   resumed.free()
+
+
+func test_a_boss_fight_uses_its_act_boss_list() -> void:
+  FixtureContent.install()
+  EnemyPools._by_act['boss'][0] = [FixtureEnemies.ID, FixtureEnemies.BIG_ID]
+  var run: RunManager = _run_at_the_first_boss()
+  var enemies: Array = run.current_encounter().enemies
+  assert_eq(enemies.size(), 2, 'the boss fight holds the act boss list')
+  assert_almost_eq((enemies[1] as Actor).max_hp, FixtureEnemies.BIG_HP, 0.0001, 'in list order')
+  run.teardown()
+  run.free()
+
+
+func test_a_boss_fight_keeps_its_authored_enemies_while_the_list_is_empty() -> void:
+  FixtureContent.install()
+  var run: RunManager = _run_at_the_first_boss()
+  var authored: int = EncounterCatalog.get_def(EncounterCatalog.FIGHT_BOSS).enemy_ids.size()
+  assert_eq(run.current_encounter().enemies.size(), authored, 'the encounter keeps its own enemies')
+  run.teardown()
+  run.free()
+
+
+func _run_at_the_first_boss() -> RunManager:
+  var run: RunManager = RunManager.new()
+  run.start(3, FixtureCharacter.ID)
+  run.position = RunMap.BOSS_BEAT - 1
+  run.advance()
+  assert_eq(run.current_encounter().def.id, EncounterCatalog.FIGHT_BOSS, 'the run is at the boss')
+  return run

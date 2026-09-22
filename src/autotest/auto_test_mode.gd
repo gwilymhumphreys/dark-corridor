@@ -291,16 +291,15 @@ func _live_actors(cm: CombatManager) -> Array:
 ## authored grunt. Enemy names are kept beside the actors for the log/report (the Actor itself is
 ## name-blind). A test that needs a particular board overrides this.
 func _build_fight() -> Dictionary:
-  var player := Actor.new(Balance.PLAYER_START_HP)
+  var character_def: CharacterDef = CharacterCatalog.get_def(character)
+  var player: Actor = character_def.make_actor()
   var board_rng := RandomNumberGenerator.new()
   board_rng.seed = seed_value
-  for id in CharacterCatalog.starting_board(CharacterCatalog.get_def(character), board_rng):
+  for id in CharacterCatalog.starting_board(character_def, board_rng):
     player.board.append(Item.new(ItemCatalog.get_def(id), player))
 
   var grunt: EnemyDef = EnemyCatalog.get_def(EnemyCatalog.GRUNT)
-  var enemy := Actor.new(grunt.max_hp)
-  for id in grunt.item_ids:
-    enemy.board.append(Item.new(ItemCatalog.get_def(id), enemy))
+  var enemy: Actor = grunt.make_actor()
 
   var names: Dictionary = {}
   names[enemy] = grunt.name_key

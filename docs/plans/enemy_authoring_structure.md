@@ -1,5 +1,7 @@
 # Plan: structure for authoring enemies
 
+**Status: shipped 2026-09-22.** As-built detail is in [`../systems/enemy.md`](../systems/enemy.md). Differences from the plan are listed at the end.
+
 Get the enemy and character definitions into the shape the owner needs before writing real enemies:
 one shared definition base, an image per enemy, enemy lists per act, a boss per act, and tests that
 do not change when those lists are filled.
@@ -115,3 +117,12 @@ a screenshot of an ally slot using a monster image as its portrait.
 - Per-character starting health values. The field exists after this change, but every character
   keeps the default.
 - A separate elite list. Elites draw from the regular list with a larger target.
+
+## How the build differs
+
+- The portrait falls back to the image inside `ActorDef.make_actor()`, so `ally_slot.gd` and
+  `combat_view_framed.gd` needed no change.
+- The ally slot screenshot check was dropped at the owner's request; its look is adjusted later.
+- The enemy portrait content check became "a portrait or an image", with each named path loading.
+- `_temp/` got a `.gdignore`: a script saved there was scanned by Godot as a duplicate class and broke
+  the combat view tests.

@@ -212,8 +212,9 @@ the corridor light, so they come out of the dark on the approach. The container 
   cut the flinch short. The ring the wall draws at the landing point is a placeholder shape
   ([vfx_driver.md](vfx_driver.md#what-is-built)), not the intended look, and each landing is nudged
   a little off the sprite centre so hits in a burst do not stack.
-- **Images:** a random cut-out sample from `assets/monsters/cut_out/` (`MonsterImages`, its own RNG,
-  so seeded runs are unchanged).
+- **Images:** the enemy's own `image` ([enemy.md](enemy.md#enemy-definition-data)), or, when it has
+  none, a random cut-out sample from `assets/monsters/cut_out/` (`MonsterImages`, its own RNG, so
+  seeded runs are unchanged). The debug `--monster-image=` override replaces both.
 
 The cut-out copies are made by `tools/cut_out_monsters.gd` (usage in its header): a pixel's opacity
 comes from its brightest colour channel, partly transparent pixels are brightened so edges have no

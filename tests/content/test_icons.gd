@@ -1,7 +1,7 @@
 extends GutTest
-## Every item, potion, status and mechanic keyword names an icon file, and every character and enemy
-## names a portrait file, that loads as a texture, so a renamed or missing picture fails here instead
-## of showing an empty cell.
+## Every item, potion, status and mechanic keyword names an icon file, every character names a
+## portrait file, and every enemy names a portrait or a corridor image, that loads as a texture, so a
+## renamed or missing picture fails here instead of showing an empty cell.
 
 
 func before_each() -> void:
@@ -41,10 +41,16 @@ func test_every_character_has_a_portrait() -> void:
     _assert_icon((CharacterCatalog._defs[id] as CharacterDef).portrait, 'character %s portrait' % id)
 
 
-func test_every_enemy_has_a_portrait() -> void:
+func test_every_enemy_has_a_portrait_or_an_image() -> void:
+  # An ally slot shows the portrait, or the image when there is no portrait (ActorDef.make_actor).
   EnemyCatalog.get_def(EnemyCatalog.GRUNT)   # builds the catalog
   for id: String in EnemyCatalog._defs:
-    _assert_icon((EnemyCatalog._defs[id] as EnemyDef).portrait, 'enemy %s portrait' % id)
+    var def: EnemyDef = EnemyCatalog._defs[id]
+    assert_true(def.portrait != '' or def.image != '', 'enemy %s names a portrait or an image' % id)
+    if def.portrait != '':
+      _assert_icon(def.portrait, 'enemy %s portrait' % id)
+    if def.image != '':
+      _assert_icon(def.image, 'enemy %s image' % id)
 
 
 func _assert_icon(path: String, what: String) -> void:

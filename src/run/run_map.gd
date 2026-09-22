@@ -112,12 +112,11 @@ static func target_points(position: int) -> float:
   return damage * Balance.POINTS_FIGHT_SECONDS * synergy
 
 
-## The EnemyCatalog ids a generated fight in this act draws from. EMPTY until the owner authors
-## per-act enemy pools — a fight with no pool keeps its EncounterDef's authored enemy_ids, so the
-## generator is dormant rather than drawing the wrong-sized enemies. The points range each act
-## should cover is in docs/plans/encounter_points_budget.md.
-static func enemy_pool(_act: int) -> Array[String]:
-  return []
+## The EnemyCatalog ids a generated fight in this act draws from (EnemyPools.REGULAR). While an
+## act's list is empty, a fight keeps its EncounterDef's authored enemy_ids, so the generator is
+## dormant rather than drawing the wrong-sized enemies.
+static func enemy_pool(act: int) -> Array[String]:
+  return EnemyPools.regular(act)
 
 
 ## Draw enemies from `pool` until their points reach `target`, up to MAX_ENEMIES_PER_FIGHT

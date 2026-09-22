@@ -71,8 +71,14 @@ for each def's fields and how it resolves.
   screen: `name_key` is the character's personal name, `subtitle_key` the role beneath it
   (`'Rot Shepherd'`). The `id` stays the internal working label (`spore_druid`) and never displays. Adding a character = a def + registering
   it; the run picks one at `start`.
-- **Enemies stay a shared pool** and the **reward-relic pool stays shared** — only *item* pools split
-  per character (#27).
+- An **enemy** (also used for allies and summons) is an `EnemyDef` in `enemies/enemy_catalog.gd`:
+  health, an ordered board of item ids (any item, including one from a player pool — #43), and
+  optionally an `image` (its cut-out monster painting) and a `portrait` (falls back to the image).
+  Size it to its act's points range in [`encounter_points_budget.md`](../plans/encounter_points_budget.md).
+  Make it live by adding its id to an act's `REGULAR` or `BOSS` list in `enemies/enemy_pools.gd`. The
+  image steps and the list rules are in [enemy.md](../systems/enemy.md).
+- **Enemies are shared by every character** and the **reward-relic pool stays shared** — only *item*
+  pools split per character (#27).
 
 ## Tests do not use authored content
 

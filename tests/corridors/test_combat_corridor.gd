@@ -239,3 +239,25 @@ func test_random_image_pick_leaves_the_run_rng_untouched() -> void:
   assert_eq(randi(), expected_global, 'the global RNG did not advance')
   run.teardown()
   run.free()
+
+
+func test_an_enemy_with_an_image_shows_it() -> void:
+  var corridor: CombatCorridor = _host()
+  var image: String = MonsterImages.paths()[0]
+  var first := Actor.new(10.0)
+  first.image = image
+  var second := Actor.new(10.0)
+  second.image = image
+  corridor.set_enemies([first, second])
+  assert_eq(corridor._enemies[0].texture.resource_path, image, 'on the placeholder sprite it takes over')
+  assert_eq(corridor._enemies[1].texture.resource_path, image, 'and on a new sprite')
+  first.dissolve()
+  second.dissolve()
+
+
+func test_an_enemy_without_an_image_gets_a_random_one() -> void:
+  var corridor: CombatCorridor = _host()
+  var enemy := Actor.new(10.0)
+  corridor.set_enemies([RefCounted.new(), enemy])
+  assert_not_null(corridor._enemies[1].texture, 'a random image')
+  enemy.dissolve()

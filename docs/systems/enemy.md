@@ -19,7 +19,26 @@ What it **is not**: not a subclass of `Actor`; not a new combat mechanism; not t
 
 ## Enemy definition (data)
 
-An enemy is authored as an `EnemyDef` (#23): **HP** (max), a `name_key`, and an **ordered board** of Item ids (`item_ids`). `EnemyDef.points()` prices it for encounter assembly — its health plus what its items spend, in the units of [`item_heuristics.md`](../design/item_heuristics.md). `Encounter` instantiates an `Actor` from the def and gives it the Items. `portrait` is the image an ally slot shows for the Actor (enemies in the corridor use the monster images instead). `hurt_sound` names the folder of recordings played when this enemy is struck, which is how one enemy sounds different from another when hit; empty uses the shared folder ([audio.md](audio.md#the-three-layers-of-an-attack)). Both are copied onto the Actor as presentation and combat ignores them. **Tier / signature** are authoring conventions, not yet `EnemyDef` fields.
+An enemy, an ally and a summon are all authored as an `EnemyDef` (#23). It extends `ActorDef` (`src/content/actor_def.gd`), the base it shares with `CharacterDef`, and adds an **ordered board** of Item ids (`item_ids`). `EnemyDef.points()` prices it for encounter assembly — its health plus what its items spend, in the units of [`item_heuristics.md`](../design/item_heuristics.md).
+
+| `ActorDef` field | Meaning |
+|---|---|
+| `id`, `name_key` | String id and source English name |
+| `max_hp` | Starting health. Defaults to `Balance.PLAYER_START_HP`; `EnemyDef` defaults to `Balance.ENEMY_PLACEHOLDER_HP`. |
+| `image` | The cut-out monster image the corridor shows (`assets/monsters/cut_out/`). Empty = a random one. |
+| `portrait` | The picture an ally slot or the player frame shows. Empty = the image. |
+| `hurt_sound` | The folder of recordings played when this actor is struck; empty uses the shared folder ([audio.md](audio.md#the-three-layers-of-an-attack)). |
+
+`make_actor()` builds the `Actor` from these, and `EnemyDef` adds its board; every place that spawns an enemy, ally, summon or the player calls it. The presentation fields are copied onto the Actor and combat ignores them. A character's Actor keeps an empty `display_name`, because the combat summary reads an empty name as the player. **Tier / signature** are authoring conventions, not yet `EnemyDef` fields.
+
+To give an enemy an image, copy the painting into `assets/monsters/`, run `tools/cut_out_monsters.gd` (usage in its header), run `tools/import.sh`, and set `image` to the copy in `cut_out/`.
+
+## Which enemies each act uses
+
+`EnemyPools` (`src/content/enemies/enemy_pools.gd`) holds two lists per act. An enemy in neither list is authored but never met.
+
+- `REGULAR`: the enemies a generated fight in that act draws from, regular and elite alike (an elite has a larger points target). While an act's list is empty, its fights keep their encounter's authored enemies.
+- `BOSS`: the enemies of the boss fight that ends the act, left to right. While it is empty, the boss fight keeps its encounter's authored enemies. The one boss encounter supplies the location text and the relic reward in every act.
 
 ---
 

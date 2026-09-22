@@ -12,7 +12,8 @@ static var _installed: bool = false
 
 
 ## Add every fixture definition to its catalog, and put a fixture in place of every authored enemy,
-## encounter and relic under the authored id. Those three are replaced rather than added because
+## encounter and relic under the authored id. Every act's regular and boss enemy lists are emptied,
+## so filling the authored EnemyPools cannot change which enemies a whole-run test meets. Those three are replaced rather than added because
 ## the game names them by id (the map names encounters, encounters name enemies, the relic reward
 ## draws from RelicCatalog.REWARD_POOL); replacing every id keeps this working as content is
 ## authored. Authored items, characters, potions and enchants stay, but no fixture refers to them.
@@ -37,6 +38,8 @@ static func install() -> void:
     RelicCatalog._defs[def.id] = def
   ConsumableCatalog._defs[FixtureKit.POTION_ID] = FixtureKit.potion()
   EnchantCatalog._defs[FixtureKit.ENCHANT_ID] = FixtureKit.enchant()
+  EnemyPools._by_act['regular'] = _empty_acts()
+  EnemyPools._by_act['boss'] = _empty_acts()
   _installed = true
 
 
@@ -51,7 +54,16 @@ static func uninstall() -> void:
   RelicCatalog._defs.clear()
   ConsumableCatalog._defs.clear()
   EnchantCatalog._defs.clear()
+  EnemyPools._by_act.clear()
   _installed = false
+
+
+## One empty enemy list per act.
+static func _empty_acts() -> Array:
+  var acts: Array = []
+  for act: int in range(RunMap.ACTS):
+    acts.append([])
+  return acts
 
 
 static func _build_all() -> void:

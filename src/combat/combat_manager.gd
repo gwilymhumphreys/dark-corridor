@@ -115,13 +115,7 @@ func _spawn_token(def_id: String) -> Actor:
     # already no-ops on a null actor, so the summon simply doesn't land — be safe for players.
     push_error('[CombatManager] _spawn_token: unknown enemy id "%s" — summon skipped.' % def_id)
     return null
-  var actor := Actor.new(def.max_hp)
-  actor.display_name = def.name_key
-  actor.portrait = def.portrait
-  actor.hurt_sound = def.hurt_sound
-  for item_id in def.item_ids:
-    actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
-  return actor
+  return def.make_actor()
 
 
 func _register_actor(actor: Actor) -> void:

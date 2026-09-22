@@ -30,14 +30,14 @@ the fixture files and are never read from `Balance`.
 | `fixture_enemies.gd` | `FixtureEnemies`: a small and a large enemy, and an ally for summons and recruits, each with fixed health and one fixture attack. |
 | `fixture_encounters.gd` | `FixtureEncounters`: a fight against one fixture enemy, a rest, and an event with a heal, a maximum-health and a recruit option (`OPTION_*` give their indexes). |
 | `fixture_kit.gd` | `FixtureKit`: a heal potion, a value-multiplying enchant, a combat-start shield relic and a maximum-health relic. |
-| `fixture_content.gd` | `FixtureContent.install()`: adds every fixture to its catalog, and puts a fixture in place of every authored enemy, encounter and relic under the authored id. |
+| `fixture_content.gd` | `FixtureContent.install()`: adds every fixture to its catalog, puts a fixture in place of every authored enemy, encounter and relic under the authored id, and empties every act's `EnemyPools` lists. |
 
 A test that plays a run, an encounter or an autotest, or that builds fixture content by id
 (`CombatManager.add_item`, a summon, a save and reload), calls `FixtureContent.install()` in
 `before_each`. A run test passes `FixtureCharacter.ID` to `run.start`, `Game.start_run` or
 `AutoTestMode.character`. Authored ids are replaced rather than added to because the map names
 encounters, encounters name enemies and the relic reward draws from `RelicCatalog.REWARD_POOL`.
-The map's beat layout in `RunMap` stays real. The fixture character beats the fixture enemies by a
+Emptying the `EnemyPools` lists keeps every whole-run fight on its encounter's enemies, so filling the authored lists cannot change a whole-run test; the fight generator is tested on its own in `tests/run/test_encounter_budget.gd`. The map's beat layout in `RunMap` stays real. The fixture character beats the fixture enemies by a
 wide margin; keep that margin if you change either.
 
 `install()` fails an assert if `ColorlessPool.ITEMS` is not empty, because the draft adds the

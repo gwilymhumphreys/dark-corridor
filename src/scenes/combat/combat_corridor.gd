@@ -8,9 +8,9 @@ extends SubViewportContainer
 ## the enemy stands still while the player walks up to it, and perspective makes the sprite grow as
 ## the gap closes. The corridor's light brightens it as it comes nearer.
 ##
-## Enemy images are random cut-out painted samples (`MonsterImages`), sized to
-## `Balance.ENEMY_PAINTED_HEIGHT` on screen at depth 0. A sprite keeps its image for as long as its
-## enemy is in the fight.
+## An enemy's image is its definition's `image` (on the Actor), or a random cut-out painted sample
+## (`MonsterImages`) when it has none, sized to `Balance.ENEMY_PAINTED_HEIGHT` on screen at depth 0.
+## A sprite keeps its image for as long as its enemy is in the fight.
 ##
 ## The container is drawn through `DebugPanels.world_material`, the corridor look shader (effects
 ## and the world palette clamp), which covers the walls and enemy images only. With every effect off
@@ -69,7 +69,8 @@ func corridor() -> Corridor3D:
 ## Keep one sprite per enemy in `actors`, in that order (empty once the last enemy is reaped; the
 ## fight resolves that same step, so the empty corridor is only ever a teardown frame away). An
 ## enemy that stays keeps its sprite and image; a removed enemy's sprite is freed; a new enemy takes
-## over a placeholder sprite if there is one, otherwise gets a new random image.
+## over a placeholder sprite if there is one, otherwise gets a new sprite. A new enemy with an image
+## of its own shows it, including on a placeholder it takes over.
 func set_enemies(actors: Array) -> void:
   if actors == _actors:
     return
@@ -87,12 +88,29 @@ func set_enemies(actors: Array) -> void:
   for actor: Object in actors:
     var sprite: Sprite3D = kept.get(actor)
     if sprite == null:
-      sprite = spare.pop_front() if not spare.is_empty() else _corridor.add_enemy(MonsterImages.random_texture())
+      var texture: Texture2D = _own_texture(actor)
+      if not spare.is_empty():
+        sprite = spare.pop_front()
+        if texture != null:
+          sprite.texture = texture
+      else:
+        sprite = _corridor.add_enemy(texture if texture != null else MonsterImages.random_texture())
     _enemies.append(sprite)
     _actors.append(actor)
   for sprite: Sprite3D in spare:
     _corridor.remove_enemy(sprite)
   _arrange()
+
+
+## The image an enemy's definition gives it, or null when it has none (or the debug panel forces
+## every enemy to one image, which MonsterImages.random_texture() returns).
+func _own_texture(actor: Object) -> Texture2D:
+  if MonsterImages.forced_path != '':
+    return null
+  var actor_image: Variant = actor.get('image') if actor != null else null
+  if not actor_image is String or actor_image == '':
+    return null
+  return load(actor_image) as Texture2D
 
 
 ## Place the enemies at `depth_cells` sections deep (0 = arrived, larger = further away). They

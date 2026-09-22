@@ -14,6 +14,7 @@ var board: Array[Item] = []              # ordered, not a grid
 var statuses: Array[StatusEffect] = []   # actor-targeted instances
 var display_name: String = ''  # presentation label (the def's name_key, tr()'d by the view); combat ignores it
 var portrait: String = ''      # presentation: res:// path of the def's portrait, shown by the view; combat ignores it
+var image: String = ''         # presentation: res:// path of the def's corridor image, '' = random; combat ignores it
 # presentation: the def's hurt sound folder, played by the wall when this actor is hit;
 # combat ignores it. Empty = the shared combat/hurt folder (docs/systems/audio.md).
 var hurt_sound: String = ''

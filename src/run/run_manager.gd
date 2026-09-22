@@ -105,11 +105,9 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
 
 
 ## Build the run-start player Actor from the character's starting board (#27). Run-lifetime,
-## owned here. Max HP is the global default for now (a per-character start-HP comes later).
+## owned here. Max HP is the character's (the global default unless its def sets one).
 func _make_starting_player() -> Actor:
-  var actor := Actor.new(Balance.PLAYER_START_HP)
-  actor.portrait = character.portrait
-  actor.hurt_sound = character.hurt_sound
+  var actor: Actor = character.make_actor()
   for id in CharacterCatalog.starting_board(character, rng):
     actor.board.append(Item.new(ItemCatalog.get_def(id), actor))
   return actor
@@ -312,14 +310,7 @@ func pick_event_option(index: int) -> void:
 
 
 func _make_ally(def_id: String) -> Actor:
-  var def: EnemyDef = EnemyCatalog.get_def(def_id)
-  var actor := Actor.new(def.max_hp)
-  actor.display_name = def.name_key
-  actor.portrait = def.portrait
-  actor.hurt_sound = def.hurt_sound
-  for item_id in def.item_ids:
-    actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
-  return actor
+  return EnemyCatalog.get_def(def_id).make_actor()
 
 
 ## Attach an enchantment to a chosen board item (the enchant-target sub-choice; a
@@ -403,16 +394,16 @@ func _create_current_encounter() -> void:
 
 ## Draw the enemies for a generated fight (docs/plans/encounter_points_budget.md): add enemies from
 ## the act's pool on the run RNG until their points reach the beat's target, up to the enemy limit.
-## The draw is random and ignores composition — positioning is handled later. Returns empty, leaving
-## the def's authored enemy_ids in place, for a non-fight, for a boss (hand-authored) and for an
-## empty pool.
+## The draw is random and ignores composition — positioning is handled later. A boss is not drawn:
+## it takes the act's boss list (EnemyPools.BOSS). Returns empty, leaving the def's authored
+## enemy_ids in place, for a non-fight, for a boss with an empty list and for an empty pool.
 func _draw_enemies(def: EncounterDef) -> Array[String]:
   if def.type != EncounterDef.Type.FIGHT:
     return []
   if not pinned_enemy_ids.is_empty():
     return pinned_enemy_ids.duplicate()
   if _current_def_id == RunMap.boss_for(RunMap.act_of(position)):
-    return []
+    return EnemyPools.boss(RunMap.act_of(position))
   var target: float = RunMap.target_points(position)
   if def.reward == EncounterDef.Reward.ELITE:
     target *= Balance.POINTS_ELITE_MULTIPLIER
@@ -527,10 +518,9 @@ func rehydrate(snap: Dictionary) -> bool:
   if not _snapshot_usable(snap):
     return false
   character = CharacterCatalog.get_def(snap.get('character', CharacterCatalog.DEFAULT))
-  player = Actor.new(float(snap['max_hp']))
+  player = character.make_actor()
+  player.max_hp = float(snap['max_hp'])
   player.hp = float(snap['hp'])
-  player.portrait = character.portrait
-  player.hurt_sound = character.hurt_sound
   player.board.clear()
   for entry in snap['board']:
     var item := Item.new(ItemCatalog.get_def(str(entry['id'])), player)

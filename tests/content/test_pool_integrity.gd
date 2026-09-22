@@ -71,6 +71,15 @@ func test_enemy_boards_resolve() -> void:
       assert_not_null(ItemCatalog.get_def(item_id), '%s: board item %s resolves' % [enemy_id, item_id])
 
 
+func test_every_act_enemy_list_resolves() -> void:
+  # A typo in an act's regular or boss list fails here instead of crashing mid-spawn.
+  assert_eq(EnemyPools.REGULAR.size(), RunMap.ACTS, 'one regular list per act')
+  assert_eq(EnemyPools.BOSS.size(), RunMap.ACTS, 'one boss list per act')
+  for act: int in range(RunMap.ACTS):
+    for id: String in EnemyPools.regular(act) + EnemyPools.boss(act):
+      assert_true(EnemyCatalog.has(id), 'act %d: enemy id %s resolves' % [act, id])
+
+
 func test_reward_relic_pool_resolves() -> void:
   for relic_id in RelicCatalog.REWARD_POOL:
     assert_not_null(RelicCatalog.get_def(relic_id), 'reward relic %s resolves' % relic_id)

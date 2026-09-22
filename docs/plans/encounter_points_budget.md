@@ -125,8 +125,9 @@ continuous across them.
    on the curve. The Claw was resized at the same time so an early fight costs up to 10% of starting
    health. All three characters now clear the run on every seed tried. Because the enemies do not
    grow until step 7, fights after the first few cost the player nothing and get shorter.
-7. Author enough enemies per act to fill the pools. This is the owner's. `RunMap.enemy_pool` returns
-   empty until then, which leaves every fight on its authored composition.
+7. Author enough enemies per act to fill the pools. This is the owner's. The lists are
+   `EnemyPools.REGULAR` (see [`enemy_authoring_structure.md`](enemy_authoring_structure.md)); while
+   an act's list is empty, its fights keep their authored composition.
 8. ~~Give the autotest a way to pin a composition.~~ **Done** — `--enemies grunt,grunt`.
 
 ## Decided

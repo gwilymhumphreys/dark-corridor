@@ -1,18 +1,14 @@
 class_name EnemyDef
-extends RefCounted
-## An authored enemy (docs/systems/enemy.md) — NOT a class, just data: HP + an authored board
-## of item ids (the per-enemy attack item + any shared utility). The Encounter
-## instantiates an Actor from this and gives it Items from the ids. Tier /
-## signature come later.
+extends ActorDef
+## An authored enemy, ally or summon (docs/systems/enemy.md) — NOT a class, just data: the ActorDef
+## fields plus an authored board of item ids. make_actor() builds the Actor and gives it Items from
+## the ids. Tier / signature come later.
 
-var id: String = ''
-var name_key: String = ''
-var portrait: String = ''            # res:// path of the portrait shown in an ally slot (assets/portraits/enemies/); empty = none
-# The folder under assets/sound-effects/ whose recordings play when this enemy is hit
-# (docs/systems/audio.md). Empty = the shared combat/hurt folder.
-var hurt_sound: String = ''
-var max_hp: float = Balance.ENEMY_PLACEHOLDER_HP
 var item_ids: Array[String] = []     # Array[String] -> ItemCatalog ids, in board order
+
+
+func _init() -> void:
+  max_hp = Balance.ENEMY_PLACEHOLDER_HP
 
 
 ## What this enemy is worth in points (docs/design/item_heuristics.md): the health the player has
@@ -23,3 +19,11 @@ func points() -> float:
   for id: String in item_ids:
     total += ItemPoints.spend(ItemCatalog.get_def(id))
   return total
+
+
+## The Actor at full health with its authored board.
+func make_actor() -> Actor:
+  var actor: Actor = super.make_actor()
+  for item_id: String in item_ids:
+    actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
+  return actor
