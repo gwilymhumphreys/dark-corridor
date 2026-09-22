@@ -681,8 +681,8 @@ static func _mighty_blow() -> ItemDef:
 
 ## Smith big slow weapons (PLACEHOLDER names — owner's to rename) — the empower-payoff ladder
 ## (docs/design/smith.md): three heavy single-target attacks on 5s/6s/7s cooldowns with similar DPS
-## but a rising PER-HIT, so the slowest is the prime target for Mighty Blow's double. Plain weapons
-## (no rider) — the identity is the per-hit ladder, not extra effects. In the Smith's item_pool.
+## but a rising PER-HIT, so the slowest is the prime target for Mighty Blow's double. The Warhammer
+## also decharges a random enemy item; the other two are plain. In the Smith's item_pool.
 ## COMMON. Numbers -> Balance (placeholders for /tune).
 static func _smith_broadaxe() -> ItemDef:
   var d := ItemDef.new()
@@ -706,7 +706,7 @@ static func _smith_warhammer() -> ItemDef:
   var d := ItemDef.new()
   d.id = SMITH_WARHAMMER
   d.types = [ItemType.WEAPON]
-  d.mechanics = [AttackMechanic.ID]
+  d.mechanics = [AttackMechanic.ID, DechargeMechanic.ID]
   d.name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/war_hammer.png'
   d.attack_sound = 'blunt'
@@ -716,7 +716,13 @@ static func _smith_warhammer() -> ItemDef:
   hit.value = Balance.SMITH_WARHAMMER_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = Balance.WEAPON_TRAVEL
-  d.effects = [hit]
+  # The blow also knocks back one random enemy item's cooldown bar, landing with the hit.
+  var stagger := ItemEffect.new()
+  stagger.mechanic = DechargeMechanic.ID
+  stagger.value = 1.0
+  stagger.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  stagger.travel = Balance.WEAPON_TRAVEL
+  d.effects = [hit, stagger]
   d.panel_color = Colours.ATTACK
   return d
 

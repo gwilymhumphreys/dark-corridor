@@ -42,6 +42,9 @@ string id), and where relevant a runtime instance class (`relic.gd`, `enchantmen
    or to `items/colorless_pool.gd` if it genuinely belongs to *every* character (the exception that
    earns it, never a default tier — decision #27).
 
+To see a character's items side by side with their tooltip text, run `tools/item_browser.sh` and open
+`_temp/item_browser.html` ([item_browser.md](../systems/item_browser.md)).
+
 **Active / disabled = pool membership.** A def that exists but is in no pool is "disabled" — it's
 authored and inspectable but never drafted. That is the toggle: add/remove the id from a pool. Not
 a flag on the def, not a folder. (`HEX_BOLT` / `SUNDER` are catalog-only examples today.)

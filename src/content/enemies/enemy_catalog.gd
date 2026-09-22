@@ -28,6 +28,16 @@ static func get_def(id: String) -> EnemyDef:
   return _defs[id]
 
 
+## Every authored enemy id, for tools that list the whole catalog (tools/item_browser.gd).
+static func all_ids() -> Array[String]:
+  if _defs.is_empty():
+    _build()
+  var ids: Array[String] = []
+  for id: String in _defs:
+    ids.append(id)
+  return ids
+
+
 static func _build() -> void:
   var grunt := EnemyDef.new()
   grunt.id = GRUNT

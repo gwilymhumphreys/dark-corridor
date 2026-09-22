@@ -62,7 +62,6 @@ func test_the_three_big_weapons_are_authored_correctly() -> void:
     var d: ItemDef = ItemCatalog.get_def(spec[0])
     assert_true(d.types.has(ItemType.WEAPON), '%s is a weapon' % spec[0])
     assert_almost_eq(d.cooldown, spec[1], 0.0001, '%s cooldown' % spec[0])
-    assert_eq(d.effects.size(), 1, '%s is a single-effect weapon' % spec[0])
     assert_eq(d.effects[0].mechanic, AttackMechanic.ID, '%s deals damage' % spec[0])
     assert_almost_eq(d.effects[0].value, spec[2], 0.0001, '%s damage' % spec[0])
     assert_eq(d.effects[0].shape, ItemEffect.Shape.OPPONENT_LEFTMOST, '%s is single-target' % spec[0])

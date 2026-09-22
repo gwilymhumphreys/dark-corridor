@@ -31,14 +31,13 @@ static func has(id: String) -> bool:
   return _defs.has(id)
 
 
-## The roster ids in display order — the character-select screen enumerates this. Both
-## characters' numbers and names are still placeholders to /tune and rename. Add an id here once
-## its pool is deep enough to play. The Smith is DEFAULT but deliberately absent from this list
-## (owner, 2026-09-21): it goes FIRST here once the owner adds it to the character select.
+## The roster ids in display order — the character-select screen enumerates this. The
+## characters' numbers and names are still placeholders to /tune and rename. The Smith leads
+## (owner, 2026-09-23), as the character being balanced first.
 static func ids() -> Array:
   if _defs.is_empty():
     _build()
-  return [FLESHMANCER, SPORE_DRUID]
+  return [SMITH, FLESHMANCER, SPORE_DRUID]
 
 
 ## The run-start board for a character: its fixed `starting_item_ids`, or — when it lists
@@ -141,7 +140,7 @@ static func _fleshmancer() -> CharacterDef:
 ## SCAFFOLD — holds the empower engine authored so far (Mighty Blow + the three big weapons, whose
 ## per-hit ladder makes the slowest the best thing to double) and the armour ladder beside it.
 ## Still the owner's to fill: the go-wide / go-tall split, the signature relic, a portrait, and the
-## real 3-item starting kit. NOT in ids() yet — see the note there.
+## real 3-item starting kit. First in ids() (owner, 2026-09-23).
 static func _smith() -> CharacterDef:
   var d := CharacterDef.new()
   d.id = SMITH

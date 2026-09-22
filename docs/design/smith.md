@@ -26,8 +26,8 @@ mechanically light and still have a distinct fiction.
 
 **Roster position (owner, 2026-09-21).** The Smith is `CharacterCatalog.DEFAULT` — the
 autostart, the save-resume fallback and the autotest baseline — because it is the character being
-balanced first. It goes **first** in `CharacterCatalog.ids()` once the owner adds it to the select
-screen; until then it is authored but not offered there.
+balanced first. It is **first** in `CharacterCatalog.ids()`, so it leads the select screen
+(added 2026-09-23).
 
 **Name:** *Smith* is the owner's working concept label, as *Fleshmancer* and *Armourer* were. A
 display name in the same register as the rest of the roster comes later. The internal id and this
@@ -188,6 +188,8 @@ pool. The names are placeholders; the numbers are on the budget curve.
   to self, stacking.
 - **The three big weapons** (`smith_broadaxe`, `smith_warhammer`, `smith_greatsword`, all
   `[weapon]`) — single-target, opponent-leftmost, on a rising cooldown and per-hit ladder.
+  The Warhammer also decharges one random enemy item by a second (owner, 2026-09-23), so it
+  slows the enemy as well as hitting; the other two are plain.
 - **The four armour items** (`smith_vambraces`, `smith_sallet`, `smith_kite_shield`,
   `smith_breast_plate`, all `[armour]`) — plain shield-to-self on a rising cooldown and shield
   ladder, the defensive counterpart to the weapon ladder. Names come from
@@ -199,4 +201,4 @@ run start (`starting_item_types`). Which three it gets changes every run.
 **Still to build:** the rest of the armour line (shield made fuel-eligible, then the spender items
 that turn shield into attacks), the go-tall skills and the item-targeted modifier they need, the
 cross-cutting cards, the poison, bleed and burn access, the signature starting relic, a portrait,
-enough pool depth to draft, and then the move into `ids()`.
+and enough pool depth to draft.
