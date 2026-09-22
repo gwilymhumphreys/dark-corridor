@@ -1,67 +1,64 @@
 GIMP Palette
 Name: ui-custom
-# The palette the debug panel's Icons tab writes chosen mechanic colours into (step 10,
-# docs/plans/mechanic_icons.md). It starts as a copy of ui-default.gpl's colours; `InterfacePalette`
-# writes it whole on every change, so it always names the same set as ui-default.gpl.
- 10  10  13	ui background
- 51  51  51	ui background wear
-123 120 120	ui background wear light
-  0   0   0	ui panel shadow
- 31  31  31	ui panel
- 51  51  51	ui panel edge
-123 120 120	ui panel light
- 51  51  51	ui panel wear
-123 120 120	ui panel wear light
- 89  89  89	ui text disabled
-128 128 128	ui text pressed
-153 153 168	ui text dim
-191 191 191	ui text button
-255 255 255	ui text
- 18  18  20	ui button
-199 196 189	ui button light
- 15  15  18	ui text button dark
-209 204 194	ui highlight
- 51  77 128	portrait player
-128  51  56	portrait enemy
- 26  26  31	hp bar bg
-102 191 102	hp bar fill
- 31  15  15	enemy hp bar bg
-184  56  56	enemy hp bar fill
-242 242 242	cooldown ring
-115 115 115	ally downed
-255 255 255	rarity common
-153 217 255	rarity uncommon
-255 217 102	rarity rare
-242 235 140	tooltip changed
-230  51  51	attack
- 77 230 102	heal
-128  51 179	arcane
-242 209  51	shield
- 69 133  46	poison
-242 128  26	burn
-120  28  74	bleed
-153 242 153	regen
-242 242 153	crit
-240 240 240	charge
-128 128 128	decharge
-153 102 179	status weak
-217 128  51	status vulnerable
-230 230 140	status blind
-128 128 128	status silence
-115 204 179	status spores
-140 102  89	status decay
-242 191  51	status empowered
-102 128 153	relic stone ward
-153  77  89	relic vital charm
-115 115 128	relic iron idol
-179 102 230	beat boss
-217 179  77	beat relic
-102 191 115	beat rest
-115 140 204	beat event
-179  89  89	beat combat
-102 102 115	map track
-242 235 140	map current halo
-128 117  77	map cleared
-140 140 153	map arrow
-217 217 224	map label
-166 102 102	map rolled beat
+16 12 10 ui background
+58 52 46 ui background wear
+150 142 130 ui background wear light
+8 6 5 ui panel shadow
+29 26 23 ui panel
+50 45 40 ui panel edge
+120 113 104 ui panel light
+58 52 46 ui panel wear
+150 142 130 ui panel wear light
+80 76 72 ui text disabled
+115 110 105 ui text pressed
+140 133 124 ui text dim
+181 176 169 ui text button
+214 206 192 ui text
+29 26 23 ui button
+181 176 169 ui button light
+16 12 10 ui text button dark
+214 206 192 ui highlight
+64 86 108 portrait player
+108 62 58 portrait enemy
+26 32 26 hp bar bg
+87 125 88 hp bar fill
+40 25 23 enemy hp bar bg
+133 75 70 enemy hp bar fill
+214 206 192 cooldown ring
+110 106 100 ally downed
+170 130 95 rarity common
+150 158 166 rarity uncommon
+190 160 100 rarity rare
+188 161 105 tooltip changed
+154 80 75 attack
+69 117 87 heal
+104 97 148 arcane
+160 138 72 shield
+72 90 48 poison
+176 108 50 burn
+110 58 78 bleed
+120 158 118 regen
+209 130 112 crit
+214 206 192 charge
+115 110 105 decharge
+126 92 122 status weak
+141 92 57 status vulnerable
+169 167 131 status blind
+105 105 105 status silence
+56 117 113 status spores
+121 100 84 status decay
+124 102 53 status empowered
+100 112 124 relic stone ward
+128 80 84 relic vital charm
+108 108 114 relic iron idol
+128 92 150 beat boss
+176 150 92 beat relic
+98 140 100 beat rest
+98 116 150 beat event
+150 88 82 beat combat
+90 86 80 map track
+206 190 130 map current halo
+120 108 76 map cleared
+128 122 114 map arrow
+196 188 176 map label
+140 96 90 map rolled beat
