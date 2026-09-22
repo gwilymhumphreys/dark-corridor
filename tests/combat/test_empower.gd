@@ -3,8 +3,9 @@ extends GutTest
 ## (the firing item is threaded into modify_outgoing / on_owner_item_fired so a status can scope to a
 ## WEAPON attack). Proves: the double is weapon-scoped (not spells/skills), one charge is spent per
 ## weapon attack (2 charges → 2 doubled → expires), modify_outgoing stays PURE on the preview path,
-## Mighty Blow banks a self charge (and stacks), the three big weapons are authored correctly, and
-## Weak + Empower compose without error.
+## an empower applier banks a self charge (and stacks), and Weak + Empower compose without error.
+## The authored cards (Mighty Blow, the three big weapons) are checked in
+## tests/content/test_authored_content.gd.
 
 
 func before_each() -> void:
@@ -106,46 +107,22 @@ func test_display_value_preview_is_pure() -> void:
     'but modify_outgoing is PURE — the preview spent no charge')
 
 
-# --- Mighty Blow (the empower applier) ---
+# --- an empower applier ---
 
-func test_mighty_blow_applies_empowered_to_self() -> void:
-  var p: Payload = Item.new(ItemCatalog.get_def(ItemCatalog.MIGHTY_BLOW), Actor.new()).fire()[0]
-  assert_eq(p.kind, Delivery.Kind.APPLY_STATUS, 'Mighty Blow is a status applier')
+func test_an_empower_applier_applies_empowered_to_self() -> void:
+  var p: Payload = Item.new(FixtureItems.empower(), Actor.new()).fire()[0]
+  assert_eq(p.kind, Delivery.Kind.APPLY_STATUS, 'the applier fires a status')
   assert_eq(p.status_id, 'empowered', 'it applies the empower buff')
   assert_eq(p.shape, ItemEffect.Shape.SELF, 'to the firer (self)')
-  assert_almost_eq(p.value, Balance.MIGHTY_BLOW_CHARGES, 0.0001, 'banking one charge per fire')
+  assert_almost_eq(p.value, FixtureItems.EMPOWER_CHARGES, 0.0001, 'banking its charges per fire')
 
 
-func test_mighty_blow_is_a_skill_on_a_cooldown() -> void:
-  var d := ItemCatalog.get_def(ItemCatalog.MIGHTY_BLOW)
-  assert_true(d.types.has(ItemType.SKILL), 'Mighty Blow is a skill')
-  assert_almost_eq(d.cooldown, Balance.MIGHTY_BLOW_COOLDOWN, 0.0001, 'a plain-cooldown metronome')
-
-
-func test_mighty_blow_charges_stack_on_repeat() -> void:
+func test_empower_charges_stack_on_repeat() -> void:
   var a := Actor.new(100.0)
-  StatusManager.apply(a, 'empowered', Balance.MIGHTY_BLOW_CHARGES)
-  StatusManager.apply(a, 'empowered', Balance.MIGHTY_BLOW_CHARGES)
-  assert_almost_eq(_find(a, 'empowered').count, 2.0 * Balance.MIGHTY_BLOW_CHARGES, 0.0001,
-    'repeated Mighty Blow fires stack charges (reapply is additive)')
-
-
-# --- the three big weapons ---
-
-func test_the_three_big_weapons_are_authored_correctly() -> void:
-  var specs := [
-    [ItemCatalog.SMITH_BROADAXE, Balance.SMITH_BROADAXE_COOLDOWN, Balance.SMITH_BROADAXE_DAMAGE],
-    [ItemCatalog.SMITH_WARHAMMER, Balance.SMITH_WARHAMMER_COOLDOWN, Balance.SMITH_WARHAMMER_DAMAGE],
-    [ItemCatalog.SMITH_GREATSWORD, Balance.SMITH_GREATSWORD_COOLDOWN, Balance.SMITH_GREATSWORD_DAMAGE],
-  ]
-  for spec in specs:
-    var d: ItemDef = ItemCatalog.get_def(spec[0])
-    assert_true(d.types.has(ItemType.WEAPON), '%s is a weapon' % spec[0])
-    assert_almost_eq(d.cooldown, spec[1], 0.0001, '%s cooldown' % spec[0])
-    assert_eq(d.effects.size(), 1, '%s is a single-effect weapon' % spec[0])
-    assert_eq(d.effects[0].mechanic, AttackMechanic.ID, '%s deals damage' % spec[0])
-    assert_almost_eq(d.effects[0].value, spec[2], 0.0001, '%s damage' % spec[0])
-    assert_eq(d.effects[0].shape, ItemEffect.Shape.OPPONENT_LEFTMOST, '%s is single-target' % spec[0])
+  StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_CHARGES)
+  StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_CHARGES)
+  assert_almost_eq(_find(a, 'empowered').count, 2.0 * FixtureItems.EMPOWER_CHARGES, 0.0001,
+    'repeated empower fires stack charges (reapply is additive)')
 
 
 # --- composition: Weak + Empower both fold in modify_outgoing ---

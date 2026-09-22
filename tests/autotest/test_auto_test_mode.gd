@@ -9,7 +9,7 @@ var _modes: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
-  FixtureRun.install()
+  FixtureContent.install()
 
 
 func after_each() -> void:
@@ -86,11 +86,12 @@ func test_tiny_timeout_fails_as_timeout() -> void:
 ## board is the default character's starting kit, which has no applier in it.
 class _FixtureBoardMode extends AutoTestMode:
   func _build_fight() -> Dictionary:
-    var player := Actor.new(Balance.PLAYER_START_HP)
+    # Both sides' health is fixed here, so tuning cannot change the fight.
+    var player := Actor.new(100.0)
     for def in [FixtureItems.attack(), FixtureItems.poison()]:
       player.board.append(Item.new(def, player))
 
-    var enemy := Actor.new(Balance.ENEMY_PLACEHOLDER_HP)
+    var enemy := Actor.new(100.0)
     enemy.board.append(Item.new(FixtureItems.enemy_attack(), enemy))
 
     var names: Dictionary = {}

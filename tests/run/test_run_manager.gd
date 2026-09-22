@@ -10,7 +10,7 @@ var _runs: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
-  FixtureRun.install()
+  FixtureContent.install()
   Save.clear()
 
 
@@ -32,11 +32,11 @@ func _run() -> RunManager:
   return r
 
 
-## Put an enchant on the first board item and a potion in the slot. No authored character's
-## starting kit carries either, so the tests that exercise those paths grant them here.
+## Put an enchant on the first board item and a potion in the slot. The fixture character's
+## starting kit carries neither, so the tests that exercise those paths grant them here.
 func _grant_enchant_and_potion(run: RunManager) -> void:
-  run.apply_enchant(Enchantment.new(EnchantCatalog.get_def(EnchantCatalog.WHETSTONE)), 0)
-  run.potions.append(Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)))
+  run.apply_enchant(Enchantment.new(FixtureKit.enchant()), 0)
+  run.potions.append(Consumable.new(FixtureKit.potion()))
 
 
 func _board_ids(actor: Actor) -> Array:
@@ -101,12 +101,12 @@ func test_draft_pick_lands_on_the_board() -> void:
 func test_starting_relic_grants_combat_start_shield() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  # Granted here: no authored character has a starting relic yet, and this is about the hook.
-  run.relics.append(Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD)))
+  # Granted here: the fixture character has no starting relic, and this is about the hook.
+  run.relics.append(Relic.new(FixtureKit.shield_relic()))
   # beat 0 auto-rolls to a live (easy) fight — begin it; relics apply at fight start, before any step
   run.begin_current()
-  assert_almost_eq(_shield_count(run.player), Balance.RELIC_STONE_WARD_SHIELD, 0.0001,
-    'Stone Ward applies its shield when the fight begins')
+  assert_almost_eq(_shield_count(run.player), FixtureKit.RELIC_SHIELD, 0.0001,
+    'the relic applies its shield when the fight begins')
 
 
 func test_loss_ends_run_died() -> void:
@@ -164,11 +164,11 @@ func test_max_hp_relic_grant_raises_max_and_current_hp() -> void:
   run.start(1, FixtureCharacter.ID)
   var before_max: float = run.player.max_hp
   var before_hp: float = run.player.hp
-  var charm := Relic.new(RelicCatalog.get_def(RelicCatalog.VITAL_CHARM))
+  var charm := Relic.new(FixtureKit.max_hp_relic())
   run.relics.append(charm)
   run._apply_relic_grant(charm)
-  assert_almost_eq(run.player.max_hp, before_max + Balance.RELIC_VITAL_CHARM_MAX_HP, 0.0001, 'max HP grew')
-  assert_almost_eq(run.player.hp, before_hp + Balance.RELIC_VITAL_CHARM_MAX_HP, 0.0001, 'and current HP too')
+  assert_almost_eq(run.player.max_hp, before_max + FixtureKit.RELIC_MAX_HP, 0.0001, 'max HP grew')
+  assert_almost_eq(run.player.hp, before_hp + FixtureKit.RELIC_MAX_HP, 0.0001, 'and current HP too')
 
 
 func test_relic_grant_is_deterministic_by_seed() -> void:
@@ -244,7 +244,7 @@ func test_resumed_run_derives_the_same_per_fight_seed() -> void:
 func test_ally_persists_through_save_and_resume() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.add_ally(EnemyCatalog.SPORE_THRALL)
+  run.add_ally(FixtureEnemies.ALLY_ID)
   run.allies[0].take_damage(5.0)   # mid-run damage — deliberately NOT persisted
   var run_b := _run()
   run_b.rehydrate(run.snapshot())
@@ -258,7 +258,7 @@ func test_ally_persists_through_save_and_resume() -> void:
 func test_between_act_full_heal_revives_allies() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.add_ally(EnemyCatalog.SPORE_THRALL)
+  run.add_ally(FixtureEnemies.ALLY_ID)
   run.allies[0].take_damage(10.0)
   run.position = RunMap.BEATS_PER_ACT - 1
   run.advance()                    # cross into the next act
@@ -270,7 +270,7 @@ func test_run_scoped_allies_revive_to_full_each_fight() -> void:
   # the next fight at full HP.
   var run := _run()
   run.start(5, FixtureCharacter.ID)
-  run.add_ally(EnemyCatalog.SPORE_THRALL)
+  run.add_ally(FixtureEnemies.ALLY_ID)
   run.allies[0].take_damage(run.allies[0].max_hp)   # down it
   assert_false(run.allies[0].is_alive(), 'the ally is downed')
   run.begin_current()                               # beat 0 auto-rolls to a fight
@@ -283,7 +283,7 @@ func test_add_ally_mid_fight_joins_the_live_combat() -> void:
   run.begin_current()                     # beat 0 auto-rolls to a fight
   var cm: CombatManager = run.combat_manager()
   assert_not_null(cm, 'a live fight is running')
-  run.add_ally(EnemyCatalog.SPORE_THRALL)
+  run.add_ally(FixtureEnemies.ALLY_ID)
   assert_true(run.allies[0] in cm.allies, 'the ally joined the live fight (shared roster)')
   for _i in 3:
     cm.sim_step()
@@ -293,7 +293,7 @@ func test_add_ally_mid_fight_joins_the_live_combat() -> void:
 func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.add_ally(EnemyCatalog.SPORE_THRALL)
+  run.add_ally(FixtureEnemies.ALLY_ID)
   var weak_ally: WeakRef = weakref(run.allies[0])
   var weak_item: WeakRef = weakref(run.allies[0].board[0])
   run.teardown()
@@ -319,7 +319,7 @@ func test_recruit_event_adds_a_run_scoped_ally() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   assert_eq(run.allies.size(), 0, 'no allies before the event')
-  _resolve_event(run, EncounterCatalog.EVENT_WANDERER, 0)   # 'Let it join you'
+  _resolve_event(run, FixtureEncounters.EVENT, FixtureEncounters.OPTION_ADD_ALLY)
   assert_eq(run.allies.size(), 1, 'the recruit event added a run-scoped ally')
   assert_eq(run.allies[0].board.size(), 1, 'the ally was built from its EnemyDef board')
 
@@ -329,7 +329,7 @@ func test_recruit_event_declined_adds_no_ally() -> void:
   run.start(1, FixtureCharacter.ID)
   run.player.take_damage(30.0)
   var hurt: float = run.player.hp
-  _resolve_event(run, EncounterCatalog.EVENT_WANDERER, 1)   # 'Walk on alone'
+  _resolve_event(run, FixtureEncounters.EVENT, FixtureEncounters.OPTION_HEAL)
   assert_eq(run.allies.size(), 0, 'declining recruits no ally')
   assert_gt(run.player.hp, hurt, 'and the decline heals a little (the player-Actor outcome still applies)')
 
@@ -338,10 +338,10 @@ func test_add_ally_respects_the_four_slot_cap() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   for _i in RunManager.MAX_ALLIES:
-    run.add_ally(EnemyCatalog.SPORE_THRALL)
+    run.add_ally(FixtureEnemies.ALLY_ID)
   assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'the four ally slots fill')
   assert_false(run.can_add_ally(), 'and report full')
-  run.add_ally(EnemyCatalog.SPORE_THRALL)   # one past the cap
+  run.add_ally(FixtureEnemies.ALLY_ID)   # one past the cap
   assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'a 5th recruit is a no-op (the cap holds)')
 
 
@@ -429,24 +429,24 @@ func test_player_actor_and_board_free_after_run_teardown() -> void:
 
 
 func test_starting_kit_saves_and_rehydrates() -> void:
-  # A relic + an enchant + a potion all round-trip through the snapshot. No authored character
-  # starts with an enchant or a potion, so this grants them the way a reward would.
+  # A relic + an enchant + a potion all round-trip through the snapshot. The fixture character
+  # starts with none of them, so this grants them the way a reward would.
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   _grant_enchant_and_potion(run)
-  run.relics.append(Relic.new(RelicCatalog.get_def(RelicCatalog.STONE_WARD)))
+  run.relics.append(Relic.new(FixtureKit.shield_relic()))
   assert_not_null(run.player.board[0].enchant, 'the enchant is on the first board item')
   assert_eq(run.potions.size(), 1, 'a potion is held')
   assert_eq(run.relics.size(), 1, 'and a relic')
 
   var snap: Dictionary = run.snapshot()
-  assert_eq(snap['board'][0]['enchant'], EnchantCatalog.WHETSTONE, 'enchant id saved on the board entry')
+  assert_eq(snap['board'][0]['enchant'], FixtureKit.ENCHANT_ID, 'enchant id saved on the board entry')
   assert_eq(snap['potions'].size(), 1, 'potion saved')
 
   var run_b := _run()
   run_b.rehydrate(snap)
   assert_not_null(run_b.player.board[0].enchant, 'rehydrate rebuilds the enchant on the item')
-  assert_eq(run_b.player.board[0].enchant.def.id, EnchantCatalog.WHETSTONE)
+  assert_eq(run_b.player.board[0].enchant.def.id, FixtureKit.ENCHANT_ID)
   assert_eq(run_b.potions.size(), 1, 'rehydrate rebuilds the potion')
 
 
@@ -495,15 +495,13 @@ func test_draft_pool_is_character_plus_colorless() -> void:
 
 func test_start_with_a_chosen_character_uses_its_kit() -> void:
   # The character-select pick routes through start(seed, id): the run opens in the chosen
-  # character's pool + starting kit, not the default one's.
+  # character's pool + starting kit, not the default one's. The fixture character is never the
+  # default, so starting as it proves the id is used.
   var run := _run()
-  run.start(1, CharacterCatalog.SPORE_DRUID)
-  assert_eq(run.character.id, CharacterCatalog.SPORE_DRUID, 'the run opens in the chosen character')
-  var ids: Array = _board_ids(run.player)
-  assert_eq(ids.size(), 3, 'and a three-item starting board drawn from its constraints')
-  for id: String in ids:
-    assert_true(CharacterCatalog.get_def(CharacterCatalog.SPORE_DRUID).item_pool.has(id),
-      'every starting item comes from its own pool')
+  run.start(1, FixtureCharacter.ID)
+  assert_eq(run.character.id, FixtureCharacter.ID, 'the run opens in the chosen character')
+  assert_eq(_board_ids(run.player), FixtureCharacter.def().starting_item_ids,
+    'with its starting board')
 
 
 func test_character_round_trips_through_the_snapshot() -> void:

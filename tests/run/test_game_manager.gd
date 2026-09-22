@@ -7,7 +7,7 @@ extends GutTest
 func before_each() -> void:
   Save.clear()
   TestCleanup.reset_all_managers()
-  FixtureRun.install()
+  FixtureContent.install()
 
 
 func after_each() -> void:

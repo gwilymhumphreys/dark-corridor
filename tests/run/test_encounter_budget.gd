@@ -56,7 +56,8 @@ func test_an_empty_pool_draws_nothing() -> void:
 func test_a_draw_reaches_its_target_within_the_enemy_limit() -> void:
   var rng := RandomNumberGenerator.new()
   rng.seed = 1234
-  var pool: Array[String] = [EnemyCatalog.GRUNT, EnemyCatalog.BRUTE]
+  FixtureContent.install()
+  var pool: Array[String] = [FixtureEnemies.ID, FixtureEnemies.BIG_ID]
   var target: float = 200.0
   var ids: Array[String] = RunMap.draw_enemies(pool, target, rng)
   assert_gt(ids.size(), 0, 'a non-empty pool draws at least one enemy')
@@ -71,13 +72,14 @@ func test_a_draw_stops_at_the_enemy_limit() -> void:
   # A target no pool can reach must still not spawn a sixth enemy.
   var rng := RandomNumberGenerator.new()
   rng.seed = 5
-  var ids: Array[String] = RunMap.draw_enemies([EnemyCatalog.GRUNT], 100000.0, rng)
+  FixtureContent.install()
+  var ids: Array[String] = RunMap.draw_enemies([FixtureEnemies.ID], 100000.0, rng)
   assert_eq(ids.size(), RunMap.MAX_ENEMIES_PER_FIGHT)
 
 
 func test_the_pin_overrides_the_draw() -> void:
-  FixtureRun.install()
-  RunManager.pinned_enemy_ids = [EnemyCatalog.GRUNT, EnemyCatalog.GRUNT]
+  FixtureContent.install()
+  RunManager.pinned_enemy_ids = [FixtureEnemies.ID, FixtureEnemies.ID]
   var run: RunManager = RunManager.new()
   run.start(99, FixtureCharacter.ID)
   assert_eq(run.current_encounter().enemies.size(), 2, 'the pinned composition is used as given')
@@ -86,7 +88,7 @@ func test_the_pin_overrides_the_draw() -> void:
 
 
 func test_the_drawn_set_survives_a_reload() -> void:
-  FixtureRun.install()
+  FixtureContent.install()
   var run: RunManager = RunManager.new()
   run.start(7, FixtureCharacter.ID)
   var before: int = run.current_encounter().enemies.size()

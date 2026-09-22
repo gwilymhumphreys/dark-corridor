@@ -8,12 +8,15 @@ extends GutTest
 # A grunt weaker than the player, so a fight between equal fixture attacks has a known winner. Fixed
 # here rather than read from Balance, because these tests check the fight engine, not enemy tuning.
 const WEAK_ENEMY_HP: float = 40.0
+# The player's health in these fights, fixed for the same reason.
+const PLAYER_HP: float = 100.0
 
 var _made: Array = []
 
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureContent.install()   # add_item, CREATE_ITEM and SUMMON look their definitions up by id
 
 
 func after_each() -> void:
@@ -62,7 +65,7 @@ func _item_has_status(item: Item, id: String) -> bool:
 
 
 func _run_basic() -> Dictionary:
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()])
   var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
@@ -299,7 +302,7 @@ func test_summon_adds_a_token_to_the_players_side() -> void:
   cm.start()
   var before: int = cm.player_side().size()
   var arrived: Array = []
-  cm._fire_item(_summon_item(p, EnemyCatalog.SPORE_THRALL), arrived)
+  cm._fire_item(_summon_item(p, FixtureEnemies.ALLY_ID), arrived)
   for d in arrived:
     cm._land(d)
   assert_eq(cm.player_side().size(), before + 1, 'a token joined the player side')
@@ -312,7 +315,7 @@ func test_enemy_summon_adds_to_the_enemy_side() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var arrived: Array = []
-  cm._fire_item(_summon_item(e, EnemyCatalog.SPORE_THRALL), arrived)
+  cm._fire_item(_summon_item(e, FixtureEnemies.ALLY_ID), arrived)
   for d in arrived:
     cm._land(d)
   assert_eq(cm.enemies.size(), 2, 'the enemy summoned an add onto its own side')
@@ -438,7 +441,7 @@ func test_summoned_token_is_dissolved_but_run_scoped_side_survives() -> void:
 
 
 func test_random_item_target_is_reproducible_by_seed() -> void:
-  # OPPONENT_ITEM_RANDOM (Hex Bolt → silence a random enemy item) picks on the seeded
+  # OPPONENT_ITEM_RANDOM (the fixture silence of a random enemy item) picks on the seeded
   # per-fight RNG, so the same combat seed silences the same item (#14/#20: random
   # targeting that's still bit-reproducible / resume-safe).
   var a: int = _hex_silence_index(777)
@@ -455,11 +458,11 @@ func test_random_item_target_varies_across_seeds() -> void:
   assert_gt(seen.size(), 1, 'different combat seeds silence different items')
 
 
-# Run Hex Bolt (player) vs a 4-item enemy under `combat_seed`; return the board index of
+# Run the fixture random-item silence (player) vs a 4-item enemy under `combat_seed`; return the board index of
 # the first item it silences (the random pick), or -1 if none within the guard.
 func _hex_silence_index(combat_seed: int) -> int:
   var p := Actor.new(5000.0)
-  p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.HEX_BOLT), p))
+  p.board.append(Item.new(FixtureItems.silence_random_enemy_item(), p))
   var e := Actor.new(5000.0)
   for _i in 4:
     e.board.append(Item.new(FixtureItems.attack(), e))
@@ -813,7 +816,7 @@ func test_item_cooldowns_reset_each_fight() -> void:
 
 
 func test_teardown_clears_combat_state() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.poison()])
+  var p := _spawn(PLAYER_HP, [FixtureItems.poison()])
   var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
@@ -830,7 +833,7 @@ func test_tick_drives_fight_to_resolution() -> void:
   # tick(delta) is the run screen's real-time driver: it turns real delta into
   # whole sim-steps (steps_due) and runs them. Same verdict as run_headless, just
   # off a clock instead of a raw loop.
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()])
   var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
@@ -846,7 +849,7 @@ func test_tick_drives_fight_to_resolution() -> void:
 func test_request_slowmo_sets_and_clears_the_dial() -> void:
   # The slow-mo-on-hover intent: the view never writes the dial — it asks, and the
   # manager sets / clears its Timekeeper's momentary override (back to base, not x1).
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()])
   var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
@@ -973,9 +976,9 @@ func test_reaped_actors_trigger_item_receives_no_pushes() -> void:
 func test_subscribed_trigger_item_frees_after_teardown() -> void:
   # The bus now holds strong Subscription -> Item refs; teardown's bus.clear() must
   # release them (the current leak tests use the sub-less claw — this covers triggers).
-  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var p := _spawn(PLAYER_HP, [])
   var e := Actor.new(40.0)
-  e.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.AVENGER), e))
+  e.board.append(Item.new(FixtureItems.poison_trigger(), e))
   var cm := _manager(p, [e])
   cm.start()
   var item_ref: WeakRef = weakref(e.board[0])
@@ -984,7 +987,7 @@ func test_subscribed_trigger_item_frees_after_teardown() -> void:
 
 
 func test_item_fired_event_carries_item_and_owner() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()])
   var e := _spawn(1000.0, [])
   var cm := _manager(p, [e])
   cm.start()
@@ -1003,7 +1006,7 @@ func test_item_fired_event_carries_item_and_owner() -> void:
 
 
 func test_thrown_consumable_event_carries_the_thrower() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var p := _spawn(PLAYER_HP, [])
   var e := _spawn(1000.0, [])
   var cm := _manager(p, [e])
   cm.start()
@@ -1032,7 +1035,7 @@ func test_fight_with_triggers_is_deterministic() -> void:
   for _round in 2:
     var p := Actor.new(200.0)
     p.board.append(Item.new(FixtureItems.poison(), p))
-    p.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.AVENGER), p))
+    p.board.append(Item.new(FixtureItems.poison_trigger(), p))
     var e := _spawn(200.0, [FixtureItems.attack()])
     var cm := _manager(p, [e])
     cm.start()
@@ -1062,7 +1065,7 @@ func test_gated_item_cooldown_freezes_and_lifts_without_burst() -> void:
   # Decision #30: a gate (silence) FREEZES the cooldown — no accrual while gated, so
   # the gate lifting releases no banked burst; the first fire lands one full cooldown
   # after the lift.
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()])
   var e := _spawn(1000.0, [])
   var cm := _manager(p, [e])
   cm.start()
@@ -1084,7 +1087,7 @@ func test_gated_item_cooldown_freezes_and_lifts_without_burst() -> void:
 func test_dot_killed_actor_does_not_fire_collected_swing() -> void:
   # The status pass runs AFTER crossings are collected, so a poison tick can kill an
   # actor whose item crossed this same step — the collected swing must be suppressed.
-  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var p := _spawn(PLAYER_HP, [])
   var e := _spawn(10.0, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
@@ -1103,7 +1106,7 @@ func test_dot_killed_actor_does_not_fire_collected_swing() -> void:
 func test_lethal_potion_resolves_fight_without_a_step() -> void:
   # A throw can land outside the step loop (paused, timescale 0): resolution must not
   # wait for a sim_step that never comes.
-  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var p := _spawn(PLAYER_HP, [])
   var e := _spawn(10.0, [FixtureItems.attack()])
   var cm := _manager(p, [e])
   cm.start()
@@ -1123,7 +1126,7 @@ func test_lethal_potion_resolves_fight_without_a_step() -> void:
 
 func test_applied_event_only_published_on_success() -> void:
   # An unknown status id applies nothing — no APPLIED event may be routed for it.
-  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var p := _spawn(PLAYER_HP, [])
   var e := _spawn(1000.0, [])
   var cm := _manager(p, [e])
   cm.start()
@@ -1138,7 +1141,7 @@ func test_applied_event_only_published_on_success() -> void:
 func test_free_while_mounted_breaks_cycles_via_exit_tree() -> void:
   # The _exit_tree safety net: a CombatManager freed while in the tree must break the
   # enemy Actor<->Item cycle even when nobody called teardown() first.
-  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var p := _spawn(PLAYER_HP, [])
   var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
@@ -1151,7 +1154,7 @@ func test_free_while_mounted_breaks_cycles_via_exit_tree() -> void:
 func test_timed_expiry_calls_on_expire() -> void:
   # The Combat manager's status pass is one of the three natural-removal sites — the
   # hook must run there (the facade's two sites are covered in test_status_manager).
-  var p := _spawn(Balance.PLAYER_START_HP, [])
+  var p := _spawn(PLAYER_HP, [])
   var e := _spawn(1000.0, [])
   var cm := _manager(p, [e])
   cm.start()
@@ -1178,7 +1181,7 @@ func test_physics_process_drives_tick_when_mounted() -> void:
   # A directly-mounted CombatManager (the sandbox) must still self-drive: its
   # _physics_process delegates to tick(). Mount it, run a couple of physics frames,
   # and confirm the clock advanced. Not via _manager — we own its lifetime here.
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()])
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()])
   var e := _spawn(WEAK_ENEMY_HP, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
@@ -1287,7 +1290,7 @@ func test_add_item_appends_registers_and_the_created_item_fires() -> void:
   var e := Actor.new(40.0)
   var cm := _manager(p, [e])   # the player has NO board
   cm.start()
-  cm.add_item(p, ItemCatalog.ENEMY_CLAW)
+  cm.add_item(p, FixtureItems.enemy_attack().id)
   assert_eq(p.board.size(), 1, 'the created item joined the board')
   assert_true(p.board[0] in cm._items, 'and was registered into the sweep (a working Ticker)')
   assert_true(p.board[0] in cm._created_items, 'tracked as combat-scoped')
@@ -1301,7 +1304,7 @@ func test_create_item_effect_lands_an_item_on_the_firing_actors_own_board() -> v
   var cm := _manager(p, [e])
   cm.start()
   var arrived: Array = []
-  cm._fire_item(_create_item_item(p, ItemCatalog.ENEMY_CLAW), arrived)
+  cm._fire_item(_create_item_item(p, FixtureItems.enemy_attack().id), arrived)
   for d in arrived:
     cm._land(d)
   assert_eq(p.board.size(), 1, 'the CREATE_ITEM effect put a new item on the firer\'s OWN board (shape SELF)')
@@ -1313,7 +1316,7 @@ func test_created_items_are_stripped_at_teardown_restoring_the_drafted_board() -
   var cm := _manager(p, [Actor.new(1000.0)])
   cm.start()
   var drafted: Array = p.board.duplicate()
-  cm.add_item(p, ItemCatalog.FLESH_FEMUR)
+  cm.add_item(p, FixtureItems.shield().id)
   assert_eq(p.board.size(), drafted.size() + 1, 'the created item is on the board mid-fight')
   cm.teardown()
   assert_eq(p.board, drafted, 'teardown stripped the created item — the drafted board is restored (snapshot stays clean)')
@@ -1388,7 +1391,7 @@ func test_item_destroyed_does_not_fire_at_teardown() -> void:
   var p := _spawn(1000.0, [FixtureItems.attack()])
   var cm := _manager(p, [Actor.new(1000.0)])
   cm.start()
-  cm.add_item(p, ItemCatalog.FLESH_FEMUR)
+  cm.add_item(p, FixtureItems.shield().id)
   var seen: Array = []
   cm.bus.add_listener(EventBus.Event.ITEM_DESTROYED,
       func(_data, _source_actor, _source_item) -> void:

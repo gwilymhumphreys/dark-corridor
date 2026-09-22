@@ -1,5 +1,13 @@
 # Plan: move the remaining tests off real content
 
+> **Shipped 2026-09-22.** The as-built description is in
+> [`../systems/testing.md`](../systems/testing.md#fixtures). It differs from this plan in three
+> ways. No created-item fixture was needed, because the combat view tests only need an item id
+> they can add, and they use the fixture attack. `test_interface_palette.gd` still reads authored
+> definitions, because it checks that the catalogs' own definitions are recoloured. The content
+> checks also cover the shrine and wanderer events, whose authored options the moved tests used to
+> exercise.
+
 Make every test that checks an engine or run system use fixture content, so that authoring,
 tuning, renaming or removing real items, characters, enemies, relics, potions, enchants and
 encounters cannot change a test's result. This continues
@@ -95,8 +103,8 @@ These exist to catch mistakes in the authored content, so they cannot run on fix
   the three Smith weapons have their authored numbers) and `content/test_consumable.gd` (the
   catalog builds the Healing Draught).
 
-**Open question for the owner:** keep these as the only tests that read real content, moved
-together into `tests/content/`, or delete them.
+The owner chose to keep them. `test_enemy.gd` and the card checks moved into
+`tests/content/test_authored_content.gd`.
 
 ## Checks
 

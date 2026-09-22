@@ -8,6 +8,7 @@ var _encs: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureContent.install()
 
 
 func after_each() -> void:
@@ -19,7 +20,7 @@ func after_each() -> void:
 
 
 func _event() -> Encounter:
-  var e := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.EVENT_SHRINE), Actor.new(100.0))
+  var e := Encounter.new(EncounterCatalog.get_def(FixtureEncounters.EVENT), Actor.new(100.0))
   _encs.append(e)
   return e
 
@@ -28,7 +29,8 @@ func test_overlay_shows_options_and_emits_the_pick() -> void:
   var overlay: EventOverlay = preload('res://src/scenes/screens/event_overlay.tscn').instantiate()
   add_child(overlay)
   overlay.setup(_event())
-  assert_eq(overlay.get_node('Panel/Options').get_child_count(), 2, 'one button per option')
+  assert_eq(overlay.get_node('Panel/Options').get_child_count(), FixtureEncounters.event().event_options.size(),
+    'one button per option')
   watch_signals(overlay)
   var btn: Button = overlay.get_node('Panel/Options').get_child(1)
   btn.pressed.emit()

@@ -19,24 +19,38 @@ For the headless end-to-end harness that drives a whole run, see
 
 ## Fixtures
 
-Tests use fixture content from `tests/fixtures/` instead of authored content, so tuning, renaming or
-re-rostering real content cannot change a test's result. Fixture numbers are constants in the
-fixture files and are never read from `Balance`.
+Tests use fixture content from `tests/fixtures/` instead of authored content, so authoring, tuning,
+renaming or removing real content cannot change a test's result. Fixture numbers are constants in
+the fixture files and are never read from `Balance`.
 
 | File | What it gives |
 |---|---|
-| `fixture_items.gd` | `FixtureItems`: an attack, an enemy attack, a shield, a poison applier and two filtered-target items, as fresh `ItemDef`s. |
+| `fixture_items.gd` | `FixtureItems`: an attack, an enemy attack, a shield, a poison applier, two filtered-target items, a poison-charged trigger item, a Vulnerable applier, a random-item silence and an empower applier, as fresh `ItemDef`s. |
 | `fixture_character.gd` | `FixtureCharacter`: a character with a fixed starting board and a pool of fixture items only. |
-| `fixture_enemies.gd` | `FixtureEnemies`: an enemy with fixed health and one fixture attack. |
-| `fixture_run.gd` | `FixtureRun.install()`: adds the fixture items and character to the catalogs and replaces every authored enemy with the fixture enemy under the same id. |
+| `fixture_enemies.gd` | `FixtureEnemies`: a small and a large enemy, and an ally for summons and recruits, each with fixed health and one fixture attack. |
+| `fixture_encounters.gd` | `FixtureEncounters`: a fight against one fixture enemy, a rest, and an event with a heal, a maximum-health and a recruit option (`OPTION_*` give their indexes). |
+| `fixture_kit.gd` | `FixtureKit`: a heal potion, a value-multiplying enchant, a combat-start shield relic and a maximum-health relic. |
+| `fixture_content.gd` | `FixtureContent.install()`: adds every fixture to its catalog, and puts a fixture in place of every authored enemy, encounter and relic under the authored id. |
 
-A test that plays a run, an encounter or an autotest calls `FixtureRun.install()` in `before_each`
-and passes `FixtureCharacter.ID` to `run.start`, `Game.start_run` or `AutoTestMode.character`. The
-map, encounters, events and relic rewards stay real; the fixture character beats the fixture
-enemies by a wide margin so that they cannot change a result. Keep that margin if you change either.
+A test that plays a run, an encounter or an autotest, or that builds fixture content by id
+(`CombatManager.add_item`, a summon, a save and reload), calls `FixtureContent.install()` in
+`before_each`. A run test passes `FixtureCharacter.ID` to `run.start`, `Game.start_run` or
+`AutoTestMode.character`. Authored ids are replaced rather than added to because the map names
+encounters, encounters name enemies and the relic reward draws from `RelicCatalog.REWARD_POOL`.
+The map's beat layout in `RunMap` stays real. The fixture character beats the fixture enemies by a
+wide margin; keep that margin if you change either.
 
-Use real content only when the test is about that content: a specific card, a character's pool, the
-catalog itself.
+`install()` fails an assert if `ColorlessPool.ITEMS` is not empty, because the draft adds the
+colorless pool to every character's pool, so a fixture run would draft authored items.
+
+### Tests that read real content
+
+Only the tests in `tests/content/` that check the authored content itself read it: pool integrity,
+starting boards, item points, icons and portraits, and `test_authored_content.gd`, which checks
+specific authored cards, enemies, potions, enchants, relics and events. Engine rules in `Balance`
+(`STEP`, time scales, status multipliers, `CRIT_MULTIPLIER`, `TRIGGER_PUSH_FULL`, `GOLD_SKIP`)
+are not content, and any test may read them. `test_interface_palette.gd` also reads a few authored
+definitions, because it checks that a palette recolours the catalogs' authored definitions.
 
 ## Resetting state between tests
 
@@ -50,7 +64,7 @@ func before_each() -> void:
 
 `reset_all_managers()` frees the live run held by `Game`, re-enables saving,
 keeps `Prefs` in memory rather than on disk, resets the debug panel settings, and
-removes the run fixtures if a test installed them.
+removes the fixtures if a test installed them.
 
 A test that builds an `Actor` without a `RunManager` should register it with
 `TestCleanup.dissolve_at_reset(actor)`. In the game `RunManager.teardown` dissolves

@@ -41,12 +41,12 @@ func test_weak_owner_fires_reduced_damage() -> void:
     'a Weak owner fires reduced damage')
 
 
-func test_sunder_applies_vulnerable_to_opponent() -> void:
-  var p: Payload = _make(ItemCatalog.get_def(ItemCatalog.SUNDER)).fire()[0]
+func test_vulnerable_applier_applies_vulnerable_to_opponent() -> void:
+  var p: Payload = _make(FixtureItems.vulnerable()).fire()[0]
   assert_eq(p.kind, Delivery.Kind.APPLY_STATUS)
   assert_eq(p.status_id, 'vulnerable')
   assert_eq(p.shape, ItemEffect.Shape.OPPONENT_LEFTMOST)
-  assert_almost_eq(p.duration, Balance.STATUS_VULNERABLE_DURATION, 0.0001,
+  assert_almost_eq(p.duration, FixtureItems.VULNERABLE_DURATION, 0.0001,
     'the per-application duration rides the payload (effect → payload → delivery → apply)')
 
 
@@ -115,7 +115,7 @@ func _status_count(actor: Actor, id: String) -> float:
 
 
 func test_trigger_item_declares_its_subscription() -> void:
-  var d := ItemCatalog.get_def(ItemCatalog.AVENGER)
-  assert_eq(d.trigger_subs.size(), 1, 'avenger declares one trigger')
+  var d := FixtureItems.poison_trigger()
+  assert_eq(d.trigger_subs.size(), 1, 'the trigger item declares one trigger')
   assert_eq(d.trigger_subs[0]['event'], EventBus.Event.APPLIED)
   assert_eq(d.trigger_subs[0]['filter'], 'poison', 'on poison applied, not shield')

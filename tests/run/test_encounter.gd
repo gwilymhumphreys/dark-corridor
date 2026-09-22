@@ -9,7 +9,7 @@ var _encs: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
-  FixtureRun.install()
+  FixtureContent.install()
 
 
 func after_each() -> void:
@@ -39,14 +39,14 @@ func _default_player(hp: float) -> Actor:
 
 
 func test_fight_spawns_enemies_at_creation() -> void:
-  var enc := _encounter(EncounterCatalog.FIGHT_GRUNT, _default_player(100.0))
+  var enc := _encounter(FixtureEncounters.FIGHT, _default_player(100.0))
   assert_true(enc.is_fight())
   assert_eq(enc.enemies.size(), 1, 'the grunt is spawned for the approach')
   assert_null(enc.combat_manager(), 'but the CombatManager is not created until begin()')
 
 
 func test_fight_win_relays_outcome_and_reward() -> void:
-  var enc := _encounter(EncounterCatalog.FIGHT_GRUNT, _default_player(100.0))
+  var enc := _encounter(FixtureEncounters.FIGHT, _default_player(100.0))
   watch_signals(enc)
   enc.begin()
   assert_not_null(enc.combat_manager(), 'begin() creates the fight')
@@ -58,7 +58,7 @@ func test_fight_win_relays_outcome_and_reward() -> void:
 
 
 func test_fight_loss_relays_lost() -> void:
-  var enc := _encounter(EncounterCatalog.FIGHT_GRUNT, _default_player(1.0))
+  var enc := _encounter(FixtureEncounters.FIGHT, _default_player(1.0))
   watch_signals(enc)
   enc.begin()
   enc.combat_manager().run_headless()
@@ -69,17 +69,18 @@ func test_fight_loss_relays_lost() -> void:
 func test_rest_heals_and_resolves_immediately() -> void:
   var player := Actor.new(100.0)
   player.take_damage(40.0)   # 60 HP
-  var enc := _encounter(EncounterCatalog.REST, player)
+  var enc := _encounter(FixtureEncounters.REST, player)
   watch_signals(enc)
   enc.begin()
-  assert_almost_eq(player.hp, 90.0, 0.0001, 'a 30% rest heals 30 of 100 max')
+  assert_almost_eq(player.hp, 60.0 + 100.0 * FixtureEncounters.REST_HEAL_FRACTION, 0.0001,
+    'a rest heals its fraction of max HP')
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
 
 
 func test_event_awaits_its_choice_then_resolves_on_pick() -> void:
   var player := Actor.new(100.0)
   player.take_damage(60.0)   # 40 HP
-  var enc := _encounter(EncounterCatalog.EVENT_SHRINE, player)
+  var enc := _encounter(FixtureEncounters.EVENT, player)
   assert_true(enc.is_event())
   watch_signals(enc)
   enc.begin()
@@ -87,7 +88,7 @@ func test_event_awaits_its_choice_then_resolves_on_pick() -> void:
   assert_signal_not_emitted(enc, 'resolved', 'no resolution until an option is picked')
   assert_gt(enc.event_options().size(), 1, 'a binary choice is offered')
 
-  enc.pick_event_option(0)   # 'Kneel and drink' → heal a fraction of max HP
+  enc.pick_event_option(FixtureEncounters.OPTION_HEAL)
   assert_gt(player.hp, 40.0, 'the chosen outcome (heal) was applied')
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
 
@@ -98,7 +99,7 @@ func test_fight_seeds_run_scoped_allies_onto_the_player_side() -> void:
   var player := _default_player(100.0)
   var ally := Actor.new(15.0)
   ally.board.append(Item.new(FixtureItems.enemy_attack(), ally))
-  var enc := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.FIGHT_GRUNT), player, 0, [ally])
+  var enc := Encounter.new(EncounterCatalog.get_def(FixtureEncounters.FIGHT), player, 0, [ally])
   _encs.append(enc)
   enc.begin()
   assert_true(ally in enc.combat_manager().allies, 'the run-scoped ally fights on the player side')
@@ -108,11 +109,11 @@ func test_fight_seeds_run_scoped_allies_onto_the_player_side() -> void:
 
 func test_event_max_hp_option_grows_max_hp() -> void:
   var player := Actor.new(100.0)
-  var enc := _encounter(EncounterCatalog.EVENT_SHRINE, player)
+  var enc := _encounter(FixtureEncounters.EVENT, player)
   enc.begin()
-  enc.pick_event_option(1)   # 'Pry the shard loose' → +max HP
-  assert_almost_eq(player.max_hp, 100.0 + Balance.EVENT_SHRINE_MAX_HP, 0.0001, 'max HP grew')
-  assert_almost_eq(player.hp, 100.0 + Balance.EVENT_SHRINE_MAX_HP, 0.0001, 'and current HP too')
+  enc.pick_event_option(FixtureEncounters.OPTION_MAX_HP)
+  assert_almost_eq(player.max_hp, 100.0 + FixtureEncounters.EVENT_MAX_HP, 0.0001, 'max HP grew')
+  assert_almost_eq(player.hp, 100.0 + FixtureEncounters.EVENT_MAX_HP, 0.0001, 'and current HP too')
 
 
 func test_lethal_event_outcome_resolves_lost() -> void:
@@ -138,7 +139,7 @@ func test_lethal_event_outcome_resolves_lost() -> void:
 func test_teardown_before_begin_dissolves_spawned_enemies() -> void:
   # Enemies spawn at _init (for the approach); a fight torn down BEFORE begin() has no
   # CombatManager to dissolve them — teardown must break the Actor<->Item cycles itself.
-  var enc := Encounter.new(EncounterCatalog.get_def(EncounterCatalog.FIGHT_GRUNT), _default_player(100.0))
+  var enc := Encounter.new(EncounterCatalog.get_def(FixtureEncounters.FIGHT), _default_player(100.0))
   var item_ref: WeakRef = weakref(enc.enemies[0].board[0])
   enc.teardown()
   enc.free()

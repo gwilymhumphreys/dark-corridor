@@ -194,24 +194,13 @@ func test_poison_tick_publishes_nothing() -> void:
   assert_true(applied_data.is_empty(), 'a poison tick published no APPLIED event')
 
 
-# --- Spite Ward's trigger ----------------------------------------------------
+# --- a poison trigger item ---------------------------------------------------
 
-func test_spite_ward_declares_an_applied_subscription() -> void:
-  var d := ItemCatalog.get_def(ItemCatalog.AVENGER)
-  assert_eq(d.trigger_subs.size(), 1, 'Spite Ward declares one trigger')
-  assert_eq(d.trigger_subs[0]['event'], EventBus.Event.APPLIED, 'it subscribes to APPLIED')
-  assert_eq(d.trigger_subs[0]['filter'], 'poison', 'filtered to poison')
-  assert_false(d.trigger_subs[0].has('source_filter'),
-      'no source_filter key — it uses the OWN_SIDE content default')
-  assert_almost_eq(d.trigger_subs[0]['amount'], Balance.TRIGGER_PUSH_FULL, 0.0001,
-      'the declared push amount')
-
-
-func test_spite_ward_charges_on_poison_not_on_shield() -> void:
+func test_poison_trigger_charges_on_poison_not_on_shield() -> void:
   # Read the trigger straight off the def and wire it onto a bus, so the test proves the
   # def's own subscription (event + filter + source filter) charges on poison and not on
   # shield — the same wiring CombatManager._register_item does.
-  var d := ItemCatalog.get_def(ItemCatalog.AVENGER)
+  var d := FixtureItems.poison_trigger()
   var sub: Dictionary = d.trigger_subs[0]
   var player_actor := Actor.new(1000.0)
   TestCleanup.dissolve_at_reset(player_actor)

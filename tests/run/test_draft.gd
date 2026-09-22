@@ -6,6 +6,7 @@ extends GutTest
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureContent.install()   # Draft.draw looks the pool ids up in ItemCatalog
 
 
 func after_each() -> void:
@@ -19,10 +20,9 @@ func _ids(offer: Array) -> Array:
   return out
 
 
-## A real character pool — Draft.draw works on catalog ids, so these tests use the deepest
-## authored pool rather than a fixture.
+## The fixture character's pool, which has the three items a distinct offer needs.
 func _pool() -> Array:
-  return CharacterCatalog.get_def(CharacterCatalog.FLESHMANCER).item_pool
+  return FixtureCharacter.def().item_pool
 
 
 func _rng(seed_value: int) -> RandomNumberGenerator:

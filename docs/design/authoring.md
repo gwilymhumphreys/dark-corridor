@@ -76,14 +76,12 @@ for each def's fields and how it resolves.
 
 ## Tests do not use authored content
 
-Combat, UI and event tests spawn items from `tests/fixtures/fixture_items.gd` (an attack, a shield,
-a poison applier, an enemy-named attack), not from the catalog, so tuning or renaming a card cannot
-break them. Reach for a real catalog item in a test only when the test is about that card, or about
-the catalog itself. Adding a card needs no test change.
-
-Tests that play a whole run use the fixture character and fixture enemies from `FixtureRun`
-([`testing.md`](../systems/testing.md#fixtures)), so re-rostering, tuning or re-pricing a character
-or an enemy cannot break them either.
+Tests use fixture content from `tests/fixtures/` rather than authored content
+([`testing.md`](../systems/testing.md#fixtures)), so authoring, tuning, renaming or removing a card,
+character, enemy, relic, potion, enchant or encounter cannot break them. The only tests that read
+authored content are the ones in `tests/content/` that check it, such as pool integrity, icons and
+`test_authored_content.gd`. Adding content needs no test change unless one of those checks catches
+a mistake.
 
 ## After authoring
 

@@ -12,7 +12,7 @@ const APPROACH_STEPS: int = int(ceil(Balance.APPROACH_DURATION)) + 1
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
-  FixtureRun.install()
+  FixtureContent.install()
 
 
 func after_each() -> void:
@@ -118,7 +118,7 @@ func test_throwing_a_potion_in_a_fight_consumes_it() -> void:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
   # Granted here: no authored character starts with a potion, and this test is about the throw.
-  Game.run.potions.append(Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)))
+  Game.run.potions.append(Consumable.new(FixtureKit.potion()))
   var before: int = Game.run.potions.size()
   assert_gt(before, 0, 'a potion is held')
   screen._on_potion_thrown(0)
@@ -264,7 +264,7 @@ func _mount_into_fight(seed_value: int) -> RunScreen:
 func _mount_into_event(seed_value: int) -> RunScreen:
   Game.start_run(seed_value, FixtureCharacter.ID)
   Game.run._teardown_current()
-  Game.run._current_def_id = EncounterCatalog.EVENT_SHRINE
+  Game.run._current_def_id = FixtureEncounters.EVENT
   Game.run._create_current_encounter()
   var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
   add_child(screen)   # _ready → _enter_beat → _begin_beat → _show_event
@@ -278,7 +278,7 @@ func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:
   Game.run.player.hp = 1.0   # so the heal outcome is observable
   assert_eq(screen._state, RunScreen.State.EVENTING, 'the event raises its overlay')
   assert_not_null(screen._event, 'the event overlay is up')
-  screen._on_event_picked(0)   # 'Kneel and drink' → heal a fraction of max HP
+  screen._on_event_picked(FixtureEncounters.OPTION_HEAL)
   assert_null(screen._event, 'the pick dismisses the overlay')
   assert_gt(Game.run.player.hp, 1.0, 'the chosen outcome was applied (healed)')
   screen.free()

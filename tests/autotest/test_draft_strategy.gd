@@ -12,10 +12,6 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func _def(id: String) -> ItemDef:
-  return ItemCatalog.get_def(id)
-
-
 func test_first_viable_takes_index_0() -> void:
   var driver := AutoTestDriver.new('first-viable', 1)
   assert_eq(driver.choose_draft([FixtureItems.shield(), FixtureItems.attack()], []), 0)
@@ -33,13 +29,13 @@ func test_shield_strategy_prefers_a_shield_candidate() -> void:
 
 
 func test_greedy_synergy_prefers_a_connecting_candidate() -> void:
-  # The board applies poison; the avenger (Spite Ward) triggers on poison
-  # being applied — so greedy-synergy connects them over a non-synergistic weapon.
+  # The board applies poison; the fixture trigger item charges on poison being applied — so
+  # greedy-synergy connects them over a non-synergistic weapon.
   var owner_actor := Actor.new(100.0)
   var board: Array = [Item.new(FixtureItems.poison(), owner_actor)]
   var driver := AutoTestDriver.new('greedy-synergy', 1)
-  # WEAPON (no synergy) at 0, AVENGER (synergy) at 1 → pick index 1.
-  assert_eq(driver.choose_draft([FixtureItems.attack(), _def(ItemCatalog.AVENGER)], board), 1)
+  # WEAPON (no synergy) at 0, the trigger item (synergy) at 1 → pick index 1.
+  assert_eq(driver.choose_draft([FixtureItems.attack(), FixtureItems.poison_trigger()], board), 1)
 
 
 func test_random_is_reproducible_for_a_seed() -> void:

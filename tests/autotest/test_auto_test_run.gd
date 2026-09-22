@@ -11,7 +11,7 @@ var _modes: Array = []
 func before_each() -> void:
   Save.clear()
   TestCleanup.reset_all_managers()
-  FixtureRun.install()
+  FixtureContent.install()
 
 
 func after_each() -> void:
@@ -72,7 +72,7 @@ func test_run_full_throws_the_starting_potion() -> void:
   # back out afterwards — the Driver's throw path needs a potion to throw.
   var character: CharacterDef = CharacterCatalog.get_def(FixtureCharacter.ID)
   var original: Array = character.starting_potion_ids
-  character.starting_potion_ids = [ConsumableCatalog.HEALING_DRAUGHT]
+  character.starting_potion_ids = [FixtureKit.POTION_ID]
   var m := _mode(1)
   m.run_full()
   character.starting_potion_ids = original

@@ -7,6 +7,9 @@ extends GutTest
 
 const PLAYER := CombatLog.Side.PLAYER
 const ENEMY := CombatLog.Side.ENEMY
+# Fight sizes, fixed here rather than read from Balance so enemy tuning cannot change these tests.
+const PLAYER_HP: float = 100.0
+const ENEMY_HP: float = 100.0
 
 var _made: Array = []
 
@@ -62,9 +65,9 @@ func _status_of(side: int, log: CombatLog) -> Dictionary:
 func test_a_full_fight_logs_fires_damage_shield_and_dot() -> void:
   # Player: a fixture attack (direct damage), a fixture shield, a fixture poison applier.
   # Enemy: a fixture attack (direct damage to the player).
-  var p := _spawn(Balance.PLAYER_START_HP,
+  var p := _spawn(PLAYER_HP,
       [FixtureItems.attack(), FixtureItems.shield(), FixtureItems.poison()], 'Player')
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
+  var e := _spawn(ENEMY_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   cm.run_headless()
   var log: CombatLog = cm.combat_log
@@ -97,7 +100,7 @@ func test_a_full_fight_logs_fires_damage_shield_and_dot() -> void:
 
 
 func test_enemy_damage_is_logged_on_the_enemy_side() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [], 'Player')   # player deals nothing
+  var p := _spawn(PLAYER_HP, [], 'Player')   # player deals nothing
   var e := _spawn(1000.0, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   # Step a handful of times; the enemy claws the player (player never wins — it has no board).
@@ -139,7 +142,7 @@ func test_heal_is_logged() -> void:
 
 
 func test_throw_is_logged_with_its_def_id() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [], 'Player')
+  var p := _spawn(PLAYER_HP, [], 'Player')
   var e := _spawn(1000.0, [], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   var def := ConsumableDef.new()
@@ -163,8 +166,8 @@ func test_throw_is_logged_with_its_def_id() -> void:
 # --- null-guard: no log attached is harmless --------------------------------
 
 func test_no_log_attached_runs_clean() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()], 'Player')
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()], 'Player')
+  var e := _spawn(ENEMY_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := CombatManager.new(p, [e])
   _made.append(cm)
   cm.start()
@@ -177,8 +180,8 @@ func test_no_log_attached_runs_clean() -> void:
 # --- the timeline records in sim order with timestamps ----------------------
 
 func test_timeline_is_ordered_and_timestamped() -> void:
-  var p := _spawn(Balance.PLAYER_START_HP, [FixtureItems.attack()], 'Player')
-  var e := _spawn(Balance.ENEMY_PLACEHOLDER_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
+  var p := _spawn(PLAYER_HP, [FixtureItems.attack()], 'Player')
+  var e := _spawn(ENEMY_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   cm.run_headless()
   var events: Array = cm.combat_log.events

@@ -1,8 +1,7 @@
 extends GutTest
-## Step 2 — the minimal relic (a combat-start status applier). The catalog builds,
-## the def carries its (status_type, count), and applying it through StatusManager
-## actually grants the player the status — proving the run-state→combat seam the
-## Run manager will use at fight start.
+## Step 2 — the minimal relic (a combat-start status applier). The def carries its
+## (status_type, count), and applying it through StatusManager actually grants the player the
+## status — proving the run-state→combat seam the Run manager will use at fight start.
 
 
 func before_each() -> void:
@@ -13,16 +12,8 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func test_catalog_builds_the_combat_start_relic() -> void:
-  var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
-  assert_eq(d.kind, RelicDef.Kind.COMBAT_START_STATUS)
-  assert_eq(d.status_id, 'shield', 'Stone Ward grants shield')
-  assert_gt(d.status_count, 0.0, 'with a positive amount')
-  assert_eq(d.name_key, 'Stone Ward')
-
-
 func test_instance_carries_its_def() -> void:
-  var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
+  var d := FixtureKit.shield_relic()
   var r := Relic.new(d)
   assert_eq(r.def, d, 'the instance holds its definition')
 
@@ -30,7 +21,7 @@ func test_instance_carries_its_def() -> void:
 func test_applying_a_combat_start_relic_grants_the_status() -> void:
   # The shape the Run manager uses: at fight start, apply each relic's status to
   # the player Actor via StatusManager.
-  var d := RelicCatalog.get_def(RelicCatalog.STONE_WARD)
+  var d := FixtureKit.shield_relic()
   var player := Actor.new(100.0)
   StatusManager.apply(player, d.status_id, d.status_count, d.status_duration)
   # Shield absorbs incoming damage before HP — so the relic shield is live.

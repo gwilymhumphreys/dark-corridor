@@ -226,8 +226,9 @@ func test_corridor_is_drawn_through_the_world_clamp() -> void:
 
 
 func test_random_image_pick_leaves_the_run_rng_untouched() -> void:
+  FixtureContent.install()
   var run := RunManager.new()
-  run.start(1234)
+  run.start(1234, FixtureCharacter.ID)
   var run_state: int = run.rng.state
   seed(99)
   var expected_global: int = randi()

@@ -10,6 +10,7 @@ var _actors: Array = []
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  FixtureContent.install()   # add_item looks the created item up by id
 
 
 func after_each() -> void:
@@ -95,7 +96,7 @@ func test_view_potion_slots_emit_the_throw_intent() -> void:
   var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
-  var potions: Array = [Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))]
+  var potions: Array = [Consumable.new(FixtureKit.potion())]
   view.bind(cm, p, potions)
   assert_eq(view.get_node('Items/Potions').get_child_count(), 1, 'one slot per potion')
   watch_signals(view)
@@ -287,7 +288,7 @@ func test_an_item_created_during_the_fight_gets_a_cell_marked_temporary() -> voi
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  cm.add_item(p, ItemCatalog.FLESH_CHUNK)
+  cm.add_item(p, FixtureItems.attack().id)
   view._process(0.0)
   var chunk: Item = p.board[1]
   assert_true(view._player_cells.has(chunk), 'the created item has a cell')
@@ -311,7 +312,7 @@ func test_temporary_things_fade_off_the_board_when_the_fight_ends() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  cm.add_item(p, ItemCatalog.FLESH_CHUNK)
+  cm.add_item(p, FixtureItems.attack().id)
   cm.add_actor(_spawn(20.0, [FixtureItems.attack()]), true)   # a combat-scoped summon token
   view._process(0.0)
   var chunk: Item = p.board[1]
@@ -334,7 +335,7 @@ func test_a_thrown_consumable_starts_from_its_slot() -> void:
   var e := _spawn(40.0, [FixtureItems.attack()])
   var cm := CombatManager.new(p, [e])
   cm.start()
-  var potion := Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT))
+  var potion := Consumable.new(FixtureKit.potion())
   view.bind(cm, p, [potion])
   var slot: PotionSlot = view.get_node('Items/Potions').get_child(0)
   var centre: Vector2 = slot.get_global_rect().get_center()
