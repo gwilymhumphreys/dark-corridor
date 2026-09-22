@@ -370,6 +370,7 @@ func _show_pause_menu() -> void:
   _pause_menu.resume_pressed.connect(_resume)
   _pause_menu.settings_pressed.connect(_open_settings)
   _pause_menu.quit_pressed.connect(_quit_to_menu)
+  _pause_menu.exit_pressed.connect(_exit_game)
 
 
 func _resume() -> void:
@@ -406,6 +407,13 @@ func _quit_to_menu() -> void:
   _resume()
   _teardown_combat_view()
   Game.return_to_title()
+
+
+# Exit Game: close the application. The save from this beat's entry is kept, so the next
+# launch's Title Resume re-enters this beat, the same as quit-to-menu.
+func _exit_game() -> void:
+  _quit_to_menu()
+  get_tree().quit()
 
 
 # Post-beat: the run already fulfilled the outcome (reward / run-end) via its signal

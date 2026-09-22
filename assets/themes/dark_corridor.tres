@@ -170,6 +170,7 @@ LabelSmall/base_type = &"Label"
 LabelSmall/font_sizes/font_size = 18
 LabelTitle/base_type = &"Label"
 LabelTitle/font_sizes/font_size = 64
+RichTextLabel/colors/default_color = Color(1, 1, 1, 1)
 Panel/styles/panel = SubResource("pb_flat_worn")
 PanelContainer/styles/panel = SubResource("pb_flat_worn")
 PanelDetail/base_type = &"PanelContainer"

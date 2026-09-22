@@ -19,9 +19,11 @@ func _ready() -> void:
   var start_button: Button = $Menu/StartButton
   var resume_button: Button = $Menu/ResumeButton
   var settings_button: Button = $Menu/SettingsButton
+  var exit_button: Button = $Menu/ExitButton
   start_button.pressed.connect(_open_select)
   resume_button.pressed.connect(_on_resume)
   settings_button.pressed.connect(_open_settings)
+  exit_button.pressed.connect(_exit_game)
   resume_button.disabled = not Save.has_save()
   # Dev hook: skip the menu + select and drop straight into a run (pairs with `--shot`), as the
   # default character or the one named by `--character=ID`. `--select` instead opens the
@@ -79,3 +81,7 @@ func _close_settings() -> void:
 
 func _on_resume() -> void:
   Game.resume_run()
+
+
+func _exit_game() -> void:
+  get_tree().quit()

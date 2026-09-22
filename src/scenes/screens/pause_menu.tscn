@@ -72,3 +72,14 @@ text = "Quit to Menu"
 
 [node name="Juice" type="Node" parent="Catcher/Panel/Menu/QuitButton"]
 script = ExtResource("2")
+
+[node name="ExitButton" type="Button" parent="Catcher/Panel/Menu"]
+mouse_default_cursor_shape = 2
+custom_minimum_size = Vector2(360, 90)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ButtonLarge"
+text = "Exit Game"
+
+[node name="Juice" type="Node" parent="Catcher/Panel/Menu/ExitButton"]
+script = ExtResource("2")

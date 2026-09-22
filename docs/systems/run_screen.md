@@ -11,13 +11,14 @@ PRD](vfx_driver.md) in the **framed** layout. The presentation only
 main.tscn (Main) ── main_controller.gd
 └─ ScreenHolder (Control)
    ├─ title_screen.tscn      Start Run → character_select → Game.start_run ;
-   │                         Resume → resume_run ; Settings → settings_screen
+   │                         Resume → resume_run ; Settings → settings_screen ;
+   │                         Exit Game → closes the application
    ├─ run_screen.tscn        the live run (below)
    └─ outcome_screen.tscn    Victory / You Died → New Run / Return to Title
 ```
 
 **Title overlays.** Start raises **`character_select.tscn`** (one `character_card`
-per `CharacterCatalog.ids()` — personal name + role subtitle + a starting-kit hint; a pick →
+per `CharacterCatalog.ids()` — personal name + role subtitle + portrait; a pick →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below). Dev hooks skip
 the menu: `--autostart` (default-character run), `--select`, `--settings`.
@@ -86,10 +87,11 @@ the headless autotest mounts none of this:
 - **Pause** — a run-screen gate (`_paused`), **not** a `Game` phase. `ui_cancel` (Escape)
   toggles it at any point in a live run; while paused, `_physics_process` (the approach
   walk *and* the fight clock) and the hover `_process` are short-circuited. It raises the
-  pause menu (Resume / **Settings** / Quit-to-menu); **Settings** raises `settings_screen.tscn`
+  pause menu (Resume / **Settings** / Quit-to-menu / Exit Game); **Settings** raises `settings_screen.tscn`
   *inside* the pause menu's CanvasLayer (layer 100) so its opaque screen covers the paused
   panel, returning to it on Close. Quit-to-menu routes through `Game.return_to_title()`
-  (which **keeps** the save, so Title's Resume re-enters the beat).
+  (which **keeps** the save, so Title's Resume re-enters the beat). Exit Game does the same
+  teardown as Quit-to-menu and then closes the application, so the save is kept there too.
   **Space** (the `toggle_pause` action) pauses and resumes without the menu, showing a small
   **Paused** panel at the top centre of the HUD (`HUD/PausedPanel`). Escape during a Space pause
   raises the menu over it (still paused); Space does nothing while the menu is up.
@@ -270,7 +272,7 @@ full-screen.
   fight has finished, then a toggle that raises and hides the combat report of the last fight.
 - **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque
   centered panel (no translucent scrim) + Resume / Settings /
-  Quit-to-menu; its full-rect Catcher swallows input so the paused board can't be clicked
+  Quit-to-menu / Exit Game; its full-rect Catcher swallows input so the paused board can't be clicked
   through. Pausing mid-approach also halts the corridor's movement, not just the depth walk.
 
 ## Localization

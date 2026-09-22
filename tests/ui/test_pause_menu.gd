@@ -28,3 +28,12 @@ func test_quit_button_emits_quit() -> void:
   menu._quit_button.pressed.emit()
   assert_signal_emitted(menu, 'quit_pressed')
   menu.free()
+
+
+func test_exit_button_emits_exit() -> void:
+  var menu: PauseMenu = preload('res://src/scenes/screens/pause_menu.tscn').instantiate()
+  add_child(menu)
+  watch_signals(menu)
+  menu._exit_button.pressed.emit()
+  assert_signal_emitted(menu, 'exit_pressed')
+  menu.free()

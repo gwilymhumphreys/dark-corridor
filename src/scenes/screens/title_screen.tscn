@@ -85,3 +85,14 @@ text = "Settings"
 
 [node name="Juice" type="Node" parent="Menu/SettingsButton"]
 script = ExtResource("2")
+
+[node name="ExitButton" type="Button" parent="Menu"]
+mouse_default_cursor_shape = 2
+custom_minimum_size = Vector2(400, 110)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ButtonHeading"
+text = "Exit Game"
+
+[node name="Juice" type="Node" parent="Menu/ExitButton"]
+script = ExtResource("2")

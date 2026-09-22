@@ -64,7 +64,9 @@ reason; `PaletteStyleBox` never reads `Colours` itself, so it has no such lookup
 The theme's colours can be replaced at runtime by an
 [interface palette](interface_palette.md); its default `UI_PANEL_*` and `UI_TEXT_*`
 colours in `colours.gd` are the greys the theme uses, so keep them in step when
-the theme's greys change.
+the theme's greys change. The palette only recolours text colours the theme lists, so every
+text control type needs one there; `RichTextLabel/colors/default_color` is set for this
+reason, since without it rich text stays Godot's built-in white under any palette.
 
 **Buttons.** Every Button state draws the same flat fill, a `PaletteStyleBox` on
 `Colours.UI_BUTTON` wrapped in a `WornStyleBox`. Hover, press and selection are drawn
