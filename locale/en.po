@@ -483,10 +483,6 @@ msgstr "Temporary"
 msgid "0"
 msgstr "0"
 
-#: src/scenes/screens/character_card.gd
-msgid "Starts with: {0}"
-msgstr "Starts with: {0}"
-
 #: src/scenes/screens/character_select.tscn
 msgid "Choose a character"
 msgstr "Choose a character"
@@ -634,6 +630,10 @@ msgstr "Settings"
 #: src/scenes/screens/pause_menu.tscn
 msgid "Quit to Menu"
 msgstr "Quit to Menu"
+
+#: src/scenes/screens/pause_menu.tscn
+msgid "Exit Game"
+msgstr "Exit Game"
 
 #: src/scenes/screens/run_screen.gd
 msgid "Gold: {0}"
