@@ -1,6 +1,6 @@
 extends GutTest
-## The Icons tab (docs/systems/debug_panel.md): it builds for every icon slot, including the two
-## that are not mechanics. `charge_time` and `card` have no `Mechanic` class, so they get no keyword
+## The Icons tab (docs/systems/debug_panel.md): it builds for every icon slot, including the three
+## that are not mechanics. `charge_time`, `card` and `hp` have no `Mechanic` class, so they get no keyword
 ## chip and no colour row, and those branches are only reached by selecting them.
 ##
 ## Choosing an icon writes `IconSlots.CHOSEN_PATH`, so the file is put back as it was found in
@@ -42,7 +42,7 @@ func test_a_mechanic_slot_has_a_colour_row() -> void:
 
 
 func test_a_slot_that_is_not_a_mechanic_has_no_colour_row() -> void:
-  for slot: String in ['charge_time', 'card']:
+  for slot: String in ['charge_time', 'card', 'hp']:
     var rows: Array[Node] = _sections_for(slot)[0].get_node('Rows').get_children()
     assert_eq(rows.size(), 2, '%s has Slot and Icon rows only' % slot)
 

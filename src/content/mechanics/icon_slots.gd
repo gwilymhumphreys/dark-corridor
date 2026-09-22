@@ -1,8 +1,9 @@
 class_name IconSlots
 ## Owns the game's icon slots — a name that owns one icon — and the icon chosen for each
 ## (docs/plans/mechanic_icons.md). Static only, like `MechanicRegistry` beside it: nothing here
-## is an autoload. The ten mechanic ids are slots, and so are two things that are not mechanics:
-## `charge_time` (an item's `cooldown`) and `card` (an item referred to without naming it).
+## is an autoload. The ten mechanic ids are slots, and so are three things that are not mechanics:
+## `charge_time` (an item's `cooldown`), `card` (an item referred to without naming it) and `hp`
+## (an actor's hit points).
 ##
 ## Each slot has a folder of candidate icons at `res://assets/icons/mechanics/<slot>/` and a
 ## default inside it (`DEFAULTS`). A chosen icon is saved to `CHOSEN_PATH` on every `set_icon`
@@ -16,7 +17,7 @@ const CHARGE_TIME: String = 'charge_time'
 
 const SLOTS: Array[String] = [
   'attack', 'shield', 'heal', 'poison', 'burn', 'bleed',
-  'regen', 'crit', 'charge', 'decharge', 'charge_time', 'card',
+  'regen', 'crit', 'charge', 'decharge', 'charge_time', 'card', 'hp',
 ]
 
 
@@ -33,6 +34,7 @@ const DEFAULTS: Dictionary = {
   'decharge': 'res://assets/icons/mechanics/decharge/fast-backward-button.png',
   'charge_time': 'res://assets/icons/mechanics/charge_time/hourglass.png',
   'card': 'res://assets/icons/mechanics/card/card-draw.png',
+  'hp': 'res://assets/icons/mechanics/hp/hearts.png',
 }
 
 

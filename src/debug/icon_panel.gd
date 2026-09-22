@@ -32,14 +32,14 @@ func rebuild() -> void:
   for path: String in candidates:
     icon_names.append(path.get_file().get_basename())
   section.add_row(_make_row('Icon', _icon_index, icon_names, _on_icon_changed))
-  # The slot's colour: a mechanic's `Colours` variable (the slot id upper-cased). `charge_time` and
-  # `card` are not mechanics and have no colour, so the row is left out for them, as the Chip sample.
+  # The slot's colour: a mechanic's `Colours` variable (the slot id upper-cased). `charge_time`,
+  # `card` and `hp` are not mechanics and have no colour, so the row is left out for them, as the Chip sample.
   if MechanicRegistry.has(slot):
     section.add_row(_make_row('Colour', _slot_colour(slot), [], func(new_value: Color) -> void:
       InterfacePalette.write_custom(slot.to_upper(), new_value)
       rebuild()))
   # The chosen icon shown where it appears: a few sizes, as a keyword chip, and inline with text.
-  # `charge_time` and `card` have no keyword chip, so the samples skip it for them.
+  # `charge_time`, `card` and `hp` have no keyword chip, so the samples skip it for them.
   var samples: LookSection = _add_section('Samples')
   samples.set_open(true)
   samples.add_node(_build_samples(slot))
@@ -74,7 +74,7 @@ func _build_sizes_sample(slot: String) -> HBoxContainer:
   return row
 
 
-## The slot as a keyword chip, shown only for slots that are mechanics — `charge_time` and `card`
+## The slot as a keyword chip, shown only for slots that are mechanics — `charge_time`, `card` and `hp`
 ## have no keyword, so the chip would show nothing useful. `setup` is deferred to `ready`, so it
 ## runs once the chip is in the tree (its scene is added to the samples box after that).
 func _build_chip_row(slot: String) -> HBoxContainer:

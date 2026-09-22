@@ -231,7 +231,7 @@ combat log, status icons and combat summary read them.
 ## IconSlots
 
 `IconSlots` (`icon_slots.gd`) is a static class that owns the game's icon slots. Each mechanic id
-is a slot, plus two non-mechanic slots (`charge_time`, `card`). Each slot has a folder of candidate
+is a slot, plus three non-mechanic slots (`charge_time`, `card`, `hp`). Each slot has a folder of candidate
 icons and a default. A chosen icon is saved to `chosen.cfg` and read back lazily on first use; a
 missing file is not an error, so every slot falls back to its default.
 
@@ -288,9 +288,9 @@ line reading its chance as a percentage beside the crit glyph.
 
 ## Content
 
-No items use burn, regen, crit, charge or decharge yet — they are covered by items built inside
-the tests. Writing
-items for them is the owner's work. Bleed items cash out on attacks received rather than on the
+No items use burn, regen, crit or charge yet — they are covered by items built inside the tests.
+The Smith's Warhammer is the first item to use decharge. Writing items for them is the owner's
+work. Bleed items cash out on attacks received rather than on the
 holder's own fires, and were not re-tuned for the change.
 
 ## Lineage
