@@ -1,0 +1,525 @@
+<meta charset="utf-8">
+<title>Dark Corridor Items</title>
+<!-- The item browser template (docs/systems/item_browser.md). tools/item_browser.gd replaces the
+     data marker in the script below with the exported items and writes _temp/item_browser.html. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rakkas&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #121110;
+    --panel: #1f1e1d;
+    --panel-raised: #2a2826;
+    --edge: #3a3734;
+    --text: #f2efe9;
+    --text-dim: #9d9aa6;
+    --text-faint: #6d6a70;
+    --accent: #d9b35c;
+    --display: 'Rakkas', 'Georgia', serif;
+    --body: 'Alegreya Sans', 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'Consolas', monospace;
+  }
+  body {
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .page {
+    padding-inline: 16px;
+    padding-block: 0 48px;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  header {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 2;
+    background: var(--ground);
+    border-bottom: 1px solid var(--edge);
+    padding-block: 14px 12px;
+    display: grid;
+    gap: 10px;
+  }
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 28px;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  .generated { color: var(--text-faint); font-size: 13px; }
+  .characters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .character {
+    display: grid;
+    text-align: left;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    color: var(--text-dim);
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font: inherit;
+    line-height: 1.15;
+  }
+  .character strong { font-family: var(--display); font-weight: 400; font-size: 18px; color: var(--text); }
+  .character small { font-size: 12px; }
+  .character[aria-pressed="true"] { border-color: var(--accent); background: var(--panel-raised); }
+  .character[aria-pressed="true"] strong { color: var(--accent); }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  .group { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .group-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-right: 2px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { color: var(--ground); background: var(--text); border-color: var(--text); }
+  .chip[aria-pressed="true"] .glyph { background-color: var(--ground) !important; }
+  input[type="search"], select {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 3px;
+  }
+  input[type="search"] { width: 200px; max-width: 100%; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .summary { color: var(--text-dim); font-size: 14px; }
+  .clear { background: none; border: none; color: var(--accent); font: inherit; font-size: 14px; cursor: pointer; padding: 0; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 22px;
+    margin: 28px 0 10px;
+    color: var(--text-dim);
+  }
+  h2 span { font-family: var(--body); font-size: 14px; color: var(--text-faint); margin-left: 6px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  h2 + .grid { margin-top: 0; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 4px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+  .card.unpooled { border-style: dashed; }
+  .card-head { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; }
+  .item-icon {
+    width: 64px;
+    height: 64px;
+    background: #0b0b0a;
+    border: 2px solid var(--rarity);
+    border-radius: 3px;
+    object-fit: contain;
+    image-rendering: auto;
+  }
+  .item-name { font-family: var(--display); font-size: 21px; line-height: 1.1; color: var(--rarity); margin: 0; text-wrap: balance; }
+  .item-meta { display: flex; flex-wrap: wrap; gap: 2px 10px; color: var(--text-dim); font-size: 14px; margin-top: 3px; }
+  .charge { display: inline-flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums; }
+  .lines { display: grid; gap: 4px; padding: 8px 10px; background: #171615; border-radius: 3px; }
+  .line { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; font-size: 16px; }
+  .value { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .flavor { font-style: italic; color: var(--text-dim); font-size: 15px; margin: 0; }
+  .glyph, .picture { display: inline-block; width: 20px; height: 20px; flex: none; vertical-align: middle; }
+  .glyph { -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+  .picture { background-size: contain; background-repeat: no-repeat; background-position: center; }
+  .chip .glyph, .chip .picture { width: 16px; height: 16px; }
+  .keywords { display: flex; flex-wrap: wrap; gap: 4px; }
+  .keyword { font-size: 13px; padding: 1px 7px 1px 4px; }
+  .foot { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; color: var(--text-faint); border-top: 1px solid var(--edge); padding-top: 8px; }
+  .foot code { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .tag-warn { color: var(--accent); }
+  .empty { color: var(--text-dim); padding: 40px 0; text-align: center; }
+  @media (max-width: 520px) {
+    h1 { font-size: 23px; }
+    .filters { gap: 8px 12px; }
+  }
+</style>
+
+<div class="page">
+  <header>
+    <div class="title-row">
+      <h1>Dark Corridor Items</h1>
+      <span class="generated" id="generated"></span>
+    </div>
+    <div class="characters" id="characters"></div>
+    <div class="filters">
+      <input type="search" id="search" placeholder="Search names and text" aria-label="Search">
+      <div class="group" id="types"><span class="group-label">Type</span></div>
+      <div class="group" id="rarities"><span class="group-label">Rarity</span></div>
+      <div class="group">
+        <label class="group-label" for="sort">Sort</label>
+        <select id="sort">
+          <option value="name">Name</option>
+          <option value="rarity">Rarity</option>
+          <option value="cooldown">Charge time</option>
+          <option value="type">Type</option>
+        </select>
+        <label class="group-label" for="group-by" style="margin-left:8px">Group</label>
+        <select id="group-by">
+          <option value="none">None</option>
+          <option value="type">Type</option>
+          <option value="rarity">Rarity</option>
+        </select>
+      </div>
+    </div>
+    <div class="group" id="keywords"><span class="group-label">Keywords</span></div>
+    <div class="summary"><span id="count"></span> <button class="clear" id="clear" type="button">Clear filters</button></div>
+  </header>
+  <main id="results"></main>
+</div>
+
+<script>
+const DATA = /*ITEM_DATA*/null;
+
+const RARITY_ORDER = ['common', 'uncommon', 'rare'];
+const RARITY_NAMES = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare' };
+const TYPE_ORDER = Object.keys(DATA.types);
+const STORE_KEY = 'dark-corridor-item-browser';
+
+const state = {
+  character: DATA.default_character,
+  search: '',
+  types: new Set(),
+  rarities: new Set(),
+  keywords: new Set(),
+  sort: 'name',
+  groupBy: 'none',
+};
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (!saved) return;
+    state.character = saved.character ?? state.character;
+    state.sort = saved.sort ?? state.sort;
+    state.groupBy = saved.groupBy ?? state.groupBy;
+    state.types = new Set(saved.types ?? []);
+    state.rarities = new Set(saved.rarities ?? []);
+    state.keywords = new Set((saved.keywords ?? []).filter((id) => DATA.keywords[id]));
+  } catch (e) { /* storage unavailable: keep the defaults */ }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      character: state.character,
+      sort: state.sort,
+      groupBy: state.groupBy,
+      types: [...state.types],
+      rarities: [...state.rarities],
+      keywords: [...state.keywords],
+    }));
+  } catch (e) { /* storage unavailable */ }
+}
+
+// One CSS class per keyword icon, so each embedded image is written into the page once.
+function installIconStyles() {
+  const rules = [];
+  Object.entries(DATA.keywords).forEach(([id, keyword], index) => {
+    keyword.cls = 'kw' + index;
+    const uri = DATA.icons[keyword.icon];
+    if (!uri) return;
+    if (keyword.glyph) {
+      rules.push(`.${keyword.cls}{-webkit-mask-image:url(${uri});mask-image:url(${uri});background-color:${keyword.color}}`);
+    } else {
+      rules.push(`.${keyword.cls}{background-image:url(${uri})}`);
+    }
+  });
+  const style = document.createElement('style');
+  style.textContent = rules.join('\n');
+  document.head.appendChild(style);
+}
+
+function el(tag, attrs = {}, children = []) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === 'class') node.className = value;
+    else if (key === 'text') node.textContent = value;
+    else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value);
+  }
+  for (const child of children) if (child) node.append(child);
+  return node;
+}
+
+function iconSpan(id) {
+  const keyword = DATA.keywords[id];
+  if (!keyword) return el('span', { text: id });
+  return el('span', {
+    class: (keyword.glyph ? 'glyph ' : 'picture ') + keyword.cls,
+    title: keyword.name,
+    role: 'img',
+    'aria-label': keyword.name,
+  });
+}
+
+function lineNode(segments) {
+  const line = el('div', { class: 'line' });
+  for (const segment of segments) {
+    if (segment.t === 'icon') line.append(iconSpan(segment.id));
+    else if (segment.t === 'value') line.append(el('span', { class: 'value', text: segment.s }));
+    else line.append(el('span', { text: segment.s.trim() }));
+  }
+  return line;
+}
+
+function characterName(id) {
+  const character = DATA.characters.find((c) => c.id === id);
+  return character ? character.name : id;
+}
+
+function card(item) {
+  const unpooled = item.pools.length === 0;
+  const node = el('article', { class: 'card' + (unpooled ? ' unpooled' : '') });
+  node.style.setProperty('--rarity', item.rarity_color);
+
+  const icon = DATA.icons[item.icon]
+    ? el('img', { class: 'item-icon', src: DATA.icons[item.icon], alt: '' })
+    : el('div', { class: 'item-icon' });
+  const charge = el('span', { class: 'charge' });
+  for (const segment of item.charge_line) {
+    charge.append(segment.t === 'icon' ? iconSpan(segment.id) : el('span', { text: segment.s }));
+  }
+  node.append(el('div', { class: 'card-head' }, [
+    icon,
+    el('div', {}, [
+      el('h3', { class: 'item-name', text: item.name }),
+      el('div', { class: 'item-meta' }, [
+        item.type_line ? el('span', { text: item.type_line }) : null,
+        charge,
+        el('span', { text: RARITY_NAMES[item.rarity] }),
+      ]),
+    ]),
+  ]));
+
+  if (item.lines.length) {
+    node.append(el('div', { class: 'lines' }, item.lines.map(lineNode)));
+  }
+  if (item.flavor) node.append(el('p', { class: 'flavor', text: item.flavor }));
+
+  if (item.keyword_ids.length) {
+    const keywords = el('div', { class: 'keywords' });
+    for (const id of item.keyword_ids) {
+      const keyword = DATA.keywords[id];
+      keywords.append(el('button', {
+        type: 'button',
+        class: 'chip keyword',
+        title: keyword.desc,
+        'aria-pressed': String(state.keywords.has(id)),
+        onclick: () => toggle(state.keywords, id),
+      }, [iconSpan(id), el('span', { text: keyword.name })]));
+    }
+    node.append(keywords);
+  }
+
+  const foot = el('div', { class: 'foot' }, [el('code', { text: item.id })]);
+  if (unpooled) foot.append(el('span', { class: 'tag-warn', text: 'In no pool' }));
+  const others = item.pools.filter((id) => id !== state.character);
+  if (others.length && state.character !== 'all') {
+    foot.append(el('span', { text: 'Also: ' + others.map(characterName).join(', ') }));
+  } else if (state.character === 'all' && item.pools.length) {
+    foot.append(el('span', { text: item.pools.map(characterName).join(', ') }));
+  }
+  if (item.enemies.length) foot.append(el('span', { text: 'Enemies: ' + item.enemies.join(', ') }));
+  if (item.starting_uses > 0) foot.append(el('span', { text: `Destroyed after ${item.starting_uses} uses` }));
+  node.append(foot);
+  return node;
+}
+
+function inCharacter(item) {
+  switch (state.character) {
+    case 'all': return true;
+    case 'none': return item.pools.length === 0;
+    case 'enemies': return item.enemies.length > 0;
+    default: return item.pools.includes(state.character);
+  }
+}
+
+function searchText(item) {
+  if (!item._text) {
+    const lines = item.lines.flat().map((s) => s.t === 'icon' ? (DATA.keywords[s.id]?.name ?? '') : s.s);
+    const keywordNames = item.keyword_ids.map((id) => DATA.keywords[id]?.name ?? '');
+    item._text = [item.name, item.id, item.type_line, item.flavor, ...lines, ...keywordNames].join(' ').toLowerCase();
+  }
+  return item._text;
+}
+
+function matches(item) {
+  if (!inCharacter(item)) return false;
+  if (state.types.size && !item.types.some((t) => state.types.has(t))) return false;
+  if (state.rarities.size && !state.rarities.has(item.rarity)) return false;
+  if (state.keywords.size && !item.keyword_ids.some((id) => state.keywords.has(id))) return false;
+  if (state.search && !searchText(item).includes(state.search)) return false;
+  return true;
+}
+
+function firstTypeIndex(item) {
+  const index = TYPE_ORDER.indexOf(item.types[0]);
+  return index < 0 ? TYPE_ORDER.length : index;
+}
+
+function compare(a, b) {
+  let result = 0;
+  if (state.sort === 'rarity') result = RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity);
+  else if (state.sort === 'cooldown') result = a.cooldown - b.cooldown;
+  else if (state.sort === 'type') result = firstTypeIndex(a) - firstTypeIndex(b);
+  return result || a.name.localeCompare(b.name);
+}
+
+function groups(items) {
+  if (state.groupBy === 'rarity') {
+    return RARITY_ORDER.map((r) => [RARITY_NAMES[r], items.filter((i) => i.rarity === r)]);
+  }
+  if (state.groupBy === 'type') {
+    const result = TYPE_ORDER.map((t) => [DATA.types[t], items.filter((i) => i.types[0] === t)]);
+    result.push(['No type', items.filter((i) => !TYPE_ORDER.includes(i.types[0]))]);
+    return result;
+  }
+  return [[null, items]];
+}
+
+function characterCounts() {
+  const counts = { all: DATA.items.length, none: 0, enemies: 0 };
+  for (const character of DATA.characters) counts[character.id] = 0;
+  for (const item of DATA.items) {
+    for (const id of item.pools) counts[id] = (counts[id] ?? 0) + 1;
+    if (!item.pools.length) counts.none += 1;
+    if (item.enemies.length) counts.enemies += 1;
+  }
+  return counts;
+}
+
+function renderCharacters() {
+  const counts = characterCounts();
+  const box = document.getElementById('characters');
+  box.replaceChildren();
+  const entries = [
+    ...DATA.characters.map((c) => [c.id, c.name, c.subtitle]),
+    ['all', 'All items', ''],
+    ['none', 'In no pool', ''],
+    ['enemies', 'Enemy boards', ''],
+  ];
+  for (const [id, name, subtitle] of entries) {
+    box.append(el('button', {
+      type: 'button',
+      class: 'character',
+      'aria-pressed': String(state.character === id),
+      onclick: () => { state.character = id; render(); },
+    }, [
+      el('strong', { text: name }),
+      el('small', { text: [subtitle, `${counts[id] ?? 0} items`].filter(Boolean).join(' · ') }),
+    ]));
+  }
+}
+
+function renderChips(containerId, entries, set) {
+  const box = document.getElementById(containerId);
+  box.querySelectorAll('.chip').forEach((n) => n.remove());
+  for (const [id, label, iconId] of entries) {
+    box.append(el('button', {
+      type: 'button',
+      class: 'chip',
+      'aria-pressed': String(set.has(id)),
+      onclick: () => toggle(set, id),
+    }, [iconId ? iconSpan(iconId) : null, el('span', { text: label })]));
+  }
+}
+
+function keywordEntries() {
+  // Only keywords that appear on the current character's items, in first-seen order.
+  const seen = [];
+  for (const item of DATA.items.filter(inCharacter)) {
+    for (const id of item.keyword_ids) if (!seen.includes(id)) seen.push(id);
+  }
+  for (const id of state.keywords) if (!seen.includes(id)) seen.push(id);
+  return seen.map((id) => [id, DATA.keywords[id].name, id]);
+}
+
+function toggle(set, id) {
+  if (set.has(id)) set.delete(id); else set.add(id);
+  render();
+}
+
+function render() {
+  saveState();
+  renderCharacters();
+  renderChips('types', TYPE_ORDER.map((t) => [t, DATA.types[t]]), state.types);
+  renderChips('rarities', RARITY_ORDER.map((r) => [r, RARITY_NAMES[r]]), state.rarities);
+  renderChips('keywords', keywordEntries(), state.keywords);
+  document.getElementById('sort').value = state.sort;
+  document.getElementById('group-by').value = state.groupBy;
+
+  const items = DATA.items.filter(matches).sort(compare);
+  const total = DATA.items.filter(inCharacter).length;
+  document.getElementById('count').textContent =
+    items.length === total ? `${total} items` : `${items.length} of ${total} items`;
+  const filtered = state.search || state.types.size || state.rarities.size || state.keywords.size;
+  document.getElementById('clear').hidden = !filtered;
+
+  const results = document.getElementById('results');
+  results.replaceChildren();
+  if (!items.length) {
+    results.append(el('p', { class: 'empty', text: 'No items match these filters.' }));
+    return;
+  }
+  for (const [heading, groupItems] of groups(items)) {
+    if (!groupItems.length) continue;
+    if (heading) results.append(el('h2', {}, [heading, el('span', { text: String(groupItems.length) })]));
+    results.append(el('div', { class: 'grid' }, groupItems.map(card)));
+  }
+}
+
+loadState();
+installIconStyles();
+document.getElementById('generated').textContent = 'Exported ' + DATA.generated.replace('T', ' ');
+document.getElementById('search').addEventListener('input', (e) => {
+  state.search = e.target.value.trim().toLowerCase();
+  render();
+});
+document.getElementById('sort').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+document.getElementById('group-by').addEventListener('change', (e) => { state.groupBy = e.target.value; render(); });
+document.getElementById('clear').addEventListener('click', () => {
+  state.search = '';
+  document.getElementById('search').value = '';
+  state.types.clear();
+  state.rarities.clear();
+  state.keywords.clear();
+  render();
+});
+render();
+</script>
