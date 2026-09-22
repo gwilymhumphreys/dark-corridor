@@ -34,9 +34,8 @@ three families from one recording session, which is why they sit together.
 
 | Family | Files in the game | Freesound ids |
 | --- | --- | --- |
-| Quiet Page Turn | 8 in `assets/sound-effects/ui/hover/` | 484961 to 484968 |
-| Book Close | 6 in `assets/sound-effects/ui/click/` | 484882, 484885, 484888, 484890, 484891, 484892 |
-| Book Drop | 2 in `assets/sound-effects/ui/click/` | 484897, 484906 |
+| Quiet Page Turn | 7 in `assets/sound-effects/ui/hover/` | 484961 to 484963, 484965 to 484968 |
+| Book Close | 3 in `assets/sound-effects/ui/click/` | 484885, 484888, 484890 |
 
 A single sound's page is at `https://freesound.org/s/<id>/`. Each sound is in the
 repository twice, as the original `.wav` and as an `.mp3`; see

@@ -55,6 +55,7 @@ Colour is the readability mechanism that scales (design) — you can't parse 30 
 - **Cooldown fill** (a filling overlay over the icon, its top edge a torn paper line) on each active item — **on enemy items too** (mutual cooldowns = the visible race). As built: `cooldown_fill.gdshader`, driven by `ItemCell` ([run_screen.md](run_screen.md)). The fills are cleared when the fight ends and are not shown outside a fight (events, reward icons).
 - **Rarity border** (bronze / silver / gold); **build-anchor** is a separate glow channel (never the border or size); **size** = a tempo tag (if it ships — Item PRD).
 - **Bigger than feels comfortable**, so activations stay legible in a packed cascade.
+- **The player's board always fits:** its items shrink together as the board fills, so every item stays visible during a fight, and sit on a pencil grid like cardboard tokens on grid paper, slightly askew ([run_screen.md](run_screen.md), [print_frame.md](print_frame.md)). The board has no size limit.
 
 The enemy board mirrors the player's (loadouts visible — "watch the cascades collide").
 

@@ -122,9 +122,9 @@ continuous across them.
 4. ~~Add `RunMap.target_points(position)`, `RunMap.enemy_pool(act)` and `RunMap.draw_enemies`.~~ **Done.**
 5. ~~Generate in `RunManager._enter_beat`, pass the ids to `Encounter`, and add them to the snapshot.~~ **Done.**
 6. ~~Raise `Balance.ENEMY_*_HP`.~~ **Done** for the Smith, the default character, whose items are
-   on the curve. The Fleshmancer's items are still far under it and the Spore Druid has no defence,
-   so both lose early on about half their seeds; they are the owner's to revisit. The grunt's Claw
-   was sized for 5 second fights and has not been re-priced for 20.
+   on the curve. The Claw was resized at the same time so an early fight costs up to 10% of starting
+   health. All three characters now clear the run on every seed tried. Because the enemies do not
+   grow until step 7, fights after the first few cost the player nothing and get shorter.
 7. Author enough enemies per act to fill the pools. This is the owner's. `RunMap.enemy_pool` returns
    empty until then, which leaves every fight on its authored composition.
 8. ~~Give the autotest a way to pin a composition.~~ **Done** — `--enemies grunt,grunt`.

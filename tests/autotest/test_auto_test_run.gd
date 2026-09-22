@@ -202,7 +202,7 @@ func test_body_block_fight_is_not_falsely_stuck() -> void:
   m.stuck_threshold_seconds = 2.0
   var player := Actor.new(30.0)            # no items — contributes nothing itself
   var enemy := Actor.new(20.0)
-  enemy.board.append(Item.new(ItemCatalog.get_def(ItemCatalog.ENEMY_CLAW), enemy))
+  enemy.board.append(Item.new(FixtureItems.enemy_attack(), enemy))
   var cm := CombatManager.new(player, [enemy])
   cm.start()
   var token := Actor.new(40.0)             # a pure body-block token, leftmost

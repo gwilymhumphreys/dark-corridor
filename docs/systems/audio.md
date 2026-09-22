@@ -90,6 +90,9 @@ category uses the Interface bus.
 - **Variants** — a subfolder of a sound is a variant of it, played when the code asks for the
   longer path. `mechanics/attack/shielded` is the hit that strikes shield, and it falls back to
   `mechanics/attack` when it holds nothing. The bus comes from the original path either way.
+  The fallback only walks up the path, so `mechanics/attack/blade/shielded` falls back to
+  `mechanics/attack/blade`, not to `mechanics/attack/shielded`. Each weapon folder needs its
+  own `shielded/` for shield hits to sound different.
 
 ### The three layers of an attack
 
@@ -136,8 +139,11 @@ API:
 
 **What is in the project now:**
 
-- `assets/sound-effects/ui/hover/` — 8 page turns
-- `assets/sound-effects/ui/click/` — 6 book closes and 2 book drops
+- `assets/sound-effects/ui/hover/` — 7 page turns
+- `assets/sound-effects/ui/click/` — 3 book closes
+- `assets/sound-effects/ui/paper/` — a pool of paper candidates that nothing plays. Its `.gdignore`
+  keeps Godot from importing it, so it is not in a build. Move a sound into a folder the game
+  plays from to use it.
 - `assets/sound-effects/world/footsteps/steps/` — single footsteps, one per footfall
 
 Wav files must be 8-bit or 16-bit PCM; a 24-bit one imports as silence without failing the

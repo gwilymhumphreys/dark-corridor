@@ -1,12 +1,13 @@
 # Print frame
 
 A dev tool for making the combat screen look like a printed sheet: a border around the corridor, the
-background wear carried over the corridor, a worn corridor edge, and the split point and padding of the
+background wear carried over the corridor, a worn corridor edge, a pencil grid behind the player's
+items, how far those items sit askew, and the split point and padding of the
 [screen sections](ui_layout.md#screen-sections). Every effect is set from the Print tab of the
 [debug panel](debug_panel.md); the [background wear](background_wear.md) itself has its own tab.
 
 **Location:** `src/ui/print_frame.gd` (class `PrintFrame`), `src/shaders/print_border.gdshader`,
-`src/shaders/corridor_overlay.gdshader`, the Print tab in `src/debug/print_panel.*` (class `PrintPanel`).
+`src/shaders/corridor_overlay.gdshader`, `src/shaders/board_grid.gdshader`, the Print tab in `src/debug/print_panel.*` (class `PrintPanel`).
 The materials, settings, defaults, reset, and writing and reading presets are owned by `PrintLook`
 (`src/autoloads/print_look.gd`, class `PrintLookAutoload`), alongside [background wear](background_wear.md)
 and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start-up arguments.
@@ -29,13 +30,21 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
 - The overlay reads the corridor from the screen and redraws it. `PrintFrame` copies every background
   wear setting and colour into `PrintLook.overlay_material`, so marks over the corridor match the
   background's and line up across the corridor's edge.
+- The board grid is a rectangle behind the player's items in `combat_view_framed.tscn`, drawn through
+  `PrintLook.grid_material`: grid paper drawn in pencil, one square per item cell, with each line
+  running through the middle of the gap between cells. `CombatViewFramed` sets its size, the square
+  size and the pencil colour, `Colours.UI_BACKGROUND_WEAR_LIGHT`.
+- The player's items are set down askew on the grid, like cardboard tokens placed by hand: each cell
+  has its own random tilt and shift, scaled by the layout settings `token_tilt` and `token_shift`
+  (`ItemCell.set_askew`, drawn with the visual-only offset transform).
 
 | Group | Does |
 |---|---|
-| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Defaults in `PRINT_SETTING_DEFAULTS` |
+| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Token tilt and token shift: the largest tilt in degrees and shift in pixels of the player's items. Defaults in `PRINT_SETTING_DEFAULTS` |
 | Print Border | A solid line around the corridor: width, gap from the corridor, edge roughness, rubbed spots and their size |
 | Corridor Wear | The background wear, with its current settings, drawn over the corridor too |
 | Corridor Worn Edge | The corridor image's edges rubbed away into the background colour, heavier at the corners: width, amount, patch size, corners |
+| Board Grid | The pencil grid behind the player's items: squares per item cell, line width, darkness, wobble and its length, pressure, grain, gaps |
 
 The owner's chosen settings are in the print part of the default [look preset](look_presets.md).
 
@@ -49,7 +58,7 @@ the border and overlay groups, then panel wear. The background wear groups are i
 ## In a preset
 
 The print part has sections `print_panel` (every [panel wear](panel_wear.md) uniform), `print_frame`
-(every border and overlay uniform) and `print_layout` (every print frame setting). Reading it starts
+(every border, overlay and board grid uniform) and `print_layout` (every print frame setting). Reading it starts
 from the print defaults. Sizes and colours set by `PrintFrame` are not saved. Background wear is a
 part of its own ([background_wear.md](background_wear.md#presets-and-screenshots)).
 
@@ -64,9 +73,9 @@ and `--print-panel` opens the Print tab ([debug_panel.md](debug_panel.md#start-u
 
 | Member | Use |
 |---|---|
-| `PrintLook.border_material`, `overlay_material`, `panel_material` | The border, corridor overlay and [panel wear](panel_wear.md) materials |
+| `PrintLook.border_material`, `overlay_material`, `grid_material`, `panel_material` | The border, corridor overlay, board grid and [panel wear](panel_wear.md) materials |
 | `PrintLook.print_settings`, `print_setting(setting) -> Variant` | Print frame settings changed from `PRINT_SETTING_DEFAULTS`, and a setting's current value |
-| `PrintLook.set_print_value(name, value)` | Set a border, overlay or panel wear uniform, or a print frame setting, by name |
+| `PrintLook.set_print_value(name, value)` | Set a border, overlay, board grid or panel wear uniform, or a print frame setting, by name |
 | `PrintLook.print_defaults() -> Dictionary`, `panel_defaults() -> Dictionary` | Border/overlay and panel wear uniform defaults, read from the shader code |
 | `PrintLook.write_print_look(file)`, `read_print_look(file)`, `reset_print_look()` | The [print part](#in-a-preset) of a preset, and the print defaults |
 | `PrintLook.write_background_look(file)`, `read_background_look(file)`, `reset_background_look()` | The [background part](background_wear.md#presets-and-screenshots) of a preset, and the background defaults |

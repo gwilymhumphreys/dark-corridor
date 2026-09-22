@@ -25,6 +25,8 @@ static func refresh_colours() -> void:
   _defs = {}
   _build()
   for id: String in cached:
+    if not _defs.has(id):
+      continue   # added from outside the catalog (a test fixture)
     var old_def: ConsumableDef = cached[id]
     var new_def: ConsumableDef = _defs[id]
     for i in old_def.effects.size():

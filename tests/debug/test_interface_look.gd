@@ -15,6 +15,10 @@ const SCENE_NODES: Array[Array] = [
 ## Nodes drawn through `InterfaceLook.framed_material`: the pictures inside a `PanelSlot` frame.
 const FRAMED_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/item_cell.tscn', 'Frame/Icon'],
+]
+
+## Nodes drawn through `InterfaceLook.portrait_material`: the framed portraits that breathe.
+const PORTRAIT_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/screens/character_card.tscn', 'Portrait/Image'],
   ['res://src/scenes/combat/ally_slot.tscn', 'Portrait/Image'],
   ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Portrait/Image'],
@@ -154,6 +158,33 @@ func test_framed_pictures_use_the_framed_material() -> void:
     assert_eq(root.get_node(pair[1]).material, InterfaceLook.framed_material,
       '%s %s draws through the framed material' % [pair[0], pair[1]])
     root.free()
+
+
+
+func test_breathing_portraits_use_the_portrait_material() -> void:
+  for pair: Array in PORTRAIT_SCENE_NODES:
+    var scene: PackedScene = load(pair[0])
+    var root: Node = scene.instantiate()
+    assert_eq(root.get_node(pair[1]).material, InterfaceLook.portrait_material,
+      '%s %s draws through the portrait material' % [pair[0], pair[1]])
+    root.free()
+
+
+func test_the_portrait_material_follows_the_framed_settings() -> void:
+  InterfaceLook.set_setting('hatching_on', true)
+  InterfaceLook.set_setting('picture_wear_on', true)
+  assert_eq(InterfaceLook.portrait_material.get_shader_parameter('hatching_on'), true, 'a setting reaches the portraits')
+  assert_ne(InterfaceLook.portrait_material.get_shader_parameter('picture_wear_on'), true,
+    'picture wear stays off, as on the framed material')
+  InterfaceLook.reset()
+
+
+func test_only_the_portrait_shader_has_a_per_node_setting() -> void:
+  # Godot reserves a block of the instance uniform buffer for every node drawn through a shader with an
+  # instance uniform, so the shader on every icon, pill and label must have none.
+  for look_material: ShaderMaterial in [InterfaceLook.material, InterfaceLook.element_material, InterfaceLook.framed_material]:
+    assert_false(look_material.shader.code.contains('#define PICTURE_ZOOM'), '%s has no picture_zoom' % look_material.shader.resource_path)
+  assert_true(InterfaceLook.portrait_material.shader.code.contains('#define PICTURE_ZOOM'), 'the portrait shader has picture_zoom')
 
 
 func test_interface_elements_use_the_element_material() -> void:

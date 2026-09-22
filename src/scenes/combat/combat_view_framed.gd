@@ -19,6 +19,7 @@ const SCREEN_SECTIONS: PackedScene = preload('res://src/ui/screen_sections.tscn'
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
 const PORTRAIT_MIN_SIZE: float = 40.0   # the player portrait shrinks to fit its section, down to this
+const MIN_CELL_SIZE: float = 48.0       # the player's item cells shrink to fit the board, down to this
 const ENEMY_FADE_IN: float = 0.25       # seconds an enemy HUD takes to fade up when the fight starts
 const TEMPORARY_FADE_OUT: float = 0.45  # seconds a temporary item's cell / a token's slot takes to fade away at fight end
 # A big hit pauses the fight and shakes this view, both growing with VfxDriver.big_hit_strength.
@@ -36,7 +37,9 @@ var _player: Actor
 @onready var _corridor: CombatCorridor = $Corridor/CorridorPanel
 @onready var _enemy_huds_box: Control = $EnemyArea/EnemyHuds
 @onready var _items_part: VBoxContainer = $Items
-@onready var _player_items: GridContainer = $Items/PlayerItems
+@onready var _board: Control = $Items/Board
+@onready var _grid: ColorRect = $Items/Board/Grid
+@onready var _player_items: GridContainer = $Items/Board/PlayerItems
 @onready var _potions: HBoxContainer = $Items/Potions
 @onready var _portraits_part: HBoxContainer = $Portraits
 @onready var _portrait: Control = $Portraits/PlayerPortrait/Portrait
@@ -60,6 +63,10 @@ var _shake_tween: Tween
 var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the fight's seeded one
 var _enemies_shown: bool = false   # false through the approach: the enemy HUDs stay hidden
 var _fading_out: Dictionary = {}   # Item/Actor -> true while its widget fades away at fight end; not rebuilt
+var _gap_ratio: float = 0.0   # the gap between the player's item cells as a share of the cell size, from the scene
+var _cell_size: float = ItemCell.CELL_SIZE.x   # the player's item cells' current size, set by _fit_board
+var _fitted: Vector3 = -Vector3.ONE   # the board width, height and cell count _fit_board last fitted to
+var _askew_set: Vector3 = -Vector3.ONE   # the tilt, shift and cell size _set_items_askew last applied
 
 
 func _ready() -> void:
@@ -68,21 +75,24 @@ func _ready() -> void:
     add_child(sections)
     move_child(sections, 0)
   sections.sections_changed.connect(_place_in_sections)
+  _gap_ratio = _player_items.get_theme_constant('h_separation') / ItemCell.CELL_SIZE.x
+  _grid.material = PrintLook.grid_material
   _place_in_sections()
 
 
-## Put the corridor, the item column and the portrait row in their screen sections. The item columns and
-## portraits are fitted to the new sizes first, so no container is held larger than its section.
+## Put the corridor, the item column and the portrait row in their screen sections. The portraits are
+## fitted to the new sizes first, so no container is held larger than its section, and the player's
+## items are fitted to the board once the item column is in place.
 func _place_in_sections() -> void:
   var corridor_rect: Rect2 = sections.section('Corridor').get_global_rect()
   var items_rect: Rect2 = sections.section('Items').get_global_rect()
   var portraits_rect: Rect2 = sections.section('Portraits').get_global_rect()
-  _fit_item_columns(items_rect.size.x)
   _fit_portraits(portraits_rect.size.y)
   _place(_corridor_part, corridor_rect)
   _place(_corridor_area, corridor_rect)
   _place(_items_part, items_rect)
   _place(_portraits_part, portraits_rect)
+  _fit_board()
 
 
 func _place(part: Control, rect: Rect2) -> void:
@@ -90,10 +100,62 @@ func _place(part: Control, rect: Rect2) -> void:
   part.size = rect.size
 
 
-## As many item columns as fit the section's width.
-func _fit_item_columns(width: float) -> void:
-  var gap: float = _player_items.get_theme_constant('h_separation')
-  _player_items.columns = maxi(1, int((width + gap) / (ItemCell.CELL_SIZE.x + gap)))
+## Fit the player's items to the board below the Items label: the cells take the largest size, up to
+## their full size, at which every item fits, with the gap scaled to match. The grid lines run through
+## the middle of the gaps, so each item sits in one square of the pencil grid. Does nothing unless the
+## board's size or the number of cells changed.
+func _fit_board() -> void:
+  var width: float = _items_part.size.x
+  var height: float = _items_part.size.y - _board.position.y
+  var count: int = _player_items.get_child_count()
+  var wanted: Vector3 = Vector3(width, height, count)
+  if wanted == _fitted:
+    return
+  _fitted = wanted
+  _cell_size = board_cell_size(width, height, count, _gap_ratio)
+  var gap: int = int(_cell_size * _gap_ratio)
+  var square: float = _cell_size + gap
+  _player_items.columns = maxi(1, int(width / square))
+  _player_items.add_theme_constant_override('h_separation', gap)
+  _player_items.add_theme_constant_override('v_separation', gap)
+  _player_items.position = Vector2(gap, gap) * 0.5
+  for cell: Node in _player_items.get_children():
+    (cell as ItemCell).set_cell_size(_cell_size)
+  PrintLook.grid_material.set_shader_parameter('square_size', square)
+
+
+## The largest whole-pixel cell size, from `ItemCell.CELL_SIZE` down to `MIN_CELL_SIZE`, at which
+## `count` cells and their gaps fit in `width` by `height`. Each cell takes a square of its size plus
+## the gap (`gap_ratio` of its size).
+static func board_cell_size(width: float, height: float, count: int, gap_ratio: float) -> float:
+  var cell_size: float = ItemCell.CELL_SIZE.x
+  while cell_size > MIN_CELL_SIZE:
+    var square: float = cell_size + int(cell_size * gap_ratio)
+    var columns: int = maxi(1, int(width / square))
+    if ceili(float(count) / columns) * square <= height:
+      return cell_size
+    cell_size -= 1.0
+  return MIN_CELL_SIZE
+
+
+## Set the player's items down askew on the grid (`ItemCell.set_askew`), by the print settings
+## `token_tilt` and `token_shift`, the shift scaled to the cells' size. Does nothing unless a setting or
+## the cell size changed; adding a cell clears `_askew_set`, so every cell is set again.
+func _set_items_askew() -> void:
+  var tilt: float = PrintLook.print_setting('token_tilt')
+  var shift: float = PrintLook.print_setting('token_shift') * _cell_size / ItemCell.CELL_SIZE.x
+  var wanted: Vector3 = Vector3(tilt, shift, _cell_size)
+  if wanted == _askew_set:
+    return
+  _askew_set = wanted
+  for cell: Node in _player_items.get_children():
+    (cell as ItemCell).set_askew(tilt, shift)
+
+
+## The pencil grid covers the board and takes its colour from the interface palette.
+func _draw_grid() -> void:
+  PrintLook.grid_material.set_shader_parameter('rect_size', _grid.size)
+  PrintLook.grid_material.set_shader_parameter('pencil_colour', Colours.UI_BACKGROUND_WEAR_LIGHT)
 
 
 ## The player portrait stays square and takes the section's full height, sitting to the left of the
@@ -117,6 +179,8 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   if player.portrait != '':
     _portrait_image.texture = load(player.portrait)
   _build_player_items(player)
+  _fit_board()
+  _set_items_askew()
   _build_potions(potions)
   _corridor.set_enemy_depth(0.0)
   _sync_rosters()
@@ -130,6 +194,9 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
 func _process(_delta: float) -> void:
   _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
   _sync_player_items()    # pick up items created or removed during the fight
+  _fit_board()            # shrink or grow the cells when the count or the section changed
+  _set_items_askew()
+  _draw_grid()
   _position_enemy_huds()  # keep each HUD pinned above its enemy's corridor sprite
   _refresh_player_hp()
   if _cm != null and _vfx.combat != null and _cm.timekeeper != null:
@@ -171,6 +238,8 @@ func _sync_player_items() -> void:
 func _add_player_cell(item: Item) -> void:
   var cell: ItemCell = ITEM_CELL.instantiate()
   _player_items.add_child(cell)
+  cell.set_cell_size(_cell_size)
+  _askew_set = -Vector3.ONE
   cell.setup(item, _cm.timekeeper if _cm != null else null, _cm != null and _cm.is_created_item(item))
   cell.show_cooldown = _cooldowns_shown
   _player_cells[item] = cell
@@ -375,6 +444,7 @@ func _exit_tree() -> void:
   _cm = null
   _player = null
   _portrait_image.texture = null
+  _grid.material = null
   if sections != null and sections.sections_changed.is_connected(_place_in_sections):
     sections.sections_changed.disconnect(_place_in_sections)
   sections = null

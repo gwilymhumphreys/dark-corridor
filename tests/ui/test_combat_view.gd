@@ -147,9 +147,27 @@ func test_framed_view_binds_a_fight_without_error() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  assert_eq(view.get_node('Items/PlayerItems').get_child_count(), 3, 'player board built (the right-edge column)')
+  assert_eq(view.get_node('Items/Board/PlayerItems').get_child_count(), 3, 'player board built (the right-edge column)')
   assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 1, 'one HUD for the one enemy')
   cm.free()   # after_each dissolves the actors (breaks the Actor<->Item cycles)
+
+
+func test_a_full_player_board_shrinks_its_cells() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var items: Array = []
+  for i in 60:
+    items.append(FixtureItems.attack())
+  var p := _spawn(100.0, items)
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [])
+  var grid: GridContainer = view.get_node('Items/Board/PlayerItems')
+  var cell: ItemCell = grid.get_child(0)
+  assert_lt(cell.cell_size.x, ItemCell.CELL_SIZE.x, 'the cells shrink to fit 60 items')
+  assert_eq((grid.get_child(59) as ItemCell).cell_size, cell.cell_size, 'every cell takes the same size')
+  cm.free()
 
 
 func test_enemy_huds_stay_hidden_until_the_fight_starts() -> void:
@@ -178,7 +196,7 @@ func test_release_clears_the_cooldown_fills() -> void:
   var cm := CombatManager.new(p, [e], 0, [ally])
   cm.start()
   view.bind(cm, p, [])
-  var cell: ItemCell = view.get_node('Items/PlayerItems').get_child(0)
+  var cell: ItemCell = view.get_node('Items/Board/PlayerItems').get_child(0)
   cell.item.cooldown.accum = cell.item.cooldown.threshold * 0.5   # part-way through its cooldown
   cell._update_cooldown()
   assert_false(cell.get_node('Cooldown').visible, 'no fill while the player is still walking in')
@@ -199,7 +217,7 @@ func test_view_without_a_fight_shows_no_cooldown_fills() -> void:
   _host(view)
   var p := _spawn(100.0, [FixtureItems.attack()])
   view.bind(null, p, [])
-  var cell: ItemCell = view.get_node('Items/PlayerItems').get_child(0)
+  var cell: ItemCell = view.get_node('Items/Board/PlayerItems').get_child(0)
   assert_false(cell.get_node('Cooldown').visible, 'an event beat shows the board with no fill')
 
 

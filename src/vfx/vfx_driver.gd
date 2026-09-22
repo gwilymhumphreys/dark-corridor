@@ -18,6 +18,8 @@ const ARC_HEIGHT: float = 0.05  # how high a projectile's path rises, as a fract
 ## Played when a struck actor names no hurt sound of its own, so the target layer works before
 ## any enemy has a voice.
 const DEFAULT_HURT_SOUND: String = 'combat/hurt'
+## Played alongside the landing sound of a delivery that crit. Crit is never delivered itself.
+const CRIT_SOUND: String = 'mechanics/' + CritMechanic.ID
 
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
@@ -132,12 +134,15 @@ func _sound_new_impacts() -> void:
       _launched[id] = true
       # No fallback: an unfilled travel folder stays silent rather than playing the hit sound.
       SfxManager.play_sound(_travel_key_of(d), -1.0, 0.0, false)
-    # Summons and created items have no impact to hear, as they have none to see.
-    if not d.landed or d.fizzled or not _impact_drawers.has(_impact_key(d)) or _sounded.has(id):
+    if not d.landed or d.fizzled or not has_impact_sound(d) or _sounded.has(id):
       continue
     _sounded[id] = true
     SfxManager.play_sound(_sound_key_of(d))
     SfxManager.play_sound(_hurt_key_of(d))
+    if d.crit:
+      # A crit adds a layer on top of the hit. It is guarded because one critting fire can land
+      # on several targets in the same frame, and that is still one crit.
+      SfxManager.play_sound_guarded(CRIT_SOUND, CRIT_SOUND)
     var strength: float = big_hit_strength(d)
     if strength >= 0.0:
       big_hit.emit(strength)
@@ -147,6 +152,13 @@ func _sound_new_impacts() -> void:
   for id: int in _launched.keys():
     if not live.has(id):
       _launched.erase(id)
+
+
+## Whether a landing makes a sound. Summons and created items have no impact to hear, as they have
+## none to see. Charge and decharge draw no ring on the item they move, but they still land on it,
+## so they are heard.
+static func has_impact_sound(d: Delivery) -> bool:
+  return d.kind != Delivery.Kind.SUMMON and d.kind != Delivery.Kind.CREATE_ITEM
 
 
 ## The folder for the target layer of a hit (docs/systems/audio.md): the sound the thing being

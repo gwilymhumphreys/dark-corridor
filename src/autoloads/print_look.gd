@@ -15,6 +15,7 @@ const BACKGROUND_SHADER: Shader = preload('res://src/shaders/background_wear.gds
 const PANEL_SHADER: Shader = preload('res://src/shaders/panel_wear.gdshader')
 const BORDER_SHADER: Shader = preload('res://src/shaders/print_border.gdshader')
 const OVERLAY_SHADER: Shader = preload('res://src/shaders/corridor_overlay.gdshader')
+const GRID_SHADER: Shader = preload('res://src/shaders/board_grid.gdshader')
 const BACKGROUND_SETTINGS_INCLUDE: ShaderInclude = preload('res://src/shaders/background_wear_settings.gdshaderinc')
 ## Background wear uniforms set from `Colours` or the current screen by `ScreenBackground`, or from the
 ## layout by `PrintFrame`, so they are not look settings.
@@ -29,16 +30,28 @@ const PANEL_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_co
 # The control highlight shares the panel wear shader and material, but its settings are its own preset
 # part and its own tab (docs/systems/control_feedback.md). They stay out of `panel_defaults` on their
 # own, because that reads the shader's own code and an included file's uniforms are not in it.
-## Border and corridor overlay uniforms set by `PrintFrame`, so they are not look settings.
-const PRINT_FRAME_UNIFORMS: Array[String] = ['border_colour', 'border_wear_colour', 'rect_size', 'paper_colour']
+## Border, corridor overlay and board grid uniforms set by `PrintFrame` or the combat view, so they are
+## not look settings.
+const PRINT_FRAME_UNIFORMS: Array[String] = [
+  'border_colour',
+  'border_wear_colour',
+  'rect_size',
+  'paper_colour',
+  'pencil_colour',
+  'square_size',
+]
 ## Print frame settings that are not shader uniforms (setting -> default), from the Print tab,
 ## presets and `--print-set=`: the screen's split point, where the folds cross and the four
 ## screen sections meet (`ScreenSections`, docs/systems/ui_layout.md), and the padding inside each
-## section. In pixels on the interface canvas.
+## section. In pixels on the interface canvas. Also how far the player's items sit askew on the board
+## grid, like cardboard tokens put down by hand: the largest tilt in degrees and the largest shift in
+## pixels at full cell size (`CombatViewFramed`).
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'split_across': 1700.0,
   'split_down': 1150.0,
+  'token_tilt': 3.0,
+  'token_shift': 4.0,
 }
 
 ## The material every screen background is drawn through (background_wear.gdshader).
@@ -50,6 +63,8 @@ var panel_material: ShaderMaterial = ShaderMaterial.new()
 var border_material: ShaderMaterial = ShaderMaterial.new()
 ## The wear and worn edge drawn over the combat corridor (corridor_overlay.gdshader), by `PrintFrame`.
 var overlay_material: ShaderMaterial = ShaderMaterial.new()
+## The pencil grid behind the player's items (board_grid.gdshader), drawn by `CombatViewFramed`.
+var grid_material: ShaderMaterial = ShaderMaterial.new()
 ## Print frame settings changed from their defaults (setting -> value); see `print_setting()`.
 var print_settings: Dictionary = {}
 ## How many screen backgrounds with `folds_shown` set are in the tree. Kept here rather than in a
@@ -58,7 +73,7 @@ var fold_backgrounds: int = 0
 
 var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
 var _panel_defaults: Dictionary = {}   # panel wear uniform -> default value, read from its code
-var _print_defaults: Dictionary = {}   # border and corridor overlay uniform -> default value
+var _print_defaults: Dictionary = {}   # border, corridor overlay and board grid uniform -> default value
 var _panel_children: Dictionary = {}   # parent canvas item RID -> [child RID, frame last cleared]
 var _panel_seed_count: int = 0
 
@@ -68,6 +83,7 @@ func _ready() -> void:
   panel_material.shader = PANEL_SHADER
   border_material.shader = BORDER_SHADER
   overlay_material.shader = OVERLAY_SHADER
+  grid_material.shader = GRID_SHADER
   _write_print_defaults()
   _write_background_defaults()
   push_wear_colours()
@@ -143,12 +159,13 @@ func panel_defaults() -> Dictionary:
   return _panel_defaults
 
 
-## Every border and corridor overlay uniform with a default in their own shader code (uniform name ->
-## value), except `PRINT_FRAME_UNIFORMS`. The overlay's copy of the background wear settings is not
-## included.
+## Every border, corridor overlay and board grid uniform with a default in their own shader code
+## (uniform name -> value), except `PRINT_FRAME_UNIFORMS`. The overlay's copy of the background wear
+## settings is not included.
 func print_defaults() -> Dictionary:
   if _print_defaults.is_empty():
-    _print_defaults = _uniform_defaults(BORDER_SHADER.code + '\n' + OVERLAY_SHADER.code, PRINT_FRAME_UNIFORMS)
+    var code: String = '\n'.join([BORDER_SHADER.code, OVERLAY_SHADER.code, GRID_SHADER.code])
+    _print_defaults = _uniform_defaults(code, PRINT_FRAME_UNIFORMS)
   return _print_defaults
 
 
@@ -157,8 +174,8 @@ func print_setting(setting: String) -> Variant:
   return print_settings.get(setting, PRINT_SETTING_DEFAULTS[setting])
 
 
-## Set a border or corridor overlay uniform, a panel wear uniform, or a print frame setting, by name.
-## Unknown names are ignored.
+## Set a border, corridor overlay or board grid uniform, a panel wear uniform, or a print frame
+## setting, by name. Unknown names are ignored.
 func set_print_value(setting: String, value: Variant) -> void:
   if print_defaults().has(setting):
     _print_material(setting).set_shader_parameter(setting, value)
@@ -169,6 +186,8 @@ func set_print_value(setting: String, value: Variant) -> void:
 
 
 func _print_material(uniform: String) -> ShaderMaterial:
+  if uniform.begins_with('board_grid'):
+    return grid_material
   return border_material if uniform.begins_with('print_border') else overlay_material
 
 
@@ -194,8 +213,8 @@ static func _uniform_defaults(code: String, skip: Array[String]) -> Dictionary:
   return defaults
 
 
-## Every panel wear, border and corridor overlay effect back to its shader default, and no print frame
-## settings. Background wear has its own reset.
+## Every panel wear, border, corridor overlay and board grid effect back to its shader default, and
+## no print frame settings. Background wear has its own reset.
 func reset_print_look() -> void:
   _write_print_defaults()
   print_settings.clear()
@@ -206,8 +225,9 @@ func reset_background_look() -> void:
   _write_background_defaults()
 
 
-## Write the current print look into a preset file: every panel wear, border and corridor overlay
-## setting, and every print frame setting. Background wear is written by `write_background_look`.
+## Write the current print look into a preset file: every panel wear, border, corridor overlay and
+## board grid setting, and every print frame setting. Background wear is written by
+## `write_background_look`.
 func write_print_look(file: ConfigFile) -> void:
   for uniform: String in panel_defaults():
     file.set_value('print_panel', uniform, panel_material.get_shader_parameter(uniform))

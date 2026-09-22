@@ -76,7 +76,7 @@ is what stops several hits on one creature stacking their rings and numbers in a
 spot. A projectile starts from the firing item's cell (`item_pos`), or for a thrown consumable from
 the potion slot it was thrown from (`consumable_pos`, read from `Delivery.consumable`).
 
-Each landing that draws an impact (so not `SUMMON` or `CREATE_ITEM`) plays one sound the first
+Each landing except a `SUMMON` or `CREATE_ITEM` (`has_impact_sound`) plays one sound the first
 frame the delivery shows as landed — the one thing here that is an event rather than a function of
 `render_time`. The driver remembers which deliveries it has sounded and forgets them as the Combat
 manager drops them.
@@ -84,7 +84,10 @@ manager drops them.
 Which sound comes from the delivery: a `MECHANIC` delivery plays the mechanic's own folder
 (`Mechanic.sound_key`, see [mechanics.md](mechanics.md)) and an `APPLY_STATUS` delivery plays
 its status id, both through `SfxManager.play_sound` ([audio.md](audio.md)). It is not
-cooldown-guarded, so a cascade is heard as every hit that lands rather than as one sound.
+cooldown-guarded, so a cascade is heard as every hit that lands rather than as one sound. Charge
+and decharge draw no ring on the item they move but are still heard. A delivery flagged `crit`
+also plays `mechanics/crit` on top; that layer is cooldown-guarded, because one critting fire can
+land on several targets at once.
 
 **The circles are placeholders.** The projectile disc and the impact ring are drawn shapes standing
 in for real VFX animations, there so the timing and the causal link between firing and damage can be

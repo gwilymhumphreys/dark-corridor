@@ -7,8 +7,8 @@ extends Node
 ## up and down forever, like slow breathing.
 ##
 ## The zoom happens inside the shader, not on the node: it sets the `picture_zoom`
-## instance uniform on the parent's canvas item, which `interface_look.gdshader`
-## applies to the image lookup. The node keeps its size on screen, so it never
+## instance uniform on the parent's canvas item, which `interface_portrait.gdshader`
+## applies to the image lookup, so the parent must use `InterfaceLook.portrait_material`. The node keeps its size on screen, so it never
 ## overflows its frame and the pixelate, halftone, hatching and grain patterns stay
 ## still while the picture moves through them. Each node picks a random starting
 ## point in the cycle, so several portraits on screen do not breathe in unison.

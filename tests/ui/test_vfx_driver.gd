@@ -101,6 +101,23 @@ func test_a_summon_landing_is_not_sounded() -> void:
   cm.free()
 
 
+func test_a_charge_landing_is_sounded_though_it_draws_no_ring() -> void:
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  var vfx: VfxDriver = _driver(cm)
+  var charge: Delivery = _landed_delivery()
+  charge.mechanic = ChargeMechanic.ID
+  var decharge: Delivery = _landed_delivery()
+  decharge.mechanic = DechargeMechanic.ID
+  cm.deliveries().append(charge)
+  cm.deliveries().append(decharge)
+  vfx._sound_new_impacts()
+  assert_eq(vfx._sounded.size(), 2, 'charge and decharge move a cooldown bar, and that is heard')
+  cm.free()
+
+
 func test_a_delivery_in_flight_is_not_sounded() -> void:
   var p := _spawn(100.0, [FixtureItems.attack()])
   var e := _spawn(40.0, [FixtureItems.attack()])

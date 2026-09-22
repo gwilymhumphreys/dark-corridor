@@ -57,6 +57,7 @@ func _ready() -> void:
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
   DebugPanels.panels_open_changed.connect(_on_debug_panels_open_changed)
   _seed_demo_allies()   # dev hook (`--allies N`): populate the ally slots for inspection
+  _seed_demo_board_items()   # dev hook (`--board-items N`): fill the player's board for inspection
   _report_button.pressed.connect(_toggle_report)
   _map.setup(RunMap.TOTAL_BEATS, _run.position)
   _refresh_gold()       # seed the HUD from run-state (covers a resumed run's banked gold)
@@ -75,6 +76,22 @@ func _seed_demo_allies() -> void:
   for _n in int(args[i + 1]):
     _run.add_ally(EnemyCatalog.SPORE_THRALL)
 
+
+
+# Dev hook (`--board-items N`, pairs with `--autofight --shot`): add copies of the starting items until
+# the player's board holds N, so a late-run board can be inspected. Inert without the flag.
+# Presentation/screenshot only.
+func _seed_demo_board_items() -> void:
+  var args: Array = []
+  args.append_array(OS.get_cmdline_args())
+  args.append_array(OS.get_cmdline_user_args())
+  var i: int = args.find('--board-items')
+  if i < 0 or i + 1 >= args.size():
+    return
+  var player: Actor = _run.player
+  var starting: Array = player.board.duplicate()
+  while player.board.size() < int(args[i + 1]) and not starting.is_empty():
+    player.board.append(Item.new((starting[player.board.size() % starting.size()] as Item).def, player))
 
 func _exit_tree() -> void:
   _log = null

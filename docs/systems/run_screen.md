@@ -143,6 +143,12 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   the board every frame (`_sync_player_items`), so an item created during the fight gains a cell with a
   "Temporary" tag on its bottom edge, and a decayed or consumed item loses its cell,
   with the **potion slots** (`potion_slot.tscn`, the potion's icon on the potion colour) above it.
+  **The board always fits its section:** `_fit_board` gives the cells the largest size, up to
+  `ItemCell.CELL_SIZE` and down to `MIN_CELL_SIZE`, at which every cell fits, with the gap scaled to
+  match, and refits whenever the cell count or the section changes (`board_cell_size`). Behind the
+  cells is a pencil grid with one square per cell, and each cell sits slightly askew on it
+  ([print_frame.md](print_frame.md#how-it-works)). For screenshots, `--board-items N` (with
+  `--autofight --shot`) fills the board with copies of the starting items up to N.
   **Temporary things fade out when the fight ends.** A created item stays on the board and a summon
   token stays on the roster until the `CombatManager` is torn down at the next advance, so
   `release()` drops them from the view itself: each created item's cell

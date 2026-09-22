@@ -11,6 +11,8 @@ const LAYOUT_PROPERTIES: Dictionary = {
   'padding': [0.0, 160.0, 1.0],
   'split_across': [800.0, 2400.0, 1.0],
   'split_down': [600.0, 1400.0, 1.0],
+  'token_tilt': [0.0, 15.0, 0.1],
+  'token_shift': [0.0, 20.0, 0.5],
 }
 
 
@@ -23,6 +25,7 @@ func rebuild() -> void:
     layout.add_row(_make_row(setting.capitalize(), PrintLook.print_setting(setting), LAYOUT_PROPERTIES[setting], set_value))
   _build_shader_sections(PrintLook.border_material, PrintLook.print_defaults())
   _build_shader_sections(PrintLook.overlay_material, PrintLook.print_defaults())
+  _build_shader_sections(PrintLook.grid_material, PrintLook.print_defaults())
   _build_shader_sections(PrintLook.panel_material, PrintLook.panel_defaults())
 
 

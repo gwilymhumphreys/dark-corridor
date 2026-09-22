@@ -32,6 +32,8 @@ static func refresh_colours() -> void:
   _defs = {}
   _build()
   for id: String in cached:
+    if not _defs.has(id):
+      continue   # added from outside the catalog (a test fixture)
     (cached[id] as RelicDef).panel_color = (_defs[id] as RelicDef).panel_color
   _defs = cached
 

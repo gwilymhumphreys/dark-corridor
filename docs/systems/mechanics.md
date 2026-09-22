@@ -133,6 +133,7 @@ both kinds of consume) and flagged `Delivery.crit`; outside-set deliveries and d
 untouched. `EventBus.Event.CRIT` is published with the item's def id as data, the owner as source,
 straight after `ITEM_FIRED`. Thrown consumables never crit, and `Item.display_value` never rolls (the
 tooltip shows the value without crit). `CritMechanic` has no `land` override — it is never delivered.
+A landing flagged `crit` plays `mechanics/crit` on top of its own sound ([vfx_driver.md](vfx_driver.md)).
 
 ## Charge and decharge
 

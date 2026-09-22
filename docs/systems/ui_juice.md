@@ -93,8 +93,9 @@ portrait looks like it is breathing.
 Unlike `UIJuice`, this does not scale the node. It sets the `picture_zoom`
 instance uniform on the parent's canvas item with
 `RenderingServer.canvas_item_set_instance_shader_parameter`, and
-`interface_look.gdshader` applies it to the image lookup
-([interface_look.md](interface_look.md)). `PortraitBreath` sets it back to 1 in
+`interface_portrait.gdshader` applies it to the image lookup
+([interface_look.md](interface_look.md)). The parent must be drawn through
+`InterfaceLook.portrait_material`, the only material with that uniform. `PortraitBreath` sets it back to 1 in
 `_exit_tree()`.
 
 Scaling the node instead would change its size on screen every frame, and the

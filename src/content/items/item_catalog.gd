@@ -69,6 +69,8 @@ static func refresh_colours() -> void:
   _defs = {}
   _build()
   for id: String in cached:
+    if not _defs.has(id):
+      continue   # added from outside the catalog (a test fixture)
     var old_def: ItemDef = cached[id]
     var new_def: ItemDef = _defs[id]
     old_def.panel_color = new_def.panel_color
@@ -707,6 +709,7 @@ static func _smith_warhammer() -> ItemDef:
   d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/war_hammer.png'
+  d.attack_sound = 'blunt'
   d.cooldown = Balance.SMITH_WARHAMMER_COOLDOWN
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
@@ -725,6 +728,7 @@ static func _smith_greatsword() -> ItemDef:
   d.mechanics = [AttackMechanic.ID]
   d.name_key = 'Greatsword'           # PLACEHOLDER name — owner's to rename
   d.icon = 'res://assets/icons/items/sword_twohanded_1.png'
+  d.attack_sound = 'blade'
   d.cooldown = Balance.SMITH_GREATSWORD_COOLDOWN
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID

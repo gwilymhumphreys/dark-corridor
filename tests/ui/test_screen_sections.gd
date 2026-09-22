@@ -90,13 +90,30 @@ func test_player_portrait_fits_the_portrait_section_height() -> void:
 func test_item_columns_fit_the_items_section_width() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
-  var grid: GridContainer = view.get_node('Items/PlayerItems')
+  var grid: GridContainer = view.get_node('Items/Board/PlayerItems')
   PrintLook.print_settings['split_across'] = 1700.0
   view.sections._process(0.0)
   var wide: int = grid.columns
   PrintLook.print_settings['split_across'] = 2100.0
   view.sections._process(0.0)
   assert_lt(grid.columns, wide, 'a narrower items section has fewer columns')
-  var gap: float = grid.get_theme_constant('h_separation')
-  assert_true(grid.columns * ItemCell.CELL_SIZE.x + (grid.columns - 1) * gap <= view.sections.section('Items').size.x,
-    'the columns fit the section')
+  var square: float = ItemCell.CELL_SIZE.x + grid.get_theme_constant('h_separation')
+  assert_true(grid.columns * square <= view.sections.section('Items').size.x, 'the columns fit the section')
+
+
+func test_item_cells_keep_full_size_until_the_board_is_full() -> void:
+  var gap_ratio: float = 0.2
+  assert_eq(CombatViewFramed.board_cell_size(820.0, 860.0, 0, gap_ratio), ItemCell.CELL_SIZE.x, 'an empty board')
+  assert_eq(CombatViewFramed.board_cell_size(820.0, 860.0, 25, gap_ratio), ItemCell.CELL_SIZE.x, 'a board that fits')
+
+
+func test_item_cells_shrink_so_a_full_board_fits() -> void:
+  var gap_ratio: float = 0.2
+  for count: int in [31, 41, 60]:
+    var cell_size: float = CombatViewFramed.board_cell_size(820.0, 860.0, count, gap_ratio)
+    assert_lt(cell_size, ItemCell.CELL_SIZE.x, '%d items shrink the cells' % count)
+    var square: float = cell_size + int(cell_size * gap_ratio)
+    var columns: int = int(820.0 / square)
+    assert_true(ceili(float(count) / columns) * square <= 860.0, '%d items fit the board' % count)
+  assert_eq(CombatViewFramed.board_cell_size(820.0, 860.0, 1000, gap_ratio), CombatViewFramed.MIN_CELL_SIZE,
+    'the cells stop shrinking at the minimum')

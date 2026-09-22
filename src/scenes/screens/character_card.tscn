@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://src/scenes/screens/character_card.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
 [ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
-[ext_resource type="Material" path="res://src/shaders/interface_framed_material.tres" id="interface_framed_material"]
+[ext_resource type="Material" path="res://src/shaders/interface_portrait_material.tres" id="interface_portrait_material"]
 
 [node name="CharacterCard" type="Button"]
 mouse_default_cursor_shape = 2
@@ -22,7 +22,7 @@ mouse_filter = 2
 theme_type_variation = &"PanelSlot"
 
 [node name="Image" type="TextureRect" parent="Portrait"]
-material = ExtResource("interface_framed_material")
+material = ExtResource("interface_portrait_material")
 layout_mode = 2
 mouse_filter = 2
 expand_mode = 1

@@ -4,32 +4,38 @@ A dev tool for trying post-processing effects on interface images (item and poti
 portraits, HP bars, item value pills) separately from the [corridor look](corridor_look.md). Other text
 and panels, and the corridor, are not affected.
 
-**Location:** `src/shaders/interface_look.gdshader`, `src/shaders/look_effects.gdshaderinc` (the effects
+**Location:** `src/shaders/interface_look.gdshaderinc` (the shader, included by `interface_look.gdshader`
+and `interface_portrait.gdshader`), `src/shaders/look_effects.gdshaderinc` (the effects
 shared with the corridor look), `src/shaders/interface_look_material.tres`,
-`src/shaders/interface_framed_material.tres` and `src/shaders/interface_element_material.tres`,
+`src/shaders/interface_framed_material.tres`, `src/shaders/interface_portrait_material.tres` and
+`src/shaders/interface_element_material.tres`,
 `InterfaceLook`
 (`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the Interface tab in
 `src/debug/interface_look_panel.*`. Saved in the interface part of a [look preset](look_presets.md).
 
 ## How it works
 
-- There are three material files on the same shader, each set in the scene of the nodes that use it.
+- There are four material files on the same shader, each set in the scene of the nodes that use it.
   Godot shares one loaded copy of each file, so a setting changed on it changes every node using it
   at once.
   - `interface_look_material.tres` (`InterfaceLook.material`) draws the pictures that are not inside a
     panel frame: potion icons, status icons and keyword chip icons.
   - `interface_framed_material.tres` (`InterfaceLook.framed_material`) draws the pictures that sit
-    inside a `PanelSlot` frame: the character portraits and the item cell icons. Picture wear is kept
-    off on this material (`FRAMED_OFF_UNIFORMS`), because the frame around them draws its own
-    [panel wear](panel_wear.md); everything else applies. `InterfaceLook.picture_materials` is this
-    material and `InterfaceLook.material` together, which is what the palette clamp is written to.
+    inside a `PanelSlot` frame and do not breathe: the item cell icons. Picture wear is kept off on
+    this material (`FRAMED_OFF_UNIFORMS`), because the frame around them draws its own
+    [panel wear](panel_wear.md); everything else applies.
+  - `interface_portrait_material.tres` (`InterfaceLook.portrait_material`) draws the breathing
+    character portraits. It takes the same settings as the framed material, through
+    `interface_portrait.gdshader`, the only version of the shader with `picture_zoom` (below).
+    `InterfaceLook.picture_materials` is this material, the framed material and
+    `InterfaceLook.material`, which is what the palette clamp is written to.
   - `interface_element_material.tres` (`InterfaceLook.element_material`) draws the interface elements
     that are not pictures: the item value pills and the HP bars. These are filled with colours from the
     [interface palette](interface_palette.md), so the effects that would move a pixel off its palette
     colour are kept off on this material: grade, colour ramp and posterize
     (`ELEMENT_OFF_UNIFORMS`), and no palette clamp colours are written to it, so its colour count stays
     0. Halftone, hatching, vignette, grain, scanlines, pixelate and picture wear all apply.
-- Every setting goes through `InterfaceLook.set_setting()`, which writes it to all three materials
+- Every setting goes through `InterfaceLook.set_setting()`, which writes it to all four materials
   except for the switches above. There is one Interface tab and one set of settings; the split is in
   code, not in the panel or the preset.
 - The shader includes `look_effects.gdshaderinc`, which holds the effect settings and functions used by
@@ -49,6 +55,11 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   halftone, hatching and grain patterns stay where they are. `PortraitBreath` drives it for the portrait
   breathing ([ui_juice.md](ui_juice.md#portrait-breathing)). It is applied to the image lookup after the
   pixelate grid is worked out, and below 1 would read outside the image, so nothing sets it there.
+- Only `interface_portrait.gdshader` has `picture_zoom` (it defines `PICTURE_ZOOM` before including the
+  shader). Godot reserves 16 slots of the instance uniform buffer for every node drawn through a shader
+  with an instance uniform, and the compatibility renderer allows 4096 slots, so an instance uniform
+  on the shared shader ran out of slots at about 21 board items and left the rest drawn blank. Do not
+  add an instance uniform to `interface_look.gdshaderinc` outside `PICTURE_ZOOM`.
 - The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the portrait palette
   ([interface_palette.md](interface_palette.md#images)) and are written to the picture materials only
   (`InterfaceLook.picture_materials`). It runs after the look effects and before picture wear. Its palette, colour matching and on/off dithering switch are set by `DebugPanels` and are not
@@ -116,11 +127,12 @@ In a preset, the interface part has an `interface_shader` section listing every 
 | Member | Use |
 |---|---|
 | `InterfaceLook.material` | The material the pictures outside a panel frame are drawn through |
-| `InterfaceLook.framed_material` | The material the pictures inside a `PanelSlot` frame are drawn through |
-| `InterfaceLook.picture_materials` | Both picture materials, which the palette clamp is written to |
+| `InterfaceLook.framed_material` | The material the item cell icons, inside a `PanelSlot` frame, are drawn through |
+| `InterfaceLook.portrait_material` | The framed material's settings on the breathing portraits, with `picture_zoom` |
+| `InterfaceLook.picture_materials` | The three picture materials, which the palette clamp is written to |
 | `InterfaceLook.element_material` | The material the interface elements that are not pictures are drawn through |
-| `InterfaceLook.set_setting(uniform, value)` | Set one setting on all three materials |
-| `picture_zoom` | Per-node instance uniform: zoom on the image, driven by `PortraitBreath` |
+| `InterfaceLook.set_setting(uniform, value)` | Set one setting on all four materials |
+| `picture_zoom` | Per-node instance uniform on `interface_portrait.gdshader` only: zoom on the image, driven by `PortraitBreath` |
 | `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the shader and include code (the shared effects, the palette clamp's dither settings, picture wear) |
 | `InterfaceLook.reset()`, `write_look(file)`, `read_look(file)` | Reset, and the interface part of a preset |
 | `InterfaceLook.copy_from_corridor()`, `copy_to_corridor()` | Copy shared settings between the looks |

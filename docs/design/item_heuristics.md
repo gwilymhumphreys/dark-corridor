@@ -103,6 +103,13 @@ damage.
 The placeholder health values in `Balance.ENEMY_*_HP` are set from this for a beat 0 fight, so a
 starting board takes roughly the target time to kill a regular enemy.
 
+### Setting damage from what a fight should cost
+
+An enemy's damage is set by how much health a fight should take from the player, not by the item
+budget. An early regular fight costs a player with no armour up to 10% of starting health (owner,
+2026-09-22), so the enemy's damage per second is that amount divided by the target fight length.
+Armour brings the real cost lower. `Balance.ENEMY_CLAW_*` holds the numbers.
+
 ## Spending the budget
 
 Every cost is a flat number of points for what the item delivers each time it fires.

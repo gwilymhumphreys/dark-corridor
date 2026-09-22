@@ -51,6 +51,7 @@ var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurio
 var _recoil_start: float = -1.0        # render_time at the last fire; -1 = idle
 var _hover: float = 0.0                # how far the highlight has come in
 var _hover_tween: Tween
+var _askew: Vector3 = Vector3.ZERO     # this cell's tilt and shift, each from -1 to 1 (set_askew)
 static var _seed_count: int = 0        # a different tear in each cell
 
 
@@ -64,12 +65,16 @@ func _ready() -> void:
   cooldown_material.set_shader_parameter('line_colour', Colours.COOLDOWN_RING)
   _cooldown.material = cooldown_material
   _push_cooldown_size()
+  var askew_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+  askew_rng.seed = _seed_count
+  _askew = Vector3(askew_rng.randf_range(-1.0, 1.0), askew_rng.randf_range(-1.0, 1.0), askew_rng.randf_range(-1.0, 1.0))
   # The highlight goes on the frame, not the cell: the value pills hang outside the cell's rectangle.
   ControlFeedback.attach(_frame, false)
 
 
-## Shrink the cell (the enemy HUDs / ally slots use smaller cells than the player's board).
-## Call after the cell is in the tree, before setup() — setup() sizes the pills to `cell_size`.
+## Shrink the cell (the enemy HUDs / ally slots use smaller cells than the player's board, which
+## shrinks its own as it fills). Call after the cell is in the tree. A cell that already holds an
+## item rebuilds its pills at the new size.
 func set_cell_size(px: float) -> void:
   cell_size = Vector2(px, px)
   custom_minimum_size = cell_size
@@ -77,6 +82,18 @@ func set_cell_size(px: float) -> void:
   pivot_offset = cell_size * 0.5
   if is_node_ready():
     _push_cooldown_size()
+    if item != null:
+      _build_pills()
+
+
+## Set the cell down slightly askew, like a cardboard token placed by hand: up to `tilt_degrees` of
+## rotation and `shift` pixels of offset, the same share of each for this cell every time. Drawn with
+## the visual-only offset transform, so the grid's layout is unchanged.
+func set_askew(tilt_degrees: float, shift: float) -> void:
+  offset_transform_enabled = true
+  offset_transform_pivot_ratio = Vector2(0.5, 0.5)
+  offset_transform_rotation = deg_to_rad(_askew.x * tilt_degrees)
+  offset_transform_position = Vector2(_askew.y, _askew.z) * shift
 
 
 func _exit_tree() -> void:

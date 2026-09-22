@@ -28,6 +28,16 @@ const CHARGE_SECONDS: float = 1.0
 const SILENCE_COOLDOWN: float = 4.0
 const SILENCE_DURATION: float = 2.0
 
+# The trigger, debuff and buff fixtures below. Fixture constants for the same reason.
+const TRIGGER_COOLDOWN: float = 2.0
+const TRIGGER_SHIELD: float = 8.0
+const TRIGGER_PUSH: float = 1.0
+const VULNERABLE_COOLDOWN: float = 3.0
+const VULNERABLE_DURATION: float = 3.0
+const HEX_COOLDOWN: float = 2.5
+const EMPOWER_COOLDOWN: float = 7.0
+const EMPOWER_CHARGES: float = 1.0
+
 
 ## A single-target attack that travels — the generic attacker.
 static func attack() -> ItemDef:
@@ -138,3 +148,100 @@ static func silence_enemy_poison_item() -> ItemDef:
   d.effects = [hush]
   d.panel_color = Colours.ARCANE
   return d
+
+
+## A self-shield that also pushes its own cooldown whenever its side applies poison — the generic
+## trigger item. It subscribes to APPLIED with the poison filter and the default own-side source.
+static func poison_trigger() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = 'fixture_poison_trigger'
+  d.types = [ItemType.ARMOUR]
+  d.mechanics = [PoisonMechanic.ID, ShieldMechanic.ID]
+  d.name_key = 'Fixture Ward'
+  d.icon = 'res://assets/icons/items/skull_shield.png'
+  d.cooldown = TRIGGER_COOLDOWN
+  var blk := ItemEffect.new()
+  blk.mechanic = ShieldMechanic.ID
+  blk.value = TRIGGER_SHIELD
+  blk.shape = ItemEffect.Shape.SELF
+  d.effects = [blk]
+  d.trigger_subs = [{
+    'event': EventBus.Event.APPLIED,
+    'amount': TRIGGER_PUSH,
+    'filter': 'poison',
+  }]
+  d.panel_color = Colours.SHIELD
+  return d
+
+
+## Makes the leftmost opponent Vulnerable for a fixed duration — the generic debuff applier.
+static func vulnerable() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = 'fixture_vulnerable'
+  d.types = [ItemType.SKILL]
+  d.mechanics = []
+  d.name_key = 'Fixture Sunder'
+  d.cooldown = VULNERABLE_COOLDOWN
+  var hit := ItemEffect.new()
+  hit.kind = Delivery.Kind.APPLY_STATUS
+  hit.status_id = 'vulnerable'
+  hit.duration = VULNERABLE_DURATION
+  hit.value = 1.0
+  hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
+  hit.travel = ATTACK_TRAVEL
+  d.effects = [hit]
+  d.panel_color = Colours.ARCANE
+  return d
+
+
+## Silences one enemy item picked at random on the fight's seeded RNG, with no filter.
+static func silence_random_enemy_item() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = 'fixture_silence_random_enemy_item'
+  d.types = [ItemType.SPELL]
+  d.mechanics = []
+  d.name_key = 'Fixture Hex'
+  d.cooldown = HEX_COOLDOWN
+  var hex := ItemEffect.new()
+  hex.kind = Delivery.Kind.APPLY_STATUS
+  hex.status_id = 'silence'
+  hex.value = 1.0
+  hex.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
+  hex.travel = ATTACK_TRAVEL
+  d.effects = [hex]
+  d.panel_color = Colours.ARCANE
+  return d
+
+
+## Applies one charge of 'empowered' to its owner on each fire — the generic empower applier.
+static func empower() -> ItemDef:
+  var d := ItemDef.new()
+  d.id = 'fixture_empower'
+  d.types = [ItemType.SKILL]
+  d.mechanics = []
+  d.name_key = 'Fixture Rally'
+  d.cooldown = EMPOWER_COOLDOWN
+  var buff := ItemEffect.new()
+  buff.kind = Delivery.Kind.APPLY_STATUS
+  buff.status_id = 'empowered'
+  buff.value = EMPOWER_CHARGES
+  buff.shape = ItemEffect.Shape.SELF
+  d.effects = [buff]
+  d.panel_color = Colours.STATUS_EMPOWERED
+  return d
+
+
+## Every fixture item, for FixtureContent to register in ItemCatalog.
+static func all() -> Array[ItemDef]:
+  return [
+    attack(),
+    enemy_attack(),
+    shield(),
+    poison(),
+    charge_your_weapons(),
+    silence_enemy_poison_item(),
+    poison_trigger(),
+    vulnerable(),
+    silence_random_enemy_item(),
+    empower(),
+  ]

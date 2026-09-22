@@ -27,10 +27,9 @@ const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3
 const PLAYER_START_HP: float = 100.0
 # Enemy health is the player's damage points per second times the seconds the enemy should last
 # (docs/design/item_heuristics.md): a beat-0 grunt is a 170-point enemy less the points its Claw
-# spends. Set for the Smith, whose items are on the curve. The Fleshmancer's items are still far under
-# it and the Spore Druid has no shield or healing, so both lose early on many seeds (owner's to
-# revisit). The Claw was sized for 5 second fights and has not been re-priced for 20.
-const ENEMY_PLACEHOLDER_HP: float = 164.0
+# spends. Set for the Smith, whose items are on the curve; the Fleshmancer's items are still far
+# under it, so its fights run long (owner's to revisit).
+const ENEMY_PLACEHOLDER_HP: float = 168.0
 # Placeholder enemy tiers for the multi-act map (#1) — HP only; the owner authors real
 # enemies + boss signature mechanics. A brute is a beefier regular; a boss is tankier
 # with two items.
@@ -45,9 +44,11 @@ const ENEMY_SPORE_THRALL_HP: float = 15.0
 # A Ticker threshold in steps = ceil(cooldown_seconds / STEP).
 const WEAPON_TRAVEL: float = 0.6            # projectile flight time (docs/systems/combat_model.md)
 
-# Claw — the enemy board's only weapon, so every enemy's damage comes from here.
-const ENEMY_CLAW_COOLDOWN: float = 1.2
-const ENEMY_CLAW_DAMAGE: float = 6.0
+# Claw — the enemy board's only weapon, so every enemy's damage comes from here. Sized so an early
+# fight of POINTS_FIGHT_SECONDS costs a player with no armour up to 10% of starting health (owner,
+# 2026-09-22).
+const ENEMY_CLAW_COOLDOWN: float = 4.0
+const ENEMY_CLAW_DAMAGE: float = 2.0
 
 # Spite Ward — the example trigger item: a self-shield that also pushes its own cooldown whenever
 # poison is applied. Unpooled, kept as the working example of a trigger subscription.
