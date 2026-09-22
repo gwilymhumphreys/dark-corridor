@@ -32,15 +32,25 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   background's and line up across the corridor's edge.
 - The board grid is a rectangle behind the player's items in `combat_view_framed.tscn`, drawn through
   `PrintLook.grid_material`: grid paper drawn in pencil, one square per item cell, with each line
-  running through the middle of the gap between cells. `CombatViewFramed` sets its size, the square
-  size and the pencil colour, `Colours.UI_BACKGROUND_WEAR_LIGHT`.
-- The player's items are set down askew on the grid, like cardboard tokens placed by hand: each cell
+  running through the middle of the gap between cells. The potion row has its own grid of three
+  squares on the same material. Each grid reads its own rectangle's pixels, so `CombatViewFramed`
+  sets only the square size and the pencil colour, `Colours.UI_BACKGROUND_WEAR_LIGHT`.
+- The player's items and potions are set down askew on the grid, like cardboard tokens placed by hand: each cell
   has its own random tilt and shift, scaled by the layout settings `token_tilt` and `token_shift`
   (`ItemCell.set_askew`, drawn with the visual-only offset transform).
+- Item cells use the `PanelToken` theme style ([ui_theme.md](ui_theme.md)): the worn panel with a
+  drop shadow onto the paper. `PrintLook.apply_token_style()` writes the shadow settings onto
+  `PanelToken` and `PanelTokenWide` whenever a print setting changes, on reset, and when the
+  interface palette changes (the shadow colour is `Colours.UI_PANEL_SHADOW`). The token's edge is the
+  panel wear's worn edge ([panel_wear.md](panel_wear.md)); it has no border.
+- Two switches try the token look on the portrait section. `token_portraits` puts the player and ally
+  portraits in `PanelToken` frames instead of `PanelSlot`. `portrait_panel` puts the player's portrait,
+  name and HP bar on one `PanelTokenWide` panel (`PanelBare`, which draws nothing, when off), and the
+  portrait shrinks by the panel's margins to stay inside the section. `CombatViewFramed` applies both.
 
 | Group | Does |
 |---|---|
-| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Token tilt and token shift: the largest tilt in degrees and shift in pixels of the player's items. Defaults in `PRINT_SETTING_DEFAULTS` |
+| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Token tilt and token shift: the largest tilt in degrees and shift in pixels of the player's items. Token shadow size, offset and darkness: the items' drop shadow. Token portraits and portrait panel: the switches above. Defaults in `PRINT_SETTING_DEFAULTS` |
 | Print Border | A solid line around the corridor: width, gap from the corridor, edge roughness, rubbed spots and their size |
 | Corridor Wear | The background wear, with its current settings, drawn over the corridor too |
 | Corridor Worn Edge | The corridor image's edges rubbed away into the background colour, heavier at the corners: width, amount, patch size, corners |
@@ -76,6 +86,7 @@ and `--print-panel` opens the Print tab ([debug_panel.md](debug_panel.md#start-u
 | `PrintLook.border_material`, `overlay_material`, `grid_material`, `panel_material` | The border, corridor overlay, board grid and [panel wear](panel_wear.md) materials |
 | `PrintLook.print_settings`, `print_setting(setting) -> Variant` | Print frame settings changed from `PRINT_SETTING_DEFAULTS`, and a setting's current value |
 | `PrintLook.set_print_value(name, value)` | Set a border, overlay, board grid or panel wear uniform, or a print frame setting, by name |
+| `PrintLook.apply_token_style()` | Write the token shadow settings onto the `PanelToken` and `PanelTokenWide` styles |
 | `PrintLook.print_defaults() -> Dictionary`, `panel_defaults() -> Dictionary` | Border/overlay and panel wear uniform defaults, read from the shader code |
 | `PrintLook.write_print_look(file)`, `read_print_look(file)`, `reset_print_look()` | The [print part](#in-a-preset) of a preset, and the print defaults |
 | `PrintLook.write_background_look(file)`, `read_background_look(file)`, `reset_background_look()` | The [background part](background_wear.md#presets-and-screenshots) of a preset, and the background defaults |

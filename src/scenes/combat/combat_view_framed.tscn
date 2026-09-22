@@ -92,10 +92,23 @@ layout_mode = 2
 theme_type_variation = &"LabelDim"
 text = "Potions"
 
-[node name="Potions" type="HBoxContainer" parent="Items"]
-custom_minimum_size = Vector2(0, 120)
+[node name="PotionBoard" type="Control" parent="Items"]
+custom_minimum_size = Vector2(0, 144)
 layout_mode = 2
-theme_override_constants/separation = 20
+mouse_filter = 2
+
+[node name="Grid" type="ColorRect" parent="Items/PotionBoard"]
+layout_mode = 0
+offset_right = 432.0
+offset_bottom = 144.0
+mouse_filter = 2
+
+[node name="Potions" type="HBoxContainer" parent="Items/PotionBoard"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+mouse_filter = 2
+theme_override_constants/separation = 24
 
 [node name="Spacer" type="Control" parent="Items"]
 custom_minimum_size = Vector2(0, 14)
@@ -139,42 +152,48 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 24
 
-[node name="PlayerPortrait" type="HBoxContainer" parent="Portraits"]
+[node name="PlayerPanel" type="PanelContainer" parent="Portraits"]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"PanelBare"
+
+[node name="PlayerPortrait" type="HBoxContainer" parent="Portraits/PlayerPanel"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="Portrait" type="PanelContainer" parent="Portraits/PlayerPortrait"]
+[node name="Portrait" type="PanelContainer" parent="Portraits/PlayerPanel/PlayerPortrait"]
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"PanelSlot"
 
-[node name="Image" type="TextureRect" parent="Portraits/PlayerPortrait/Portrait"]
+[node name="Image" type="TextureRect" parent="Portraits/PlayerPanel/PlayerPortrait/Portrait"]
 material = ExtResource("interface_portrait_material")
 layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Breath" type="Node" parent="Portraits/PlayerPortrait/Portrait/Image"]
+[node name="Breath" type="Node" parent="Portraits/PlayerPanel/PlayerPortrait/Portrait/Image"]
 script = ExtResource("portrait_breath")
 
-[node name="Readout" type="VBoxContainer" parent="Portraits/PlayerPortrait"]
+[node name="Readout" type="VBoxContainer" parent="Portraits/PlayerPanel/PlayerPortrait"]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 10
 
-[node name="Name" type="Label" parent="Portraits/PlayerPortrait/Readout"]
+[node name="Name" type="Label" parent="Portraits/PlayerPanel/PlayerPortrait/Readout"]
 layout_mode = 2
 theme_type_variation = &"LabelMedium"
 text = "You"
 
-[node name="HP" type="Control" parent="Portraits/PlayerPortrait/Readout"]
+[node name="HP" type="Control" parent="Portraits/PlayerPanel/PlayerPortrait/Readout"]
 custom_minimum_size = Vector2(200, 30)
 layout_mode = 2
 
-[node name="Background" type="ColorRect" parent="Portraits/PlayerPortrait/Readout/HP"]
+[node name="Background" type="ColorRect" parent="Portraits/PlayerPanel/PlayerPortrait/Readout/HP"]
 material = ExtResource("interface_element_material")
 layout_mode = 1
 anchors_preset = 15
@@ -186,7 +205,7 @@ color = Color(0.1, 0.1, 0.12, 1)
 script = ExtResource("5")
 colour_name = "HP_BAR_BG"
 
-[node name="Fill" type="ColorRect" parent="Portraits/PlayerPortrait/Readout/HP"]
+[node name="Fill" type="ColorRect" parent="Portraits/PlayerPanel/PlayerPortrait/Readout/HP"]
 material = ExtResource("interface_element_material")
 layout_mode = 1
 anchors_preset = 15
@@ -198,7 +217,7 @@ color = Color(0.4, 0.75, 0.4, 1)
 script = ExtResource("5")
 colour_name = "HP_BAR_FILL"
 
-[node name="Label" type="Label" parent="Portraits/PlayerPortrait/Readout/HP"]
+[node name="Label" type="Label" parent="Portraits/PlayerPanel/PlayerPortrait/Readout/HP"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -208,7 +227,7 @@ grow_vertical = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StatusNumbers" parent="Portraits/PlayerPortrait/Readout/HP" instance=ExtResource("status_numbers")]
+[node name="StatusNumbers" parent="Portraits/PlayerPanel/PlayerPortrait/Readout/HP" instance=ExtResource("status_numbers")]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0

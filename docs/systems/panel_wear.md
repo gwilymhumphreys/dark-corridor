@@ -24,7 +24,11 @@ Images outside a panel frame have their own picture wear in the Interface tab ([
   of this, unworn.
 - One canvas item is created per control (keyed by the control's own canvas item RID) and reused; it is
   cleared once per process frame before drawing, so a control that draws several styles in one frame
-  (for example normal then focus) keeps both, and a resize leaves nothing from an earlier frame.
+  (for example normal then focus) keeps both, and a resize leaves nothing from an earlier frame. It is
+  also cleared when a draw in the same frame uses a different rectangle, so a control resized and
+  drawn again within one frame does not keep its style at the old size too.
+- A style's drop shadow is drawn outside its rectangle and takes no wear or control highlight
+  (the `PanelToken` styles, [ui_theme.md](ui_theme.md)).
   `PrintLook` frees a control's canvas item when the control leaves the tree, and frees every remaining
   one at its own exit.
 - The same shader and the same canvas item also draw the [control feedback](control_feedback.md):

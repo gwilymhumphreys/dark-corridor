@@ -18,6 +18,7 @@ const SCREEN_SECTIONS: PackedScene = preload('res://src/ui/screen_sections.tscn'
 
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
+const POTION_SLOTS: int = 3   # squares drawn in the potion row's grid (docs/design/game_design.md)
 const PORTRAIT_MIN_SIZE: float = 40.0   # the player portrait shrinks to fit its section, down to this
 const MIN_CELL_SIZE: float = 48.0       # the player's item cells shrink to fit the board, down to this
 const ENEMY_FADE_IN: float = 0.25       # seconds an enemy HUD takes to fade up when the fight starts
@@ -40,13 +41,16 @@ var _player: Actor
 @onready var _board: Control = $Items/Board
 @onready var _grid: ColorRect = $Items/Board/Grid
 @onready var _player_items: GridContainer = $Items/Board/PlayerItems
-@onready var _potions: HBoxContainer = $Items/Potions
+@onready var _potion_board: Control = $Items/PotionBoard
+@onready var _potion_grid: ColorRect = $Items/PotionBoard/Grid
+@onready var _potions: HBoxContainer = $Items/PotionBoard/Potions
 @onready var _portraits_part: HBoxContainer = $Portraits
-@onready var _portrait: Control = $Portraits/PlayerPortrait/Portrait
-@onready var _portrait_image: TextureRect = $Portraits/PlayerPortrait/Portrait/Image
-@onready var _player_hp_fill: ColorRect = $Portraits/PlayerPortrait/Readout/HP/Fill
-@onready var _player_hp_label: Label = $Portraits/PlayerPortrait/Readout/HP/Label
-@onready var _player_status_numbers: StatusNumbers = $Portraits/PlayerPortrait/Readout/HP/StatusNumbers
+@onready var _player_panel: PanelContainer = $Portraits/PlayerPanel
+@onready var _portrait: Control = $Portraits/PlayerPanel/PlayerPortrait/Portrait
+@onready var _portrait_image: TextureRect = $Portraits/PlayerPanel/PlayerPortrait/Portrait/Image
+@onready var _player_hp_fill: ColorRect = $Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Fill
+@onready var _player_hp_label: Label = $Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Label
+@onready var _player_status_numbers: StatusNumbers = $Portraits/PlayerPanel/PlayerPortrait/Readout/HP/StatusNumbers
 @onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
 @onready var _ally_right: HBoxContainer = $Portraits/AllyRight
 @onready var _corridor_area: Control = $CorridorArea
@@ -65,8 +69,9 @@ var _enemies_shown: bool = false   # false through the approach: the enemy HUDs 
 var _fading_out: Dictionary = {}   # Item/Actor -> true while its widget fades away at fight end; not rebuilt
 var _gap_ratio: float = 0.0   # the gap between the player's item cells as a share of the cell size, from the scene
 var _cell_size: float = ItemCell.CELL_SIZE.x   # the player's item cells' current size, set by _fit_board
-var _fitted: Vector3 = -Vector3.ONE   # the board width, height and cell count _fit_board last fitted to
+var _fitted: Vector4 = -Vector4.ONE   # the board width, height, cell count and potion count _fit_board last fitted to
 var _askew_set: Vector3 = -Vector3.ONE   # the tilt, shift and cell size _set_items_askew last applied
+var _tokens_set: Array = []   # the token_portraits, portrait_panel and ally count _set_token_styles last applied
 
 
 func _ready() -> void:
@@ -77,6 +82,7 @@ func _ready() -> void:
   sections.sections_changed.connect(_place_in_sections)
   _gap_ratio = _player_items.get_theme_constant('h_separation') / ItemCell.CELL_SIZE.x
   _grid.material = PrintLook.grid_material
+  _potion_grid.material = PrintLook.grid_material
   _place_in_sections()
 
 
@@ -100,19 +106,22 @@ func _place(part: Control, rect: Rect2) -> void:
   part.size = rect.size
 
 
-## Fit the player's items to the board below the Items label: the cells take the largest size, up to
-## their full size, at which every item fits, with the gap scaled to match. The grid lines run through
-## the middle of the gaps, so each item sits in one square of the pencil grid. Does nothing unless the
-## board's size or the number of cells changed.
+## Fit the potion row and the player's items to the item column: the cells take the largest size, up
+## to their full size, at which the potion row and every item fit, with the gap scaled to match. The
+## potion row is one row of squares, `POTION_SLOTS` wide (more if there are more potions); the board
+## takes the height left below it. The grid lines run through the middle of the gaps, so each item and
+## potion sits in one square of the pencil grid. Does nothing unless the column's size or the number of
+## items or potions changed.
 func _fit_board() -> void:
   var width: float = _items_part.size.x
-  var height: float = _items_part.size.y - _board.position.y
+  var height: float = _items_part.size.y - _labels_height()
   var count: int = _player_items.get_child_count()
-  var wanted: Vector3 = Vector3(width, height, count)
+  var potion_count: int = _potions.get_child_count()
+  var wanted: Vector4 = Vector4(width, height, count, potion_count)
   if wanted == _fitted:
     return
   _fitted = wanted
-  _cell_size = board_cell_size(width, height, count, _gap_ratio)
+  _cell_size = board_cell_size(width, height, count, _gap_ratio, 1)
   var gap: int = int(_cell_size * _gap_ratio)
   var square: float = _cell_size + gap
   _player_items.columns = maxi(1, int(width / square))
@@ -121,26 +130,43 @@ func _fit_board() -> void:
   _player_items.position = Vector2(gap, gap) * 0.5
   for cell: Node in _player_items.get_children():
     (cell as ItemCell).set_cell_size(_cell_size)
+  _potion_board.custom_minimum_size = Vector2(0.0, square)
+  _potion_grid.size = Vector2(maxi(POTION_SLOTS, potion_count) * square, square)
+  _potions.add_theme_constant_override('separation', gap)
+  _potions.position = Vector2(gap, gap) * 0.5
+  for slot: Node in _potions.get_children():
+    (slot as PotionSlot).set_cell_size(_cell_size)
   PrintLook.grid_material.set_shader_parameter('square_size', square)
 
 
+# The height of the item column's parts that are not grid squares: the labels, the spacer and the gaps
+# between the column's children.
+func _labels_height() -> float:
+  var total: float = _items_part.get_theme_constant('separation') * (_items_part.get_child_count() - 1)
+  for child: Node in _items_part.get_children():
+    if child != _potion_board and child != _board:
+      total += (child as Control).get_combined_minimum_size().y
+  return total
+
+
 ## The largest whole-pixel cell size, from `ItemCell.CELL_SIZE` down to `MIN_CELL_SIZE`, at which
-## `count` cells and their gaps fit in `width` by `height`. Each cell takes a square of its size plus
-## the gap (`gap_ratio` of its size).
-static func board_cell_size(width: float, height: float, count: int, gap_ratio: float) -> float:
+## `count` cells and their gaps, plus `extra_rows` more rows of squares (the potion row), fit in
+## `width` by `height`. Each cell takes a square of its size plus the gap (`gap_ratio` of its size).
+static func board_cell_size(width: float, height: float, count: int, gap_ratio: float, extra_rows: int = 0) -> float:
   var cell_size: float = ItemCell.CELL_SIZE.x
   while cell_size > MIN_CELL_SIZE:
     var square: float = cell_size + int(cell_size * gap_ratio)
     var columns: int = maxi(1, int(width / square))
-    if ceili(float(count) / columns) * square <= height:
+    if (ceili(float(count) / columns) + extra_rows) * square <= height:
       return cell_size
     cell_size -= 1.0
   return MIN_CELL_SIZE
 
 
-## Set the player's items down askew on the grid (`ItemCell.set_askew`), by the print settings
-## `token_tilt` and `token_shift`, the shift scaled to the cells' size. Does nothing unless a setting or
-## the cell size changed; adding a cell clears `_askew_set`, so every cell is set again.
+## Set the player's items and potions down askew on the grid (`ItemCell.set_askew`), by the print
+## settings `token_tilt` and `token_shift`, the shift scaled to the cells' size. Does nothing unless a
+## setting or the cell size changed; adding a cell or rebuilding the potions clears `_askew_set`, so
+## every cell is set again.
 func _set_items_askew() -> void:
   var tilt: float = PrintLook.print_setting('token_tilt')
   var shift: float = PrintLook.print_setting('token_shift') * _cell_size / ItemCell.CELL_SIZE.x
@@ -150,18 +176,41 @@ func _set_items_askew() -> void:
   _askew_set = wanted
   for cell: Node in _player_items.get_children():
     (cell as ItemCell).set_askew(tilt, shift)
+  for slot: Node in _potions.get_children():
+    (slot as PotionSlot).cell.set_askew(tilt, shift)
 
 
-## The pencil grid covers the board and takes its colour from the interface palette.
+## The pencil grids behind the board and the potions take their colour from the interface palette.
 func _draw_grid() -> void:
-  PrintLook.grid_material.set_shader_parameter('rect_size', _grid.size)
   PrintLook.grid_material.set_shader_parameter('pencil_colour', Colours.UI_BACKGROUND_WEAR_LIGHT)
 
 
-## The player portrait stays square and takes the section's full height, sitting to the left of the
-## name and HP bar. Each ally slot fits itself the same way.
+## Whether the portraits are cardboard tokens like the items, and whether the player's portrait, name
+## and HP bar sit on one token panel, from the print settings `token_portraits` and `portrait_panel`
+## (docs/systems/print_frame.md). Does nothing unless a setting or the number of allies changed.
+func _set_token_styles() -> void:
+  var portraits: bool = PrintLook.print_setting('token_portraits')
+  var panel: bool = PrintLook.print_setting('portrait_panel')
+  var wanted: Array = [portraits, panel, _ally_slots.size()]
+  if wanted == _tokens_set:
+    return
+  var panel_changed: bool = _tokens_set.is_empty() or _tokens_set[1] != panel
+  _tokens_set = wanted
+  var portrait_style: StringName = &'PanelToken' if portraits else &'PanelSlot'
+  _portrait.theme_type_variation = portrait_style
+  for slot in _ally_slots.values():
+    (slot as AllySlot).set_portrait_style(portrait_style)
+  _player_panel.theme_type_variation = &'PanelTokenWide' if panel else &'PanelBare'
+  if panel_changed:
+    _place_in_sections()   # the panel's margins change the room left for the portrait
+    _portraits_part.queue_sort()   # the row keeps the panel's old size otherwise
+
+
+## The player portrait stays square and takes the section's full height, less the margins of the panel
+## around it, sitting to the left of the name and HP bar. Each ally slot fits itself the same way.
 func _fit_portraits(height: float) -> void:
-  var side: float = maxf(floorf(height), PORTRAIT_MIN_SIZE)
+  var room: float = height - _player_panel.get_theme_stylebox('panel').get_minimum_size().y
+  var side: float = maxf(floorf(room), PORTRAIT_MIN_SIZE)
   _portrait.custom_minimum_size = Vector2(side, side)
   for slot in _ally_slots.values():
     (slot as AllySlot).fit_height(height)
@@ -196,6 +245,7 @@ func _process(_delta: float) -> void:
   _sync_player_items()    # pick up items created or removed during the fight
   _fit_board()            # shrink or grow the cells when the count or the section changed
   _set_items_askew()
+  _set_token_styles()
   _draw_grid()
   _position_enemy_huds()  # keep each HUD pinned above its enemy's corridor sprite
   _refresh_player_hp()
@@ -344,6 +394,8 @@ func _build_potions(potions: Array) -> void:
     _potions.add_child(slot)
     slot.setup(potions[i])
     slot.pressed.connect(_on_potion_pressed.bind(i))
+  _fitted = -Vector4.ONE   # size and tilt the new slots with the board's cells
+  _askew_set = -Vector3.ONE
 
 
 ## Remember the slot's centre before the throw removes the slot, so the potion's effects start there.

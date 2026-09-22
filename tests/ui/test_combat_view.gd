@@ -98,9 +98,9 @@ func test_view_potion_slots_emit_the_throw_intent() -> void:
   cm.start()
   var potions: Array = [Consumable.new(FixtureKit.potion())]
   view.bind(cm, p, potions)
-  assert_eq(view.get_node('Items/Potions').get_child_count(), 1, 'one slot per potion')
+  assert_eq(view.get_node('Items/PotionBoard/Potions').get_child_count(), 1, 'one slot per potion')
   watch_signals(view)
-  var slot: Button = view.get_node('Items/Potions').get_child(0)
+  var slot: Button = view.get_node('Items/PotionBoard/Potions').get_child(0)
   slot.pressed.emit()
   assert_signal_emitted_with_parameters(view, 'potion_thrown', [0])
   cm.free()
@@ -168,6 +168,49 @@ func test_a_full_player_board_shrinks_its_cells() -> void:
   var cell: ItemCell = grid.get_child(0)
   assert_lt(cell.cell_size.x, ItemCell.CELL_SIZE.x, 'the cells shrink to fit 60 items')
   assert_eq((grid.get_child(59) as ItemCell).cell_size, cell.cell_size, 'every cell takes the same size')
+  cm.free()
+
+
+func test_potions_are_drawn_like_board_items() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [Consumable.new(FixtureKit.potion())])
+  view._process(0.0)
+  var slot: PotionSlot = view.get_node('Items/PotionBoard/Potions').get_child(0)
+  var board_cell: ItemCell = view.get_node('Items/Board/PlayerItems').get_child(0)
+  assert_eq(slot.theme_type_variation, &'ButtonBare', 'the button draws no body of its own')
+  assert_eq((slot.cell.get_node('Frame') as Control).theme_type_variation, &'PanelToken', 'the same frame as an item')
+  assert_eq((slot.cell.get_node('Frame/Icon') as CanvasItem).material, InterfaceLook.framed_material, 'the same icon material')
+  assert_eq(slot.cell.cell_size, board_cell.cell_size, 'the same size as the board items')
+  for pill: Node in slot.cell.get_node('Pills').get_children():
+    assert_false((pill as Control).visible, 'a potion shows no value pills')
+  cm.free()
+
+
+func test_the_potion_grid_has_three_squares_and_the_column_still_fits() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var items: Array = []
+  for i in 60:
+    items.append(FixtureItems.attack())
+  var p := _spawn(100.0, items)
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [Consumable.new(FixtureKit.potion())])
+  for frame: int in 3:
+    await get_tree().process_frame
+  var grid: GridContainer = view.get_node('Items/Board/PlayerItems')
+  var square: float = (grid.get_child(0) as ItemCell).cell_size.x + grid.get_theme_constant('h_separation')
+  var potion_grid: Control = view.get_node('Items/PotionBoard/Grid')
+  assert_eq(potion_grid.size, Vector2(3.0 * square, square), 'three squares in one row, the same size as the board squares')
+  var last_cell: ItemCell = grid.get_child(59)
+  var column: Rect2 = view.get_node('Items').get_global_rect()
+  assert_true(last_cell.get_global_rect().end.y <= column.end.y, 'the potion row and 60 items fit the column')
   cm.free()
 
 
@@ -337,7 +380,7 @@ func test_a_thrown_consumable_starts_from_its_slot() -> void:
   cm.start()
   var potion := Consumable.new(FixtureKit.potion())
   view.bind(cm, p, [potion])
-  var slot: PotionSlot = view.get_node('Items/Potions').get_child(0)
+  var slot: PotionSlot = view.get_node('Items/PotionBoard/Potions').get_child(0)
   var centre: Vector2 = slot.get_global_rect().get_center()
   slot.pressed.emit()
   view.refresh_potions([])   # the throw removes the slot; its position is remembered

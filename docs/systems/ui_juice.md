@@ -13,7 +13,7 @@ skips the press squash, the release pulse and the click sound, so a control the 
 with is never built that way. When the thing the player picks is a picture rather than a button
 body, put it inside a button using the `ButtonBare` theme variation
 ([ui_theme.md](ui_theme.md)), which draws nothing, and point `highlight_target` at the panel
-that does draw — `reward_option.tscn` wraps an `ItemCell` this way.
+that does draw — `reward_option.tscn` and `potion_slot.tscn` wrap an `ItemCell` this way.
 
 ## Usage
 

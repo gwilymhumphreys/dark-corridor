@@ -16,9 +16,12 @@ press and selection, and the files are no longer referenced.
 
 | Variation | Used by |
 |---|---|
-| `PanelSlot` | the frame behind a picture: item cells (`item_cell.tscn`), potion slots, character portraits (combat, ally slots, character select cards) and keyword chips |
+| `PanelSlot` | the frame behind a picture: character portraits (combat, ally slots, character select cards) and keyword chips |
+| `PanelToken` | item cells (`item_cell.tscn`, which the potion slots also use), and the combat portraits when the `token_portraits` print setting is on: `PanelSlot` with a drop shadow, so items read as cardboard tokens on the board grid. The shadow is set by `PrintLook.apply_token_style()` ([print_frame.md](print_frame.md)) |
+| `PanelTokenWide` | the same with wider margins: the panel around the player's portrait, name and HP bar when the `portrait_panel` print setting is on |
+| `PanelBare` | a `PanelContainer` that draws nothing: that panel when the setting is off |
 | `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it. `PanelSlot` is the same, with smaller content margins |
-| `ButtonBare` | a button that draws no body of its own (`StyleBoxEmpty` in every state): used where the button only carries the click and the juice, and something inside it is the picture — the reward options in the draft overlay (`reward_option.tscn`) |
+| `ButtonBare` | a button that draws no body of its own (`StyleBoxEmpty` in every state): used where the button only carries the click and the juice, and something inside it is the picture — the reward options in the draft overlay (`reward_option.tscn`) and the potion slots (`potion_slot.tscn`) |
 | `LabelDim` | dimmer section labels ("Potions", "Items") |
 
 `PanelFramed` is used by most overlay panels, by the tooltip panel

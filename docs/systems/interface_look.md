@@ -19,9 +19,9 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   Godot shares one loaded copy of each file, so a setting changed on it changes every node using it
   at once.
   - `interface_look_material.tres` (`InterfaceLook.material`) draws the pictures that are not inside a
-    panel frame: potion icons, status icons and keyword chip icons.
+    panel frame: status icons and keyword chip icons.
   - `interface_framed_material.tres` (`InterfaceLook.framed_material`) draws the pictures that sit
-    inside a `PanelSlot` frame and do not breathe: the item cell icons. Picture wear is kept off on
+    inside a panel frame and do not breathe: the item cell icons, which include the potions. Picture wear is kept off on
     this material (`FRAMED_OFF_UNIFORMS`), because the frame around them draws its own
     [panel wear](panel_wear.md); everything else applies.
   - `interface_portrait_material.tres` (`InterfaceLook.portrait_material`) draws the breathing
@@ -71,7 +71,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 | Element | Scene and node | Material |
 |---|---|---|
 | Item icons (combat boards, draft rewards) | `item_cell.tscn` `Frame/Icon` | framed pictures |
-| Potion icons | `potion_slot.tscn` `Icon` | images |
+| Potion icons | `potion_slot.tscn` `Cell/Frame/Icon` (an item cell) | framed pictures |
 | Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` | images |
 | Character portraits | `combat_view_framed.tscn` player portrait `Image`, `ally_slot.tscn` `Portrait/Image`, `character_card.tscn` `Portrait/Image` | framed pictures |
 | HP bars | `Background` and `Fill` under `HP` in `combat_view_framed.tscn`, `ally_slot.tscn`, `enemy_hud.tscn` | elements |

@@ -25,13 +25,9 @@ An enemy is authored as an `EnemyDef` (#23): **HP** (max), a `name_key`, and an 
 
 ## Enemy items — a content category, not a mechanism
 
-Mechanically these are **Items** (Item PRD). The enemy-specific part is *sourcing* (design):
+Enemy items are ordinary **Items** (Item PRD) and work exactly like the player's (decision #43). An enemy can carry an item written for it or any other item, including one from a player pool. Enemy items are listed in `ItemCatalog` with every other item; an item written only for enemies is simply in no player pool.
 
-- **Per-enemy attack item** — each enemy has its own attack Item (own value + icon), authored *with* the enemy; **not** drawn from a shared attack pool and **not** in the player draft pool.
-- **Shared enemy utility pool** — on top, an enemy may carry a defensive/utility Item from a small shared enemy pool.
-- Icons may visually overlap player items, but enemy items must **not be mechanically identical** to player items — keeps "their items" distinct from "mine."
-
-These are authoring guidelines + separate pools, not new code — they're Items either way (so they fire, travel, and resolve through the same `Delivery` path).
+An enemy's health and the damage of its items both grow through the run, roughly in step with the player's damage, healing and shields (#43). The size of an enemy in each act comes from the points ranges in [`encounter_points_budget.md`](../plans/encounter_points_budget.md).
 
 ---
 

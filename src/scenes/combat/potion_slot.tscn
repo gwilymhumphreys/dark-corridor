@@ -2,44 +2,27 @@
 
 [ext_resource type="Script" path="res://src/scenes/combat/potion_slot.gd" id="3"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="1"]
-[ext_resource type="Material" path="res://src/shaders/interface_look_material.tres" id="interface_look_material"]
+[ext_resource type="PackedScene" path="res://src/scenes/combat/item_cell.tscn" id="item_cell"]
 
 [node name="PotionSlot" type="Button"]
 mouse_default_cursor_shape = 2
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(120, 120)
 focus_mode = 0
+theme_type_variation = &"ButtonBare"
 script = ExtResource("3")
 
-[node name="Frame" type="PanelContainer" parent="."]
+[node name="Cell" parent="." instance=ExtResource("item_cell")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = -6.0
+offset_right = 0.0
+offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_type_variation = &"PanelSlot"
-
-[node name="Icon" type="TextureRect" parent="."]
-material = ExtResource("interface_look_material")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
 
 [node name="Juice" type="Node" parent="."]
 script = ExtResource("1")
 preset = 2
+highlight_target = NodePath("../Cell/Frame")

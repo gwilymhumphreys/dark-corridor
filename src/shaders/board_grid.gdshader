@@ -6,10 +6,10 @@ shader_type canvas_item;
 
 #include "res://src/shaders/print_noise.gdshaderinc"
 
-// Set by CombatViewFramed: the pencil colour from Colours, the rectangle's size and the distance
-// between the lines at the item cells' edges, both in canvas pixels.
+// Set by CombatViewFramed: the pencil colour from Colours, and the distance between the lines at the
+// item cells' edges in canvas pixels. The board grid and the potion grid share this material; each
+// reads its own rectangle's pixels, so neither needs its size set.
 uniform vec3 pencil_colour : source_color = vec3(0.48, 0.47, 0.47);
-uniform vec2 rect_size = vec2(1.0);
 uniform float square_size = 144.0;
 
 group_uniforms board_grid;
@@ -50,8 +50,16 @@ float pencil_lines(float across, float along, float spacing, float seed) {
 }
 
 
+varying vec2 local_position;
+
+
+void vertex() {
+  local_position = VERTEX;
+}
+
+
 void fragment() {
-  vec2 local = UV * rect_size;
+  vec2 local = local_position;
   float spacing = square_size / float(max(board_grid_squares_per_cell, 1));
   float vertical = pencil_lines(local.x, local.y, spacing, 0.0);
   float horizontal = pencil_lines(local.y, local.x, spacing, 41.0);

@@ -135,20 +135,27 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
 - **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
   aligned to the top of the section, the left-aligned name ("You") over the HP bar and status
   numbers — centred between the
-  ally slots; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelSlot` frame holding the item's icon (`ItemDef.icon`), a
+  ally slots (the portrait row sits in a `PlayerPanel` that is only drawn with the `portrait_panel`
+  print setting, [print_frame.md](print_frame.md)); the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
   centred row of effect-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per value-bearing effect)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
   whose edge is torn like the paper edges of the print look) + fire recoil). The grid is matched to
   the board every frame (`_sync_player_items`), so an item created during the fight gains a cell with a
   "Temporary" tag on its bottom edge, and a decayed or consumed item loses its cell,
-  with the **potion slots** (`potion_slot.tscn`, the potion's icon on the potion colour) above it.
+  with the **potion slots** above it. A potion slot (`potion_slot.tscn`) is a `ButtonBare` button
+  wrapping the same `ItemCell` as a board item, shown with `ItemCell.show_picture` (the icon, no
+  pills or cooldown fill), so potions look like items and a board item can later be made clickable
+  the same way. The potions sit in a one-row pencil grid of `POTION_SLOTS` squares (more if there are
+  more potions; the three-slot limit is not enforced in code).
   **The board always fits its section:** `_fit_board` gives the cells the largest size, up to
-  `ItemCell.CELL_SIZE` and down to `MIN_CELL_SIZE`, at which every cell fits, with the gap scaled to
-  match, and refits whenever the cell count or the section changes (`board_cell_size`). Behind the
-  cells is a pencil grid with one square per cell, and each cell sits slightly askew on it
-  ([print_frame.md](print_frame.md#how-it-works)). For screenshots, `--board-items N` (with
-  `--autofight --shot`) fills the board with copies of the starting items up to N.
+  `ItemCell.CELL_SIZE` and down to `MIN_CELL_SIZE`, at which the potion row and every item fit, with
+  the gap scaled to match, and refits whenever the item or potion count or the section changes
+  (`board_cell_size`, which counts the potion row as one extra row). The potions take the same cell
+  size. Behind the cells is a pencil grid with one square per cell, and each item and potion sits
+  slightly askew on it ([print_frame.md](print_frame.md#how-it-works)). For screenshots,
+  `--board-items N` (with `--autofight --shot`) fills the board with copies of the starting items up
+  to N, and `--potions N` gives the player N Healing Draughts.
   **Temporary things fade out when the fight ends.** A created item stays on the board and a summon
   token stays on the roster until the `CombatManager` is torn down at the next advance, so
   `release()` drops them from the view itself: each created item's cell

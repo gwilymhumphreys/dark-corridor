@@ -13,6 +13,11 @@ const LAYOUT_PROPERTIES: Dictionary = {
   'split_down': [600.0, 1400.0, 1.0],
   'token_tilt': [0.0, 15.0, 0.1],
   'token_shift': [0.0, 20.0, 0.5],
+  'token_shadow_size': [0.0, 24.0, 1.0],
+  'token_shadow_offset': [0.0, 16.0, 1.0],
+  'token_shadow_darkness': [0.0, 1.0, 0.01],
+  'token_portraits': [],
+  'portrait_panel': [],
 }
 
 
@@ -21,7 +26,7 @@ func rebuild() -> void:
   _clear_sections()
   var layout: LookSection = _add_section('Layout')
   for setting: String in LAYOUT_PROPERTIES:
-    var set_value: Callable = func(new_value: Variant) -> void: PrintLook.print_settings[setting] = new_value
+    var set_value: Callable = func(new_value: Variant) -> void: PrintLook.set_print_value(setting, new_value)
     layout.add_row(_make_row(setting.capitalize(), PrintLook.print_setting(setting), LAYOUT_PROPERTIES[setting], set_value))
   _build_shader_sections(PrintLook.border_material, PrintLook.print_defaults())
   _build_shader_sections(PrintLook.overlay_material, PrintLook.print_defaults())

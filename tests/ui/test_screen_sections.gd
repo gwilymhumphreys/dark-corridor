@@ -71,8 +71,8 @@ func test_view_uses_the_sections_it_is_given() -> void:
 func test_player_portrait_fits_the_portrait_section_height() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
-  var portrait: Control = view.get_node('Portraits/PlayerPortrait/Portrait')
-  var box: Control = view.get_node('Portraits/PlayerPortrait')
+  var portrait: Control = view.get_node('Portraits/PlayerPanel/PlayerPortrait/Portrait')
+  var box: Control = view.get_node('Portraits/PlayerPanel/PlayerPortrait')
   for split_down: float in [1000.0, 1150.0, 1250.0]:
     PrintLook.print_settings['split_down'] = split_down
     view.sections._process(0.0)
@@ -117,3 +117,29 @@ func test_item_cells_shrink_so_a_full_board_fits() -> void:
     assert_true(ceili(float(count) / columns) * square <= 860.0, '%d items fit the board' % count)
   assert_eq(CombatViewFramed.board_cell_size(820.0, 860.0, 1000, gap_ratio), CombatViewFramed.MIN_CELL_SIZE,
     'the cells stop shrinking at the minimum')
+
+
+func test_player_portrait_fits_inside_the_portrait_panel() -> void:
+  PrintLook.set_print_value('portrait_panel', true)
+  var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
+  _host(view)
+  for frame: int in 3:
+    await get_tree().process_frame
+  var panel: PanelContainer = view.get_node('Portraits/PlayerPanel')
+  assert_eq(panel.theme_type_variation, &'PanelTokenWide', 'the panel is a token')
+  var height: float = view.sections.section('Portraits').size.y
+  assert_true(panel.size.y <= height, 'the panel fits in %d pixels' % height)
+  PrintLook.set_print_value('portrait_panel', false)
+  view._process(0.0)
+  assert_eq(panel.theme_type_variation, &'PanelBare', 'no panel when off')
+
+
+func test_portraits_become_tokens_when_set() -> void:
+  var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
+  _host(view)
+  var portrait: Control = view.get_node('Portraits/PlayerPanel/PlayerPortrait/Portrait')
+  view._process(0.0)
+  assert_eq(portrait.theme_type_variation, &'PanelSlot', 'a plain frame by default')
+  PrintLook.set_print_value('token_portraits', true)
+  view._process(0.0)
+  assert_eq(portrait.theme_type_variation, &'PanelToken', 'a token when set')

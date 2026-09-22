@@ -1,7 +1,7 @@
 class_name ItemCell
 extends Control
-## One board item in the framed combat view (docs/systems/ui_layout.md): a themed item-slot
-## frame (PanelSlot) holding the item's icon (`ItemDef.icon`), a row of effect-coloured value pills straddling
+## One board item in the framed combat view (docs/systems/ui_layout.md): a cardboard token frame
+## (PanelToken) holding the item's icon (`ItemDef.icon`), a row of effect-coloured value pills straddling
 ## the top edge (one per value-bearing effect), a cooldown fill over the icon (a semi-transparent fill
 ## rising from the bottom edge with a solid torn-paper line along its top, drawn by
 ## `cooldown_fill.gdshader`), and a scale-punch recoil when it fires. Structure is authored in
@@ -117,6 +117,16 @@ func setup(target_item: Item, timekeeper: Timekeeper = null, temporary: bool = f
   _icon.texture = load(item.def.icon) as Texture2D if item != null and item.def.icon != '' else null
   _build_pills()
   _update_cooldown()
+
+
+## Show a picture with no item behind it (a potion, `PotionSlot`): no value pills, no cooldown fill and
+## no "Temporary" tag. Call after the cell is in the tree.
+func show_picture(texture: Texture2D) -> void:
+  item = null
+  _temporary_tag.visible = false
+  _icon.texture = texture
+  show_cooldown = false
+  _build_pills()
 
 
 ## A pill per value-bearing effect (damage / heal / status amount), tinted by the effect's family

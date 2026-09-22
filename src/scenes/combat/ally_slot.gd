@@ -55,6 +55,12 @@ func fit_height(height: float) -> void:
   _portrait_frame.custom_minimum_size = Vector2(side, side)
 
 
+## The portrait's frame style: `PanelSlot`, or `PanelToken` when the portraits are cardboard tokens
+## (`CombatViewFramed._set_token_styles`).
+func set_portrait_style(style: StringName) -> void:
+  _portrait_frame.theme_type_variation = style
+
+
 ## Show or hide the cooldown fill on this slot's item cells (hidden once the fight is over).
 func set_cooldowns_shown(shown: bool) -> void:
   for cell in _cells.values():

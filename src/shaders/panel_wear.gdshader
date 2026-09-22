@@ -132,8 +132,11 @@ PrintWearSettings _panel_wear_settings() {
 
 void fragment() {
   vec2 local = local_position - panel_rect.xy;
-  vec3 colour = print_panel_wear(COLOR.rgb, _panel_wear_settings(), local, panel_rect.zw, wear_dark_colour, wear_light_colour);
-  // The pointer feedback goes on last, over the worn panel (docs/systems/control_feedback.md).
-  colour = control_highlight(colour, local, panel_rect.zw, FRAGCOORD.xy);
-  COLOR = vec4(colour, COLOR.a);
+  // A style's shadow is drawn outside its rectangle; it takes no wear or highlight.
+  if (all(greaterThanEqual(local, vec2(0.0))) && all(lessThanEqual(local, panel_rect.zw))) {
+    vec3 colour = print_panel_wear(COLOR.rgb, _panel_wear_settings(), local, panel_rect.zw, wear_dark_colour, wear_light_colour);
+    // The pointer feedback goes on last, over the worn panel (docs/systems/control_feedback.md).
+    colour = control_highlight(colour, local, panel_rect.zw, FRAGCOORD.xy);
+    COLOR = vec4(colour, COLOR.a);
+  }
 }

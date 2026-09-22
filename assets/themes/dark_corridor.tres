@@ -95,6 +95,38 @@ content_margin_bottom = 6.0
 script = ExtResource("6_worn_style_box")
 base = SubResource("pb_slot")
 
+[sub_resource type="StyleBoxFlat" id="pb_token"]
+script = ExtResource("7_palette_style_box")
+colour_name = "UI_BACKGROUND"
+bg_color = Color(0.04, 0.04, 0.05, 1)
+shadow_color = Color(0, 0, 0, 0.6)
+shadow_size = 6
+shadow_offset = Vector2(4, 4)
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBox" id="pb_token_worn"]
+script = ExtResource("6_worn_style_box")
+base = SubResource("pb_token")
+
+[sub_resource type="StyleBoxFlat" id="pb_token_wide"]
+script = ExtResource("7_palette_style_box")
+colour_name = "UI_BACKGROUND"
+bg_color = Color(0.04, 0.04, 0.05, 1)
+shadow_color = Color(0, 0, 0, 0.6)
+shadow_size = 6
+shadow_offset = Vector2(4, 4)
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+
+[sub_resource type="StyleBox" id="pb_token_wide_worn"]
+script = ExtResource("6_worn_style_box")
+base = SubResource("pb_token_wide")
+
 [sub_resource type="StyleBoxEmpty" id="pb_bare"]
 
 [resource]
@@ -150,7 +182,13 @@ PanelPause/base_type = &"PanelContainer"
 PanelPause/styles/panel = SubResource("pb_pause_worn")
 PanelSlot/base_type = &"PanelContainer"
 PanelSlot/styles/panel = SubResource("pb_slot_worn")
+PanelBare/base_type = &"PanelContainer"
+PanelBare/styles/panel = SubResource("pb_bare")
 PanelSmall/base_type = &"PanelContainer"
 PanelSmall/styles/panel = SubResource("pb_small_worn")
+PanelToken/base_type = &"PanelContainer"
+PanelToken/styles/panel = SubResource("pb_token_worn")
+PanelTokenWide/base_type = &"PanelContainer"
+PanelTokenWide/styles/panel = SubResource("pb_token_wide_worn")
 TooltipLabel/colors/font_color = Color(1, 1, 1, 1)
 TooltipPanel/styles/panel = SubResource("pb_framed_worn")

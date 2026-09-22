@@ -62,8 +62,8 @@ The enemy board mirrors the player's (loadouts visible — "watch the cascades c
 ## Portrait, HP, potions
 
 - **Player portrait** separate from the scene (identity anchor), with the left-aligned name over the HP bar beside it, both at the top of the section; **HP** shown as the portrait getting progressively beaten-up + the value as text. Ally slots use the same arrangement, with their item row under the HP bar.
-- As built, the portrait image comes from `CharacterDef.portrait` (player) or `EnemyDef.portrait` (ally slots), copied onto `Actor.portrait` when the Actor is made. The image sits in a `PanelSlot` frame, the worn panel used behind icons ([panel_wear.md](panel_wear.md)). The character select cards show `CharacterDef.portrait` too. Beaten-up HP is not built.
-- **Potion slots** distinct from item slots (tactical reserve, not item-cousin UI); **slow-mo-on-hover** to inspect + throw.
+- As built, the portrait image comes from `CharacterDef.portrait` (player) or `EnemyDef.portrait` (ally slots), copied onto `Actor.portrait` when the Actor is made. The image sits in a `PanelSlot` frame, the worn panel used behind icons ([panel_wear.md](panel_wear.md)), or a `PanelToken` frame with the `token_portraits` print setting ([print_frame.md](print_frame.md)). The character select cards show `CharacterDef.portrait` too. Beaten-up HP is not built.
+- **Potion slots** distinct from item slots (tactical reserve, not item-cousin UI); **slow-mo-on-hover** to inspect + throw. As built, the owner chose to draw potions like items (the same cell, look and size) in their own row of three grid squares above the board ([run_screen.md](run_screen.md)).
 
 ## Slow-mo-on-hover (one verb)
 

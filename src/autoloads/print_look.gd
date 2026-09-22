@@ -45,14 +45,23 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## screen sections meet (`ScreenSections`, docs/systems/ui_layout.md), and the padding inside each
 ## section. In pixels on the interface canvas. Also how far the player's items sit askew on the board
 ## grid, like cardboard tokens put down by hand: the largest tilt in degrees and the largest shift in
-## pixels at full cell size (`CombatViewFramed`).
+## pixels at full cell size (`CombatViewFramed`). Then the token look (`apply_token_style`): the
+## shadow's blur and offset in pixels and its opacity; and whether the portraits are tokens too and
+## whether the player's portrait, name and HP bar sit on one token panel (`CombatViewFramed`).
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'split_across': 1700.0,
   'split_down': 1150.0,
   'token_tilt': 3.0,
   'token_shift': 4.0,
+  'token_shadow_size': 6.0,
+  'token_shadow_offset': 4.0,
+  'token_shadow_darkness': 0.6,
+  'token_portraits': false,
+  'portrait_panel': false,
 }
+## The theme styles the token look is written to (docs/systems/ui_theme.md).
+const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']
 
 ## The material every screen background is drawn through (background_wear.gdshader).
 var background_material: ShaderMaterial = ShaderMaterial.new()
@@ -74,7 +83,7 @@ var fold_backgrounds: int = 0
 var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
 var _panel_defaults: Dictionary = {}   # panel wear uniform -> default value, read from its code
 var _print_defaults: Dictionary = {}   # border, corridor overlay and board grid uniform -> default value
-var _panel_children: Dictionary = {}   # parent canvas item RID -> [child RID, frame last cleared]
+var _panel_children: Dictionary = {}   # parent canvas item RID -> [child RID, frame last cleared, rect drawn]
 var _panel_seed_count: int = 0
 
 
@@ -99,14 +108,17 @@ func _exit_tree() -> void:
 ## The canvas item `WornStyleBox` draws a control's worn panel background into, creating it the first
 ## time it is asked for a given `parent` (the control's own canvas item RID). Cleared once per process
 ## frame, so a control drawing several styles in one frame (e.g. normal then focus) keeps both, and a
-## resize leaves nothing from an earlier frame.
-func panel_wear_child(parent: RID) -> RID:
+## resize leaves nothing from an earlier frame. Also cleared when `rect` differs from the one drawn
+## earlier in the frame: a control resized and drawn again within one frame would otherwise keep its
+## style at the old size as well.
+func panel_wear_child(parent: RID, rect: Rect2) -> RID:
   var child: RID = panel_child(parent)
   var entry: Array = _panel_children[parent]
   var frame: int = Engine.get_process_frames()
-  if entry[1] != frame:
+  if entry[1] != frame or entry[2] != rect:
     RenderingServer.canvas_item_clear(child)
     entry[1] = frame
+    entry[2] = rect
   return child
 
 
@@ -121,7 +133,7 @@ func panel_child(parent: RID) -> RID:
     RenderingServer.canvas_item_set_material(child, panel_material.get_rid())
     _panel_seed_count += 1
     RenderingServer.canvas_item_set_instance_shader_parameter(child, 'panel_seed', float(_panel_seed_count))
-    _panel_children[parent] = [child, -1]
+    _panel_children[parent] = [child, -1, Rect2()]
   return _panel_children[parent][0]
 
 
@@ -141,6 +153,25 @@ func _on_node_removed(node: Node) -> void:
 func push_wear_colours() -> void:
   panel_material.set_shader_parameter('wear_dark_colour', Colours.UI_PANEL_WEAR)
   panel_material.set_shader_parameter('wear_light_colour', Colours.UI_PANEL_WEAR_LIGHT)
+  apply_token_style()
+
+
+## Write the token settings onto the theme's token styles: the shadow, whose colour comes from
+## `Colours`. The token's edge is the panel wear's worn edge (docs/systems/panel_wear.md). `WornStyleBox` does not pass on its wrapped style's `changed` signal, so each wrapper
+## emits its own, which the theme passes on to every control using it.
+func apply_token_style() -> void:
+  var theme: Theme = ThemeDB.get_project_theme()
+  if theme == null:
+    return
+  var shadow_colour: Color = Colours.UI_PANEL_SHADOW
+  shadow_colour.a = print_setting('token_shadow_darkness')
+  for type: String in TOKEN_STYLES:
+    var worn: WornStyleBox = theme.get_stylebox('panel', type) as WornStyleBox
+    var box: StyleBoxFlat = worn.base as StyleBoxFlat
+    box.shadow_size = roundi(print_setting('token_shadow_size'))
+    box.shadow_offset = Vector2.ONE * float(print_setting('token_shadow_offset'))
+    box.shadow_color = shadow_colour
+    worn.emit_changed()
 
 
 ## Every background wear uniform with a default in the shader code or its settings include (uniform
@@ -183,6 +214,7 @@ func set_print_value(setting: String, value: Variant) -> void:
     panel_material.set_shader_parameter(setting, value)
   elif PRINT_SETTING_DEFAULTS.has(setting):
     print_settings[setting] = value
+    apply_token_style()
 
 
 func _print_material(uniform: String) -> ShaderMaterial:
@@ -218,6 +250,7 @@ static func _uniform_defaults(code: String, skip: Array[String]) -> Dictionary:
 func reset_print_look() -> void:
   _write_print_defaults()
   print_settings.clear()
+  apply_token_style()
 
 
 ## Every background wear effect back to its shader default.

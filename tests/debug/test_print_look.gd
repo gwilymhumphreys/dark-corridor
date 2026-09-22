@@ -67,3 +67,27 @@ func test_the_background_is_written_and_read_on_its_own() -> void:
   PrintLook.read_background_look(file)
   assert_eq(PrintLook.background_material.get_shader_parameter('background_specks_on'), false,
     'background switch restored')
+
+
+func test_token_settings_are_written_onto_both_token_styles() -> void:
+  PrintLook.set_print_value('token_shadow_size', 9.0)
+  PrintLook.set_print_value('token_shadow_offset', 3.0)
+  PrintLook.set_print_value('token_shadow_darkness', 0.25)
+  var theme: Theme = ThemeDB.get_project_theme()
+  for type: String in PrintLook.TOKEN_STYLES:
+    var box: StyleBoxFlat = (theme.get_stylebox('panel', type) as WornStyleBox).base as StyleBoxFlat
+    assert_eq(box.border_width_left, 0, '%s has no border; its edge is the worn edge' % type)
+    assert_eq(box.shadow_size, 9, '%s shadow size' % type)
+    assert_eq(box.shadow_offset, Vector2(3, 3), '%s shadow offset' % type)
+    assert_almost_eq(box.shadow_color.a, 0.25, 0.001, '%s shadow darkness' % type)
+  PrintLook.reset_print_look()
+  var reset_box: StyleBoxFlat = (theme.get_stylebox('panel', 'PanelToken') as WornStyleBox).base as StyleBoxFlat
+  assert_eq(reset_box.shadow_size, roundi(PrintLook.PRINT_SETTING_DEFAULTS['token_shadow_size']),
+    'reset restores the shadow size')
+
+
+func test_a_token_shadow_keeps_the_cell_layout() -> void:
+  var theme: Theme = ThemeDB.get_project_theme()
+  var before: Vector2 = theme.get_stylebox('panel', 'PanelToken').get_minimum_size()
+  PrintLook.set_print_value('token_shadow_size', 20.0)
+  assert_eq(theme.get_stylebox('panel', 'PanelToken').get_minimum_size(), before, 'the margins stay the same')

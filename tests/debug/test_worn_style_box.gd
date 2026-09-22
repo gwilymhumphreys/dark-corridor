@@ -44,16 +44,29 @@ func test_panel_wear_child_is_created_once_per_control() -> void:
   add_child(control)
   _nodes.append(control)
   var rid: RID = control.get_canvas_item()
-  var first: RID = PrintLook.panel_wear_child(rid)
-  var second: RID = PrintLook.panel_wear_child(rid)
+  var first: RID = PrintLook.panel_wear_child(rid, Rect2(0, 0, 64, 64))
+  var second: RID = PrintLook.panel_wear_child(rid, Rect2(0, 0, 64, 64))
   assert_eq(first, second, 'the same child is reused for the same control')
+
+
+func test_a_new_rect_in_the_same_frame_clears_the_earlier_drawing() -> void:
+  var control: Control = Control.new()
+  add_child(control)
+  _nodes.append(control)
+  var rid: RID = control.get_canvas_item()
+  PrintLook.panel_wear_child(rid, Rect2(0, 0, 64, 64))
+  var frame: int = PrintLook._panel_children[rid][1]
+  PrintLook.panel_wear_child(rid, Rect2(0, 0, 80, 64))
+  assert_eq(PrintLook._panel_children[rid][1], frame, 'still the same frame')
+  assert_eq(PrintLook._panel_children[rid][2], Rect2(0, 0, 80, 64),
+    'the drawing is cleared and restarted at the new size, not kept at the old one')
 
 
 func test_registry_frees_the_child_when_the_control_leaves_the_tree() -> void:
   var control: Control = Control.new()
   add_child(control)
   var rid: RID = control.get_canvas_item()
-  PrintLook.panel_wear_child(rid)
+  PrintLook.panel_wear_child(rid, Rect2(0, 0, 64, 64))
   assert_true(PrintLook._panel_children.has(rid), 'registered while the control is in the tree')
   remove_child(control)
   assert_false(PrintLook._panel_children.has(rid), 'freed once the control leaves the tree')

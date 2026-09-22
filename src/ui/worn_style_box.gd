@@ -32,7 +32,7 @@ func _draw(to_canvas_item: RID, rect: Rect2) -> void:
   if base == null:
     return
   var look: PrintLookAutoload = _print_look_autoload()
-  var child: RID = look.panel_wear_child(to_canvas_item)
+  var child: RID = look.panel_wear_child(to_canvas_item, rect)
   RenderingServer.canvas_item_set_instance_shader_parameter(
     child, 'panel_rect', Vector4(rect.position.x, rect.position.y, rect.size.x, rect.size.y))
   base.draw(child, rect)

@@ -7,21 +7,21 @@ const INTERFACE_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
 
 ## Nodes drawn through `InterfaceLook.material`: the pictures that are not inside a panel frame.
 const SCENE_NODES: Array[Array] = [
-  ['res://src/scenes/combat/potion_slot.tscn', 'Icon'],
   ['res://src/scenes/combat/status_icon.tscn', 'Icon'],
   ['res://src/scenes/ui/tooltip/keyword_chip.tscn', 'Margin/Row/Icon'],
 ]
 
-## Nodes drawn through `InterfaceLook.framed_material`: the pictures inside a `PanelSlot` frame.
+## Nodes drawn through `InterfaceLook.framed_material`: the pictures inside a panel frame.
 const FRAMED_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/item_cell.tscn', 'Frame/Icon'],
+  ['res://src/scenes/combat/potion_slot.tscn', 'Cell/Frame/Icon'],
 ]
 
 ## Nodes drawn through `InterfaceLook.portrait_material`: the framed portraits that breathe.
 const PORTRAIT_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/screens/character_card.tscn', 'Portrait/Image'],
   ['res://src/scenes/combat/ally_slot.tscn', 'Portrait/Image'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Portrait/Image'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPanel/PlayerPortrait/Portrait/Image'],
 ]
 
 ## Nodes drawn through `InterfaceLook.element_material`: the interface elements that are not pictures.
@@ -32,8 +32,8 @@ const ELEMENT_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/ally_slot.tscn', 'Readout/HP/Fill'],
   ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Background'],
   ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Fill'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Readout/HP/Background'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPortrait/Readout/HP/Fill'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Background'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Fill'],
 ]
 
 
