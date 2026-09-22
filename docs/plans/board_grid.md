@@ -65,3 +65,15 @@ and material).
   after the fade.
 - The HUD and ally slot cells call `set_cell_size` before `setup()`, so the new pill rebuild does
   nothing for them.
+
+## Built (2026-09-22)
+
+Built as planned, plus:
+
+- Each cell sits slightly askew, like a cardboard token placed by hand (`ItemCell.set_askew`, the
+  `token_tilt` and `token_shift` layout settings). Hover, tooltips and effect origins still use the
+  cell's straight rectangle, which is off by at most the shift.
+- The owner chose the default grid settings (option A on the screenshot comparison).
+- Building it found that boards over about 21 items drew blank, because the interface look shader's
+  `picture_zoom` instance uniform used up the instance uniform buffer. Only the new
+  `interface_portrait.gdshader` has it now ([interface_look.md](../systems/interface_look.md)).
