@@ -69,6 +69,14 @@ func test_background_panel_has_the_background_wear_sections() -> void:
   assert_false(titles.has('Print Border'), 'the border is in the Print tab')
 
 
+func test_tokens_panel_has_the_token_sections() -> void:
+  var tokens_panel: TokensPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Tokens') as TokensPanel
+  tokens_panel.rebuild()
+  var titles: Array[String] = _section_titles(tokens_panel)
+  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits'] as Array[String], 'one section per part of the token look')
+  assert_false(PrintPanel.LAYOUT_PROPERTIES.has('token_tilt'), 'the token settings left the Print tab')
+
+
 func test_save_then_load_restores_the_print_look() -> void:
   PrintLook.set_print_value('print_border_on', true)
   PrintLook.set_print_value('corridor_worn_edge_width', 50.0)

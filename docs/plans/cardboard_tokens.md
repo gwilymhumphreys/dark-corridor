@@ -79,3 +79,12 @@ not rank.
   `_portraits_part.queue_sort()` was added.
 - `WornStyleBox` kept a panel's drawing at its old size when the panel was resized and drawn again in
   the same frame. `PrintLook.panel_wear_child` now also clears when the rectangle changes.
+
+## Token fill and Tokens tab (2026-09-22)
+
+The owner asked for a card-coloured fill as an option to try in the debug panel, and for the token
+settings to have their own tab. `token_fill_colour` and `token_fill_amount` blend the `PanelToken` and
+`PanelTokenWide` fill from `Colours.UI_BACKGROUND` towards the card colour in `apply_token_style()`.
+That runs after an interface palette sets the fill, so the blend survives palette changes. The amount
+defaults to 0. All token settings moved from the Print tab's Layout group to a new Tokens tab (F7,
+`TokensPanel`); they stay print frame settings, so presets save them with the Print part.

@@ -6,18 +6,12 @@ extends LookPanel
 ## then the panel wear groups. The wear on screen backgrounds is in the Background tab
 ## (`BackgroundPanel`).
 
-## Print frame settings shown in the Layout section: setting -> [min, max, step].
+## Print frame settings shown in the Layout section: setting -> [min, max, step]. The token settings
+## are print frame settings too, but have their own tab (`TokensPanel`).
 const LAYOUT_PROPERTIES: Dictionary = {
   'padding': [0.0, 160.0, 1.0],
   'split_across': [800.0, 2400.0, 1.0],
   'split_down': [600.0, 1400.0, 1.0],
-  'token_tilt': [0.0, 15.0, 0.1],
-  'token_shift': [0.0, 20.0, 0.5],
-  'token_shadow_size': [0.0, 24.0, 1.0],
-  'token_shadow_offset': [0.0, 16.0, 1.0],
-  'token_shadow_darkness': [0.0, 1.0, 0.01],
-  'token_portraits': [],
-  'portrait_panel': [],
 }
 
 

@@ -6,7 +6,7 @@ screen, including the corridor testbed and combat sandbox.
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
 as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`,
-`background_panel.*`, `feedback_panel.*` and `icon_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
+`background_panel.*`, `feedback_panel.*`, `icon_panel.*` and `tokens_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
 
 ## Tabs
 
@@ -18,10 +18,12 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
 | Icons | F6 | Which icon and colour each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice; a mechanic's colour is written to the [custom palette](interface_palette.md) |
+| Tokens | F7 | The [cardboard token look](print_frame.md) of items, potions and portraits: placement, shadow, fill and the portrait switches |
 
-The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The five above line up
+The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The first five line up
 with the parts, but a tab that saves its own files rather than being part of a
-preset has no `Part`.
+preset has no `Part`. The Tokens tab's settings are print frame settings, so a
+preset saves them with its Print part.
 
 ## Behaviour
 
@@ -33,7 +35,8 @@ preset has no `Part`.
   with Space or Escape. A panel opened by a start-up argument does not pause, so screenshot runs keep
   playing.
 - Every look tab starts with a "Take this part from" row ([look_presets.md](look_presets.md#the-preset-bar)).
-  The Icons tab has none, because it is not a preset part; `LookPanel` treats that row as optional.
+  The Icons tab has none, because it is not a preset part, and neither has the Tokens tab, whose
+  settings belong to the Print part; `LookPanel` treats that row as optional.
 - The palette keys below are ignored while a text field (the preset name) has focus.
 - `]` and `[` select the next and previous entry in the World palette list, `'` and `;` in the
   Interface palette list and `.` and `,` in the Portrait palette list, with the panel open or closed,
@@ -99,11 +102,11 @@ Read once at start-up from the user arguments (after `--`), after the default pr
 | `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
 | `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
-| `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay or layout setting. Repeatable |
+| `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay, layout or token setting. Repeatable |
 | `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
 | `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
 | `--feedback-demo=<amount>` | Holds every control at that much hover, for screenshots of the feedback |
-| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel` | Opens the panel on the Corridor, Interface, Print, Background, Feedback or Icons tab |
+| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel`, `--tokens-panel` | Opens the panel on the Corridor, Interface, Print, Background, Feedback, Icons or Tokens tab |
 | `--glow-demo=<brightness>` | Every node drawn through the interface look material glows ([interface_glow.md](interface_glow.md)); read by `InterfaceGlow` |
 
 `--shot` saves into the project's gitignored `screenshots/` folder, one file per shot named with the

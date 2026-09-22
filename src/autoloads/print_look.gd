@@ -46,7 +46,8 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## section. In pixels on the interface canvas. Also how far the player's items sit askew on the board
 ## grid, like cardboard tokens put down by hand: the largest tilt in degrees and the largest shift in
 ## pixels at full cell size (`CombatViewFramed`). Then the token look (`apply_token_style`): the
-## shadow's blur and offset in pixels and its opacity; and whether the portraits are tokens too and
+## shadow's blur and offset in pixels and its opacity; the card colour the token fill is blended
+## towards and how far (0 keeps the interface background, 1 is the card colour); and whether the portraits are tokens too and
 ## whether the player's portrait, name and HP bar sit on one token panel (`CombatViewFramed`).
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
@@ -57,6 +58,8 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'token_shadow_size': 6.0,
   'token_shadow_offset': 4.0,
   'token_shadow_darkness': 0.6,
+  'token_fill_colour': Color(0.55, 0.45, 0.32),
+  'token_fill_amount': 0.0,
   'token_portraits': false,
   'portrait_panel': false,
 }
@@ -157,7 +160,10 @@ func push_wear_colours() -> void:
 
 
 ## Write the token settings onto the theme's token styles: the shadow, whose colour comes from
-## `Colours`. The token's edge is the panel wear's worn edge (docs/systems/panel_wear.md). `WornStyleBox` does not pass on its wrapped style's `changed` signal, so each wrapper
+## `Colours`, and the fill, blended from `Colours.UI_BACKGROUND` towards the card colour. Both are
+## worked out from `Colours`, so this runs again after an interface palette sets the fill. The
+## token's edge is the panel wear's worn edge (docs/systems/panel_wear.md). `WornStyleBox` does not
+## pass on its wrapped style's `changed` signal, so each wrapper
 ## emits its own, which the theme passes on to every control using it.
 func apply_token_style() -> void:
   var theme: Theme = ThemeDB.get_project_theme()
@@ -165,12 +171,14 @@ func apply_token_style() -> void:
     return
   var shadow_colour: Color = Colours.UI_PANEL_SHADOW
   shadow_colour.a = print_setting('token_shadow_darkness')
+  var fill_colour: Color = Colours.UI_BACKGROUND.lerp(print_setting('token_fill_colour'), print_setting('token_fill_amount'))
   for type: String in TOKEN_STYLES:
     var worn: WornStyleBox = theme.get_stylebox('panel', type) as WornStyleBox
     var box: StyleBoxFlat = worn.base as StyleBoxFlat
     box.shadow_size = roundi(print_setting('token_shadow_size'))
     box.shadow_offset = Vector2.ONE * float(print_setting('token_shadow_offset'))
     box.shadow_color = shadow_colour
+    box.bg_color = fill_colour
     worn.emit_changed()
 
 
