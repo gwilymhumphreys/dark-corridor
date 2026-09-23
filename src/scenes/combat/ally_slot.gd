@@ -3,7 +3,7 @@ extends HBoxContainer
 ## A run-scoped ally / combat-scoped summon token in the framed combat view, in one of the
 ## slots flanking the player (docs/systems/ui_layout.md): a portrait, and beside it a column of its
 ## name, its HP bar, and its board items. Structure is authored in ally_slot.tscn; setup() builds the
-## item row and HP reads each frame. Reads the Actor; writes nothing. The VFX wall reads
+## item row; the health bar reads the actor itself. Reads the Actor; writes nothing. The VFX wall reads
 ## slot_centre / cell_centre.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
@@ -18,9 +18,7 @@ var actor: Actor
 
 @onready var _portrait_frame: Control = $Portrait
 @onready var _portrait: TextureRect = $Portrait/Image
-@onready var _hp_fill: ColorRect = $Readout/HP/Fill
-@onready var _hp_label: Label = $Readout/HP/Label
-@onready var _status_numbers: StatusNumbers = $Readout/HP/StatusNumbers
+@onready var _health_bar: HealthBar = $Readout/HealthBar
 @onready var _name: Label = $Readout/Name
 @onready var _items: HBoxContainer = $Readout/Items
 
@@ -30,7 +28,7 @@ var _cells: Dictionary = {}   # Item -> ItemCell
 ## `timekeeper` drives the cells' fire recoil on the combat clock (null = no recoil).
 func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
   actor = target
-  _status_numbers.actor = target
+  _health_bar.actor = target
   _name.text = tr(actor.display_name) if actor.display_name != '' else tr('Ally')
   if actor.portrait != '':
     _portrait.texture = load(actor.portrait)
@@ -45,7 +43,6 @@ func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
     cell.set_cell_size(cell_px)
     cell.setup(item, timekeeper)
     _cells[item] = cell
-  _refresh_hp()
 
 
 ## Shrink the portrait, keeping it square, so it fits in `height`. It never grows past its size in
@@ -70,24 +67,13 @@ func set_cooldowns_shown(shown: bool) -> void:
 func _exit_tree() -> void:
   _portrait.texture = null
   _cells.clear()
-  _status_numbers.actor = null
   actor = null
 
 
 func _process(_delta: float) -> void:
-  _refresh_hp()
   # A downed (dead) run-scoped ally keeps its slot but reads as out — dim the whole slot.
   # Colours.ALLY_DOWNED darkens with alpha 1, not transparency.
   modulate = Colours.ALLY_DOWNED if (actor != null and not actor.is_alive()) else Color.WHITE
-
-
-func _refresh_hp() -> void:
-  if actor == null:
-    return
-  var ratio: float = clampf(actor.hp / actor.max_hp, 0.0, 1.0)
-  _hp_fill.anchor_right = ratio
-  _hp_fill.offset_right = 0.0
-  _hp_label.text = '%d / %d' % [int(round(actor.hp)), int(round(actor.max_hp))]
 
 
 func slot_centre() -> Vector2:

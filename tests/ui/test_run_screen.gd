@@ -275,12 +275,12 @@ func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:
   # An event beat raises the event overlay; an option pick applies its outcome (heal), dismisses
   # the overlay, then advances.
   var screen := _mount_into_event(1)
-  Game.run.player.hp = 1.0   # so the heal outcome is observable
+  Game.run.player.hp = 1   # so the heal outcome is observable
   assert_eq(screen._state, RunScreen.State.EVENTING, 'the event raises its overlay')
   assert_not_null(screen._event, 'the event overlay is up')
   screen._on_event_picked(FixtureEncounters.OPTION_HEAL)
   assert_null(screen._event, 'the pick dismisses the overlay')
-  assert_gt(Game.run.player.hp, 1.0, 'the chosen outcome was applied (healed)')
+  assert_gt(Game.run.player.hp, 1, 'the chosen outcome was applied (healed)')
   screen.free()
 
 

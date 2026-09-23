@@ -2,7 +2,7 @@ class_name EnemyHud
 extends VBoxContainer
 ## An enemy in the framed combat view, floating above the corridor occupant (docs/systems/ui_layout.md):
 ## the enemy's name, then a status-icon row + HP bar, then its board items as cells. Structure is
-## authored in enemy_hud.tscn; setup() builds the item row and HP reads each frame. The HUD is
+## authored in enemy_hud.tscn; setup() builds the item row; the health bar reads the actor itself. The HUD is
 ## hidden through the approach and fade_in() brings it up when the fight starts. Reads the Actor;
 ## writes nothing. The VFX wall reads hud_centre / cell_centre.
 
@@ -13,9 +13,7 @@ var actor: Actor
 
 @onready var _items: HBoxContainer = $Items
 @onready var _statuses: HBoxContainer = $HpRow/Statuses
-@onready var _status_numbers: StatusNumbers = $HpRow/StatusNumbers
-@onready var _hp_fill: ColorRect = $HpRow/HP/Fill
-@onready var _hp_label: Label = $HpRow/HP/Label
+@onready var _health_bar: HealthBar = $HpRow/HealthBar
 @onready var _name: Label = $Name
 
 var _cells: Dictionary = {}   # Item -> ItemCell
@@ -30,7 +28,7 @@ const CELL_SEPARATION: float = 8.0
 ## budgets the item row — cells shrink so a big loadout fits its share of the panel.
 func setup(target: Actor, timekeeper: Timekeeper = null, max_width: float = 0.0) -> void:
   actor = target
-  _status_numbers.actor = target
+  _health_bar.actor = target
   _name.text = tr(actor.display_name) if actor.display_name != '' else ''
   var cell_px: float = CELL_PX
   if max_width > 0.0 and not actor.board.is_empty():
@@ -42,7 +40,6 @@ func setup(target: Actor, timekeeper: Timekeeper = null, max_width: float = 0.0)
     cell.set_cell_size(cell_px)
     cell.setup(item, timekeeper)
     _cells[item] = cell
-  _refresh_hp()
 
 
 func _exit_tree() -> void:
@@ -50,26 +47,15 @@ func _exit_tree() -> void:
     _fade.kill()
     _fade = null
   _cells.clear()
-  _status_numbers.actor = null
   actor = null
 
 
 func _process(_delta: float) -> void:
-  _refresh_hp()
   _refresh_statuses()
 
 
-func _refresh_hp() -> void:
-  if actor == null:
-    return
-  var ratio: float = clampf(actor.hp / actor.max_hp, 0.0, 1.0)
-  _hp_fill.anchor_right = ratio
-  _hp_fill.offset_right = 0.0
-  _hp_label.text = '%d / %d' % [int(round(actor.hp)), int(round(actor.max_hp))]
-
-
 ## Status icons — one StatusIcon (the status's icon on its colour) per active OUTSIDE-set
-## status (the mechanic statuses read off the StatusNumbers beside the HP bar). Rebuilt each
+## status (the health bar shows the mechanic statuses). Rebuilt each
 ## frame since statuses accrue / expire during combat.
 func _refresh_statuses() -> void:
   if actor == null:

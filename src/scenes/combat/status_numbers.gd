@@ -1,13 +1,12 @@
 class_name StatusNumbers
 extends HBoxContainer
-## The health-bar status numbers (docs/systems/mechanics.md → Health bar numbers): one label per
-## mechanic status (shield, poison, burn, bleed, regen) showing its stack count in the mechanic's
-## colour, beside the health bar. Reads the actor's statuses each frame; writes nothing.
+## The health-bar status numbers (docs/systems/mechanics.md → Health bar): one label per
+## mechanic status (poison, burn, bleed, regen) showing its stack count in the mechanic's colour,
+## beside the health bar. Shield is shown above the bar by HealthBar instead. Reads the actor's statuses each frame; writes nothing.
 
 
 var actor: Actor = null
 
-@onready var _shield: Label = $Shield
 @onready var _poison: Label = $Poison
 @onready var _burn: Label = $Burn
 @onready var _bleed: Label = $Bleed
@@ -18,7 +17,6 @@ func _process(_delta: float) -> void:
   if actor == null:
     _hide_all()
     return
-  _refresh(_shield, ShieldMechanic.ID)
   _refresh(_poison, PoisonMechanic.ID)
   _refresh(_burn, BurnMechanic.ID)
   _refresh(_bleed, BleedMechanic.ID)
@@ -27,8 +25,8 @@ func _process(_delta: float) -> void:
 
 func _refresh(label: Label, id: String) -> void:
   var status: StatusEffect = _find_status(id)
-  if status != null and status.count > 0.0:
-    label.text = str(int(status.count))
+  if status != null and status.count > 0:
+    label.text = str(status.count)
     label.modulate = MechanicRegistry.get_mechanic(id).color()
     label.show()
   else:
@@ -36,7 +34,6 @@ func _refresh(label: Label, id: String) -> void:
 
 
 func _hide_all() -> void:
-  _shield.hide()
   _poison.hide()
   _burn.hide()
   _bleed.hide()

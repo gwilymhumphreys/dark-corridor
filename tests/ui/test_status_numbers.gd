@@ -1,7 +1,7 @@
 extends GutTest
-## The health-bar status numbers (docs/systems/mechanics.md → Health bar numbers): one label per mechanic status
-## (shield, poison, burn, bleed, regen) shows its stack count in the mechanic's colour; outside-set
-## statuses (weak) show no label, and a null actor hides everything.
+## The health-bar status numbers (docs/systems/mechanics.md → Health bar): one label per mechanic status
+## (poison, burn, bleed, regen) shows its stack count in the mechanic's colour; shield is shown by
+## HealthBar instead, outside-set statuses (weak) show no label, and a null actor hides everything.
 
 
 var _nodes: Array = []
@@ -36,7 +36,7 @@ func _host(node: Node) -> Node:
   return node
 
 
-func test_shield_and_poison_labels_show_their_counts_and_weak_does_not() -> void:
+func test_poison_label_shows_its_count_and_shield_and_weak_do_not() -> void:
   var numbers: StatusNumbers = preload('res://src/scenes/combat/status_numbers.tscn').instantiate()
   _host(numbers)
   var a := _spawn(100.0)
@@ -45,8 +45,7 @@ func test_shield_and_poison_labels_show_their_counts_and_weak_does_not() -> void
   StatusManager.apply(a, 'weak', 1.0)
   numbers.actor = a
   numbers._process(0.0)
-  assert_true(numbers.get_node('Shield').visible, 'the shield label is visible')
-  assert_eq(numbers.get_node('Shield').text, '5', 'the shield label shows its count')
+  assert_false(numbers.has_node('Shield'), 'shield has no label here: the health bar shows it')
   assert_true(numbers.get_node('Poison').visible, 'the poison label is visible')
   assert_eq(numbers.get_node('Poison').text, '3', 'the poison label shows its count')
   assert_false(numbers.get_node('Burn').visible, 'no burn, no label')
@@ -59,5 +58,5 @@ func test_null_actor_hides_every_label() -> void:
   _host(numbers)
   numbers.actor = null
   numbers._process(0.0)
-  for label_name in ['Shield', 'Poison', 'Burn', 'Bleed', 'Regen']:
+  for label_name in ['Poison', 'Burn', 'Bleed', 'Regen']:
     assert_false((numbers.get_node(label_name) as Label).visible, '%s is hidden with a null actor' % label_name)

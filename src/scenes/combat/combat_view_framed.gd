@@ -48,9 +48,7 @@ var _player: Actor
 @onready var _player_panel: PanelContainer = $Portraits/PlayerPanel
 @onready var _portrait: Control = $Portraits/PlayerPanel/PlayerPortrait/Portrait
 @onready var _portrait_image: TextureRect = $Portraits/PlayerPanel/PlayerPortrait/Portrait/Image
-@onready var _player_hp_fill: ColorRect = $Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Fill
-@onready var _player_hp_label: Label = $Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Label
-@onready var _player_status_numbers: StatusNumbers = $Portraits/PlayerPanel/PlayerPortrait/Readout/HP/StatusNumbers
+@onready var _player_health_bar: HealthBar = $Portraits/PlayerPanel/PlayerPortrait/Readout/HealthBar
 @onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
 @onready var _ally_right: HBoxContainer = $Portraits/AllyRight
 @onready var _corridor_area: Control = $CorridorArea
@@ -223,7 +221,7 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _cm = cm
   _player = player
   _enemies_shown = false   # the HUDs stay hidden until show_enemies (the fight starting)
-  _player_status_numbers.actor = player
+  _player_health_bar.actor = player
   _cooldowns_shown = false   # the fight has not started yet; begin_fight turns the fills on
   if player.portrait != '':
     _portrait_image.texture = load(player.portrait)
@@ -233,7 +231,6 @@ func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
   _build_potions(potions)
   _corridor.set_enemy_depth(0.0)
   _sync_rosters()
-  _refresh_player_hp()
   _vfx.setup(_cm, self)
   _vfx.big_hit.connect(_on_big_hit)
   _cluster = TOOLTIP_CLUSTER.instantiate()
@@ -248,18 +245,8 @@ func _process(_delta: float) -> void:
   _set_token_styles()
   _draw_grid()
   _position_enemy_huds()  # keep each HUD pinned above its enemy's corridor sprite
-  _refresh_player_hp()
   if _cm != null and _vfx.combat != null and _cm.timekeeper != null:
     _corridor.show_hits(_cm.deliveries(), _cm.timekeeper.render_time())   # debug hit lights
-
-
-func _refresh_player_hp() -> void:
-  if _player == null:
-    return
-  var ratio: float = clampf(_player.hp / _player.max_hp, 0.0, 1.0)
-  _player_hp_fill.anchor_right = ratio
-  _player_hp_fill.offset_right = 0.0
-  _player_hp_label.text = '%d / %d' % [int(round(_player.hp)), int(round(_player.max_hp))]
 
 
 ## Build the right-edge item column at bind. Cells get the fight's clock so their fire recoil

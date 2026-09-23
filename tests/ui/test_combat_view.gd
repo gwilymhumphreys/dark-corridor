@@ -52,12 +52,13 @@ func test_enemy_hud_hp_text_tracks_actor() -> void:
   var a := _spawn(100.0, [FixtureItems.attack()])
   hud.setup(a)
   a.take_damage(40.0)
-  hud._refresh_hp()   # the per-frame refresh, called directly — deterministic, no _process race
-  assert_eq(hud.get_node('HpRow/HP/Label').text, '60 / 100', 'HP text tracks the actor')
+  var bar: HealthBar = hud.get_node('HpRow/HealthBar')
+  bar._process(0.0)   # the per-frame refresh, called directly — deterministic, no _process race
+  assert_eq(bar.get_node('Bar/Label').text, '60', 'HP text tracks the actor')
 
 
 func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
-  # The mechanic statuses (shield, poison, …) read off the StatusNumbers beside the HP bar; the
+  # The mechanic statuses (shield, poison, …) are shown by the health bar; the
   # status-icon row keeps showing only the outside-set statuses.
   var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
   _host(hud)

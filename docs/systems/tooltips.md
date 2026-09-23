@@ -120,8 +120,9 @@ tooltip computes display values with **separate pure methods** on `Item`:
 
 - `display_value(effect)` — the value read from a status the owner holds (`per_owner_stack_id`),
   the enchant, plus, for an attack, the status bonuses on the owner and
-  on the item (`StatusManager.outgoing_bonuses`, e.g. Weak, the attack bonuses). Pure.
-- `base_value(effect)` — the authored value × enchant mult (a permanent modifier).
+  on the item (`StatusManager.outgoing_bonuses`, e.g. Weak, the attack bonuses), rounded to the
+  whole number that will land (decision #49). Pure.
+- `base_value(effect)` — the authored value × enchant mult (a permanent modifier), rounded the same way.
 
 The builder marks a value as `changed` when `display_value != base_value`, and the panel tints it
 with a single accent colour (a placeholder, the owner's call). It used to carry a ▲/▼ glyph as

@@ -120,14 +120,13 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   Resizeable; the SubViewportContainer clips it. See *Enemies in the corridor* below. `PrintFrame`
   draws the optional border and overlay ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — the enemy's **name**
-  (`Actor.display_name`, `tr()`'d), then a **status-icon row + HP bar + status numbers**, then its
+  (`Actor.display_name`, `tr()`'d), then a **status-icon row + the health bar** (`health_bar.tscn`, [mechanics.md → Health bar](mechanics.md#health-bar)), then its
   **item cells**. The HUD is **hidden for most of the approach** and fades in over the last
   `Balance.ENEMY_REVEAL_DURATION` seconds of the walk, so it is up when the fight starts (the run
   screen calls `CombatView.show_enemies`); a summon that spawns mid-fight fades in over the shorter
   `ENEMY_FADE_IN` instead. Each OUTSIDE-set status shows as a `status_icon.tscn`:
-  the status's icon on a square of its colour. The mechanic statuses (shield, poison, burn,
-  bleed, regen) show as **stack counts beside the HP bar** (`status_numbers.tscn`,
-  `StatusNumbers` — one label per mechanic status in its colour, numbers untranslated).
+  the status's icon on a square of its colour. The mechanic statuses are shown by the health bar:
+  shield above it, the others as stack counts beside it.
   The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
   count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`. The HUD / ally-slot item cells
@@ -135,8 +134,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
-  aligned to the top of the section, the left-aligned name ("You") over the HP bar and status
-  numbers — centred between the
+  aligned to the top of the section, the left-aligned name ("You") over the health bar — centred between the
   ally slots (the portrait row sits in a `PlayerPanel` that is only drawn with the `portrait_panel`
   print setting, [print_frame.md](print_frame.md)); the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
   centred row of effect-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per value-bearing effect)
@@ -165,7 +163,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   once — no longer hoverable or a VFX target — and fades and shrinks away over `TEMPORARY_FADE_OUT`
   seconds before freeing. The per-frame sync does not rebuild a widget that is fading.
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (the portrait,
-  and beside it a column of the name, the HP bar + status numbers, and the item cells, whose size
+  and beside it a column of the name, the health bar, and the item cells, whose size
   shrinks so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
   capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
   `AllyLeft` / `AllyRight`). A **downed run-scoped ally keeps its slot** (dimmed; it stops

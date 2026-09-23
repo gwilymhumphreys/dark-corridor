@@ -70,9 +70,9 @@ func _exit_tree() -> void:
 
 
 func _process(_delta: float) -> void:
-  var ratio: float = clampf(actor.hp / actor.max_hp, 0.0, 1.0)
+  var ratio: float = clampf(float(actor.hp) / actor.max_hp, 0.0, 1.0)
   _hp_fill.size.x = BAR.x * ratio
-  _hp_label.text = '%d / %d' % [int(round(actor.hp)), int(round(actor.max_hp))]
+  _hp_label.text = '%d / %d' % [actor.hp, actor.max_hp]
 
 
 func icon_center(item: Item) -> Vector2:
