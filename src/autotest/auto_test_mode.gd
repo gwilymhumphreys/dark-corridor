@@ -164,7 +164,7 @@ func run_full() -> Dictionary:
       logger.log_event('choice', { 'beat': run.position, 'options': run.pending_choice().size(), 'picked': path })
       run.pick_path(path)
     var enc: Encounter = run.current_encounter()
-    var hp_before: float = run.player.hp
+    var hp_before: int = run.player.hp
     var beat_name: String = _beat_name(enc)
     var is_fight: bool = enc.is_fight()
     logger.log_event('encounter_started', {

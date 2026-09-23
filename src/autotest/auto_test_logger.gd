@@ -131,9 +131,9 @@ func format_summary(summary: Dictionary) -> PackedStringArray:
   ])
   if summary['board_size'] > 0:
     lines.append('Beats cleared: %d   Final board: %d items' % [summary['beats_cleared'], summary['board_size']])
-  lines.append('Player HP: %.1f / %.1f' % [summary['player_hp'], summary['player_max_hp']])
+  lines.append('Player HP: %d / %d' % [summary['player_hp'], summary['player_max_hp']])
   for e in summary['enemies']:
-    lines.append('Enemy "%s" HP: %.1f / %.1f' % [e['name'], e['hp'], e['max_hp']])
+    lines.append('Enemy "%s" HP: %d / %d' % [e['name'], e['hp'], e['max_hp']])
   lines.append('Total damage dealt: %.1f' % summary['total_damage'])
   for family in _sorted_families(summary['damage_by_family']):
     lines.append('  %s: %.1f' % [family, summary['damage_by_family'][family]])
@@ -178,9 +178,9 @@ func write_report(path: String, summary: Dictionary) -> void:
   lines.append('')
   lines.append('## Final HP')
   lines.append('')
-  lines.append('- Player: %.1f / %.1f' % [summary['player_hp'], summary['player_max_hp']])
+  lines.append('- Player: %d / %d' % [summary['player_hp'], summary['player_max_hp']])
   for e in summary['enemies']:
-    lines.append('- %s: %.1f / %.1f' % [e['name'], e['hp'], e['max_hp']])
+    lines.append('- %s: %d / %d' % [e['name'], e['hp'], e['max_hp']])
   lines.append('')
   lines.append('## Damage by item')
   lines.append('')

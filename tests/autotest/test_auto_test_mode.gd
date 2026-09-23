@@ -51,7 +51,7 @@ func test_run_once_is_deterministic() -> void:
   var b := _mode().run_once()
   assert_eq(a['steps'], b['steps'], 'same step count')
   assert_eq(a['outcome'], b['outcome'], 'same outcome')
-  assert_almost_eq(a['player_hp'], b['player_hp'], 0.0001, 'identical final HP — bit-reproducible')
+  assert_eq(a['player_hp'], b['player_hp'], 'identical final HP — bit-reproducible')
 
 
 func test_run_once_attributes_damage_per_player_item() -> void:

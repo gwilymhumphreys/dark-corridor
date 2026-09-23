@@ -57,7 +57,7 @@ func test_run_full_is_deterministic() -> void:
   assert_eq(a['outcome'], b['outcome'])
   assert_eq(a['beats_cleared'], b['beats_cleared'])
   assert_eq(a['board_size'], b['board_size'])
-  assert_almost_eq(a['player_hp'], b['player_hp'], 0.0001, 'same seed ⇒ identical run')
+  assert_eq(a['player_hp'], b['player_hp'], 'same seed ⇒ identical run')
   assert_almost_eq(a['summary']['total_damage'], b['summary']['total_damage'], 0.0001)
 
 
