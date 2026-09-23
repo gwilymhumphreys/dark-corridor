@@ -48,7 +48,6 @@ func _attack_effect(value: float) -> ItemEffect:
   e.mechanic = AttackMechanic.ID
   e.value = value
   e.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  e.travel = 0.0
   return e
 
 
@@ -58,16 +57,12 @@ func _weak_effect(value: float) -> ItemEffect:
   e.status_id = 'weak'
   e.value = value
   e.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  e.travel = 0.0
   return e
 
 
 ## Fire the item through the Combat manager and land whatever arrives instantly.
 func _fire_and_land(cm: CombatManager, it: Item) -> Array:
-  var arrived: Array = []
-  cm._fire_item(it, arrived)
-  for d in arrived:
-    cm._land(d)
+  var arrived: Array = CombatSteps.fire_and_land(cm, it)
   return arrived
 
 
@@ -116,7 +111,6 @@ func test_crit_doubles_a_shield_applied() -> void:
   shield.mechanic = ShieldMechanic.ID
   shield.value = 8.0
   shield.shape = ItemEffect.Shape.SELF
-  shield.travel = 0.0
   _fire_and_land(cm, _crit_item(p, 1.0, shield))
   assert_almost_eq(_status_count(p, 'shield'), 8.0 * Balance.CRIT_MULTIPLIER, 0.0001,
       'the shield applied is doubled by the crit')
@@ -210,8 +204,9 @@ func test_thrown_consumable_never_crits() -> void:
   effect.mechanic = AttackMechanic.ID
   effect.value = 10.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  effect.travel = 0.0
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
   assert_eq(seen.size(), 0, 'a thrown consumable never publishes CRIT')
   assert_almost_eq(e.hp, 1000.0 - 10.0, 0.0001, 'and its value is not multiplied')

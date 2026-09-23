@@ -90,6 +90,8 @@ The full catalog (with keywords) is [`index.md`](index.md): system specs in `doc
 
 47. **A trigger is priced as a number of expected triggers per cooldown (2026-09-23, owner).** A trigger that charges its own item costs the seconds it charges each time, times an assumed count per cooldown (`Balance.POINTS_TRIGGERS_PER_COOLDOWN`), at the item's own budget per second. The owner accepted that the real count rises as the board grows, so the price is low late in a run. Chosen over halving the budget per trigger, which ignores how much a trigger charges and cuts too hard when an item has two. First used on Bloodletting. Home: [`design/item_heuristics.md`](design/item_heuristics.md#spending-the-budget).
 
+48. **Every delivery travels a fixed number of steps, and a step lands before it fires (2026-09-23, owner).** Every delivery, including shields and heals on the holder, charges on the holder's own items, thrown potions, summons and created items, flies `Balance.TRAVEL_STEPS` steps with a projectile; the visuals follow the step count. Each step lands its arrivals and removes the dead before any item fires, so an item never picks a target that died that step. Because a self-charge lands a full travel later, the firing item is no longer left out of its own-board targets. Supersedes the zero-travel case in the combat model. Homes: [`combat_model.md`](systems/combat_model.md#fire--delivery) / [`combat_manager.md`](systems/combat_manager.md#the-central-tick-the-heart).
+
 ## Open / deferred (each has a home)
 
 - Timescale override **replace-vs-multiply — resolved → replace** (absolute slow-mo, independent of the ×1/×2/×3 battle-speed dial; the dial is a `Game` session preference applied to each fight's Timekeeper base scale). timekeeper.md / combat_model.md.

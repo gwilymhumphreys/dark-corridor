@@ -66,8 +66,6 @@ func _draw() -> void:
   for d in combat.deliveries():
     if d.fizzled:
       continue
-    if d.kind == Delivery.Kind.SUMMON or d.kind == Delivery.Kind.CREATE_ITEM:
-      continue   # adds a body / an item to a side; no projectile to draw (the arrival tell is content, not yet built)
     var travel_dur: float = d.travel.threshold * Timekeeper.STEP
     if not d.landed:
       if travel_dur > 0.0:
@@ -176,7 +174,7 @@ func _hurt_key_of(d: Delivery) -> String:
 
 ## The folder for the travel layer (docs/systems/audio.md): a soft sound while a projectile is in
 ## flight, played once when it launches. A delivery with no travel time has no flight to cover, and
-## a summon or a created item draws no projectile, so both return the empty string. The folder is
+## a summon or a created item has no travel sound yet, so both return the empty string. The folder is
 ## the mechanic's own, without the weapon and shield variants the landing uses, because the
 ## flight is the same whatever it arrives at.
 func _travel_key_of(d: Delivery) -> String:

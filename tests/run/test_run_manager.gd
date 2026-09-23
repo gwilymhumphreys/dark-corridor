@@ -460,6 +460,8 @@ func test_throw_potion_heals_and_empties_the_slot() -> void:
   assert_eq(run.potions.size(), 1)
   assert_true(run.throw_potion(0), 'thrown mid-fight')
   assert_eq(run.potions.size(), 0, 'the potion was consumed from the slot')
+  for i in Balance.TRAVEL_STEPS:
+    run.combat_manager().sim_step()
   assert_gt(run.player.hp, before, 'and it healed the player')
 
 

@@ -5,7 +5,7 @@ extends RefCounted
 ## firing). Held in a potion slot, consumed on use. On throw the Combat manager
 ## builds its effect(s) into Deliveries — the same resolution surface as an item
 ## fire, minus the cooldown. Phase 3: one heal potion. Effects reuse `ItemEffect`
-## (kind / value / shape / travel).
+## (kind / value / shape).
 
 enum Rarity { COMMON, UNCOMMON, RARE }
 

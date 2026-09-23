@@ -13,7 +13,6 @@ class_name FixtureItems
 
 const ATTACK_COOLDOWN: float = 1.2
 const ATTACK_DAMAGE: float = 6.0
-const ATTACK_TRAVEL: float = 0.6
 
 const SHIELD_COOLDOWN: float = 2.0
 const SHIELD_VALUE: float = 8.0
@@ -52,7 +51,6 @@ static func attack() -> ItemDef:
   hit.mechanic = AttackMechanic.ID
   hit.value = ATTACK_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = ATTACK_TRAVEL
   d.effects = [hit]
   d.panel_colour_name = 'ATTACK'
   return d
@@ -99,7 +97,6 @@ static func poison() -> ItemDef:
   pois.mechanic = PoisonMechanic.ID
   pois.value = POISON_STACKS
   pois.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  pois.travel = ATTACK_TRAVEL
   d.effects = [pois]
   d.panel_colour_name = 'POISON'
   return d
@@ -188,7 +185,6 @@ static func vulnerable() -> ItemDef:
   hit.duration = VULNERABLE_DURATION
   hit.value = 1.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = ATTACK_TRAVEL
   d.effects = [hit]
   d.panel_colour_name = 'ARCANE'
   return d
@@ -207,7 +203,6 @@ static func silence_random_enemy_item() -> ItemDef:
   hex.status_id = 'silence'
   hex.value = 1.0
   hex.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
-  hex.travel = ATTACK_TRAVEL
   d.effects = [hex]
   d.panel_colour_name = 'ARCANE'
   return d

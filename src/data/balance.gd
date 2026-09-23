@@ -31,7 +31,7 @@ const ENEMY_PLACEHOLDER_HP: float = 168.0
 
 
 # ── Items ────────────────────────────────────────────────────────────────────
-const WEAPON_TRAVEL: float = 0.6            # projectile flight time (docs/systems/combat_model.md)
+const TRAVEL_STEPS: int = 36                # sim-steps every delivery flies (docs/systems/combat_model.md)
 
 
 # ── Statuses ─────────────────────────────────────────────────────────────────

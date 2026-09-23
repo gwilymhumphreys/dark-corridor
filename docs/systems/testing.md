@@ -78,6 +78,13 @@ run. Call `TestCleanup.snapshot_chosen_icons()` in `before_each` and
 to be chosen calls `TestCleanup.clear_chosen_icons()` after the snapshot,
 because the developer may have chosen icons in the Icons tab.
 
+## Firing an item outside the step loop
+
+Every delivery travels `Balance.TRAVEL_STEPS`, so a test of what a delivery does on landing uses
+`CombatSteps` (`tests/utils/combat_steps.gd`): `fire(cm, item)` fires the item and returns the
+deliveries it spawned, and `fire_and_land(cm, item)` also lands them at once. A test of timing runs
+`cm.sim_step()` for the travel instead.
+
 ## Signals
 
 ```gdscript

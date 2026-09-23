@@ -107,6 +107,33 @@ func test_self_fuel_consume_scales_the_payload_at_fire() -> void:
   assert_almost_eq(_status_count(owner_actor, 'poison'), 1.0, 0.0001, 'the owner spent 3 of 4 stacks')
 
 
+## An effect with per_owner_stack_id adds a value per stack the owner holds and spends none of them
+## (Shield Bash: an attack equal to the owner's shield).
+func test_owner_stack_scaling_reads_the_status_without_spending_it() -> void:
+  var owner_actor := Actor.new(100.0)
+  StatusManager.apply(owner_actor, ShieldStatus.ID, 30.0)
+  var def := ItemDef.new()
+  var hit := ItemEffect.attack(0.0)
+  hit.per_owner_stack_id = ShieldStatus.ID
+  hit.per_owner_stack_scale = 1.0
+  def.effects = [hit]
+  var it := Item.new(def, owner_actor)
+  assert_almost_eq(it.display_value(hit), 30.0, 0.0001, 'the tooltip shows the shield amount')
+  var p: Payload = it.fire()[0]
+  assert_almost_eq(p.value, 30.0, 0.0001, 'the attack equals the 30 shield')
+  assert_almost_eq(_status_count(owner_actor, ShieldStatus.ID), 30.0, 0.0001, 'the shield is not spent')
+
+
+func test_owner_stack_scaling_is_the_base_value_when_the_status_is_absent() -> void:
+  var def := ItemDef.new()
+  var hit := ItemEffect.attack(4.0)
+  hit.per_owner_stack_id = ShieldStatus.ID
+  hit.per_owner_stack_scale = 1.0
+  def.effects = [hit]
+  var p: Payload = Item.new(def, Actor.new(100.0)).fire()[0]
+  assert_almost_eq(p.value, 4.0, 0.0001, 'no shield adds nothing to the authored value')
+
+
 func _status_count(actor: Actor, id: String) -> float:
   for s in actor.statuses:
     if s.id == id:

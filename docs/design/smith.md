@@ -218,14 +218,19 @@ pool. The names are placeholders; the numbers are on the budget curve.
 - **The two forges** (`deep_forge`, `wide_forge`, rare, no type yet; working names) — slow items
   that burn every enemy and buff the Smith's attack items for the rest of the fight (owner,
   2026-09-23). The Deep Forge gives one random attack item +50% attack, which goes tall; the Wide
-  Forge gives every attack item +10 attack, which goes wide. "Attack item" means any item with the
-  attack mechanic, not only weapons. The bonuses are unpriced.
+  Forge gives every attack item a flat attack bonus, which goes wide. The flat bonus favours fast
+  attack items on purpose: the Wide Forge is meant to be a strong rare payoff for a go-wide board
+  (owner, 2026-09-23). "Attack item" means any item with the attack mechanic, not only weapons.
+  The bonuses are unpriced.
 - **Acid** (`jar_of_acid`, `acid_bath`, no type yet) — poison-only items (owner, 2026-09-23). The
   Jar of Acid is fast and the Acid Bath slow, both on the leftmost enemy.
 - **Bloodletting** (`bloodletting`, no type yet) — applies bleed, and charges itself 1 second
   whenever the Smith applies poison (owner, 2026-09-23), so it links the acid items to bleed. Its
   own bleed does not charge it. The trigger is priced by the trigger row in
   [`item_heuristics.md`](item_heuristics.md#spending-the-budget).
+- **Shield Bash** (`shield_bash`, uncommon, `[skill]`) — hits the front enemy for as much as the
+  Smith's current shield, and keeps the shield (owner, 2026-09-23). It is the first item that pays
+  off stacking armour. The budget cannot price it, so it is tuned by its cooldown (owner).
 - **The four armour items** (`vambraces`, `sallet`, `kite_shield`,
   `breast_plate`, all `[armour]`) — plain shield-to-self on a rising cooldown and shield
   ladder, the defensive counterpart to the weapon ladder. Names come from

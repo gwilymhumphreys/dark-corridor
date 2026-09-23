@@ -118,6 +118,27 @@ func test_complex_effect_keeps_a_worded_line_with_an_icon() -> void:
   assert_true(_first_segment(line, 'chip') == {}, 'no keyword chip is left in a tooltip line')
 
 
+## An effect whose value is read from the owner's status names the status instead of a number, and
+## that status joins the keyword column.
+func test_owner_stack_line_names_the_status() -> void:
+  var def := ItemDef.new()
+  def.id = 'test_tooltip_owner_stack'
+  def.name_key = 'Test Owner Stack'
+  def.icon = 'res://assets/icons/items/old_sword.png'
+  def.cooldown = 1.0
+  var hit := ItemEffect.attack(0.0)
+  hit.per_owner_stack_id = ShieldStatus.ID
+  hit.per_owner_stack_scale = 1.0
+  def.effects = [hit]
+  var content: Dictionary = TooltipContent.new().build(Item.new(def, _actor(100.0)))
+  var line: Array = content['lines'][0]
+  assert_eq(line[0]['id'], AttackMechanic.ID, 'the line opens with the attack glyph')
+  assert_eq(line[line.size() - 1]['id'], ShieldStatus.ID, 'the line ends with the shield glyph')
+  assert_true(_first_segment(line, 'value') == {}, 'the line shows no number')
+  assert_true(TooltipContent.keyword_ids(Item.new(def, _actor(100.0))).has(ShieldStatus.ID),
+      'shield is in the keyword column')
+
+
 ## The charge-time line: the charge_time glyph, then the item's cooldown in seconds.
 func test_charge_line_is_the_charge_time_glyph_and_the_cooldown() -> void:
   var it: Item = Item.new(_heal_def(), _actor(100.0))

@@ -64,7 +64,7 @@ Each shape is its own class under `src/vfx/drawers/`, extending `EffectDrawer`: 
 motion and pause keep working. The driver keeps a dictionary from a mechanic id (for a `MECHANIC` delivery) or
 `Delivery.Kind.APPLY_STATUS` to the drawer, so a new effect is a new file rather than another branch in
 `_draw()`. The eight built [mechanics](mechanics.md) and status application currently share one
-`ImpactRingDrawer`; `SUMMON` and `CREATE_ITEM` have no entry and so draw nothing. Numbers draw for
+`ImpactRingDrawer`; `SUMMON` and `CREATE_ITEM` have no entry, so they draw a projectile in flight and nothing on landing. Numbers draw for
 attack and heal landings and for every visual-only delivery (a poison tick or bleed carries its status
 id as its mechanic).
 

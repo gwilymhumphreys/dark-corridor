@@ -28,7 +28,6 @@ static func potion() -> ConsumableDef:
   heal.mechanic = HealMechanic.ID
   heal.value = POTION_HEAL
   heal.shape = ItemEffect.Shape.SELF
-  heal.travel = 0.0
   d.effects = [heal]
   return d
 

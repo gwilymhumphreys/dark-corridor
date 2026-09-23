@@ -23,6 +23,7 @@ func _init() -> void:
     'jar_of_acid',
     'acid_bath',
     'bloodletting',
+    'shield_bash',
     'greatsword',
     'vambraces',
     'sallet',

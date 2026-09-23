@@ -3,7 +3,8 @@ extends RefCounted
 ## One authored effect of an item (docs/systems/item.md). An item fires one payload per
 ## effect. Carries a relative target-SHAPE (not a resolved target — the Combat
 ## manager resolves it) plus an optional target-FILTER that narrows the shape's pool,
-## + the payload kind/value + travel + presentation.
+## + the payload kind/value + presentation. Travel is not authored: every delivery flies
+## Balance.TRAVEL_STEPS.
 
 enum Shape { SELF, OPPONENT_LEFTMOST, ALL_OPPONENTS, OPPONENT_ITEM_RANDOM, ALL_OPPONENT_ITEMS,
     OWN_ITEM_RANDOM, ALL_OWN_ITEMS }
@@ -15,7 +16,6 @@ var shape: int = Shape.OPPONENT_LEFTMOST
 # the shape picks the pool and before it picks the targets. Null = no filtering. Item pools only;
 # actor shapes ignore it.
 var target_filter: TargetFilter = null
-var travel: float = 0.0          # seconds (0 = instant; docs/systems/combat_model.md's zero case)
 var mechanic: String = ''        # for kind == MECHANIC (MechanicRegistry id; docs/systems/mechanics.md)
 var status_id: String = ''       # for kind == APPLY_STATUS (string id, #23)
 var duration: float = 0.0        # for kind == APPLY_STATUS — per-application duration (timed statuses)
@@ -36,6 +36,12 @@ var consume_id: String = ''      # status id to spend ('' = none)
 var consume_amount: float = 0.0  # up to this many stacks
 var consume_from_target: bool = false
 var consume_scale: float = 0.0   # value added to the payload per stack consumed
+
+# Scale by a status the owner holds WITHOUT spending it (docs/systems/item.md): at fire time the value
+# gains `per_owner_stack_scale` for each stack of `per_owner_stack_id` on the owner. Shield Bash uses
+# it to hit for the Smith's shield. Unlike consume, the stacks stay, and any status counts.
+var per_owner_stack_id: String = ''      # status id to read ('' = none)
+var per_owner_stack_scale: float = 0.0   # value added per stack held
 
 # Summon (docs/systems/spore_engine.md Cap 3): a kind == SUMMON effect spawns a token Actor from an
 # EnemyCatalog def onto the summoner's OWN side (shape SELF). `summon_in_front` puts it
@@ -59,7 +65,7 @@ var consume_item_amount: int = 0       # up to this many (<= 0 = all present)
 var consume_item_scale: float = 0.0    # value added to the payload per item consumed
 
 
-## An attack for `value` damage. Travel follows the shape (`travel_for`).
+## An attack for `value` damage.
 static func attack(value: float, shape: int = Shape.OPPONENT_LEFTMOST) -> ItemEffect:
   return make(AttackMechanic.ID, value, shape)
 
@@ -80,7 +86,6 @@ static func make(mechanic_id: String, value: float, shape: int) -> ItemEffect:
   effect.mechanic = mechanic_id
   effect.value = value
   effect.shape = shape
-  effect.travel = travel_for(shape)
   return effect
 
 
@@ -93,17 +98,7 @@ static func apply_status(status_id: String, value: float, shape: int,
   effect.value = value
   effect.shape = shape
   effect.duration = duration
-  effect.travel = travel_for(shape)
   return effect
-
-
-## The travel time the constructors give a shape: a thrown delivery for the other side, instant for
-## the holder and its own items.
-static func travel_for(shape: int) -> float:
-  match shape:
-    Shape.SELF, Shape.OWN_ITEM_RANDOM, Shape.ALL_OWN_ITEMS:
-      return 0.0
-  return Balance.WEAPON_TRAVEL
 
 
 func _get_color() -> Color:

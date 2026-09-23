@@ -260,32 +260,32 @@ func sim_step() -> void:
     if not d.landed and not d.fizzled and d.step_travel():
       arrived.append(d)
 
-  # 2. Fire crossed items -> resolve shapes -> spawn Deliveries (travel-0 land now).
-  for it in fired_items:
-    # The crossings were collected before this loop, and firing can remove another item that
-    # crossed the same step — own-board consume spends board items as fuel, and a decay use-status
-    # can empty. remove_item dissolves the item, which nulls its owner, so that is the check: a
-    # removed item must not fire.
-    if it.owner == null:
-      continue
-    _fire_item(it, arrived)
-
-  # 3. Land arrived (travelled this step + instant spawns).
+  # 2. Land the deliveries that arrived. Landing comes before firing so an item firing this step
+  #    targets from the board as this step's landings left it.
   for d in arrived:
     _land(d)
 
-  # 4. Reap the combat-scoped dead (enemies + summon tokens leave combat on death; a downed
-  #    run-scoped ally stays — see _reap_dead). Before the win/loss check, so clearing the last
-  #    enemy this step resolves the fight.
+  # 3. Reap the combat-scoped dead (enemies + summon tokens leave combat on death; a downed
+  #    run-scoped ally stays — see _reap_dead). Before firing, so a dead enemy is not targeted.
   _reap_dead()
 
-  # 5. (Routing is inline: events published in fire/land push tickers, which are
-  #    only evaluated next step — one link per step, loop-proof.)
-
-  # 6. Win/loss.
+  # 4. Win/loss. A fight decided by this step's landings ends before anything else fires.
   _check_resolution()
 
-  # 7. Drop spent Deliveries (fizzled = no visual; landed = held briefly for the
+  # 5. Fire crossed items -> resolve shapes -> spawn Deliveries, which land TRAVEL_STEPS later.
+  #    (Routing is inline: events published in fire/land push tickers, whose crossings were already
+  #    collected in step 1, so they fire next step at the earliest — one link per step, loop-proof.)
+  if not _resolved:
+    for it in fired_items:
+      # The crossings were collected before this loop, and firing can remove another item that
+      # crossed the same step — own-board consume spends board items as fuel, and a decay
+      # use-status can empty. remove_item dissolves the item, which nulls its owner, so that is the
+      # check: a removed item must not fire. (_fire_item skips an item whose owner is dead.)
+      if it.owner == null:
+        continue
+      _fire_item(it)
+
+  # 6. Drop spent Deliveries (fizzled = no visual; landed = held briefly for the
   #    impact number/flash) so the in-flight set can't grow unbounded over a long
   #    fight — docs/systems/vfx_driver.md's "keep until the visual elapses, then drop."
   _prune_deliveries()
@@ -352,9 +352,9 @@ func _dot_visual(status: StatusEffect, target, dealt: float) -> Delivery:
   return d
 
 
-func _fire_item(it: Item, arrived: Array) -> void:
-  # Re-check the owner: the status pass runs AFTER crossings are collected, so a DoT
-  # tick can kill an actor whose item crossed this same step — a slain body must not
+func _fire_item(it: Item) -> void:
+  # Re-check the owner: the status pass and the landings run AFTER crossings are collected, so a
+  # DoT tick or a hit can kill an actor whose item crossed this same step — a slain body must not
   # swing (the Cap 3 rule; the loop's check above only covers earlier deaths).
   if it.owner != null and not it.owner.is_alive():
     return
@@ -397,8 +397,6 @@ func _fire_item(it: Item, arrived: Array) -> void:
       if blinded and d.mechanic == AttackMechanic.ID:
         d.evaded = true
       _deliveries.append(d)
-      if d.travel.crossed():
-        arrived.append(d)   # instant (travel 0) lands this same step
   # Drain the item's use-statuses AFTER its payload(s) are spawned (docs/systems/item.md fire
   # pipeline): decay spends one activation, so the final fire still lands, then removes the item at 0.
   _drain_uses(it)
@@ -519,7 +517,7 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   d.source_actor = p.source_actor
   d.consumable = p.consumable
   d.target = target
-  d.travel = Ticker.from_seconds(p.travel)
+  d.travel = Ticker.new(Balance.TRAVEL_STEPS)   # every delivery flies the same number of steps
   d.fire_time = timekeeper.sim_time
   return d
 
@@ -659,9 +657,9 @@ func _resolve_targets(p: Payload, owner_actor: Actor) -> Array:
     ItemEffect.Shape.ALL_OPPONENT_ITEMS:
       return _filter_items(_all_opponent_items(owner_actor), p.target_filter)
     ItemEffect.Shape.OWN_ITEM_RANDOM:
-      return _pick_random(_filter_items(_all_own_items(owner_actor, p.source), p.target_filter))
+      return _pick_random(_filter_items(_all_own_items(owner_actor), p.target_filter))
     ItemEffect.Shape.ALL_OWN_ITEMS:
-      return _filter_items(_all_own_items(owner_actor, p.source), p.target_filter)
+      return _filter_items(_all_own_items(owner_actor), p.target_filter)
     _:
       # A future shape with no resolver — warn ONCE so an authored item using it isn't a
       # silent no-op (it would fire nothing with no clue why).
@@ -761,17 +759,12 @@ func _filter_items(pool: Array, filter: TargetFilter) -> Array:
   return out
 
 
-## Every Item on the firing actor's OWN board, minus the firing item itself. The own-side twin
-## of `_all_opponent_items`, for charge and decharge. The firing item is left out so an item
-## that charges its own board cannot charge itself: with travel 0 it would refill its own bar
-## the step it fired and then fire every step after that. Only the owner's own board — an
-## ally's items are not included. [] when the owner holds nothing else.
-func _all_own_items(actor: Actor, firing_item) -> Array:
-  var out: Array = []
-  for it in actor.board:
-    if it != firing_item:
-      out.append(it)
-  return out
+## Every Item on the firing actor's OWN board, the firing item included. The own-side twin of
+## `_all_opponent_items`, for charge and decharge. An item that charges itself cannot fire every
+## step: its charge lands TRAVEL_STEPS after the fire, so it fires at most once per travel time.
+## Only the owner's own board — an ally's items are not included.
+func _all_own_items(actor: Actor) -> Array:
+  return actor.board.duplicate()
 
 
 ## One Item from the pool, chosen on the seeded per-fight RNG (decision #14: item-target
@@ -894,9 +887,9 @@ func request_hit_pause(real_seconds: float) -> void:
 
 
 ## Throw-potion intent: activate a thrown consumable (docs/systems/content.md). Build its
-## effect(s) into Deliveries resolved relative to the thrower, then land any that
-## arrive instantly — the same resolution surface as an item fire, minus the
-## Ticker. The RunManager removes the potion from its slot; this just resolves it.
+## effect(s) into Deliveries resolved relative to the thrower, which fly and land in the step loop
+## like an item's — the same resolution surface as an item fire, minus the Ticker. The RunManager
+## removes the potion from its slot; this just resolves it.
 func throw_consumable(consumable, thrower: Actor) -> void:
   if _resolved:
     return
@@ -916,12 +909,6 @@ func throw_consumable(consumable, thrower: Actor) -> void:
       if p.consume_id != '' and p.consume_from_target:   # opponent-fuel: spend the target's stacks
         d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
       _deliveries.append(d)
-      if d.travel.crossed():
-        _land(d)
-  # A throw can be lethal outside the step loop (e.g. while paused at timescale 0, when
-  # no sim_step follows to notice) — reap and resolve NOW, like step 4/6 of sim_step.
-  _reap_dead()
-  _check_resolution()
 
 
 

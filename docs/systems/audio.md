@@ -101,7 +101,7 @@ can be left empty:
 
 | Layer | When | Folder |
 | --- | --- | --- |
-| Travel | Once, when a projectile launches, if the delivery has travel time | `mechanics/<mechanic id>/travel` |
+| Travel | Once, when a mechanic delivery's projectile launches (summons and created items have none yet) | `mechanics/<mechanic id>/travel` |
 | Weapon | On landing | `mechanics/attack/<weapon>/`, with `shielded/` below it |
 | Target | On landing, alongside the weapon layer | the struck actor's `hurt_sound`, or `combat/hurt` |
 

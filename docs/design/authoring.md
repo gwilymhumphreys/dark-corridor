@@ -22,7 +22,7 @@ definition is **one file** under the top-level `content/` folder:
 
 A definition file extends its def class (`ItemDef`, `EnemyDef`, …) and sets its fields in `_init()`.
 Its numbers are written on it; `Balance` holds only values shared by several definitions or systems
-(`WEAPON_TRAVEL`, status durations, the points curve). The engine side stays in `src/content/<kind>/`:
+(`TRAVEL_STEPS`, status durations, the points curve). The engine side stays in `src/content/<kind>/`:
 the def class (the schema), the catalog, and where relevant a runtime class (`relic.gd`,
 `enchantment.gd`, `consumable.gd`). Each catalog builds itself on first access by loading every
 script in its `content/` folder, subfolders included (`ContentFolder`), so adding a file is all it
@@ -54,8 +54,8 @@ takes. Two definitions with the same id is an error. **Statuses are the exceptio
    - The id matches the file name and is unique across all items. There is no character prefix;
      the folder shows the character, and the folder means nothing to the catalog.
    - Effects come from the `ItemEffect` constructors: `attack`, `shield`, `heal`, `make` (any
-     mechanic on any shape) and `apply_status`. They set travel from the shape (thrown at the other
-     side, instant on your own). Effects that spend statuses, summon or create items set their fields
+     mechanic on any shape) and `apply_status`. Travel is not authored: every delivery flies
+     `Balance.TRAVEL_STEPS`. Effects that spend statuses, summon or create items set their fields
      on an `ItemEffect.new()` ([item.md](../systems/item.md)).
    - `types` are inert synergy labels (`weapon` / `armour` / `skill` / `spell` / `trinket`).
      `mechanics` is the keyword list, written by hand in alphabetical order.

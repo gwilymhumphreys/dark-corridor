@@ -1,7 +1,7 @@
 class_name Payload
 extends RefCounted
 ## What an item fire hands up (docs/systems/item.md step 4): a resolved (kind, value) plus
-## its relative target-SHAPE, travel, flags, and presentation. The Combat manager
+## its relative target-SHAPE, flags, and presentation. The Combat manager
 ## turns each Payload into a Delivery — resolving the shape to a concrete target.
 ## (Distinct from ItemEffect: that is the authored template; this is the runtime
 ## output after value-modifiers / enchants are applied.)
@@ -12,7 +12,6 @@ var shape: int = ItemEffect.Shape.OPPONENT_LEFTMOST
 # The optional target-filter narrowing (docs/systems/item.md) — carried straight through from the
 # effect, unmodified (like the shape; it is shared read-only authored data, not deep-copied).
 var target_filter: TargetFilter = null
-var travel: float = 0.0
 var mechanic: String = ''
 var status_id: String = ''
 var duration: float = 0.0     # per-application duration for an APPLY_STATUS payload (timed statuses)
@@ -52,7 +51,6 @@ static func from_effect(effect: ItemEffect) -> Payload:
   payload.value = effect.value
   payload.shape = effect.shape
   payload.target_filter = effect.target_filter
-  payload.travel = effect.travel
   payload.mechanic = effect.mechanic
   payload.status_id = effect.status_id
   payload.duration = effect.duration

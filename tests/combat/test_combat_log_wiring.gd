@@ -127,7 +127,6 @@ func test_heal_is_logged() -> void:
   effect.mechanic = HealMechanic.ID
   effect.value = 15.0
   effect.shape = ItemEffect.Shape.SELF
-  effect.travel = 0.0
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
   var log: CombatLog = cm.combat_log
@@ -152,7 +151,6 @@ func test_throw_is_logged_with_its_def_id() -> void:
   effect.mechanic = AttackMechanic.ID
   effect.value = 5.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  effect.travel = 0.0
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
   var log: CombatLog = cm.combat_log

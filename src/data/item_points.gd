@@ -63,11 +63,11 @@ static func trigger_points(def: ItemDef, sub: Dictionary) -> float:
   return float(sub.get('seconds', 0.0)) * Balance.POINTS_TRIGGERS_PER_COOLDOWN * rate(def.cooldown) * rarity_multiplier(def.rarity)
 
 
-## True when `spend` prices this effect. Anything else (a status, summon or created item, or an
-## unpriced mechanic such as regen or the attack bonuses) adds nothing, so an item carrying it is
-## worth more than its points say.
+## True when `spend` prices this effect. Anything else (a status, summon or created item, an
+## unpriced mechanic such as regen or the attack bonuses, or a value read from a status the owner
+## holds) adds nothing, so an item carrying it is worth more than its points say.
 static func is_priced(effect: ItemEffect) -> bool:
-  return effect.kind == Delivery.Kind.MECHANIC and PRICED_MECHANICS.has(effect.mechanic)
+  return effect.kind == Delivery.Kind.MECHANIC and PRICED_MECHANICS.has(effect.mechanic)       and effect.per_owner_stack_id == ''
 
 
 ## An effect aimed at every opponent costs Balance.POINTS_ALL_OPPONENTS_MULTIPLIER times the same

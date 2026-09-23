@@ -476,6 +476,10 @@ msgid "{0} {1} by {2}s"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} equal to your {1}"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "{0} {1} to all enemies"
 msgstr ""
 
@@ -777,6 +781,10 @@ msgstr ""
 
 #: content/items/smith/sallet.gd
 msgid "Sallet"
+msgstr ""
+
+#: content/items/smith/shield_bash.gd
+msgid "Shield Bash"
 msgstr ""
 
 #: content/items/smith/tongs.gd

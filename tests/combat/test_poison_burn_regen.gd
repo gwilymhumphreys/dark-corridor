@@ -143,16 +143,12 @@ func test_poison_mechanic_effect_applies_poison_and_publishes_applied() -> void:
   effect.mechanic = PoisonMechanic.ID
   effect.value = 3.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  effect.travel = 0.0
   def.effects = [effect]
   var applied_data: Array = []
   cm.bus.add_listener(EventBus.Event.APPLIED,
       func(data, _source_actor, _source_item) -> void:
         applied_data.append(data))
-  var arrived: Array = []
-  cm._fire_item(Item.new(def, p), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, Item.new(def, p))
   assert_true(_has_status(e, 'poison'), 'the poison mechanic effect applied the poison status')
   assert_almost_eq(_find(e, 'poison').count, 3.0, 0.0001, 'with the delivery value as its count')
   assert_true(applied_data.has('poison'), 'it still publishes APPLIED with the poison id (Spite Ward)')

@@ -28,7 +28,7 @@ When an item's Ticker crosses, the item fires: it resets its cooldown immediatel
 The Delivery owns a travel Ticker that advances each tick and lands its payload (damage / status / etc.) when travel elapses — on arrival, not on fire.
 Fire-rate and travel are decoupled. A fast item can have several Deliveries in flight at once. Preserves the size→cooldown tempo design (fast items ping often regardless of travel) and looks correct in a cascade.
 The projectile arriving *is* the damage event, so fire-emote, flight, and damage-landing are three things sharing one clock rather than one tangled event — which is what keeps slow-mo coherent.
-travel_time may be zero. Self-buffs, heals, instant potions, AOE-on-all resolve same-tick via zero countdown. Not a special path — just the zero case.
+Every Delivery travels the same fixed number of steps (`Balance.TRAVEL_STEPS`), whatever it carries and wherever it goes: shields and heals on the holder, charges on the holder's own items, thrown potions, summons and created items all fly a projectile (decision #48). Nothing lands on the step it was fired, and the visuals draw the flight from the step count. Because a charge an item aims at itself lands a full travel later, an item can target itself without firing every step.
 
 ## Targeting
 

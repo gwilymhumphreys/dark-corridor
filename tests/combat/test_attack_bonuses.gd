@@ -31,10 +31,7 @@ func _manager(p: Actor, enemy_list: Array) -> CombatManager:
 
 
 func _fire_and_land(cm: CombatManager, it: Item) -> Array:
-  var arrived: Array = []
-  cm._fire_item(it, arrived)
-  for d in arrived:
-    cm._land(d)
+  var arrived: Array = CombatSteps.fire_and_land(cm, it)
   return arrived
 
 
@@ -47,7 +44,6 @@ func _bonus_item(owner_actor: Actor, mechanic_id: String, value: float, shape: i
   filter.add_mechanic(AttackMechanic.ID)
   var bonus := ItemEffect.make(mechanic_id, value, shape)
   bonus.target_filter = filter
-  bonus.travel = 0.0
   def.effects = [bonus]
   return Item.new(def, owner_actor)
 
@@ -143,7 +139,6 @@ func test_crit_still_multiplies_after_the_bonuses() -> void:
   var e := Actor.new(1000.0)
   var def := FixtureItems.attack()
   def.crit_chance = 1.0
-  def.effects[0].travel = 0.0   # land on the fire, so the value can be read
   var it := Item.new(def, p)
   p.board.append(it)
   var cm := _manager(p, [e])

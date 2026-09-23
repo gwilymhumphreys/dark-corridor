@@ -38,7 +38,6 @@ func _mechanic_item(owner_actor: Actor, mechanic_id: String, value: float,
   effect.mechanic = mechanic_id
   effect.value = value
   effect.shape = shape
-  effect.travel = 0.0
   def.effects = [effect]
   return Item.new(def, owner_actor)
 
@@ -50,10 +49,7 @@ func _land_mechanic(cm: CombatManager, p: Actor, e: Actor, mechanic_id: String,
   cm.bus.add_listener(EventBus.Event.APPLIED,
       func(data, _source_actor, _source_item) -> void:
         applied_data.append(data))
-  var arrived: Array = []
-  cm._fire_item(_mechanic_item(p, mechanic_id, 3.0, shape), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, _mechanic_item(p, mechanic_id, 3.0, shape))
   return applied_data
 
 

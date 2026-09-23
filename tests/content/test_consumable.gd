@@ -1,6 +1,6 @@
 extends GutTest
 ## FF2 — the minimal consumable (a thrown heal potion). Throwing it through the CombatManager
-## resolves a travel-0 Delivery that heals the thrower — the manual-fire path (no Ticker), the
+## spawns a Delivery that travels and then heals the thrower — the manual-fire path (no Ticker), the
 ## same resolution surface as an item fire.
 
 
@@ -41,7 +41,11 @@ func test_throwing_a_heal_potion_heals_the_thrower() -> void:
   cm.start()
   var potion := Consumable.new(FixtureKit.potion())
   cm.throw_consumable(potion, p)
-  assert_almost_eq(p.hp, 60.0 + FixtureKit.POTION_HEAL, 0.0001, 'the thrown potion healed the thrower instantly')
+  assert_almost_eq(p.hp, 60.0, 0.0001, 'the potion is still in flight')
+  # The enemy's first attack cannot land this soon: it must fill its cooldown and then travel too.
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
+  assert_almost_eq(p.hp, 60.0 + FixtureKit.POTION_HEAL, 0.0001, 'the thrown potion healed the thrower on landing')
 
 
 func test_throw_after_resolution_is_a_noop() -> void:

@@ -89,12 +89,16 @@ func base_value(effect: ItemEffect) -> float:
 ## The enchant counts as a percentage bonus and applies to every effect; statuses only to attacks.
 ## Pure.
 func _scaled_value(effect: ItemEffect, with_statuses: bool) -> float:
+  var base: float = effect.value
+  # A value that scales by a status the owner holds reads it first, so bonuses apply on top of it.
+  if effect.per_owner_stack_id != '' and owner != null:
+    base += StatusManager.stack_count(owner, effect.per_owner_stack_id) * effect.per_owner_stack_scale
   var bonuses: Array[Dictionary] = []
   if enchant != null:
     bonuses.append({'percent': enchant.def.value_mult - 1.0})   # a permanent item modifier
   if with_statuses and effect.mechanic == AttackMechanic.ID:
     bonuses.append_array(StatusManager.outgoing_bonuses(owner, self))
-  return StatusManager.combine(effect.value, bonuses)
+  return StatusManager.combine(base, bonuses)
 
 
 ## The item-side stages on top of the shared template copy (Payload.from_effect):

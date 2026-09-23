@@ -90,6 +90,10 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
       elif effect.mechanic == AttackPercentBonusMechanic.ID:
         value_seg['s'] = '+' + value_seg['s'] + '%'
         icon_seg = {'t': 'icon', 'id': AttackMechanic.ID}
+      # A value read from a status the owner holds names that status, not a number.
+      if effect.per_owner_stack_id != '':
+        return _interpolate(tr('{0} equal to your {1}'),
+            [icon_seg, {'t': 'icon', 'id': effect.per_owner_stack_id}])
       if _is_basic_apply(effect):
         return [icon_seg, value_seg]
       if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
@@ -270,7 +274,7 @@ func _summon_text(effect: ItemEffect) -> Dictionary:
 ## is how a mechanic keyword is gated off):
 ##   1. the authored `mechanics` list, in its own (alphabetical) order;
 ##   2. the derived non-mechanic ids, in effect order — an `APPLY_STATUS` effect's `status_id`, then
-##      its `consume_id`, then each trigger subscription's `filter` when it is a String (statuses such
+##      its `consume_id`, then its `per_owner_stack_id`, then each trigger subscription's `filter` when it is a String (statuses such
 ##      as weak, vulnerable, blind and spores);
 ##   3. the structural keywords, in `KeywordCatalog.MECHANIC_ORDER` (only those this item references).
 ## `_add_keyword` dedupes and gates every addition, so an id appearing in more than one part is added once.
@@ -279,13 +283,15 @@ static func keyword_ids(item: Item) -> Array[String]:
   # 1. The authored mechanics list, in its own order (authored alphabetically; not re-sorted here).
   for mechanic_id: String in item.def.mechanics:
     _add_keyword(ids, mechanic_id)
-  # 2. The derived non-mechanic ids, in effect order: applied statuses, consumed-fuel statuses, then
-  #    trigger filters. Dropping this would remove those keyword cards from every status-applier.
+  # 2. The derived non-mechanic ids, in effect order: applied statuses, consumed-fuel statuses, statuses
+  #    a value is read from, then trigger filters. Dropping this would remove those keyword cards from every status-applier.
   for effect: ItemEffect in item.def.effects:
     if effect.kind == Delivery.Kind.APPLY_STATUS:
       _add_keyword(ids, effect.status_id)
     if effect.consume_id != '':
       _add_keyword(ids, effect.consume_id)
+    if effect.per_owner_stack_id != '':
+      _add_keyword(ids, effect.per_owner_stack_id)
   for sub: Dictionary in item.def.trigger_subs:
     var filter: Variant = sub.get('filter', null)
     if filter is String:

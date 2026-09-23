@@ -245,3 +245,6 @@ Smith.
 - **Creating and consuming items**, and **summons**.
 - **The attack bonuses** (flat and percentage, on the Deep Forge and Wide Forge). Rare items are
   expected to carry effects like these that the rates do not cover (owner, 2026-09-23).
+- **Values read from a status the owner holds** (`per_owner_stack_id`, Shield Bash's attack equal to
+  the shield). The value changes through the fight, so these are tuned by cooldown (owner,
+  2026-09-23).

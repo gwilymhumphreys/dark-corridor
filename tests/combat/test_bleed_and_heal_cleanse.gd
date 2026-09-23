@@ -50,7 +50,6 @@ func _attack_item(owner_actor: Actor, value: float, shape: int = ItemEffect.Shap
   hit.mechanic = AttackMechanic.ID
   hit.value = value
   hit.shape = shape
-  hit.travel = 0.0
   def.effects = [hit]
   return Item.new(def, owner_actor)
 
@@ -62,17 +61,13 @@ func _heal_item(owner_actor: Actor, value: float) -> Item:
   heal.mechanic = HealMechanic.ID
   heal.value = value
   heal.shape = ItemEffect.Shape.SELF
-  heal.travel = 0.0
   def.effects = [heal]
   return Item.new(def, owner_actor)
 
 
 ## Fire `it` and land everything it spawns (instant travel lands the same call).
 func _fire_and_land(cm: CombatManager, it: Item) -> void:
-  var arrived: Array = []
-  cm._fire_item(it, arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, it)
 
 
 func _status_count(actor: Actor, id: String) -> float:

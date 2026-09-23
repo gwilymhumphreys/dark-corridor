@@ -118,6 +118,9 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
     cm.sim_step()
     guard += 1
   assert_true(_has_status(e, 'poison'), 'poison was applied')
+  # Had the push fired the avenger this same step, its shield would land TRAVEL_STEPS from now.
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
   assert_false(_has_status(p, 'shield'), 'the push does NOT fire the avenger the same step')
 
   cm.sim_step()
@@ -200,7 +203,6 @@ func _instant_damage_item(owner_actor: Actor, value: float) -> Item:
   hit.mechanic = AttackMechanic.ID
   hit.value = value
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = 0.0
   def.effects = [hit]
   return Item.new(def, owner_actor)
 
@@ -225,7 +227,6 @@ func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
   hit.mechanic = AttackMechanic.ID
   hit.value = 10.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = 0.0
   hit.consume_id = 'poison'
   hit.consume_amount = 4.0
   hit.consume_from_target = true   # opponent-fuel (Mass)
@@ -233,10 +234,7 @@ func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
   def.effects = [hit]
 
   var before: float = e.hp
-  var arrived: Array = []
-  cm._fire_item(Item.new(def, p), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, Item.new(def, p))
   assert_almost_eq(before - e.hp, 10.0 + 4.0 * 3.0, 0.0001, 'Mass damage = base 10 + 4 poison consumed × 3')
   assert_almost_eq(_status_count(e, 'poison'), 1.0, 0.0001, 'the target spent 4 of 5 poison stacks')
 
@@ -249,8 +247,7 @@ func test_blinded_attacker_damage_whiffs() -> void:
   var cm := _manager(p, [e])
   cm.start()
   StatusManager.apply(p, 'blind', 1.0)
-  var arrived: Array = []
-  cm._fire_item(_instant_damage_item(p, 8.0), arrived)
+  var arrived: Array = CombatSteps.fire(cm, _instant_damage_item(p, 8.0))
   assert_eq(arrived.size(), 1, 'the attack still fired (a delivery spawned)')
   assert_true(arrived[0].evaded, 'a blinded attacker marks its damage evaded')
   var before: float = e.hp
@@ -272,10 +269,8 @@ func test_blinded_attacker_nondamage_still_lands() -> void:
   ap.status_id = 'weak'
   ap.value = 3.0
   ap.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  ap.travel = 0.0
   def.effects = [ap]
-  var arrived: Array = []
-  cm._fire_item(Item.new(def, p), arrived)
+  var arrived: Array = CombatSteps.fire(cm, Item.new(def, p))
   assert_false(arrived[0].evaded, 'a non-damage delivery is not evaded')
   cm._land(arrived[0])
   assert_true(_has_status(e, 'weak'), 'the blinded actor still applies its status')
@@ -290,7 +285,6 @@ func _summon_item(owner_actor: Actor, token_id: String, in_front: bool = true) -
   s.summon_def_id = token_id
   s.summon_in_front = in_front
   s.shape = ItemEffect.Shape.SELF
-  s.travel = 0.0
   def.effects = [s]
   return Item.new(def, owner_actor)
 
@@ -301,10 +295,7 @@ func test_summon_adds_a_token_to_the_players_side() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var before: int = cm.player_side().size()
-  var arrived: Array = []
-  cm._fire_item(_summon_item(p, FixtureEnemies.ALLY_ID), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, _summon_item(p, FixtureEnemies.ALLY_ID))
   assert_eq(cm.player_side().size(), before + 1, 'a token joined the player side')
   assert_eq(cm._leftmost_living_opponent(e), cm.player_side()[0], 'and is the enemy\'s leftmost target (body-block)')
 
@@ -314,10 +305,7 @@ func test_enemy_summon_adds_to_the_enemy_side() -> void:
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  var arrived: Array = []
-  cm._fire_item(_summon_item(e, FixtureEnemies.ALLY_ID), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, _summon_item(e, FixtureEnemies.ALLY_ID))
   assert_eq(cm.enemies.size(), 2, 'the enemy summoned an add onto its own side')
 
 
@@ -489,10 +477,9 @@ func test_item_target_with_no_enemy_items_yields_no_targets() -> void:
   assert_eq(cm._resolve_targets(payload, p).size(), 0, 'no enemy items → no item targets')
 
 
-func test_all_own_items_resolves_every_other_item_on_the_board() -> void:
-  # ALL_OWN_ITEMS (charge / decharge) resolves to every item on the firing actor's own
-  # board EXCEPT the firing item itself — an item that charges its own board must not
-  # be able to charge itself.
+func test_all_own_items_resolves_every_item_on_the_board() -> void:
+  # ALL_OWN_ITEMS (charge / decharge) resolves to every item on the firing actor's own board, the
+  # firing item included — its charge lands TRAVEL_STEPS later, so it cannot fire every step.
   var p := Actor.new(100.0)
   p.board.append(Item.new(FixtureItems.attack(), p))
   p.board.append(Item.new(FixtureItems.attack(), p))
@@ -502,18 +489,15 @@ func test_all_own_items_resolves_every_other_item_on_the_board() -> void:
   cm.start()
   var payload := Payload.new()
   payload.shape = ItemEffect.Shape.ALL_OWN_ITEMS
-  payload.source = p.board[1]   # the firing item — excluded from the pool
+  payload.source = p.board[1]
   var targets: Array = cm._resolve_targets(payload, p)
-  assert_eq(targets.size(), 2, 'every other item on the owner board is a target')
-  assert_false(p.board[1] in targets, 'the firing item itself is excluded')
-  assert_true(p.board[0] in targets, 'the first item is in the pool')
-  assert_true(p.board[2] in targets, 'the third item is in the pool')
+  assert_eq(targets.size(), 3, 'every item on the owner board is a target')
+  assert_true(p.board[1] in targets, 'the firing item is included')
 
 
-func test_own_item_random_never_picks_the_firing_item() -> void:
-  # OWN_ITEM_RANDOM (charge / decharge) resolves to exactly one item, chosen on the
-  # seeded per-fight RNG, and it is never the firing item (the source) — looped over
-  # several fights / picks to make a fluke impossible.
+func test_own_item_random_picks_one_own_item() -> void:
+  # OWN_ITEM_RANDOM (charge / decharge) resolves to exactly one item from the owner's board, chosen
+  # on the seeded per-fight RNG — looped over several seeds.
   for s in 10:
     var p := Actor.new(100.0)
     p.board.append(Item.new(FixtureItems.attack(), p))
@@ -528,12 +512,11 @@ func test_own_item_random_never_picks_the_firing_item() -> void:
     payload.source = p.board[0]
     var targets: Array = cm._resolve_targets(payload, p)
     assert_eq(targets.size(), 1, 'one random own item is picked')
-    assert_ne(targets[0], p.board[0], 'the pick is never the firing item')
+    assert_true(targets[0] in p.board, 'the pick is an item on the owner board')
 
 
-func test_own_item_shapes_with_no_other_items_yield_no_targets() -> void:
-  # An own-board item-target shape on an actor holding ONLY the firing item resolves to
-  # no targets for either shape (the firing item is excluded from the pool).
+func test_own_item_shapes_with_only_the_firing_item_target_it() -> void:
+  # On an actor holding only the firing item, both own-board shapes resolve to that item.
   var p := _spawn(100.0, [FixtureItems.attack()])
   var e := Actor.new(100.0)
   var cm := _manager(p, [e])
@@ -541,11 +524,36 @@ func test_own_item_shapes_with_no_other_items_yield_no_targets() -> void:
   var all := Payload.new()
   all.shape = ItemEffect.Shape.ALL_OWN_ITEMS
   all.source = p.board[0]
-  assert_eq(cm._resolve_targets(all, p).size(), 0, 'no other items → ALL_OWN_ITEMS resolves nothing')
+  assert_eq(cm._resolve_targets(all, p), [p.board[0]], 'ALL_OWN_ITEMS resolves the firing item')
   var random := Payload.new()
   random.shape = ItemEffect.Shape.OWN_ITEM_RANDOM
   random.source = p.board[0]
-  assert_eq(cm._resolve_targets(random, p).size(), 0, 'no other items → OWN_ITEM_RANDOM resolves nothing')
+  assert_eq(cm._resolve_targets(random, p), [p.board[0]], 'OWN_ITEM_RANDOM resolves the firing item')
+
+
+func test_a_self_charging_item_fires_at_most_once_per_travel() -> void:
+  # An item whose ALL_OWN_ITEMS charge fills its whole bar: the charge lands TRAVEL_STEPS after the
+  # fire, so the item fires once per TRAVEL_STEPS (plus the one step the landed charge waits to be
+  # read), never every step.
+  var def := ItemDef.new()
+  def.cooldown = 5.0
+  def.effects = [ItemEffect.make(ChargeMechanic.ID, 5.0, ItemEffect.Shape.ALL_OWN_ITEMS)]
+  var p := Actor.new(1000.0)
+  var it := Item.new(def, p)
+  p.board.append(it)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  # A fire is the only thing that lowers the bar (advance and charge both raise it).
+  var fires: Array[int] = []
+  var last: float = it.cooldown.accum
+  for i in int(ceil(5.0 / Balance.STEP)) + Balance.TRAVEL_STEPS * 4:
+    cm.sim_step()
+    if it.cooldown.accum < last:
+      fires.append(i)
+    last = it.cooldown.accum
+  assert_gt(fires.size(), 2, 'the item keeps charging itself')
+  for i in range(1, fires.size()):
+    assert_gte(fires[i] - fires[i - 1], Balance.TRAVEL_STEPS, 'no faster than one fire per travel')
 
 
 # --- target filters ---------------------------------
@@ -556,7 +564,7 @@ func test_own_item_shapes_with_no_other_items_yield_no_targets() -> void:
 
 func test_type_filter_narrows_an_own_board_pool() -> void:
   # A type-tag filter on ALL_OWN_ITEMS drops the non-matching items (here the shield) from the
-  # pool, keeps the matching weapon, and still excludes the firing item.
+  # pool and keeps the matching weapons, the firing item among them.
   var p := Actor.new(100.0)
   var a1 := Item.new(FixtureItems.attack(), p)   # the firing item (WEAPON)
   p.board.append(a1)
@@ -576,8 +584,8 @@ func test_type_filter_narrows_an_own_board_pool() -> void:
   var targets: Array = cm._resolve_targets(payload, p)
   assert_true(a2 in targets, 'the matching weapon survives the filter')
   assert_false(sh in targets, 'the non-matching shield is dropped from the pool')
-  assert_false(a1 in targets, 'the firing item is still excluded')
-  assert_eq(targets.size(), 1, 'only the matching weapon remains')
+  assert_true(a1 in targets, 'the firing item is a weapon, so it is kept')
+  assert_eq(targets.size(), 2, 'only the two weapons remain')
 
 
 func test_mechanic_filter_decides_a_random_opponent_pick() -> void:
@@ -707,7 +715,7 @@ func test_unfiltered_shapes_resolve_exactly_as_before() -> void:
   all.shape = ItemEffect.Shape.ALL_OWN_ITEMS
   all.source = p.board[1]
   var at: Array = cm._resolve_targets(all, p)
-  assert_eq(at.size(), 2, 'an unfiltered ALL_OWN_ITEMS still resolves every other own item')
+  assert_eq(at.size(), 3, 'an unfiltered ALL_OWN_ITEMS resolves every own item')
 
   var actor := Payload.new()
   actor.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
@@ -896,8 +904,8 @@ func test_enemy_poison_does_not_charge_own_side_trigger() -> void:
     cm.sim_step()
     guard += 1
   assert_true(_has_status(p, 'poison'), 'the enemy poisoned the player')
-  cm.sim_step()
-  cm.sim_step()
+  for i in Balance.TRAVEL_STEPS + 2:   # long enough for a pushed fire's shield to have landed
+    cm.sim_step()
   assert_false(_has_status(p, 'shield'), "the enemy's application charged nothing (OWN_SIDE default)")
 
 
@@ -912,7 +920,8 @@ func test_opponent_side_filter_inverts_the_default() -> void:
   while not _has_status(p, 'poison') and guard < 1000:
     cm.sim_step()
     guard += 1
-  cm.sim_step()
+  for i in Balance.TRAVEL_STEPS + 1:   # the push fires it next step; its shield then travels
+    cm.sim_step()
   assert_true(_has_status(p, 'shield'), "an OPPONENT_SIDE sub charges off the enemy's application")
 
 
@@ -932,7 +941,8 @@ func test_summoned_token_trigger_resolves_own_side_at_event_time() -> void:
     cm.sim_step()
     guard += 1
   assert_true(_has_status(e, 'poison'), "the player's poison landed")
-  cm.sim_step()
+  for i in Balance.TRAVEL_STEPS + 1:   # the push fires it next step; its shield then travels
+    cm.sim_step()
   assert_true(_has_status(token, 'shield'), "the player-side token's trigger charged off its own side")
 
 
@@ -1021,10 +1031,12 @@ func test_thrown_consumable_event_carries_the_thrower() -> void:
   effect.mechanic = AttackMechanic.ID
   effect.value = 5.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  effect.travel = 0.0
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  assert_eq(seen.size(), 1, 'the throw published APPLIED')
+  assert_eq(seen.size(), 0, 'the dart is still in flight')
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
+  assert_eq(seen.size(), 1, 'the throw published APPLIED on landing')
   assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
   assert_eq(seen[0][1], p, 'source actor is the thrower')
   assert_null(seen[0][2], 'source item is null — a throw has no firing Item')
@@ -1103,9 +1115,8 @@ func test_dot_killed_actor_does_not_fire_collected_swing() -> void:
   assert_eq(p.hp, hp_before, "the dead enemy's collected swing never fired")
 
 
-func test_lethal_potion_resolves_fight_without_a_step() -> void:
-  # A throw can land outside the step loop (paused, timescale 0): resolution must not
-  # wait for a sim_step that never comes.
+func test_lethal_potion_resolves_fight_on_landing() -> void:
+  # A thrown potion travels like an item's delivery, and the fight resolves on the step it lands.
   var p := _spawn(PLAYER_HP, [])
   var e := _spawn(10.0, [FixtureItems.attack()])
   var cm := _manager(p, [e])
@@ -1117,10 +1128,13 @@ func test_lethal_potion_resolves_fight_without_a_step() -> void:
   effect.mechanic = AttackMechanic.ID
   effect.value = 50.0
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  effect.travel = 0.0
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  assert_true(cm.is_resolved(), 'the lethal throw resolved the fight immediately')
+  for i in Balance.TRAVEL_STEPS - 1:
+    cm.sim_step()
+  assert_false(cm.is_resolved(), 'the bomb is still in flight')
+  cm.sim_step()
+  assert_true(cm.is_resolved(), 'the lethal throw resolved the fight on landing')
   assert_true(cm.player_won(), 'and the player won it')
 
 
@@ -1209,7 +1223,6 @@ func _decay_weapon_def(uses: int) -> ItemDef:
   hit.mechanic = AttackMechanic.ID
   hit.value = FixtureItems.ATTACK_DAMAGE
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = 0.0
   def.effects = [hit]
   return def
 
@@ -1220,7 +1233,6 @@ func _create_item_item(owner_actor: Actor, created_id: String) -> Item:
   c.kind = Delivery.Kind.CREATE_ITEM
   c.create_item_def_id = created_id
   c.shape = ItemEffect.Shape.SELF
-  c.travel = 0.0
   def.effects = [c]
   return Item.new(def, owner_actor)
 
@@ -1258,12 +1270,10 @@ func test_decay_drains_one_per_fire_then_removes_the_item_after_the_last_hit() -
   p.board.append(it)
   var cm := _manager(p, [Actor.new(1000.0)])
   cm.start()
-  var arrived: Array = []
-  cm._fire_item(it, arrived)
+  CombatSteps.fire(cm, it)
   assert_almost_eq(_decay_status_on(it).count, 1.0, 0.0001, 'one activation spent after the first fire')
   assert_true(it in p.board, 'still on the board (decay 2 fires twice)')
-  arrived.clear()
-  cm._fire_item(it, arrived)
+  var arrived: Array = CombatSteps.fire(cm, it)
   assert_eq(arrived.size(), 1, 'the final activation still fired its payload — the last hit lands')
   assert_false(it in p.board, 'then removed from the board at 0')
   assert_false(it in cm._items, 'and deregistered from the sweep (stops ticking)')
@@ -1303,10 +1313,7 @@ func test_create_item_effect_lands_an_item_on_the_firing_actors_own_board() -> v
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  var arrived: Array = []
-  cm._fire_item(_create_item_item(p, FixtureItems.enemy_attack().id), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, _create_item_item(p, FixtureItems.enemy_attack().id))
   assert_eq(p.board.size(), 1, 'the CREATE_ITEM effect put a new item on the firer\'s OWN board (shape SELF)')
   assert_true(p.board[0] in cm._created_items, 'and tracked it combat-scoped')
 
@@ -1343,7 +1350,6 @@ func _chunk_consumer_def(chunk_id: String, amount: int, scale: float) -> ItemDef
   hit.mechanic = AttackMechanic.ID
   hit.value = 10.0
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = 0.0
   hit.consume_item_def_id = chunk_id
   hit.consume_item_amount = amount
   hit.consume_item_scale = scale
@@ -1378,7 +1384,7 @@ func test_item_destroyed_fires_on_a_decay_destroy_with_the_owner_as_source() -> 
   cm.bus.add_listener(EventBus.Event.ITEM_DESTROYED,
       func(data, source_actor, source_item) -> void:
         seen.append([data, source_actor, source_item]))
-  cm._fire_item(it, [])
+  cm._fire_item(it)
   assert_eq(seen.size(), 1, 'the decay-destroy published ITEM_DESTROYED')
   assert_eq(seen[0][0], it.def.id, 'the event data is the destroyed item def id')
   assert_eq(seen[0][1], p, 'the source actor is the destroyed item\'s OWNER (OWN_SIDE filtering)')
@@ -1410,7 +1416,10 @@ func test_a_trigger_item_charges_off_item_destroyed() -> void:
   p.board.append(avenger)
   var cm := _manager(p, [Actor.new(1000.0)])
   cm.start()
-  cm._fire_item(dying, [])   # decay 1 → destroyed → ITEM_DESTROYED published
+  cm._fire_item(dying)   # decay 1 → destroyed → ITEM_DESTROYED published
+  # The avenger fires on the next step, and its shield lands TRAVEL_STEPS after that.
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
   assert_false(_has_status(p, 'shield'), 'the push does NOT fire the avenger the same step')
   cm.sim_step()
   assert_true(_has_status(p, 'shield'), 'the avenger charged off ITEM_DESTROYED one step later (SELF shield on its owner)')
@@ -1426,16 +1435,13 @@ func test_own_board_consume_counts_removes_and_scales() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var before: float = e.hp
-  var arrived: Array = []
-  cm._fire_item(consumer, arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, consumer)
   assert_almost_eq(before - e.hp, 10.0 + 3.0 * 4.0, 0.0001, 'base 10 + 3 chunks consumed × 4')
   for it in p.board:
     assert_ne(it.def.id, 'chunk', 'every chunk was removed from the board')
 
 
-## A chunk that DOES fire on its own: cooldown `cooldown` seconds, `value` damage, instant.
+## A chunk that DOES fire on its own: cooldown `cooldown` seconds, `value` damage.
 func _firing_chunk_def(def_id: String, cooldown: float, value: float) -> ItemDef:
   var def := ItemDef.new()
   def.id = def_id
@@ -1444,7 +1450,6 @@ func _firing_chunk_def(def_id: String, cooldown: float, value: float) -> ItemDef
   hit.mechanic = AttackMechanic.ID
   hit.value = value
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
-  hit.travel = 0.0
   def.effects = [hit]
   return def
 
@@ -1461,7 +1466,8 @@ func test_an_item_eaten_as_fuel_does_not_fire_in_the_same_step() -> void:
   p.board.append(chunk)
   var cm := _manager(p, [e])
   cm.start()
-  for _i in 61:   # one second at Balance.STEP — both cooldowns cross on the same step
+  # One second at Balance.STEP — both cooldowns cross on the same step — then the hit's travel.
+  for _i in 61 + Balance.TRAVEL_STEPS:
     cm.sim_step()
   assert_false(chunk in p.board, 'the chunk was eaten as fuel')
   assert_almost_eq(1000.0 - e.hp, 10.0 + 4.0, 0.0001,
@@ -1478,10 +1484,7 @@ func test_own_board_consume_respects_the_amount_cap() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var before: float = e.hp
-  var arrived: Array = []
-  cm._fire_item(consumer, arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, consumer)
   assert_almost_eq(before - e.hp, 10.0 + 2.0 * 4.0, 0.0001, 'only 2 chunks consumed (the cap), scaling by 2')
   var chunks_left: int = 0
   for it in p.board:
@@ -1498,10 +1501,7 @@ func test_own_board_consume_with_no_fuel_is_a_safe_no_op() -> void:
   var cm := _manager(p, [e])
   cm.start()
   var before: float = e.hp
-  var arrived: Array = []
-  cm._fire_item(consumer, arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, consumer)
   assert_almost_eq(before - e.hp, 10.0, 0.0001, 'no fuel → just the base hit, no scaling, no crash')
 
 
@@ -1520,7 +1520,7 @@ func test_consumed_items_publish_item_destroyed_for_the_charge_synergy() -> void
   cm.bus.add_listener(EventBus.Event.ITEM_DESTROYED,
       func(data, _source_actor, _source_item) -> void:
         seen.append(data))
-  cm._fire_item(consumer, [])
+  cm._fire_item(consumer)
   assert_eq(seen.size(), 3, 'all 3 consumed chunks published ITEM_DESTROYED (consume-death = decay-death)')
   assert_eq(seen[0], 'chunk', 'with the chunk def id as the event data')
 
@@ -1536,7 +1536,6 @@ func _mechanic_item(owner_actor: Actor, mechanic_id: String, value: float, shape
   effect.mechanic = mechanic_id
   effect.value = value
   effect.shape = shape
-  effect.travel = 0.0
   def.effects = [effect]
   return Item.new(def, owner_actor)
 
@@ -1550,10 +1549,7 @@ func test_attack_mechanic_deals_damage_and_publishes_applied() -> void:
   cm.bus.add_listener(EventBus.Event.APPLIED,
       func(data, source_actor, _source_item) -> void:
         seen.append([data, source_actor]))
-  var arrived: Array = []
-  cm._fire_item(_mechanic_item(p, AttackMechanic.ID, 12.0), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, _mechanic_item(p, AttackMechanic.ID, 12.0))
   assert_almost_eq(e.hp, 1000.0 - 12.0, 0.0001, 'the attack mechanic dealt its damage')
   assert_eq(seen.size(), 1, 'it published APPLIED (no new events)')
   assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
@@ -1566,10 +1562,7 @@ func test_heal_mechanic_heals_the_target() -> void:
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  var arrived: Array = []
-  cm._fire_item(_mechanic_item(p, HealMechanic.ID, 15.0, ItemEffect.Shape.SELF), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, _mechanic_item(p, HealMechanic.ID, 15.0, ItemEffect.Shape.SELF))
   assert_almost_eq(p.hp, 60.0 + 15.0, 0.0001, 'the heal mechanic restored health')
 
 
@@ -1578,10 +1571,7 @@ func test_shield_mechanic_applies_shield() -> void:
   var e := Actor.new(1000.0)
   var cm := _manager(p, [e])
   cm.start()
-  var arrived: Array = []
-  cm._fire_item(_mechanic_item(p, ShieldMechanic.ID, 8.0, ItemEffect.Shape.SELF), arrived)
-  for d in arrived:
-    cm._land(d)
+  CombatSteps.fire_and_land(cm, _mechanic_item(p, ShieldMechanic.ID, 8.0, ItemEffect.Shape.SELF))
   assert_true(_has_status(p, 'shield'), 'the shield mechanic applied the shield status')
   assert_almost_eq(_status_count(p, 'shield'), 8.0, 0.0001, 'with the delivery value as its count')
 
@@ -1604,3 +1594,94 @@ func test_item_uses_reports_its_mechanics() -> void:
   assert_false(weapon.uses(ShieldMechanic.ID), 'the weapon does not use shield')
   assert_true(armor.uses(ShieldMechanic.ID), 'the shield item uses the shield mechanic')
   assert_false(armor.uses(AttackMechanic.ID), 'the shield item does not use attack')
+
+
+# --- fixed travel and land before fire -------------------------------------------------------
+# Every delivery flies Balance.TRAVEL_STEPS, and a step lands its arrivals before any item fires.
+
+## Set `it`'s bar so it crosses on step `steps` of the loop (counting from the next sim_step as 1).
+func _cross_on_step(it: Item, steps: int) -> void:
+  it.cooldown.accum = it.cooldown.threshold - steps
+
+
+## The deliveries in flight whose source is `it`.
+func _deliveries_from(cm: CombatManager, it: Item) -> Array:
+  var out: Array = []
+  for d in cm.deliveries():
+    if d.source == it and not d.landed:
+      out.append(d)
+  return out
+
+
+func test_a_delivery_on_the_holder_lands_after_the_fixed_travel() -> void:
+  var p := Actor.new(1000.0)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  CombatSteps.fire(cm, _mechanic_item(p, ShieldMechanic.ID, 8.0, ItemEffect.Shape.SELF))
+  for i in Balance.TRAVEL_STEPS - 1:
+    cm.sim_step()
+  assert_false(_has_status(p, 'shield'), 'the shield is still in flight')
+  cm.sim_step()
+  assert_true(_has_status(p, 'shield'), 'the shield lands after TRAVEL_STEPS')
+
+
+func test_an_item_firing_as_a_hit_kills_the_leftmost_targets_the_next_enemy() -> void:
+  var p := Actor.new(1000.0)
+  var follow_up := Item.new(FixtureItems.attack(), p)
+  p.board.append(follow_up)
+  var first := Actor.new(10.0)
+  var second := Actor.new(1000.0)
+  var cm := _manager(p, [first, second])
+  cm.start()
+  CombatSteps.fire(cm, _mechanic_item(p, AttackMechanic.ID, 50.0))   # lands on step TRAVEL_STEPS
+  _cross_on_step(follow_up, Balance.TRAVEL_STEPS)
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
+  assert_false(first.is_alive(), 'the first hit killed the leftmost enemy')
+  var spawned: Array = _deliveries_from(cm, follow_up)
+  assert_eq(spawned.size(), 1, 'the follow-up fired on the same step')
+  assert_eq(spawned[0].target, second, 'and targeted the next enemy, not the dead one')
+
+
+func test_an_item_whose_owner_dies_from_a_landing_does_not_fire() -> void:
+  var p := Actor.new(1000.0)
+  var doomed := _spawn(10.0, [FixtureItems.attack()])
+  var survivor := Actor.new(1000.0)   # keeps the fight going after the doomed enemy dies
+  var cm := _manager(p, [doomed, survivor])
+  cm.start()
+  var doomed_item: Item = doomed.board[0]
+  CombatSteps.fire(cm, _mechanic_item(p, AttackMechanic.ID, 50.0))
+  _cross_on_step(doomed_item, Balance.TRAVEL_STEPS)
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
+  assert_false(doomed.is_alive(), 'the enemy died from the landing')
+  assert_eq(_deliveries_from(cm, doomed_item).size(), 0, "its item did not fire on the step it died")
+
+
+func test_the_fight_ends_on_the_landing_step_and_nothing_fires_after() -> void:
+  var p := Actor.new(1000.0)
+  var late := Item.new(FixtureItems.attack(), p)
+  p.board.append(late)
+  var e := Actor.new(10.0)
+  var cm := _manager(p, [e])
+  cm.start()
+  CombatSteps.fire(cm, _mechanic_item(p, AttackMechanic.ID, 50.0))
+  _cross_on_step(late, Balance.TRAVEL_STEPS)
+  for i in Balance.TRAVEL_STEPS:
+    cm.sim_step()
+  assert_true(cm.is_resolved(), 'the fight ended on the landing step')
+  assert_true(cm.player_won(), 'and the player won it')
+  assert_eq(_deliveries_from(cm, late).size(), 0, 'no item fired after the fight was decided')
+
+
+func test_a_summon_arrives_after_the_fixed_travel() -> void:
+  var p := Actor.new(1000.0)
+  var cm := _manager(p, [Actor.new(1000.0)])
+  cm.start()
+  var before: int = cm.player_side().size()
+  CombatSteps.fire(cm, _summon_item(p, FixtureEnemies.ALLY_ID))
+  for i in Balance.TRAVEL_STEPS - 1:
+    cm.sim_step()
+  assert_eq(cm.player_side().size(), before, 'the summon is still in flight')
+  cm.sim_step()
+  assert_eq(cm.player_side().size(), before + 1, 'the token arrives after TRAVEL_STEPS')

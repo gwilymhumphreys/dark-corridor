@@ -194,8 +194,8 @@ shapes work as well, and a decharge on the enemy's board is what they are for.
   no event and writes no log entry.
 - A delivery aimed at an `Actor` instead of an `Item` is an authoring mistake: it pushes an error
   and does nothing.
-- The **firing item is left out** of both own-board shapes. An item that could charge itself with
-  travel 0 would refill its own bar the step it fired, then fire every step after that.
+- The **firing item is included** in both own-board shapes. Its charge lands a full travel after
+  the fire, so an item charging itself fires at most once per `Balance.TRAVEL_STEPS`.
 - `ChargeMechanic.shift_cooldown(item, seconds)` holds the shared arithmetic; `DechargeMechanic`
   calls it with a negative value. It returns the seconds actually applied, which is what the log
   records.

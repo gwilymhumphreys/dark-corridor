@@ -41,6 +41,9 @@ A trigger line names its event and then the charge icon with the seconds the tri
 it goes off: "When [poison] is applied, [charge] 1s". A trigger on destroyed items reads as the
 Reclaim keyword instead.
 
+An effect whose value is read from a status its owner holds (`ItemEffect.per_owner_stack_id`) names
+that status instead of a number: "[attack] equal to your [shield]".
+
 ## The pieces (`src/scenes/ui/tooltip/`)
 
 | File | Role |
@@ -115,15 +118,15 @@ label so height is computed at the real width.
 `Item.fire()` / `_resolve_effect()` mutate (reset the cooldown, spend fuel). The
 tooltip computes display values with **separate pure methods** on `Item`:
 
-- `display_value(effect)` — the enchant plus, for an attack, the status bonuses on the owner and
+- `display_value(effect)` — the value read from a status the owner holds (`per_owner_stack_id`),
+  the enchant, plus, for an attack, the status bonuses on the owner and
   on the item (`StatusManager.outgoing_bonuses`, e.g. Weak, the attack bonuses). Pure.
 - `base_value(effect)` — the authored value × enchant mult (a permanent modifier).
 
 The builder marks a value as `changed` when `display_value != base_value`, and the panel tints it
 with a single accent colour (a placeholder, the owner's call). It used to carry a ▲/▼ glyph as
-well, for direction; that was dropped once the mechanic's icon sat beside the number. **Consume-scaling is excluded from v1** —
-reading it correctly needs a non-mutating stack peek (`StatusManager` has no
-read-only stack getter); a static consume number would mislead.
+well, for direction; that was dropped once the mechanic's icon sat beside the number. **Consume-scaling is excluded from v1**,
+because a static consume number would mislead.
 
 ## Keywords (catalog-gated)
 
@@ -135,7 +138,7 @@ keyword):
   counts as, including crit (an item with a crit chance lists `crit` like any other mechanic; the
   floor check in `test_pool_integrity.gd` enforces it).
 - **The derived non-mechanic ids**, in effect order: an `APPLY_STATUS` effect's `status_id`
-  (weak, vulnerable, …); each effect's `consume_id`; and each `trigger_subs` entry's `filter`
+  (weak, vulnerable, …); each effect's `consume_id`, then its `per_owner_stack_id`; and each `trigger_subs` entry's `filter`
   (a status id).
 - **The structural keywords**, in `KeywordCatalog.MECHANIC_ORDER` (only those the item references):
   `consume_id` set → `kw:fuel`; `SUMMON` → `kw:summon`; AOE shapes → `kw:aoe`; item-target shapes

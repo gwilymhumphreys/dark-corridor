@@ -97,6 +97,12 @@ func has_status(target, id: String) -> bool:
   return _find(target, id) != null
 
 
+## How many stacks of `id` `target` holds (0 when absent). Read-only.
+func stack_count(target, id: String) -> float:
+  var s: StatusEffect = _find(target, id)
+  return s.count if s != null else 0.0
+
+
 ## Spend up to `amount` of `id` from `target` as Mass fuel (docs/systems/spore_engine.md Cap 1), returning how
 ## many were removed (so the consuming effect scales by what it found). Only fuel statuses (stacked
 ## DoT / the Spores counter) spend; others return 0. A drained instance is removed.
