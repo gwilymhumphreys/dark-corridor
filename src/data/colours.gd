@@ -103,3 +103,14 @@ static var UI_BUTTON: Color = Color(0.07, 0.07, 0.08)        # a button's restin
 static var UI_BUTTON_LIGHT: Color = Color(0.78, 0.77, 0.74)  # the wash that lifts that fill on hover and press
 static var UI_TEXT_BUTTON_DARK: Color = Color(0.06, 0.06, 0.07)  # button text once the fill is light
 static var UI_HIGHLIGHT: Color = Color(0.82, 0.8, 0.76)      # the border around a hovered or selected control
+
+
+## The current value of the `Colours` variable called `variable` ('STATUS_DECAY'), read each call so
+## a palette applied since is included. White, with an error, for a name that is not a colour here.
+static func named(variable: String) -> Color:
+  var colours_script: Script = Colours
+  var value: Variant = colours_script.get(variable)
+  if not (value is Color):
+    push_error('Colours: no colour named "%s"' % variable)
+    return Color.WHITE
+  return value

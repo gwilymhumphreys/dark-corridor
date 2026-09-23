@@ -75,7 +75,7 @@ func _seed_demo_allies() -> void:
   if i < 0 or i + 1 >= args.size():
     return
   for _n in int(args[i + 1]):
-    _run.add_ally(EnemyCatalog.SPORE_THRALL)
+    _run.add_ally('spore_thrall')
 
 
 
@@ -105,7 +105,7 @@ func _seed_demo_potions() -> void:
   if i < 0 or i + 1 >= args.size():
     return
   for _n in int(args[i + 1]):
-    _run.potions.append(Consumable.new(ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)))
+    _run.potions.append(Consumable.new(ConsumableCatalog.get_def('healing_draught')))
 
 func _exit_tree() -> void:
   _log = null

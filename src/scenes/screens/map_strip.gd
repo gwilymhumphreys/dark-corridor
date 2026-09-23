@@ -74,8 +74,8 @@ func _beat_color(i: int) -> Color:
   var spec: Dictionary = RunMap.beat_spec(i)
   if spec['kind'] == RunMap.BeatKind.FIXED:
     match spec['id']:
-      EncounterCatalog.FIGHT_BOSS:
+      'fight_boss':
         return Colours.BEAT_BOSS
-      EncounterCatalog.FIGHT_RELIC:
+      'fight_relic':
         return Colours.BEAT_RELIC
   return Colours.MAP_ROLLED_BEAT        # a rolled beat (combat or event — not known ahead)

@@ -5,7 +5,8 @@ extends RefCounted
 ## recoloured: every grey in its images and panel colours is mapped onto the UI_PANEL_* colours, and
 ## every font colour onto the UI_TEXT_* colours, by brightness. A dev tool, like the palette clamp.
 ##
-## Colours are copied when things are built. Cached content definitions are recoloured here;
+## Most colours are copied when things are built. Cached keyword cards are recoloured here (item,
+## relic and potion definitions read theirs on use);
 ## `DebugPanels.set_interface_palette` also recolours statuses in the current fight and tells scene
 ## colour rectangles through its `interface_palette_changed` signal.
 
@@ -124,11 +125,9 @@ static func reset() -> void:
   _refresh_catalogs()
 
 
-# Content definitions copy `Colours` when built; recolour the cached ones.
+# Keyword cards copy `Colours` when built; recolour the cached ones. Item, relic and potion
+# definitions read their colours on use, so they need nothing here.
 static func _refresh_catalogs() -> void:
-  ItemCatalog.refresh_colours()
-  RelicCatalog.refresh_colours()
-  ConsumableCatalog.refresh_colours()
   KeywordCatalog.refresh_colours()
 
 

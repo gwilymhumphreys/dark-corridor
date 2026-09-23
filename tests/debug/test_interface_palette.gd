@@ -194,9 +194,9 @@ func test_panel_and_text_colours_recolour_the_theme_until_reset() -> void:
 
 
 func test_definitions_already_built_take_the_palette_until_reset() -> void:
-  var weapon: ItemDef = ItemCatalog.get_def(ItemCatalog.FLESH_CLEAVER)
-  var potion: ConsumableDef = ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)
-  var relic: RelicDef = RelicCatalog.get_def(RelicCatalog.STONE_WARD)
+  var weapon: ItemDef = ItemCatalog.get_def('cleaver')
+  var potion: ConsumableDef = ConsumableCatalog.get_def('healing_draught')
+  var relic: RelicDef = RelicCatalog.get_def('stone_ward')
   # The weapon / potion effects are mechanics, so their colour is the mechanic's (Colours.ATTACK /
   # HEAL), not an effect colour — read it through the registry, which tracks the palette.
   var default_attack: Color = MechanicRegistry.get_mechanic(weapon.effects[0].mechanic).color()
@@ -205,7 +205,7 @@ func test_definitions_already_built_take_the_palette_until_reset() -> void:
     '40 50 60 heal',
     '70 80 90 relic stone ward',
   ]))
-  assert_eq(ItemCatalog.get_def(ItemCatalog.FLESH_CLEAVER), weapon, 'the cached definition is kept')
+  assert_eq(ItemCatalog.get_def('cleaver'), weapon, 'the cached definition is kept')
   assert_eq(MechanicRegistry.get_mechanic(weapon.effects[0].mechanic).color(), Color8(10, 20, 30))
   assert_eq(weapon.panel_color, Color8(10, 20, 30))
   assert_eq(MechanicRegistry.get_mechanic(potion.effects[0].mechanic).color(), Color8(40, 50, 60))

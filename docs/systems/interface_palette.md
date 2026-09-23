@@ -67,7 +67,8 @@ Enemy images in the corridor are part of the corridor and use the [world clamp](
 
 - Things that copy `Colours` when built are updated when a palette is applied or reset, so it can be
   switched mid-fight:
-  - Item, relic and potion definitions and keyword cards: `refresh_colours()` on each catalog.
+  - Keyword cards: `KeywordCatalog.refresh_colours()`. Item, relic and potion definitions need
+    nothing, because they read their colours on use (`Colours.named`).
   - `NamedColourRect` nodes (and `ScreenBackground`): `DebugPanels.interface_palette_changed`.
   - Statuses in the current fight: `DebugPanels.set_interface_palette` gives each the colour a new
     status of its class would have.
