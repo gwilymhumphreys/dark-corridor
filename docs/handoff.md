@@ -309,7 +309,7 @@ test-first + its own green commit, with the headless autotest as the regression 
    splits by weight; a source-less DoT keeps the generic channel. In `src/autotest/`
    (logger `attribute_damage` + the mode's per-step observation). [autotest](systems/autotest.md).
 6. **Stat-statuses — SEAMS WIRED (placeholder content).** Both damage-modifier seams are
-   built: `modify_outgoing` (applied at fire time in `Item._resolve_effect`) and the
+   built: `outgoing_bonus` (applied at fire time in `Item._resolve_effect`) and the
    incoming **amplifier** stage in `resolve_incoming_damage` (before shield). The `StatusEffect`
    classes carry both as **% multipliers** (cascade-safe — not flat-per-fire). Placeholder statuses
    **Weak** (outgoing −25%) / **Vulnerable** (incoming +50%) + a **Sundering Bolt** applier

@@ -85,7 +85,7 @@ pattern in their own `content/` folder — see the matching PRD ([item](../syste
 for each def's fields and how it resolves.
 
 - A **status** is NOT a def — it's a **`StatusEffect` subclass** (`statuses/<name>_status.gd`)
-  overriding the hooks it needs (`modify_outgoing`, `absorb`, `on_step`, …; default no-op),
+  overriding the hooks it needs (`outgoing_bonus`, `absorb`, `on_step`, …; default no-op),
   extending an intermediate base (`TimedStatus` / `PeriodicStatus` / `PoolStatus`) or `StatusEffect`
   directly. Set `id` / `name_key` / `color` / `icon` (under `assets/icons/statuses/`) by plain assignment in `_init` (the `name_key = '...'`
   assignment is what localizes it). Make it live with **one line** in `StatusRegistry` (`id →

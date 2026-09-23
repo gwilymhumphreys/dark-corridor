@@ -23,7 +23,7 @@ The export runs as a scene, not with `--script`, because the tooltip code it reu
 | `KeywordCatalog.get_entry()`, `IconSlots.icon_for()` | Keyword names, descriptions, icons and colours. Icons under `assets/icons/mechanics/` are white shapes tinted with the keyword colour, the same rule as `KeywordIcon` |
 | `CharacterCatalog.ids()` + each `item_pool`, `ColorlessPool.ITEMS` | Which characters can draft the item |
 | `EnemyCatalog.all_ids()` + each `item_ids` | Which enemies carry the item |
-| `ItemPoints.spend()`, `ItemPoints.budget()` | The points the item spends per fire and the budget for its charge time ([item_heuristics.md](../design/item_heuristics.md)). Effects that `spend` does not price (statuses, summons, created items, regen) mark the card as having unpriced effects |
+| `ItemPoints.spend()`, `ItemPoints.budget()` | The points the item spends per fire and the budget for its charge time and rarity ([item_heuristics.md](../design/item_heuristics.md)). Effects that `spend` does not price (statuses, summons, created items, regen) mark the card as having unpriced effects |
 | `Colours.RARITY_*` | The rarity colour of the name and icon border |
 
 Icons are shrunk to `ICON_SIZE` in `item_browser.gd` before embedding to keep the page small.
