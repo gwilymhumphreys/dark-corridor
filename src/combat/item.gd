@@ -69,37 +69,41 @@ func uses(mechanic_id: String) -> bool:
 
 
 ## Read-only display value for the tooltip (docs/systems/tooltips.md) — the value the tooltip
-## SHOWS, computed WITHOUT side effects. Mirrors the pure stages of _resolve_effect (enchant
-## scaling + the outgoing stat-status seam) but never resets the cooldown or spends fuel, so it
-## is safe to call every frame while inspecting. Consume-scaling is excluded (it needs a non-
-## mutating stack peek; tooltips.md). Pairs with base_value for the changed-value highlight.
+## SHOWS, computed WITHOUT side effects. Mirrors the pure stages of _resolve_effect (the enchant and
+## the status bonuses) but never resets the cooldown or spends fuel, so it is safe to call every
+## frame while inspecting. Consume-scaling is excluded (it needs a non-mutating stack peek;
+## tooltips.md). Pairs with base_value for the changed-value highlight.
 func display_value(effect: ItemEffect) -> float:
-  var v: float = base_value(effect)
-  if effect.mechanic == AttackMechanic.ID and owner != null:
-    v = StatusManager.modify_outgoing(owner, v, self)   # pure (Weak, empower — scoped by this item's types)
-  return v
+  return _scaled_value(effect, true)
 
 
 ## The baseline the changed-value highlight compares against: the authored value scaled by the
 ## enchant only (a PERMANENT modifier — #26), so the highlight reflects combat-scoped status
-## changes (Weak), not the enchant. Read-only.
+## changes (Weak, the attack bonuses), not the enchant. Read-only.
 func base_value(effect: ItemEffect) -> float:
-  var v: float = effect.value
+  return _scaled_value(effect, false)
+
+
+## The effect's value with the enchant and, when `with_statuses` and the effect is an attack, every
+## status bonus, combined by StatusManager.combine (docs/systems/mechanics.md → Combining bonuses).
+## The enchant counts as a percentage bonus and applies to every effect; statuses only to attacks.
+## Pure.
+func _scaled_value(effect: ItemEffect, with_statuses: bool) -> float:
+  var bonuses: Array[Dictionary] = []
   if enchant != null:
-    v *= enchant.def.value_mult   # pure (permanent item modifier)
-  return v
+    bonuses.append({'percent': enchant.def.value_mult - 1.0})   # a permanent item modifier
+  if with_statuses and effect.mechanic == AttackMechanic.ID:
+    bonuses.append_array(StatusManager.outgoing_bonuses(owner, self))
+  return StatusManager.combine(effect.value, bonuses)
 
 
 ## The item-side stages on top of the shared template copy (Payload.from_effect):
 ## enchant scaling, the outgoing stat-status seam, self-fuel consume, source identity.
 func _resolve_effect(effect: ItemEffect) -> Payload:
   var p := Payload.from_effect(effect)
-  if enchant != null:
-    p.value *= enchant.def.value_mult   # scale-a-value enchant (docs/systems/content.md / #26)
-  # Outgoing-damage stat-status seam (#6): scale an attack by the owner's modifiers AT FIRE
-  # TIME (e.g. Weak). A % multiplier, so it's locked into the payload here, cascade-safe.
-  if effect.mechanic == AttackMechanic.ID and owner != null:
-    p.value = StatusManager.modify_outgoing(owner, p.value, self)
+  # The enchant (docs/systems/content.md / #26) and, for an attack, the status bonuses on the owner
+  # and on this item (#6), worked out AT FIRE TIME and locked into the payload, cascade-safe.
+  p.value = _scaled_value(effect, true)
   # Status-stack consume (docs/systems/spore_engine.md Cap 1): SELF-fuel resolves now (the
   # owner is known) by spending its stacks + scaling. OPPONENT-fuel (Mass) rides the
   # payload's consume declaration to the Combat manager, which knows the resolved target.

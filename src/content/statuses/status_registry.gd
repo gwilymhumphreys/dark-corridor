@@ -20,6 +20,8 @@ static func _build() -> void:
   _creators[DecayStatus.ID] = func() -> StatusEffect: return DecayStatus.new()
   _creators[BleedStatus.ID] = func() -> StatusEffect: return BleedStatus.new()
   _creators[EmpoweredStatus.ID] = func() -> StatusEffect: return EmpoweredStatus.new()
+  _creators[AttackBonusStatus.ID] = func() -> StatusEffect: return AttackBonusStatus.new()
+  _creators[AttackPercentBonusStatus.ID] = func() -> StatusEffect: return AttackPercentBonusStatus.new()
 
 
 static func create(id: String) -> StatusEffect:

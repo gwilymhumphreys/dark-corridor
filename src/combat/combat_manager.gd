@@ -903,7 +903,7 @@ func throw_consumable(consumable, thrower: Actor) -> void:
     combat_log.on_throw(consumable.def.id, _side_of(thrower), timekeeper.sim_time)
   for effect in consumable.def.effects:
     # The shared template copy only — a throw deliberately SKIPS the item-side stages
-    # (enchant scaling, modify_outgoing, evasion): potions are exempt (decision #30).
+    # (enchant scaling, status bonuses, evasion): potions are exempt (decision #30).
     var p := Payload.from_effect(effect)
     p.source_actor = thrower   # event source identity; `source` stays null
     p.consumable = consumable   # the VFX origin: the effect starts from the potion's slot

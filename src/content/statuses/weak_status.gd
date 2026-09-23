@@ -16,5 +16,5 @@ func _init() -> void:
   icon = 'res://assets/icons/statuses/skill_loosen_the_weapon_nb.png'
 
 
-func modify_outgoing(amount: float, target, item = null, ctx = null) -> float:
-  return amount * Balance.STATUS_WEAK_DAMAGE_MULT   # blanket — no item/type scope (unlike the empower)
+func outgoing_bonus(target, item = null) -> Dictionary:
+  return {'percent': Balance.STATUS_WEAK_DAMAGE_MULT - 1.0}   # blanket — no item/type scope (unlike the empower)

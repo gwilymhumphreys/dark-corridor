@@ -9,7 +9,8 @@ terms of.
 
 **Location:** `src/content/mechanics/`
 
-All ten are built: attack, heal, shield, poison, burn, bleed, regen, crit, charge and decharge.
+All twelve are built: attack, heal, shield, poison, burn, bleed, regen, crit, charge, decharge and
+the two attack bonuses.
 
 ## Sound
 
@@ -42,13 +43,13 @@ back to its parent, which means a variant can be added or removed without touchi
 - **Damage** is health or shield lost from any source. Poison, burn and bleed deal damage but are
   not attacks.
 - **Stacks** is a status's `count`.
-- **The set** means the ten mechanics below. **Outside the set** means every other status and
+- **The set** means the twelve mechanics below. **Outside the set** means every other status and
   delivery kind (weak, vulnerable, blind, silence, spores, decay, empowered, summon, item creation),
   all unchanged by this system.
 
 Every number these rules use is a constant in `src/data/balance.gd`.
 
-## The ten
+## The twelve
 
 | Mechanic | Id | What it is | What it does |
 |---|---|---|---|
@@ -62,6 +63,8 @@ Every number these rules use is a constant in `src/data/balance.gd`.
 | **Crit** | `'crit'` | A chance on an item | When the item fires, rolls its crit chance. On a crit, that fire's mechanic values are multiplied. |
 | **Charge** | `'charge'` | Direct, on an item | Adds seconds of progress to the target item's cooldown bar, so it fires sooner. |
 | **Decharge** | `'decharge'` | Direct, on an item | Takes seconds of progress off the target item's cooldown bar, so it fires later. |
+| **Attack Bonus** (placeholder name) | `'attack_bonus'` | Status on an item | Adds its stacks as flat damage to each attack the item fires, for the rest of the fight. |
+| **Attack Percent Bonus** (placeholder name) | `'attack_percent_bonus'` | Status on an item | Raises each attack the item fires by its stacks as a percentage, for the rest of the fight. |
 
 Poison, burn, bleed and regen are statuses that are also mechanics: their effects are delivered as
 `MECHANIC` naming the mechanic, and their status classes copy their `name_key` / `desc_key` / `icon`
@@ -72,6 +75,41 @@ damage-over-time, and Mass fuel); regen and bleed extend `StatusEffect` directly
 are the text the tooltip keyword cards show the player, so the player is not yet told the real
 rules. Writing them is the owner's work. The icons come from `IconSlots` (see below), so they
 can be changed at runtime.
+
+## Combining bonuses
+
+Everything that changes an item's outgoing value is combined by one rule (owner, 2026-09-23),
+in `StatusManager.combine`:
+
+```
+(authored value + flat bonuses) × (1 + positive percentages added together) × (negative percentages multiplied together)
+```
+
+- Each status reports its share through `StatusEffect.outgoing_bonus(target, item)` as a flat
+  amount and a signed percentage, instead of changing the value itself.
+- `StatusManager.outgoing_bonuses(actor, item)` asks the owner's statuses and the firing item's own
+  statuses. Only attack effects get status bonuses.
+- The item's enchant counts as a percentage (`value_mult` − 1) and applies to every effect, not
+  only attacks.
+- Crit is outside the rule: it multiplies the combined value last (see [Crit](#crit)).
+- Incoming damage (Vulnerable) is a separate stage on the target, applied when the hit lands.
+- `Item.display_value` uses the same path, so a tooltip shows the combined value.
+
+## Attack bonuses
+
+The two attack bonus mechanics buff other items: an effect aims them at the owner's own items,
+usually with a target filter on the attack mechanic, so "attack items" means any item that lists
+attack in its `mechanics`, not only weapons. Each lands by applying its status to the target item
+(the base `Mechanic.land`).
+
+- `AttackBonusStatus` gives `{'flat': count}` and `AttackPercentBonusStatus` gives
+  `{'percent': count / 100}`, only for the item they sit on.
+- Re-applying adds to the count, so two +50% make +100%.
+- They have no timer. Statuses are cleared at the end of a fight (decision #26), so a bonus lasts
+  the rest of the fight it was applied in.
+- They are unpriced ([item_heuristics.md](../design/item_heuristics.md#what-this-leaves-unpriced)).
+- The tooltip shows their value as "+10" and "+50%".
+- They use the attack colour.
 
 ## Shield
 
@@ -243,7 +281,7 @@ missing file is not an error, so every slot falls back to its default.
 | `set_icon(slot, path)` | Records the chosen icon and saves `chosen.cfg`. |
 | `reset()` | Drops in-memory choices so the next read re-reads `chosen.cfg`. |
 
-The five statuses that copy a mechanic's icon in `_init` need no special handling: a status built
+The seven statuses that copy a mechanic's icon in `_init` need no special handling: a status built
 after a change already has the new icon.
 
 ## Colours
@@ -263,10 +301,11 @@ on 2026-09-18:
 | Crit | Placeholder pale yellow, not yet chosen |
 | Charge | White |
 | Decharge | Grey |
+| Attack Bonus, Attack Percent Bonus | The attack red (`Colours.ATTACK`), no variable of their own |
 
 Interface palette files name them in lower case (`attack`, `poison`); see
 [interface_palette.md](interface_palette.md). `ui-default.gpl` carries the same values, and the other
-palettes in `assets/palettes/new/ui/` carry all ten fitted to their own schemes.
+palettes in `assets/palettes/new/ui/` carry the first ten fitted to their own schemes.
 
 ## Health bar numbers
 
@@ -281,7 +320,7 @@ instead.
 ## Tooltip keyword cards
 
 `KeywordCatalog.has` / `get_entry` resolve a **mechanic** id from its `Mechanic` class (name /
-desc / colour / icon), so all ten mechanics have cards
+desc / colour / icon), so all twelve mechanics have cards
 ([tooltips.md](tooltips.md)). `TooltipContent.keyword_ids` adds each effect's mechanic id (attack and
 heal included) and `crit` for an item with a crit chance, and such an item gets an extra effect
 line reading its chance as a percentage beside the crit glyph.

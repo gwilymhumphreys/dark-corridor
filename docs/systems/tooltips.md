@@ -111,8 +111,8 @@ label so height is computed at the real width.
 `Item.fire()` / `_resolve_effect()` mutate (reset the cooldown, spend fuel). The
 tooltip computes display values with **separate pure methods** on `Item`:
 
-- `display_value(effect)` — `base_value` then the outgoing stat-status seam
-  (`StatusManager.modify_outgoing`, e.g. Weak). Pure.
+- `display_value(effect)` — the enchant plus, for an attack, the status bonuses on the owner and
+  on the item (`StatusManager.outgoing_bonuses`, e.g. Weak, the attack bonuses). Pure.
 - `base_value(effect)` — the authored value × enchant mult (a permanent modifier).
 
 The builder marks a value as `changed` when `display_value != base_value`, and the panel tints it
@@ -207,11 +207,16 @@ An effect's target phrase names what its `target_filter` narrows to (`tooltip_co
 The **actor** shapes (self / all opponents / the enemy) ignore the filter — a filter narrows an item
 pool, not an actor — and read their unfiltered baseline phrase. The four **item** shapes read the
 unfiltered phrase ("all your items") when the filter is null or empty, and a filtered phrase with the
-filter's term in the gap ("all your weapon items") when it is not: a `TYPE` condition contributes its
+filter's term in the gap ("each of your weapon items") when it is not. A filter of exactly one
+`MECHANIC` condition fills the gap with that mechanic's icon ("each of your [attack] items"), so
+`_shape_text` returns segments. Otherwise the gap is words: a `TYPE` condition contributes its
 lowercased singular type display name, a `MECHANIC` condition the lowercased mechanic name (an id that
 does not resolve is skipped, so a bad id never crashes a tooltip), and several terms join with a
 mode-dependent translated word (` and ` / ` or `). A filter whose term resolves to nothing falls back
 to the unfiltered phrase rather than emit an empty gap.
+
+The attack bonus lines put a sign on the value and the attack icon after it: "+10 [attack] to each
+of your [attack] items", "+50% [attack] to a random [attack] item of yours".
 
 ## Dev host
 

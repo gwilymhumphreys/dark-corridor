@@ -33,7 +33,7 @@ The Spore Druid is a **status-identity character** (the Slay-the-Spire Silent an
 Every capability here is **plumbing the GDScript-authored content drives** (decision #23), not a hardcoded effect — the same shape as the stat-status seams already built (handoff backlog #6: seams wired, the statuses themselves are the owner's `StatusEffect` classes):
 
 - `consume(target, id, amount)` is an **id-agnostic verb** on the stateless facade, beside `apply` — the *which status, how much, scaling* live on the `ItemDef` / the `StatusEffect` class (`is_fuel()`). The engine knows no "poison," no "Mass."
-- **Evasion is a `StatusEffect` hook** (`causes_evasion()`), beside the built `absorb` / `modify_outgoing` behaviours — the engine checks "does the source carry a status whose `causes_evasion()` returns true," **never the name "blinding."** Any status that overrides it evades.
+- **Evasion is a `StatusEffect` hook** (`causes_evasion()`), beside the built `absorb` / `outgoing_bonus` behaviours — the engine checks "does the source carry a status whose `causes_evasion()` returns true," **never the name "blinding."** Any status that overrides it evades.
 - The **roster add** is a general both-sides capability; *what* spawns (the token's authored actor definition + the spawn trigger on a relic/enchant) is content.
 - **Lethal-execute** stays a verify-content-vs-hook call, not a pre-built mechanic.
 

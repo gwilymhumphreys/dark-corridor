@@ -67,9 +67,9 @@ func test_vulnerable_amplifies_incoming_before_shield() -> void:
 func test_outgoing_damage_modifier_reads_weak() -> void:
   # #6 outgoing seam (the facade half): Weak lowers the holder's outgoing DAMAGE value.
   var a := Actor.new(100.0)
-  assert_almost_eq(StatusManager.modify_outgoing(a, 10.0), 10.0, 0.0001, 'no statuses → no change')
+  assert_almost_eq(StatusManager.combine(10.0, StatusManager.outgoing_bonuses(a)), 10.0, 0.0001, 'no statuses → no change')
   StatusManager.apply(a, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)
-  assert_almost_eq(StatusManager.modify_outgoing(a, 10.0), 10.0 * Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
+  assert_almost_eq(StatusManager.combine(10.0, StatusManager.outgoing_bonuses(a)), 10.0 * Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
     'Weak scales outgoing damage down')
 
 

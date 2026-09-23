@@ -82,6 +82,14 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
       if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:
         return _interpolate(tr('{0} {1} by {2}s'),
             [icon_seg, _shape_text(effect.shape, effect.target_filter), value_seg])
+      # The attack bonuses add to other items' attacks, so their line reads as "+10 [attack] to ..." /
+      # "+50% [attack] to ...", with the attack icon after the number.
+      if effect.mechanic == AttackBonusMechanic.ID:
+        value_seg['s'] = '+' + value_seg['s']
+        icon_seg = {'t': 'icon', 'id': AttackMechanic.ID}
+      elif effect.mechanic == AttackPercentBonusMechanic.ID:
+        value_seg['s'] = '+' + value_seg['s'] + '%'
+        icon_seg = {'t': 'icon', 'id': AttackMechanic.ID}
       if _is_basic_apply(effect):
         return [value_seg, icon_seg]
       if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
@@ -132,17 +140,21 @@ static func _value_seg(item: Item, effect: ItemEffect) -> Dictionary:
 ## The target phrase an effect line's {2} / {1} placeholder stands in for. The actor shapes (SELF,
 ## ALL_OPPONENTS, the default "the enemy") are baseline copy and ignore `filter` — a filter narrows
 ## an ITEM pool, not an actor. The four item shapes read differently when `filter` is non-empty: a
-## template with the filter's term in the gap ("all your {0} items"). A null or empty filter, or one
-## whose term resolves to nothing, falls back to the unfiltered baseline phrase. Baseline copy is the
-## owner's — every unfiltered phrase is byte-for-byte unchanged; the literal tr() calls (not a lookup
-## table) keep each phrase and template POT-extractable.
-func _shape_text(shape: int, filter: TargetFilter = null) -> Dictionary:
+## template with the filter's term in the gap ("each of your {0} items"). A filter of one mechanic
+## fills the gap with that mechanic's icon; otherwise the gap is words. A null or empty filter, or
+## one whose term resolves to nothing, falls back to the unfiltered baseline phrase. Baseline copy is
+## the owner's — every unfiltered phrase is byte-for-byte unchanged; the literal tr() calls (not a
+## lookup table) keep each phrase and template POT-extractable. Returns segments, because the gap
+## may be an icon.
+func _shape_text(shape: int, filter: TargetFilter = null) -> Array:
   if filter != null and not filter.is_empty() and _shape_has_item_pool(shape):
+    var template: String = _filtered_template(shape)
+    var icon_id: String = _filter_icon(filter)
+    if template != '' and icon_id != '':
+      return _interpolate(template, [{'t': 'icon', 'id': icon_id}])
     var term: String = _filter_term(filter)
-    if term != '':
-      var template: String = _filtered_template(shape)
-      if template != '':
-        return {'t': 'text', 's': template.format([term])}
+    if template != '' and term != '':
+      return [{'t': 'text', 's': template.format([term])}]
   # Actor shapes, an empty/null filter, or an unresolvable filter term: the unfiltered phrase.
   var phrase: String
   match shape:
@@ -160,7 +172,19 @@ func _shape_text(shape: int, filter: TargetFilter = null) -> Dictionary:
       phrase = tr('all your items')
     _:
       phrase = tr('the enemy')
-  return {'t': 'text', 's': phrase}
+  return [{'t': 'text', 's': phrase}]
+
+
+## The mechanic id whose icon stands for `filter` in a target phrase: set when the filter is one
+## mechanic condition that resolves, '' otherwise (a type, or several conditions, read as words).
+func _filter_icon(filter: TargetFilter) -> String:
+  if filter.conditions.size() != 1:
+    return ''
+  var condition: Dictionary = filter.conditions[0]
+  if condition.get('kind', TargetFilter.Kind.TYPE) != TargetFilter.Kind.MECHANIC:
+    return ''
+  var id: String = condition.get('id', '')
+  return id if MechanicRegistry.has(id) else ''
 
 
 ## True when the shape targets an item pool (a filter can narrow it), false for actor shapes.
@@ -182,7 +206,7 @@ func _filtered_template(shape: int) -> String:
     ItemEffect.Shape.OWN_ITEM_RANDOM:
       return tr('a random {0} item of yours')
     ItemEffect.Shape.ALL_OWN_ITEMS:
-      return tr('all your {0} items')
+      return tr('each of your {0} items')
   return ''
 
 
@@ -330,7 +354,12 @@ static func _interpolate(template: String, args: Array) -> Array:
             segs.append({'t': 'text', 's': buf})
             buf = ''
           var arg: Variant = args[int(idx_str)]
-          segs.append(arg if arg is Dictionary else {'t': 'text', 's': str(arg)})
+          if arg is Array:   # an argument that is itself several segments (a target phrase)
+            segs.append_array(arg)
+          elif arg is Dictionary:
+            segs.append(arg)
+          else:
+            segs.append({'t': 'text', 's': str(arg)})
           i = close + 1
           continue
     buf += template[i]

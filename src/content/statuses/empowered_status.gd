@@ -4,7 +4,7 @@ extends StatusEffect
 ## smith.md → The empower engine). A CONSUMED COUNTER (like Spores / shield — no timer, persists
 ## until spent): `count` is the banked charges, each of which DOUBLES one WEAPON attack. The two hooks
 ## split by path:
-##   - modify_outgoing (PULL, PURE) — doubles a weapon-typed DAMAGE payload while a charge is banked.
+##   - outgoing_bonus (PULL, PURE) — doubles a weapon-typed DAMAGE payload while a charge is banked.
 ##     It runs on the read-only tooltip-preview path too (Item.display_value), so it MUST NOT mutate
 ##     state; one charge = x2 of ONE attack, never x2^count.
 ##   - on_owner_item_fired (PUSH, real fire) — spends exactly ONE charge per weapon attack, so banking
@@ -24,13 +24,14 @@ func _init() -> void:
   icon = 'res://assets/icons/statuses/aura_flex_nb.png'
 
 
-## Double a WEAPON attack's outgoing DAMAGE while a charge is banked. PURE — no mutation (this also
-## runs in Item.display_value's tooltip preview; the charge-spend lives on on_owner_item_fired). Gated
-## on the firing `item` being a weapon, so a spell / skill damage attack is left at its base value.
-func modify_outgoing(amount: float, target, item = null, ctx = null) -> float:
+## Double a WEAPON attack's outgoing DAMAGE while a charge is banked, as a positive percentage
+## bonus (Balance.EMPOWER_MULT 2.0 = +100%). PURE — no mutation (this also runs in
+## Item.display_value's tooltip preview; the charge-spend lives on on_owner_item_fired). Gated on the
+## firing `item` being a weapon, so a spell / skill damage attack gets nothing.
+func outgoing_bonus(target, item = null) -> Dictionary:
   if count > 0.0 and item != null and item.def.types.has(ItemType.WEAPON):
-    return amount * Balance.EMPOWER_MULT
-  return amount
+    return {'percent': Balance.EMPOWER_MULT - 1.0}
+  return {}
 
 
 ## A weapon of the holder's just fired (the real-fire path): spend exactly ONE charge. A non-weapon

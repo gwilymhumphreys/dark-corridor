@@ -155,7 +155,7 @@ func test_crit_event_published_with_the_def_id_and_not_when_it_does_not_crit() -
 
 
 func test_crit_applies_after_weak() -> void:
-  # Weak scales the attack at fire time (modify_outgoing); the crit multiplies the
+  # Weak scales the attack at fire time (outgoing_bonus); the crit multiplies the
   # weakened value, so the landed value is the weakened value times the multiplier.
   var p := Actor.new(1000.0)
   var e := Actor.new(1000.0)

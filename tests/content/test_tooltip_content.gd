@@ -182,9 +182,13 @@ func test_type_line_names_the_tags_and_empty_for_untagged() -> void:
   assert_eq(TooltipContent.new().build(untagged)['type_line'], '', 'an untagged item has an empty type line')
 
 
-## The target phrase `_shape_text` produces for a shape + filter, as its 's' string.
+## The target phrase `_shape_text` produces for a shape + filter, as its text with each icon
+## written as [id].
 func _phrase(shape: int, filter: TargetFilter) -> String:
-  return TooltipContent.new()._shape_text(shape, filter)['s']
+  var text: String = ''
+  for seg: Dictionary in TooltipContent.new()._shape_text(shape, filter):
+    text += seg['s'] if seg['t'] == 'text' else '[%s]' % seg['id']
+  return text
 
 
 ## A type-tag filter (weapons) on ALL_OWN_ITEMS narrows the phrase to the lowercased weapon name,
@@ -204,12 +208,26 @@ func test_null_filter_gives_the_baseline_phrase() -> void:
       'a null filter gives the baseline phrase')
 
 
-## A mechanic filter names the mechanic (lowercased), so 'poison' appears in the phrase.
-func test_mechanic_filter_names_the_mechanic() -> void:
+## A filter of one mechanic shows that mechanic's icon in the gap.
+func test_mechanic_filter_shows_the_mechanic_icon() -> void:
   var f := TargetFilter.new()
   f.add_mechanic(PoisonMechanic.ID)
-  var phrase: String = _phrase(ItemEffect.Shape.ALL_OWN_ITEMS, f)
-  assert_true(phrase.find('poison') != -1, 'the phrase names the mechanic: %s' % phrase)
+  assert_eq(_phrase(ItemEffect.Shape.ALL_OWN_ITEMS, f), 'each of your [poison] items')
+
+
+## An attack bonus reads as its value with a sign, then the attack icon, then the target phrase.
+func test_attack_bonus_line_shows_the_attack_icon_after_the_value() -> void:
+  var def := ItemDef.new()
+  var f := TargetFilter.new()
+  f.add_mechanic(AttackMechanic.ID)
+  var bonus := ItemEffect.make(AttackBonusMechanic.ID, 10.0, ItemEffect.Shape.ALL_OWN_ITEMS)
+  bonus.target_filter = f
+  def.effects = [bonus]
+  var item := Item.new(def, _actor(100.0))
+  var text: String = ''
+  for seg: Dictionary in TooltipContent.new()._effect_line(item, bonus):
+    text += seg['s'] if seg.has('s') else '[%s]' % seg['id']
+  assert_eq(text, '+10 [attack] to each of your [attack] items')
 
 
 ## A filter on an actor shape is ignored: the phrase is the unfiltered baseline copy.

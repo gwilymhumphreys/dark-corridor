@@ -1,8 +1,8 @@
 extends GutTest
 ## The Smith empower engine (docs/design/smith.md → The empower engine) + its fire-pipeline seam
-## (the firing item is threaded into modify_outgoing / on_owner_item_fired so a status can scope to a
+## (the firing item is threaded into outgoing_bonus / on_owner_item_fired so a status can scope to a
 ## WEAPON attack). Proves: the double is weapon-scoped (not spells/skills), one charge is spent per
-## weapon attack (2 charges → 2 doubled → expires), modify_outgoing stays PURE on the preview path,
+## weapon attack (2 charges → 2 doubled → expires), outgoing_bonus stays PURE on the preview path,
 ## an empower applier banks a self charge (and stacks), and Weak + Empower compose without error.
 ## The authored cards (Mighty Blow, the three big weapons) are checked in
 ## tests/content/test_authored_content.gd.
@@ -70,7 +70,7 @@ func test_one_charge_per_weapon_attack_then_expires() -> void:
   var it := Item.new(_damage_def(40.0, ItemType.WEAPON), a)
   var emp := _find(a, 'empowered')
 
-  # Attack 1: modify_outgoing doubles (during fire), then on_owner_item_fired spends one charge (after).
+  # Attack 1: outgoing_bonus doubles (during fire), then on_owner_item_fired spends one charge (after).
   assert_almost_eq(it.fire()[0].value, 80.0, 0.0001, 'attack 1 is doubled (2 charges banked)')
   assert_false(emp.on_owner_item_fired(a, it, null), 'a charge remains after the first weapon attack')
   assert_almost_eq(emp.count, 1.0, 0.0001, 'spent exactly one charge')
@@ -104,7 +104,7 @@ func test_display_value_preview_is_pure() -> void:
   assert_almost_eq(it.display_value(it.def.effects[0]), 80.0, 0.0001,
     'the read-only preview SHOWS the doubled value')
   assert_almost_eq(emp.count, 1.0, 0.0001,
-    'but modify_outgoing is PURE — the preview spent no charge')
+    'but outgoing_bonus is PURE — the preview spent no charge')
 
 
 # --- an empower applier ---
@@ -125,13 +125,14 @@ func test_empower_charges_stack_on_repeat() -> void:
     'repeated empower fires stack charges (reapply is additive)')
 
 
-# --- composition: Weak + Empower both fold in modify_outgoing ---
+# --- composition: Weak + Empower both fold in outgoing_bonus ---
 
 func test_weak_and_empower_compose() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'empowered', 1.0)
   StatusManager.apply(a, 'weak', 1.0, Balance.STATUS_WEAK_DURATION)
   var it := Item.new(_damage_def(40.0, ItemType.WEAPON), a)
+  # Empower is a positive percentage and Weak a negative one; the two groups apply separately.
   var expected: float = 40.0 * Balance.EMPOWER_MULT * Balance.STATUS_WEAK_DAMAGE_MULT
   assert_almost_eq(it.fire()[0].value, expected, 0.0001,
-    'Weak and Empower both fold in modify_outgoing without error (the product)')
+    'Weak and Empower both apply (one positive and one negative percentage multiply)')

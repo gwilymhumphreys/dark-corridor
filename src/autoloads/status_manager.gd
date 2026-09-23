@@ -51,15 +51,35 @@ func advance_status(status: StatusEffect, target, ctx = null) -> bool:
   return status.on_step(target, ctx)
 
 
-## The product of `actor`'s outgoing-damage modifiers (#6) applied to an outgoing DAMAGE value at
-## fire time (Weak scales it down; the Smith empower doubles a weapon attack). Folds each status's
-## modify_outgoing in list order. `item` is the firing item (optional, default null) so a status can
-## scope to a weapon attack; pure (this runs in the tooltip-preview path too — no state mutation).
-func modify_outgoing(actor, amount: float, item = null, ctx = null) -> float:
-  var out: float = amount
-  for s in actor.statuses:
-    out = s.modify_outgoing(out, actor, item, ctx)
-  return out
+## Every status bonus to an outgoing attack from `item`: those on its owner `actor` (Weak, Empowered)
+## and those on the item itself (the attack bonuses). Either may be null. Pure — this runs in the
+## tooltip-preview path too.
+func outgoing_bonuses(actor, item = null) -> Array[Dictionary]:
+  var bonuses: Array[Dictionary] = []
+  if actor != null:
+    for s in actor.statuses:
+      bonuses.append(s.outgoing_bonus(actor, item))
+  if item != null:
+    for s in item.statuses:
+      bonuses.append(s.outgoing_bonus(item, item))
+  return bonuses
+
+
+## `value` with `bonuses` applied by the combining rule (docs/systems/mechanics.md → Combining
+## bonuses, owner 2026-09-23): flat bonuses are added first; positive percentages are added
+## together; negative percentages multiply together; the two groups are applied separately.
+static func combine(value: float, bonuses: Array[Dictionary]) -> float:
+  var flat: float = 0.0
+  var positive: float = 0.0
+  var negative: float = 1.0
+  for bonus: Dictionary in bonuses:
+    flat += bonus.get('flat', 0.0)
+    var percent: float = bonus.get('percent', 0.0)
+    if percent > 0.0:
+      positive += percent
+    elif percent < 0.0:
+      negative *= 1.0 + percent
+  return (value + flat) * (1.0 + positive) * negative
 
 
 ## True if `actor` carries any status that causes evasion (Blind) — the engine asks the instances,

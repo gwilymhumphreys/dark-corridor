@@ -1,7 +1,7 @@
 extends GutTest
 ## The mechanic registry (docs/systems/mechanics.md): one shared Mechanic instance per id, built
-## lazily like the StatusRegistry. This run registers all ten: attack, heal, shield, poison,
-## burn, bleed, regen, charge, decharge and crit.
+## lazily like the StatusRegistry. This run registers all twelve: attack, heal, shield, poison,
+## burn, bleed, regen, charge, decharge, crit and the two attack bonuses.
 
 
 func before_each() -> void:
@@ -23,6 +23,8 @@ func test_has_is_true_for_the_registered_ids_and_false_for_the_rest() -> void:
   assert_true(MechanicRegistry.has(ChargeMechanic.ID), 'charge is registered')
   assert_true(MechanicRegistry.has(DechargeMechanic.ID), 'decharge is registered')
   assert_true(MechanicRegistry.has(CritMechanic.ID), 'crit is registered')
+  assert_true(MechanicRegistry.has(AttackBonusMechanic.ID), 'attack bonus is registered')
+  assert_true(MechanicRegistry.has(AttackPercentBonusMechanic.ID), 'attack percent bonus is registered')
   assert_false(MechanicRegistry.has(''), 'an empty id is not registered')
 
 

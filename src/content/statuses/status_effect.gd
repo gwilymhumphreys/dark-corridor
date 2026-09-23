@@ -75,7 +75,7 @@ func on_holder_fired(item, ctx) -> void:
 ## Called on an ACTOR-targeted status when one of that actor's items FIRES — the actor-level twin of
 ## on_holder_fired (which fires for the one item the status sits ON). Receives the firing `item`, so a
 ## status can scope to a weapon attack (the Smith empower consumes a charge here). This is the
-## REAL-fire path (not the tooltip preview), so consuming state belongs here, not in modify_outgoing.
+## REAL-fire path (not the tooltip preview), so consuming state belongs here, not in outgoing_bonus.
 ## Returns true when the status has expired (the Combat manager removes it + runs on_expire);
 ## default no-op.
 func on_owner_item_fired(actor, item, ctx) -> bool:
@@ -93,12 +93,15 @@ func on_holder_attacked(target, ctx) -> bool:
 # --- modifiers (PULL — the engine queries these at the pipeline stage, in statuses-list order,
 #     so composition stays deterministic (#24) and amplify-before-absorb holds (#6)). ---
 
-## Scale an outgoing DAMAGE value at fire time. Receives the firing `item` (optional, default null),
-## so a status can scope to a weapon attack (the Smith empower doubles a weapon's damage; Weak
-## scales any). MUST stay PURE — it also runs on the read-only tooltip-preview path (Item.display_value),
-## so nothing here may mutate status state (the charge-spend lives on on_owner_item_fired).
-func modify_outgoing(amount: float, target, item = null, ctx = null) -> float:
-  return amount
+## This status's bonus to an outgoing ATTACK at fire time, as `{'flat': float, 'percent': float}`
+## (either key may be left out; `percent` is a signed fraction, +1.0 for double, -0.25 for a quarter
+## less). `target` is the status's holder (the owner actor, or the item it sits on); `item` is the
+## firing item, so a status can scope to a weapon attack. StatusManager.combine applies every
+## bonus by the rule in docs/systems/mechanics.md → Combining bonuses. MUST stay PURE — it also runs
+## on the read-only tooltip-preview path (Item.display_value), so nothing here may mutate status
+## state (the Empowered charge-spend lives on on_owner_item_fired).
+func outgoing_bonus(target, item = null) -> Dictionary:
+  return {}
 
 
 func modify_incoming(amount: float, target, ctx) -> float:

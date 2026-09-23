@@ -11,7 +11,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Item`]
 
 ## Purpose
 
-Items are the engine the player builds; the cascade is many small items firing. An item shares the **Draftable** base with Relic / Enchantment / Consumable (drafting, slow-mo-hover inspection, tooltips — see [design](../design/game_design.md)); this PRD covers the **combat-participant** side. Item power is many-small-not-few-big and roughly flat across rarity (design) — rarity buys complexity, not numbers.
+Items are the engine the player builds; the cascade is many small items firing. An item shares the **Draftable** base with Relic / Enchantment / Consumable (drafting, slow-mo-hover inspection, tooltips — see [design](../design/game_design.md)); this PRD covers the **combat-participant** side. Item power is many-small-not-few-big. Rarity buys both complexity and numbers: uncommon and rare items get a larger points budget (owner, 2026-09-23).
 
 What it **is not**:
 
@@ -23,7 +23,7 @@ What it **is not**:
 
 ## Definition vs. instance
 
-- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `mechanics` (the authored list of mechanic ids the item counts as — see [The mechanics list](#the-mechanics-list)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`, read on each use: the `Colours` variable named by `panel_colour_name`, else the first effect's colour. An effect's colour is likewise read on use (`ItemEffect.color`: its `colour_name`, else its mechanic's colour, else its status's). Each authored item is one file under `content/items/` ([authoring.md](../design/authoring.md)). (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
+- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity and power tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `mechanics` (the authored list of mechanic ids the item counts as — see [The mechanics list](#the-mechanics-list)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`, read on each use: the `Colours` variable named by `panel_colour_name`, else the first effect's colour. An effect's colour is likewise read on use (`ItemEffect.color`: its `colour_name`, else its mechanic's colour, else its status's). Each authored item is one file under `content/items/` ([authoring.md](../design/authoring.md)). (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
 - **Item instance** — runtime, on a board: a definition + live `Ticker` state + its one enchant (if any) + its item-targeted statuses. **Duplicates stack independently** — two of the same definition are two instances, each its own Ticker, firing twice (design).
 
 ---
@@ -46,7 +46,7 @@ When the item's `Ticker` crosses — its accumulator filled step-by-step, plus a
 
 1. **Gate check** — item-targeted gate statuses (e.g. *silence*) can suppress the fire (`StatusManager`). A gated item's cooldown **freezes** (decision #30): the Combat manager skips its accrual while a gate status sits on it, so a lifting gate never releases a banked burst — the first fire lands one full cooldown after the lift. (The in-`fire()` gate check stays as a backstop.)
 2. **Fire** — reset the cooldown; play the fire-emote (recoil / flash — combat_model.md). The fire is an event others can trigger off.
-3. **Resolve payload(s)** — for each of the item's effects, apply the enchant's permanent multiplier and the **owner's** outgoing-value statuses (`StatusManager`) → a **payload** `(kind, value)`, plus its target-shape and `travel_time`. The outgoing-damage modifier stage receives **the firing item itself** (`StatusManager.modify_outgoing(owner, value, self)`, #35) so an actor-targeted status can scope to a weapon attack — the Smith empower doubles only `weapon`-tagged damage; Weak scales any. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns.
+3. **Resolve payload(s)** — for each of the item's effects, apply the enchant and the outgoing-value bonuses of the **owner's** statuses and **the item's own** statuses, combined by one rule ([mechanics.md → Combining bonuses](mechanics.md#combining-bonuses)) → a **payload** `(kind, value)`, plus its target-shape and `travel_time`. The outgoing-damage modifier stage receives **the firing item itself** (`StatusManager.modify_outgoing(owner, value, self)`, #35) so an actor-targeted status can scope to a weapon attack — the Smith empower doubles only `weapon`-tagged damage; Weak scales any. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns.
 4. **Hand them up** — the item returns its payload(s) + shape + travel to the `Combat manager`, which resolves the shape and spawns a `combat_model.md` **Delivery** per target. The item never calls up.
 
 A fire may yield several payloads (a rare combining damage + heal); each becomes its own Delivery (fire-rate and travel are decoupled — combat_model.md).
@@ -75,9 +75,9 @@ The `Combat manager` (which knows sides + ordering) resolves the shape to actual
 
 ## Item-targeted statuses
 
-Items hold their own statuses (`StatusManager` rules; instances on the item). **Two kinds are implemented today:** **gates** (silence — consulted at step 1, `Item.is_gated`) and **use-statuses** (Decay — drained after the fire, step 5). 
+Items hold their own statuses (`StatusManager` rules; instances on the item). **Three kinds are implemented today:** **gates** (silence — consulted at step 1, `Item.is_gated`), **value bonuses** (the attack bonuses — consulted at step 3) and **use-statuses** (Decay — drained after the fire, step 5). 
 
-**Not implemented: item-targeted *value* modifiers.** An item-level "+2 damage" or "triggers twice next" status has no effect — `Item._resolve_effect` scales a payload by the enchant and by `StatusManager.modify_outgoing(owner, …)`, which iterates the **owner's** statuses only and never consults `Item.statuses`. A buff that raises the damage of *all* the owner's weapons already works as an actor-targeted status scoped by type tag (`EmpoweredStatus`, #35); a buff aimed at **one specific item** would need this seam added. Wiring it means calling the item's own statuses in `_resolve_effect` and mirroring that in the pure `display_value` preview path. Like every status, item-targeted statuses are **combat-scoped** (decision #26) — cleared at the fight's teardown, never carried between fights; the *permanent* item modifier is an **Enchantment** (one slot, below).
+**Item value bonuses.** `Item._resolve_effect` and the pure `display_value` preview both ask the item's own statuses for an `outgoing_bonus`, as well as the owner's, so a status on one item raises that item's attacks only ([mechanics.md → Attack bonuses](mechanics.md#attack-bonuses)). A buff for all the owner's weapons can still be an actor-targeted status scoped by type tag (`EmpoweredStatus`, #35). Like every status, item-targeted statuses are **combat-scoped** (decision #26) — cleared at the fight's teardown, never carried between fights; the *permanent* item modifier is an **Enchantment** (one slot, below).
 
 ---
 
@@ -100,7 +100,7 @@ Synergy is the core decision mechanism (design). The item side:
 
 ## Definition tags: rarity, size, damage-shape
 
-- **Rarity** (common / uncommon / rare → bronze / silver / gold border) — a *complexity* tier, **not** a power multiplier (design: power ~flat; numeric scaling is enchants). Common = simple/single-purpose; uncommon = conditional/interactive; rare = build-anchor / may combine multiple effects.
+- **Rarity** (common / uncommon / rare → bronze / silver / gold border) — a *complexity* tier and a *power* tier. Common = simple/single-purpose; uncommon = conditional/interactive; rare = build-anchor / may combine multiple effects. Uncommon and rare items get a larger points budget, so they are stronger as well as more involved; power is not meant to be flat across rarities (owner, 2026-09-23; multipliers in `Balance`, see [item_heuristics.md](../design/item_heuristics.md)).
 - **Size** — a *tempo* tag coupling cooldown ↔ per-hit value (bigger = slower = bigger hit; DPS roughly flat), ~2–3 sizes. Reads as rhythm, not power; distinct from rarity (border) and build-anchor (a separate glow channel). *A leaning from the art doc, to test — count and whether it ships are open.*
 - **Damage-shape** (single-target / AOE) — a per-damage-effect tag; feeds the target-shape.
 

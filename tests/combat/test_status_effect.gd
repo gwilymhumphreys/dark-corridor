@@ -14,7 +14,7 @@ func test_registry_builds_a_weak_status_for_its_id() -> void:
 
 func test_weak_scales_outgoing_damage_down() -> void:
   var w := StatusRegistry.create('weak')
-  assert_almost_eq(w.modify_outgoing(10.0, null, null), 10.0 * Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
+  assert_almost_eq(StatusManager.combine(10.0, [w.outgoing_bonus(null, null)]), 10.0 * Balance.STATUS_WEAK_DAMAGE_MULT, 0.0001,
     'Weak scales an outgoing DAMAGE payload by the Weak multiplier')
 
 
