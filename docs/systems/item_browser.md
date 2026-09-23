@@ -23,6 +23,7 @@ The export runs as a scene, not with `--script`, because the tooltip code it reu
 | `KeywordCatalog.get_entry()`, `IconSlots.icon_for()` | Keyword names, descriptions, icons and colours. Icons under `assets/icons/mechanics/` are white shapes tinted with the keyword colour, the same rule as `KeywordIcon` |
 | `CharacterCatalog.ids()` + each `item_pool`, `ColorlessPool.ITEMS` | Which characters can draft the item |
 | `EnemyCatalog.all_ids()` + each `item_ids` | Which enemies carry the item |
+| `ItemPoints.spend()`, `ItemPoints.budget()` | The points the item spends per fire and the budget for its charge time ([item_heuristics.md](../design/item_heuristics.md)). Effects that `spend` does not price (statuses, summons, created items, regen) mark the card as having unpriced effects |
 | `Colours.RARITY_*` | The rarity colour of the name and icon border |
 
 Icons are shrunk to `ICON_SIZE` in `item_browser.gd` before embedding to keep the page small.
@@ -32,7 +33,8 @@ Icons are shrunk to `ICON_SIZE` in `item_browser.gd` before embedding to keep th
 - Character buttons at the top pick one character's pool. Three more buttons show all items, items in no pool, and items on enemy boards. The starting selection is `CharacterCatalog.DEFAULT`.
 - Type, rarity and keyword chips filter the list. Within one row, an item matches if it has any of the selected values. The keyword row lists only keywords on the selected character's items. Clicking a keyword on a card toggles that keyword's filter.
 - The search box matches item names, ids, and the text of effect lines, flavour lines and keywords.
-- Items sort by name, rarity, charge time or first type, and can be grouped by first type or rarity.
+- Each card shows the item's points, its budget and the points as a share of the budget.
+- Items sort by name, rarity, charge time, points, points as a share of budget, or first type, and can be grouped by first type or rarity.
 - Each card's footer shows the item id, other characters whose pool has the item, enemies that carry it, and `starting_uses` when it is set. A card for an item in no pool has a dashed border.
 - The selected character, filters, sort and grouping are kept in the browser's local storage.
 

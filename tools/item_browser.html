@@ -34,10 +34,6 @@
     margin: 0 auto;
   }
   header {
-    position: sticky;
-    top: env(safe-area-inset-top, 0px);
-    z-index: 2;
-    background: var(--ground);
     border-bottom: 1px solid var(--edge);
     padding-block: 14px 12px;
     display: grid;
@@ -153,6 +149,8 @@
   .lines { display: grid; gap: 4px; padding: 8px 10px; background: #171615; border-radius: 3px; }
   .line { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; font-size: 16px; }
   .value { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .points { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 14px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .points strong { color: var(--text); font-weight: 700; }
   .flavor { font-style: italic; color: var(--text-dim); font-size: 15px; margin: 0; }
   .glyph, .picture { display: inline-block; width: 20px; height: 20px; flex: none; vertical-align: middle; }
   .glyph { -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
@@ -187,6 +185,8 @@
           <option value="name">Name</option>
           <option value="rarity">Rarity</option>
           <option value="cooldown">Charge time</option>
+          <option value="points">Points</option>
+          <option value="budget-share">Points against budget</option>
           <option value="type">Type</option>
         </select>
         <label class="group-label" for="group-by" style="margin-left:8px">Group</label>
@@ -298,6 +298,14 @@ function lineNode(segments) {
   return line;
 }
 
+function formatNumber(value) {
+  return String(Math.round(value * 10) / 10);
+}
+
+function budgetShare(item) {
+  return item.budget > 0 ? item.points / item.budget : 0;
+}
+
 function characterName(id) {
   const character = DATA.characters.find((c) => c.id === id);
   return character ? character.name : id;
@@ -331,6 +339,20 @@ function card(item) {
     node.append(el('div', { class: 'lines' }, item.lines.map(lineNode)));
   }
   if (item.flavor) node.append(el('p', { class: 'flavor', text: item.flavor }));
+
+  const points = el('div', { class: 'points' }, [
+    el('span', {}, ['Points ', el('strong', { text: formatNumber(item.points) })]),
+    el('span', { text: `Budget ${formatNumber(item.budget)}` }),
+    el('span', { text: `${Math.round(budgetShare(item) * 100)}% of budget` }),
+  ]);
+  if (item.unpriced) {
+    points.append(el('span', {
+      class: 'tag-warn',
+      text: 'Has unpriced effects',
+      title: 'Statuses, summons, created items and regen add nothing to the points yet',
+    }));
+  }
+  node.append(points);
 
   if (item.keyword_ids.length) {
     const keywords = el('div', { class: 'keywords' });
@@ -397,6 +419,8 @@ function compare(a, b) {
   let result = 0;
   if (state.sort === 'rarity') result = RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity);
   else if (state.sort === 'cooldown') result = a.cooldown - b.cooldown;
+  else if (state.sort === 'points') result = b.points - a.points;
+  else if (state.sort === 'budget-share') result = budgetShare(b) - budgetShare(a);
   else if (state.sort === 'type') result = firstTypeIndex(a) - firstTypeIndex(b);
   return result || a.name.localeCompare(b.name);
 }

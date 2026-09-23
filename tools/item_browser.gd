@@ -33,6 +33,10 @@ func _ready() -> void:
     get_tree().quit(1)
     return
   var data: Dictionary = _build_data()
+  if data.is_empty():
+    push_error('item_browser: an item failed to build; the page was not written')
+    get_tree().quit(1)
+    return
   var page: String = template.replace(DATA_MARKER, JSON.stringify(data))
   var file: FileAccess = FileAccess.open(OUT_PATH, FileAccess.WRITE)
   if file == null:
@@ -46,6 +50,8 @@ func _ready() -> void:
   get_tree().quit(0)
 
 
+## The page data, or an empty Dictionary when an item cannot be built (a script error in the item
+## code leaves its definition null), so a broken export never replaces a working page.
 func _build_data() -> Dictionary:
   var characters: Array = []
   var pools: Dictionary = {}   # item id -> Array of character ids
@@ -74,7 +80,11 @@ func _build_data() -> Dictionary:
   var tooltip := TooltipContent.new()
   for item_id: String in ItemCatalog.all_ids():
     var def: ItemDef = ItemCatalog.get_def(item_id)
+    if def == null:
+      return {}
     var content: Dictionary = tooltip.build(Item.new(def))
+    if not content.has('lines'):
+      return {}
     _register_keyword(IconSlots.CHARGE_TIME)
     for line: Array in content['lines']:
       _register_line_icons(line)
@@ -96,6 +106,9 @@ func _build_data() -> Dictionary:
       'mechanics': def.mechanics,
       'crit_chance': def.crit_chance,
       'starting_uses': def.starting_uses,
+      'points': ItemPoints.spend(def),
+      'budget': ItemPoints.budget(def.cooldown),
+      'unpriced': _has_unpriced_effect(def),
       'pools': pools.get(item_id, []),
       'enemies': enemy_boards.get(item_id, []),
     })
@@ -113,6 +126,15 @@ func _build_data() -> Dictionary:
     'icons': _icons,
     'items': items,
   }
+
+
+## True when an effect adds nothing in ItemPoints.spend (a status, summon or created item, or an
+## unpriced mechanic such as regen), so the item's points undercount it.
+func _has_unpriced_effect(def: ItemDef) -> bool:
+  for effect: ItemEffect in def.effects:
+    if effect.kind != Delivery.Kind.MECHANIC or effect.mechanic == RegenMechanic.ID:
+      return true
+  return false
 
 
 func _register_line_icons(line: Array) -> void:

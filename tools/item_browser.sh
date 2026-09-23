@@ -8,7 +8,8 @@ set -uo pipefail
 
 LOG="$LOG_DIR/item_browser.log"
 
-"$GODOT" --headless --path . res://tools/item_browser.tscn > "$LOG" 2>&1
+# The time limit stops a run that hangs at exit after script errors.
+timeout 120 "$GODOT" --headless --path . res://tools/item_browser.tscn > "$LOG" 2>&1
 STATUS=$?
 
 grep -nE 'SCRIPT ERROR|ERROR:|Parse Error|WARNING: item_browser' "$LOG" | head -20
