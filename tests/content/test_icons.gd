@@ -13,13 +13,13 @@ func after_each() -> void:
 
 
 func test_every_item_has_an_icon() -> void:
-  ItemCatalog.get_def(ItemCatalog.ENEMY_CLAW)   # builds the catalog
+  ItemCatalog.get_def('claw')   # builds the catalog
   for id: String in ItemCatalog._defs:
     _assert_icon((ItemCatalog._defs[id] as ItemDef).icon, 'item %s' % id)
 
 
 func test_every_potion_has_an_icon() -> void:
-  ConsumableCatalog.get_def(ConsumableCatalog.HEALING_DRAUGHT)   # builds the catalog
+  ConsumableCatalog.get_def('healing_draught')   # builds the catalog
   for id: String in ConsumableCatalog._defs:
     _assert_icon((ConsumableCatalog._defs[id] as ConsumableDef).icon, 'potion %s' % id)
 
@@ -43,7 +43,7 @@ func test_every_character_has_a_portrait() -> void:
 
 func test_every_enemy_has_a_portrait_or_an_image() -> void:
   # An ally slot shows the portrait, or the image when there is no portrait (ActorDef.make_actor).
-  EnemyCatalog.get_def(EnemyCatalog.GRUNT)   # builds the catalog
+  EnemyCatalog.get_def('grunt')   # builds the catalog
   for id: String in EnemyCatalog._defs:
     var def: EnemyDef = EnemyCatalog._defs[id]
     assert_true(def.portrait != '' or def.image != '', 'enemy %s names a portrait or an image' % id)

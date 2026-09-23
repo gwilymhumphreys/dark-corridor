@@ -41,7 +41,7 @@ func _attack_def(types: Array[String], mechanics: Array[String]) -> ItemDef:
   hit.value = 5.0
   hit.shape = ItemEffect.Shape.ALL_OPPONENTS
   def.effects = [hit]
-  def.panel_color = Colours.ATTACK
+  def.panel_colour_name = 'ATTACK'
   return def
 
 
@@ -59,7 +59,7 @@ func _status_def(status_id: String) -> ItemDef:
   eff.value = 1.0
   eff.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   def.effects = [eff]
-  def.panel_color = Colours.ATTACK
+  def.panel_colour_name = 'ATTACK'
   return def
 
 
@@ -76,7 +76,7 @@ func _heal_def() -> ItemDef:
   heal.value = 10.0
   heal.shape = ItemEffect.Shape.SELF
   def.effects = [heal]
-  def.panel_color = Colours.HEAL
+  def.panel_colour_name = 'HEAL'
   return def
 
 

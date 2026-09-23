@@ -15,44 +15,71 @@ is localizable.)
 
 ## The model
 
-Content = typed GDScript **def objects** in static **catalogs**, keyed by a **string id**
-(decision #23), organized by kind under `src/content/<kind>/`:
+Content is typed GDScript **definitions** keyed by a **string id** (decision #23). Each authored
+definition is **one file** under the top-level `content/` folder:
 
-`items/` · `enemies/` · `relics/` · `consumables/` · `enchants/` · `encounters/` · `statuses/` · `characters/`
+`content/items/<character>/` · `enemies/` · `relics/` · `consumables/` · `enchants/` · `encounters/` · `characters/`
 
-Each kind has a `*_def.gd` (the schema), a `*_catalog.gd` (the collection — lazily built, keyed by
-string id), and where relevant a runtime instance class (`relic.gd`, `enchantment.gd`,
-`consumable.gd`). **Statuses are the exception:** they are not def-objects but **polymorphic
-`StatusEffect` subclasses** (one class per status, keyed by string id #23, registered in
-`StatusRegistry`) — see below.
+A definition file extends its def class (`ItemDef`, `EnemyDef`, …) and sets its fields in `_init()`.
+Its numbers are written on it; `Balance` holds only values shared by several definitions or systems
+(`WEAPON_TRAVEL`, status durations, the points curve). The engine side stays in `src/content/<kind>/`:
+the def class (the schema), the catalog, and where relevant a runtime class (`relic.gd`,
+`enchantment.gd`, `consumable.gd`). Each catalog builds itself on first access by loading every
+script in its `content/` folder, subfolders included (`ContentFolder`), so adding a file is all it
+takes. Two definitions with the same id is an error. **Statuses are the exception:** they are
+`StatusEffect` subclasses in `src/content/statuses/`, registered in `StatusRegistry` — see below.
 
 ## To add a draftable item (the common case)
 
-1. **Write the def.** Add a `_name() -> ItemDef` builder in `items/item_catalog.gd` (or a new
-   themed file the catalog aggregates). Give it a **string id** with a const alias —
-   `const POCKET_SHROOMS := 'pocket_shrooms'` — and set its effects via `ItemEffect` (`mechanic` for any of the eight mechanics — attack, shield, heal, poison, burn, bleed, regen, crit — otherwise kind / value
-   / shape / travel / `status_id` + `duration` for a status applier, the `consume_id` Mass fields,
-   the `summon_*` fields). Set the item's `types` — one or more `ItemType` tags (`weapon` / `armour` /
-   `skill` / `spell` / `trinket`), inert synergy labels ([item.md](../systems/item.md)). Shared numbers
-   point to `Balance`; the player-facing `name_key` is source English. Set `icon` to a `res://` path
-   under `assets/icons/items/` (a copy from the icon pack, file name in snake_case); `tests/content/test_icons.gd`
-   fails if it is missing.
-2. **Register it.** Add it to the catalog's `_build()` — `_defs[POCKET_SHROOMS] = _pocket_shrooms()`.
-3. **Make it live.** Add the id to a character's `item_pool` in `characters/character_catalog.gd` —
-   or to `items/colorless_pool.gd` if it genuinely belongs to *every* character (the exception that
-   earns it, never a default tier — decision #27).
+1. **Write the file.** `content/items/<character>/<id>.gd`, named after the item:
+
+   ```gdscript
+   extends ItemDef
+   ## Warhammer — what the item is for, and anything a tuner needs to know about its numbers.
+
+
+   func _init() -> void:
+     id = 'warhammer'
+     name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
+     types = [ItemType.WEAPON]
+     mechanics = [AttackMechanic.ID, DechargeMechanic.ID]
+     icon = 'res://assets/icons/items/war_hammer.png'
+     cooldown = 6.0
+     effects = [
+       ItemEffect.attack(73.0),
+       ItemEffect.make(DechargeMechanic.ID, 1.0, ItemEffect.Shape.OPPONENT_ITEM_RANDOM),
+     ]
+   ```
+
+   - The id matches the file name and is unique across all items. There is no character prefix;
+     the folder shows the character, and the folder means nothing to the catalog.
+   - Effects come from the `ItemEffect` constructors: `attack`, `shield`, `heal`, `make` (any
+     mechanic on any shape) and `apply_status`. They set travel from the shape (thrown at the other
+     side, instant on your own). Effects that spend statuses, summon or create items set their fields
+     on an `ItemEffect.new()` ([item.md](../systems/item.md)).
+   - `types` are inert synergy labels (`weapon` / `armour` / `skill` / `spell` / `trinket`).
+     `mechanics` is the keyword list, written by hand in alphabetical order.
+   - Write `name_key = '...'` out in full; the translation extractor finds names by that literal.
+   - `icon` is a `res://` path under `assets/icons/items/`; `tests/content/test_icons.gd` fails if it
+     is missing.
+   - The panel colour follows the first effect's mechanic or status. Set `panel_colour_name` to a
+     `Colours` variable name (`'STATUS_DECAY'`) only when that is the wrong colour.
+2. **Make it live.** Add the id to the character's `item_pool` in
+   `content/characters/<character>.gd`, or to `src/content/items/colorless_pool.gd` if it genuinely
+   belongs to every character (the exception that earns it, never a default tier — decision #27).
+3. **Reimport** (`tools/import.sh`) so Godot sees the new file.
 
 To see a character's items side by side with their tooltip text, run `tools/item_browser.sh` and open
 `_temp/item_browser.html` ([item_browser.md](../systems/item_browser.md)).
 
 **Active / disabled = pool membership.** A def that exists but is in no pool is "disabled" — it's
 authored and inspectable but never drafted. That is the toggle: add/remove the id from a pool. Not
-a flag on the def, not a folder. (`HEX_BOLT` / `SUNDER` are catalog-only examples today.)
+a flag on the def. (`content/items/examples/` holds the unpooled working examples.)
 
 ## Other kinds
 
-Enemies, relics, potions, enchants, and encounters follow the same **def + catalog**
-pattern in their own dir — see the matching PRD ([item](../systems/item.md) ·
+Enemies, relics, potions, enchants, encounters and characters follow the same one-file-per-definition
+pattern in their own `content/` folder — see the matching PRD ([item](../systems/item.md) ·
 [enemy](../systems/enemy.md) ·
 [content](../systems/content.md) (relics/enchants/potions) · [encounter](../systems/encounter.md))
 for each def's fields and how it resolves.
@@ -65,16 +92,16 @@ for each def's fields and how it resolves.
   creator`). An applier (item/relic) references it by string id (`status_id = 'weak'`) and, for a
   timed status, sets `duration` (per-application). See [status PRD](../systems/status_manager.md).
 
-- A **character** is a `CharacterDef` (`characters/character_catalog.gd`): its own `item_pool`,
+- A **character** is a `CharacterDef` (`content/characters/<id>.gd`): its own `item_pool`,
   starting board, starting relic, starting potions/enchants. The starting board is normally written
   as **type constraints** (`starting_item_types`, e.g. `[WEAPON, SKILL, ARMOUR]`) rather than fixed
   ids: one random item of each listed type is drawn from the character's own pool at run start, so
   every run opens differently. Repeating a type asks for two of it, and each slot draws a distinct
   item. `starting_item_ids` still works for a fixed opening and is used when no types are set. Its display is two lines on the select
   screen: `name_key` is the character's personal name, `subtitle_key` the role beneath it
-  (`'Rot Shepherd'`). The `id` stays the internal working label (`spore_druid`) and never displays. Adding a character = a def + registering
-  it; the run picks one at `start`.
-- An **enemy** (also used for allies and summons) is an `EnemyDef` in `enemies/enemy_catalog.gd`:
+  (`'Rot Shepherd'`). The `id` stays the internal working label (`spore_druid`) and never displays. Adding a character = a file plus its place in
+  `CharacterCatalog.ids()`, which sets the select-screen order.
+- An **enemy** (also used for allies and summons) is an `EnemyDef` (`content/enemies/<id>.gd`):
   health, an ordered board of item ids (any item, including one from a player pool — #43), and
   optionally an `image` (its cut-out monster painting) and a `portrait` (falls back to the image).
   Size it to its act's points range in [`encounter_points_budget.md`](../plans/encounter_points_budget.md).

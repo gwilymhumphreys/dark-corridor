@@ -298,7 +298,7 @@ func _build_fight() -> Dictionary:
   for id in CharacterCatalog.starting_board(character_def, board_rng):
     player.board.append(Item.new(ItemCatalog.get_def(id), player))
 
-  var grunt: EnemyDef = EnemyCatalog.get_def(EnemyCatalog.GRUNT)
+  var grunt: EnemyDef = EnemyCatalog.get_def('grunt')
   var enemy: Actor = grunt.make_actor()
 
   var names: Dictionary = {}

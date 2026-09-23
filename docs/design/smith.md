@@ -70,6 +70,10 @@ do.
 keeps both halves playable. The usual risk is that one quietly dies and the choice turns out to be
 fake.
 
+**Plain items are few and each has a role (owner, 2026-09-23).** The pool should not carry many
+weapons or armour pieces with no other effect. A few are fine, as long as each fills a different
+role rather than differing only in speed.
+
 Keep the non-signature threads simple. This is the low-load character, so they should be the kind
 a player can reason about at a glance.
 
@@ -134,9 +138,8 @@ per-hit climbs while damage per second climbs more slowly and the slowest weapon
 empower target. Mighty Blow is priced against the slowest weapon it can reach rather than an
 average one, because a charge is worth whatever it doubles. That sets its cooldown: one cooldown
 cycle adds one weapon's per-hit damage, so the cooldown has to be the one whose budget equals the
-biggest per-hit the Smith can reach, which is the slowest weapon's. The numbers live in `Balance`
-(`SMITH_BROADAXE_*`, `SMITH_WARHAMMER_*`, `SMITH_GREATSWORD_*`, `MIGHTY_BLOW_COOLDOWN`,
-`MIGHTY_BLOW_CHARGES`, `EMPOWER_MULT`).
+biggest per-hit the Smith can reach, which is the slowest weapon's. The numbers are on each item's
+file in `content/items/smith/`; the doubling is `Balance.EMPOWER_MULT`.
 
 **Terminology:** "attack" is the act of dealing damage; "weapon attack" is an attack from a
 weapon-typed item.
@@ -175,8 +178,8 @@ charge belongs on `on_owner_item_fired`, which only runs on a real fire.
 
 ## Authored so far
 
-**Location:** `CharacterCatalog._smith()` (`src/content/characters/character_catalog.gd`), items in
-`ItemCatalog`, numbers in `Balance`, the status in `src/content/statuses/empowered_status.gd`.
+**Location:** the character in `content/characters/smith.gd`, one file per item in
+`content/items/smith/`, the status in `src/content/statuses/empowered_status.gd`.
 
 The empower engine, the three big weapons and the four armour items are built and in the Smith's
 pool. The names are placeholders; the numbers are on the budget curve.
@@ -186,12 +189,12 @@ pool. The names are placeholders; the numbers are on the budget curve.
   charge per weapon attack. Registered in `StatusRegistry`.
 - **Mighty Blow** (`mighty_blow`, `[skill]`) — a plain-cooldown metronome that applies `empowered`
   to self, stacking.
-- **The three big weapons** (`smith_broadaxe`, `smith_warhammer`, `smith_greatsword`, all
+- **The three big weapons** (`broadaxe`, `warhammer`, `greatsword`, all
   `[weapon]`) — single-target, opponent-leftmost, on a rising cooldown and per-hit ladder.
   The Warhammer also decharges one random enemy item by a second (owner, 2026-09-23), so it
   slows the enemy as well as hitting; the other two are plain.
-- **The four armour items** (`smith_vambraces`, `smith_sallet`, `smith_kite_shield`,
-  `smith_breast_plate`, all `[armour]`) — plain shield-to-self on a rising cooldown and shield
+- **The four armour items** (`vambraces`, `sallet`, `kite_shield`,
+  `breast_plate`, all `[armour]`) — plain shield-to-self on a rising cooldown and shield
   ladder, the defensive counterpart to the weapon ladder. Names come from
   [`item_name_reference.md`](item_name_reference.md) and are the owner's to change.
 

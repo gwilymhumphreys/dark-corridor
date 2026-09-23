@@ -6,20 +6,20 @@ extends GutTest
 
 # Every AUTHORED character, rostered or not — the Smith is authored but not yet in ids().
 const CHARACTER_IDS: Array = [
-  CharacterCatalog.SPORE_DRUID,
-  CharacterCatalog.FLESHMANCER,
-  CharacterCatalog.SMITH,
+  'spore_druid',
+  'fleshmancer',
+  'smith',
 ]
 
 const ENCOUNTER_IDS: Array = [
-  EncounterCatalog.FIGHT_GRUNT,
-  EncounterCatalog.REST,
-  EncounterCatalog.FIGHT_ELITE,
-  EncounterCatalog.FIGHT_RELIC,
-  EncounterCatalog.FIGHT_TOUGH,
-  EncounterCatalog.FIGHT_BOSS,
-  EncounterCatalog.EVENT_SHRINE,
-  EncounterCatalog.EVENT_WANDERER,
+  'fight_grunt',
+  'rest',
+  'fight_elite',
+  'fight_relic',
+  'fight_tough',
+  'fight_boss',
+  'event_shrine',
+  'event_wanderer',
 ]
 
 const ITEM_TYPE_IDS: Array = [
@@ -65,7 +65,7 @@ func test_encounter_defs_resolve_their_references() -> void:
 
 
 func test_enemy_boards_resolve() -> void:
-  for enemy_id in [EnemyCatalog.GRUNT, EnemyCatalog.BRUTE, EnemyCatalog.BOSS, EnemyCatalog.SPORE_THRALL]:
+  for enemy_id in ['grunt', 'brute', 'boss', 'spore_thrall']:
     var def: EnemyDef = EnemyCatalog.get_def(enemy_id)
     for item_id in def.item_ids:
       assert_not_null(ItemCatalog.get_def(item_id), '%s: board item %s resolves' % [enemy_id, item_id])
@@ -175,3 +175,29 @@ func test_item_target_filter_ids_resolve() -> void:
           TargetFilter.Kind.MECHANIC:
             assert_true(MechanicRegistry.has(id),
                 '%s: target filter MECHANIC condition id %s resolves' % [item_id, id])
+
+
+func test_every_content_file_loads_as_a_definition_with_a_unique_id() -> void:
+  for folder: String in [ItemCatalog.FOLDER, EnemyCatalog.FOLDER, RelicCatalog.FOLDER,
+      ConsumableCatalog.FOLDER, EnchantCatalog.FOLDER, EncounterCatalog.FOLDER,
+      CharacterCatalog.FOLDER]:
+    var files: int = ContentFolder._script_paths(folder).size()
+    assert_gt(files, 0, '%s has content' % folder)
+    # load_defs leaves out a file that makes no definition, or whose id is already taken.
+    assert_eq(ContentFolder.load_defs(folder).size(), files,
+        'every file in %s is one definition with its own id' % folder)
+
+
+func test_every_colour_name_on_content_is_a_colour() -> void:
+  var colours_script: Script = Colours
+  var names: Array[String] = []
+  for id: String in ItemCatalog.all_ids():
+    var def: ItemDef = ItemCatalog.get_def(id)
+    names.append(def.panel_colour_name)
+    for effect: ItemEffect in def.effects:
+      names.append(effect.colour_name)
+  for path: String in ContentFolder._script_paths(RelicCatalog.FOLDER):
+    names.append((load(path).new() as RelicDef).panel_colour_name)
+  for colour_name: String in names:
+    if colour_name != '':
+      assert_true(colours_script.get(colour_name) is Color, '%s is a Colours variable' % colour_name)

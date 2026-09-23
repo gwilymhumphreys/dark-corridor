@@ -98,11 +98,11 @@ Fungal without being a spore (thallids, saprolings, the dead rising as spore-thr
 
 | Name | Shape (ST/AoE) | Archetype | Effect | Notes |
 |------|----------------|-----------|--------|-------|
-| Druid Staff | ST | mass (x) | 10 dmg, 3s; apply 1 Spore | The starter Spores applier. Single-target so Spores pile on one enemy (the Mass shape); a cross-cutting common that also feeds distinct-status variety. Authored: `ItemCatalog.DRUID_STAFF`, in the Spore Druid pool. |
-| Spore Spitter † | ST | mass (x) | 4 dmg, 1s; apply 1 Spore | Fast pole of the first weapon spread. 1s cooldown = ~1 Spore/sec — the kit's fastest Mass-fuel engine. 4 DPS. `ItemCatalog.SPORE_SPITTER`. |
-| Capped Cudgel † | ST | x | 10 dmg, 2s | Middle pole: clean tempo weapon, NO spore. 5 DPS baseline — the pure-damage draft option. `ItemCatalog.CAPPED_CUDGEL`. |
-| Bloomhammer † | ST | mass (x) | 40 dmg, 5s; apply 2 Spores | Slow pole: heavy hit that dumps 2 fuel in one strike. 8 DPS — slow accrual but a sudden fuel spike. `ItemCatalog.BLOOMHAMMER`. |
-| Wilt Frond † | ST | x | 20 dmg, 4s; apply Weak (2s) | A Weakness applier. Damage sits 2 DPS under the curve (7→5 = 20 dmg) to pay for the Weak rider ([`item_heuristics.md`](item_heuristics.md)). Weak isn't Mass fuel — feeds distinct-status variety. `ItemCatalog.WILT_FROND`. |
+| Druid Staff | ST | mass (x) | 10 dmg, 3s; apply 1 Spore | The starter Spores applier. Single-target so Spores pile on one enemy (the Mass shape); a cross-cutting common that also feeds distinct-status variety. Authored: `druid_staff`, in the Spore Druid pool. |
+| Spore Spitter † | ST | mass (x) | 4 dmg, 1s; apply 1 Spore | Fast pole of the first weapon spread. 1s cooldown = ~1 Spore/sec — the kit's fastest Mass-fuel engine. 4 DPS. `spore_spitter`. |
+| Capped Cudgel † | ST | x | 10 dmg, 2s | Middle pole: clean tempo weapon, NO spore. 5 DPS baseline — the pure-damage draft option. `capped_cudgel`. |
+| Bloomhammer † | ST | mass (x) | 40 dmg, 5s; apply 2 Spores | Slow pole: heavy hit that dumps 2 fuel in one strike. 8 DPS — slow accrual but a sudden fuel spike. `bloomhammer`. |
+| Wilt Frond † | ST | x | 20 dmg, 4s; apply Weak (2s) | A Weakness applier. Damage sits 2 DPS under the curve (7→5 = 20 dmg) to pay for the Weak rider ([`item_heuristics.md`](item_heuristics.md)). Weak isn't Mass fuel — feeds distinct-status variety. `wilt_frond`. |
 
 > † **Placeholder name** — agent-coined, owner's to rename (also flagged in the def's `name_key` comment).
 
@@ -146,7 +146,7 @@ On-mechanism standouts: thallid counter, decompose-for-fuel, board-linking, spaw
 |------|------|-------|-----------|--------|-------|
 | Pocket Shrooms | A | ST | x | 10 dmg, 3s; apply 1 blinding spore (2s blind) | The blinding enabler. ~3.3 DPS attack + a timed control rider; **rare for the access to blinding, not for bigger numbers** (rarity = complexity, not power). |
 
-> **Authored in code** as `ItemCatalog.POCKET_SHROOMS` (the first multi-effect rare + first Spore Druid card). Now in the **Spore Druid's `item_pool`** (#27) alongside Druid Staff; reachable in drafts once the Spore Druid is flipped into `CharacterCatalog.ids()` (selectable).
+> **Authored in code** as `content/items/spore_druid/pocket_shrooms.gd` (the first multi-effect rare + first Spore Druid card). Now in the **Spore Druid's `item_pool`** (#27) alongside Druid Staff; reachable in drafts once the Spore Druid is flipped into `CharacterCatalog.ids()` (selectable).
 
 ---
 

@@ -2,7 +2,7 @@ class_name ItemDef
 extends RefCounted
 ## The item definition (docs/systems/item.md) — authored in GDScript (#23), collected in
 ## ItemCatalog. Configures one Item class; rarity is a complexity tier, not a
-## power multiplier. Numbers point to Balance.
+## power multiplier. Each authored item is its own file under content/items/.
 
 enum Rarity { COMMON, UNCOMMON, RARE }
 
@@ -43,4 +43,16 @@ var starting_uses: int = 0
 # once; on a crit, the values of that fire's mechanic deliveries are multiplied by
 # Balance.CRIT_MULTIPLIER. 0 = never crits (the default; draws nothing from the per-fight RNG).
 var crit_chance: float = 0.0
-var panel_color: Color = Color.WHITE
+# The item's panel colour, worked out on each read so a palette change shows at once: the `Colours`
+# variable named by `panel_colour_name` when set ('STATUS_DECAY'), else the first effect's colour.
+var panel_colour_name: String = ''
+var panel_color: Color:
+  get = _get_panel_color
+
+
+func _get_panel_color() -> Color:
+  if panel_colour_name != '':
+    return Colours.named(panel_colour_name)
+  if effects.is_empty():
+    return Color.WHITE
+  return effects[0].color

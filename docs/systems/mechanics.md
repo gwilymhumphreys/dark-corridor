@@ -179,7 +179,7 @@ lands and applies. It replaced `DAMAGE_DEALT`, `HEALED` and `STATUS_APPLIED`. Th
 mechanic id (attack, heal, shield, poison, burn, bleed, regen, charge, decharge) or the status id
 for `APPLY_STATUS`;
 the source is the delivery's `source_actor`. Ticks, bleed's own damage, `SUMMON` and `CREATE_ITEM`
-publish nothing. A trigger's `filter` names the id — Spite Ward (`ItemCatalog.AVENGER`) subscribes to
+publish nothing. A trigger's `filter` names the id — Spite Ward (`content/items/examples/spite_ward.gd`) subscribes to
 `APPLIED` filtered to `'poison'`.
 
 ## How effects name a mechanic

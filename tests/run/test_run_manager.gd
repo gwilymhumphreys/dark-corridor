@@ -387,13 +387,13 @@ func test_roll_bias_force_breaks_a_maxed_streak() -> void:
 
 
 func test_fixed_beats_are_boss_and_relic_others_roll() -> void:
-  assert_eq(RunMap.beat_spec(RunMap.BOSS_BEAT)['id'], EncounterCatalog.FIGHT_BOSS, 'act end = boss')
-  assert_eq(RunMap.beat_spec(RunMap.RELIC_BEAT)['id'], EncounterCatalog.FIGHT_RELIC, 'midpoint = relic')
+  assert_eq(RunMap.beat_spec(RunMap.BOSS_BEAT)['id'], 'fight_boss', 'act end = boss')
+  assert_eq(RunMap.beat_spec(RunMap.RELIC_BEAT)['id'], 'fight_relic', 'midpoint = relic')
   assert_eq(int(RunMap.beat_spec(0)['kind']), RunMap.BeatKind.ROLL, 'other beats auto-roll')
   assert_true(RunMap.beat_spec(0)['event_pool'].is_empty(), 'the easy opener forces combat (no events)')
   assert_false(RunMap.beat_spec(RunMap.EASY_BEATS_END + 1)['event_pool'].is_empty(),
     'events become possible after the opener')
-  assert_true(EncounterCatalog.FIGHT_ELITE in RunMap.beat_spec(RunMap.ELITE_FROM_BEAT)['combat_pool'],
+  assert_true('fight_elite' in RunMap.beat_spec(RunMap.ELITE_FROM_BEAT)['combat_pool'],
     'an elite is possible in the combat pool from ELITE_FROM_BEAT on')
   assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
 

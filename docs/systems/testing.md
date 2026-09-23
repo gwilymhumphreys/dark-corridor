@@ -50,7 +50,7 @@ starting boards, item points, icons and portraits, and `test_authored_content.gd
 specific authored cards, enemies, potions, enchants, relics and events. Engine rules in `Balance`
 (`STEP`, time scales, status multipliers, `CRIT_MULTIPLIER`, `TRIGGER_PUSH_FULL`, `GOLD_SKIP`)
 are not content, and any test may read them. `test_interface_palette.gd` also reads a few authored
-definitions, because it checks that a palette recolours the catalogs' authored definitions.
+definitions, because it checks that authored definitions show a palette's colours.
 
 ## Resetting state between tests
 

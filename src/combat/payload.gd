@@ -67,10 +67,5 @@ static func from_effect(effect: ItemEffect) -> Payload:
   payload.consume_from_target = effect.consume_from_target
   payload.consume_scale = effect.consume_scale
   payload.flags = effect.flags
-  # A mechanic effect takes its colour from the mechanic (the effect's own colour is unset);
-  # everything else keeps the effect's authored colour.
-  if effect.mechanic != '':
-    payload.color = MechanicRegistry.get_mechanic(effect.mechanic).color()
-  else:
-    payload.color = effect.color
+  payload.color = effect.color   # worked out from the mechanic or status (ItemEffect.color)
   return payload

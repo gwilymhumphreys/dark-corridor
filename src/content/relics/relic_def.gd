@@ -20,4 +20,10 @@ var status_id: String = ''          # status id applied at combat start (COMBAT_
 var status_count: float = 0.0       # stacks / pool applied (COMBAT_START_STATUS)
 var status_duration: float = 0.0    # per-application duration (timed statuses; 0 for pools/counters)
 var max_hp_bonus: float = 0.0       # max-HP added on grant (MAX_HP_BONUS)
-var panel_color: Color = Color.WHITE
+var panel_colour_name: String = ''  # the `Colours` variable the panel is drawn in ('RELIC_STONE_WARD')
+var panel_color: Color:             # read each time, so a palette change shows at once
+  get = _get_panel_color
+
+
+func _get_panel_color() -> Color:
+  return Colours.named(panel_colour_name) if panel_colour_name != '' else Color.WHITE

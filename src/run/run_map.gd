@@ -66,7 +66,7 @@ static func beat_spec(position: int) -> Dictionary:
   if beat == BOSS_BEAT:
     return { 'kind': BeatKind.FIXED, 'id': boss_for(act) }
   if beat == RELIC_BEAT:
-    return { 'kind': BeatKind.FIXED, 'id': EncounterCatalog.FIGHT_RELIC }
+    return { 'kind': BeatKind.FIXED, 'id': 'fight_relic' }
   return {
     'kind': BeatKind.ROLL,
     'combat_pool': combat_pool(beat),
@@ -77,7 +77,7 @@ static func beat_spec(position: int) -> Dictionary:
 ## The act's boss encounter (placeholder: one boss def reused per act — the FINAL-act boss
 ## is the run's ending, decided by position, not a distinct def).
 static func boss_for(_act: int) -> String:
-  return EncounterCatalog.FIGHT_BOSS
+  return 'fight_boss'
 
 
 ## The combat defs a rolled beat draws from when it rolls COMBAT. The easy opener is a single
@@ -85,10 +85,10 @@ static func boss_for(_act: int) -> String:
 ## the middle band is regular fights. PLACEHOLDER ids — the owner scales the pools per act/depth.
 static func combat_pool(beat: int) -> Array:
   if beat <= EASY_BEATS_END:
-    return [EncounterCatalog.FIGHT_GRUNT]
+    return ['fight_grunt']
   if beat >= ELITE_FROM_BEAT:
-    return [EncounterCatalog.FIGHT_GRUNT, EncounterCatalog.FIGHT_TOUGH, EncounterCatalog.FIGHT_ELITE]
-  return [EncounterCatalog.FIGHT_GRUNT, EncounterCatalog.FIGHT_TOUGH]
+    return ['fight_grunt', 'fight_tough', 'fight_elite']
+  return ['fight_grunt', 'fight_tough']
 
 
 ## The event defs a rolled beat draws from when it rolls EVENT. Empty for the easy opener
@@ -96,7 +96,7 @@ static func combat_pool(beat: int) -> Array:
 static func event_pool(beat: int) -> Array:
   if beat <= EASY_BEATS_END:
     return []
-  return [EncounterCatalog.EVENT_SHRINE, EncounterCatalog.EVENT_WANDERER]
+  return ['event_shrine', 'event_wanderer']
 
 
 ## The points a fight at `position` should be worth (docs/plans/encounter_points_budget.md). Fixed:

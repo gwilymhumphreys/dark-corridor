@@ -18,7 +18,7 @@ extends SceneTree
 
 const LOCALES: Array[String] = ['en']
 const POT_PATH: String = 'res://locale/messages.pot'
-const SCAN_DIR: String = 'res://src'
+const SCAN_DIRS: Array[String] = ['res://src', 'res://content']   # code, and the authored content
 
 # Escape-aware string-body sub-patterns: any char that isn't the quote or a backslash, OR a
 # backslash-escape (so an escaped quote `\'` stays inside the captured string instead of
@@ -60,11 +60,12 @@ func _add(msgid: String, source: String) -> void:
   _order.append(msgid)
 
 
-# --- Collection: walk src/ for .gd and .tscn ---------------------------------
+# --- Collection: walk src/ and content/ for .gd and .tscn ---------------------------------
 
 func _collect_from_scripts_and_scenes() -> void:
   var files: Array[String] = []
-  _walk(SCAN_DIR, files)
+  for scan_dir: String in SCAN_DIRS:
+    _walk(scan_dir, files)
   for path: String in files:
     if path.ends_with('.gd'):
       _scan_gd(path)

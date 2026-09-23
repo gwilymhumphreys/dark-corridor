@@ -93,8 +93,8 @@ the character system #23/#27). See the per-item status in "Your task" below.
   `autotest.tscn`) · stub `AutoTestDriver` · `AutoTestStuckDetector` ·
   `AutoTestLogger`. Drives fights headless + deterministic.
 - **Phase 3 — the run loop**: `Save` · `Game` · `RunManager` (`src/run/`) ·
-  `Encounter` (`src/run/`) · `Draft`, content catalogs in `src/content/` (GDScript
-  defs, decision #23). The autotest's `run_full` drives a **whole descent** (draft
+  `Encounter` (`src/run/`) · `Draft`, content catalogs in `src/content/` loading one
+  file per definition from `content/` (GDScript, decision #23). The autotest's `run_full` drives a **whole descent** (draft
   → fight → advance → win) headless, deterministic by `--seed`, with quit/resume.
 - **Content** (`src/content/`): all three categories — **Relic** (Stone Ward,
   combat-start shield), **Enchant** (Whetstone, scale-a-value, saved on the board),
@@ -180,8 +180,8 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
   `_physics_process` in tests). **Each step green headless before the next. Commit
   each green step; NO self-attribution / Co-Authored-By** (CLAUDE.md overrides).
 - **Docs:** if you change behaviour a doc describes, update that doc in the same
-  change. Docs describe *systems/intent, not numbers* — point to `Balance`
-  (`src/data/balance.gd`) / catalogs for tunables.
+  change. Docs describe *systems/intent, not numbers* — point to the definition files in `content/`
+  or to `Balance` (`src/data/balance.gd`, shared values only) for tunables.
 
 ## The look (being explored)
 
@@ -242,9 +242,9 @@ circles for projectiles and impacts are placeholders waiting on real VFX animati
 - **Save = JSON, atomic, no migration** (decision #11): RNG `seed`/`state` stored as
   **strings** (JSON doubles can't hold a 64-bit value). Absent/corrupt/old → `{}` →
   fresh run.
-- **Content = GDScript def objects + static catalogs** (decision #23), keyed by a
-  **string id** (amended from int), in kind-grouped `src/content/<kind>/` subdirs;
-  localized via `tr(def.name_key)`. Drafts pull from the **character's pool + colorless** (#27).
+- **Content = GDScript definitions, one file each under `content/<kind>/`** (decisions #23, #44),
+  keyed by a **string id** and loaded by the catalogs in `src/content/<kind>/`; numbers are written
+  on the definition; localized via `tr(def.name_key)`. Drafts pull from the **character's pool + colorless** (#27).
 - **Exit codes** (autotest): `0` = the sim reached a clean conclusion (win OR die OR
   cap), `1` = it didn't (stuck / timeout) — not who wins (that's `tune`'s job later).
 - **"N resources still in use at exit" means a leaked Actor<->Item cycle** (the Actor, Item,
@@ -347,7 +347,7 @@ catches the corridor approach — add `--autofight --shot-delay 6` for a mid-fig
 
 `src/combat/` (spine) · `src/run/` (run_manager · encounter) · `src/content/`
 (kind-grouped: items/enemies/relics/consumables/enchants/encounters/statuses/characters
-— def + catalog per kind) · `src/autoloads/` (status_manager · save · prefs · draft ·
+— def class + catalog per kind) · `content/` (the authored definitions, one file each) · `src/autoloads/` (status_manager · save · prefs · draft ·
 game_manager · sfx · music) · `src/autotest/` (the harness + strategies + report) · `src/vfx/` ·
 `src/scenes/main.tscn` + `main_controller.gd` (presentation root) · `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·

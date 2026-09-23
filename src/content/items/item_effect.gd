@@ -20,7 +20,12 @@ var mechanic: String = ''        # for kind == MECHANIC (MechanicRegistry id; do
 var status_id: String = ''       # for kind == APPLY_STATUS (string id, #23)
 var duration: float = 0.0        # for kind == APPLY_STATUS — per-application duration (timed statuses)
 var flags: int = 0               # Delivery.Flag bits (e.g. unblockable)
-var color: Color = Color.WHITE
+# The colour the effect's delivery is drawn in, worked out on each read so a palette change shows at
+# once: the `Colours` variable named by `colour_name` when set, else the mechanic's colour, else the
+# applied status's colour, else white.
+var colour_name: String = ''
+var color: Color:
+  get = _get_color
 
 # Status-stack consumption (docs/systems/spore_engine.md Cap 1) — spend a stacked status as fuel,
 # scaling this effect's value by `consume_scale` per stack removed. `consume_from_target`
@@ -52,3 +57,60 @@ var create_item_def_id: String = ''
 var consume_item_def_id: String = ''   # board item def id to eat ('' = none)
 var consume_item_amount: int = 0       # up to this many (<= 0 = all present)
 var consume_item_scale: float = 0.0    # value added to the payload per item consumed
+
+
+## An attack for `value` damage. Travel follows the shape (`travel_for`).
+static func attack(value: float, shape: int = Shape.OPPONENT_LEFTMOST) -> ItemEffect:
+  return make(AttackMechanic.ID, value, shape)
+
+
+## Shield of `value` on the holder.
+static func shield(value: float) -> ItemEffect:
+  return make(ShieldMechanic.ID, value, Shape.SELF)
+
+
+## Healing of `value` on the holder.
+static func heal(value: float) -> ItemEffect:
+  return make(HealMechanic.ID, value, Shape.SELF)
+
+
+## Any mechanic (`MechanicRegistry` id) for `value` on `shape`.
+static func make(mechanic_id: String, value: float, shape: int) -> ItemEffect:
+  var effect := ItemEffect.new()
+  effect.mechanic = mechanic_id
+  effect.value = value
+  effect.shape = shape
+  effect.travel = travel_for(shape)
+  return effect
+
+
+## Apply `value` of the status `status_id` on `shape`; `duration` is for a timed status.
+static func apply_status(status_id: String, value: float, shape: int,
+    duration: float = 0.0) -> ItemEffect:
+  var effect := ItemEffect.new()
+  effect.kind = Delivery.Kind.APPLY_STATUS
+  effect.status_id = status_id
+  effect.value = value
+  effect.shape = shape
+  effect.duration = duration
+  effect.travel = travel_for(shape)
+  return effect
+
+
+## The travel time the constructors give a shape: a thrown delivery for the other side, instant for
+## the holder and its own items.
+static func travel_for(shape: int) -> float:
+  match shape:
+    Shape.SELF, Shape.OWN_ITEM_RANDOM, Shape.ALL_OWN_ITEMS:
+      return 0.0
+  return Balance.WEAPON_TRAVEL
+
+
+func _get_color() -> Color:
+  if colour_name != '':
+    return Colours.named(colour_name)
+  if mechanic != '':
+    return MechanicRegistry.get_mechanic(mechanic).color()
+  if kind == Delivery.Kind.APPLY_STATUS and StatusRegistry.has(status_id):
+    return StatusRegistry.create(status_id).color
+  return Color.WHITE

@@ -106,7 +106,7 @@ func test_a_boss_fight_uses_its_act_boss_list() -> void:
 func test_a_boss_fight_keeps_its_authored_enemies_while_the_list_is_empty() -> void:
   FixtureContent.install()
   var run: RunManager = _run_at_the_first_boss()
-  var authored: int = EncounterCatalog.get_def(EncounterCatalog.FIGHT_BOSS).enemy_ids.size()
+  var authored: int = EncounterCatalog.get_def('fight_boss').enemy_ids.size()
   assert_eq(run.current_encounter().enemies.size(), authored, 'the encounter keeps its own enemies')
   run.teardown()
   run.free()
@@ -117,5 +117,5 @@ func _run_at_the_first_boss() -> RunManager:
   run.start(3, FixtureCharacter.ID)
   run.position = RunMap.BOSS_BEAT - 1
   run.advance()
-  assert_eq(run.current_encounter().def.id, EncounterCatalog.FIGHT_BOSS, 'the run is at the boss')
+  assert_eq(run.current_encounter().def.id, 'fight_boss', 'the run is at the boss')
   return run

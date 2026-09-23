@@ -19,7 +19,7 @@ func _types_of(ids: Array) -> Array:
 
 
 func test_the_smith_opens_with_a_weapon_a_skill_and_an_armour() -> void:
-  var smith: CharacterDef = CharacterCatalog.get_def(CharacterCatalog.SMITH)
+  var smith: CharacterDef = CharacterCatalog.get_def('smith')
   var ids: Array = CharacterCatalog.starting_board(smith, _rng(1))
   assert_eq(ids.size(), 3, 'three items')
   var types: Array = _types_of(ids)
@@ -29,14 +29,14 @@ func test_the_smith_opens_with_a_weapon_a_skill_and_an_armour() -> void:
 
 
 func test_every_drawn_item_comes_from_the_characters_own_pool() -> void:
-  for character_id: String in [CharacterCatalog.SMITH, CharacterCatalog.SPORE_DRUID, CharacterCatalog.FLESHMANCER]:
+  for character_id: String in ['smith', 'spore_druid', 'fleshmancer']:
     var def: CharacterDef = CharacterCatalog.get_def(character_id)
     for id: String in CharacterCatalog.starting_board(def, _rng(3)):
       assert_true(def.item_pool.has(id), '%s drew %s from its own pool' % [character_id, id])
 
 
 func test_the_same_seed_draws_the_same_board() -> void:
-  var smith: CharacterDef = CharacterCatalog.get_def(CharacterCatalog.SMITH)
+  var smith: CharacterDef = CharacterCatalog.get_def('smith')
   assert_eq(CharacterCatalog.starting_board(smith, _rng(42)),
     CharacterCatalog.starting_board(smith, _rng(42)), 'a seed always opens the same way')
 
@@ -44,7 +44,7 @@ func test_the_same_seed_draws_the_same_board() -> void:
 func test_a_repeated_type_draws_distinct_items() -> void:
   # The Spore Druid's pool is all weapons, so it asks for three of them. Asking twice for a type
   # must not hand back the same item twice.
-  var druid: CharacterDef = CharacterCatalog.get_def(CharacterCatalog.SPORE_DRUID)
+  var druid: CharacterDef = CharacterCatalog.get_def('spore_druid')
   for seed_value: int in [1, 2, 3, 4, 5]:
     var ids: Array = CharacterCatalog.starting_board(druid, _rng(seed_value))
     assert_eq(ids.size(), 3, 'three weapons on seed %d' % seed_value)
@@ -55,7 +55,7 @@ func test_a_repeated_type_draws_distinct_items() -> void:
 
 
 func test_different_seeds_can_draw_different_boards() -> void:
-  var smith: CharacterDef = CharacterCatalog.get_def(CharacterCatalog.SMITH)
+  var smith: CharacterDef = CharacterCatalog.get_def('smith')
   var seen: Array = []
   for seed_value: int in range(20):
     var ids: Array = CharacterCatalog.starting_board(smith, _rng(seed_value))
@@ -69,15 +69,15 @@ func test_a_character_with_fixed_ids_keeps_them() -> void:
   # always were.
   var def := CharacterDef.new()
   def.id = 'test_fixed'
-  def.starting_item_ids = [ItemCatalog.CAPPED_CUDGEL]
-  assert_eq(CharacterCatalog.starting_board(def, _rng(1)), [ItemCatalog.CAPPED_CUDGEL])
+  def.starting_item_ids = ['capped_cudgel']
+  assert_eq(CharacterCatalog.starting_board(def, _rng(1)), ['capped_cudgel'])
 
 
 func test_a_type_with_nothing_in_the_pool_is_skipped() -> void:
   # A half-authored character still starts rather than crashing — it just opens short-handed.
   var def := CharacterDef.new()
   def.id = 'test_missing_type'
-  def.item_pool = [ItemCatalog.CAPPED_CUDGEL]
+  def.item_pool = ['capped_cudgel']
   def.starting_item_types = [ItemType.WEAPON, ItemType.ARMOUR]
-  assert_eq(CharacterCatalog.starting_board(def, _rng(1)), [ItemCatalog.CAPPED_CUDGEL],
+  assert_eq(CharacterCatalog.starting_board(def, _rng(1)), ['capped_cudgel'],
     'the weapon is drawn and the missing armour is skipped')

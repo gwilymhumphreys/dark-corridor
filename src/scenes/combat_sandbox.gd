@@ -31,7 +31,7 @@ func _build_fight() -> void:
   var board_rng := RandomNumberGenerator.new()
   _player = _spawn(Balance.PLAYER_START_HP,
       CharacterCatalog.starting_board(CharacterCatalog.get_def(CharacterCatalog.DEFAULT), board_rng))
-  _enemy = _spawn(Balance.ENEMY_PLACEHOLDER_HP, [ItemCatalog.ENEMY_CLAW])
+  _enemy = _spawn(Balance.ENEMY_PLACEHOLDER_HP, ['claw'])
 
   _cm = CombatManager.new(_player, [_enemy])
   add_child(_cm)

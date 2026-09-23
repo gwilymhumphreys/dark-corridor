@@ -51,7 +51,7 @@ static func shield_relic(id: String = SHIELD_RELIC_ID) -> RelicDef:
   d.kind = RelicDef.Kind.COMBAT_START_STATUS
   d.status_id = 'shield'
   d.status_count = RELIC_SHIELD
-  d.panel_color = Colours.SHIELD
+  d.panel_colour_name = 'SHIELD'
   return d
 
 
@@ -62,5 +62,5 @@ static func max_hp_relic() -> RelicDef:
   d.name_key = 'Fixture Health Relic'
   d.kind = RelicDef.Kind.MAX_HP_BONUS
   d.max_hp_bonus = RELIC_MAX_HP
-  d.panel_color = Colours.HEAL
+  d.panel_colour_name = 'HEAL'
   return d

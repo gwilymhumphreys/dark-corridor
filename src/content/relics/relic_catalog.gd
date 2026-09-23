@@ -1,16 +1,12 @@
 class_name RelicCatalog
-## The relic definitions (decision #23 — authored in GDScript, keyed by Id). Stone Ward
-## is the starting relic (combat-start shield). Vital Charm + Iron Idol are the placeholder
-## REWARD relics (granted by the reward routing — RELIC / ELITE / boss beats; #2): they
-## prove both relic shapes (a direct max-HP mod + a combat-start status). Lazily built.
+## The relic definitions (decision #23), keyed by string id: one file each under content/relics/.
+## Built on first access.
 
-const STONE_WARD := 'stone_ward'
-const VITAL_CHARM := 'vital_charm'
-const IRON_IDOL := 'iron_idol'
+const FOLDER := 'res://content/relics'
 
-# What a relic reward draws from (the RunManager's grant). Stone Ward is starting-only —
-# not a reward. The owner curates this pool with the real relic content.
-const REWARD_POOL: Array = [VITAL_CHARM, IRON_IDOL]
+# What a relic reward draws from (the run manager's grant). Stone Ward is a starting relic, not a
+# reward. The owner curates this pool with the real relics.
+const REWARD_POOL: Array = ['vital_charm', 'iron_idol']
 
 static var _defs: Dictionary = {}
 
@@ -20,59 +16,9 @@ static func get_def(id: String) -> RelicDef:
     _build()
   if not _defs.has(id):
     push_error('RelicCatalog: unknown relic id "%s"' % id)
+    return null   # caller guards (a misspelt id logs, never crashes)
   return _defs[id]
 
 
-## Copy the colours of freshly built definitions onto the cached ones, so relics that already hold a
-## definition show the current `Colours` (docs/systems/interface_palette.md).
-static func refresh_colours() -> void:
-  if _defs.is_empty():
-    return
-  var cached: Dictionary = _defs
-  _defs = {}
-  _build()
-  for id: String in cached:
-    if not _defs.has(id):
-      continue   # added from outside the catalog (a test fixture)
-    (cached[id] as RelicDef).panel_color = (_defs[id] as RelicDef).panel_color
-  _defs = cached
-
-
 static func _build() -> void:
-  _defs[STONE_WARD] = _stone_ward()
-  _defs[VITAL_CHARM] = _vital_charm()
-  _defs[IRON_IDOL] = _iron_idol()
-
-
-static func _stone_ward() -> RelicDef:
-  var d := RelicDef.new()
-  d.id = STONE_WARD
-  d.name_key = 'Stone Ward'
-  d.kind = RelicDef.Kind.COMBAT_START_STATUS
-  d.status_id = 'shield'
-  d.status_count = Balance.RELIC_STONE_WARD_SHIELD
-  d.panel_color = Colours.RELIC_STONE_WARD
-  return d
-
-
-## Placeholder reward relic — a direct run-state mod (max-HP growth, applied once on grant).
-static func _vital_charm() -> RelicDef:
-  var d := RelicDef.new()
-  d.id = VITAL_CHARM
-  d.name_key = 'Vital Charm'
-  d.kind = RelicDef.Kind.MAX_HP_BONUS
-  d.max_hp_bonus = Balance.RELIC_VITAL_CHARM_MAX_HP
-  d.panel_color = Colours.RELIC_VITAL_CHARM
-  return d
-
-
-## Placeholder reward relic — a second combat-start-shield relic (stacks with Stone Ward).
-static func _iron_idol() -> RelicDef:
-  var d := RelicDef.new()
-  d.id = IRON_IDOL
-  d.name_key = 'Iron Idol'
-  d.kind = RelicDef.Kind.COMBAT_START_STATUS
-  d.status_id = 'shield'
-  d.status_count = Balance.RELIC_IRON_IDOL_SHIELD
-  d.panel_color = Colours.RELIC_IRON_IDOL
-  return d
+  _defs = ContentFolder.load_defs(FOLDER)

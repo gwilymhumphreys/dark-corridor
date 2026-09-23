@@ -1,22 +1,10 @@
 class_name EnemyCatalog
-## The enemy definitions (decision #23 — GDScript, keyed by Id). Phase 1: one
-## grunt with a one-item authored board (its own attack item, separate from the
-## player pool — design). Lazily built once.
+## The enemy definitions (decision #23), keyed by string id: one file each under content/enemies/.
+## Allies and summons are enemy definitions too. Built on first access.
 
-const GRUNT := 'grunt'
-const BRUTE := 'brute'
-const BOSS := 'boss'
-const SPORE_THRALL := 'spore_thrall'
+const FOLDER := 'res://content/enemies'
 
 static var _defs: Dictionary = {}
-
-
-## Whether the id resolves, for a caller validating authored or command-line input without
-## tripping get_def's error on a typo.
-static func has(id: String) -> bool:
-  if _defs.is_empty():
-    _build()
-  return _defs.has(id)
 
 
 static func get_def(id: String) -> EnemyDef:
@@ -24,11 +12,19 @@ static func get_def(id: String) -> EnemyDef:
     _build()
   if not _defs.has(id):
     push_error('EnemyCatalog: unknown enemy id "%s"' % id)
-    return null   # caller guards (a typo'd id no-ops + logs, never crashes)
+    return null   # caller guards (a misspelt id logs, never crashes)
   return _defs[id]
 
 
-## Every authored enemy id, for tools that list the whole catalog (tools/item_browser.gd).
+## Whether the id resolves, for a caller checking authored or command-line input without tripping
+## get_def's error on a misspelt id.
+static func has(id: String) -> bool:
+  if _defs.is_empty():
+    _build()
+  return _defs.has(id)
+
+
+## Every authored id, for content checks and tools that list the whole catalog.
 static func all_ids() -> Array[String]:
   if _defs.is_empty():
     _build()
@@ -39,39 +35,4 @@ static func all_ids() -> Array[String]:
 
 
 static func _build() -> void:
-  var grunt := EnemyDef.new()
-  grunt.id = GRUNT
-  grunt.name_key = 'Corridor Grunt'
-  grunt.portrait = 'res://assets/portraits/enemies/goblin_01.png'   # PLACEHOLDER portrait — owner's to swap
-  grunt.max_hp = Balance.ENEMY_PLACEHOLDER_HP
-  grunt.item_ids = [ItemCatalog.ENEMY_CLAW]
-  _defs[grunt.id] = grunt
-
-  # Placeholder tougher regular (#1) — a beefier claw fighter for the choice pool.
-  var brute := EnemyDef.new()
-  brute.id = BRUTE
-  brute.name_key = 'Corridor Brute'
-  brute.portrait = 'res://assets/portraits/enemies/gigant_06_ogre_warrior.png'   # PLACEHOLDER portrait — owner's to swap
-  brute.max_hp = Balance.ENEMY_BRUTE_HP
-  brute.item_ids = [ItemCatalog.ENEMY_CLAW]
-  _defs[brute.id] = brute
-
-  # Placeholder boss (#1) — tankier, two items. No signature mechanic (that's the owner's
-  # content); the final-act boss is the run's ending (decided by position, not this def).
-  var boss := EnemyDef.new()
-  boss.id = BOSS
-  boss.name_key = 'Corridor Warden'
-  boss.portrait = 'res://assets/portraits/enemies/undead_07_soulhunter.png'   # PLACEHOLDER portrait — owner's to swap
-  boss.max_hp = Balance.ENEMY_BOSS_HP
-  boss.item_ids = [ItemCatalog.ENEMY_CLAW, ItemCatalog.ENEMY_CLAW]
-  _defs[boss.id] = boss
-
-  # A summon/token actor (docs/systems/spore_engine.md Cap 3): low HP, one weak attack. Usable as a
-  # boss add, a player-side summon, OR (Stage B) a draftable persistent ally. Placeholder.
-  var thrall := EnemyDef.new()
-  thrall.id = SPORE_THRALL
-  thrall.name_key = 'Spore Thrall'
-  thrall.portrait = 'res://assets/portraits/enemies/monster_flower3.png'   # PLACEHOLDER portrait — owner's to swap
-  thrall.max_hp = Balance.ENEMY_SPORE_THRALL_HP
-  thrall.item_ids = [ItemCatalog.ENEMY_CLAW]
-  _defs[thrall.id] = thrall
+  _defs = ContentFolder.load_defs(FOLDER)

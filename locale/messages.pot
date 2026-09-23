@@ -7,230 +7,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/content/characters/character_catalog.gd
-msgid "Maren"
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Aldous"
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Orrin"
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Rot Shepherd"
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Disgraced Surgeon"
-msgstr ""
-
-#: src/content/characters/character_catalog.gd
-msgid "Smith"
-msgstr ""
-
-#: src/content/consumables/consumable_catalog.gd
-msgid "Healing Draught"
-msgstr ""
-
-#: src/content/enchants/enchant_catalog.gd
-msgid "Whetstone"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A dim corridor"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A quiet alcove"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "An elite ambush"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A warded vault"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A blocked passage"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "The warden's gate"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A dripping shrine"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A figure in the dark"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "Kneel and drink"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "Pry the shard loose"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "Let it join you"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "Walk on alone"
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A black idol slumps in an alcove, weeping cold water. You could kneel and drink, or pry the shard from its brow."
-msgstr ""
-
-#: src/content/encounters/encounter_catalog.gd
-msgid "A gaunt shape uncurls from a recess, a notched blade across its knees. It rasps an offer: walk together a while, and it will fight at your side."
-msgstr ""
-
-#: src/content/enemies/enemy_catalog.gd
-msgid "Corridor Grunt"
-msgstr ""
-
-#: src/content/enemies/enemy_catalog.gd
-msgid "Corridor Brute"
-msgstr ""
-
-#: src/content/enemies/enemy_catalog.gd
-msgid "Corridor Warden"
-msgstr ""
-
-#: src/content/enemies/enemy_catalog.gd
-msgid "Spore Thrall"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Venom Fang"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Spite Ward"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Hex Bolt"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Sundering Bolt"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Pocket Shrooms"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Druid Staff"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Spore Spitter"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Capped Cudgel"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Bloomhammer"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Wilt Frond"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Chunk of Flesh"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Carving Knife"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Cleaver"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Bone Saw"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Flesh Explosion"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Flensing Hook"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Skin Graft"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Bone Spear"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Rib"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Femur"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Skull"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Mighty Blow"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Broadaxe"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Warhammer"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Greatsword"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Claw"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Vambraces"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Sallet"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Kite Shield"
-msgstr ""
-
-#: src/content/items/item_catalog.gd
-msgid "Breast Plate"
-msgstr ""
-
 #: src/content/keywords/keyword_catalog.gd
 msgid "Fuel"
 msgstr ""
@@ -369,18 +145,6 @@ msgstr ""
 
 #: src/content/mechanics/shield_mechanic.gd
 msgid "Absorbs incoming damage, then wears off."
-msgstr ""
-
-#: src/content/relics/relic_catalog.gd
-msgid "Stone Ward"
-msgstr ""
-
-#: src/content/relics/relic_catalog.gd
-msgid "Vital Charm"
-msgstr ""
-
-#: src/content/relics/relic_catalog.gd
-msgid "Iron Idol"
 msgstr ""
 
 #: src/content/statuses/blind_status.gd
@@ -777,4 +541,240 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_panel.tscn
 msgid "Weapon"
+msgstr ""
+
+#: content/characters/fleshmancer.gd
+msgid "Aldous"
+msgstr ""
+
+#: content/characters/fleshmancer.gd
+msgid "Disgraced Surgeon"
+msgstr ""
+
+#: content/characters/smith.gd
+msgid "Orrin"
+msgstr ""
+
+#: content/characters/smith.gd
+msgid "Smith"
+msgstr ""
+
+#: content/characters/spore_druid.gd
+msgid "Maren"
+msgstr ""
+
+#: content/characters/spore_druid.gd
+msgid "Rot Shepherd"
+msgstr ""
+
+#: content/consumables/healing_draught.gd
+msgid "Healing Draught"
+msgstr ""
+
+#: content/enchants/whetstone.gd
+msgid "Whetstone"
+msgstr ""
+
+#: content/encounters/event_shrine.gd
+msgid "A dripping shrine"
+msgstr ""
+
+#: content/encounters/event_shrine.gd
+msgid "Kneel and drink"
+msgstr ""
+
+#: content/encounters/event_shrine.gd
+msgid "Pry the shard loose"
+msgstr ""
+
+#: content/encounters/event_shrine.gd
+msgid "A black idol slumps in an alcove, weeping cold water. You could kneel and drink, or pry the shard from its brow."
+msgstr ""
+
+#: content/encounters/event_wanderer.gd
+msgid "A figure in the dark"
+msgstr ""
+
+#: content/encounters/event_wanderer.gd
+msgid "Let it join you"
+msgstr ""
+
+#: content/encounters/event_wanderer.gd
+msgid "Walk on alone"
+msgstr ""
+
+#: content/encounters/event_wanderer.gd
+msgid "A gaunt shape uncurls from a recess, a notched blade across its knees. It rasps an offer: walk together a while, and it will fight at your side."
+msgstr ""
+
+#: content/encounters/fight_boss.gd
+msgid "The warden's gate"
+msgstr ""
+
+#: content/encounters/fight_elite.gd
+msgid "An elite ambush"
+msgstr ""
+
+#: content/encounters/fight_grunt.gd
+msgid "A dim corridor"
+msgstr ""
+
+#: content/encounters/fight_relic.gd
+msgid "A warded vault"
+msgstr ""
+
+#: content/encounters/fight_tough.gd
+msgid "A blocked passage"
+msgstr ""
+
+#: content/encounters/rest.gd
+msgid "A quiet alcove"
+msgstr ""
+
+#: content/enemies/boss.gd
+msgid "Corridor Warden"
+msgstr ""
+
+#: content/enemies/brute.gd
+msgid "Corridor Brute"
+msgstr ""
+
+#: content/enemies/grunt.gd
+msgid "Corridor Grunt"
+msgstr ""
+
+#: content/enemies/spore_thrall.gd
+msgid "Spore Thrall"
+msgstr ""
+
+#: content/items/enemy/claw.gd
+msgid "Claw"
+msgstr ""
+
+#: content/items/examples/hex_bolt.gd
+msgid "Hex Bolt"
+msgstr ""
+
+#: content/items/examples/spite_ward.gd
+msgid "Spite Ward"
+msgstr ""
+
+#: content/items/examples/sundering_bolt.gd
+msgid "Sundering Bolt"
+msgstr ""
+
+#: content/items/examples/venom_fang.gd
+msgid "Venom Fang"
+msgstr ""
+
+#: content/items/fleshmancer/bone_saw.gd
+msgid "Bone Saw"
+msgstr ""
+
+#: content/items/fleshmancer/bone_spear.gd
+msgid "Bone Spear"
+msgstr ""
+
+#: content/items/fleshmancer/carving_knife.gd
+msgid "Carving Knife"
+msgstr ""
+
+#: content/items/fleshmancer/chunk_of_flesh.gd
+msgid "Chunk of Flesh"
+msgstr ""
+
+#: content/items/fleshmancer/cleaver.gd
+msgid "Cleaver"
+msgstr ""
+
+#: content/items/fleshmancer/femur.gd
+msgid "Femur"
+msgstr ""
+
+#: content/items/fleshmancer/flensing_hook.gd
+msgid "Flensing Hook"
+msgstr ""
+
+#: content/items/fleshmancer/flesh_explosion.gd
+msgid "Flesh Explosion"
+msgstr ""
+
+#: content/items/fleshmancer/rib.gd
+msgid "Rib"
+msgstr ""
+
+#: content/items/fleshmancer/skin_graft.gd
+msgid "Skin Graft"
+msgstr ""
+
+#: content/items/fleshmancer/skull.gd
+msgid "Skull"
+msgstr ""
+
+#: content/items/smith/breast_plate.gd
+msgid "Breast Plate"
+msgstr ""
+
+#: content/items/smith/broadaxe.gd
+msgid "Broadaxe"
+msgstr ""
+
+#: content/items/smith/greatsword.gd
+msgid "Greatsword"
+msgstr ""
+
+#: content/items/smith/kite_shield.gd
+msgid "Kite Shield"
+msgstr ""
+
+#: content/items/smith/mighty_blow.gd
+msgid "Mighty Blow"
+msgstr ""
+
+#: content/items/smith/sallet.gd
+msgid "Sallet"
+msgstr ""
+
+#: content/items/smith/vambraces.gd
+msgid "Vambraces"
+msgstr ""
+
+#: content/items/smith/warhammer.gd
+msgid "Warhammer"
+msgstr ""
+
+#: content/items/spore_druid/bloomhammer.gd
+msgid "Bloomhammer"
+msgstr ""
+
+#: content/items/spore_druid/capped_cudgel.gd
+msgid "Capped Cudgel"
+msgstr ""
+
+#: content/items/spore_druid/druid_staff.gd
+msgid "Druid Staff"
+msgstr ""
+
+#: content/items/spore_druid/pocket_shrooms.gd
+msgid "Pocket Shrooms"
+msgstr ""
+
+#: content/items/spore_druid/spore_spitter.gd
+msgid "Spore Spitter"
+msgstr ""
+
+#: content/items/spore_druid/wilt_frond.gd
+msgid "Wilt Frond"
+msgstr ""
+
+#: content/relics/iron_idol.gd
+msgid "Iron Idol"
+msgstr ""
+
+#: content/relics/stone_ward.gd
+msgid "Stone Ward"
+msgstr ""
+
+#: content/relics/vital_charm.gd
+msgid "Vital Charm"
 msgstr ""

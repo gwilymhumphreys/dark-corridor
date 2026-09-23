@@ -54,7 +54,7 @@ static func attack() -> ItemDef:
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = ATTACK_TRAVEL
   d.effects = [hit]
-  d.panel_color = Colours.ATTACK
+  d.panel_colour_name = 'ATTACK'
   return d
 
 
@@ -82,7 +82,7 @@ static func shield() -> ItemDef:
   blk.value = SHIELD_VALUE
   blk.shape = ItemEffect.Shape.SELF
   d.effects = [blk]
-  d.panel_color = Colours.SHIELD
+  d.panel_colour_name = 'SHIELD'
   return d
 
 
@@ -101,7 +101,7 @@ static func poison() -> ItemDef:
   pois.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   pois.travel = ATTACK_TRAVEL
   d.effects = [pois]
-  d.panel_color = Colours.POISON
+  d.panel_colour_name = 'POISON'
   return d
 
 
@@ -123,7 +123,7 @@ static func charge_your_weapons() -> ItemDef:
   push.shape = ItemEffect.Shape.ALL_OWN_ITEMS
   push.target_filter = f
   d.effects = [push]
-  d.panel_color = Colours.ARCANE
+  d.panel_colour_name = 'ARCANE'
   return d
 
 
@@ -146,7 +146,7 @@ static func silence_enemy_poison_item() -> ItemDef:
   hush.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
   hush.target_filter = f
   d.effects = [hush]
-  d.panel_color = Colours.ARCANE
+  d.panel_colour_name = 'ARCANE'
   return d
 
 
@@ -170,7 +170,7 @@ static func poison_trigger() -> ItemDef:
     'amount': TRIGGER_PUSH,
     'filter': 'poison',
   }]
-  d.panel_color = Colours.SHIELD
+  d.panel_colour_name = 'SHIELD'
   return d
 
 
@@ -190,7 +190,7 @@ static func vulnerable() -> ItemDef:
   hit.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   hit.travel = ATTACK_TRAVEL
   d.effects = [hit]
-  d.panel_color = Colours.ARCANE
+  d.panel_colour_name = 'ARCANE'
   return d
 
 
@@ -209,7 +209,7 @@ static func silence_random_enemy_item() -> ItemDef:
   hex.shape = ItemEffect.Shape.OPPONENT_ITEM_RANDOM
   hex.travel = ATTACK_TRAVEL
   d.effects = [hex]
-  d.panel_color = Colours.ARCANE
+  d.panel_colour_name = 'ARCANE'
   return d
 
 
@@ -227,7 +227,7 @@ static func empower() -> ItemDef:
   buff.value = EMPOWER_CHARGES
   buff.shape = ItemEffect.Shape.SELF
   d.effects = [buff]
-  d.panel_color = Colours.STATUS_EMPOWERED
+  d.panel_colour_name = 'STATUS_EMPOWERED'
   return d
 
 

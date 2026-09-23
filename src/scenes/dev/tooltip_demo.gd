@@ -17,7 +17,7 @@ var _cluster: TooltipCluster
 func _ready() -> void:
   # A multi-effect RARE (damage + Blind) so the cluster shows a value, a status chip, and a column.
   var actor := Actor.new(100.0)
-  _item = Item.new(ItemCatalog.get_def(ItemCatalog.POCKET_SHROOMS), actor)
+  _item = Item.new(ItemCatalog.get_def('pocket_shrooms'), actor)
   actor.board.append(_item)
   # Apply Weak to the owner so the DAMAGE value renders a live (changed) number — the ▼ highlight.
   StatusManager.apply(actor, 'weak', 1.0)
