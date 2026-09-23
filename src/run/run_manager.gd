@@ -237,8 +237,8 @@ func _grant_relic() -> void:
 ## COMBAT_START_STATUS relic has no grant-time effect (it applies per fight, below).
 func _apply_relic_grant(relic: Relic) -> void:
   if relic.def.kind == RelicDef.Kind.MAX_HP_BONUS:
-    player.max_hp += relic.def.max_hp_bonus
-    player.hp += relic.def.max_hp_bonus
+    player.max_hp += roundi(relic.def.max_hp_bonus)
+    player.hp += roundi(relic.def.max_hp_bonus)
 
 
 func has_pending_draft() -> bool:
@@ -519,8 +519,8 @@ func rehydrate(snap: Dictionary) -> bool:
     return false
   character = CharacterCatalog.get_def(snap.get('character', CharacterCatalog.DEFAULT))
   player = character.make_actor()
-  player.max_hp = float(snap['max_hp'])
-  player.hp = float(snap['hp'])
+  player.max_hp = roundi(float(snap['max_hp']))
+  player.hp = roundi(float(snap['hp']))
   player.board.clear()
   for entry in snap['board']:
     var item := Item.new(ItemCatalog.get_def(str(entry['id'])), player)

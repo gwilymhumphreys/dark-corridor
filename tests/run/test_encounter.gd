@@ -72,7 +72,7 @@ func test_rest_heals_and_resolves_immediately() -> void:
   var enc := _encounter(FixtureEncounters.REST, player)
   watch_signals(enc)
   enc.begin()
-  assert_almost_eq(player.hp, 60.0 + 100.0 * FixtureEncounters.REST_HEAL_FRACTION, 0.0001,
+  assert_eq(player.hp, roundi(60.0 + 100.0 * FixtureEncounters.REST_HEAL_FRACTION),
     'a rest heals its fraction of max HP')
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
 
@@ -84,12 +84,12 @@ func test_event_awaits_its_choice_then_resolves_on_pick() -> void:
   assert_true(enc.is_event())
   watch_signals(enc)
   enc.begin()
-  assert_almost_eq(player.hp, 40.0, 0.0001, 'an event does NOT resolve/apply on begin — it awaits the pick')
+  assert_eq(player.hp, 40, 'an event does NOT resolve/apply on begin — it awaits the pick')
   assert_signal_not_emitted(enc, 'resolved', 'no resolution until an option is picked')
   assert_gt(enc.event_options().size(), 1, 'a binary choice is offered')
 
   enc.pick_event_option(FixtureEncounters.OPTION_HEAL)
-  assert_gt(player.hp, 40.0, 'the chosen outcome (heal) was applied')
+  assert_gt(player.hp, 40, 'the chosen outcome (heal) was applied')
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
 
 
@@ -112,8 +112,8 @@ func test_event_max_hp_option_grows_max_hp() -> void:
   var enc := _encounter(FixtureEncounters.EVENT, player)
   enc.begin()
   enc.pick_event_option(FixtureEncounters.OPTION_MAX_HP)
-  assert_almost_eq(player.max_hp, 100.0 + FixtureEncounters.EVENT_MAX_HP, 0.0001, 'max HP grew')
-  assert_almost_eq(player.hp, 100.0 + FixtureEncounters.EVENT_MAX_HP, 0.0001, 'and current HP too')
+  assert_eq(player.max_hp, roundi(100.0 + FixtureEncounters.EVENT_MAX_HP), 'max HP grew')
+  assert_eq(player.hp, roundi(100.0 + FixtureEncounters.EVENT_MAX_HP), 'and current HP too')
 
 
 func test_lethal_event_outcome_resolves_lost() -> void:

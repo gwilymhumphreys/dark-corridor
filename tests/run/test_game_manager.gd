@@ -59,7 +59,7 @@ func test_win_sets_win_phase_and_clears_save() -> void:
 func test_death_sets_death_phase_and_clears_save() -> void:
   Game.start_run(1, FixtureCharacter.ID)
   Game.run.relics.clear()
-  Game.run.player.hp = 1.0
+  Game.run.player.hp = 1
   _play_one_beat(Game.run, 0)
   assert_eq(Game.phase, GameManagerAutoload.Phase.DEATH)
   assert_false(Save.has_save(), 'a death clears the run save')

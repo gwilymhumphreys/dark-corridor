@@ -100,8 +100,8 @@ func _apply_event_outcome(option: EventOptionDef) -> void:
     EventOptionDef.Effect.HEAL_FRACTION:
       player.heal(option.amount * player.max_hp)
     EventOptionDef.Effect.MAX_HP_BONUS:
-      player.max_hp += option.amount
-      player.hp += option.amount
+      player.max_hp += roundi(option.amount)
+      player.hp += roundi(option.amount)
     EventOptionDef.Effect.DAMAGE:
       player.take_damage(option.amount)
     EventOptionDef.Effect.ADD_ALLY:

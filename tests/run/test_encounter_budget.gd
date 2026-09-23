@@ -98,7 +98,7 @@ func test_a_boss_fight_uses_its_act_boss_list() -> void:
   var run: RunManager = _run_at_the_first_boss()
   var enemies: Array = run.current_encounter().enemies
   assert_eq(enemies.size(), 2, 'the boss fight holds the act boss list')
-  assert_almost_eq((enemies[1] as Actor).max_hp, FixtureEnemies.BIG_HP, 0.0001, 'in list order')
+  assert_eq((enemies[1] as Actor).max_hp, roundi(FixtureEnemies.BIG_HP), 'in list order')
   run.teardown()
   run.free()
 

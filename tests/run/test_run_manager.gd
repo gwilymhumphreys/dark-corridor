@@ -113,7 +113,7 @@ func test_loss_ends_run_died() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   run.relics.clear()       # drop the protective relic so the glass player actually dies
-  run.player.hp = 1.0
+  run.player.hp = 1
   watch_signals(run)
   _play_one_beat(run, 0)
   assert_true(run.is_ended())
@@ -162,13 +162,13 @@ func test_elite_reward_grants_a_relic_and_a_draft() -> void:
 func test_max_hp_relic_grant_raises_max_and_current_hp() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  var before_max: float = run.player.max_hp
-  var before_hp: float = run.player.hp
+  var before_max: int = run.player.max_hp
+  var before_hp: int = run.player.hp
   var charm := Relic.new(FixtureKit.max_hp_relic())
   run.relics.append(charm)
   run._apply_relic_grant(charm)
-  assert_almost_eq(run.player.max_hp, before_max + FixtureKit.RELIC_MAX_HP, 0.0001, 'max HP grew')
-  assert_almost_eq(run.player.hp, before_hp + FixtureKit.RELIC_MAX_HP, 0.0001, 'and current HP too')
+  assert_eq(run.player.max_hp, roundi(before_max + FixtureKit.RELIC_MAX_HP), 'max HP grew')
+  assert_eq(run.player.hp, roundi(before_hp + FixtureKit.RELIC_MAX_HP), 'and current HP too')
 
 
 func test_relic_grant_is_deterministic_by_seed() -> void:
@@ -186,7 +186,7 @@ func test_granted_relic_survives_save_and_resume() -> void:
   run.start(1, FixtureCharacter.ID)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
   var granted_id: String = run.relics[-1].def.id
-  var max_after: float = run.player.max_hp
+  var max_after: int = run.player.max_hp
   var snap: Dictionary = run.snapshot()
 
   var run_b := _run()
@@ -195,7 +195,7 @@ func test_granted_relic_survives_save_and_resume() -> void:
   for r in run_b.relics:
     ids.append(r.def.id)
   assert_true(granted_id in ids, 'the granted relic is restored on resume')
-  assert_almost_eq(run_b.player.max_hp, max_after, 0.0001, 'a max-HP grant is baked into the snapshot, not re-applied')
+  assert_eq(run_b.player.max_hp, roundi(max_after), 'a max-HP grant is baked into the snapshot, not re-applied')
 
 
 func test_per_fight_seed_is_seed_based_not_stream_based() -> void:
@@ -251,7 +251,7 @@ func test_ally_persists_through_save_and_resume() -> void:
   assert_eq(run_b.allies.size(), 1, 'the ally is restored on resume')
   # An ally's HP is not saved: allies are revived to full at every fight begin (only the
   # player carries HP attrition), so resume rebuilds the ally at full.
-  assert_almost_eq(run_b.allies[0].hp, run_b.allies[0].max_hp, 0.0001, 'rebuilt at full HP')
+  assert_eq(run_b.allies[0].hp, run_b.allies[0].max_hp, 'rebuilt at full HP')
   assert_eq(run_b.allies[0].board.size(), 1, 'and its board (rebuilt from the def)')
 
 
@@ -262,7 +262,7 @@ func test_between_act_full_heal_revives_allies() -> void:
   run.allies[0].take_damage(10.0)
   run.position = RunMap.BEATS_PER_ACT - 1
   run.advance()                    # cross into the next act
-  assert_almost_eq(run.allies[0].hp, run.allies[0].max_hp, 0.0001, 'the between-act restore heals allies too')
+  assert_eq(run.allies[0].hp, run.allies[0].max_hp, 'the between-act restore heals allies too')
 
 
 func test_run_scoped_allies_revive_to_full_each_fight() -> void:
@@ -274,7 +274,7 @@ func test_run_scoped_allies_revive_to_full_each_fight() -> void:
   run.allies[0].take_damage(run.allies[0].max_hp)   # down it
   assert_false(run.allies[0].is_alive(), 'the ally is downed')
   run.begin_current()                               # beat 0 auto-rolls to a fight
-  assert_almost_eq(run.allies[0].hp, run.allies[0].max_hp, 0.0001, 'the ally enters the fight revived to full')
+  assert_eq(run.allies[0].hp, run.allies[0].max_hp, 'the ally enters the fight revived to full')
 
 
 func test_add_ally_mid_fight_joins_the_live_combat() -> void:
@@ -328,7 +328,7 @@ func test_recruit_event_declined_adds_no_ally() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   run.player.take_damage(30.0)
-  var hurt: float = run.player.hp
+  var hurt: int = run.player.hp
   _resolve_event(run, FixtureEncounters.EVENT, FixtureEncounters.OPTION_HEAL)
   assert_eq(run.allies.size(), 0, 'declining recruits no ally')
   assert_gt(run.player.hp, hurt, 'and the decline heals a little (the player-Actor outcome still applies)')
@@ -402,18 +402,18 @@ func test_crossing_into_a_new_act_full_heals() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   run.position = RunMap.BEATS_PER_ACT - 1   # the act-0 boss beat
-  run.player.hp = 10.0
+  run.player.hp = 10
   run.advance()                              # cross into act 1
-  assert_almost_eq(run.player.hp, run.player.max_hp, 0.0001, 'entering a new act restores full HP')
+  assert_eq(run.player.hp, run.player.max_hp, 'entering a new act restores full HP')
   assert_eq(run.act(), 1, 'and the run is in the next act')
 
 
 func test_no_full_heal_within_an_act() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.player.hp = 10.0
+  run.player.hp = 10
   run.advance()                              # beat 0 → 1, same act
-  assert_almost_eq(run.player.hp, 10.0, 0.0001, 'HP persists between beats inside an act')
+  assert_eq(run.player.hp, 10, 'HP persists between beats inside an act')
 
 
 func test_player_actor_and_board_free_after_run_teardown() -> void:
@@ -456,11 +456,11 @@ func test_throw_potion_heals_and_empties_the_slot() -> void:
   _grant_enchant_and_potion(run)
   run.begin_current()                  # beat 0 auto-rolls to a live fight
   run.player.take_damage(40.0)
-  var before: float = run.player.hp
+  var before: int = run.player.hp
   assert_eq(run.potions.size(), 1)
   assert_true(run.throw_potion(0), 'thrown mid-fight')
   assert_eq(run.potions.size(), 0, 'the potion was consumed from the slot')
-  for i in Balance.TRAVEL_STEPS:
+  for i in Balance.POTION_TRAVEL_STEPS:
     run.combat_manager().sim_step()
   assert_gt(run.player.hp, before, 'and it healed the player')
 
