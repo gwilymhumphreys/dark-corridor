@@ -22,6 +22,7 @@ func _init() -> void:
     'wide_forge',
     'jar_of_acid',
     'acid_bath',
+    'bloodletting',
     'greatsword',
     'vambraces',
     'sallet',

@@ -492,11 +492,11 @@ msgid "{0} as your items are destroyed"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "When {0} is applied"
+msgid "When {0} is applied, {1}"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "On trigger"
+msgid "On trigger, {0}"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
@@ -729,6 +729,10 @@ msgstr ""
 
 #: content/items/smith/acid_bath.gd
 msgid "Acid Bath"
+msgstr ""
+
+#: content/items/smith/bloodletting.gd
+msgid "Bloodletting"
 msgstr ""
 
 #: content/items/smith/breast_plate.gd

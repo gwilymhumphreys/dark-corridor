@@ -207,7 +207,7 @@ func test_poison_trigger_charges_on_poison_not_on_shield() -> void:
   var bus := EventBus.new()
   bus.side_resolver = func(actor) -> bool: return actor == player_actor
   var ward := Item.new(d, player_actor)
-  bus.subscribe(sub['event'], ward.cooldown, sub['amount'], sub.get('filter', null),
+  bus.subscribe(sub['event'], ward.cooldown, sub['seconds'] / d.cooldown, sub.get('filter', null),
       sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE), ward)
   # Poison applied by the ward's own side (the player) matches the OWN_SIDE + 'poison' filter.
   bus.publish(sub['event'], 'poison', player_actor, null)

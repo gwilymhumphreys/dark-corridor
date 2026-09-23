@@ -122,6 +122,7 @@ does relative to the others.
 | Bleed | `POINTS_PER_BLEED_DAMAGE`, per eventual damage | The same total again, but it only cashes out when the holder is hit by an attack, so it needs a weapon alongside it. |
 | Charge, own item | `POINTS_PER_CHARGE_SECOND`, per second of bar | Roughly the rate of a mid-cooldown item, which is what a second is worth to whatever receives it. |
 | Decharge, enemy item | `POINTS_PER_CHARGE_SECOND`, per second of bar | Shares the charge rate. |
+| Trigger that charges its own item | seconds charged per trigger × `POINTS_TRIGGERS_PER_COOLDOWN` × the item's own budget per second | Assumes a fixed number of triggers per cooldown (owner, 2026-09-23). The real number rises through a run as the board grows, so late in a run trigger items are underpriced. `ItemPoints.trigger_points`. |
 | Spores | nothing | See below. |
 
 Regen and crit are not on this table. Regen never loses stacks, so its value depends on how long

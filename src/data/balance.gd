@@ -72,14 +72,6 @@ const HEAL_CLEANSE_FRACTION: float = 0.1      # PLACEHOLDER — owner tunes
 const CRIT_MULTIPLIER: float = 2.0            # PLACEHOLDER — owner tunes
 
 
-# ── Triggers (charges model — push as a fraction of the bar; docs/systems/combat_model.md) ─────
-# "on poison applied -> push the shield item." ~1.0 fills the bar (an instant
-# reaction); smaller values accelerate firing without completing it.
-const TRIGGER_PUSH_FULL: float = 1.0
-const TRIGGER_PUSH_SMALL: float = 0.25
-
-
-
 # ── Run loop (HP economy + map; docs/systems/run_manager.md) ─────────────────────────────
 # Draft skip → bank gold (docs decision #33). Skipping the 1-of-3 draft banks this fixed amount of
 # gold instead of taking an item — a run-state resource (source built, no sink yet). The reward
@@ -140,6 +132,10 @@ const POINTS_PER_BLEED_DAMAGE: float = 0.5
 const POINTS_PER_CHARGE_SECOND: float = 6.0
 # An effect aimed at every opponent costs this many times the same effect on one target.
 const POINTS_ALL_OPPONENTS_MULTIPLIER: float = 1.5
+# How many times a trigger is expected to go off per cooldown of its item. A trigger that charges its
+# item costs the seconds it charges, times this, at the item's own points per second. The real count
+# rises through a run as the board grows (owner, 2026-09-23). PLACEHOLDER — the owner tunes in /tune.
+const POINTS_TRIGGERS_PER_COOLDOWN: float = 2.0
 
 
 # ── Encounter budgets (docs/plans/encounter_points_budget.md) ────────────────

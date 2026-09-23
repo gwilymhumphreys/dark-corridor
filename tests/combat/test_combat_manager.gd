@@ -101,7 +101,7 @@ func test_poison_trigger_fires_avenger_next_step() -> void:
   avenger.effects = [blk]
   avenger.trigger_subs = [{
     'event': EventBus.Event.APPLIED,
-    'amount': Balance.TRIGGER_PUSH_FULL,
+    'seconds': 9999.0,   # the whole bar
     'filter': 'poison',
   }]
 
@@ -873,7 +873,7 @@ func _never_fires_avenger(source_filter: int = -1) -> ItemDef:
   def.effects = [blk]
   var sub := {
     'event': EventBus.Event.APPLIED,
-    'amount': Balance.TRIGGER_PUSH_FULL,
+    'seconds': 9999.0,   # the whole bar
     'filter': 'poison',
   }
   if source_filter >= 0:
@@ -947,7 +947,7 @@ func test_reaped_actors_trigger_item_receives_no_pushes() -> void:
   reactive.cooldown = 9999.0
   reactive.trigger_subs = [{
     'event': EventBus.Event.APPLIED,
-    'amount': Balance.TRIGGER_PUSH_FULL,
+    'seconds': 9999.0,   # the whole bar
     'filter': 'poison',
     'source_filter': EventBus.SourceFilter.ANY,
   }]
@@ -1363,7 +1363,7 @@ func _destroy_charged_avenger() -> ItemDef:
   def.effects = [blk]
   def.trigger_subs = [{
     'event': EventBus.Event.ITEM_DESTROYED,
-    'amount': Balance.TRIGGER_PUSH_FULL,
+    'seconds': 9999.0,   # the whole bar
   }]
   return def
 

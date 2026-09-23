@@ -31,12 +31,12 @@ func build(item: Item) -> Dictionary:
   }
 
 
-## The charge-time line: the item's cooldown in seconds beside the charge_time glyph. No tr() —
+## The charge-time line: the charge_time glyph, then the item's cooldown in seconds. No tr() —
 ## the line is a number and an icon, so there is nothing to translate.
 static func _charge_line(item: Item) -> Array:
   return [
-    {'t': 'text', 's': fmt(item.def.cooldown) + 's'},
     {'t': 'icon', 'id': IconSlots.CHARGE_TIME},
+    {'t': 'text', 's': fmt(item.def.cooldown) + 's'},
   ]
 
 
@@ -60,16 +60,16 @@ func _effect_lines(item: Item) -> Array:
     var line: Array = _trigger_line(sub)
     if not line.is_empty():
       lines.append(line)
-  # An item's crit chance reads as one more effect line: the percentage beside the crit glyph.
+  # An item's crit chance reads as one more effect line: the crit glyph, then the percentage.
   if item.def.crit_chance > 0.0:
     lines.append([
-      {'t': 'text', 's': fmt(item.def.crit_chance * 100.0) + '%'},
       {'t': 'icon', 'id': CritMechanic.ID},
+      {'t': 'text', 's': fmt(item.def.crit_chance * 100.0) + '%'},
     ])
   return lines
 
 
-## One effect's line. A basic apply (see `_is_basic_apply`) is the value and the icon, with no
+## One effect's line. A basic apply (see `_is_basic_apply`) is the icon and then the value, with no
 ## words at all. Anything more complicated keeps a worded line for now — the owner designs those
 ## strings when the effects that need them are authored.
 func _effect_line(item: Item, effect: ItemEffect) -> Array:
@@ -82,8 +82,8 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
       if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:
         return _interpolate(tr('{0} {1} by {2}s'),
             [icon_seg, _shape_text(effect.shape, effect.target_filter), value_seg])
-      # The attack bonuses add to other items' attacks, so their line reads as "+10 [attack] to ..." /
-      # "+50% [attack] to ...", with the attack icon after the number.
+      # The attack bonuses add to other items' attacks, so their line reads as "[attack] +10 to ..." /
+      # "[attack] +50% to ...", with the attack icon in place of the bonus mechanic's own.
       if effect.mechanic == AttackBonusMechanic.ID:
         value_seg['s'] = '+' + value_seg['s']
         icon_seg = {'t': 'icon', 'id': AttackMechanic.ID}
@@ -91,23 +91,23 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
         value_seg['s'] = '+' + value_seg['s'] + '%'
         icon_seg = {'t': 'icon', 'id': AttackMechanic.ID}
       if _is_basic_apply(effect):
-        return [value_seg, icon_seg]
+        return [icon_seg, value_seg]
       if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-        return _interpolate(tr('{0} {1} to all enemies'), [value_seg, icon_seg])
-      return _interpolate(tr('{0} {1} to {2}'), [value_seg, icon_seg, _shape_text(effect.shape, effect.target_filter)])
+        return _interpolate(tr('{0} {1} to all enemies'), [icon_seg, value_seg])
+      return _interpolate(tr('{0} {1} to {2}'), [icon_seg, value_seg, _shape_text(effect.shape, effect.target_filter)])
     Delivery.Kind.APPLY_STATUS:
       var status_seg: Dictionary = {'t': 'icon', 'id': effect.status_id}
       if _is_basic_apply(effect):
-        return [value_seg, status_seg]
+        return [status_seg, value_seg]
       if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-        return _interpolate(tr('{0} {1} to all enemies'), [value_seg, status_seg])
-      return _interpolate(tr('{0} {1} to {2}'), [value_seg, status_seg, _shape_text(effect.shape, effect.target_filter)])
+        return _interpolate(tr('{0} {1} to all enemies'), [status_seg, value_seg])
+      return _interpolate(tr('{0} {1} to {2}'), [status_seg, value_seg, _shape_text(effect.shape, effect.target_filter)])
     Delivery.Kind.SUMMON:
       return _interpolate(tr('Summon {0}'), [_summon_text(effect)])
   return []
 
 
-## True when an effect's line can be just its value and its icon: it applies to a single actor in
+## True when an effect's line can be just its icon and its value: it applies to a single actor in
 ## the direction its mechanic already implies (yourself, or the enemy in front of you), spends no
 ## fuel, and is not unblockable. Everything else takes a worded line.
 static func _is_basic_apply(effect: ItemEffect) -> bool:
@@ -121,14 +121,19 @@ static func _is_basic_apply(effect: ItemEffect) -> bool:
   return false
 
 
+## A trigger's line names its event and the seconds it charges the item each time.
 func _trigger_line(sub: Dictionary) -> Array:
   # An ITEM_DESTROYED trigger is the Reclaim keyword (the destroy-payoff; tooltips.md), not generic.
   if sub.get('event', -1) == EventBus.Event.ITEM_DESTROYED:
     return _interpolate(tr('{0} as your items are destroyed'), [{'t': 'icon', 'id': KeywordCatalog.RECLAIM}])
+  var charge: Array = [
+    {'t': 'icon', 'id': ChargeMechanic.ID},
+    {'t': 'text', 's': fmt(float(sub.get('seconds', 0.0))) + 's'},
+  ]
   var filter: Variant = sub.get('filter', null)
   if filter is String and filter != '':
-    return _interpolate(tr('When {0} is applied'), [{'t': 'icon', 'id': filter}])
-  return _interpolate(tr('On trigger'), [])
+    return _interpolate(tr('When {0} is applied, {1}'), [{'t': 'icon', 'id': filter}, charge])
+  return _interpolate(tr('On trigger, {0}'), [charge])
 
 
 static func _value_seg(item: Item, effect: ItemEffect) -> Dictionary:

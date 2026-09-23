@@ -50,7 +50,17 @@ static func spend(def: ItemDef) -> float:
       continue
     total += _effect_points(effect)
   # A crit chance raises the item's expected output, so it is worth more than its values read.
-  return total * (1.0 + def.crit_chance * (Balance.CRIT_MULTIPLIER - 1.0))
+  total *= 1.0 + def.crit_chance * (Balance.CRIT_MULTIPLIER - 1.0)
+  for sub: Dictionary in def.trigger_subs:
+    total += trigger_points(def, sub)
+  return total
+
+
+## The points a trigger costs: the seconds of its item's bar it fills each time it goes off, times
+## Balance.POINTS_TRIGGERS_PER_COOLDOWN, at the item's own budget per second (its rate with its
+## rarity multiplier).
+static func trigger_points(def: ItemDef, sub: Dictionary) -> float:
+  return float(sub.get('seconds', 0.0)) * Balance.POINTS_TRIGGERS_PER_COOLDOWN * rate(def.cooldown) * rarity_multiplier(def.rarity)
 
 
 ## True when `spend` prices this effect. Anything else (a status, summon or created item, or an

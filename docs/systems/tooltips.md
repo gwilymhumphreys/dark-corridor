@@ -13,8 +13,8 @@ holds the design rationale, the ratified decisions, and the prior-art lineage
 ## What the player sees
 
 - **Main panel** (nearest the item) — four parts, in this order: the name (rarity-tinted), a type
-  line (the item's type tags, hidden when it has none), the charge time beside the `charge_time`
-  glyph, and the generated effect lines. An optional authored flavor line sits under them.
+  line (the item's type tags, hidden when it has none), the `charge_time` glyph followed by the
+  charge time, and the generated effect lines. An optional authored flavor line sits under them.
 - **Keyword column** (cards beside the main panel) — one card per keyword the item
   references (statuses + mechanics), **all shown at once**. A card is the keyword's icon and its
   tinted name on one row, with its description under them.
@@ -30,12 +30,16 @@ card at once. A chip used elsewhere in the interface can still carry a pop-up ca
 
 A **basic apply** — an effect that applies to a single actor in the direction its mechanic already
 implies (yourself, or the enemy in front of you), spends no fuel and is not unblockable — reads as
-its **value and its icon**, with no words at all (`TooltipContent._is_basic_apply`). An item's crit
-chance reads as one more line in the same shape: the percentage beside the crit glyph.
+its **icon followed by its value**, with no words at all (`TooltipContent._is_basic_apply`). An item's crit
+chance reads as one more line in the same shape: the crit glyph followed by the percentage.
 
 Anything more complicated — an item target, all enemies, a summon, a trigger, a charge or decharge
 — keeps a **worded line** for now, with an icon where a keyword chip used to be. Those strings are
 the owner's to design as the effects that need them are authored.
+
+A trigger line names its event and then the charge icon with the seconds the trigger fills each time
+it goes off: "When [poison] is applied, [charge] 1s". A trigger on destroyed items reads as the
+Reclaim keyword instead.
 
 ## The pieces (`src/scenes/ui/tooltip/`)
 
@@ -215,8 +219,8 @@ does not resolve is skipped, so a bad id never crashes a tooltip), and several t
 mode-dependent translated word (` and ` / ` or `). A filter whose term resolves to nothing falls back
 to the unfiltered phrase rather than emit an empty gap.
 
-The attack bonus lines put a sign on the value and the attack icon after it: "+10 [attack] to each
-of your [attack] items", "+50% [attack] to a random [attack] item of yours".
+The attack bonus lines show the attack icon followed by the signed value: "[attack] +10 to each
+of your [attack] items", "[attack] +50% to a random [attack] item of yours".
 
 ## Dev host
 

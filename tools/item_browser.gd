@@ -107,7 +107,7 @@ func _build_data() -> Dictionary:
       'crit_chance': def.crit_chance,
       'starting_uses': def.starting_uses,
       'points': ItemPoints.spend(def),
-      'budget': ItemPoints.budget(def.cooldown),
+      'budget': ItemPoints.budget(def.cooldown, def.rarity),
       'unpriced': _has_unpriced_effect(def),
       'pools': pools.get(item_id, []),
       'enemies': enemy_boards.get(item_id, []),
@@ -128,11 +128,10 @@ func _build_data() -> Dictionary:
   }
 
 
-## True when an effect adds nothing in ItemPoints.spend (a status, summon or created item, or an
-## unpriced mechanic such as regen), so the item's points undercount it.
+## True when an effect adds nothing in ItemPoints.spend, so the item's points undercount it.
 func _has_unpriced_effect(def: ItemDef) -> bool:
   for effect: ItemEffect in def.effects:
-    if effect.kind != Delivery.Kind.MECHANIC or effect.mechanic == RegenMechanic.ID:
+    if not ItemPoints.is_priced(effect):
       return true
   return false
 

@@ -222,6 +222,10 @@ pool. The names are placeholders; the numbers are on the budget curve.
   attack mechanic, not only weapons. The bonuses are unpriced.
 - **Acid** (`jar_of_acid`, `acid_bath`, no type yet) — poison-only items (owner, 2026-09-23). The
   Jar of Acid is fast and the Acid Bath slow, both on the leftmost enemy.
+- **Bloodletting** (`bloodletting`, no type yet) — applies bleed, and charges itself 1 second
+  whenever the Smith applies poison (owner, 2026-09-23), so it links the acid items to bleed. Its
+  own bleed does not charge it. The trigger is priced by the trigger row in
+  [`item_heuristics.md`](item_heuristics.md#spending-the-budget).
 - **The four armour items** (`vambraces`, `sallet`, `kite_shield`,
   `breast_plate`, all `[armour]`) — plain shield-to-self on a rising cooldown and shield
   ladder, the defensive counterpart to the weapon ladder. Names come from

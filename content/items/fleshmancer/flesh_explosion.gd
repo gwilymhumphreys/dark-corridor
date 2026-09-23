@@ -14,8 +14,8 @@ func _init() -> void:
   rarity = Rarity.UNCOMMON
   cooldown = 20.0
   effects = [ItemEffect.attack(70.0, ItemEffect.Shape.ALL_OPPONENTS)]
-  # Each own item destroyed fills this share of the bar (about 1s of the 20s).
+  # Each own item destroyed charges it 1 second.
   trigger_subs = [{
     'event': EventBus.Event.ITEM_DESTROYED,
-    'amount': 0.05,
+    'seconds': 1.0,
   }]

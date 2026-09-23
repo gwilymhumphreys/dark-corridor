@@ -138,8 +138,9 @@ func _register_item(it: Item) -> void:
   _items.append(it)
   for sub in it.def.trigger_subs:
     # The CONTENT default for trigger source is OWN_SIDE — "when MY side does X"
-    # (decision #30); a def opts out per subscription via 'source_filter'.
-    bus.subscribe(sub['event'], it.cooldown, sub['amount'], sub.get('filter', null),
+    # (decision #30); a def opts out per subscription via 'source_filter'. A trigger is authored in
+    # seconds of charge; the Ticker takes a share of its bar.
+    bus.subscribe(sub['event'], it.cooldown, sub['seconds'] / it.def.cooldown, sub.get('filter', null),
         sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE), it)
 
 

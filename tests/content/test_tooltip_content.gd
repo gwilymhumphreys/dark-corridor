@@ -80,12 +80,12 @@ func _heal_def() -> ItemDef:
   return def
 
 
-## A single-target attack is a basic apply: a value and the attack glyph, no words at all.
-func test_attack_line_is_a_value_and_the_attack_glyph() -> void:
+## A single-target attack is a basic apply: the attack glyph and a value, no words at all.
+func test_attack_line_is_the_attack_glyph_and_a_value() -> void:
   var it: Item = Item.new(FixtureItems.attack(), _actor(100.0))
   var line: Array = TooltipContent.new().build(it)['lines'][0]
   assert_eq(line.size(), 2, 'a single-target attack line has two segments')
-  assert_eq(line[1]['id'], AttackMechanic.ID, 'the icon is the attack glyph')
+  assert_eq(line[0]['id'], AttackMechanic.ID, 'the icon is the attack glyph')
   assert_true(_first_segment(line, 'text') == {}, 'a basic apply line has no words')
 
 
@@ -98,15 +98,15 @@ func test_heal_line_has_an_icon_segment() -> void:
   assert_eq(icon.get('id'), HealMechanic.ID, 'the icon is the heal glyph')
 
 
-## A self-shield is a basic apply: the line is exactly a value and the shield icon, no words.
-func test_basic_apply_line_is_a_value_and_an_icon_only() -> void:
+## A self-shield is a basic apply: the line is exactly the shield icon and a value, no words.
+func test_basic_apply_line_is_an_icon_and_a_value_only() -> void:
   var it: Item = Item.new(FixtureItems.shield(), _actor(100.0))
   var content: Dictionary = TooltipContent.new().build(it)
   var line: Array = content['lines'][0]
   assert_eq(line.size(), 2, 'a basic apply line has two segments')
-  assert_eq(line[0]['t'], 'value', 'the first segment is the value')
-  assert_eq(line[1]['t'], 'icon', 'the second segment is the icon')
-  assert_eq(line[1]['id'], ShieldMechanic.ID, 'the icon is the shield glyph')
+  assert_eq(line[0]['t'], 'icon', 'the first segment is the icon')
+  assert_eq(line[1]['t'], 'value', 'the second segment is the value')
+  assert_eq(line[0]['id'], ShieldMechanic.ID, 'the icon is the shield glyph')
 
 
 ## An effect that is not a basic apply keeps its worded line, with an icon where the chip used to be.
@@ -118,23 +118,23 @@ func test_complex_effect_keeps_a_worded_line_with_an_icon() -> void:
   assert_true(_first_segment(line, 'chip') == {}, 'no keyword chip is left in a tooltip line')
 
 
-## The charge-time line: the item's cooldown in seconds beside the charge_time glyph.
-func test_charge_line_is_the_cooldown_and_the_charge_time_glyph() -> void:
+## The charge-time line: the charge_time glyph, then the item's cooldown in seconds.
+func test_charge_line_is_the_charge_time_glyph_and_the_cooldown() -> void:
   var it: Item = Item.new(_heal_def(), _actor(100.0))
   var line: Array = TooltipContent.new().build(it)['charge_line']
-  assert_eq(line[0]['s'], '2s', 'the charge line reads the cooldown in seconds')
-  assert_eq(line[1]['id'], IconSlots.CHARGE_TIME, 'the charge line carries the charge_time glyph')
+  assert_eq(line[0]['id'], IconSlots.CHARGE_TIME, 'the charge line carries the charge_time glyph')
+  assert_eq(line[1]['s'], '2s', 'the charge line reads the cooldown in seconds')
 
 
-## An item's crit chance is one more effect line: the percentage beside the crit glyph.
+## An item's crit chance is one more effect line: the crit glyph, then the percentage.
 func test_crit_chance_is_an_effect_line() -> void:
   var def: ItemDef = _heal_def()
   def.crit_chance = 0.25
   var it: Item = Item.new(def, _actor(100.0))
   var lines: Array = TooltipContent.new().build(it)['lines']
   var last: Array = lines[lines.size() - 1]
-  assert_eq(last[0]['s'], '25%', 'the crit line reads the chance as a percentage')
-  assert_eq(last[1]['id'], CritMechanic.ID, 'the crit line carries the crit glyph')
+  assert_eq(last[0]['id'], CritMechanic.ID, 'the crit line carries the crit glyph')
+  assert_eq(last[1]['s'], '25%', 'the crit line reads the chance as a percentage')
 
 
 ## No crit chance, no crit line.
@@ -227,7 +227,7 @@ func test_attack_bonus_line_shows_the_attack_icon_after_the_value() -> void:
   var text: String = ''
   for seg: Dictionary in TooltipContent.new()._effect_line(item, bonus):
     text += seg['s'] if seg.has('s') else '[%s]' % seg['id']
-  assert_eq(text, '+10 [attack] to each of your [attack] items')
+  assert_eq(text, '[attack] +10 to each of your [attack] items')
 
 
 ## A filter on an actor shape is ignored: the phrase is the unfiltered baseline copy.
@@ -238,6 +238,24 @@ func test_filter_on_actor_shape_is_ignored() -> void:
 
 
 ## The first segment of `line` whose 't' is `kind`, or {} if none.
+## A trigger line names its event and the seconds it charges the item each time it goes off.
+func test_trigger_line_shows_the_seconds_it_charges() -> void:
+  var def: ItemDef = _heal_def()
+  def.cooldown = 5.0
+  def.trigger_subs = [{'event': EventBus.Event.APPLIED, 'seconds': 1.0, 'filter': 'poison'}]
+  var lines: Array = TooltipContent.new().build(Item.new(def, _actor(100.0)))['lines']
+  var line: Array = lines[lines.size() - 1]
+  var ids: Array = []
+  var texts: Array = []
+  for seg: Dictionary in line:
+    if seg['t'] == 'icon':
+      ids.append(seg['id'])
+    else:
+      texts.append(seg['s'])
+  assert_eq(ids, [PoisonMechanic.ID, ChargeMechanic.ID], 'the event icon, then the charge icon')
+  assert_has(texts, '1s', 'the seconds it charges')
+
+
 func _first_segment(line: Array, kind: String) -> Dictionary:
   for seg: Dictionary in line:
     if seg['t'] == kind:

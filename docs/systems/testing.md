@@ -48,7 +48,7 @@ colorless pool to every character's pool, so a fixture run would draft authored 
 Only the tests in `tests/content/` that check the authored content itself read it: pool integrity,
 starting boards, item points, icons and portraits, and `test_authored_content.gd`, which checks
 specific authored cards, enemies, potions, enchants, relics and events. Engine rules in `Balance`
-(`STEP`, time scales, status multipliers, `CRIT_MULTIPLIER`, `TRIGGER_PUSH_FULL`, `GOLD_SKIP`)
+(`STEP`, time scales, status multipliers, `CRIT_MULTIPLIER`, `GOLD_SKIP`)
 are not content, and any test may read them. `test_interface_palette.gd` also reads a few authored
 definitions, because it checks that authored definitions show a palette's colours.
 

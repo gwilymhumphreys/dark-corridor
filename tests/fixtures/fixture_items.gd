@@ -31,7 +31,7 @@ const SILENCE_DURATION: float = 2.0
 # The trigger, debuff and buff fixtures below. Fixture constants for the same reason.
 const TRIGGER_COOLDOWN: float = 2.0
 const TRIGGER_SHIELD: float = 8.0
-const TRIGGER_PUSH: float = 1.0
+const TRIGGER_SECONDS: float = TRIGGER_COOLDOWN   # fills the whole bar
 const VULNERABLE_COOLDOWN: float = 3.0
 const VULNERABLE_DURATION: float = 3.0
 const HEX_COOLDOWN: float = 2.5
@@ -167,7 +167,7 @@ static func poison_trigger() -> ItemDef:
   d.effects = [blk]
   d.trigger_subs = [{
     'event': EventBus.Event.APPLIED,
-    'amount': TRIGGER_PUSH,
+    'seconds': TRIGGER_SECONDS,
     'filter': 'poison',
   }]
   d.panel_colour_name = 'SHIELD'

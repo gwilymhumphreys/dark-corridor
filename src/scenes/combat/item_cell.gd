@@ -78,7 +78,9 @@ func _ready() -> void:
 func set_cell_size(px: float) -> void:
   cell_size = Vector2(px, px)
   custom_minimum_size = cell_size
-  size = cell_size
+  # A cell anchored to fill its parent (the potion slot's) takes its size from the parent.
+  if anchor_left == anchor_right and anchor_top == anchor_bottom:
+    size = cell_size
   pivot_offset = cell_size * 0.5
   if is_node_ready():
     _push_cooldown_size()

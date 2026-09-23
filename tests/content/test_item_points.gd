@@ -57,6 +57,17 @@ func test_parked_and_unpriced_effects_add_nothing() -> void:
   assert_almost_eq(ItemPoints.spend(ItemCatalog.get_def('druid_staff')), 10.0, TOLERANCE)
 
 
+func test_a_trigger_costs_its_seconds_times_the_expected_count_at_the_item_budget_rate() -> void:
+  var def := ItemDef.new()
+  def.cooldown = 5.0
+  def.rarity = ItemDef.Rarity.UNCOMMON
+  def.trigger_subs = [{'event': EventBus.Event.APPLIED, 'seconds': 1.0, 'filter': 'poison'}]
+  var per_second: float = ItemPoints.budget(def.cooldown, def.rarity) / def.cooldown
+  var expected: float = 1.0 * Balance.POINTS_TRIGGERS_PER_COOLDOWN * per_second
+  assert_almost_eq(ItemPoints.trigger_points(def, def.trigger_subs[0]), expected, TOLERANCE)
+  assert_almost_eq(ItemPoints.spend(def), expected, TOLERANCE, 'spend adds the trigger')
+
+
 func test_spend_of_a_null_def_is_zero() -> void:
   assert_eq(ItemPoints.spend(null), 0.0)
 

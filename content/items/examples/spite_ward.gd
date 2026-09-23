@@ -13,6 +13,6 @@ func _init() -> void:
   effects = [ItemEffect.shield(8.0)]
   trigger_subs = [{
     'event': EventBus.Event.APPLIED,
-    'amount': Balance.TRIGGER_PUSH_FULL,
+    'seconds': cooldown,              # fills the whole bar
     'filter': 'poison',
   }]

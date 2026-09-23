@@ -26,8 +26,8 @@ func test_spite_ward_declares_an_applied_subscription() -> void:
   assert_eq(d.trigger_subs[0]['filter'], 'poison', 'filtered to poison')
   assert_false(d.trigger_subs[0].has('source_filter'),
       'no source_filter key — it uses the OWN_SIDE content default')
-  assert_almost_eq(d.trigger_subs[0]['amount'], Balance.TRIGGER_PUSH_FULL, 0.0001,
-      'the declared push amount')
+  assert_almost_eq(d.trigger_subs[0]['seconds'], d.cooldown, 0.0001,
+      'each poison fills the whole bar')
 
 
 func test_sundering_bolt_applies_vulnerable_to_opponent() -> void:

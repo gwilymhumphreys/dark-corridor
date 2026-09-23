@@ -88,6 +88,8 @@ The full catalog (with keywords) is [`index.md`](index.md): system specs in `doc
 
 46. **Bonuses combine by one rule, and items can hold value bonuses (2026-09-23, owner).** Flat bonuses are added first; positive percentage bonuses are added together; negative ones multiply together; the two groups apply separately; crit multiplies the result last. An enchant counts as a positive percentage. Statuses now report a bonus (`outgoing_bonus`) instead of changing the value, and a status on an item raises only that item's attacks, which is how the Deep Forge and Wide Forge work. Homes: [`systems/mechanics.md`](systems/mechanics.md#combining-bonuses) / [`plans/attack_bonuses.md`](plans/attack_bonuses.md).
 
+47. **A trigger is priced as a number of expected triggers per cooldown (2026-09-23, owner).** A trigger that charges its own item costs the seconds it charges each time, times an assumed count per cooldown (`Balance.POINTS_TRIGGERS_PER_COOLDOWN`), at the item's own budget per second. The owner accepted that the real count rises as the board grows, so the price is low late in a run. Chosen over halving the budget per trigger, which ignores how much a trigger charges and cuts too hard when an item has two. First used on Bloodletting. Home: [`design/item_heuristics.md`](design/item_heuristics.md#spending-the-budget).
+
 ## Open / deferred (each has a home)
 
 - Timescale override **replace-vs-multiply — resolved → replace** (absolute slow-mo, independent of the ×1/×2/×3 battle-speed dial; the dial is a `Game` session preference applied to each fight's Timekeeper base scale). timekeeper.md / combat_model.md.
