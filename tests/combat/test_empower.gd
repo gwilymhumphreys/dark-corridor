@@ -73,12 +73,12 @@ func test_one_charge_per_weapon_attack_then_expires() -> void:
   # Attack 1: outgoing_bonus doubles (during fire), then on_owner_item_fired spends one charge (after).
   assert_almost_eq(it.fire()[0].value, 80.0, 0.0001, 'attack 1 is doubled (2 charges banked)')
   assert_false(emp.on_owner_item_fired(a, it, null), 'a charge remains after the first weapon attack')
-  assert_almost_eq(emp.count, 1.0, 0.0001, 'spent exactly one charge')
+  assert_eq(emp.count, 1, 'spent exactly one charge')
 
   # Attack 2: still doubled (1 charge left), then the last charge is spent → expired.
   assert_almost_eq(it.fire()[0].value, 80.0, 0.0001, 'attack 2 is still doubled (1 charge left)')
   assert_true(emp.on_owner_item_fired(a, it, null), 'the last charge is spent → the empower expires')
-  assert_almost_eq(emp.count, 0.0, 0.0001, 'drained to zero')
+  assert_eq(emp.count, 0, 'drained to zero')
 
   # The Combat manager removes an expired status; attack 3 is then a normal hit.
   a.statuses.erase(emp)
@@ -91,7 +91,7 @@ func test_a_non_weapon_fire_spends_no_charge() -> void:
   var skill := Item.new(_damage_def(40.0, ItemType.SKILL), a)
   var emp := _find(a, 'empowered')
   assert_false(emp.on_owner_item_fired(a, skill, null), 'a skill fire never spends an empower charge')
-  assert_almost_eq(emp.count, 1.0, 0.0001, 'the charge is banked until a WEAPON attack')
+  assert_eq(emp.count, 1, 'the charge is banked until a WEAPON attack')
 
 
 # --- purity: the tooltip preview must not spend a charge ---
@@ -103,7 +103,7 @@ func test_display_value_preview_is_pure() -> void:
   var emp := _find(a, 'empowered')
   assert_almost_eq(it.display_value(it.def.effects[0]), 80.0, 0.0001,
     'the read-only preview SHOWS the doubled value')
-  assert_almost_eq(emp.count, 1.0, 0.0001,
+  assert_eq(emp.count, 1,
     'but outgoing_bonus is PURE — the preview spent no charge')
 
 
@@ -121,7 +121,7 @@ func test_empower_charges_stack_on_repeat() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_CHARGES)
   StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_CHARGES)
-  assert_almost_eq(_find(a, 'empowered').count, 2.0 * FixtureItems.EMPOWER_CHARGES, 0.0001,
+  assert_eq(_find(a, 'empowered').count, roundi(2.0 * FixtureItems.EMPOWER_CHARGES),
     'repeated empower fires stack charges (reapply is additive)')
 
 

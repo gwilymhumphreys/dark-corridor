@@ -41,7 +41,7 @@ A **`Draftable`** (drafted / inspected / tooltipped like Item / Relic / Consumab
 A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing that doesn't accrue-toward-firing).
 
 - **Slots** — 3 potion slots (design); found mainly in drafts; consumed on use; a potion taken when slots are full drops one (the potion-drop sub-choice — Draft PRD).
-- **Throw → resolve** — a **throw-potion intent** reaches the `Combat manager`, which activates the consumable: builds its payload(s), resolves the target-shape, spawns its Deliveries (combat_model.md) — the same resolution surface as an item fire, minus the Ticker. Effects are tactical (heal, instant shield, freeze, instant damage, apply-status-to-all — design). A thrown potion's Deliveries travel like an item's, from the potion's slot, and land `Balance.TRAVEL_STEPS` later; a lethal throw resolves the fight on that step. **Thrown payloads are exempt from the thrower's combat modifiers** (decision #30): Weak doesn't scale a potion down and Blind can't whiff a throw — potions are the reserve, not the engine.
+- **Throw → resolve** — a **throw-potion intent** reaches the `Combat manager`, which activates the consumable: builds its payload(s), resolves the target-shape, spawns its Deliveries (combat_model.md) — the same resolution surface as an item fire, minus the Ticker. Effects are tactical (heal, instant shield, freeze, instant damage, apply-status-to-all — design). A thrown potion's Deliveries fly `Balance.POTION_TRAVEL_STEPS` (one step, decision #48) and land in the step loop like an item's; a lethal throw resolves the fight on that step. A potion thrown while the fight is paused lands on the first step after it resumes. **Thrown payloads are exempt from the thrower's combat modifiers** (decision #30): Weak doesn't scale a potion down and Blind can't whiff a throw — potions are the reserve, not the engine.
 - **Slow-mo-on-hover** to inspect + throw during combat (design — opt-in agency; slows both sides).
 - **Saved** — potions are run-state, in the snapshot (Save PRD).
 
@@ -60,7 +60,7 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 
 - One **relic** — Stone Ward (a combat-start shield status applier), in run-state, applied at each fight start, saved (`src/content/relics/relic*.gd`).
 - One **enchant** — Whetstone (scale-a-value, +50%), applied to a chosen item, saved on the board entry; the Item fire pipeline scales payload values (`src/content/enchants/enchant*.gd`, `Item._resolve_effect`).
-- One **consumable** — Healing Draught (a thrown self-heal), in a potion slot, fired via `RunManager.throw_potion` → `CombatManager.throw_consumable` → a travelling Delivery (`src/content/consumables/consumable*.gd`). **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.
+- One **consumable** — Healing Draught (a thrown self-heal), in a potion slot, fired via `RunManager.throw_potion` → `CombatManager.throw_consumable` → a Delivery that lands on the next step (`src/content/consumables/consumable*.gd`). **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.
 
 ---
 

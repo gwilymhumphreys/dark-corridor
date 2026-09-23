@@ -72,16 +72,17 @@ func uses(mechanic_id: String) -> bool:
 ## SHOWS, computed WITHOUT side effects. Mirrors the pure stages of _resolve_effect (the enchant and
 ## the status bonuses) but never resets the cooldown or spends fuel, so it is safe to call every
 ## frame while inspecting. Consume-scaling is excluded (it needs a non-mutating stack peek;
-## tooltips.md). Pairs with base_value for the changed-value highlight.
+## tooltips.md). Rounded, like every value when it lands. Pairs with base_value for the changed-value
+## highlight.
 func display_value(effect: ItemEffect) -> float:
-  return _scaled_value(effect, true)
+  return roundi(_scaled_value(effect, true))
 
 
 ## The baseline the changed-value highlight compares against: the authored value scaled by the
 ## enchant only (a PERMANENT modifier — #26), so the highlight reflects combat-scoped status
 ## changes (Weak, the attack bonuses), not the enchant. Read-only.
 func base_value(effect: ItemEffect) -> float:
-  return _scaled_value(effect, false)
+  return roundi(_scaled_value(effect, false))
 
 
 ## The effect's value with the enchant and, when `with_statuses` and the effect is an attack, every

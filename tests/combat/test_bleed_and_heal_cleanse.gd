@@ -92,9 +92,9 @@ func test_attack_on_a_bleeding_actor_deals_attack_plus_bleed_and_loses_a_stack()
   var cm := _manager(p, [e])
   cm.start()
   StatusManager.apply(e, 'bleed', 3.0)
-  var before: float = e.hp
+  var before: int = e.hp
   _fire_and_land(cm, _attack_item(p, 10.0))
-  assert_almost_eq(before - e.hp, 10.0 + 3.0, 0.0001, 'the attack plus the bleed bite (3 stacks)')
+  assert_eq(before - e.hp, roundi(10.0 + 3.0), 'the attack plus the bleed bite (3 stacks)')
   assert_almost_eq(_status_count(e, 'bleed'), 2.0, 0.0001, 'bleed lost one stack')
 
 
@@ -106,7 +106,7 @@ func test_attack_triggers_bleed_even_when_shield_absorbs_the_whole_attack() -> v
   StatusManager.apply(e, 'shield', 100.0)
   StatusManager.apply(e, 'bleed', 3.0)
   _fire_and_land(cm, _attack_item(p, 10.0))
-  assert_almost_eq(e.hp, 1000.0, 0.0001, 'the shield soaked the attack and the bleed bite')
+  assert_eq(e.hp, 1000, 'the shield soaked the attack and the bleed bite')
   assert_almost_eq(_status_count(e, 'bleed'), 2.0, 0.0001, 'the bleed still triggered and lost a stack')
 
 
@@ -134,7 +134,7 @@ func test_evaded_attack_does_not_trigger_bleed() -> void:
   StatusManager.apply(p, 'blind', 1.0)
   StatusManager.apply(e, 'bleed', 3.0)
   _fire_and_land(cm, _attack_item(p, 10.0))
-  assert_almost_eq(e.hp, 1000.0, 0.0001, 'the blinded swing whiffed')
+  assert_eq(e.hp, 1000, 'the blinded swing whiffed')
   assert_almost_eq(_status_count(e, 'bleed'), 3.0, 0.0001, 'an evaded attack does not trigger the bleed')
 
 
@@ -180,7 +180,7 @@ func test_unblockable_bleed_skips_the_holders_shield() -> void:
   StatusManager.apply(e, 'shield', 100.0)
   StatusManager.apply(e, 'bleed', 3.0, 0.0, null, Delivery.Flag.UNBLOCKABLE)
   _fire_and_land(cm, _attack_item(p, 10.0))
-  assert_almost_eq(e.hp, 1000.0 - 3.0, 0.0001, 'the unblockable bleed bite skipped the holder\'s shield')
+  assert_eq(e.hp, roundi(1000.0 - 3.0), 'the unblockable bleed bite skipped the holder\'s shield')
   assert_almost_eq(_status_count(e, 'shield'), 100.0 - 10.0, 0.0001, 'the shield only spent the attack')
 
 

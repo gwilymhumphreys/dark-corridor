@@ -12,7 +12,7 @@ extends RefCounted
 ## a null ctx.
 
 var id: String = ''
-var count: float = 0.0
+var count: int = 0   # whole numbers — setup / reapply / consume round what they are given
 var duration: float = 0.0
 var ticker: Ticker = null      # time-driven subclasses build one in setup(); inert shapes leave null
 var source: Variant = null     # the Actor/Item that applied it (source-dependent rules / attribution)
@@ -32,7 +32,7 @@ var icon: String = ''
 ## StatusRegistry.create(). Time-driven subclasses override to also build their Ticker from
 ## `dur` — which is how duration rides the APPLICATION, not a global on a def.
 func setup(amount: float, dur: float, src, applied_flags: int) -> void:
-  count = amount
+  count = roundi(amount)
   duration = dur
   source = src
   flags = applied_flags
@@ -55,7 +55,7 @@ func on_expire(target, ctx) -> void:
 ## Re-application onto an existing instance of the same id. Default = STACK (additive count);
 ## time-driven subclasses also extend their duration. Override for refresh / max semantics.
 func reapply(add_count: float, add_duration: float, src, new_flags: int) -> void:
-  count += add_count
+  count += roundi(add_count)
 
 
 # --- per-step active effect (PUSH). Return true the step it has expired. ---
@@ -131,10 +131,10 @@ func is_fuel() -> bool:
 
 ## Spend up to `amount` of this status as fuel, returning how many were removed. Default: count-
 ## based (fuel subclasses opt in via is_fuel()); non-fuel returns 0.
-func consume(amount: float) -> float:
+func consume(amount: float) -> int:
   if not is_fuel():
-    return 0.0
-  var removed: float = minf(amount, count)
+    return 0
+  var removed: int = mini(roundi(amount), count)
   count -= removed
   return removed
 

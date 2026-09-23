@@ -8,8 +8,8 @@ extends RefCounted
 
 signal died
 
-var hp: float
-var max_hp: float
+var hp: int     # whole numbers — every value is rounded when it lands (docs/systems/actor.md)
+var max_hp: int
 var board: Array[Item] = []              # ordered, not a grid
 var statuses: Array[StatusEffect] = []   # actor-targeted instances
 var display_name: String = ''  # presentation label (the def's name_key, tr()'d by the view); combat ignores it
@@ -21,12 +21,12 @@ var hurt_sound: String = ''
 
 
 func _init(starting_max_hp: float = Balance.PLAYER_START_HP) -> void:
-  max_hp = starting_max_hp
-  hp = starting_max_hp
+  max_hp = roundi(starting_max_hp)
+  hp = max_hp
 
 
 func is_alive() -> bool:
-  return hp > 0.0
+  return hp > 0
 
 
 ## Run the raw amount through the target's incoming-damage modifiers (shield, and
@@ -34,14 +34,15 @@ func is_alive() -> bool:
 ## (so `died` fires once). Returns the ACTUAL HP lost — post-shield, capped at the
 ## remaining HP (a killing blow returns effective, not inflated raw, damage) — so
 ## the CombatLog records honest numbers with no HP-diff machinery (docs/systems/
-## combat_log.md). Statement-callers may ignore the return.
-func take_damage(amount: float, flags: int = 0, mechanic_id: String = '') -> float:
+## combat_log.md). Statement-callers may ignore the return. The amount stays fractional through
+## the modifiers and is rounded once, when it reaches HP.
+func take_damage(amount: float, flags: int = 0, mechanic_id: String = '') -> int:
   if not is_alive():
-    return 0.0
+    return 0
   var net: float = StatusManager.resolve_incoming_damage(self, amount, flags, null, mechanic_id)
-  var hp_before: float = hp
-  hp = maxf(hp - net, 0.0)
-  if hp <= 0.0:
+  var hp_before: int = hp
+  hp = maxi(hp - roundi(net), 0)
+  if hp <= 0:
     died.emit()
   return hp_before - hp
 
@@ -49,12 +50,12 @@ func take_damage(amount: float, flags: int = 0, mechanic_id: String = '') -> flo
 ## A dead actor stays dead — heal cannot revive (death is final this fight).
 ## Currently unreachable via Deliveries (a HEAL to a dead target fizzles in the
 ## Combat manager) but guarded here so no future caller can resurrect a corpse.
-## Returns the ACTUAL HP restored (post-overheal-cap) — see take_damage.
-func heal(amount: float) -> float:
+## Returns the ACTUAL HP restored (post-overheal-cap) — see take_damage. Rounded when it lands.
+func heal(amount: float) -> int:
   if not is_alive():
-    return 0.0
-  var hp_before: float = hp
-  hp = minf(hp + amount, max_hp)
+    return 0
+  var hp_before: int = hp
+  hp = mini(hp + roundi(amount), max_hp)
   return hp - hp_before
 
 

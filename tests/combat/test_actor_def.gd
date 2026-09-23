@@ -22,8 +22,8 @@ func test_an_enemy_actor_copies_its_definition() -> void:
   def.portrait = PORTRAIT
   def.hurt_sound = 'fixture/hurt'
   var actor: Actor = def.make_actor()
-  assert_almost_eq(actor.max_hp, FixtureEnemies.BIG_HP, 0.0001, 'max health')
-  assert_almost_eq(actor.hp, FixtureEnemies.BIG_HP, 0.0001, 'at full health')
+  assert_eq(actor.max_hp, roundi(FixtureEnemies.BIG_HP), 'max health')
+  assert_eq(actor.hp, roundi(FixtureEnemies.BIG_HP), 'at full health')
   assert_eq(actor.display_name, def.name_key, 'name')
   assert_eq(actor.image, IMAGE, 'image')
   assert_eq(actor.portrait, PORTRAIT, 'portrait')
@@ -45,6 +45,6 @@ func test_the_portrait_falls_back_to_the_image() -> void:
 func test_a_character_actor_has_no_board_and_no_name() -> void:
   var def: CharacterDef = CharacterCatalog.get_def(FixtureCharacter.ID)
   var actor: Actor = def.make_actor()
-  assert_almost_eq(actor.max_hp, def.max_hp, 0.0001, 'the character max health')
+  assert_eq(actor.max_hp, roundi(def.max_hp), 'the character max health')
   assert_eq(actor.board.size(), 0, 'the RunManager adds the board')
   assert_eq(actor.display_name, '', 'an empty name reads as the player in the combat summary')

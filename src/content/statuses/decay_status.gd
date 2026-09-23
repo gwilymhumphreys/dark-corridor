@@ -23,6 +23,6 @@ func _init() -> void:
 ## "decay 2" = two full hits, then removal). Spend one activation; when none remain, ask the
 ## Combat manager (via ctx) to remove the host item — the individual-live-item removal path.
 func on_holder_fired(item, ctx) -> void:
-  count -= 1.0
-  if count <= 0.0 and ctx != null:
+  count -= 1
+  if count <= 0 and ctx != null:
     ctx.remove_item(item)

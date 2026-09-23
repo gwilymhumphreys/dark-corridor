@@ -99,7 +99,7 @@ func test_crit_doubles_mechanic_values_and_leaves_outside_set_alone() -> void:
   assert_almost_eq(attack.value, 10.0 * Balance.CRIT_MULTIPLIER, 0.0001, 'the attack value is doubled')
   assert_false(weak.crit, 'the outside-set (APPLY_STATUS) delivery is not crit')
   assert_almost_eq(weak.value, 3.0, 0.0001, 'the weak value is unchanged')
-  assert_almost_eq(e.hp, 1000.0 - 10.0 * Balance.CRIT_MULTIPLIER, 0.0001, 'the enemy took the doubled damage')
+  assert_eq(e.hp, roundi(1000.0 - 10.0 * Balance.CRIT_MULTIPLIER), 'the enemy took the doubled damage')
 
 
 func test_crit_doubles_a_shield_applied() -> void:
@@ -160,8 +160,7 @@ func test_crit_applies_after_weak() -> void:
   var arrived := _fire_and_land(cm, it)
   assert_almost_eq(arrived[0].value, 10.0 * Balance.STATUS_WEAK_DAMAGE_MULT * Balance.CRIT_MULTIPLIER,
       0.0001, 'the crit multiplies the WEAKENED value')
-  assert_almost_eq(e.hp, 1000.0 - 10.0 * Balance.STATUS_WEAK_DAMAGE_MULT * Balance.CRIT_MULTIPLIER,
-      0.0001, 'the enemy took the weakened-then-crit damage')
+  assert_eq(e.hp, roundi(1000.0 - 10.0 * Balance.STATUS_WEAK_DAMAGE_MULT * Balance.CRIT_MULTIPLIER), 'the enemy took the weakened-then-crit damage')
 
 
 func test_display_value_never_rolls() -> void:
@@ -206,7 +205,7 @@ func test_thrown_consumable_never_crits() -> void:
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  for i in Balance.TRAVEL_STEPS:
+  for i in Balance.POTION_TRAVEL_STEPS:
     cm.sim_step()
   assert_eq(seen.size(), 0, 'a thrown consumable never publishes CRIT')
-  assert_almost_eq(e.hp, 1000.0 - 10.0, 0.0001, 'and its value is not multiplied')
+  assert_eq(e.hp, roundi(1000.0 - 10.0), 'and its value is not multiplied')

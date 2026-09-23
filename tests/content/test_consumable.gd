@@ -1,6 +1,6 @@
 extends GutTest
 ## FF2 — the minimal consumable (a thrown heal potion). Throwing it through the CombatManager
-## spawns a Delivery that travels and then heals the thrower — the manual-fire path (no Ticker), the
+## spawns a Delivery that lands on the next step and heals the thrower — the manual-fire path (no Ticker), the
 ## same resolution surface as an item fire.
 
 
@@ -41,11 +41,10 @@ func test_throwing_a_heal_potion_heals_the_thrower() -> void:
   cm.start()
   var potion := Consumable.new(FixtureKit.potion())
   cm.throw_consumable(potion, p)
-  assert_almost_eq(p.hp, 60.0, 0.0001, 'the potion is still in flight')
-  # The enemy's first attack cannot land this soon: it must fill its cooldown and then travel too.
-  for i in Balance.TRAVEL_STEPS:
+  assert_eq(p.hp, 60, 'the potion lands in the step loop, not during the throw')
+  for i in Balance.POTION_TRAVEL_STEPS:
     cm.sim_step()
-  assert_almost_eq(p.hp, 60.0 + FixtureKit.POTION_HEAL, 0.0001, 'the thrown potion healed the thrower on landing')
+  assert_eq(p.hp, roundi(60.0 + FixtureKit.POTION_HEAL), 'the thrown potion healed the thrower on the next step')
 
 
 func test_throw_after_resolution_is_a_noop() -> void:
@@ -58,4 +57,4 @@ func test_throw_after_resolution_is_a_noop() -> void:
   cm._check_resolution()    # fight resolves (player won)
   var potion := Consumable.new(FixtureKit.potion())
   cm.throw_consumable(potion, p)
-  assert_eq(p.hp, 60.0, 'no throw lands once the fight is over')
+  assert_eq(p.hp, 60, 'no throw lands once the fight is over')

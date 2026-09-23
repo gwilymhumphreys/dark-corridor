@@ -119,6 +119,12 @@ out, the damage it could not cover goes to health unchanged. Poison drains shiel
 bleed drain it half (`Balance.SHIELD_MULTIPLIER_*`). The calculation lives in `PoolStatus.absorb` —
 see [status_manager.md](status_manager.md).
 
+Shield is a whole number, like every value that lands on a character (decision #49). The cost of a
+hit is rounded (`roundi(damage × multiplier)`); if the shield can pay it, nothing reaches health.
+Otherwise the shield covers `shield / multiplier` damage and drops to 0, and the rest is rounded when
+it reaches health. For example, 3 burn damage against 1 shield costs 2, more than the shield holds,
+so the shield covers 2 damage and 1 reaches health.
+
 Worked example with the current constants: a 10 damage poison tick against 30 shield removes 20
 shield and no health; against 6 shield, the shield covers 3 damage and is used up, and 7 goes to
 health.
@@ -307,15 +313,28 @@ Interface palette files name them in lower case (`attack`, `poison`); see
 [interface_palette.md](interface_palette.md). `ui-default.gpl` carries the same values, and the other
 palettes in `assets/palettes/new/ui/` carry the first ten fitted to their own schemes.
 
-## Health bar numbers
+## Health bar
 
-`StatusNumbers` (`src/scenes/combat/status_numbers.tscn` / `.gd`) sits beside the health bar in all
-three places that draw one (the player portrait in `combat_view_framed.tscn`, `enemy_hud.tscn` and
-`ally_slot.tscn`). It holds one `Label` per mechanic status — shield, poison, burn, bleed, regen —
-and each frame shows the actor's stack count for that status in the mechanic's colour (the numbers
-are not translated). It reads the actor's statuses; writes nothing. The enemy HUD's status-icon row
-(`StatusIcon`) shows only the OUTSIDE-set statuses — the mechanic statuses read off the numbers
-instead.
+`HealthBar` (`src/scenes/combat/health_bar.tscn` / `.gd`) is the one health bar, used by the player
+portrait (`combat_view_framed.tscn`), `enemy_hud.tscn` and `ally_slot.tscn`. Each view sets its
+`actor`, its `bar_size`, and for the enemy the fill and background colour names. It reads the actor
+each frame and writes nothing.
+
+- The bar's full width stands for max health or shield, whichever is larger. When that changes, the
+  bar eases to the new scale (`SCALE_EASE_SPEED`) instead of jumping.
+- Health fills from the left. Shield fills from the left on top of it, in the shield colour, so it
+  hides the health under it.
+- A faint line (`Colours.HP_BAR_LINE`) marks every `LINE_STEP` points. When shield is larger than
+  max health, a thicker line marks where max health ends.
+- The label on the bar shows current health only.
+- Above the bar, the shield icon and value in the shield colour. The row keeps its space when shield
+  is 0, so the bar does not move.
+- `StatusNumbers` (`status_numbers.tscn`) sits to the right of the bar: one label per mechanic
+  status (poison, burn, bleed, regen) showing its stack count in the mechanic's colour. The numbers
+  are not translated.
+
+The enemy HUD's status-icon row (`StatusIcon`) shows only the OUTSIDE-set statuses; the health bar
+shows the mechanic statuses.
 
 ## Tooltip keyword cards
 

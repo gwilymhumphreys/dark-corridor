@@ -21,9 +21,9 @@ func on_step(target, ctx) -> bool:
   if ticker.step():
     if target is Actor:
       target.take_damage(count * damage_per_tick, flags, id)
-    count -= 1.0
+    count -= 1
     ticker.reset()
-    return count <= 0.0
+    return count <= 0
   return false
 
 

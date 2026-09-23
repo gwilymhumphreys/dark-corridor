@@ -26,6 +26,6 @@ func test_applying_a_combat_start_relic_grants_the_status() -> void:
   StatusManager.apply(player, d.status_id, d.status_count, d.status_duration)
   # Shield absorbs incoming damage before HP — so the relic shield is live.
   player.take_damage(d.status_count - 1.0)
-  assert_eq(player.hp, 100.0, 'relic shield absorbed the hit; HP untouched')
+  assert_eq(player.hp, 100, 'relic shield absorbed the hit; HP untouched')
   player.take_damage(2.0)
-  assert_almost_eq(player.hp, 99.0, 0.0001, 'damage past the shield pool reaches HP')
+  assert_eq(player.hp, 99, 'damage past the shield pool reaches HP')

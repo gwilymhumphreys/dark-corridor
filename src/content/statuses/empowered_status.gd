@@ -29,7 +29,7 @@ func _init() -> void:
 ## Item.display_value's tooltip preview; the charge-spend lives on on_owner_item_fired). Gated on the
 ## firing `item` being a weapon, so a spell / skill damage attack gets nothing.
 func outgoing_bonus(target, item = null) -> Dictionary:
-  if count > 0.0 and item != null and item.def.types.has(ItemType.WEAPON):
+  if count > 0 and item != null and item.def.types.has(ItemType.WEAPON):
     return {'percent': Balance.EMPOWER_MULT - 1.0}
   return {}
 
@@ -38,7 +38,7 @@ func outgoing_bonus(target, item = null) -> Dictionary:
 ## fire spends nothing (its attack was never doubled). Returns true when drained to zero (the Combat
 ## manager removes it + runs on_expire).
 func on_owner_item_fired(_actor, item, _ctx) -> bool:
-  if count > 0.0 and item != null and item.def.types.has(ItemType.WEAPON):
-    count -= 1.0
-    return count <= 0.0
+  if count > 0 and item != null and item.def.types.has(ItemType.WEAPON):
+    count -= 1
+    return count <= 0
   return false

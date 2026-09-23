@@ -30,5 +30,5 @@ func _init() -> void:
 func on_holder_attacked(target, _ctx) -> bool:
   if target is Actor:
     target.take_damage(count, flags, id)
-  count -= 1.0
-  return count <= 0.0
+  count -= 1
+  return count <= 0

@@ -45,7 +45,7 @@ func test_reapply_stacks_by_extending_the_timer() -> void:
   var before: float = w.ticker.threshold
   w.reapply(1.0, 2.0, null, 0)
   assert_true(w.ticker.threshold > before, 'reapply STACKS — the timer is extended, not refreshed')
-  assert_almost_eq(w.count, 2.0, 0.0001, 'and count adds')
+  assert_eq(w.count, 2, 'and count adds')
 
 
 # --- Decay use-status (docs/systems/item_creation_and_decay.md Cap 2) -----------------------
@@ -69,10 +69,10 @@ func test_decay_drains_one_per_fire_and_asks_to_remove_at_zero() -> void:
   d.setup(2.0, 0.0, null, 0)
   var ctx := _RecordingCtx.new()
   d.on_holder_fired('item_a', ctx)
-  assert_almost_eq(d.count, 1.0, 0.0001, 'one activation spent per fire')
+  assert_eq(d.count, 1, 'one activation spent per fire')
   assert_null(ctx.removed, 'not removed while charges remain (decay 2 fires twice)')
   d.on_holder_fired('item_a', ctx)
-  assert_almost_eq(d.count, 0.0, 0.0001, 'drained to zero on the second fire')
+  assert_eq(d.count, 0, 'drained to zero on the second fire')
   assert_eq(ctx.removed, 'item_a', 'and asks ctx to remove the host item at zero')
 
 
@@ -80,7 +80,7 @@ func test_decay_reapply_tops_up_charges() -> void:
   var d := StatusRegistry.create('decay')
   d.setup(2.0, 0.0, null, 0)
   d.reapply(2.0, 0.0, null, 0)
-  assert_almost_eq(d.count, 4.0, 0.0001, 'reapply STACKS — charges add (top-up is reapply)')
+  assert_eq(d.count, 4, 'reapply STACKS — charges add (top-up is reapply)')
 
 
 # --- Bleed (docs/design/mechanic_ideas.md → Bleed) -----------------------------------------
@@ -100,12 +100,12 @@ func test_bleed_bites_the_holder_per_attack_and_pays_itself_down() -> void:
   b.setup(3.0, 0.0, null, 0)
   actor.statuses.append(b)
   var expired: bool = b.on_holder_attacked(actor, null)
-  assert_almost_eq(actor.hp, 97.0, 0.0001, 'bleed 3 bites 3 on the first attack')
-  assert_almost_eq(b.count, 2.0, 0.0001, 'and loses a stack')
+  assert_eq(actor.hp, 97, 'bleed 3 bites 3 on the first attack')
+  assert_eq(b.count, 2, 'and loses a stack')
   assert_false(expired, 'still bleeding while stacks remain')
   b.on_holder_attacked(actor, null)                    # bites 2 -> 95
   expired = b.on_holder_attacked(actor, null)          # bites 1 -> 94, drained
-  assert_almost_eq(actor.hp, 94.0, 0.0001, 'triangular total 3+2+1 = 6 over three attacks')
+  assert_eq(actor.hp, 94, 'triangular total 3+2+1 = 6 over three attacks')
   assert_true(expired, 'expires when the last stack is spent')
 
 
@@ -113,4 +113,4 @@ func test_bleed_reapply_stacks() -> void:
   var b := StatusRegistry.create('bleed')
   b.setup(3.0, 0.0, null, 0)
   b.reapply(2.0, 0.0, null, 0)
-  assert_almost_eq(b.count, 5.0, 0.0001, 'reapply STACKS — bleed adds')
+  assert_eq(b.count, 5, 'reapply STACKS — bleed adds')

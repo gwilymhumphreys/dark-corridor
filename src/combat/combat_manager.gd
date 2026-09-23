@@ -2,7 +2,7 @@ class_name CombatManager
 extends Node
 ## The per-fight orchestrator (docs/systems/combat_manager.md). Owns the Timekeeper, the
 ## component registry, the event bus, and the in-flight Deliveries; runs the
-## single fixed-step tick (advance -> fire -> land -> route -> win/loss). Makes no
+## single fixed-step tick (advance -> land -> reap -> win/loss -> fire). Makes no
 ## combat decisions — boards auto-fire on their Tickers. Instanced one-per-fight.
 ## Within-step order is deterministic (decision #24): each component TYPE is swept
 ## in a fixed order — item cooldowns, then statuses (actor- AND item-targeted,
@@ -501,7 +501,9 @@ func _prune_deliveries() -> void:
   _deliveries = kept
 
 
-func _spawn_delivery(p: Payload, target) -> Delivery:
+## `travel_steps` is Balance.TRAVEL_STEPS for everything an item fires; a thrown potion passes
+## Balance.POTION_TRAVEL_STEPS (decision #48).
+func _spawn_delivery(p: Payload, target, travel_steps: int = Balance.TRAVEL_STEPS) -> Delivery:
   var d := Delivery.new()
   d.kind = p.kind
   d.value = p.value
@@ -517,7 +519,7 @@ func _spawn_delivery(p: Payload, target) -> Delivery:
   d.source_actor = p.source_actor
   d.consumable = p.consumable
   d.target = target
-  d.travel = Ticker.new(Balance.TRAVEL_STEPS)   # every delivery flies the same number of steps
+  d.travel = Ticker.new(travel_steps)
   d.fire_time = timekeeper.sim_time
   return d
 
@@ -887,9 +889,10 @@ func request_hit_pause(real_seconds: float) -> void:
 
 
 ## Throw-potion intent: activate a thrown consumable (docs/systems/content.md). Build its
-## effect(s) into Deliveries resolved relative to the thrower, which fly and land in the step loop
-## like an item's — the same resolution surface as an item fire, minus the Ticker. The RunManager
-## removes the potion from its slot; this just resolves it.
+## effect(s) into Deliveries resolved relative to the thrower, which land in the step loop like an
+## item's — the same resolution surface as an item fire, minus the Ticker. A potion is thrown in a
+## crisis, often in slow motion, so it flies only Balance.POTION_TRAVEL_STEPS (decision #48). The
+## RunManager removes the potion from its slot; this just resolves it.
 func throw_consumable(consumable, thrower: Actor) -> void:
   if _resolved:
     return
@@ -905,7 +908,7 @@ func throw_consumable(consumable, thrower: Actor) -> void:
     if p.consume_id != '' and not p.consume_from_target:
       p.value += StatusManager.consume(thrower, p.consume_id, p.consume_amount) * p.consume_scale
     for target in _resolve_targets(p, thrower):
-      var d := _spawn_delivery(p, target)
+      var d := _spawn_delivery(p, target, Balance.POTION_TRAVEL_STEPS)
       if p.consume_id != '' and p.consume_from_target:   # opponent-fuel: spend the target's stacks
         d.value += StatusManager.consume(target, p.consume_id, p.consume_amount) * p.consume_scale
       _deliveries.append(d)

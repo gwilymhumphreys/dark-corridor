@@ -28,12 +28,10 @@ const PORTRAIT_SCENE_NODES: Array[Array] = [
 const ELEMENT_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/value_pill.tscn', '.'],
   ['res://src/scenes/combat/value_pill.tscn', 'Value'],
-  ['res://src/scenes/combat/ally_slot.tscn', 'Readout/HP/Background'],
-  ['res://src/scenes/combat/ally_slot.tscn', 'Readout/HP/Fill'],
-  ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Background'],
-  ['res://src/scenes/combat/enemy_hud.tscn', 'HpRow/HP/Fill'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Background'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPanel/PlayerPortrait/Readout/HP/Fill'],
+  ['res://src/scenes/combat/health_bar.tscn', 'Bar/Background'],
+  ['res://src/scenes/combat/health_bar.tscn', 'Bar/HealthFill'],
+  ['res://src/scenes/combat/health_bar.tscn', 'Bar/ShieldFill'],
+  ['res://src/scenes/combat/health_bar.tscn', 'Bar/Lines'],
 ]
 
 

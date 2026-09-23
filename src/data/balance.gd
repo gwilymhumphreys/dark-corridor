@@ -32,6 +32,7 @@ const ENEMY_PLACEHOLDER_HP: float = 168.0
 
 # ── Items ────────────────────────────────────────────────────────────────────
 const TRAVEL_STEPS: int = 36                # sim-steps every delivery flies (docs/systems/combat_model.md)
+const POTION_TRAVEL_STEPS: int = 1          # a thrown potion lands on the next step (decision #48)
 
 
 # ── Statuses ─────────────────────────────────────────────────────────────────

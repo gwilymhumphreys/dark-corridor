@@ -33,8 +33,8 @@ func test_double_multiplier_drains_shield_twice_as_fast() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'shield', 30.0)
   a.take_damage(10.0, 0, 'test_double')
-  assert_almost_eq(_find(a, 'shield').count, 10.0, 0.0001, '30 - 10 x 2 = 10 shield left')
-  assert_almost_eq(a.hp, 100.0, 0.0001, 'no health lost')
+  assert_eq(_find(a, 'shield').count, 10, '30 - 10 x 2 = 10 shield left')
+  assert_eq(a.hp, 100, 'no health lost')
 
 
 func test_double_multiplier_exhausts_shield_and_leaks_the_rest() -> void:
@@ -43,7 +43,7 @@ func test_double_multiplier_exhausts_shield_and_leaks_the_rest() -> void:
   StatusManager.apply(a, 'shield', 6.0)
   a.take_damage(10.0, 0, 'test_double')
   assert_null(_find(a, 'shield'), 'the shield pool is removed once emptied')
-  assert_almost_eq(a.hp, 93.0, 0.0001, '10 - 3 covered = 7 health lost')
+  assert_eq(a.hp, 93, '10 - 3 covered = 7 health lost')
 
 
 func test_attack_uses_the_default_multiplier() -> void:
@@ -52,15 +52,15 @@ func test_attack_uses_the_default_multiplier() -> void:
   StatusManager.apply(a, 'shield', 6.0)
   a.take_damage(10.0, 0, AttackMechanic.ID)
   assert_null(_find(a, 'shield'), 'the shield pool is removed once emptied')
-  assert_almost_eq(a.hp, 96.0, 0.0001, '10 - 6 = 4 health lost')
+  assert_eq(a.hp, 96, '10 - 6 = 4 health lost')
 
 
 func test_unblockable_skips_shield_regardless_of_mechanic() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'shield', 30.0)
   a.take_damage(10.0, Delivery.Flag.UNBLOCKABLE, 'test_double')
-  assert_almost_eq(_find(a, 'shield').count, 30.0, 0.0001, 'the shield is untouched')
-  assert_almost_eq(a.hp, 90.0, 0.0001, 'the full amount goes to health')
+  assert_eq(_find(a, 'shield').count, 30, 'the shield is untouched')
+  assert_eq(a.hp, 90, 'the full amount goes to health')
 
 
 func test_vulnerable_scales_before_shield_absorbs() -> void:
@@ -71,9 +71,9 @@ func test_vulnerable_scales_before_shield_absorbs() -> void:
   StatusManager.apply(a, 'shield', 40.0)
   a.take_damage(10.0, 0, 'test_double')
   var amplified: float = 10.0 * Balance.STATUS_VULNERABLE_DAMAGE_MULT
-  assert_almost_eq(_find(a, 'shield').count, 40.0 - amplified * 2.0, 0.0001,
+  assert_eq(_find(a, 'shield').count, roundi(40.0 - amplified * 2.0),
       'the shield loss matches the amplified amount times the multiplier')
-  assert_almost_eq(a.hp, 100.0, 0.0001, 'the shield covered the amplified hit')
+  assert_eq(a.hp, 100, 'the shield covered the amplified hit')
 
 
 func test_no_mechanic_id_behaves_as_multiplier_one() -> void:
@@ -82,7 +82,7 @@ func test_no_mechanic_id_behaves_as_multiplier_one() -> void:
   StatusManager.apply(a, 'shield', 6.0)
   a.take_damage(10.0)
   assert_null(_find(a, 'shield'), 'the shield pool is removed once emptied')
-  assert_almost_eq(a.hp, 96.0, 0.0001, '10 - 6 = 4 health lost')
+  assert_eq(a.hp, 96, '10 - 6 = 4 health lost')
 
 
 # --- helpers (not test_*; GUT ignores them) ---

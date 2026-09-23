@@ -17,9 +17,9 @@ func test_shield_absorbs_before_hp() -> void:
   var a := Actor.new(50.0)
   StatusManager.apply(a, 'shield', 8.0)
   a.take_damage(5.0)
-  assert_eq(a.hp, 50.0, 'shield absorbs all 5')
+  assert_eq(a.hp, 50, 'shield absorbs all 5')
   a.take_damage(5.0)
-  assert_eq(a.hp, 48.0, 'remaining 3 shield absorbs 3, 2 leaks to HP')
+  assert_eq(a.hp, 48, 'remaining 3 shield absorbs 3, 2 leaks to HP')
   assert_null(_find(a, 'shield'), 'a spent shield pool is removed')
 
 
@@ -27,7 +27,7 @@ func test_unblockable_skips_shield() -> void:
   var a := Actor.new(50.0)
   StatusManager.apply(a, 'shield', 8.0)
   a.take_damage(5.0, Delivery.Flag.UNBLOCKABLE)
-  assert_eq(a.hp, 45.0, 'an unblockable payload bypasses shield')
+  assert_eq(a.hp, 45, 'an unblockable payload bypasses shield')
 
 
 func test_unblockable_dot_bypasses_shield() -> void:
@@ -37,15 +37,15 @@ func test_unblockable_dot_bypasses_shield() -> void:
   StatusManager.apply(a, 'shield', 8.0)
   var p := StatusManager.apply(a, 'poison', 3.0, 0.0, null, Delivery.Flag.UNBLOCKABLE)
   _advance(a, p, int(p.ticker.threshold))   # one tick
-  assert_eq(a.hp, 47.0, 'the unblockable poison tick goes straight to HP (3 damage)')
-  assert_eq(_find(a, 'shield').count, 8.0, 'shield is untouched by an unblockable DoT')
+  assert_eq(a.hp, 47, 'the unblockable poison tick goes straight to HP (3 damage)')
+  assert_eq(_find(a, 'shield').count, 8, 'shield is untouched by an unblockable DoT')
 
 
 func test_shield_stacks_additively() -> void:
   var a := Actor.new(50.0)
   StatusManager.apply(a, 'shield', 5.0)
   StatusManager.apply(a, 'shield', 3.0)
-  assert_eq(_find(a, 'shield').count, 8.0, 'shield adds to the pool')
+  assert_eq(_find(a, 'shield').count, 8, 'shield adds to the pool')
 
 
 func test_vulnerable_amplifies_incoming_before_shield() -> void:
@@ -55,13 +55,13 @@ func test_vulnerable_amplifies_incoming_before_shield() -> void:
   StatusManager.apply(a, 'vulnerable', 1.0, Balance.STATUS_VULNERABLE_DURATION)
   a.take_damage(10.0)
   var expected: float = 10.0 * Balance.STATUS_VULNERABLE_DAMAGE_MULT
-  assert_almost_eq(a.hp, 100.0 - expected, 0.0001, 'Vulnerable amplifies the raw damage')
+  assert_eq(a.hp, roundi(100.0 - expected), 'Vulnerable amplifies the raw damage')
 
   var b := Actor.new(100.0)
   StatusManager.apply(b, 'vulnerable', 1.0, Balance.STATUS_VULNERABLE_DURATION)
   StatusManager.apply(b, 'shield', 5.0)
   b.take_damage(10.0)   # 10 → x1.5 = 15 amplified; shield soaks 5; 10 to HP
-  assert_almost_eq(b.hp, 90.0, 0.0001, 'shield absorbs the amplified amount (amplifier before absorber)')
+  assert_eq(b.hp, 90, 'shield absorbs the amplified amount (amplifier before absorber)')
 
 
 func test_outgoing_damage_modifier_reads_weak() -> void:
@@ -78,11 +78,11 @@ func test_poison_dot_decrements_and_expires() -> void:
   var p := StatusManager.apply(a, 'poison', 3.0)
   var interval := int(p.ticker.threshold)
   _advance(a, p, interval)
-  assert_eq(a.hp, 47.0, 'tick 1 deals count=3')
+  assert_eq(a.hp, 47, 'tick 1 deals count=3')
   _advance(a, p, interval)
-  assert_eq(a.hp, 45.0, 'tick 2 deals count=2')
+  assert_eq(a.hp, 45, 'tick 2 deals count=2')
   var expired := _advance(a, p, interval)
-  assert_eq(a.hp, 44.0, 'tick 3 deals count=1')
+  assert_eq(a.hp, 44, 'tick 3 deals count=1')
   assert_true(expired, 'poison expires once its stacks are spent')
 
 
@@ -103,14 +103,14 @@ func test_consume_spends_stacks_and_reports_what_it_removed() -> void:
   # consuming effect scales by what it found).
   var a := Actor.new(50.0)
   StatusManager.apply(a, 'poison', 5.0)
-  assert_almost_eq(StatusManager.consume(a, 'poison', 3.0), 3.0, 0.0001, 'removed the requested 3')
-  assert_almost_eq(_find(a, 'poison').count, 2.0, 0.0001, 'the remainder stays')
+  assert_eq(StatusManager.consume(a, 'poison', 3.0), 3, 'removed the requested 3')
+  assert_eq(_find(a, 'poison').count, 2, 'the remainder stays')
 
 
 func test_consume_caps_at_available_and_drops_a_drained_stack() -> void:
   var a := Actor.new(50.0)
   StatusManager.apply(a, 'poison', 2.0)
-  assert_almost_eq(StatusManager.consume(a, 'poison', 5.0), 2.0, 0.0001, 'only what was present')
+  assert_eq(StatusManager.consume(a, 'poison', 5.0), 2, 'only what was present')
   assert_null(_find(a, 'poison'), 'a fully-drained status is removed')
 
 
@@ -118,12 +118,12 @@ func test_consume_is_a_noop_for_non_fuel_statuses() -> void:
   # The design's stacked-only Mass rule: pool / timed / static return 0 and are untouched.
   var a := Actor.new(50.0)
   StatusManager.apply(a, 'shield', 8.0)
-  assert_almost_eq(StatusManager.consume(a, 'shield', 5.0), 0.0, 0.0001, 'shield is not Mass fuel')
-  assert_almost_eq(_find(a, 'shield').count, 8.0, 0.0001, 'and is untouched')
+  assert_eq(StatusManager.consume(a, 'shield', 5.0), 0, 'shield is not Mass fuel')
+  assert_eq(_find(a, 'shield').count, 8, 'and is untouched')
 
 
 func test_consume_of_an_absent_status_returns_zero() -> void:
-  assert_almost_eq(StatusManager.consume(Actor.new(50.0), 'poison', 3.0), 0.0, 0.0001, 'nothing to spend')
+  assert_eq(StatusManager.consume(Actor.new(50.0), 'poison', 3.0), 0, 'nothing to spend')
 
 
 func test_periodic_status_on_an_item_does_not_crash() -> void:
@@ -134,7 +134,7 @@ func test_periodic_status_on_an_item_does_not_crash() -> void:
   var p := StatusManager.apply(item, 'poison', 2.0)
   p.ticker.accum = p.ticker.threshold - 1.0   # one step from firing
   StatusManager.advance_status(p, item)        # crosses → take_damage(item) would crash, guarded
-  assert_almost_eq(p.count, 1.0, 0.0001, 'the periodic status ticked down on the item without crashing')
+  assert_eq(p.count, 1, 'the periodic status ticked down on the item without crashing')
 
 
 func test_has_evasion_reads_the_flag() -> void:
@@ -196,9 +196,9 @@ func test_different_flag_applications_get_separate_instances() -> void:
   var piercing: StatusEffect = StatusManager.apply(a, 'poison', 3.0, 0.0, null, Delivery.Flag.UNBLOCKABLE)
   assert_ne(plain, piercing, 'a different-flags application is its own instance')
   _advance(a, plain, int(plain.ticker.threshold))
-  assert_eq(a.hp, 50.0, 'the blockable tick was absorbed by shield')
+  assert_eq(a.hp, 50, 'the blockable tick was absorbed by shield')
   _advance(a, piercing, int(piercing.ticker.threshold))
-  assert_eq(a.hp, 47.0, 'the unblockable tick went straight to HP')
+  assert_eq(a.hp, 47, 'the unblockable tick went straight to HP')
 
 
 func test_same_flag_reapplication_still_stacks() -> void:
@@ -206,7 +206,7 @@ func test_same_flag_reapplication_still_stacks() -> void:
   var first: StatusEffect = StatusManager.apply(a, 'poison', 2.0)
   var second: StatusEffect = StatusManager.apply(a, 'poison', 3.0)
   assert_eq(first, second, 'a same-flags reapplication merges into the existing instance')
-  assert_eq(first.count, 5.0, 'and stacks additively')
+  assert_eq(first.count, 5, 'and stacks additively')
 
 
 func test_consume_to_zero_calls_on_expire() -> void:
@@ -215,7 +215,7 @@ func test_consume_to_zero_calls_on_expire() -> void:
   probe.setup(2.0, 0.0, null, 0)
   a.statuses.append(probe)
   var removed := StatusManager.consume(a, 'fuel_probe', 2.0)
-  assert_eq(removed, 2.0, 'the full stack was spent')
+  assert_eq(removed, 2, 'the full stack was spent')
   assert_true(probe.expired_called, 'draining a fuel status to zero runs on_expire')
   assert_false(a.statuses.has(probe), 'and removes it')
 
@@ -226,7 +226,7 @@ func test_spent_removal_calls_on_expire() -> void:
   probe.setup(5.0, 0.0, null, 0)
   a.statuses.append(probe)
   a.take_damage(5.0)
-  assert_eq(a.hp, 50.0, 'the pool absorbed the hit')
+  assert_eq(a.hp, 50, 'the pool absorbed the hit')
   assert_true(probe.expired_called, 'an emptied absorb pool runs on_expire at removal')
   assert_false(a.statuses.has(probe), 'and is removed')
 

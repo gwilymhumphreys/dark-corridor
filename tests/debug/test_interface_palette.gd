@@ -8,7 +8,7 @@ const DEFAULT_PALETTE: String = PALETTE_DIR + '/ui-default.gpl'
 const COLOURS_PATH: String = 'res://src/data/colours.gd'
 # A .gpl carries no alpha (PaletteLoader forces it to 1), so a Colours variable that uses alpha is
 # not settable from a palette and is left out of the files.
-const NOT_SETTABLE: Array[String] = ['COOLDOWN_FILL']
+const NOT_SETTABLE: Array[String] = ['COOLDOWN_FILL', 'HP_BAR_LINE']
 # The theme itself holds no images any more (docs/systems/control_feedback.md), so the tests that
 # cover the image brightness ramp add one of their own under this type and drop it afterwards.
 const TEST_ART_TYPE: String = 'TestArt'

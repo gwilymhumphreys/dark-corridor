@@ -86,7 +86,7 @@ func test_fight_is_deterministic() -> void:
   var b := _run_basic()
   assert_eq(a['won'], b['won'], 'same winner')
   assert_eq(a['steps'], b['steps'], 'same step count (no RNG in Phase 1)')
-  assert_almost_eq(a['hp'], b['hp'], 0.0001, 'identical final HP — bit-reproducible')
+  assert_eq(a['hp'], b['hp'], 'identical final HP — bit-reproducible')
 
 
 func test_poison_trigger_fires_avenger_next_step() -> void:
@@ -233,9 +233,9 @@ func test_opponent_fuel_consume_scales_the_mass_hit() -> void:
   hit.consume_scale = 3.0
   def.effects = [hit]
 
-  var before: float = e.hp
+  var before: int = e.hp
   CombatSteps.fire_and_land(cm, Item.new(def, p))
-  assert_almost_eq(before - e.hp, 10.0 + 4.0 * 3.0, 0.0001, 'Mass damage = base 10 + 4 poison consumed × 3')
+  assert_eq(before - e.hp, roundi(10.0 + 4.0 * 3.0), 'Mass damage = base 10 + 4 poison consumed × 3')
   assert_almost_eq(_status_count(e, 'poison'), 1.0, 0.0001, 'the target spent 4 of 5 poison stacks')
 
 
@@ -250,10 +250,10 @@ func test_blinded_attacker_damage_whiffs() -> void:
   var arrived: Array = CombatSteps.fire(cm, _instant_damage_item(p, 8.0))
   assert_eq(arrived.size(), 1, 'the attack still fired (a delivery spawned)')
   assert_true(arrived[0].evaded, 'a blinded attacker marks its damage evaded')
-  var before: float = e.hp
+  var before: int = e.hp
   cm._land(arrived[0])
   assert_true(arrived[0].fizzled, 'the evaded swing whiffs on land')
-  assert_almost_eq(e.hp, before, 0.0001, 'and deals no damage')
+  assert_eq(e.hp, before, 'and deals no damage')
 
 
 func test_blinded_attacker_nondamage_still_lands() -> void:
@@ -761,8 +761,9 @@ func test_dot_tick_through_shield_does_not_skip_a_later_status() -> void:
 
   assert_eq(weak.ticker.accum, 1.0, 'the status after shield still advanced (no skip)')
   assert_false(_has_status(a, 'shield'), 'shield was consumed and erased mid-pass')
-  # Poison drains shield double: 1 shield covers 0.5 of the 3-damage tick, 2.5 leaks to HP.
-  assert_almost_eq(a.hp, 97.5, 0.0001, 'poison dealt 3, shield absorbed 0.5 (double drain), 2.5 leaked to HP')
+  # Poison drains shield double: 1 shield covers 0.5 of the 3-damage tick, and the 2.5 left over
+  # rounds to 3 when it reaches HP.
+  assert_eq(a.hp, 97, 'poison dealt 3, shield absorbed 0.5 (double drain), 3 reached HP after rounding')
 
 
 func test_dot_tick_shows_a_visual_on_the_wall() -> void:
@@ -1033,10 +1034,9 @@ func test_thrown_consumable_event_carries_the_thrower() -> void:
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  assert_eq(seen.size(), 0, 'the dart is still in flight')
-  for i in Balance.TRAVEL_STEPS:
+  for i in Balance.POTION_TRAVEL_STEPS:
     cm.sim_step()
-  assert_eq(seen.size(), 1, 'the throw published APPLIED on landing')
+  assert_eq(seen.size(), 1, 'the throw published APPLIED')
   assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
   assert_eq(seen[0][1], p, 'source actor is the thrower')
   assert_null(seen[0][2], 'source item is null — a throw has no firing Item')
@@ -1054,7 +1054,7 @@ func test_fight_with_triggers_is_deterministic() -> void:
     var steps := cm.run_headless()
     results.append({ 'steps': steps, 'hp': p.hp, 'won': cm.player_won() })
   assert_eq(results[0]['steps'], results[1]['steps'], 'same step count with triggers live')
-  assert_almost_eq(results[0]['hp'], results[1]['hp'], 0.0001, 'identical final HP')
+  assert_eq(results[0]['hp'], results[1]['hp'], 'identical final HP')
   assert_eq(results[0]['won'], results[1]['won'], 'same winner')
 
 
@@ -1107,7 +1107,7 @@ func test_dot_killed_actor_does_not_fire_collected_swing() -> void:
   claw.cooldown.accum = claw.cooldown.threshold - 1.0    # crosses next step
   var poison: StatusEffect = StatusManager.apply(e, 'poison', 99.0)
   poison.ticker.accum = poison.ticker.threshold - 1.0    # ticks (lethally) the same step
-  var hp_before: float = p.hp
+  var hp_before: int = p.hp
   cm.sim_step()
   assert_false(e.is_alive(), 'the poison tick killed the enemy this step')
   for _i in 60:   # long enough for any (wrongly) launched swing to land
@@ -1115,8 +1115,8 @@ func test_dot_killed_actor_does_not_fire_collected_swing() -> void:
   assert_eq(p.hp, hp_before, "the dead enemy's collected swing never fired")
 
 
-func test_lethal_potion_resolves_fight_on_landing() -> void:
-  # A thrown potion travels like an item's delivery, and the fight resolves on the step it lands.
+func test_lethal_potion_resolves_fight_on_the_next_step() -> void:
+  # A thrown potion flies POTION_TRAVEL_STEPS, and the fight resolves on the step it lands.
   var p := _spawn(PLAYER_HP, [])
   var e := _spawn(10.0, [FixtureItems.attack()])
   var cm := _manager(p, [e])
@@ -1130,10 +1130,9 @@ func test_lethal_potion_resolves_fight_on_landing() -> void:
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  for i in Balance.TRAVEL_STEPS - 1:
+  assert_false(cm.is_resolved(), 'the bomb is in flight until the next step')
+  for i in Balance.POTION_TRAVEL_STEPS:
     cm.sim_step()
-  assert_false(cm.is_resolved(), 'the bomb is still in flight')
-  cm.sim_step()
   assert_true(cm.is_resolved(), 'the lethal throw resolved the fight on landing')
   assert_true(cm.player_won(), 'and the player won it')
 
@@ -1252,7 +1251,7 @@ func test_starting_uses_seeds_the_decay_status_at_fight_start() -> void:
   cm.start()
   var decay := _decay_status_on(it)
   assert_not_null(decay, 'starting_uses > 0 seeded the decay use-status at item birth')
-  assert_almost_eq(decay.count, 3.0, 0.0001, 'with the def\'s activation count')
+  assert_eq(decay.count, 3, 'with the def\'s activation count')
 
 
 func test_zero_starting_uses_never_decays() -> void:
@@ -1271,7 +1270,7 @@ func test_decay_drains_one_per_fire_then_removes_the_item_after_the_last_hit() -
   var cm := _manager(p, [Actor.new(1000.0)])
   cm.start()
   CombatSteps.fire(cm, it)
-  assert_almost_eq(_decay_status_on(it).count, 1.0, 0.0001, 'one activation spent after the first fire')
+  assert_eq(_decay_status_on(it).count, 1, 'one activation spent after the first fire')
   assert_true(it in p.board, 'still on the board (decay 2 fires twice)')
   var arrived: Array = CombatSteps.fire(cm, it)
   assert_eq(arrived.size(), 1, 'the final activation still fired its payload — the last hit lands')
@@ -1290,7 +1289,7 @@ func test_decay_runs_a_self_limiting_attack_to_zero_in_a_real_fight() -> void:
   cm.start()
   var steps := cm.run_headless(2000)
   assert_false(it in cm._items, 'the decay weapon removed itself after its uses')
-  assert_almost_eq(e.hp, 100000.0 - 2.0 * FixtureItems.ATTACK_DAMAGE, 0.0001,
+  assert_eq(e.hp, roundi(100000.0 - 2.0 * FixtureItems.ATTACK_DAMAGE),
       'it dealt exactly two hits of damage, then stopped')
   assert_eq(steps, 2000, 'with no other source, the fight ran to the cap (the item self-limited)')
 
@@ -1434,9 +1433,9 @@ func test_own_board_consume_counts_removes_and_scales() -> void:
   p.board.append(consumer)
   var cm := _manager(p, [e])
   cm.start()
-  var before: float = e.hp
+  var before: int = e.hp
   CombatSteps.fire_and_land(cm, consumer)
-  assert_almost_eq(before - e.hp, 10.0 + 3.0 * 4.0, 0.0001, 'base 10 + 3 chunks consumed × 4')
+  assert_eq(before - e.hp, roundi(10.0 + 3.0 * 4.0), 'base 10 + 3 chunks consumed × 4')
   for it in p.board:
     assert_ne(it.def.id, 'chunk', 'every chunk was removed from the board')
 
@@ -1470,7 +1469,7 @@ func test_an_item_eaten_as_fuel_does_not_fire_in_the_same_step() -> void:
   for _i in 61 + Balance.TRAVEL_STEPS:
     cm.sim_step()
   assert_false(chunk in p.board, 'the chunk was eaten as fuel')
-  assert_almost_eq(1000.0 - e.hp, 10.0 + 4.0, 0.0001,
+  assert_eq(1000 - e.hp, roundi(10.0 + 4.0),
       'only the consumer hit (10 + one chunk of fuel) — the eaten chunk did not also swing for 5')
 
 
@@ -1483,9 +1482,9 @@ func test_own_board_consume_respects_the_amount_cap() -> void:
   p.board.append(consumer)
   var cm := _manager(p, [e])
   cm.start()
-  var before: float = e.hp
+  var before: int = e.hp
   CombatSteps.fire_and_land(cm, consumer)
-  assert_almost_eq(before - e.hp, 10.0 + 2.0 * 4.0, 0.0001, 'only 2 chunks consumed (the cap), scaling by 2')
+  assert_eq(before - e.hp, roundi(10.0 + 2.0 * 4.0), 'only 2 chunks consumed (the cap), scaling by 2')
   var chunks_left: int = 0
   for it in p.board:
     if it.def.id == 'chunk':
@@ -1500,9 +1499,9 @@ func test_own_board_consume_with_no_fuel_is_a_safe_no_op() -> void:
   p.board.append(consumer)
   var cm := _manager(p, [e])
   cm.start()
-  var before: float = e.hp
+  var before: int = e.hp
   CombatSteps.fire_and_land(cm, consumer)
-  assert_almost_eq(before - e.hp, 10.0, 0.0001, 'no fuel → just the base hit, no scaling, no crash')
+  assert_eq(before - e.hp, 10, 'no fuel → just the base hit, no scaling, no crash')
 
 
 func test_consumed_items_publish_item_destroyed_for_the_charge_synergy() -> void:
@@ -1550,7 +1549,7 @@ func test_attack_mechanic_deals_damage_and_publishes_applied() -> void:
       func(data, source_actor, _source_item) -> void:
         seen.append([data, source_actor]))
   CombatSteps.fire_and_land(cm, _mechanic_item(p, AttackMechanic.ID, 12.0))
-  assert_almost_eq(e.hp, 1000.0 - 12.0, 0.0001, 'the attack mechanic dealt its damage')
+  assert_eq(e.hp, roundi(1000.0 - 12.0), 'the attack mechanic dealt its damage')
   assert_eq(seen.size(), 1, 'it published APPLIED (no new events)')
   assert_eq(seen[0][0], AttackMechanic.ID, 'the data is the attack id')
   assert_eq(seen[0][1], p, 'the source actor is the firer')
@@ -1563,7 +1562,7 @@ func test_heal_mechanic_heals_the_target() -> void:
   var cm := _manager(p, [e])
   cm.start()
   CombatSteps.fire_and_land(cm, _mechanic_item(p, HealMechanic.ID, 15.0, ItemEffect.Shape.SELF))
-  assert_almost_eq(p.hp, 60.0 + 15.0, 0.0001, 'the heal mechanic restored health')
+  assert_eq(p.hp, roundi(60.0 + 15.0), 'the heal mechanic restored health')
 
 
 func test_shield_mechanic_applies_shield() -> void:

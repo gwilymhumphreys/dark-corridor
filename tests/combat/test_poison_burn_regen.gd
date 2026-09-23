@@ -44,8 +44,8 @@ func test_poison_hit_uses_double_shield() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'shield', 30.0)
   a.take_damage(10.0, 0, PoisonMechanic.ID)
-  assert_almost_eq(_find(a, 'shield').count, 10.0, 0.0001, '30 - 10 x 2 = 10 shield left')
-  assert_almost_eq(a.hp, 100.0, 0.0001, 'no health lost')
+  assert_eq(_find(a, 'shield').count, 10, '30 - 10 x 2 = 10 shield left')
+  assert_eq(a.hp, 100, 'no health lost')
 
 
 func test_poison_hit_exhausts_shield_and_leaks_the_rest() -> void:
@@ -54,7 +54,7 @@ func test_poison_hit_exhausts_shield_and_leaks_the_rest() -> void:
   StatusManager.apply(a, 'shield', 6.0)
   a.take_damage(10.0, 0, PoisonMechanic.ID)
   assert_null(_find(a, 'shield'), 'the shield pool is removed once emptied')
-  assert_almost_eq(a.hp, 93.0, 0.0001, '10 - 3 covered = 7 health lost')
+  assert_eq(a.hp, 93, '10 - 3 covered = 7 health lost')
 
 
 # --- Burn: ticks + half shield ------------------------------------------------
@@ -68,11 +68,11 @@ func test_burn_ticks_for_stacks_and_uses_half_shield() -> void:
   var interval := int(b.ticker.threshold)
   for _i in interval:
     StatusManager.advance_status(b, a)
-  assert_almost_eq(a.hp, 100.0, 0.0001, 'the shield covered the tick')
+  assert_eq(a.hp, 100, 'the shield covered the tick')
   var tick_damage: float = 10.0 * Balance.BURN_DAMAGE_PER_TICK
-  assert_almost_eq(_find(a, 'shield').count, 30.0 - tick_damage * Balance.SHIELD_MULTIPLIER_BURN, 0.0001,
+  assert_eq(_find(a, 'shield').count, roundi(30.0 - tick_damage * Balance.SHIELD_MULTIPLIER_BURN),
       '10 burn damage against 30 shield leaves 25 (the half multiplier)')
-  assert_almost_eq(b.count, 9.0, 0.0001, 'the burn lost one stack')
+  assert_eq(b.count, 9, 'the burn lost one stack')
 
 
 func test_burn_tick_without_shield_drops_health() -> void:
@@ -81,7 +81,7 @@ func test_burn_tick_without_shield_drops_health() -> void:
   var interval := int(b.ticker.threshold)
   for _i in interval:
     StatusManager.advance_status(b, a)
-  assert_almost_eq(a.hp, 100.0 - 3.0 * Balance.BURN_DAMAGE_PER_TICK, 0.0001,
+  assert_eq(a.hp, roundi(100.0 - 3.0 * Balance.BURN_DAMAGE_PER_TICK),
       'the tick dealt stacks x BURN_DAMAGE_PER_TICK to health')
 
 
@@ -95,9 +95,9 @@ func test_regen_heals_each_tick_and_never_expires() -> void:
   for _tick in 3:
     for _i in interval:
       assert_false(StatusManager.advance_status(r, a), 'regen never reports expiry')
-  assert_almost_eq(a.hp, 60.0 + 3.0 * 3.0 * Balance.REGEN_HEAL_PER_TICK, 0.0001,
+  assert_eq(a.hp, roundi(60.0 + 3.0 * 3.0 * Balance.REGEN_HEAL_PER_TICK),
       'three ticks healed stacks x REGEN_HEAL_PER_TICK each')
-  assert_almost_eq(r.count, 3.0, 0.0001, 'regen keeps all its stacks after several ticks')
+  assert_eq(r.count, 3, 'regen keeps all its stacks after several ticks')
   assert_true(a.statuses.has(r), 'and the status is still on the actor')
 
 
@@ -119,8 +119,8 @@ func test_regen_tick_in_a_running_combat_manager_is_logged_as_a_heal() -> void:
   # Step exactly one full regen tick (the ticker's threshold steps), so the player heals once.
   for _i in int(r.ticker.threshold):
     cm.sim_step()
-  assert_almost_eq(p.hp, 60.0 + 2.0 * Balance.REGEN_HEAL_PER_TICK, 0.0001, 'the regen tick healed the player')
-  assert_almost_eq(_find(p, 'regen').count, 2.0, 0.0001, 'and it kept its stacks')
+  assert_eq(p.hp, roundi(60.0 + 2.0 * Balance.REGEN_HEAL_PER_TICK), 'the regen tick healed the player')
+  assert_eq(_find(p, 'regen').count, 2, 'and it kept its stacks')
   var log: CombatLog = cm.combat_log
   assert_gt(float(log.total_healing[CombatLog.Side.PLAYER]), 0.0, 'the heal is tallied on the player side')
   var saw_heal := false
@@ -150,7 +150,7 @@ func test_poison_mechanic_effect_applies_poison_and_publishes_applied() -> void:
         applied_data.append(data))
   CombatSteps.fire_and_land(cm, Item.new(def, p))
   assert_true(_has_status(e, 'poison'), 'the poison mechanic effect applied the poison status')
-  assert_almost_eq(_find(e, 'poison').count, 3.0, 0.0001, 'with the delivery value as its count')
+  assert_eq(_find(e, 'poison').count, 3, 'with the delivery value as its count')
   assert_true(applied_data.has('poison'), 'it still publishes APPLIED with the poison id (Spite Ward)')
 
 
