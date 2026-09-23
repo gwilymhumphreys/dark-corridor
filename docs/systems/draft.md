@@ -28,7 +28,7 @@ What it **is not**:
 The `Run manager` calls `Draft` with the pool, the run-state, and the run RNG; `Draft` returns the offer (default **3** candidates):
 
 - **Slot composition** — each slot is **usually an item**; each has a **low chance** of an **enchant** or a **potion** instead (a per-slot roll). The exact chances are tuning (design).
-- **Depth-weighting** — rarity is a *complexity* tier (common / uncommon / rare — [Item PRD](item.md)), and **drop odds shift with depth** (later drafts → better rarity odds — design). Weighting reads **depth/position only**.
+- **Depth-weighting** — rarity is a complexity and power tier (common / uncommon / rare — [Item PRD](item.md)), and **drop odds shift with depth** (later drafts → better rarity odds — design). Weighting reads **depth/position only**.
 - **Seeded** — the draw derives from the **run RNG** (the `Run manager`'s run stream), so a given run-state yields the **same offer** — not re-rollable by quit-and-resume (no save-scum — [Save PRD](save.md)).
 
 The offer is `Draftable`-generic — it draws item / enchant / potion definitions the same way; the subtype only matters at *application* (below).

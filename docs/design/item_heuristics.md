@@ -9,8 +9,14 @@ An item is priced in two steps. Work out its budget from its cooldown, then spen
 what the item does.
 
 The arithmetic is built, in `ItemPoints` (`src/data/item_points.gd`): `rate(cooldown)`,
-`budget(cooldown)` and `spend(item_def)`, which prices an authored item by its effects. The rates
-and the curve constants are in `Balance`. `EnemyDef.points()` uses it to price an enemy.
+`budget(cooldown, rarity)` and `spend(item_def)`, which prices an authored item by its effects.
+`EnemyDef.points()` uses it to price an enemy.
+
+**Every point value lives in one place: the "Item points" section of `src/data/balance.gd`.** That
+covers the budget curve constants and the exchange rate for each mechanic. This doc names the
+constants and explains them, but does not repeat their values, so tuning a rate needs no doc edit.
+To see what a given item spends and may spend, run `tools/item_browser.sh`: every card shows the
+item's points, its budget and the share of the budget it uses.
 
 The Smith is the character these rules are being applied to first. The Spore Druid and the
 Fleshmancer were authored before the mechanics were revised, so their items are off this curve in
@@ -27,40 +33,34 @@ same thing. See [Health is three rates](#health-is-three-rates).
 
 ## The budget curve
 
-An item's budget is how many points it may spend, and it comes from its cooldown alone.
+An item's budget is how many points it may spend. It comes from its cooldown, raised for uncommon
+and rare items (see below).
 
 ```
-rate(t)   = 26 / (1 + e^(−0.33 × (t − 6.4)))    points per second at a cooldown of t seconds
-budget(t) = t × rate(t)                          points the item may spend
+rate(t)   = AT_BASELINE + PER_SECOND × (t − BASELINE_COOLDOWN)    points per second at a cooldown of t seconds
+budget(t) = t × rate(t)                                           points the item may spend
 ```
 
-The rate rises with the cooldown, slowly at first, steepest around a 6.4 second cooldown, then
-flattening towards a ceiling of 26 points per second that is effectively reached by 30 seconds.
-Because the budget is the rate multiplied by the cooldown, the total climbs steeply: 2 seconds is
-worth 10 points, 10 seconds is worth 199, and 20 seconds is worth 514.
+`AT_BASELINE`, `PER_SECOND` and `BASELINE_COOLDOWN` are `Balance.POINTS_RATE_AT_BASELINE`,
+`Balance.POINTS_RATE_PER_SECOND` and `Balance.POINTS_RATE_BASELINE_COOLDOWN`. The rate is a
+straight line with no cap (owner, 2026-09-23): each extra second of cooldown adds the same amount
+to the rate. Because the budget is the rate multiplied by the cooldown, the budget grows faster
+than the cooldown.
 
 The rate rises because a slow item loses value to **overkill** (damage past 0 HP is wasted, while
 fast small hits spend almost exactly to the kill), to **trigger density** (anything per-hit fires
 per swing, not per damage), and to **commitment** (a fast item contributes immediately and can be
-redirected). It flattens at the top because those losses are bounded. A 20 second weapon is not
-four times as wasteful as a 5 second one.
+redirected). The owner replaced an earlier curve that levelled off at the top with the straight
+line because it is simpler and gives slow items a smaller bonus in the usual cooldown range.
 
-| Cooldown | Rate | Budget |
-|---|---|---|
-| 1s | 3.75 | 3.7 |
-| 2s | 4.93 | 9.9 |
-| 3s | 6.39 | 19.2 |
-| 4s | 8.11 | 32.4 |
-| 5s | 10.05 | 50.2 |
-| 6s | 12.14 | 72.9 |
-| 7s | 14.28 | 100.0 |
-| 8s | 16.35 | 130.8 |
-| 10s | 19.93 | 199.3 |
-| 15s | 24.56 | 368.4 |
-| 20s | 25.71 | 514.2 |
+**Rarity raises the budget** (owner, 2026-09-23). An uncommon or rare item's budget is the common
+budget multiplied by `Balance.POINTS_UNCOMMON_MULTIPLIER` or `Balance.POINTS_RARE_MULTIPLIER`. Rarer
+items are meant to be stronger, not only more involved: power is not flat across rarities. The
+extra also pays for the conditions and interactions those items carry. `ItemPoints.budget(cooldown, rarity)` applies it. Enemy fight
+budgets do not model rarity.
 
-**Long cooldowns need large enemy health pools.** A 10 second item spends 199 points, so an enemy
-with too little health turns most of it into overkill. The next section sets enemy health to match.
+**Long cooldowns need large enemy health pools.** A slow item spends a large budget in one hit, so
+an enemy with too little health turns most of it into overkill. The next section sets enemy health to match.
 
 ## Pricing an enemy
 
@@ -85,15 +85,9 @@ budget at its rate, so a board's damage output is the sum of the rates of its da
 enemy health = the board's damage points per second × the seconds it should survive
 ```
 
-A regular fight is meant to last about 20 seconds (`Balance.POINTS_FIGHT_SECONDS`), and that
-length does not change across the run — the enemy budget grows with the player's board to hold it
+A regular fight is meant to last `Balance.POINTS_FIGHT_SECONDS`, and that length does not change
+across the run — the enemy budget grows with the player's board to hold it
 steady.
-
-| Board | Points per second | Health for a 20 second kill |
-|---|---|---|
-| 2 items, 3s and 4s cooldowns | 14.5 | 290 |
-| 4 items, 3s to 6s | 36.7 | 734 |
-| 6 items, 2s to 7s | 55.9 | 1118 |
 
 Three things push the real fight longer than the division suggests, and are why the figure is a
 floor rather than a target. The enemy's own shield and healing add to its effective health. The
@@ -112,26 +106,28 @@ Armour brings the real cost lower. The numbers are on the Claw (`content/items/e
 
 ## Spending the budget
 
-Every cost is a flat number of points for what the item delivers each time it fires.
+Every cost is a flat number of points for what the item delivers each time it fires. The rates are
+the `Balance.POINTS_PER_*` constants; the table says what each one prices and why it sits where it
+does relative to the others.
 
-| Mechanic | Points | Notes |
+| Mechanic | Rate | Notes |
 |---|---|---|
-| Attack, single target | 1 per damage | The definition of a point. |
-| Attack, all opponents | 1.5 per damage | Fights run 1 to 4 enemies, most 1 to 2 ([enemy.md](../systems/enemy.md)), so it is dead weight often enough to be worth less than two targets. |
-| Heal | 0.75 per health restored | An item buys more healing than damage per point. See below. |
-| Self-damage | gives back 1.5 per health | An item that hurts its own holder spends a run resource, so it gets back more than it costs the enemy. See below. |
-| Shield, self | 1.25 per shield | Worth more than health, because it takes the hit before health does and is never wasted on overheal. |
-| Poison | 1 per eventual damage | N stacks deal `N × (N + 1) / 2` damage in total, because a tick deals its stacks and then loses one. It drains double shield, which is treated as cancelling out the delay. |
-| Burn | 0.75 per eventual damage | The same total as poison, but it drains half shield instead of double. |
-| Bleed | 0.5 per eventual damage | The same total again, but it only cashes out when the holder is hit by an attack, so it needs a weapon alongside it. |
-| Charge, own item | 6 per second of bar | Roughly the rate of a mid-cooldown item, which is what a second is worth to whatever receives it. |
-| Decharge, enemy item | 6 per second of bar | |
-| Spores | 0 | See below. |
+| Attack, single target | `POINTS_PER_DAMAGE`, per damage | The definition of a point. |
+| Any effect on all opponents | the single-target cost times `POINTS_ALL_OPPONENTS_MULTIPLIER` | Applies to every mechanic, so an attack or a burn aimed at all enemies costs the same multiple. Fights run 1 to 4 enemies, most 1 to 2 ([enemy.md](../systems/enemy.md)), so it is dead weight often enough to be worth less than two targets. |
+| Heal | `POINTS_PER_HEAL`, per health restored | An item buys more healing than damage per point. See below. |
+| Self-damage | `POINTS_PER_SELF_DAMAGE`, given back per health | An item that hurts its own holder spends a run resource, so it gets back more than it costs the enemy. See below. |
+| Shield, self | `POINTS_PER_SHIELD`, per shield | Worth more than health, because it takes the hit before health does and is never wasted on overheal. |
+| Poison | `POINTS_PER_POISON_DAMAGE`, per eventual damage | N stacks deal `N × (N + 1) / 2` damage in total, because a tick deals its stacks and then loses one. It drains double shield, which is treated as cancelling out the delay. |
+| Burn | `POINTS_PER_BURN_DAMAGE`, per eventual damage | The same total as poison, but it drains half shield instead of double. |
+| Bleed | `POINTS_PER_BLEED_DAMAGE`, per eventual damage | The same total again, but it only cashes out when the holder is hit by an attack, so it needs a weapon alongside it. |
+| Charge, own item | `POINTS_PER_CHARGE_SECOND`, per second of bar | Roughly the rate of a mid-cooldown item, which is what a second is worth to whatever receives it. |
+| Decharge, enemy item | `POINTS_PER_CHARGE_SECOND`, per second of bar | Shares the charge rate. |
+| Spores | nothing | See below. |
 
 Regen and crit are not on this table. Regen never loses stacks, so its value depends on how long
 the fight runs rather than on what it applies, which is covered under the open questions below.
 Crit is not a cost at all: a crit chance of `c` multiplies the item's expected output, so divide
-the budget by `1 + c × (CRIT_MULTIPLIER − 1)` before spending it.
+the budget by `1 + c × (Balance.CRIT_MULTIPLIER − 1)` before spending it.
 
 **Spores cost nothing.** A Spores applier pays its full budget in damage and stacks Spores on top.
 Spores do nothing alone ([spore_druid.md](spore_druid.md)) and their value is only realised by a
@@ -143,19 +139,20 @@ Revisit this if Spores ever earn an effect of their own.
 Health is not one quantity, so it does not get one rate. Assigning enemy health a point value says
 nothing about what an item should pay to heal.
 
-**Enemy health is 1 point per health, and this is forced rather than chosen.** A point is one damage
+**Enemy health is one point per health, and this is forced rather than chosen.** A point is one damage
 and one damage removes one enemy health, so the exchange is fixed by the definition. This is the
 rate that prices enemies.
 
-**Healing costs 0.75 points per health restored**, so an item buys more healing than it buys damage.
+**Healing costs less than a point per health restored** (`POINTS_PER_HEAL`), so an item buys more
+healing than it buys damage.
 Healing is capped by the damage that has already landed, so any excess is wasted, and it arrives
-after the hit rather than before it. Shield is priced above it at 1.25 for the opposite reasons: it
+after the hit rather than before it. Shield is priced above a point (`POINTS_PER_SHIELD`) for the opposite reasons: it
 takes the hit before health does and is never wasted on overheal. This is the rate most likely to
 move, because player health carries between fights while shield does not, which pulls healing's
 value back up. It should settle somewhere between healing and shield once fights run long enough to
 see whether in-combat healing matters at all.
 
-**Self-damage gives back 1.5 points per health spent.** Player health is the run's attrition
+**Self-damage gives back more than a point per health spent** (`POINTS_PER_SELF_DAMAGE`). Player health is the run's attrition
 resource rather than a pool that refills each fight, so an item that carves its holder costs more
 than the same number of points would cost an enemy. This is what prices Flensing Hook.
 
@@ -165,28 +162,29 @@ items. It needs its own rate once relics are priced.
 
 ## Worked examples
 
-A 4 second attack that also applies 3 poison has a budget of 32.4 points. Three poison stacks deal
-6 damage in total, at 1 point each, so 6 points. That leaves 26.4 points of damage.
+A 4 second attack that also applies 3 poison: three poison stacks deal 3 + 2 + 1 = 6 damage in
+total, which costs `6 × POINTS_PER_POISON_DAMAGE`. The attack's damage is whatever is left of
+`budget(4)`.
 
-A 2 second self-shield has a budget of 9.9 points, which at 1.25 points per shield is 7.9 shield.
-The authored Femur is 8.
+A 2 second self-shield applies `budget(2) / POINTS_PER_SHIELD` shield. The Femur is authored this
+way.
 
 ## The Smith against the curve
 
 The empower engine ([smith.md](smith.md)) is the first thing these rules have to hold up for.
 
-The weapon ladder is on the curve. The 5 second Broadaxe is 50 damage, the 6 second Warhammer is
-73, and the 7 second Greatsword is 100. The shape of the ladder is unchanged, with per-hit climbing
-faster than damage per second.
+The weapons are on the curve. The plain two-handed Broadaxe and Greatsword spend their whole
+budget on damage, so per-hit climbs faster than damage per second. The one-handed Warhammer spends
+its budget on damage less the cost of its decharge (see Weapon cooldowns below). The Dagger splits
+its budget between damage and bleed, with bleed priced by its eventual damage.
 
-The armour ladder is priced the same way, through the shield rate: the shield an item applies is
-its budget divided by `Balance.POINTS_PER_SHIELD`. That gives 15 shield at 3 seconds (Vambraces),
-26 at 4 (Sallet), 40 at 5 (Kite Shield) and 58 at 6 (Breast Plate).
+The armour pieces are priced the same way, through the shield rate: the shield an item applies is
+its budget divided by `Balance.POINTS_PER_SHIELD`.
 
 Mighty Blow prices differently from the rest, because a charge is worth whatever weapon it doubles.
 One cooldown cycle banks one charge, and that charge adds exactly one weapon's per-hit damage. So
 the empower's budget for a cycle has to cover the biggest per-hit it can reach. The biggest is the
-Greatsword's 100, which is `budget(7)`, so the empower's cooldown is 7 seconds.
+Greatsword's, which is its whole budget, so the empower's cooldown matches the Greatsword's.
 
 The general rule: **an empower's cooldown equals the cooldown of the biggest per-hit weapon it can
 reach.** Both sides use the same budget function, so the two match exactly.
@@ -200,10 +198,16 @@ budget.
 
 The cooldown matters more than it looks, because charges stack with no cap. At a cooldown below the
 weapon's, the overspend is not a fixed amount — it grows with the board. With a single Greatsword,
-a 5 second empower is capped by how often the Greatsword fires, so it adds 14.28 points per second
-against an allowed 10.05. With enough weapons to consume every charge, it adds 100 every 5 seconds,
-which is 20 per second against the same 10.05. Matching the cooldown removes the difference: at 7
-seconds both cases come out at 14.28.
+a faster empower is capped by how often the Greatsword fires, so it adds the Greatsword's rate
+against its own lower `rate(cooldown)`. With enough weapons to consume every charge, it adds the
+Greatsword's whole hit every empower cooldown, which is more again. Matching the cooldown removes
+the difference: both cases then come out at the Greatsword's rate.
+
+## Weapon cooldowns
+
+A loose guide, not a hard rule (owner, 2026-09-23): one-handed weapons take cooldowns of 1 to 4
+seconds, and two-handed weapons take 5 seconds or more. A heavier one-handed weapon, such as a
+warhammer, sits at the slow end of its range.
 
 ## Parked
 
@@ -238,3 +242,5 @@ Smith.
   5 second item's whole budget. That suggests regen wants to decay, or to heal less per tick.
 - **Relics**, which are not on the item curve at all, including the maximum health they grant.
 - **Creating and consuming items**, and **summons**.
+- **The attack bonuses** (flat and percentage, on the Deep Forge and Wide Forge). Rare items are
+  expected to carry effects like these that the rates do not cover (owner, 2026-09-23).

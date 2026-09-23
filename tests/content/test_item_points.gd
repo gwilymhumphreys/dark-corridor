@@ -6,18 +6,27 @@ extends GutTest
 const TOLERANCE: float = 0.1
 
 
-func test_budget_matches_the_documented_anchors() -> void:
-  assert_almost_eq(ItemPoints.budget(2.0), 9.9, TOLERANCE, '2s budget')
-  assert_almost_eq(ItemPoints.budget(5.0), 50.2, TOLERANCE, '5s budget')
-  assert_almost_eq(ItemPoints.budget(7.0), 100.0, TOLERANCE, '7s budget')
+func test_rate_at_the_baseline_cooldown_is_the_baseline_rate() -> void:
+  assert_almost_eq(ItemPoints.rate(Balance.POINTS_RATE_BASELINE_COOLDOWN), Balance.POINTS_RATE_AT_BASELINE, TOLERANCE)
 
 
-func test_rate_rises_with_cooldown_and_flattens() -> void:
-  assert_lt(ItemPoints.rate(1.0), ItemPoints.rate(4.0), 'rate rises')
-  assert_lt(ItemPoints.rate(4.0), ItemPoints.rate(10.0), 'rate keeps rising')
-  assert_lt(ItemPoints.rate(30.0), Balance.POINTS_RATE_CEILING, 'rate stays under the ceiling')
-  # The rise decelerates: the gain from 10s to 20s is smaller than from 1s to 10s.
-  assert_lt(ItemPoints.rate(20.0) - ItemPoints.rate(10.0), ItemPoints.rate(10.0) - ItemPoints.rate(1.0))
+func test_budget_is_rate_times_cooldown() -> void:
+  assert_almost_eq(ItemPoints.budget(6.0), 6.0 * ItemPoints.rate(6.0), TOLERANCE)
+
+
+func test_rarer_items_get_a_larger_budget() -> void:
+  var common: float = ItemPoints.budget(4.0)
+  assert_almost_eq(ItemPoints.budget(4.0, ItemDef.Rarity.COMMON), common, TOLERANCE, 'common is the default')
+  assert_almost_eq(ItemPoints.budget(4.0, ItemDef.Rarity.UNCOMMON), common * Balance.POINTS_UNCOMMON_MULTIPLIER, TOLERANCE)
+  assert_almost_eq(ItemPoints.budget(4.0, ItemDef.Rarity.RARE), common * Balance.POINTS_RARE_MULTIPLIER, TOLERANCE)
+
+
+func test_rate_rises_in_a_straight_line() -> void:
+  # Each second of cooldown adds the same amount to the rate, however slow the item.
+  var early: float = ItemPoints.rate(2.0) - ItemPoints.rate(1.0)
+  var late: float = ItemPoints.rate(21.0) - ItemPoints.rate(20.0)
+  assert_almost_eq(early, Balance.POINTS_RATE_PER_SECOND, TOLERANCE)
+  assert_almost_eq(late, Balance.POINTS_RATE_PER_SECOND, TOLERANCE)
 
 
 func test_single_target_damage_is_one_point_each() -> void:

@@ -116,16 +116,21 @@ const DELIVERY_VISUAL_HOLD: float = 1.0
 
 
 # ── Item points (docs/design/item_heuristics.md) ─────────────────────────────
-# The budget curve: an item's points per second of cooldown is a rising curve that flattens
-# towards POINTS_RATE_CEILING and is steepest at POINTS_RATE_MIDPOINT seconds. Its budget is that
-# rate times its cooldown. The arithmetic is in ItemPoints. PLACEHOLDER — the owner tunes in /tune.
-const POINTS_RATE_CEILING: float = 26.0
-const POINTS_RATE_STEEPNESS: float = 0.33
-const POINTS_RATE_MIDPOINT: float = 6.4
+# The budget curve: an item's points per second of cooldown is POINTS_RATE_AT_BASELINE at
+# POINTS_RATE_BASELINE_COOLDOWN and rises in a straight line by POINTS_RATE_PER_SECOND for each
+# second of cooldown, with no cap (owner, 2026-09-23). Its budget is that rate times its cooldown.
+# The arithmetic is in ItemPoints. PLACEHOLDER — the owner tunes in /tune.
+# These are the only copies of the point values: docs name the constants rather than repeat them.
+const POINTS_RATE_BASELINE_COOLDOWN: float = 2.0
+const POINTS_RATE_AT_BASELINE: float = 5.0
+const POINTS_RATE_PER_SECOND: float = 1.25
+# Uncommon and rare items get a larger budget than a common item on the same cooldown, so they are
+# stronger as well as more involved (owner, 2026-09-23). PLACEHOLDER — the owner tunes in /tune.
+const POINTS_UNCOMMON_MULTIPLIER: float = 1.5
+const POINTS_RARE_MULTIPLIER: float = 2.0
 # What one unit of each mechanic costs in points. One point is one damage from a single-target
 # attack. Self-damage is a credit rather than a cost. PLACEHOLDER — the owner tunes in /tune.
 const POINTS_PER_DAMAGE: float = 1.0
-const POINTS_PER_AOE_DAMAGE: float = 1.5
 const POINTS_PER_SELF_DAMAGE: float = 1.5
 const POINTS_PER_HEAL: float = 0.75
 const POINTS_PER_SHIELD: float = 1.25
@@ -133,6 +138,8 @@ const POINTS_PER_POISON_DAMAGE: float = 1.0
 const POINTS_PER_BURN_DAMAGE: float = 0.75
 const POINTS_PER_BLEED_DAMAGE: float = 0.5
 const POINTS_PER_CHARGE_SECOND: float = 6.0
+# An effect aimed at every opponent costs this many times the same effect on one target.
+const POINTS_ALL_OPPONENTS_MULTIPLIER: float = 1.5
 
 
 # ── Encounter budgets (docs/plans/encounter_points_budget.md) ────────────────

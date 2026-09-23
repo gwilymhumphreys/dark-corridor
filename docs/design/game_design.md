@@ -174,16 +174,16 @@ Known categories so far:
 - **Passive / always-on effects are not an item kind** — they're statuses (applied to actors or items), usually carried by relics. An item that confers a lasting effect does so by applying a status.
 At rare tier, items can combine multiple effects (e.g. damage + heal, or weapon + status-applier). Common and uncommon items are single-purpose.
 
-### Rarity — flat power baseline, varies by complexity not numbers
+### Rarity — varies by complexity, and by numbers too
 
 Three tiers. Color-coded (bronze / silver / gold borders). Drop rate weighted by depth (later drafts = better odds).
 
-Item numerical power is roughly flat across tiers. Rarity varies by complexity, specificity, and build-defining-ness:
+**Power is no longer flat across tiers (2026-09-23).** Uncommon and rare items get a larger points budget than commons on the same cooldown, so they are stronger as well as more involved ([item_heuristics.md](item_heuristics.md); the multipliers are in `Balance`). Rarity also still varies by complexity, specificity, and build-defining-ness:
 
 - **Common:** simple, single-purpose, broadly useful (damage tick, basic shield). Workhorses. Trigger-fuel for the cascade.
 - **Uncommon:** conditional or interactive (triggers on poison applied, scales with item count, requires another item type). Connection-makers.
 - **Rare:** build-anchors. The item that turns "I have poison stuff" into "poison is my strategy." Each rare is a build-completion event.
-Why not Bazaar-style scaling rarity: if rarity meant bigger numbers, low-rarity items would become deadweight late, players would auto-take any high-rarity item regardless of synergy (rarity > fit), and the late game would collapse into the Vampire Crawlers failure mode. Power-by-complexity preserves the cascade identity — late-game rares amplify the early commons rather than replacing them.
+The earlier reasoning for flat power, kept as the risk to watch in tuning: if rarity meant bigger numbers, low-rarity items would become deadweight late, players would auto-take any high-rarity item regardless of synergy (rarity > fit), and the late game would collapse into the Vampire Crawlers failure mode. Power-by-complexity preserves the cascade identity — late-game rares amplify the early commons rather than replacing them.
 
 Items that are purely "+X stronger version of common item Y" don't exist as items. Those become enchantments. Numerical scaling lives in the enchant layer, not the rarity layer.
 

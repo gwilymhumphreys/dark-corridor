@@ -7,19 +7,35 @@ class_name ItemPoints
 ## actually spends. Comparing the two is how a new item gets a starting number. The rates and the
 ## curve constants live in `Balance`.
 
+# The mechanics `spend` has a rate for (docs/design/item_heuristics.md → Spending the budget).
+const PRICED_MECHANICS: Array[String] = [
+  'attack', 'heal', 'shield', 'poison', 'burn', 'bleed', 'charge', 'decharge',
+]
 
-## Points per second at this cooldown: a rising curve that flattens towards
-## Balance.POINTS_RATE_CEILING and is steepest at Balance.POINTS_RATE_MIDPOINT seconds. Slow items
-## earn a higher rate because they lose value to overkill, to firing fewer per-hit triggers, and to
-## committing early; it flattens because those losses are bounded.
+
+## Points per second at this cooldown: a straight line through Balance.POINTS_RATE_AT_BASELINE at
+## Balance.POINTS_RATE_BASELINE_COOLDOWN, rising by Balance.POINTS_RATE_PER_SECOND per second of
+## cooldown. Slow items earn a higher rate because they lose value to overkill, to firing fewer
+## per-hit triggers, and to committing early.
 static func rate(cooldown: float) -> float:
-  var t: float = Balance.POINTS_RATE_STEEPNESS * (cooldown - Balance.POINTS_RATE_MIDPOINT)
-  return Balance.POINTS_RATE_CEILING / (1.0 + exp(-t))
+  return Balance.POINTS_RATE_AT_BASELINE \
+      + Balance.POINTS_RATE_PER_SECOND * (cooldown - Balance.POINTS_RATE_BASELINE_COOLDOWN)
 
 
-## The points an item on this cooldown may spend.
-static func budget(cooldown: float) -> float:
-  return cooldown * rate(cooldown)
+## The points an item on this cooldown and of this rarity may spend. Uncommon and rare items get a
+## larger budget (Balance.POINTS_UNCOMMON_MULTIPLIER, Balance.POINTS_RARE_MULTIPLIER).
+static func budget(cooldown: float, rarity: int = ItemDef.Rarity.COMMON) -> float:
+  return cooldown * rate(cooldown) * rarity_multiplier(rarity)
+
+
+## How much larger than a common item's this rarity's budget is.
+static func rarity_multiplier(rarity: int) -> float:
+  match rarity:
+    ItemDef.Rarity.UNCOMMON:
+      return Balance.POINTS_UNCOMMON_MULTIPLIER
+    ItemDef.Rarity.RARE:
+      return Balance.POINTS_RARE_MULTIPLIER
+  return 1.0
 
 
 ## The points an authored item actually spends per fire. Effects that are not MECHANIC deliveries
@@ -37,15 +53,29 @@ static func spend(def: ItemDef) -> float:
   return total * (1.0 + def.crit_chance * (Balance.CRIT_MULTIPLIER - 1.0))
 
 
+## True when `spend` prices this effect. Anything else (a status, summon or created item, or an
+## unpriced mechanic such as regen or the attack bonuses) adds nothing, so an item carrying it is
+## worth more than its points say.
+static func is_priced(effect: ItemEffect) -> bool:
+  return effect.kind == Delivery.Kind.MECHANIC and PRICED_MECHANICS.has(effect.mechanic)
+
+
+## An effect aimed at every opponent costs Balance.POINTS_ALL_OPPONENTS_MULTIPLIER times the same
+## effect on one target, whatever its mechanic.
 static func _effect_points(effect: ItemEffect) -> float:
+  var points: float = _single_target_points(effect)
+  if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
+    points *= Balance.POINTS_ALL_OPPONENTS_MULTIPLIER
+  return points
+
+
+static func _single_target_points(effect: ItemEffect) -> float:
   match effect.mechanic:
     'attack':
       # An attack aimed at SELF is the holder paying health as a cost, which frees budget to spend
       # elsewhere, so it subtracts.
       if effect.shape == ItemEffect.Shape.SELF:
         return -Balance.POINTS_PER_SELF_DAMAGE * effect.value
-      if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-        return Balance.POINTS_PER_AOE_DAMAGE * effect.value
       return Balance.POINTS_PER_DAMAGE * effect.value
     'heal':
       return Balance.POINTS_PER_HEAL * effect.value
