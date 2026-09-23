@@ -1,5 +1,9 @@
 # Plan: shared health bar with shield, and whole numbers in combat
 
+> **Built, 2026-09-23. This file is history and is not maintained.** The built behaviour is in
+> [`systems/mechanics.md`](../systems/mechanics.md) (Shield, Health bar) and
+> [`systems/actor.md`](../systems/actor.md); decision #49.
+
 Two changes decided by the owner on 2026-09-23:
 
 1. Every combat value that lands on a character is a whole number: health, max health, damage

@@ -81,6 +81,10 @@ fired. Remove the `arrived` parameter and the `if d.travel.crossed()` branch.
 
 ### Potions
 
+Changed after the build (owner, 2026-09-23): a delayed potion would feel bad in a crisis and in slow
+motion, so thrown potions fly `Balance.POTION_TRAVEL_STEPS` (one step) instead of `TRAVEL_STEPS`.
+`_spawn_delivery` takes the travel step count. The rest of the potion path is as planned below.
+
 `throw_consumable` lands zero-travel deliveries immediately. With fixed travel, a thrown potion's
 deliveries are added to the in-flight set like any other and land after `TRAVEL_STEPS`. Remove the
 immediate `_land` call. The `_reap_dead` and `_check_resolution` calls at the end of the function can
