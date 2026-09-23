@@ -71,12 +71,28 @@ msgstr ""
 msgid "A permanent modifier attached to this item."
 msgstr ""
 
+#: src/content/mechanics/attack_bonus_mechanic.gd
+msgid "Attack Bonus"
+msgstr ""
+
+#: src/content/mechanics/attack_bonus_mechanic.gd
+msgid "Adds damage to the item's attacks for the rest of the fight."
+msgstr ""
+
 #: src/content/mechanics/attack_mechanic.gd
 msgid "Attack"
 msgstr ""
 
 #: src/content/mechanics/attack_mechanic.gd
 msgid "Deals damage to the target."
+msgstr ""
+
+#: src/content/mechanics/attack_percent_bonus_mechanic.gd
+msgid "Attack Percent Bonus"
+msgstr ""
+
+#: src/content/mechanics/attack_percent_bonus_mechanic.gd
+msgid "Raises the item's attacks by a percentage for the rest of the fight."
 msgstr ""
 
 #: src/content/mechanics/bleed_mechanic.gd
@@ -524,7 +540,7 @@ msgid "a random {0} item of yours"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "all your {0} items"
+msgid "each of your {0} items"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
@@ -711,6 +727,10 @@ msgstr ""
 msgid "Skull"
 msgstr ""
 
+#: content/items/smith/acid_bath.gd
+msgid "Acid Bath"
+msgstr ""
+
 #: content/items/smith/breast_plate.gd
 msgid "Breast Plate"
 msgstr ""
@@ -719,8 +739,24 @@ msgstr ""
 msgid "Broadaxe"
 msgstr ""
 
+#: content/items/smith/dagger.gd
+msgid "Dagger"
+msgstr ""
+
+#: content/items/smith/deep_forge.gd
+msgid "Deep Forge"
+msgstr ""
+
 #: content/items/smith/greatsword.gd
 msgid "Greatsword"
+msgstr ""
+
+#: content/items/smith/iron_maiden.gd
+msgid "Iron Maiden"
+msgstr ""
+
+#: content/items/smith/jar_of_acid.gd
+msgid "Jar of Acid"
 msgstr ""
 
 #: content/items/smith/kite_shield.gd
@@ -731,8 +767,16 @@ msgstr ""
 msgid "Mighty Blow"
 msgstr ""
 
+#: content/items/smith/poker.gd
+msgid "Poker"
+msgstr ""
+
 #: content/items/smith/sallet.gd
 msgid "Sallet"
+msgstr ""
+
+#: content/items/smith/tongs.gd
+msgid "Tongs"
 msgstr ""
 
 #: content/items/smith/vambraces.gd
@@ -741,6 +785,10 @@ msgstr ""
 
 #: content/items/smith/warhammer.gd
 msgid "Warhammer"
+msgstr ""
+
+#: content/items/smith/wide_forge.gd
+msgid "Wide Forge"
 msgstr ""
 
 #: content/items/spore_druid/bloomhammer.gd

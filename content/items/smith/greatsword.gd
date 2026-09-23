@@ -12,4 +12,4 @@ func _init() -> void:
   icon = 'res://assets/icons/items/sword_twohanded_1.png'
   attack_sound = 'blade'
   cooldown = 7.0
-  effects = [ItemEffect.attack(100.0)]
+  effects = [ItemEffect.attack(79.0)]

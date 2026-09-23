@@ -11,4 +11,4 @@ func _init() -> void:
   mechanics = [AttackMechanic.ID]
   icon = 'res://assets/icons/items/axe_hard_2.png'
   cooldown = 5.0
-  effects = [ItemEffect.attack(50.0)]
+  effects = [ItemEffect.attack(44.0)]

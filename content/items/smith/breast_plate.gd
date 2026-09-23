@@ -11,4 +11,4 @@ func _init() -> void:
   mechanics = [ShieldMechanic.ID]
   icon = 'res://assets/icons/items/leather_chest_1.png'
   cooldown = 6.0
-  effects = [ItemEffect.shield(58.0)]
+  effects = [ItemEffect.shield(48.0)]

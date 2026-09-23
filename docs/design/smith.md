@@ -74,6 +74,19 @@ fake.
 weapons or armour pieces with no other effect. A few are fine, as long as each fills a different
 role rather than differing only in speed.
 
+**Weapon kinds lean towards a side effect (owner, 2026-09-23).** A loose guide for the Smith's
+weapons, not a rule every item must follow:
+
+| Weapon kind | Leans towards | Why it fits |
+|---|---|---|
+| Daggers | Bleed | Fast hits set off the bleed they apply. |
+| Blunt weapons (hammers, maces) | Decharge | A heavy blow knocks an enemy item's cooldown bar back. The Warhammer is the first. |
+| Smithing tools and forges (poker, tongs, forges) | Burn | Heated metal from the forge. |
+| Acid (jar, bath) | Poison | Smiths use acid to clean and etch metal, and poison's double shield drain reads as acid eating through armour. |
+
+This is flavour for authoring only; the game does not know an item's weapon kind. It applies to
+the Smith for now, and other characters may or may not follow it.
+
 Keep the non-signature threads simple. This is the low-load character, so they should be the kind
 a player can reason about at a glance.
 
@@ -94,7 +107,7 @@ Verified against the code 2026-07-04 and 2026-09-20.
 | Direction | Cost |
 |---|---|
 | Go wide | Free. An actor-targeted status scoped by item type tag already works (decision #35); `EmpoweredStatus` is the working example. "All my weapons hit harder for the rest of the fight" is authoring only. |
-| Go tall | A small piece of engine for the half that buffs one named weapon: that wants an item-targeted value modifier. `Item.statuses` exists and is consulted for gating (silence) and the use-status drain (decay), but `Item._resolve_effect` never asks the item's own statuses to modify a value — only the owner's, via `StatusManager.modify_outgoing`. See the note in [`../systems/item.md`](../systems/item.md). The other half, a bonus while you hold only one weapon, is a board-count condition, which nothing reads today either. |
+| Go tall | Built for attack damage (2026-09-23): an item-targeted status can raise one item's attacks ([`../systems/mechanics.md`](../systems/mechanics.md#attack-bonuses)); the Deep Forge uses it. The other half, a bonus while you hold only one weapon, is a board-count condition, which nothing reads today. |
 | Armour (stack and spend) | Nearly free. Shield is a `PoolStatus` (`src/content/statuses/shield_status.gd`), and spending it rides the built consume seam `StatusManager.consume`, gated by each status's `is_fuel()`. Spores opts in with a one-line override; shield does not yet. So this is that one override plus the spender items. Consuming shield spends its absorb count, which is the intended tradeoff. |
 | Cross-cutting cards | Free where they combine things that already read — type tags, mechanic ids, target filters. Otherwise they inherit whatever the threads they join need. |
 
@@ -149,8 +162,8 @@ inert labels `weapon / armour / spell / skill / trinket`, an array per item. The
 **weapon**, **armour** and **skill**.
 
 **The seam the empower needs is built** (decision #35). The doubling happens at fire time, in
-`Item._resolve_effect` → `StatusManager.modify_outgoing`, and that hook receives the firing item
-as well as the actor, so a status can tell a weapon attack from a spell attack. `modify_outgoing`
+`Item._resolve_effect` → `StatusEffect.outgoing_bonus`, and that hook receives the firing item
+as well as the actor, so a status can tell a weapon attack from a spell attack. `outgoing_bonus`
 also runs the read-only tooltip preview (`Item.display_value`), so it stays pure; spending a
 charge belongs on `on_owner_item_fired`, which only runs on a real fire.
 
@@ -184,15 +197,31 @@ charge belongs on `on_owner_item_fired`, which only runs on a real fire.
 The empower engine, the three big weapons and the four armour items are built and in the Smith's
 pool. The names are placeholders; the numbers are on the budget curve.
 
-- **`EmpoweredStatus`** (id `empowered`) — a consumed counter. `modify_outgoing` doubles a
+- **`EmpoweredStatus`** (id `empowered`) — a consumed counter. `outgoing_bonus` doubles a
   `weapon`-tagged attack while a charge is banked and stays pure; `on_owner_item_fired` spends one
   charge per weapon attack. Registered in `StatusRegistry`.
 - **Mighty Blow** (`mighty_blow`, `[skill]`) — a plain-cooldown metronome that applies `empowered`
   to self, stacking.
-- **The three big weapons** (`broadaxe`, `warhammer`, `greatsword`, all
-  `[weapon]`) — single-target, opponent-leftmost, on a rising cooldown and per-hit ladder.
-  The Warhammer also decharges one random enemy item by a second (owner, 2026-09-23), so it
-  slows the enemy as well as hitting; the other two are plain.
+- **The weapons** (`broadaxe`, `warhammer`, `greatsword`, `dagger`, all `[weapon]`) —
+  single-target, opponent-leftmost, priced on the budget curve. Cooldowns follow the weapon
+  cooldown guide in [`item_heuristics.md`](item_heuristics.md). The Broadaxe and Greatsword are
+  two-handed and plain. The Warhammer is one-handed, at the slow end of the range, and also
+  decharges one random enemy item (owner, 2026-09-23), so it slows the enemy as well as hitting.
+  The Dagger is a fast one-handed weapon that deals damage and applies bleed, the first of the
+  daggers-lean-towards-bleed guide (owner, 2026-09-23).
+- **Iron Maiden** (`iron_maiden`, uncommon, no type yet) — a slow item that only applies bleed,
+  spending its whole budget on it (owner, 2026-09-23). It is not clearly a weapon, and the
+  existing types do not fit it; which type it gets is open.
+- **Smithing tools** (`tongs`, `poker`, no type yet) — burn-only items, following the
+  smithing-tools-lean-towards-burn guide (owner, 2026-09-23). The Tongs are fast and the Poker
+  slower, both on the leftmost enemy.
+- **The two forges** (`deep_forge`, `wide_forge`, rare, no type yet; working names) — slow items
+  that burn every enemy and buff the Smith's attack items for the rest of the fight (owner,
+  2026-09-23). The Deep Forge gives one random attack item +50% attack, which goes tall; the Wide
+  Forge gives every attack item +10 attack, which goes wide. "Attack item" means any item with the
+  attack mechanic, not only weapons. The bonuses are unpriced.
+- **Acid** (`jar_of_acid`, `acid_bath`, no type yet) — poison-only items (owner, 2026-09-23). The
+  Jar of Acid is fast and the Acid Bath slow, both on the leftmost enemy.
 - **The four armour items** (`vambraces`, `sallet`, `kite_shield`,
   `breast_plate`, all `[armour]`) — plain shield-to-self on a rising cooldown and shield
   ladder, the defensive counterpart to the weapon ladder. Names come from

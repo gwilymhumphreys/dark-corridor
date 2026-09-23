@@ -71,6 +71,14 @@ msgstr "Charges as your own items are destroyed."
 msgid "A permanent modifier attached to this item."
 msgstr "A permanent modifier attached to this item."
 
+#: src/content/mechanics/attack_bonus_mechanic.gd
+msgid "Attack Bonus"
+msgstr "Attack Bonus"
+
+#: src/content/mechanics/attack_bonus_mechanic.gd
+msgid "Adds damage to the item's attacks for the rest of the fight."
+msgstr "Adds damage to the item's attacks for the rest of the fight."
+
 #: src/content/mechanics/attack_mechanic.gd
 msgid "Attack"
 msgstr "Attack"
@@ -78,6 +86,14 @@ msgstr "Attack"
 #: src/content/mechanics/attack_mechanic.gd
 msgid "Deals damage to the target."
 msgstr "Deals damage to the target."
+
+#: src/content/mechanics/attack_percent_bonus_mechanic.gd
+msgid "Attack Percent Bonus"
+msgstr "Attack Percent Bonus"
+
+#: src/content/mechanics/attack_percent_bonus_mechanic.gd
+msgid "Raises the item's attacks by a percentage for the rest of the fight."
+msgstr "Raises the item's attacks by a percentage for the rest of the fight."
 
 #: src/content/mechanics/bleed_mechanic.gd
 msgid "Bleed"
@@ -524,8 +540,8 @@ msgid "a random {0} item of yours"
 msgstr "a random {0} item of yours"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
-msgid "all your {0} items"
-msgstr "all your {0} items"
+msgid "each of your {0} items"
+msgstr "each of your {0} items"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid " and "
@@ -711,6 +727,10 @@ msgstr "Skin Graft"
 msgid "Skull"
 msgstr "Skull"
 
+#: content/items/smith/acid_bath.gd
+msgid "Acid Bath"
+msgstr "Acid Bath"
+
 #: content/items/smith/breast_plate.gd
 msgid "Breast Plate"
 msgstr "Breast Plate"
@@ -719,9 +739,25 @@ msgstr "Breast Plate"
 msgid "Broadaxe"
 msgstr "Broadaxe"
 
+#: content/items/smith/dagger.gd
+msgid "Dagger"
+msgstr "Dagger"
+
+#: content/items/smith/deep_forge.gd
+msgid "Deep Forge"
+msgstr "Deep Forge"
+
 #: content/items/smith/greatsword.gd
 msgid "Greatsword"
 msgstr "Greatsword"
+
+#: content/items/smith/iron_maiden.gd
+msgid "Iron Maiden"
+msgstr "Iron Maiden"
+
+#: content/items/smith/jar_of_acid.gd
+msgid "Jar of Acid"
+msgstr "Jar of Acid"
 
 #: content/items/smith/kite_shield.gd
 msgid "Kite Shield"
@@ -731,9 +767,17 @@ msgstr "Kite Shield"
 msgid "Mighty Blow"
 msgstr "Mighty Blow"
 
+#: content/items/smith/poker.gd
+msgid "Poker"
+msgstr "Poker"
+
 #: content/items/smith/sallet.gd
 msgid "Sallet"
 msgstr "Sallet"
+
+#: content/items/smith/tongs.gd
+msgid "Tongs"
+msgstr "Tongs"
 
 #: content/items/smith/vambraces.gd
 msgid "Vambraces"
@@ -742,6 +786,10 @@ msgstr "Vambraces"
 #: content/items/smith/warhammer.gd
 msgid "Warhammer"
 msgstr "Warhammer"
+
+#: content/items/smith/wide_forge.gd
+msgid "Wide Forge"
+msgstr "Wide Forge"
 
 #: content/items/spore_druid/bloomhammer.gd
 msgid "Bloomhammer"
