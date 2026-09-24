@@ -50,6 +50,10 @@ const VOLUME_MAX_DB: float = 12.0
 ## Loaded at boot rather than on first play, because these answer an input directly and a
 ## load pause would read as lag.
 const PRELOAD_FOLDERS: Array[String] = ['ui/hover', 'ui/click', 'world/footsteps/steps']
+## Every folder under these categories starts loading on a background thread at boot. Combat
+## sounds were loaded the first time each one played, on the frame the hit landed, and the
+## load showed as a stutter on the first hits of a run.
+const BACKGROUND_LOAD_CATEGORIES: Array[String] = ['mechanics', 'combat', 'statuses']
 ## Audio file extensions, most preferred first. A sound is kept in the repository as both the
 ## original .wav and a much smaller .mp3; the same name with two extensions is one sound, not two
 ## variants. The web build prefers the mp3 so the player downloads less, everything else prefers
@@ -74,6 +78,9 @@ var _banks: Dictionary = {}
 var _volumes: Dictionary = {}
 # Folder paths already warned about, so a missing folder warns once rather than every play.
 var _warned: Dictionary = {}
+# File paths requested on a background thread and not yet collected. _try_load collects one,
+# waiting for it only if it has not finished.
+var _pending_loads: Dictionary = {}
 # True when nothing is listening (headless dummy driver, --autotest or --shot). Set in _ready.
 var _silent: bool = false
 
@@ -83,6 +90,8 @@ var _cooldowns: Dictionary = {}
 func _ready() -> void:
   _silent = _is_silent_run()
   if not _silent:
+    for category: String in BACKGROUND_LOAD_CATEGORIES:
+      _request_background_loads(SOUND_ROOT + category + '/')
     for path: String in PRELOAD_FOLDERS:
       _banks[path] = _load_folder(SOUND_ROOT + path + '/')
   # Only process while cooldowns are pending; re-enabled in play_guarded().
@@ -138,19 +147,45 @@ func _bank_for(path: String) -> Array[AudioStream]:
 
 
 func _try_load(path: String) -> AudioStream:
+  if _pending_loads.has(path):
+    _pending_loads.erase(path)
+    return ResourceLoader.load_threaded_get(path) as AudioStream
   if ResourceLoader.exists(path):
     return load(path) as AudioStream
   return null
 
 
-## One stream per sound in `dir`, in no particular order. Files sharing a name before the
-## extension are the same sound in different formats, so only the preferred one is loaded.
-## A missing folder gives [].
-func _load_folder(dir_path: String) -> Array[AudioStream]:
-  var streams: Array[AudioStream] = []
+## Start loading every sound in `dir_path` and the folders below it on a background thread.
+## _try_load collects each result when its folder is first played.
+func _request_background_loads(dir_path: String) -> void:
+  for file_path: String in _sound_files(dir_path):
+    if ResourceLoader.load_threaded_request(file_path) == OK:
+      _pending_loads[file_path] = true
   var dir: DirAccess = DirAccess.open(dir_path)
   if dir == null:
-    return streams
+    return
+  for sub: String in dir.get_directories():
+    _request_background_loads(dir_path + sub + '/')
+
+
+## One stream per sound in `dir`, in no particular order. A missing folder gives [].
+func _load_folder(dir_path: String) -> Array[AudioStream]:
+  var streams: Array[AudioStream] = []
+  for file_path: String in _sound_files(dir_path):
+    var stream: AudioStream = _try_load(file_path)
+    if stream:
+      streams.append(stream)
+  return streams
+
+
+## The path of each sound in `dir_path`, not looking in subfolders. Files sharing a name before
+## the extension are the same sound in different formats, so only the preferred one is listed.
+## A missing folder gives [].
+func _sound_files(dir_path: String) -> Array[String]:
+  var files: Array[String] = []
+  var dir: DirAccess = DirAccess.open(dir_path)
+  if dir == null:
+    return files
   var order: Array[String] = EXTENSIONS_BY_SIZE if OS.has_feature('web') else EXTENSIONS_BY_QUALITY
   # Each name before the extension maps to the extensions found for it.
   var by_name: Dictionary = {}
@@ -169,11 +204,9 @@ func _load_folder(dir_path: String) -> Array[AudioStream]:
   for base: String in by_name:
     for extension: String in order:
       if extension in by_name[base]:
-        var stream: AudioStream = _try_load(dir_path + base + extension)
-        if stream:
-          streams.append(stream)
+        files.append(dir_path + base + extension)
         break
-  return streams
+  return files
 
 
 ## The volume adjustment for the folder `path`, in decibels, read from its VOLUME_FILE and
@@ -233,9 +266,9 @@ func bus_for(path: String) -> String:
 ## folder above it that has. The category's FALLBACK_FOLDER is the last resort, so a newly
 ## authored mechanic or status is never silent.
 ##
-## `fall_back` false means an empty folder plays nothing at all. A layer that is optional rather
-## than a variant of its parent needs this: an empty mechanics/attack/travel must stay silent,
-## because falling back would play the hit sound during the flight instead.
+## `fall_back` false means an empty folder plays nothing at all. An optional layer needs this, such
+## as the travel layer, which picks its own folder and must not play a category's _default
+## sound during a flight.
 func _resolve_folder(path: String, fall_back: bool = true) -> String:
   if not fall_back:
     if _bank_for(path).is_empty():
@@ -288,6 +321,14 @@ func play_sound(path: String, pitch: float = -1.0, volume_db: float = 0.0,
   if pitch < 0.0:
     pitch = randf_range(PITCH_JITTER_MIN, PITCH_JITTER_MAX)
   return playback.play_stream(stream, 0.0, volume_db, pitch)
+
+
+## Whether the folder `path` holds any sounds of its own, with no fallback. Lets a caller walk
+## its own order of folders. Always false in a silent run, so nothing is loaded there.
+func has_sounds(path: String) -> bool:
+  if _silent or path == '':
+    return false
+  return not _bank_for(path).is_empty()
 
 
 ## Cooldown-guarded `play_sound`, keyed by `key`. Repeated calls within COOLDOWN_TIME are
@@ -412,6 +453,10 @@ func _exit_tree() -> void:
       player.stream = null
   _players.clear()
   _playbacks.clear()
+  # A threaded load that is never collected is reported as leaked at exit.
+  for file_path: String in _pending_loads:
+    ResourceLoader.load_threaded_get(file_path)
+  _pending_loads.clear()
   _banks.clear()
   _volumes.clear()
   _cooldowns.clear()

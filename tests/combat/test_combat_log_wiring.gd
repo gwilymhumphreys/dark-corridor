@@ -29,9 +29,9 @@ func after_each() -> void:
 
 # --- helpers ----------------------------------------------------------------
 
-func _spawn(max_hp: float, item_defs: Array, name: String = '') -> Actor:
+func _spawn(max_hp: float, item_defs: Array, actor_name: String = '') -> Actor:
   var a := Actor.new(max_hp)
-  a.display_name = name
+  a.display_name = actor_name
   for def in item_defs:
     a.board.append(Item.new(def, a))
   TestCleanup.dissolve_at_reset(a)   # teardown keeps the player side; dissolve it after the test
@@ -46,16 +46,16 @@ func _manager_with_log(p: Actor, enemy_list: Array) -> CombatManager:
   return cm
 
 
-func _name_of(side: int, log: CombatLog) -> Dictionary:
+func _name_of(side: int, fight_log: CombatLog) -> Dictionary:
   var by := {}
-  for r in log.summary(side):
+  for r in fight_log.summary(side):
     by[r['name']] = r
   return by
 
 
-func _status_of(side: int, log: CombatLog) -> Dictionary:
+func _status_of(side: int, fight_log: CombatLog) -> Dictionary:
   var by := {}
-  for r in log.status_damage(side):
+  for r in fight_log.status_damage(side):
     by[r['name']] = r
   return by
 
@@ -70,8 +70,8 @@ func test_a_full_fight_logs_fires_damage_shield_and_dot() -> void:
   var e := _spawn(ENEMY_HP, [FixtureItems.enemy_attack()], 'Corridor Grunt')
   var cm := _manager_with_log(p, [e])
   cm.run_headless()
-  var log: CombatLog = cm.combat_log
-  var player_rows := _name_of(PLAYER, log)
+  var fight_log: CombatLog = cm.combat_log
+  var player_rows := _name_of(PLAYER, fight_log)
 
   # Fire (site 1) — every player item that fired is counted.
   assert_gt(player_rows.get('Fixture Blade', {}).get('fires', 0), 0, 'the blade fired')
@@ -88,15 +88,15 @@ func test_a_full_fight_logs_fires_damage_shield_and_dot() -> void:
   # (merged appliers make per-item DoT attribution a fiction). the fixture applier only APPLIES poison, so
   # its per-item damage stays 0; the tick damage shows under the 'Poison' status bucket.
   assert_eq(float(player_rows['Fixture Fang']['damage']), 0.0, 'no per-item DoT credit to the applier')
-  assert_gt(float(_status_of(PLAYER, log).get('Poison', {}).get('damage', 0.0)), 0.0,
+  assert_gt(float(_status_of(PLAYER, fight_log).get('Poison', {}).get('damage', 0.0)), 0.0,
       'poison tick damage is bucketed under the status')
 
   # Other status (site 6) — poison APPLIED is counted (separate from its tick damage).
   assert_gt(player_rows['Fixture Fang']['statuses'], 0, 'the poison application is counted')
 
   # Totals split by side: the player dealt damage; the player also took the enemy's hits.
-  assert_gt(float(log.total_damage_dealt[PLAYER]), 0.0, 'player-side dealt total')
-  assert_gt(float(log.total_shield[PLAYER]), 0.0, 'player-side shield total')
+  assert_gt(float(fight_log.total_damage_dealt[PLAYER]), 0.0, 'player-side dealt total')
+  assert_gt(float(fight_log.total_shield[PLAYER]), 0.0, 'player-side shield total')
 
 
 func test_enemy_damage_is_logged_on_the_enemy_side() -> void:
@@ -108,11 +108,11 @@ func test_enemy_damage_is_logged_on_the_enemy_side() -> void:
     if cm.is_resolved():
       break
     cm.sim_step()
-  var log: CombatLog = cm.combat_log
-  var enemy_rows := _name_of(ENEMY, log)
+  var fight_log: CombatLog = cm.combat_log
+  var enemy_rows := _name_of(ENEMY, fight_log)
   assert_gt(float(enemy_rows.get('Fixture Claw', {}).get('damage', 0.0)), 0.0, 'the enemy item is logged enemy-side')
-  assert_gt(float(log.total_damage_taken[PLAYER]), 0.0, 'the player took damage (taken total, player side)')
-  assert_true(_name_of(PLAYER, log).is_empty(), 'the boardless player logged nothing player-side')
+  assert_gt(float(fight_log.total_damage_taken[PLAYER]), 0.0, 'the player took damage (taken total, player side)')
+  assert_true(_name_of(PLAYER, fight_log).is_empty(), 'the boardless player logged nothing player-side')
 
 
 func test_heal_is_logged() -> void:
@@ -129,12 +129,14 @@ func test_heal_is_logged() -> void:
   effect.shape = ItemEffect.Shape.SELF
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  var log: CombatLog = cm.combat_log
+  for i in Balance.POTION_TRAVEL_STEPS:   # the potion flies before it lands and heals
+    cm.sim_step()
+  var fight_log: CombatLog = cm.combat_log
   # A thrown consumable has no source ITEM, so its heal credits the SOURCELESS bucket;
   # what matters is the heal total + the timeline event.
-  assert_gt(float(log.total_healing[PLAYER]), 0.0, 'healing logged on the thrower side')
+  assert_gt(float(fight_log.total_healing[PLAYER]), 0.0, 'healing logged on the thrower side')
   var saw_heal := false
-  for ev in log.events:
+  for ev in fight_log.events:
     if ev['type'] == 'heal':
       saw_heal = true
   assert_true(saw_heal, 'a heal event is in the timeline')
@@ -153,9 +155,9 @@ func test_throw_is_logged_with_its_def_id() -> void:
   effect.shape = ItemEffect.Shape.OPPONENT_LEFTMOST
   def.effects = [effect]
   cm.throw_consumable(Consumable.new(def), p)
-  var log: CombatLog = cm.combat_log
+  var fight_log: CombatLog = cm.combat_log
   var saw_throw := false
-  for ev in log.events:
+  for ev in fight_log.events:
     if ev['type'] == 'throw' and ev['data'] == 'test_dart' and ev['source_side'] == PLAYER:
       saw_throw = true
   assert_true(saw_throw, 'the throw is in the timeline carrying its consumable id + thrower side')

@@ -20,6 +20,9 @@ const ARC_HEIGHT: float = 0.05  # how high a projectile's path rises, as a fract
 const DEFAULT_HURT_SOUND: String = 'combat/hurt'
 ## Played alongside the landing sound of a delivery that crit. Crit is never delivered itself.
 const CRIT_SOUND: String = 'mechanics/' + CritMechanic.ID
+## The travel layer's folder. Its own recordings are the default flight sound for every item;
+## subfolders named after an item's `travel_sound`, a type tag or a mechanic override it.
+const TRAVEL_SOUND: String = 'combat/travel'
 
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
@@ -130,7 +133,7 @@ func _sound_new_impacts() -> void:
     live[id] = true
     if not d.landed and not d.fizzled and not _launched.has(id):
       _launched[id] = true
-      # No fallback: an unfilled travel folder stays silent rather than playing the hit sound.
+      # No fallback: _travel_key_of already chose a folder that holds sounds.
       SfxManager.play_sound(_travel_key_of(d), -1.0, 0.0, false)
     if not d.landed or d.fizzled or not has_impact_sound(d) or _sounded.has(id):
       continue
@@ -173,18 +176,36 @@ func _hurt_key_of(d: Delivery) -> String:
 
 
 ## The folder for the travel layer (docs/systems/audio.md): a soft sound while a projectile is in
-## flight, played once when it launches. A delivery with no travel time has no flight to cover, and
-## a summon or a created item has no travel sound yet, so both return the empty string. The folder is
-## the mechanic's own, without the weapon and shield variants the landing uses, because the
-## flight is the same whatever it arrives at.
+## flight, played once when it launches. The first of `travel_folders` that holds sounds is used,
+## so every item plays the shared default until a more specific folder is filled. A delivery with
+## no travel time, a summon and a created item have no travel sound, so they return the empty string.
 func _travel_key_of(d: Delivery) -> String:
+  for folder: String in travel_folders(d):
+    if SfxManager.has_sounds(folder):
+      return folder
+  return ''
+
+
+## The travel folders a delivery could play, most specific first: the firing item's own
+## `travel_sound`, then one folder per type tag in the order the item lists them, then the
+## mechanic, then the shared default. A thrown consumable has no firing item, so it starts at the
+## mechanic. Empty when the delivery has no flight to cover.
+static func travel_folders(d: Delivery) -> Array[String]:
+  var folders: Array[String] = []
   if d.kind == Delivery.Kind.SUMMON or d.kind == Delivery.Kind.CREATE_ITEM:
-    return ''
+    return folders
   if d.travel == null or d.travel.threshold <= 0:
-    return ''
-  if d.kind != Delivery.Kind.MECHANIC or not MechanicRegistry.has(d.mechanic):
-    return ''
-  return 'mechanics/' + d.mechanic + '/travel'
+    return folders
+  if d.source is Item and d.source.def != null:
+    var def: ItemDef = d.source.def
+    if def.travel_sound != '':
+      folders.append(TRAVEL_SOUND + '/' + def.travel_sound)
+    for tag: String in def.types:
+      folders.append(TRAVEL_SOUND + '/' + tag)
+  if d.kind == Delivery.Kind.MECHANIC and d.mechanic != '':
+    folders.append(TRAVEL_SOUND + '/' + d.mechanic)
+  folders.append(TRAVEL_SOUND)
+  return folders
 
 
 ## The sound folder a landing delivery plays. A mechanic names its own folder; a status

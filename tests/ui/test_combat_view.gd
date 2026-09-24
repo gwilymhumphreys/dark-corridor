@@ -343,6 +343,7 @@ func test_an_item_created_during_the_fight_gets_a_cell_marked_temporary() -> voi
   assert_false(view._player_cells.has(chunk), 'a removed item loses its cell')
   assert_eq(view._player_cells.size(), 1, 'the drafted item keeps its cell')
   cm.free()
+  await wait_process_frames(1)   # the removed cell is queue_free'd; let it go before the orphan count
 
 
 func test_temporary_things_fade_off_the_board_when_the_fight_ends() -> void:
@@ -389,3 +390,4 @@ func test_a_thrown_consumable_starts_from_its_slot() -> void:
   cm.throw_consumable(potion, p)
   assert_eq((cm.deliveries()[0] as Delivery).consumable, potion, 'the delivery carries the thrown consumable')
   cm.free()
+  await wait_process_frames(1)   # the thrown potion's slot is queue_free'd; let it go before the orphan count

@@ -99,7 +99,8 @@ the headless autotest mounts none of this:
   unless the player paused or raised the menu in the meantime.
 
 **Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Interface / Game), a
-text size slider, a mute-when-unfocused toggle and a fullscreen toggle, all bound to the **`Prefs`**
+text size slider (each slider shows its value as a whole number above its handle, through
+`SliderValueLabel`), a mute-when-unfocused toggle and a fullscreen toggle, all bound to the **`Prefs`**
 autoload, which applies each change (bus level / theme text sizes / window mode / focus-mute) and
 persists it to `user://` (a ConfigFile, **separate** from the run `Save`). The rows sit in a
 `ScrollContainer` so the screen stays usable at the largest text size. Opened from the title and the
@@ -137,7 +138,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   aligned to the top of the section, the left-aligned name ("You") over the health bar — centred between the
   ally slots (the portrait row sits in a `PlayerPanel` that is only drawn with the `portrait_panel`
   print setting, [print_frame.md](print_frame.md)); the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
-  centred row of effect-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per value-bearing effect)
+  centred row of mechanic-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per mechanic effect; an effect that applies a status gets no pill)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
   whose edge is torn like the paper edges of the print look) + fire recoil). The grid is matched to

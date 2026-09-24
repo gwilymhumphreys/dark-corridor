@@ -78,8 +78,8 @@ category uses the Interface bus.
   or status is never silent. A path with only one slash has no parent worth trying, since a
   category folder holds only subfolders. Debug builds warn once per path so a typo is visible.
   Passing `fall_back` as false makes an empty folder silent instead, which is what an optional
-  layer needs: an unfilled `mechanics/attack/travel` must play nothing rather than play the hit
-  sound during the flight.
+  layer needs: the travel layer walks its own order of folders and must not play a category's
+  `_default` sound during a flight.
 - **Volume per folder** — a folder may hold a `volume.cfg` containing one number, how many
   decibels to adjust that sound by. It is added to whatever a caller passes rather than
   replacing it, and it is read from the folder that actually played after any fallback. This is
@@ -101,14 +101,26 @@ can be left empty:
 
 | Layer | When | Folder |
 | --- | --- | --- |
-| Travel | Once, when a mechanic delivery's projectile launches (summons and created items have none yet) | `mechanics/<mechanic id>/travel` |
+| Travel | Once, when a projectile launches (summons and created items have none yet) | the first filled folder under `combat/travel/` — see below |
 | Weapon | On landing | `mechanics/attack/<weapon>/`, with `shielded/` below it |
 | Target | On landing, alongside the weapon layer | the struck actor's `hurt_sound`, or `combat/hurt` |
 
 The weapon and target layers land at the same instant and are heard as one event: one says what
 was swung, the other says what was struck. The travel layer is a separate, earlier event, so it
-is the one most likely to crowd a cascade — its `volume.cfg` is the control for that, and
-emptying its folder silences it with no code change.
+is the one most likely to crowd a cascade — the `volume.cfg` in each travel folder is the control
+for that.
+
+The travel folder is looked up in this order, and the first folder that holds sounds is played:
+
+1. `combat/travel/<travel_sound>`, when the firing item names one ([item.md](item.md)).
+2. `combat/travel/<tag>` for each of the item's type tags, in the order the item lists them.
+3. `combat/travel/<mechanic id>`.
+4. `combat/travel/` itself, the default for every item.
+
+A thrown consumable has no firing item, so it starts at the mechanic. The travel layer says how an
+effect is delivered and the landing says what it does: a poison spell plays the spell folder's
+sound in flight and the poison sound on landing. To give a group its own flight sound, fill its
+folder; no code change is needed.
 
 The weapon folder comes from the firing item's `attack_sound` ([item.md](item.md)), so a blade
 and a mace differ. A thrown consumable has no firing item and plays the plain folder. The target
@@ -129,6 +141,8 @@ API:
   folder `path` (negative pitch = random jitter). Returns the stream id, or -1 if nothing
   played.
 - `play_sound_guarded(key, path, pitch, volume_db)` — same, cooldown-guarded by `key`.
+- `has_sounds(path)` — whether a folder holds sounds of its own, with no fallback. Always false
+  in a silent run. The travel layer uses it to walk its lookup order.
 - `bus_for(path)` — the bus a folder path plays on.
 - `play_ui_hover()` / `play_ui_click()` / `play_footstep()` — the three named sounds, each one
   guarded `play_sound` call. The corridor calls `play_footstep()` on each footfall

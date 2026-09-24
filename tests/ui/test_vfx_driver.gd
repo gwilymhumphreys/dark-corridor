@@ -177,3 +177,43 @@ func test_damage_number_drift_follows_the_landing_side_and_stays_put() -> void:
     assert_almost_eq(drift, expected, most_random + 0.001, 'drift is the off-centre amount plus a little randomness')
     assert_eq(DamageNumberDrawer.drift_for(hit), drift, 'the same delivery always drifts the same amount')
 
+
+
+func _flying_delivery(source: Variant) -> Delivery:
+  var d := Delivery.new()
+  d.mechanic = PoisonMechanic.ID
+  d.travel = Ticker.new(3)
+  d.source = source
+  return d
+
+
+func test_travel_folders_run_from_the_item_override_to_the_shared_default() -> void:
+  var owner := Actor.new(100.0)
+  _actors.append(owner)
+  var def := ItemDef.new()
+  def.types = [ItemType.SPELL, ItemType.TRINKET]
+  def.travel_sound = 'wand'
+  var d := _flying_delivery(Item.new(def, owner))
+  var expected: Array[String] = [
+    'combat/travel/wand',
+    'combat/travel/spell',
+    'combat/travel/trinket',
+    'combat/travel/poison',
+    'combat/travel',
+  ]
+  assert_eq(VfxDriver.travel_folders(d), expected,
+      'the item override, then each tag in order, then the mechanic, then the default')
+
+
+func test_a_thrown_consumable_starts_its_travel_lookup_at_the_mechanic() -> void:
+  var expected: Array[String] = ['combat/travel/poison', 'combat/travel']
+  assert_eq(VfxDriver.travel_folders(_flying_delivery(null)), expected)
+
+
+func test_a_delivery_with_no_flight_has_no_travel_folders() -> void:
+  var instant := _flying_delivery(null)
+  instant.travel = Ticker.new(0)
+  assert_eq(VfxDriver.travel_folders(instant).size(), 0, 'no travel time, no travel sound')
+  var summon := _flying_delivery(null)
+  summon.kind = Delivery.Kind.SUMMON
+  assert_eq(VfxDriver.travel_folders(summon).size(), 0, 'a summon has no travel sound')

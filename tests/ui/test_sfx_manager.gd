@@ -127,5 +127,5 @@ func test_the_same_folder_falls_back_when_allowed() -> void:
 
 
 func test_a_filled_layer_resolves_to_itself() -> void:
-  assert_eq(SfxManager._resolve_folder('mechanics/attack/travel', false), 'mechanics/attack/travel',
+  assert_eq(SfxManager._resolve_folder('combat/travel', false), 'combat/travel',
       'a layer with recordings plays its own folder')
