@@ -3,8 +3,8 @@ extends CombatView
 ## player vs one enemy, runs a real CombatManager (its _physics_process drives
 ## the tick), and composes the placeholder boards + VFX over it. Not the main
 ## scene — run it directly:
-##   ...console.exe --path . res://src/scenes/combat_sandbox.tscn
-## `--shot` captures a mid-fight frame then quits.
+##   ...console.exe --path . res://src/debug/scenes/combat_sandbox.tscn
+## `--shot` captures a frame then quits (the Dev autoload, docs/systems/dev_tools.md).
 
 const PLAYER_ANCHOR := Vector2(620, 640)
 const ENEMY_ANCHOR := Vector2(1940, 640)
@@ -21,8 +21,6 @@ var _result: Label
 func _ready() -> void:
   _result = $Result
   _build_fight()
-  if '--shot' in OS.get_cmdline_args() or '--shot' in OS.get_cmdline_user_args():
-    _auto_shot()
 
 
 func _build_fight() -> void:
@@ -116,10 +114,3 @@ func target_pos(target) -> Vector2:
   if target is Item:
     return item_pos(target)
   return actor_pos(target)
-
-
-func _auto_shot() -> void:
-  await get_tree().create_timer(2.0).timeout
-  await RenderingServer.frame_post_draw
-  Screenshot.save(get_viewport(), 'combat_shot')
-  get_tree().quit()

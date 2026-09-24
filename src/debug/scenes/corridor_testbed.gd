@@ -27,9 +27,10 @@ func _ready() -> void:
   _corridor.apply_settings(DebugPanels.corridor_settings, DebugPanels.environment_settings)
   (_corridor.get_node('Display') as Sprite2D).material = DebugPanels.world_material
 
-  # Verification helper: `--shot` captures a mid-glide frame then quits.
-  if '--shot' in OS.get_cmdline_args() or '--shot' in OS.get_cmdline_user_args():
-    _auto_shot()
+  # Verification helper: for a `--shot` (captured by the Dev autoload), glide forward unless
+  # `--still`, and with `--monster` place a monster to walk up to.
+  if DevArgs.has('--shot'):
+    _set_up_shot()
 
 
 func _exit_tree() -> void:
@@ -41,18 +42,15 @@ func _exit_tree() -> void:
 ## Dev hooks: `--view=WIDTHxHEIGHT` forces a fixed view_size (try aspects), and
 ## `-- --set=property=value` sets any corridor export, e.g. `--set=light_energy=0.2`.
 func _apply_overrides(corridor: Corridor3D) -> void:
-  for arg in OS.get_cmdline_args():
-    if arg.begins_with('--view='):
-      var parts: PackedStringArray = arg.substr(7).split('x')
-      if parts.size() == 2:
-        corridor.auto_view_size = false
-        corridor.view_size = Vector2(float(parts[0]), float(parts[1]))
-        corridor.position = corridor.view_size * 0.5
-  for arg in OS.get_cmdline_user_args():
-    if arg.begins_with('--set='):
-      var pair: PackedStringArray = arg.substr(6).split('=')
-      if pair.size() == 2 and pair[0] in corridor:
-        corridor.set(pair[0], str_to_var(pair[1]))
+  var parts: PackedStringArray = DevArgs.value('--view').split('x')
+  if parts.size() == 2:
+    corridor.auto_view_size = false
+    corridor.view_size = Vector2(float(parts[0]), float(parts[1]))
+    corridor.position = corridor.view_size * 0.5
+  for setting: String in DevArgs.values('--set'):
+    var pair: PackedStringArray = setting.split('=')
+    if pair.size() == 2 and pair[0] in corridor:
+      corridor.set(pair[0], str_to_var(pair[1]))
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -92,18 +90,8 @@ func _process(delta: float) -> void:
     _monster_walking = false
 
 
-func _auto_shot() -> void:
-  # `--still` captures a stopped frame (no motion).
-  if not ('--still' in OS.get_cmdline_args() or '--still' in OS.get_cmdline_user_args()):
+func _set_up_shot() -> void:
+  if not DevArgs.has('--still'):
     _corridor.set_forward_held(true)
-  if '--monster' in OS.get_cmdline_user_args():
+  if DevArgs.has('--monster'):
     _spawn_monster()
-  # `--shot-delay=SECONDS` waits longer, e.g. for the monster to finish walking in.
-  var delay: float = 0.6
-  for arg in OS.get_cmdline_user_args():
-    if arg.begins_with('--shot-delay='):
-      delay = float(arg.substr(13))
-  await get_tree().create_timer(delay).timeout
-  await RenderingServer.frame_post_draw
-  Screenshot.save(get_viewport(), 'corridor_shot')
-  get_tree().quit()

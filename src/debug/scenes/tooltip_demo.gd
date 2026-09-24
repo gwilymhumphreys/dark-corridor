@@ -3,8 +3,8 @@ extends Control
 ## mounts an ItemCell near the right edge + a TooltipCluster, and force-shows the cluster over the
 ## cell every frame (so a hover isn't needed). The verification harness for the tooltip system —
 ## run it directly:
-##   /c/projects/godot/godot --path . res://src/scenes/dev/tooltip_demo.tscn
-## `--shot` captures a frame then quits. Excluded from extract_pot (dev host; text stays English).
+##   /c/projects/godot/godot --path . res://src/debug/scenes/tooltip_demo.tscn
+## `--shot` captures a frame then quits (the Dev autoload, docs/systems/dev_tools.md).
 
 const TOOLTIP_CLUSTER: PackedScene = preload('res://src/scenes/ui/tooltip/tooltip_cluster.tscn')
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
@@ -30,9 +30,6 @@ func _ready() -> void:
   _cluster = TOOLTIP_CLUSTER.instantiate()
   add_child(_cluster)
 
-  if '--shot' in OS.get_cmdline_args() or '--shot' in OS.get_cmdline_user_args():
-    _auto_shot()
-
 
 func _process(_delta: float) -> void:
   if _cell == null or _cluster == null:
@@ -46,10 +43,3 @@ func _exit_tree() -> void:
   if _item != null and _item.owner != null:
     _item.owner.dissolve()   # break the demo actor's Actor<->Item cycle
   _item = null
-
-
-func _auto_shot() -> void:
-  await get_tree().create_timer(1.5).timeout
-  await RenderingServer.frame_post_draw
-  Screenshot.save(get_viewport(), 'tooltip_shot')
-  get_tree().quit()

@@ -165,6 +165,15 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
         limits.append(part.to_float())
     elif entry['type'] == TYPE_INT and entry['hint'] == PROPERTY_HINT_ENUM:
       limits = Array((entry['hint_string'] as String).split(','))
+    elif entry['type'] == TYPE_INT:
+      # A whole-number range is a slider in steps of one (an int value would make a dropdown); the
+      # shader still receives an int.
+      var range_parts: PackedStringArray = (entry['hint_string'] as String).split(',')
+      if range_parts.size() >= 2:
+        limits = [range_parts[0].to_float(), range_parts[1].to_float(), 1.0]
+      value = float(value)
+      var set_float: Callable = set_value
+      set_value = func(new_value: Variant) -> void: set_float.call(roundi(new_value))
     section.add_row(_make_row(label, value, limits, set_value))
 
 

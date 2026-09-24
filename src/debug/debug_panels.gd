@@ -133,11 +133,12 @@ func _ready() -> void:
 ## wear setting, `--panel-set=uniform=value` a panel wear setting, `--print-set=name=value` a border,
 ## corridor overlay or layout setting, `--interface-set=uniform=value` an interface look setting,
 ## `--feedback-set=name=value` a control feedback setting, `--feedback-demo=<amount>` holds every
-## control at that much hover for a screenshot. `--look-panel`, `--interface-panel`,
+## control at that much hover for a screenshot, `--glow-demo=<brightness>` makes every node drawn
+## through a picture material glow. `--look-panel`, `--interface-panel`,
 ## `--print-panel`, `--background-panel`, `--feedback-panel` and `--icon-panel` open the panel on
 ## that tab.
 func _apply_command_line() -> void:
-  var args: PackedStringArray = OS.get_cmdline_user_args()
+  var args: PackedStringArray = DevArgs.all()
   for arg: String in args:
     if arg.begins_with('--preset='):
       var preset: String = arg.substr(9)
@@ -175,6 +176,8 @@ func _apply_command_line() -> void:
         InterfaceLook.set_setting(interface_pair[0], str_to_var(interface_pair[1]))
     elif arg.begins_with('--feedback-demo='):
       ControlFeedback.set_demo(arg.substr(16).to_float())
+    elif arg.begins_with('--glow-demo='):
+      InterfaceGlow.demo_brightness = arg.substr(12).to_float()
     elif arg.begins_with('--feedback-set='):
       var feedback_pair: PackedStringArray = arg.substr(15).split('=')
       if feedback_pair.size() == 2:

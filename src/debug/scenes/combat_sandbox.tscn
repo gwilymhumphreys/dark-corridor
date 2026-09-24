@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dcsandbox01"]
 
-[ext_resource type="Script" path="res://src/scenes/combat_sandbox.gd" id="1"]
+[ext_resource type="Script" path="res://src/debug/scenes/combat_sandbox.gd" id="1"]
 
 [node name="CombatSandbox" type="Control"]
 anchors_preset = 15
