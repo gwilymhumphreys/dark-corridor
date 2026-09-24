@@ -19,7 +19,7 @@ The layout, by the kind of question you're answering:
 | Doc | Covers |
 |-----|--------|
 | [handoff.md](handoff.md) | Fresh-agent orientation: what the game is, build status, how to run and test, settled lessons, the engineering backlog. |
-| [decision_log.md](decision_log.md) | The canonical decision record (#1–#41): what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
+| [decision_log.md](decision_log.md) | The canonical decision record (#1–#50): what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
 | [documentation.md](documentation.md) | How the docs work: where each kind lives and the rules for writing them (sync with code in the same change, catalog every doc, intent not numbers, plan to system). |
 
 ## Systems (`docs/systems/`)
@@ -92,7 +92,7 @@ unless asked.** The authoring how-to is the bridge to implementation.
 |-----|--------|
 | [design/lexicon.md](design/lexicon.md) | The meaning of the game's terms (cooldown, fire, effect, mechanic, charge, status, stack, points and others), so each word is used in one sense only. |
 | [design/game_design.md](design/game_design.md) | The whole-game design snapshot: pitch, core loop, combat, items, enchants, relics, consumables, statuses, encounters, characters, meta-progression and scope. |
-| [design/art_audio.md](design/art_audio.md) | Art direction and audio: the look being explored with existing art, post-processing and palettes; art sources, world and interface colours, readability, dungeon-synth audio, candidate asset packs. |
+| [design/art_audio.md](design/art_audio.md) | Art direction and audio: the 90s tabletop and gamebook theme, the pen-and-paper interface of cardboard tokens, the rest of the look being explored with existing art, post-processing and palettes; art sources, world and interface colours, readability, dungeon-synth audio, candidate asset packs. |
 | [design/asset_credits.md](design/asset_credits.md) | Who made the third-party assets we ship and where they came from: the three dungeon synth music packs, plus the art packs and font whose sources still need filling in. |
 | [design/asset_library.md](design/asset_library.md) | Where the source art packs and downloaded sounds live (`../dark-corridor-design/`), how to find a file by name, what each folder holds, and where copies land in `assets/`. |
 | [design/influence_dcc.md](design/influence_dcc.md) | Tone and concept, with Dungeon Crawler Carl as the touchstone: fuse two recognisable ideas so the seam shows; humour is a byproduct and delivery stays grim. |

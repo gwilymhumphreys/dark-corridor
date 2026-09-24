@@ -94,6 +94,8 @@ The full catalog (with keywords) is [`index.md`](index.md): system specs in `doc
 
 49. **Combat values that land on a character are whole numbers (2026-09-23, owner).** Health, max health and status counts are stored as `int`. A value stays fractional while bonuses and crit combine and is rounded once (`roundi`, halves up) when it lands on health, shield or a status, so what the screen shows is what the game holds and tooltips show the number that lands. Small percentage bonuses on small values can round to nothing; that is accepted. Shield use at the half and double rates is rounded the same way. Homes: [`systems/actor.md`](systems/actor.md) / [`systems/mechanics.md`](systems/mechanics.md#shield).
 
+50. **The visual theme is 90s tabletop and gamebook fantasy, with a pen-and-paper interface (2026-09-25, owner).** The look should remind the player of 90s HeroQuest and other board-game RPGs, Fighting Fantasy gamebooks, and CRPGs of that decade. The interface looks like pen and paper with cardboard tokens: a hand-drawn pencil grid, with items and potions as slightly askew tokens with a worn edge and no border. New interface work should fit this theme. How each part is drawn, and the rest of the look, are still tried as options with screenshot comparisons. This narrows the open exploration of 2026-09-16. Home: [`design/art_audio.md`](design/art_audio.md).
+
 ## Open / deferred (each has a home)
 
 - Timescale override **replace-vs-multiply — resolved → replace** (absolute slow-mo, independent of the ×1/×2/×3 battle-speed dial; the dial is a `Game` session preference applied to each fight's Timekeeper base scale). timekeeper.md / combat_model.md.

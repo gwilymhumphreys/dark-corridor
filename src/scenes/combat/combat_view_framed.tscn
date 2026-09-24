@@ -1,12 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/combat_view_framed.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/combat_corridor.tscn" id="2"]
 [ext_resource type="Script" path="res://src/vfx/vfx_driver.gd" id="4"]
 [ext_resource type="Script" path="res://src/ui/print_frame.gd" id="6"]
-[ext_resource type="PackedScene" path="res://src/scenes/combat/health_bar.tscn" id="health_bar"]
-[ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
-[ext_resource type="Material" path="res://src/shaders/interface_portrait_material.tres" id="interface_portrait_material"]
+[ext_resource type="PackedScene" path="res://src/scenes/combat/character_panel.tscn" id="character_panel"]
 
 [node name="CombatViewFramed" type="Control"]
 layout_mode = 3
@@ -150,46 +148,17 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 24
 
-[node name="PlayerPanel" type="PanelContainer" parent="Portraits"]
+[node name="PlayerPanel" parent="Portraits" instance=ExtResource("character_panel")]
 layout_mode = 2
-size_flags_vertical = 0
-mouse_filter = 2
-theme_type_variation = &"PanelBare"
 
-[node name="PlayerPortrait" type="HBoxContainer" parent="Portraits/PlayerPanel"]
-layout_mode = 2
-theme_override_constants/separation = 20
-
-[node name="Portrait" type="PanelContainer" parent="Portraits/PlayerPanel/PlayerPortrait"]
-custom_minimum_size = Vector2(200, 200)
-layout_mode = 2
+[node name="Portrait" parent="Portraits/PlayerPanel/Row" index="0"]
 size_flags_vertical = 4
-mouse_filter = 2
-theme_type_variation = &"PanelSlot"
 
-[node name="Image" type="TextureRect" parent="Portraits/PlayerPanel/PlayerPortrait/Portrait"]
-material = ExtResource("interface_portrait_material")
-layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Breath" type="Node" parent="Portraits/PlayerPanel/PlayerPortrait/Portrait/Image"]
-script = ExtResource("portrait_breath")
-
-[node name="Readout" type="VBoxContainer" parent="Portraits/PlayerPanel/PlayerPortrait"]
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_constants/separation = 10
-
-[node name="Name" type="Label" parent="Portraits/PlayerPanel/PlayerPortrait/Readout"]
-layout_mode = 2
-theme_type_variation = &"LabelMedium"
+[node name="Name" parent="Portraits/PlayerPanel/Row/Readout" index="0"]
 text = "You"
 
-[node name="HealthBar" parent="Portraits/PlayerPanel/PlayerPortrait/Readout" instance=ExtResource("health_bar")]
-layout_mode = 2
-bar_size = Vector2(200, 30)
+[node name="Items" parent="Portraits/PlayerPanel/Row/Readout" index="3"]
+visible = false
 
 [node name="AllyRight" type="HBoxContainer" parent="Portraits"]
 layout_mode = 2

@@ -20,8 +20,8 @@ const FRAMED_SCENE_NODES: Array[Array] = [
 ## Nodes drawn through `InterfaceLook.portrait_material`: the framed portraits that breathe.
 const PORTRAIT_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/screens/character_card.tscn', 'Portrait/Image'],
-  ['res://src/scenes/combat/ally_slot.tscn', 'Portrait/Image'],
-  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPanel/PlayerPortrait/Portrait/Image'],
+  ['res://src/scenes/combat/ally_slot.tscn', 'Row/Portrait/Image'],
+  ['res://src/scenes/combat/combat_view_framed.tscn', 'Portraits/PlayerPanel/Row/Portrait/Image'],
 ]
 
 ## Nodes drawn through `InterfaceLook.element_material`: the interface elements that are not pictures.

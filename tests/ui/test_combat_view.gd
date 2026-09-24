@@ -43,7 +43,7 @@ func test_enemy_hud_builds_one_cell_per_item() -> void:
   var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
   _host(hud)
   hud.setup(_spawn(100.0, [FixtureItems.attack(), FixtureItems.shield(), FixtureItems.poison()]))
-  assert_eq(hud.get_node('Items').get_child_count(), 3, 'one cell per board item')
+  assert_eq(hud.get_node('Row/Readout/Items').get_child_count(), 3, 'one cell per board item')
 
 
 func test_enemy_hud_hp_text_tracks_actor() -> void:
@@ -52,7 +52,7 @@ func test_enemy_hud_hp_text_tracks_actor() -> void:
   var a := _spawn(100.0, [FixtureItems.attack()])
   hud.setup(a)
   a.take_damage(40.0)
-  var bar: HealthBar = hud.get_node('HpRow/HealthBar')
+  var bar: HealthBar = hud.get_node('Row/Readout/HealthBar')
   bar._process(0.0)   # the per-frame refresh, called directly — deterministic, no _process race
   assert_eq(bar.get_node('Bar/Label').text, '60', 'HP text tracks the actor')
 
@@ -66,8 +66,8 @@ func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
   StatusManager.apply(a, ShieldStatus.ID, 5.0)
   StatusManager.apply(a, 'weak', 1.0)
   hud.setup(a)
-  hud._refresh_statuses()
-  assert_eq(hud.get_node('HpRow/Statuses').get_child_count(), 1,
+  (hud.get_node('Row/Readout/Statuses') as StatusIcons).refresh()
+  assert_eq(hud.get_node('Row/Readout/Statuses').get_child_count(), 1,
       'shield is a mechanic (its number shows beside the HP bar), only weak gets an icon')
 
 
@@ -75,7 +75,7 @@ func test_ally_slot_builds_one_cell_per_item() -> void:
   var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
   _host(slot)
   slot.setup(_spawn(15.0, [FixtureItems.attack()]))
-  assert_eq(slot.get_node('Readout/Items').get_child_count(), 1, 'one cell per board item')
+  assert_eq(slot.get_node('Row/Readout/Items').get_child_count(), 1, 'one cell per board item')
 
 
 func test_ally_slot_mouse_over_detects_a_cell() -> void:
@@ -84,7 +84,7 @@ func test_ally_slot_mouse_over_detects_a_cell() -> void:
   _host(slot)
   slot.setup(_spawn(15.0, [FixtureItems.attack()]))
   await get_tree().process_frame   # let the container lay the cell out
-  var cell: Control = slot.get_node('Readout/Items').get_child(0)
+  var cell: Control = slot.get_node('Row/Readout/Items').get_child(0)
   var centre: Vector2 = cell.global_position + cell.size * 0.5
   assert_true(slot.mouse_over(centre), 'a point over a cell is detected')
   assert_false(slot.mouse_over(centre + Vector2(10000, 10000)), 'a far point is not')
@@ -105,6 +105,36 @@ func test_view_potion_slots_emit_the_throw_intent() -> void:
   slot.pressed.emit()
   assert_signal_emitted_with_parameters(view, 'potion_thrown', [0])
   cm.free()
+
+
+func test_player_portrait_shows_outside_set_status_icons() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  StatusManager.apply(p, ShieldStatus.ID, 5.0)
+  StatusManager.apply(p, 'weak', 1.0)
+  view.bind(null, p, [])
+  var row: StatusIcons = view.get_node('Portraits/PlayerPanel/Row/Readout/Statuses')
+  row.refresh()
+  assert_eq(row.get_child_count(), 1, 'shield shows on the health bar, only weak gets an icon')
+
+
+func test_allies_show_outside_a_fight() -> void:
+  # An event or rest beat binds no Combat manager. The run's allies must still get their slots,
+  # including one recruited during the event (appended to the same array the view holds).
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var allies: Array = [_spawn(20.0, [FixtureItems.attack()])]
+  view.bind(null, p, [], allies)
+  assert_eq(_ally_slot_count(view), 1, 'the ally already in the run has a slot')
+  allies.append(_spawn(20.0, [FixtureItems.attack()]))
+  await get_tree().process_frame
+  assert_eq(_ally_slot_count(view), 2, 'an ally recruited during the event gets a slot')
+
+
+func _ally_slot_count(view: CombatViewFramed) -> int:
+  return view.get_node('Portraits/AllyLeft').get_child_count() + view.get_node('Portraits/AllyRight').get_child_count()
 
 
 func test_item_pos_handles_a_source_less_delivery() -> void:

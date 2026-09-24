@@ -95,7 +95,7 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 
 *Full art direction, palette, tone, VFX, and audio live in the **Art Direction & Audio** doc. This section captures only what the mechanics depend on. Keep it short; depth goes in the other doc.*
 
-- **Godot 4, a 3D corridor.** The corridor is a real 3D scene of modular sections seen from a fixed camera (decision #36). Enemies are flat painted images lit inside it. Everything renders at full monitor resolution. The art style itself is being explored (see the art doc).
+- **Godot 4, a 3D corridor.** The corridor is a real 3D scene of modular sections seen from a fixed camera (decision #36). Enemies are flat painted images lit inside it. Everything renders at full monitor resolution. The theme is 90s HeroQuest, Fighting Fantasy and CRPGs, with a pen-and-paper interface of cardboard tokens; the rest of the art style is being explored (see the art doc).
 - **Items dominate the screen; the corridor view is mood/feedback.** Whether combat sits in a small framed window or a full-screen scene is open (see UI/Layout) — either way the items are the game, which is what the UI/Layout section is built around.
 - **Color vocabulary is the readability mechanism** (red attack, yellow shield, green heal, per-effect status colors) — mechanically required to parse a 30-item cascade, not a cosmetic choice. Carried on both player and enemy boards.
 - **Lighting = one steady light at the camera, fading to black.** Hides art weaknesses and does coherence work across mixed asset sources. Relevant to mechanics only insofar as it sets the dark baseline the cascade punches through.

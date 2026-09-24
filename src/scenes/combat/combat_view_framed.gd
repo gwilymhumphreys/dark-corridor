@@ -33,6 +33,7 @@ const SHAKE_DURATION_MAX: float = 0.45
 
 var _cm: CombatManager
 var _player: Actor
+var _allies: Array = []   # the run's allies, shared by reference; drawn from here when there is no fight
 
 @onready var _corridor_part: Control = $Corridor
 @onready var _corridor: CombatCorridor = $Corridor/CorridorPanel
@@ -45,10 +46,8 @@ var _player: Actor
 @onready var _potion_grid: ColorRect = $Items/PotionBoard/Grid
 @onready var _potions: HBoxContainer = $Items/PotionBoard/Potions
 @onready var _portraits_part: HBoxContainer = $Portraits
-@onready var _player_panel: PanelContainer = $Portraits/PlayerPanel
-@onready var _portrait: Control = $Portraits/PlayerPanel/PlayerPortrait/Portrait
-@onready var _portrait_image: TextureRect = $Portraits/PlayerPanel/PlayerPortrait/Portrait/Image
-@onready var _player_health_bar: HealthBar = $Portraits/PlayerPanel/PlayerPortrait/Readout/HealthBar
+@onready var _player_panel: CharacterPanel = $Portraits/PlayerPanel
+@onready var _portrait: Control = $Portraits/PlayerPanel/Row/Portrait
 @onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
 @onready var _ally_right: HBoxContainer = $Portraits/AllyRight
 @onready var _corridor_area: Control = $CorridorArea
@@ -69,7 +68,7 @@ var _gap_ratio: float = 0.0   # the gap between the player's item cells as a sha
 var _cell_size: float = ItemCell.CELL_SIZE.x   # the player's item cells' current size, set by _fit_board
 var _fitted: Vector4 = -Vector4.ONE   # the board width, height, cell count and potion count _fit_board last fitted to
 var _askew_set: Vector3 = -Vector3.ONE   # the tilt, shift and cell size _set_items_askew last applied
-var _tokens_set: Array = []   # the token_portraits, portrait_panel and ally count _set_token_styles last applied
+var _tokens_set: Array = []   # the token_portraits, portrait_panel, ally count and enemy count _set_token_styles last applied
 
 
 func _ready() -> void:
@@ -183,25 +182,24 @@ func _draw_grid() -> void:
   PrintLook.grid_material.set_shader_parameter('pencil_colour', Colours.UI_BACKGROUND_WEAR_LIGHT)
 
 
-## Whether the portraits are cardboard tokens like the items, and whether the player's portrait, name
-## and HP bar sit on one token panel, from the print settings `token_portraits` and `portrait_panel`
-## (docs/systems/print_frame.md). Does nothing unless a setting or the number of allies changed.
+## Whether the portraits are cardboard tokens like the items, and whether every character panel (the
+## player's, each ally slot's and each enemy HUD's) is drawn, from the print settings `token_portraits`
+## and `portrait_panel` (docs/systems/print_frame.md). Does nothing unless a setting or the number of
+## allies or enemies changed.
 func _set_token_styles() -> void:
   var portraits: bool = PrintLook.print_setting('token_portraits')
   var panel: bool = PrintLook.print_setting('portrait_panel')
-  var wanted: Array = [portraits, panel, _ally_slots.size()]
+  var wanted: Array = [portraits, panel, _ally_slots.size(), _enemy_huds.size()]
   if wanted == _tokens_set:
     return
-  var panel_changed: bool = _tokens_set.is_empty() or _tokens_set[1] != panel
   _tokens_set = wanted
   var portrait_style: StringName = &'PanelToken' if portraits else &'PanelSlot'
-  _portrait.theme_type_variation = portrait_style
-  for slot in _ally_slots.values():
-    (slot as AllySlot).set_portrait_style(portrait_style)
-  _player_panel.theme_type_variation = &'PanelTokenWide' if panel else &'PanelBare'
-  if panel_changed:
-    _place_in_sections()   # the panel's margins change the room left for the portrait
-    _portraits_part.queue_sort()   # the row keeps the panel's old size otherwise
+  var panels: Array = [_player_panel] + _ally_slots.values() + _enemy_huds.values()
+  for character_panel in panels:
+    (character_panel as CharacterPanel).set_portrait_style(portrait_style)
+    (character_panel as CharacterPanel).set_panel_shown(panel)
+  _place_in_sections()   # the panel's margins change the room left for the portraits
+  _portraits_part.queue_sort()   # the row keeps the panel's old size otherwise
 
 
 ## The player portrait stays square and takes the section's full height, less the margins of the panel
@@ -216,15 +214,15 @@ func _fit_portraits(height: float) -> void:
 
 ## Bind the live fight: the player's portrait + HP (lower left) and its board column (top right),
 ## the potion slots, a HUD per enemy / a slot per ally-or-token, and the VFX wall on this layout.
-## `cm` is null outside a fight (an event beat): the player's side is shown with no enemies.
-func bind(cm: CombatManager, player: Actor, potions: Array) -> void:
+## `cm` is null outside a fight (an event beat): the player's side is shown with no enemies, and
+## the ally slots come from `allies` (the run's allies) instead of the Combat manager's roster.
+func bind(cm: CombatManager, player: Actor, potions: Array, allies: Array = []) -> void:
   _cm = cm
   _player = player
+  _allies = allies
   _enemies_shown = false   # the HUDs stay hidden until show_enemies (the fight starting)
-  _player_health_bar.actor = player
+  _player_panel.set_actor(player)
   _cooldowns_shown = false   # the fight has not started yet; begin_fight turns the fills on
-  if player.portrait != '':
-    _portrait_image.texture = load(player.portrait)
   _build_player_items(player)
   _fit_board()
   _set_items_askew()
@@ -286,6 +284,7 @@ func _add_player_cell(item: Item) -> void:
 ## allies/tokens as slots flanking the player. Cheap: only rebuilds when the roster grew.
 func _sync_rosters() -> void:
   if _cm == null:
+    _sync_ally_slots([_player] + _allies)   # no fight: the run's allies still stand beside the player
     return
   var enemies: Array = _cm.enemies
   var player_side: Array = _cm.player_side()
@@ -307,11 +306,17 @@ func _sync_rosters() -> void:
       if _enemies_shown:
         hud.fade_in(ENEMY_FADE_IN)
       _enemy_huds[e] = hud
+  _sync_ally_slots(player_side)
+
+
+## Add a slot for each player-side actor that has none yet. The Combat manager's clock drives the
+## cells' fire recoil when there is a fight.
+func _sync_ally_slots(player_side: Array) -> void:
   for a in player_side:
     if a != _player and not _ally_slots.has(a) and not _fading_out.has(a):   # the player keeps its centre-bottom portrait
       var slot: AllySlot = ALLY_SLOT.instantiate()
       _pick_ally_box().add_child(slot)
-      slot.setup(a, _cm.timekeeper)
+      slot.setup(a, _cm.timekeeper if _cm != null else null)
       slot.fit_height(sections.section('Portraits').size.y)
       slot.set_cooldowns_shown(_cooldowns_shown)
       _ally_slots[a] = slot
@@ -368,6 +373,7 @@ func _position_enemy_huds() -> void:
     hud.position = anchor - base - Vector2(hud.size.x * 0.5, hud.size.y)
     # Keep the HUD on the panel — an edge occupant's wide HUD clamps in rather than clipping off.
     hud.position.x = clampf(hud.position.x, 0.0, maxf(_enemy_huds_box.size.x - hud.size.x, 0.0))
+    hud.position.y = maxf(hud.position.y, 0.0)   # and a tall HUD over a near occupant stays below the panel's top edge
 
 
 ## (Re)build the potion slots from the reserve. Each is a clickable button emitting
@@ -482,7 +488,7 @@ func _exit_tree() -> void:
     _vfx.big_hit.disconnect(_on_big_hit)
   _cm = null
   _player = null
-  _portrait_image.texture = null
+  _allies = []
   _grid.material = null
   if sections != null and sections.sections_changed.is_connected(_place_in_sections):
     sections.sections_changed.disconnect(_place_in_sections)

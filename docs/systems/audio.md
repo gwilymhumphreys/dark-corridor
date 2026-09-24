@@ -73,6 +73,10 @@ category uses the Interface bus.
 - **Folders load once** — the first play of a path scans its folder and caches the result,
   empty included, so a folder that does not exist is not rescanned. `PRELOAD_FOLDERS` loads
   the sounds that answer an input at boot instead, because a load pause would read as lag.
+  Every sound under `BACKGROUND_LOAD_CATEGORIES` (the combat categories) starts loading on
+  Godot's background loading threads at boot, and the first play of a folder collects the
+  finished files. Loading them on the frame a hit landed made the first hits of a run stutter.
+  Files still uncollected at exit are collected then, so they are not reported as leaked.
 - **Fallback** — a folder with no recordings falls back to its parent, then that parent's
   parent and so on, and last to its category's `_default` folder, so a newly authored mechanic
   or status is never silent. A path with only one slash has no parent worth trying, since a

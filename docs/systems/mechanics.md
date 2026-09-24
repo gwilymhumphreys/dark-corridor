@@ -316,7 +316,7 @@ palettes in `assets/palettes/new/ui/` carry the first ten fitted to their own sc
 ## Health bar
 
 `HealthBar` (`src/scenes/combat/health_bar.tscn` / `.gd`) is the one health bar, used by the player
-portrait (`combat_view_framed.tscn`), `enemy_hud.tscn` and `ally_slot.tscn`. Each view sets its
+portrait, the ally slots and the enemy HUDs, all through `character_panel.tscn`. Each view sets its
 `actor`, its `bar_size`, and for the enemy the fill and background colour names. It reads the actor
 each frame and writes nothing.
 
@@ -333,8 +333,8 @@ each frame and writes nothing.
   status (poison, burn, bleed, regen) showing its stack count in the mechanic's colour. The numbers
   are not translated.
 
-The enemy HUD's status-icon row (`StatusIcon`) shows only the OUTSIDE-set statuses; the health bar
-shows the mechanic statuses.
+The status-icon row (`status_icons.tscn`, one `StatusIcon` per status) on the enemy HUD and under
+the player's health bar shows only the OUTSIDE-set statuses; the health bar shows the mechanic statuses.
 
 ## Tooltip keyword cards
 

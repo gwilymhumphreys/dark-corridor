@@ -3,11 +3,17 @@
 This is a working doc, not a settled spec. Almost everything here is a current leaning to test in prototype, not a decision. Treat it that way — argue with it freely.
 
 Companion to the design snapshot. This is the living capture of the look-and-feel thinking — art direction, visual readability, audio. Add to it as the vibes evolve.
-Date: 2026-05-30, revised 2026-06-01 and 2026-09-16. The prototype is playable; the look is being explored in game.
+Date: 2026-05-30, revised 2026-06-01, 2026-09-16 and 2026-09-25. The prototype is playable; the look is being explored in game.
+
+Theme (owner, 2026-09-25, decision #50)
+
+The visual theme should remind the player of playing 90s fantasy games: HeroQuest and other board-game RPGs, Fighting Fantasy gamebooks, and CRPGs of that decade.
+The interface looks like pen and paper with cardboard tokens: a hand-drawn pencil grid on paper, with items as cardboard tokens set slightly askew on it, as in HeroQuest. Tokens have a worn edge and no border. Potions look and work the same as items.
+New interface work should fit this theme. How each part of the interface is drawn is still tried as options.
 
 Direction (exploring, 2026-09)
 
-The chunky pixel-art direction is set aside. The goal is a distinctive look that fits the dark-fantasy theme, made with the assets and skills we have. That means existing art (the monster collection, icon packs, textures, UI packs), shaders, post-processing and palettes, not drawing or commissioning art. Nothing in the look is chosen yet.
+The chunky pixel-art direction is set aside. The goal is a distinctive look that fits the theme above, made with the assets and skills we have. That means existing art (the monster collection, icon packs, textures, UI packs), shaders, post-processing and palettes, not drawing or commissioning art. Apart from the theme and the pen-and-paper interface, nothing in the look is chosen yet.
 Work order: get the corridor and enemies looking good first, then build the rest of the look around them.
 Full-screen effects are welcome, for example CRT, colour treatments, bloom, and the post-processing in Slots & Daggers.
 How options are judged: each option is built as a debug setting, screenshotted in the same real fight, and shown on one comparison page. The owner picks; options are not ranked for him.
@@ -24,7 +30,7 @@ Movement feel: smooth-but-controlled advance, footfall audio. Each advance shoul
 
 Visual style & tone
 
-Dark fantasy / classic dungeon. Desaturated, low-value, restricted colour band. Dim crimson, deep iron, sickly moss — no bright neon anything. Darkest Dungeon / Mörk Borg as touchstones.
+Dark fantasy / classic dungeon, in the 90s tabletop and gamebook theme above. Desaturated, low-value, restricted colour band. Dim crimson, deep iron, sickly moss — no bright neon anything. Darkest Dungeon and Mörk Borg were the earlier touchstones for the dark tone.
 Tone resolution: atmosphere is dread, mechanics are juicy. The corridor and walk are heavy and oppressive; the cascade punches through with restrained but unmistakable flashes of colour, particle, sound. Contrast is where the satisfaction lives.
 Failure mode to avoid: dread-without-juice — oppressive and miserable, no payoff. The dread baseline only works if the cascade punch lands against it. Target the games that nail the balance (Mörk Borg, Darkest Dungeon); plenty of indie horror doesn’t.
 
@@ -37,7 +43,8 @@ Monsters: painted images from the monster collection in ../dark-corridor-design/
 Corridor walls: one tiling stone texture for now. Candidate PSX-style modular kits are listed in docs/plans/full_res_art_palette_clamp_3d_corridor.md.
 Icons: painted icons from the 6000 Fantasy Icons pack for items, potions, statuses and keywords, copied into assets/icons/. The agent picked a first icon for each; every pick is a placeholder for the owner to swap.
 Portraits: painted character portraits from the same pack (the versions without backgrounds, so the worn frame shows behind the figure), copied into assets/portraits/. Each character and enemy has one, shown on the character select cards, the player's combat portrait and the ally slots. The agent picked each one; every pick is a placeholder for the owner to swap.
-Interface frame: no pack art. Panels and buttons are flat fills in palette colours with printed wear drawn on them, and a hovered or selected control takes a rough printed border (decision #40, docs/systems/control_feedback.md). What the frame finally looks like is still open.
+Interface frame: no pack art. Panels and buttons are flat fills in palette colours with printed wear drawn on them, and a hovered or selected control takes a rough printed border (decision #40, docs/systems/control_feedback.md). The frame should end up looking like pen and paper (see Theme); how is still open.
+Item board: a hand-drawn pencil grid with the items drawn as askew cardboard tokens with a drop shadow (docs/systems/print_frame.md).
 Font: Rakkas, a smooth font, chosen from a screenshot comparison. The other shortlisted fonts are kept in assets/fonts/candidates/; trying one means pointing the theme's default_font at it, since the debug panel's font dropdown was removed. No pixel font.
 No generative-AI assets.
 
@@ -143,7 +150,7 @@ UI implementation in Godot (when building): the frame wants Control nodes (ancho
 Corridor look: which effects, world palette and dithering, including how dithering looks in motion.
 Print style: whether the worn record-sleeve style carries on to the corridor border, folds and the rest of the interface.
 Interface: which palette, and which interface parts take shaders.
-Interface frame: stay pixel art, or change to fit the painted enemies and icons.
+Interface frame: how the pen-and-paper theme is drawn on panels, buttons and the rest of the frame.
 Corridor walls: textures or a bought modular kit.
 Effects style at full resolution with post-processing.
 One item firing against black — does it feel good? (Atomic readability test.)
@@ -160,4 +167,4 @@ Asset sources (candidate packs)
 - Corridor kits: see docs/plans/full_res_art_palette_clamp_3d_corridor.md
 
 
-End of vibes capture. Ongoing — add to it. The firmest bits are Godot, the 3D corridor and dungeon synth; the look itself is still being explored.
+End of vibes capture. Ongoing — add to it. The firmest bits are Godot, the 3D corridor, dungeon synth, the 90s tabletop theme and the pen-and-paper interface; the rest of the look is still being explored.

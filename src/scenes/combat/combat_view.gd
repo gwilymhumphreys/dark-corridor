@@ -14,8 +14,9 @@ signal potion_thrown(index: int)
 var sections: ScreenSections
 
 
-## Bind the live fight (the view reads the full rosters off the CombatManager).
-func bind(_cm: CombatManager, _player_actor: Actor, _potions: Array) -> void:
+## Bind the live fight (the view reads the full rosters off the CombatManager; with no fight,
+## `_allies` is the run's allies).
+func bind(_cm: CombatManager, _player_actor: Actor, _potions: Array, _allies: Array = []) -> void:
   pass
 
 

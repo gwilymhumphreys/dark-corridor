@@ -47,9 +47,10 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   change, because the palette sets the fill to `UI_BACKGROUND`. The token's edge is the
   panel wear's worn edge ([panel_wear.md](panel_wear.md)); it has no border.
 - Two switches try the token look on the portrait section. `token_portraits` puts the player and ally
-  portraits in `PanelToken` frames instead of `PanelSlot`. `portrait_panel` puts the player's portrait,
-  name and HP bar on one `PanelTokenWide` panel (`PanelBare`, which draws nothing, when off), and the
-  portrait shrinks by the panel's margins to stay inside the section. `CombatViewFramed` applies both.
+  portraits in `PanelToken` frames instead of `PanelSlot`. `portrait_panel` draws every character panel
+  (the player's, each ally's and each enemy's, `character_panel.tscn`) as a `PanelTokenWide` panel
+  (`PanelBare`, which draws nothing, when off), and the portraits shrink by the panel's margins to stay
+  inside the section. `CombatViewFramed` applies both.
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
   `TokensPanel`), in four sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill

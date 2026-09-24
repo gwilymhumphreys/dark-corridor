@@ -73,8 +73,8 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 | Item icons (combat boards, draft rewards) | `item_cell.tscn` `Frame/Icon` | framed pictures |
 | Potion icons | `potion_slot.tscn` `Cell/Frame/Icon` (an item cell) | framed pictures |
 | Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` | images |
-| Character portraits | `combat_view_framed.tscn` player portrait `Image`, `ally_slot.tscn` `Portrait/Image`, `character_card.tscn` `Portrait/Image` | framed pictures |
-| HP bars | `Background` and `Fill` under `HP` in `combat_view_framed.tscn`, `ally_slot.tscn`, `enemy_hud.tscn` | elements |
+| Character portraits | `character_panel.tscn` `Row/Portrait/Image` (player and allies), `character_card.tscn` `Portrait/Image` | framed pictures |
+| HP bars | `Background` and `Fill` in `health_bar.tscn`, used by every character panel | elements |
 | Item value pills (the numbers on items) | `value_pill.tscn` root panel and its `Value` label | elements |
 | The mouse cursor ([cursor.md](cursor.md)) | `mouse_cursor.tscn` `Hand` | images |
 

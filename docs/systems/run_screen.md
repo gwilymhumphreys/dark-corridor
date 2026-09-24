@@ -120,24 +120,31 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   `SubViewport` → `Corridor3D`, with each enemy a `Sprite3D` inside its 3D scene).
   Resizeable; the SubViewportContainer clips it. See *Enemies in the corridor* below. `PrintFrame`
   draws the optional border and overlay ([print_frame.md](print_frame.md)).
-- **An `enemy_hud` pinned above each enemy's corridor sprite** — the enemy's **name**
-  (`Actor.display_name`, `tr()`'d), then a **status-icon row + the health bar** (`health_bar.tscn`, [mechanics.md → Health bar](mechanics.md#health-bar)), then its
-  **item cells**. The HUD is **hidden for most of the approach** and fades in over the last
+- **One character panel for the player, each ally and each enemy** — `character_panel.tscn`
+  (`CharacterPanel`): a portrait, and beside it a column of the **name**, the **health bar**
+  (`health_bar.tscn`, [mechanics.md → Health bar](mechanics.md#health-bar)), the **status-icon row**
+  and the **item cells**. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
+  change only sizes, colours and which parts show, and the player's `PlayerPanel` is an instance of
+  it, so the three cannot drift apart in layout. The enemy hides the portrait (its sprite is right
+  below); the player hides the item row (its items are on the board). The panel itself is drawn
+  only with the `portrait_panel` print setting ([print_frame.md](print_frame.md)).
+- **An `enemy_hud` pinned above each enemy's corridor sprite** — the enemy's character panel: its
+  **name** (`Actor.display_name`, `tr()`'d), health bar, status-icon row and **item cells**. The HUD is **hidden for most of the approach** and fades in over the last
   `Balance.ENEMY_REVEAL_DURATION` seconds of the walk, so it is up when the fight starts (the run
   screen calls `CombatView.show_enemies`); a summon that spawns mid-fight fades in over the shorter
-  `ENEMY_FADE_IN` instead. Each OUTSIDE-set status shows as a `status_icon.tscn`:
+  `ENEMY_FADE_IN` instead. The row is `status_icons.tscn`; each OUTSIDE-set status in it shows as a `status_icon.tscn`:
   the status's icon on a square of its colour. The mechanic statuses are shown by the health bar:
-  shield above it, the others as stack counts beside it.
-  The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
+  shield above it, the others as stack counts beside it. An empty status row is hidden, so it adds
+  no gap. The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
   count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
-  its sprite each frame via `CombatCorridor.enemy_anchor(i)`. The HUD / ally-slot item cells
+  its sprite each frame via `CombatCorridor.enemy_anchor(i)`, kept inside the corridor panel's
+  top and side edges. The HUD / ally-slot item cells
   are smaller than the player's board (`ItemCell.set_cell_size`). The view **reconciles** its
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
-  aligned to the top of the section, the left-aligned name ("You") over the health bar — centred between the
-  ally slots (the portrait row sits in a `PlayerPanel` that is only drawn with the `portrait_panel`
-  print setting, [print_frame.md](print_frame.md)); the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
+  aligned to the top of the section, the left-aligned name ("You") over the health bar and the status-icon row (the player's character
+  panel, `PlayerPanel`) — centred between the ally slots; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
   centred row of mechanic-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per mechanic effect; an effect that applies a status gets no pill)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
@@ -163,9 +170,8 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   (`CombatManager.is_created_item`) and each token's ally slot is taken out of the lookup maps at
   once — no longer hoverable or a VFX target — and fades and shrinks away over `TEMPORARY_FADE_OUT`
   seconds before freeing. The per-frame sync does not rebuild a widget that is fading.
-- **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (the portrait,
-  and beside it a column of the name, the health bar, and the item cells, whose size
-  shrinks so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
+- **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (the ally's character
+  panel at a smaller size; its item cells shrink so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
   capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
   `AllyLeft` / `AllyRight`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
   participating, revived to full next fight); a **dead combat-scoped token is reaped** like an
@@ -245,7 +251,9 @@ ticked until arrival**, so combat is frozen during the walk. Constants in `src/d
 the corridor's rectangle), and their root Controls ignore the mouse, so the board, potions, portrait,
 HUD and item tooltips keep working around them. An event beat has no fight, so the run screen still
 builds the combat view for it with no `CombatManager` (`bind(null, ...)`: the player's side, no
-enemies). When a fight resolves, the run screen calls `view.release()` at once so the last hits'
+enemies). The run screen also hands `bind` the run's allies, and the view draws the ally slots from
+that array when there is no fight, so allies stay beside the player during events and an ally
+recruited by the event appears at once. When a fight resolves, the run screen calls `view.release()` at once so the last hits'
 numbers and rings don't stay frozen in the corridor under the reward panel. `release()` also clears the item
 cells' cooldown fills (`ItemCell.show_cooldown`) and fades away the fight's temporary things (below).
 A view built without a fight never shows the fills. The choice overlay and the combat report are still

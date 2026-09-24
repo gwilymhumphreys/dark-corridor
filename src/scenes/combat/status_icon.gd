@@ -1,6 +1,6 @@
 class_name StatusIcon
 extends ColorRect
-## One active status in an enemy HUD's status row (docs/systems/run_screen.md): the status's icon
+## One active status in a StatusIcons row (docs/systems/run_screen.md): the status's icon
 ## on a square of its colour, so the colour shows as a border. Reads the status; writes nothing.
 
 @onready var _icon: TextureRect = $Icon

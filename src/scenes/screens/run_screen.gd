@@ -521,7 +521,7 @@ func _mount_view(cm: CombatManager) -> void:
   _view.sections = _sections
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
-  _view.bind(cm, _run.player, _run.potions)   # the view reads the full rosters off the CM (none without a fight)
+  _view.bind(cm, _run.player, _run.potions, _run.allies)   # the rosters come off the CM; with no fight, the run's allies
   _view.potion_thrown.connect(_on_potion_thrown)
 
 

@@ -64,7 +64,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
    `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
    self-attribution in git messages**). These OVERRIDE defaults.
 2. **[`decision_log.md`](decision_log.md)** — the canonical record: every decision
-   (numbered #1–#41) and what's still open. **Don't re-litigate anything in it.**
+   (numbered #1–#50) and what's still open. **Don't re-litigate anything in it.**
 3. **[`architecture.md`](systems/architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
 4. The per-system **PRDs** as needed (one per system in `docs/systems/`, spec +
@@ -187,7 +187,9 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
 
 On 2026-09-16 the owner set aside the chunky pixel-art direction. The goal is a distinctive dark-fantasy
 look made with the art we already have (painted monsters, icon packs, textures, the UI pack), shaders,
-post-processing and palettes, not by drawing or commissioning art. Nothing in the look is chosen yet.
+post-processing and palettes, not by drawing or commissioning art. On 2026-09-25 the owner set the theme:
+the look should remind the player of 90s HeroQuest and board-game RPGs, Fighting Fantasy gamebooks and
+CRPGs, and the interface looks like pen and paper with cardboard tokens. The rest of the look is not chosen yet.
 The owner's intent is in [`art_audio.md`](design/art_audio.md) (the owner's doc: read it, don't edit it
 unless asked); the working plan is [`plans/corridor_look_handoff.md`](plans/corridor_look_handoff.md).
 
@@ -216,7 +218,7 @@ resolution.
 | Rakkas as the interface font (smooth, not pixel) | [ui_theme.md](systems/ui_theme.md) |
 
 **Open:** the effects style, which corridor look and palettes, whether the print style spreads to the
-rest of the interface, and whether item icons and the interface frame stay pixel art. The drawn
+rest of the interface, and how the interface frame is drawn to look like pen and paper. The drawn
 circles for projectiles and impacts are placeholders waiting on real VFX animations
 ([vfx_driver.md](systems/vfx_driver.md)).
 
