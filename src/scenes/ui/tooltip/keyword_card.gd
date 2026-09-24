@@ -30,5 +30,22 @@ func setup(id: String) -> void:
   name_label.text = tr(entry['name_key'])
   name_label.add_theme_color_override('font_color', entry['color'])
   var desc: String = tr(entry['desc_key']) if entry['desc_key'] != '' else ''
+  var desc_args: Array = entry.get('desc_args', [])
+  if not desc_args.is_empty():
+    desc = _rich_desc(TooltipContent.interpolate(desc, desc_args), desc_label)
   desc_label.text = desc
   desc_label.visible = desc != ''
+
+
+## A description with placeholders, as BBCode: its text, with each icon as an image as tall as a
+## line of the description's text.
+func _rich_desc(segs: Array, desc_label: RichTextLabel) -> String:
+  var font: Font = desc_label.get_theme_font('normal_font')
+  var icon_size: int = roundi(font.get_height(desc_label.get_theme_font_size('normal_font_size')))
+  var out: String = ''
+  for seg: Dictionary in segs:
+    if seg['t'] == 'icon':
+      out += KeywordIcon.bbcode(seg['id'], icon_size)
+    else:
+      out += (seg['s'] as String).replace('[', '[lb]')
+  return out

@@ -109,6 +109,19 @@ func test_basic_apply_line_is_an_icon_and_a_value_only() -> void:
   assert_eq(line[0]['id'], ShieldMechanic.ID, 'the icon is the shield glyph')
 
 
+## A status whose description has placeholders (Empowered) shows that description as the line: the
+## words, with the attack icon in the gap and the percentage joined to the text after it.
+func test_status_with_placeholders_shows_its_description() -> void:
+  var it: Item = Item.new(_status_def(EmpoweredStatus.ID), _actor(100.0))
+  var line: Array = TooltipContent.new().build(it)['lines'][0]
+  var percent: String = TooltipContent.fmt((Balance.EMPOWER_MULT - 1.0) * 100.0)
+  assert_eq(line, [
+    {'t': 'text', 's': 'Your next '},
+    {'t': 'icon', 'id': AttackMechanic.ID},
+    {'t': 'text', 's': ' gets +%s%% damage' % percent},
+  ], 'the line is the status description with its icon and number filled in')
+
+
 ## An effect that is not a basic apply keeps its worded line, with an icon where the chip used to be.
 func test_complex_effect_keeps_a_worded_line_with_an_icon() -> void:
   var it: Item = Item.new(_attack_def([ItemType.WEAPON], [AttackMechanic.ID]), _actor(100.0))

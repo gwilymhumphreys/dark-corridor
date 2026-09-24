@@ -38,14 +38,18 @@ static func rarity_multiplier(rarity: int) -> float:
   return 1.0
 
 
-## The points an authored item actually spends per fire. Effects that are not MECHANIC deliveries
-## add nothing: APPLY_STATUS covers the parked timed statuses, and SUMMON and CREATE_ITEM are on the
-## unpriced list. Regen and crit are unpriced too, so they add nothing here.
+## The points an authored item actually spends per fire. Of the effects that are not MECHANIC
+## deliveries, only an Empowered application is priced: the other statuses are the parked timed
+## ones, and SUMMON and CREATE_ITEM are on the unpriced list. Regen and crit are unpriced too, so
+## they add nothing here.
 static func spend(def: ItemDef) -> float:
   if def == null:
     return 0.0
   var total: float = 0.0
   for effect: ItemEffect in def.effects:
+    if _is_empower(effect):
+      total += empower_points(effect.value)
+      continue
     if effect.kind != Delivery.Kind.MECHANIC:
       continue
     total += _effect_points(effect)
@@ -67,7 +71,18 @@ static func trigger_points(def: ItemDef, sub: Dictionary) -> float:
 ## unpriced mechanic such as regen or the attack bonuses, or a value read from a status the owner
 ## holds) adds nothing, so an item carrying it is worth more than its points say.
 static func is_priced(effect: ItemEffect) -> bool:
+  if _is_empower(effect):
+    return true
   return effect.kind == Delivery.Kind.MECHANIC and PRICED_MECHANICS.has(effect.mechanic)       and effect.per_owner_stack_id == ''
+
+
+## The points `stacks` Empowered stacks are worth, at Balance.POINTS_PER_EMPOWERED_STACK each.
+static func empower_points(stacks: float) -> float:
+  return stacks * Balance.POINTS_PER_EMPOWERED_STACK
+
+
+static func _is_empower(effect: ItemEffect) -> bool:
+  return effect.kind == Delivery.Kind.APPLY_STATUS and effect.status_id == EmpoweredStatus.ID
 
 
 ## An effect aimed at every opponent costs Balance.POINTS_ALL_OPPONENTS_MULTIPLIER times the same

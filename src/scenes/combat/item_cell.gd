@@ -1,8 +1,8 @@
 class_name ItemCell
 extends Control
 ## One board item in the framed combat view (docs/systems/ui_layout.md): a cardboard token frame
-## (PanelToken) holding the item's icon (`ItemDef.icon`), a row of effect-coloured value pills straddling
-## the top edge (one per value-bearing effect), a cooldown fill over the icon (a semi-transparent fill
+## (PanelToken) holding the item's icon (`ItemDef.icon`), a row of mechanic-coloured value pills straddling
+## the top edge (one per mechanic effect), a cooldown fill over the icon (a semi-transparent fill
 ## rising from the bottom edge with a solid torn-paper line along its top, drawn by
 ## `cooldown_fill.gdshader`), and a scale-punch recoil when it fires. Structure is authored in
 ## item_cell.tscn, including the pills; this binds the data, drives the fill's shader and fills in the pills.
@@ -39,6 +39,8 @@ var hovered: bool = false:
       return
     hovered = value
     _hover_to(1.0 if value else 0.0)
+    if value:
+      SfxManager.play_ui_hover()
 
 @onready var _pills: HBoxContainer = $Pills
 @onready var _frame: Control = $Frame
@@ -131,8 +133,9 @@ func show_picture(texture: Texture2D) -> void:
   _build_pills()
 
 
-## A pill per value-bearing effect (damage / heal / status amount), tinted by the effect's family
-## colour, in a centred row straddling the top edge (vertical centre on the frame's top border).
+## A pill per mechanic effect (damage, shield, heal ...), tinted by the mechanic's colour. An effect
+## that applies a status (Mighty Blow's Empowered) gets no pill; its amount is in the tooltip. The
+## pills sit in a centred row straddling the top edge (vertical centre on the frame's top border).
 ## The pills are placed in item_cell.tscn; unused ones stay hidden.
 func _build_pills() -> void:
   var pills: Array[Node] = _pills.get_children()
@@ -144,7 +147,7 @@ func _build_pills() -> void:
   _pills.add_theme_constant_override('separation', int(round(4.0 * ratio)))  # scales with the cell
   var index: int = 0
   for effect: ItemEffect in item.def.effects:
-    if not _effect_has_value(effect):
+    if effect.kind != Delivery.Kind.MECHANIC:
       continue
     if index >= pills.size():
       push_error('ItemCell: %s has more values than item_cell.tscn has pills' % item.def.id)
@@ -158,19 +161,9 @@ func _build_pills() -> void:
   _pills.position = Vector2((cell_size.x - pills_size.x) * 0.5, -pills_size.y * 0.5)
 
 
-func _effect_has_value(effect: ItemEffect) -> bool:
-  match effect.kind:
-    Delivery.Kind.MECHANIC, Delivery.Kind.APPLY_STATUS:
-      return true
-  return false
-
-
-## The pill's tint: a mechanic effect takes its colour from the mechanic (the effect's own colour
-## is unset), everything else keeps the effect's authored colour.
+## The pill's tint: the mechanic's colour (a mechanic effect's own colour is unset).
 func _effect_color(effect: ItemEffect) -> Color:
-  if effect.mechanic != '':
-    return MechanicRegistry.get_mechanic(effect.mechanic).color()
-  return effect.color
+  return MechanicRegistry.get_mechanic(effect.mechanic).color()
 
 
 func _process(_delta: float) -> void:

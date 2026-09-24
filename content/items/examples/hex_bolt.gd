@@ -9,7 +9,7 @@ func _init() -> void:
   types = [ItemType.SPELL]
   mechanics = []
   icon = 'res://assets/icons/items/skill_shadow_curse_nb.png'
-  cooldown = 2.5
+  cooldown = 3.0
   panel_colour_name = 'ARCANE'
   var hex := ItemEffect.apply_status('silence', 1.0, ItemEffect.Shape.OPPONENT_ITEM_RANDOM)
   hex.colour_name = 'ARCANE'

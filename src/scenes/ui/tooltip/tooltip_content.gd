@@ -80,7 +80,7 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
       # Charge and decharge move an item's cooldown bar by seconds, so their line names the target
       # items and the seconds, not a stack count. They always target items, never an actor.
       if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:
-        return _interpolate(tr('{0} {1} by {2}s'),
+        return interpolate(tr('{0} {1} by {2}s'),
             [icon_seg, _shape_text(effect.shape, effect.target_filter), value_seg])
       # The attack bonuses add to other items' attacks, so their line reads as "[attack] +10 to ..." /
       # "[attack] +50% to ...", with the attack icon in place of the bonus mechanic's own.
@@ -92,22 +92,28 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
         icon_seg = {'t': 'icon', 'id': AttackMechanic.ID}
       # A value read from a status the owner holds names that status, not a number.
       if effect.per_owner_stack_id != '':
-        return _interpolate(tr('{0} equal to your {1}'),
+        return interpolate(tr('{0} equal to your {1}'),
             [icon_seg, {'t': 'icon', 'id': effect.per_owner_stack_id}])
       if _is_basic_apply(effect):
         return [icon_seg, value_seg]
       if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-        return _interpolate(tr('{0} {1} to all enemies'), [icon_seg, value_seg])
-      return _interpolate(tr('{0} {1} to {2}'), [icon_seg, value_seg, _shape_text(effect.shape, effect.target_filter)])
+        return interpolate(tr('{0} {1} to all enemies'), [icon_seg, value_seg])
+      return interpolate(tr('{0} {1} to {2}'), [icon_seg, value_seg, _shape_text(effect.shape, effect.target_filter)])
     Delivery.Kind.APPLY_STATUS:
+      # A status whose description has placeholders ("Your next [attack] gets +50% damage") shows
+      # that description as the line.
+      var status_entry: Dictionary = KeywordCatalog.get_entry(effect.status_id)
+      var desc_args: Array = status_entry.get('desc_args', [])
+      if not desc_args.is_empty():
+        return interpolate(tr(status_entry['desc_key']), desc_args)
       var status_seg: Dictionary = {'t': 'icon', 'id': effect.status_id}
       if _is_basic_apply(effect):
         return [status_seg, value_seg]
       if effect.shape == ItemEffect.Shape.ALL_OPPONENTS:
-        return _interpolate(tr('{0} {1} to all enemies'), [status_seg, value_seg])
-      return _interpolate(tr('{0} {1} to {2}'), [status_seg, value_seg, _shape_text(effect.shape, effect.target_filter)])
+        return interpolate(tr('{0} {1} to all enemies'), [status_seg, value_seg])
+      return interpolate(tr('{0} {1} to {2}'), [status_seg, value_seg, _shape_text(effect.shape, effect.target_filter)])
     Delivery.Kind.SUMMON:
-      return _interpolate(tr('Summon {0}'), [_summon_text(effect)])
+      return interpolate(tr('Summon {0}'), [_summon_text(effect)])
   return []
 
 
@@ -129,15 +135,15 @@ static func _is_basic_apply(effect: ItemEffect) -> bool:
 func _trigger_line(sub: Dictionary) -> Array:
   # An ITEM_DESTROYED trigger is the Reclaim keyword (the destroy-payoff; tooltips.md), not generic.
   if sub.get('event', -1) == EventBus.Event.ITEM_DESTROYED:
-    return _interpolate(tr('{0} as your items are destroyed'), [{'t': 'icon', 'id': KeywordCatalog.RECLAIM}])
+    return interpolate(tr('{0} as your items are destroyed'), [{'t': 'icon', 'id': KeywordCatalog.RECLAIM}])
   var charge: Array = [
     {'t': 'icon', 'id': ChargeMechanic.ID},
     {'t': 'text', 's': fmt(float(sub.get('seconds', 0.0))) + 's'},
   ]
   var filter: Variant = sub.get('filter', null)
   if filter is String and filter != '':
-    return _interpolate(tr('When {0} is applied, {1}'), [{'t': 'icon', 'id': filter}, charge])
-  return _interpolate(tr('On trigger, {0}'), [charge])
+    return interpolate(tr('When {0} is applied, {1}'), [{'t': 'icon', 'id': filter}, charge])
+  return interpolate(tr('On trigger, {0}'), [charge])
 
 
 static func _value_seg(item: Item, effect: ItemEffect) -> Dictionary:
@@ -160,7 +166,7 @@ func _shape_text(shape: int, filter: TargetFilter = null) -> Array:
     var template: String = _filtered_template(shape)
     var icon_id: String = _filter_icon(filter)
     if template != '' and icon_id != '':
-      return _interpolate(template, [{'t': 'icon', 'id': icon_id}])
+      return interpolate(template, [{'t': 'icon', 'id': icon_id}])
     var term: String = _filter_term(filter)
     if template != '' and term != '':
       return [{'t': 'text', 's': template.format([term])}]
@@ -348,9 +354,9 @@ static func _add_keyword(ids: Array[String], id: String) -> void:
 # --- helpers -----------------------------------------------------------------
 
 ## Replace {0}, {1}, … in a (translated) template with the supplied segments, splitting the literal
-## text around them into 'text' segments. The translated template controls word order, so the value
+## text around them into 'text' segments. A String argument joins the text around it. The translated template controls word order, so the value
 ## and icon land wherever the translator places their placeholder.
-static func _interpolate(template: String, args: Array) -> Array:
+static func interpolate(template: String, args: Array) -> Array:
   var segs: Array = []
   var buf: String = ''
   var i: int = 0
@@ -361,16 +367,17 @@ static func _interpolate(template: String, args: Array) -> Array:
       if close > i:
         var idx_str: String = template.substr(i + 1, close - i - 1)
         if idx_str.is_valid_int() and int(idx_str) < args.size():
-          if buf != '':
-            segs.append({'t': 'text', 's': buf})
-            buf = ''
           var arg: Variant = args[int(idx_str)]
-          if arg is Array:   # an argument that is itself several segments (a target phrase)
-            segs.append_array(arg)
-          elif arg is Dictionary:
-            segs.append(arg)
+          if arg is Array or arg is Dictionary:
+            if buf != '':
+              segs.append({'t': 'text', 's': buf})
+              buf = ''
+            if arg is Array:   # an argument that is itself several segments (a target phrase)
+              segs.append_array(arg)
+            else:
+              segs.append(arg)
           else:
-            segs.append({'t': 'text', 's': str(arg)})
+            buf += str(arg)   # plain text joins the text around it
           i = close + 1
           continue
     buf += template[i]

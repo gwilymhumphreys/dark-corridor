@@ -8,5 +8,5 @@ func _init() -> void:
   types = [ItemType.WEAPON]
   mechanics = [PoisonMechanic.ID]
   icon = 'res://assets/icons/items/loot_26_spiderteeth.png'
-  cooldown = 1.6
+  cooldown = 2.0
   effects = [ItemEffect.make(PoisonMechanic.ID, 3.0, ItemEffect.Shape.OPPONENT_LEFTMOST)]

@@ -43,7 +43,7 @@ func test_mighty_blow_applies_empowered_to_self() -> void:
   assert_eq(p.kind, Delivery.Kind.APPLY_STATUS, 'Mighty Blow is a status applier')
   assert_eq(p.status_id, 'empowered', 'it applies the empower buff')
   assert_eq(p.shape, ItemEffect.Shape.SELF, 'to the firer (self)')
-  assert_gt(p.value, 0.0, 'banking a charge per fire')
+  assert_gt(p.value, 0.0, 'adding a stack per fire')
 
 
 func test_mighty_blow_is_a_skill_on_a_cooldown() -> void:

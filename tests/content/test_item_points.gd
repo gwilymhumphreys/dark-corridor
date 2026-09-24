@@ -52,6 +52,11 @@ func test_bleed_uses_the_triangular_total() -> void:
   assert_almost_eq(ItemPoints.spend(ItemCatalog.get_def('bone_spear')), expected, TOLERANCE)
 
 
+func test_an_empowered_stack_costs_its_points_rate() -> void:
+  # Mighty Blow adds one stack.
+  assert_almost_eq(ItemPoints.spend(ItemCatalog.get_def('mighty_blow')), Balance.POINTS_PER_EMPOWERED_STACK, TOLERANCE)
+
+
 func test_parked_and_unpriced_effects_add_nothing() -> void:
   # Druid Staff is 10 damage plus a Spores application. Spores are free, so it spends 10.
   assert_almost_eq(ItemPoints.spend(ItemCatalog.get_def('druid_staff')), 10.0, TOLERANCE)

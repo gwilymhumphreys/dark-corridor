@@ -29,6 +29,10 @@ var mechanics: Array[String] = []
 # it from `types` above, whose values are synergy labels content may key off. Empty = the plain
 # mechanics/attack folder.
 var attack_sound: String = ''
+# The folder under combat/travel/ this item's projectiles play in flight (docs/systems/audio.md),
+# ahead of the folders for its type tags and mechanic. Sound only, like attack_sound. Empty = the
+# usual lookup: type tags, then mechanic, then the shared default.
+var travel_sound: String = ''
 var cooldown: float = 1.0          # seconds -> Ticker threshold
 var effects: Array[ItemEffect] = []   # one usually; rares combine
 # Array[{ event:int (EventBus.Event), amount:float, filter:Variant (a status string id),

@@ -39,6 +39,20 @@ static func make(id: String, size: int) -> TextureRect:
   return rect
 
 
+## `id`'s icon as a RichTextLabel `[img]` tag of `size` pixels, for an icon inside a line of rich
+## text. It takes the same tint as `make`, but a rich text image cannot take a material, so it is
+## drawn without the interface look.
+static func bbcode(id: String, size: int) -> String:
+  var entry: Dictionary = KeywordCatalog.get_entry(id)
+  var path: String = entry['icon'] if not entry.is_empty() else IconSlots.icon_for(id)
+  if path == '':
+    return ''
+  var colour: Color = Color.WHITE
+  if path.begins_with(GLYPH_DIR):
+    colour = entry['color'] if not entry.is_empty() else Colours.UI_TEXT_DIM
+  return '[img=center width=%d height=%d color=#%s]%s[/img]' % [size, size, colour.to_html(), path]
+
+
 static func _blank(size: int) -> TextureRect:
   var rect := TextureRect.new()
   rect.custom_minimum_size = Vector2(size, size)

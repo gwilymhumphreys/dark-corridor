@@ -25,8 +25,8 @@ static func reset_all_managers() -> void:
   Save.disabled = false   # an autotest run may have set it (nosave); clear for the next test
   Prefs.disabled = true   # tests never write the prefs file to disk (in-memory + bus only)
   # The text ladder is written into the shared theme RESOURCE, so a test that changed the text size
-  # would leave every later test measuring the wrong sizes. Put the authored ladder back.
-  TextSize.apply(load(PrefsAutoload.THEME_PATH) as Theme, TextSize.DEFAULT_SCALE)
+  # would leave every later test measuring the wrong sizes. Put the authored ladder (100%) back.
+  TextSize.apply(load(PrefsAutoload.THEME_PATH) as Theme, 1.0)
   DebugPanels.reset_settings()   # clamp off, scaled corridor, painted enemies
   _dissolve_registered_actors()
   FixtureContent.uninstall()   # a test that installed the run fixtures gets the authored catalogs back

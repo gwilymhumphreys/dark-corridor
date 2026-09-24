@@ -62,6 +62,9 @@ takes. Two definitions with the same id is an error. **Statuses are the exceptio
    - Write `name_key = '...'` out in full; the translation extractor finds names by that literal.
    - `icon` is a `res://` path under `assets/icons/items/`; `tests/content/test_icons.gd` fails if it
      is missing.
+   - **Every number on an item is a whole number**, including the cooldown and the seconds a
+     trigger charges (owner, 2026-09-24). When a budget works out to a fraction, round it to the
+     nearest whole number rather than authoring the fraction.
    - The panel colour follows the first effect's mechanic or status. Set `panel_colour_name` to a
      `Colours` variable name (`'STATUS_DECAY'`) only when that is the wrong colour.
 2. **Make it live.** Add the id to the character's `item_pool` in

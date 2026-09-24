@@ -1,8 +1,8 @@
 extends ItemDef
 ## Mighty Blow — the Smith's empower skill (docs/design/smith.md → The empower engine). Each fire
-## banks one Empowered charge on the holder, and each charge doubles the next weapon attack. Its
-## cooldown matches the Greatsword's, which puts it on budget: one cycle adds one weapon hit, and the
-## Greatsword's hit is the budget at that cooldown (docs/design/item_heuristics.md).
+## adds one Empowered stack to the holder, and each stack raises the next attack by
+## Balance.EMPOWER_MULT. Each stack costs Balance.POINTS_PER_EMPOWERED_STACK
+## (docs/design/item_heuristics.md → The Smith against the curve).
 
 
 func _init() -> void:
@@ -11,5 +11,5 @@ func _init() -> void:
   types = [ItemType.SKILL]
   mechanics = []
   icon = 'res://assets/icons/items/skill_strong_attack_nb.png'
-  cooldown = 7.0
+  cooldown = 5.0
   effects = [ItemEffect.apply_status('empowered', 1.0, ItemEffect.Shape.SELF)]

@@ -1,9 +1,9 @@
 extends GutTest
 ## The Smith empower engine (docs/design/smith.md → The empower engine) + its fire-pipeline seam
-## (the firing item is threaded into outgoing_bonus / on_owner_item_fired so a status can scope to a
-## WEAPON attack). Proves: the double is weapon-scoped (not spells/skills), one charge is spent per
-## weapon attack (2 charges → 2 doubled → expires), outgoing_bonus stays PURE on the preview path,
-## an empower applier banks a self charge (and stacks), and Weak + Empower compose without error.
+## (the firing item is threaded into outgoing_bonus / on_owner_item_fired). Proves: any item's
+## attack is raised whatever its type tags, one stack is used up per attack (2 stacks → 2 raised →
+## expires), an item with no attack uses none, outgoing_bonus stays PURE on the preview path,
+## an empower applier adds a stack to itself (and they add up), and Weak + Empower compose without error.
 ## The authored cards (Mighty Blow, the three big weapons) are checked in
 ## tests/content/test_authored_content.gd.
 
@@ -36,75 +36,75 @@ func _find(a: Actor, id: String) -> StatusEffect:
   return null
 
 
-# --- the double: weapon yes, spell/skill no ---
+# --- the raise: any attack, whatever the item's type tags ---
 
-func test_empower_doubles_a_weapon_attack() -> void:
+func test_empower_raises_a_weapon_attack() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'empowered', 1.0)
   var it := Item.new(_damage_def(40.0, ItemType.WEAPON), a)
   assert_almost_eq(it.fire()[0].value, 40.0 * Balance.EMPOWER_MULT, 0.0001,
-    'a banked charge doubles a WEAPON attack at fire time')
+    'a held stack raises a weapon attack at fire time')
 
 
-func test_empower_does_not_double_a_spell_attack() -> void:
+func test_empower_raises_a_spell_attack() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'empowered', 1.0)
   var it := Item.new(_damage_def(40.0, ItemType.SPELL), a)
-  assert_almost_eq(it.fire()[0].value, 40.0, 0.0001,
-    'a spell damage attack is NOT doubled — the empower is weapon-scoped')
+  assert_almost_eq(it.fire()[0].value, 40.0 * Balance.EMPOWER_MULT, 0.0001,
+    'a spell attack is raised too')
 
 
-func test_empower_does_not_double_a_skill_attack() -> void:
+func test_empower_raises_a_skill_attack() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'empowered', 1.0)
   var it := Item.new(_damage_def(40.0, ItemType.SKILL), a)
-  assert_almost_eq(it.fire()[0].value, 40.0, 0.0001,
-    'a skill damage attack is NOT doubled — the empower is weapon-scoped')
+  assert_almost_eq(it.fire()[0].value, 40.0 * Balance.EMPOWER_MULT, 0.0001,
+    'a skill attack is raised too')
 
 
-# --- one charge per weapon attack (consume on the real-fire hook) ---
+# --- one stack per attack (consume on the real-fire hook) ---
 
-func test_one_charge_per_weapon_attack_then_expires() -> void:
+func test_one_stack_per_attack_then_expires() -> void:
   var a := Actor.new(100.0)
-  StatusManager.apply(a, 'empowered', 2.0)   # bank two charges
+  StatusManager.apply(a, 'empowered', 2.0)   # hold two stacks
   var it := Item.new(_damage_def(40.0, ItemType.WEAPON), a)
   var emp := _find(a, 'empowered')
 
-  # Attack 1: outgoing_bonus doubles (during fire), then on_owner_item_fired spends one charge (after).
-  assert_almost_eq(it.fire()[0].value, 80.0, 0.0001, 'attack 1 is doubled (2 charges banked)')
-  assert_false(emp.on_owner_item_fired(a, it, null), 'a charge remains after the first weapon attack')
-  assert_eq(emp.count, 1, 'spent exactly one charge')
+  # Attack 1: outgoing_bonus raises it (during fire), then on_owner_item_fired uses up one stack (after).
+  assert_almost_eq(it.fire()[0].value, 40.0 * Balance.EMPOWER_MULT, 0.0001, 'attack 1 is raised (2 stacks held)')
+  assert_false(emp.on_owner_item_fired(a, it, null), 'a stack remains after the first attack')
+  assert_eq(emp.count, 1, 'used up exactly one stack')
 
-  # Attack 2: still doubled (1 charge left), then the last charge is spent → expired.
-  assert_almost_eq(it.fire()[0].value, 80.0, 0.0001, 'attack 2 is still doubled (1 charge left)')
-  assert_true(emp.on_owner_item_fired(a, it, null), 'the last charge is spent → the empower expires')
+  # Attack 2: still raised (1 stack left), then the last stack is used up → expired.
+  assert_almost_eq(it.fire()[0].value, 40.0 * Balance.EMPOWER_MULT, 0.0001, 'attack 2 is still raised (1 stack left)')
+  assert_true(emp.on_owner_item_fired(a, it, null), 'the last stack is used up → the empower expires')
   assert_eq(emp.count, 0, 'drained to zero')
 
   # The Combat manager removes an expired status; attack 3 is then a normal hit.
   a.statuses.erase(emp)
-  assert_almost_eq(it.fire()[0].value, 40.0, 0.0001, 'attack 3 is a normal hit (no charges banked)')
+  assert_almost_eq(it.fire()[0].value, 40.0, 0.0001, 'attack 3 is a normal hit (no stacks held)')
 
 
-func test_a_non_weapon_fire_spends_no_charge() -> void:
+func test_an_item_with_no_attack_uses_no_stack() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'empowered', 1.0)
-  var skill := Item.new(_damage_def(40.0, ItemType.SKILL), a)
+  var applier := Item.new(FixtureItems.empower(), a)
   var emp := _find(a, 'empowered')
-  assert_false(emp.on_owner_item_fired(a, skill, null), 'a skill fire never spends an empower charge')
-  assert_eq(emp.count, 1, 'the charge is banked until a WEAPON attack')
+  assert_false(emp.on_owner_item_fired(a, applier, null), 'an item with no attack uses no stack')
+  assert_eq(emp.count, 1, 'the stack is held until an attack')
 
 
-# --- purity: the tooltip preview must not spend a charge ---
+# --- purity: the tooltip preview must not use up a stack ---
 
 func test_display_value_preview_is_pure() -> void:
   var a := Actor.new(100.0)
   StatusManager.apply(a, 'empowered', 1.0)
   var it := Item.new(_damage_def(40.0, ItemType.WEAPON), a)
   var emp := _find(a, 'empowered')
-  assert_almost_eq(it.display_value(it.def.effects[0]), 80.0, 0.0001,
-    'the read-only preview SHOWS the doubled value')
+  assert_almost_eq(it.display_value(it.def.effects[0]), 40.0 * Balance.EMPOWER_MULT, 0.0001,
+    'the read-only preview SHOWS the raised value')
   assert_eq(emp.count, 1,
-    'but outgoing_bonus is PURE — the preview spent no charge')
+    'but outgoing_bonus is PURE — the preview used up no stack')
 
 
 # --- an empower applier ---
@@ -114,15 +114,15 @@ func test_an_empower_applier_applies_empowered_to_self() -> void:
   assert_eq(p.kind, Delivery.Kind.APPLY_STATUS, 'the applier fires a status')
   assert_eq(p.status_id, 'empowered', 'it applies the empower buff')
   assert_eq(p.shape, ItemEffect.Shape.SELF, 'to the firer (self)')
-  assert_almost_eq(p.value, FixtureItems.EMPOWER_CHARGES, 0.0001, 'banking its charges per fire')
+  assert_almost_eq(p.value, FixtureItems.EMPOWER_STACKS, 0.0001, 'adding its stacks per fire')
 
 
-func test_empower_charges_stack_on_repeat() -> void:
+func test_empower_stacks_add_up_on_repeat() -> void:
   var a := Actor.new(100.0)
-  StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_CHARGES)
-  StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_CHARGES)
-  assert_eq(_find(a, 'empowered').count, roundi(2.0 * FixtureItems.EMPOWER_CHARGES),
-    'repeated empower fires stack charges (reapply is additive)')
+  StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_STACKS)
+  StatusManager.apply(a, 'empowered', FixtureItems.EMPOWER_STACKS)
+  assert_eq(_find(a, 'empowered').count, roundi(2.0 * FixtureItems.EMPOWER_STACKS),
+    'repeated empower fires add up stacks (reapply is additive)')
 
 
 # --- composition: Weak + Empower both fold in outgoing_bonus ---

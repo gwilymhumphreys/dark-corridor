@@ -402,7 +402,7 @@ func _fire_item(it: Item) -> void:
   _drain_uses(it)
   # Any actor-level fire-status (the Smith empower) cashes out on the OWNER's activation — the
   # actor twin of the item-use drain above. The firing item is threaded in so a status can scope to
-  # a weapon attack (the empower spends a charge). After the payload. (Bleed no longer fires here —
+  # a weapon attack (the empower uses up a stack). After the payload. (Bleed no longer fires here —
   # it triggers on attacks landing on the holder, in the attack mechanic's land.)
   _drain_actor_fire_statuses(it.owner, it)
 

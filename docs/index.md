@@ -90,6 +90,7 @@ unless asked.** The authoring how-to is the bridge to implementation.
 
 | Doc | Covers |
 |-----|--------|
+| [design/lexicon.md](design/lexicon.md) | The meaning of the game's terms (cooldown, fire, effect, mechanic, charge, status, stack, points and others), so each word is used in one sense only. |
 | [design/game_design.md](design/game_design.md) | The whole-game design snapshot: pitch, core loop, combat, items, enchants, relics, consumables, statuses, encounters, characters, meta-progression and scope. |
 | [design/art_audio.md](design/art_audio.md) | Art direction and audio: the look being explored with existing art, post-processing and palettes; art sources, world and interface colours, readability, dungeon-synth audio, candidate asset packs. |
 | [design/asset_credits.md](design/asset_credits.md) | Who made the third-party assets we ship and where they came from: the three dungeon synth music packs, plus the art packs and font whose sources still need filling in. |

@@ -6,7 +6,8 @@
 > reason. Every rate below is a starting point the owner ratifies or changes.
 
 An item is priced in two steps. Work out its budget from its cooldown, then spend the budget on
-what the item does.
+what the item does. Every number an item ends up with, including its cooldown, is a whole number
+(owner, 2026-09-24): round the result of the arithmetic to the nearest whole number.
 
 The arithmetic is built, in `ItemPoints` (`src/data/item_points.gd`): `rate(cooldown)`,
 `budget(cooldown, rarity)` and `spend(item_def)`, which prices an authored item by its effects.
@@ -123,6 +124,7 @@ does relative to the others.
 | Charge, own item | `POINTS_PER_CHARGE_SECOND`, per second of bar | Roughly the rate of a mid-cooldown item, which is what a second is worth to whatever receives it. |
 | Decharge, enemy item | `POINTS_PER_CHARGE_SECOND`, per second of bar | Shares the charge rate. |
 | Trigger that charges its own item | seconds charged per trigger × `POINTS_TRIGGERS_PER_COOLDOWN` × the item's own budget per second | Assumes a fixed number of triggers per cooldown (owner, 2026-09-23). The real number rises through a run as the board grows, so late in a run trigger items are underpriced. `ItemPoints.trigger_points`. |
+| Empowered | `POINTS_PER_EMPOWERED_STACK`, per stack | A stack raises the next attack by `Balance.EMPOWER_MULT − 1`. See The Smith against the curve. |
 | Spores | nothing | See below. |
 
 Regen and crit are not on this table. Regen never loses stacks, so its value depends on how long
@@ -182,13 +184,12 @@ its budget between damage and bleed, with bleed priced by its eventual damage.
 The armour pieces are priced the same way, through the shield rate: the shield an item applies is
 its budget divided by `Balance.POINTS_PER_SHIELD`.
 
-Mighty Blow prices differently from the rest, because a charge is worth whatever weapon it doubles.
-One cooldown cycle banks one charge, and that charge adds exactly one weapon's per-hit damage. So
-the empower's budget for a cycle has to cover the biggest per-hit it can reach. The biggest is the
-Greatsword's, which is its whole budget, so the empower's cooldown matches the Greatsword's.
-
-The general rule: **an empower's cooldown equals the cooldown of the biggest per-hit weapon it can
-reach.** Both sides use the same budget function, so the two match exactly.
+Mighty Blow prices differently from the rest, because a stack is worth a share of whatever attack
+it raises. A stack has its own rate, `Balance.POINTS_PER_EMPOWERED_STACK`. Its starting estimate
+was the most a stack can add: `Balance.EMPOWER_MULT − 1` of the Greatsword's hit, the biggest the
+Smith has. After that it is a number of its own, tuned directly, and does not follow the Greatsword
+or `EMPOWER_MULT` (owner, 2026-09-24). Mighty Blow's cooldown is the whole second whose budget is
+nearest that price.
 
 There is a catch the curve does not capture: an item is worth nothing if the fight ends before its
 first cooldown. At the old placeholder enemy health an act 1 fight lasted about 5.6 seconds, so
@@ -197,12 +198,9 @@ enemy health on the curve, the Smith's regular fights last about 10 to 16 second
 Slow items need fights long enough to reach them, and that is set by enemy health, not by the item
 budget.
 
-The cooldown matters more than it looks, because charges stack with no cap. At a cooldown below the
-weapon's, the overspend is not a fixed amount — it grows with the board. With a single Greatsword,
-a faster empower is capped by how often the Greatsword fires, so it adds the Greatsword's rate
-against its own lower `rate(cooldown)`. With enough weapons to consume every charge, it adds the
-Greatsword's whole hit every empower cooldown, which is more again. Matching the cooldown removes
-the difference: both cases then come out at the Greatsword's rate.
+Stacks add up with no cap, and any attack uses one up, so what a stack is worth depends on the
+board. A stack used up by a Greatsword-sized hit is worth the most; one used up by a smaller
+attack, such as the Dagger's, is worth less.
 
 ## Weapon cooldowns
 

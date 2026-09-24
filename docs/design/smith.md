@@ -131,28 +131,27 @@ change.
 ## The empower engine — the first weapons payoff
 
 **Mighty Blow** (placeholder name — owner's to rename) is a skill on a plain cooldown. Each time
-it fires it applies a self-buff that doubles the next weapon attack.
+it fires it applies a self-buff: "Your next [attack] gets +50% damage".
 
-- **Weapon-scoped.** Only a weapon attack is doubled; a spell or skill attack does not benefit.
-  That is what the `weapon` tag is for.
+- **Any attack.** The next attack from any item gets the bonus, whatever the item's type tags
+  (owner, 2026-09-24; it was weapon attacks only, and a double).
 - **Stacks by proc count.** A consumed counter, like shield or spores: no timer, it persists until
-  spent. One charge is spent per weapon attack, so banking N charges doubles the next N attacks
+  spent. One stack is used up per attack, so holding N stacks raises the next N attacks
   rather than multiplying one hit.
 - **Board composition is the control.** You cannot choose which attack is next — it lands on
-  whichever weapon comes off cooldown first. Few big weapons make "the next weapon attack"
+  whichever attack comes off cooldown first. Few big attacks make "the next attack"
   reliably a big hit. The archetype is bad with fast weapons and good with big ones, and that
   constraint is the deckbuilding identity. It is written as a go-wide effect but rewards a tall
   board, which makes it an early example of a cross-cutting card.
-- **The role that falls out.** Big doubled hits overkill small enemies, so the build is aimed at
+- **The role that falls out.** Big raised hits overkill small enemies, so the build is aimed at
   bosses and elites and is soft against swarms.
 
 The three weapons sit on the item budget curve ([`item_heuristics.md`](item_heuristics.md)), so
 per-hit climbs while damage per second climbs more slowly and the slowest weapon is the prime
-empower target. Mighty Blow is priced against the slowest weapon it can reach rather than an
-average one, because a charge is worth whatever it doubles. That sets its cooldown: one cooldown
-cycle adds one weapon's per-hit damage, so the cooldown has to be the one whose budget equals the
-biggest per-hit the Smith can reach, which is the slowest weapon's. The numbers are on each item's
-file in `content/items/smith/`; the doubling is `Balance.EMPOWER_MULT`.
+empower target. A stack is priced against the biggest hit it can reach rather than an average
+one, because it is worth a share of whatever it raises. The numbers are on each item's
+file in `content/items/smith/`; the bonus is `Balance.EMPOWER_MULT`. The pricing is worked through
+in [`item_heuristics.md`](item_heuristics.md) → The Smith against the curve.
 
 **Terminology:** "attack" is the act of dealing damage; "weapon attack" is an attack from a
 weapon-typed item.
@@ -161,11 +160,11 @@ weapon-typed item.
 inert labels `weapon / armour / spell / skill / trinket`, an array per item. The Smith surfaces
 **weapon**, **armour** and **skill**.
 
-**The seam the empower needs is built** (decision #35). The doubling happens at fire time, in
+**The seam the empower needs is built** (decision #35). The bonus is applied at fire time, in
 `Item._resolve_effect` → `StatusEffect.outgoing_bonus`, and that hook receives the firing item
 as well as the actor, so a status can tell a weapon attack from a spell attack. `outgoing_bonus`
-also runs the read-only tooltip preview (`Item.display_value`), so it stays pure; spending a
-charge belongs on `on_owner_item_fired`, which only runs on a real fire.
+also runs the read-only tooltip preview (`Item.display_value`), so it stays pure; using up a
+stack belongs on `on_owner_item_fired`, which only runs on a real fire.
 
 ## Watch / open
 
@@ -197,9 +196,9 @@ charge belongs on `on_owner_item_fired`, which only runs on a real fire.
 The empower engine, the three big weapons and the four armour items are built and in the Smith's
 pool. The names are placeholders; the numbers are on the budget curve.
 
-- **`EmpoweredStatus`** (id `empowered`) — a consumed counter. `outgoing_bonus` doubles a
-  `weapon`-tagged attack while a charge is banked and stays pure; `on_owner_item_fired` spends one
-  charge per weapon attack. Registered in `StatusRegistry`.
+- **`EmpoweredStatus`** (id `empowered`) — a consumed counter. `outgoing_bonus` raises any attack
+  while a stack is held and stays pure; `on_owner_item_fired` uses up one stack when an item
+  with an attack fires. Registered in `StatusRegistry`.
 - **Mighty Blow** (`mighty_blow`, `[skill]`) — a plain-cooldown metronome that applies `empowered`
   to self, stacking.
 - **The weapons** (`broadaxe`, `warhammer`, `greatsword`, `dagger`, all `[weapon]`) —

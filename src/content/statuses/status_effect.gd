@@ -74,7 +74,7 @@ func on_holder_fired(item, ctx) -> void:
 
 ## Called on an ACTOR-targeted status when one of that actor's items FIRES — the actor-level twin of
 ## on_holder_fired (which fires for the one item the status sits ON). Receives the firing `item`, so a
-## status can scope to a weapon attack (the Smith empower consumes a charge here). This is the
+## status can scope to a weapon attack (the Smith empower uses up a stack here). This is the
 ## REAL-fire path (not the tooltip preview), so consuming state belongs here, not in outgoing_bonus.
 ## Returns true when the status has expired (the Combat manager removes it + runs on_expire);
 ## default no-op.
@@ -99,9 +99,17 @@ func on_holder_attacked(target, ctx) -> bool:
 ## firing item, so a status can scope to a weapon attack. StatusManager.combine applies every
 ## bonus by the rule in docs/systems/mechanics.md → Combining bonuses. MUST stay PURE — it also runs
 ## on the read-only tooltip-preview path (Item.display_value), so nothing here may mutate status
-## state (the Empowered charge-spend lives on on_owner_item_fired).
+## state (using up an Empowered stack lives on on_owner_item_fired).
 func outgoing_bonus(target, item = null) -> Dictionary:
   return {}
+
+
+## What fills the `{0}`, `{1}` ... placeholders in `desc_key`, in order: an icon as
+## `{'t': 'icon', 'id': <keyword id>}`, or a String of text. Empty (the default) means the description
+## has no placeholders. An item that applies a status with placeholders shows the filled-in
+## description as its effect line instead of the status icon and amount (docs/systems/tooltips.md).
+func desc_args() -> Array:
+  return []
 
 
 func modify_incoming(amount: float, target, ctx) -> float:

@@ -37,6 +37,13 @@ Anything more complicated — an item target, all enemies, a summon, a trigger, 
 — keeps a **worded line** for now, with an icon where a keyword chip used to be. Those strings are
 the owner's to design as the effects that need them are authored.
 
+A status whose description has placeholders shows that description as the line of any item that
+applies it, instead of the status icon and amount. The status writes `desc_key` with `{0}`, `{1}`
+... and returns what fills them from `desc_args()`: an icon as `{'t': 'icon', 'id': ...}`, or a
+String. Empowered is the example: "Your next [attack] gets +50% damage", with the number read from
+`Balance`. The keyword card shows the same description, with the icon drawn inline as a rich text
+image (`KeywordIcon.bbcode`, which has no interface-look material).
+
 A trigger line names its event and then the charge icon with the seconds the trigger fills each time
 it goes off: "When [poison] is applied, [charge] 1s". A trigger on destroyed items reads as the
 Reclaim keyword instead.
@@ -52,7 +59,7 @@ that status instead of a number: "[attack] equal to your [shield]".
 | `tooltip_panel.gd` (+`.tscn`) | The main item panel. Fed a `TooltipContent` Dictionary; rebuilds its charge row and its line rows (text / value / icon segments). Opaque `PanelFramed` stylebox — now a flat, palette-following fill with no border ([ui_theme.md](ui_theme.md#flat-palette-following-panels)), so it reads as a plain block over the corridor rather than a bordered frame. |
 | `keyword_card.gd` (+`.tscn`) | **Frameless** keyword content: the icon and the tinted name on one row, the description under them. Wrapped in a `PanelContainer` for the column; returned bare by a hoverable chip's `_make_custom_tooltip`. `setup()` reads nodes via `get_node` (called before the card is in the tree). |
 | `keyword_chip.gd` (+`.tscn`) | `PanelContainer` tag (icon + tinted name), used **outside** the item tooltip. `setup(id, hoverable = false)`: inert to the mouse by default, or, with `hoverable = true`, `MOUSE_FILTER_STOP` + `tooltip_text = <id>` so the built-in per-keyword tooltip pops. |
-| `keyword_icon.gd` | `class_name KeywordIcon`, static only: the one rule for drawing a keyword's icon. `dress(rect, path, colour)` sets the modulate and material by kind (see below); `make(id, size)` returns a ready square `TextureRect`. Shared by the chip, the card and the panel's inline icons. |
+| `keyword_icon.gd` | `class_name KeywordIcon`, static only: the one rule for drawing a keyword's icon. `dress(rect, path, colour)` sets the modulate and material by kind (see below); `make(id, size)` returns a ready square `TextureRect`. `bbcode(id, size)` returns the icon as a rich text `[img]` tag, for an icon inside a description. Shared by the chip, the card and the panel's inline icons. |
 | `tooltip_content.gd` | The builder (`class_name TooltipContent`). `TooltipContent.new().build(item)` → `{title, rarity, panel_color, type_line, charge_line, lines, flavor, keyword_ids}`. **Instance** (not static) because the line templates and the type line call `tr()`. |
 
 Supporting: `src/content/keywords/keyword_catalog.gd` (the keyword id → card map).

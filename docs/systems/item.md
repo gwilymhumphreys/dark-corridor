@@ -46,7 +46,7 @@ When the item's `Ticker` crosses — its accumulator filled step-by-step, plus a
 
 1. **Gate check** — item-targeted gate statuses (e.g. *silence*) can suppress the fire (`StatusManager`). A gated item's cooldown **freezes** (decision #30): the Combat manager skips its accrual while a gate status sits on it, so a lifting gate never releases a banked burst — the first fire lands one full cooldown after the lift. (The in-`fire()` gate check stays as a backstop.)
 2. **Fire** — reset the cooldown; play the fire-emote (recoil / flash — combat_model.md). The fire is an event others can trigger off.
-3. **Resolve payload(s)** — for each of the item's effects, apply the enchant and the outgoing-value bonuses of the **owner's** statuses and **the item's own** statuses, combined by one rule ([mechanics.md → Combining bonuses](mechanics.md#combining-bonuses)) → a **payload** `(kind, value)`, plus its target-shape and `travel_time`. The outgoing-damage modifier stage receives **the firing item itself** (`StatusManager.modify_outgoing(owner, value, self)`, #35) so an actor-targeted status can scope to a weapon attack — the Smith empower doubles only `weapon`-tagged damage; Weak scales any. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns. An effect with `per_owner_stack_id` set first adds `per_owner_stack_scale` for each stack of that status on the owner (`StatusManager.stack_count`), without removing any, and the bonuses apply on top; Shield Bash uses it to hit for the owner's shield. Spending stacks instead is the consume seam ([`spore_engine.md`](spore_engine.md)).
+3. **Resolve payload(s)** — for each of the item's effects, apply the enchant and the outgoing-value bonuses of the **owner's** statuses and **the item's own** statuses, combined by one rule ([mechanics.md → Combining bonuses](mechanics.md#combining-bonuses)) → a **payload** `(kind, value)`, plus its target-shape and `travel_time`. The outgoing-damage modifier stage receives **the firing item itself** (`StatusManager.modify_outgoing(owner, value, self)`, #35) so an actor-targeted status can scope to a type of item; Weak and the Smith empower scale any attack. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns. An effect with `per_owner_stack_id` set first adds `per_owner_stack_scale` for each stack of that status on the owner (`StatusManager.stack_count`), without removing any, and the bonuses apply on top; Shield Bash uses it to hit for the owner's shield. Spending stacks instead is the consume seam ([`spore_engine.md`](spore_engine.md)).
 4. **Hand them up** — the item returns its payload(s) + shape + travel to the `Combat manager`, which resolves the shape and spawns a `combat_model.md` **Delivery** per target. The item never calls up.
 
 A fire may yield several payloads (a rare combining damage + heal); each becomes its own Delivery (fire-rate and travel are decoupled — combat_model.md).
@@ -77,7 +77,7 @@ The `Combat manager` (which knows sides + ordering) resolves the shape to actual
 
 Items hold their own statuses (`StatusManager` rules; instances on the item). **Three kinds are implemented today:** **gates** (silence — consulted at step 1, `Item.is_gated`), **value bonuses** (the attack bonuses — consulted at step 3) and **use-statuses** (Decay — drained after the fire, step 5). 
 
-**Item value bonuses.** `Item._resolve_effect` and the pure `display_value` preview both ask the item's own statuses for an `outgoing_bonus`, as well as the owner's, so a status on one item raises that item's attacks only ([mechanics.md → Attack bonuses](mechanics.md#attack-bonuses)). A buff for all the owner's weapons can still be an actor-targeted status scoped by type tag (`EmpoweredStatus`, #35). Like every status, item-targeted statuses are **combat-scoped** (decision #26) — cleared at the fight's teardown, never carried between fights; the *permanent* item modifier is an **Enchantment** (one slot, below).
+**Item value bonuses.** `Item._resolve_effect` and the pure `display_value` preview both ask the item's own statuses for an `outgoing_bonus`, as well as the owner's, so a status on one item raises that item's attacks only ([mechanics.md → Attack bonuses](mechanics.md#attack-bonuses)). A buff for all the owner's weapons can still be an actor-targeted status scoped by type tag (#35). Like every status, item-targeted statuses are **combat-scoped** (decision #26) — cleared at the fight's teardown, never carried between fights; the *permanent* item modifier is an **Enchantment** (one slot, below).
 
 ---
 
@@ -131,7 +131,7 @@ the item counts as: its identity, not a summary of its effects. A target filter 
 
 `ItemDef.types` is an **array of type-tag string ids** (a Bazaar-style tag set) drawn from **five tags** — `weapon` · `armour` · `skill` · `spell` · `trinket` (the `ItemType` consts). The axis is the **source / vessel of the effect** (weapon = an attack; armour = self-shield; skill = an active ability; spell = a cast effect; trinket = a passive / utility bearer).
 
-- **Read in three places.** The fire pipeline itself never branches on `types`, so a tag still has no *inherent* effect, but three things read tag membership: a status can (the firing item is threaded into the outgoing-damage / actor-fire hooks, #35 — the Smith empower, `EmpoweredStatus`, uses `types.has(ItemType.WEAPON)` to double only weapon attacks); a **target filter** can, which is how "all your weapons" is targeted; and the tooltip shows an item's tags as a type line. Tags are the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2").
+- **Read in three places.** The fire pipeline itself never branches on `types`, so a tag still has no *inherent* effect, but three things read tag membership: a status can (the firing item is threaded into the outgoing-damage / actor-fire hooks, #35); a **target filter** can, which is how "all your weapons" is targeted; and the tooltip shows an item's tags as a type line. Tags are the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2").
 - **Display names.** `ItemType.display_name` / `display_name_plural` give each tag its word, singular and plural. Placeholder copy — the owner's to write.
 - **An array, not a single field** — most items carry exactly one tag; the array just lets a rare carry more later. A synergy checks `types.has('weapon')`.
 - **Items only.** Tags live on `ItemDef`; **Relic / Enchantment / Consumable are separate `Draftable` categories** (#21) and stay untagged.
@@ -151,6 +151,11 @@ content reads, so adding `blade` there would make it something an item could key
 but the sound layer reads `attack_sound`. If a blade synergy is ever wanted, it becomes a type
 tag then; until it does, telling a sword from a mace is a sound decision alone. The folder
 scheme and the other two layers of a hit: [audio.md](audio.md).
+
+`ItemDef.travel_sound` works the same way for the sound a projectile makes in flight. It names a
+folder under `assets/sound-effects/combat/travel/` and is checked before the item's type tags and
+mechanic. Empty, which is usual, means the item's tags and mechanic choose the sound, and if none
+of their folders is filled it plays the shared default.
 
 ---
 

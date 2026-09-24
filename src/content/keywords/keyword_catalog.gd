@@ -123,6 +123,7 @@ static func get_entry(id: String) -> Dictionary:
     return {
       'name_key': s.name_key,
       'desc_key': s.desc_key,
+      'desc_args': s.desc_args(),
       'color': s.color,
       'icon': s.icon,
     }

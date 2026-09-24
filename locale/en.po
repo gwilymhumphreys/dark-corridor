@@ -184,8 +184,8 @@ msgid "Empowered"
 msgstr "Empowered"
 
 #: src/content/statuses/empowered_status.gd
-msgid "Doubles your next weapon attack."
-msgstr "Doubles your next weapon attack."
+msgid "Your next {0} gets +{1}% damage"
+msgstr "Your next {0} gets +{1}% damage"
 
 #: src/content/statuses/silence_status.gd
 msgid "Silence"
@@ -255,13 +255,13 @@ msgstr "Items"
 msgid "You"
 msgstr "You"
 
+#: src/scenes/combat/health_bar.tscn
+msgid "0"
+msgstr "0"
+
 #: src/scenes/combat/item_cell.tscn
 msgid "Temporary"
 msgstr "Temporary"
-
-#: src/scenes/combat/value_pill.tscn
-msgid "0"
-msgstr "0"
 
 #: src/scenes/screens/character_select.tscn
 msgid "Choose a character"

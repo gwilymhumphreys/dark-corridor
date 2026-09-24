@@ -51,10 +51,10 @@ const STATUS_WEAK_DAMAGE_MULT: float = 0.75       # Weak: holder deals 25% less 
 const STATUS_WEAK_DURATION: float = 2.0           # global to all Weak appliers (duration lives on the status, not the item)
 const STATUS_VULNERABLE_DAMAGE_MULT: float = 1.5  # Vulnerable: holder takes 50% more
 const STATUS_VULNERABLE_DURATION: float = 5.0
-# Empowered (docs/design/smith.md → The empower engine) — the Smith's Mighty Blow buff scales a
-# WEAPON attack's damage by this each charge spent. 2.0 = "double the next weapon attack" (PLACEHOLDER
-# — /tune). One charge per weapon attack (the consume rate is in EmpoweredStatus, not tunable here).
-const EMPOWER_MULT: float = 2.0
+# Empowered (docs/design/smith.md → The empower engine) — the Smith's Mighty Blow buff scales an
+# attack's damage by this for each stack used up. 1.5 = "your next attack gets +50% damage". One stack
+# per attack (the consume rate is in EmpoweredStatus, not tunable here).
+const EMPOWER_MULT: float = 1.5
 # Blind (docs/systems/spore_engine.md Cap 2) — a timed evasion status; the holder's attacks whiff for
 # this long. 2s = the Spore Druid's blinding spore as designed (spore_druid.md), applied by
 # Pocket Shrooms. A default duration an applier passes per-application (TimedStatus stacks/extends).
@@ -131,6 +131,9 @@ const POINTS_PER_POISON_DAMAGE: float = 1.0
 const POINTS_PER_BURN_DAMAGE: float = 0.75
 const POINTS_PER_BLEED_DAMAGE: float = 0.5
 const POINTS_PER_CHARGE_SECOND: float = 6.0
+# One Empowered stack. The starting estimate was EMPOWER_MULT - 1 (+50%) of the Greatsword's hit;
+# it is a number of its own, not tied to either. PLACEHOLDER — the owner tunes in /tune.
+const POINTS_PER_EMPOWERED_STACK: float = 39.0
 # An effect aimed at every opponent costs this many times the same effect on one target.
 const POINTS_ALL_OPPONENTS_MULTIPLIER: float = 1.5
 # How many times a trigger is expected to go off per cooldown of its item. A trigger that charges its

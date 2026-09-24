@@ -35,7 +35,7 @@ const VULNERABLE_COOLDOWN: float = 3.0
 const VULNERABLE_DURATION: float = 3.0
 const HEX_COOLDOWN: float = 2.5
 const EMPOWER_COOLDOWN: float = 7.0
-const EMPOWER_CHARGES: float = 1.0
+const EMPOWER_STACKS: float = 1.0
 
 
 ## A single-target attack that travels — the generic attacker.
@@ -219,7 +219,7 @@ static func empower() -> ItemDef:
   var buff := ItemEffect.new()
   buff.kind = Delivery.Kind.APPLY_STATUS
   buff.status_id = 'empowered'
-  buff.value = EMPOWER_CHARGES
+  buff.value = EMPOWER_STACKS
   buff.shape = ItemEffect.Shape.SELF
   d.effects = [buff]
   d.panel_colour_name = 'STATUS_EMPOWERED'

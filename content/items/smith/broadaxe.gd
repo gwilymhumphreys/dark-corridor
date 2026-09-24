@@ -1,6 +1,6 @@
 extends ItemDef
 ## Broadaxe — one of the Smith's three big weapons (docs/design/smith.md). They share a per-hit
-## ladder on 5s, 6s and 7s cooldowns, so the slowest is the best target for Mighty Blow's double.
+## ladder on 5s, 6s and 7s cooldowns, so the slowest is the best target for Mighty Blow's bonus.
 ## Each spends its full budget from the curve in docs/design/item_heuristics.md.
 
 
