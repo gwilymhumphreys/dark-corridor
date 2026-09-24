@@ -62,6 +62,17 @@ func test_moving_the_text_size_slider_resizes_the_theme() -> void:
       'the theme default size was rewritten at the new scale')
 
 
+## Each slider shows its value above the handle as a whole number; the text size one adds '%'.
+func test_slider_value_labels_show_whole_numbers() -> void:
+  var s := _screen()
+  var music: HSlider = s.get_node('Panel/Scroll/Rows/MusicRow/Slider')
+  music.value = 40.0
+  assert_eq((music.get_node('Value') as Label).text, '40', 'the volume label shows the slider value')
+  var text_size: HSlider = s.get_node('Panel/Scroll/Rows/TextSizeRow/Slider')
+  text_size.value = 125.0
+  assert_eq((text_size.get_node('Value') as Label).text, '125%', 'the text size label shows a whole percent')
+
+
 func test_back_emits_closed() -> void:
   var s := _screen()
   watch_signals(s)

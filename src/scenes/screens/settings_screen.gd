@@ -50,8 +50,8 @@ func _on_volume_changed(value: float, key: String) -> void:
   Prefs.set_volume(key, value / 100.0)
 
 
-## The text size slider, in whole percent of the ladder. Dragging it resizes this screen too, since
-## Prefs writes the new sizes straight into the theme every Control is reading.
+## The text size slider, in whole percent of the ladder (rounded, so the stored scale is always a
+## whole percent). Dragging it resizes this screen too, since Prefs writes the new sizes straight into the theme every Control is reading.
 func _bind_text_size(slider: HSlider) -> void:
   slider.min_value = TextSize.MIN_SCALE * 100.0
   slider.max_value = TextSize.MAX_SCALE * 100.0
@@ -61,7 +61,7 @@ func _bind_text_size(slider: HSlider) -> void:
 
 
 func _on_text_size_changed(value: float) -> void:
-  Prefs.set_text_scale(value / 100.0)
+  Prefs.set_text_scale(roundi(value) / 100.0)
 
 
 ## A bool toggle: seed `pressed` from the stored value, then route `toggled` straight to the setter.

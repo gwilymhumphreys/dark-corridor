@@ -41,8 +41,8 @@ const VARIATIONS: Dictionary = {
 
 ## The player's setting is a multiple of the ladder, clamped to this range.
 const MIN_SCALE: float = 0.75
-const MAX_SCALE: float = 2.0
-const DEFAULT_SCALE: float = 1.0
+const MAX_SCALE: float = 1.75
+const DEFAULT_SCALE: float = 1.1
 
 
 ## Write `base size x scale` into the theme for the default size and every variation. Safe to call

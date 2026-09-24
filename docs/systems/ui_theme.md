@@ -146,7 +146,8 @@ hardcoded number does not move with the player's text size setting.
 
 ### The setting
 
-The settings screen has a **Text size** slider: a percentage from 75% to 200%, default 100%.
+The settings screen has a **Text size** slider: a whole-number percentage between `TextSize.MIN_SCALE`
+and `TextSize.MAX_SCALE`, starting at `TextSize.DEFAULT_SCALE`.
 `Prefs.set_text_scale` stores it and calls `TextSize.apply`, which writes `rung size x scale` into
 the theme resource for the default size and every variation. Every Control reads that resource, so
 one call resizes the whole interface live — including the settings screen the slider is on.

@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/settings_screen.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
 [ext_resource type="Script" path="res://src/ui/screen_background.gd" id="named_colour"]
+[ext_resource type="Script" path="res://src/ui/slider_value_label.gd" id="slider_value"]
 
 [node name="SettingsScreen" type="Control"]
 layout_mode = 3
@@ -59,7 +60,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 90.0
-offset_top = 180.0
+offset_top = 140.0
 offset_right = -120.0
 offset_bottom = -130.0
 grow_horizontal = 2
@@ -70,6 +71,11 @@ horizontal_scroll_mode = 0
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 32
+
+[node name="TopSpace" type="Control" parent="Panel/Scroll/Rows"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
 
 [node name="MasterRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
 layout_mode = 2
@@ -89,6 +95,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
+[node name="Value" type="Label" parent="Panel/Scroll/Rows/MasterRow/Slider"]
+layout_mode = 0
+theme_type_variation = &"LabelSmall"
+script = ExtResource("slider_value")
+
 [node name="MusicRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
@@ -106,6 +117,11 @@ custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
+
+[node name="Value" type="Label" parent="Panel/Scroll/Rows/MusicRow/Slider"]
+layout_mode = 0
+theme_type_variation = &"LabelSmall"
+script = ExtResource("slider_value")
 
 [node name="InterfaceRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
 layout_mode = 2
@@ -125,6 +141,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
+[node name="Value" type="Label" parent="Panel/Scroll/Rows/InterfaceRow/Slider"]
+layout_mode = 0
+theme_type_variation = &"LabelSmall"
+script = ExtResource("slider_value")
+
 [node name="GameRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
@@ -143,6 +164,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
+[node name="Value" type="Label" parent="Panel/Scroll/Rows/GameRow/Slider"]
+layout_mode = 0
+theme_type_variation = &"LabelSmall"
+script = ExtResource("slider_value")
+
 [node name="TextSizeRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
@@ -160,6 +186,12 @@ custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
+
+[node name="Value" type="Label" parent="Panel/Scroll/Rows/TextSizeRow/Slider"]
+layout_mode = 0
+theme_type_variation = &"LabelSmall"
+script = ExtResource("slider_value")
+suffix = "%"
 
 [node name="FullscreenRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
 layout_mode = 2
