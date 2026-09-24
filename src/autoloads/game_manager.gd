@@ -13,6 +13,9 @@ extends Node
 
 signal phase_changed(phase: int)
 signal battle_speed_changed(scale: float)
+## A new run has been set up and is about to be shown (not emitted on Resume). The dev tools add to
+## the run here, before any screen reads it.
+signal run_started(run: RunManager)
 
 enum Phase { BOOT, TITLE, RUN, DEATH, WIN }
 
@@ -39,6 +42,7 @@ func start_run(seed_value: int, character_id: String = CharacterCatalog.DEFAULT)
   run = RunManager.new()
   run.run_ended.connect(_on_run_ended)
   run.start(seed_value, character_id)
+  run_started.emit(run)
   _set_phase(Phase.RUN)
 
 

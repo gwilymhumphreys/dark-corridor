@@ -12,22 +12,22 @@ script = ExtResource("1")
 [node name="Poison" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_type_variation = &"LabelSmall"
+theme_type_variation = &"LabelOnBar"
 
 [node name="Burn" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_type_variation = &"LabelSmall"
+theme_type_variation = &"LabelOnBar"
 
 [node name="Bleed" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_type_variation = &"LabelSmall"
+theme_type_variation = &"LabelOnBar"
 
 [node name="Regen" type="Label" parent="."]
 layout_mode = 2
 auto_translate_mode = 2
-theme_type_variation = &"LabelSmall"
+theme_type_variation = &"LabelOnBar"
 
 [node name="Juice" type="Node" parent="."]
 script = ExtResource("2")

@@ -25,7 +25,7 @@ var _environment: Environment = Environment.new()
 var _world_environment: WorldEnvironment = WorldEnvironment.new()
 var _tweens: Dictionary = {}   # CanvasItem instance id -> the Tween flashing it
 var _glowing: Dictionary = {}   # CanvasItem instance id -> the item, for every item glowing now
-var _demo_brightness: float = 0.0   # from `--glow-demo=`; 0 when off
+var demo_brightness: float = 0.0   # set by the debug panel from `--glow-demo=`; 0 when off
 
 
 func _ready() -> void:
@@ -36,9 +36,6 @@ func _ready() -> void:
   apply_settings()
   _world_environment.environment = _environment
   add_child(_world_environment)
-  for arg: String in OS.get_cmdline_user_args():
-    if arg.begins_with('--glow-demo='):
-      _demo_brightness = arg.substr(12).to_float()
 
 
 # `--glow-demo=<brightness>` (dev, for screenshots): every node drawn through a picture material
@@ -47,12 +44,12 @@ func _process(_delta: float) -> void:
   # A node freed mid-flash takes its tween with it, so `_on_flash_finished` never runs; drop it here.
   if _environment.glow_enabled:
     _update_enabled()
-  if _demo_brightness <= 0.0 or Engine.get_process_frames() % 30 != 0:
+  if demo_brightness <= 0.0 or Engine.get_process_frames() % 30 != 0:
     return
   for node: Node in get_tree().root.find_children('*', 'CanvasItem', true, false):
     var item: CanvasItem = node as CanvasItem
     if InterfaceLook.picture_materials.has(item.material) and not _glowing.has(item.get_instance_id()):
-      set_glow(item, _demo_brightness)
+      set_glow(item, demo_brightness)
 
 
 func _exit_tree() -> void:

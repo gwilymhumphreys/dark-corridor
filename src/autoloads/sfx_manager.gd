@@ -62,9 +62,6 @@ const EXTENSIONS_BY_QUALITY: Array[String] = ['.wav', '.ogg', '.mp3']
 const EXTENSIONS_BY_SIZE: Array[String] = ['.mp3', '.ogg', '.wav']
 ## Audio driver name used when there is no real output device (headless runs).
 const DUMMY_DRIVER: String = 'Dummy'
-## Command-line flags for runs that play no sound — the autotest harness and a --shot screenshot
-## capture. Prefs mutes the Master bus for these; here they also skip loading the sound files.
-const SILENT_ARGS: Array[String] = ['--autotest', '--shot']
 
 # Bus name -> its AudioStreamPlayer, and bus name -> its playback handle. Made on first use,
 # so a bus nothing ever plays on gets no player. See _ensure_playing for why that matters.
@@ -108,11 +105,7 @@ func _process(delta: float) -> void:
 func _is_silent_run() -> bool:
   if AudioServer.get_driver_name() == DUMMY_DRIVER:
     return true
-  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
-  for flag: String in SILENT_ARGS:
-    if flag in args:
-      return true
-  return false
+  return DevArgs.is_silent_run()
 
 
 ## A configured polyphonic stream player for `bus_name`: not autoplayed, for the reason in

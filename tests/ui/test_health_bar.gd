@@ -39,13 +39,12 @@ func _bar_for(a: Actor) -> HealthBar:
   return bar
 
 
-func test_no_shield_hides_the_readout_but_keeps_its_space() -> void:
+func test_no_shield_hides_the_readout() -> void:
   var a := _spawn(100.0)
   a.take_damage(40.0)
   var bar := _bar_for(a)
-  var row: Control = bar.get_node('ShieldRow')
-  assert_true(row.visible, 'the row stays in the layout')
-  assert_eq(row.modulate.a, 0.0, 'and is see-through with no shield')
+  var row: Control = bar.get_node('Bar/Shield')
+  assert_false(row.visible, 'the shield readout on the bar is hidden with no shield')
   assert_almost_eq(bar.get_node('Bar/HealthFill').anchor_right, 0.6, 0.0001, 'health fills 60 of 100')
   assert_eq(bar.get_node('Bar/ShieldFill').anchor_right, 0.0, 'no shield fill')
   assert_eq(bar.get_node('Bar/Label').text, '60', 'the label shows current health only')
@@ -55,8 +54,8 @@ func test_shield_below_max_health_is_measured_against_max_health() -> void:
   var a := _spawn(100.0)
   StatusManager.apply(a, ShieldStatus.ID, 25.0)
   var bar := _bar_for(a)
-  assert_eq(bar.get_node('ShieldRow').modulate.a, 1.0, 'the readout shows')
-  assert_eq(bar.get_node('ShieldRow/Value').text, '25', 'with the shield value')
+  assert_true(bar.get_node('Bar/Shield').visible, 'the readout shows')
+  assert_eq(bar.get_node('Bar/Shield/Value').text, '25', 'with the shield value')
   assert_almost_eq(bar.get_node('Bar/ShieldFill').anchor_right, 0.25, 0.0001, 'shield fills 25 of 100')
   assert_almost_eq(bar.get_node('Bar/HealthFill').anchor_right, 1.0, 0.0001, 'health is full underneath')
 

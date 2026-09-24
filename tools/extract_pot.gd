@@ -26,9 +26,8 @@ const SCAN_DIRS: Array[String] = ['res://src', 'res://content']   # code, and th
 const Q1: String = "(?:[^'\\\\]|\\\\.)*"    # single-quoted body
 const Q2: String = "(?:[^\"\\\\]|\\\\.)*"   # double-quoted body
 
-# Dev / throwaway hosts never ship to players — their text stays English.
-const EXCLUDE_FILES: Array[String] = ['corridor_testbed','combat_sandbox', 'tooltip_demo']
-# Dev-only folders (the debug panel): skipped entirely, so their labels stay out of the catalogs.
+# Dev-only folders (the debug panel and the dev scenes): skipped entirely, so their labels stay out
+# of the catalogs and their text stays English.
 const EXCLUDE_DIRS: Array[String] = ['res://src/debug']
 # Format specifiers / placeholders that aren't real copy.
 const EXCLUDE_IDS: Array[String] = []
@@ -51,9 +50,6 @@ func _add(msgid: String, source: String) -> void:
     return
   if msgid in EXCLUDE_IDS:
     return
-  for frag: String in EXCLUDE_FILES:
-    if frag in source:
-      return
   if _sources.has(msgid):
     return
   _sources[msgid] = source

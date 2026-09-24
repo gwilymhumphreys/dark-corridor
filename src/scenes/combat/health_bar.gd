@@ -3,8 +3,8 @@ extends VBoxContainer
 ## The health bar shared by the player portrait, the enemy panel and the ally slots
 ## (docs/systems/mechanics.md → Health bar). Shield is drawn over health from the left, and the
 ## bar's width stands for max health or shield, whichever is larger, so either can grow past the
-## other. A faint line marks every LINE_STEP points. Above the bar: the shield icon and value.
-## Beside it: the other mechanic statuses (StatusNumbers). Reads the actor each frame; writes
+## other. A faint line marks every LINE_STEP points. On the bar: the shield icon and value at the
+## left, the health in the centre, and the other mechanic statuses (StatusNumbers) at the right. Reads the actor each frame; writes
 ## nothing.
 
 const LINE_STEP: int = 100             # points between the faint lines across the bar
@@ -12,7 +12,7 @@ const SCALE_EASE_SPEED: float = 8.0    # how fast the bar's scale eases to a new
 const LINE_WIDTH: float = 2.0
 
 ## The bar's size in canvas pixels; each view sets its own.
-@export var bar_size: Vector2 = Vector2(200, 30):
+@export var bar_size: Vector2 = Vector2(400, 40):
   set(value):
     bar_size = value
     if is_node_ready():
@@ -32,9 +32,9 @@ var actor: Actor = null:
 
 var _shown_scale: float = 1.0   # the points the full bar width stands for, eased towards the target
 
-@onready var _shield_row: HBoxContainer = $ShieldRow
-@onready var _shield_icon: TextureRect = $ShieldRow/Icon
-@onready var _shield_value: Label = $ShieldRow/Value
+@onready var _shield: HBoxContainer = $Bar/Shield
+@onready var _shield_icon: TextureRect = $Bar/Shield/Icon
+@onready var _shield_value: Label = $Bar/Shield/Value
 @onready var _bar: Control = $Bar
 @onready var _background: NamedColourRect = $Bar/Background
 @onready var _health_fill: NamedColourRect = $Bar/HealthFill
@@ -53,8 +53,9 @@ func _ready() -> void:
   _label.theme_type_variation = label_variation
   var icon_path: String = MechanicRegistry.get_mechanic(ShieldMechanic.ID).icon
   _shield_icon.texture = load(icon_path) as Texture2D
-  KeywordIcon.dress(_shield_icon, icon_path, Colours.SHIELD)
-  _shield_value.modulate = Colours.SHIELD
+  # Drawn in the text colour, like the health number: the readout sits on the shield fill, which is
+  # the shield colour.
+  KeywordIcon.dress(_shield_icon, icon_path, Colours.UI_TEXT)
   _lines.draw.connect(_draw_lines)
   _status_numbers.actor = actor
   _shown_scale = _target_scale()
@@ -62,7 +63,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
   if actor == null:
-    _shield_row.modulate.a = 0.0
+    _shield.hide()
     return
   var shield: int = StatusManager.stack_count(actor, ShieldMechanic.ID)
   var target: float = _target_scale()
@@ -76,8 +77,7 @@ func _process(delta: float) -> void:
   _shield_fill.anchor_right = clampf(shield / _shown_scale, 0.0, 1.0)
   _shield_fill.offset_right = 0.0
   _label.text = str(actor.hp)
-  # The row keeps its space while empty, so the bar does not move when shield comes and goes.
-  _shield_row.modulate.a = 1.0 if shield > 0 else 0.0
+  _shield.visible = shield > 0
   _shield_value.text = str(shield)
 
 

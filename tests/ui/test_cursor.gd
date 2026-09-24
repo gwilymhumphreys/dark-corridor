@@ -28,8 +28,8 @@ const CLICKABLE_NODES: Array[Array] = [
   ['res://src/scenes/screens/title_screen.tscn', 'Menu/StartButton'],
   ['res://src/scenes/screens/title_screen.tscn', 'Menu/ResumeButton'],
   ['res://src/scenes/screens/title_screen.tscn', 'Menu/SettingsButton'],
-  ['res://src/scenes/corridor_testbed.tscn', 'UILayer/ButtonRow/BackButton'],
-  ['res://src/scenes/corridor_testbed.tscn', 'UILayer/ButtonRow/ForwardButton'],
+  ['res://src/debug/scenes/corridor_testbed.tscn', 'UILayer/ButtonRow/BackButton'],
+  ['res://src/debug/scenes/corridor_testbed.tscn', 'UILayer/ButtonRow/ForwardButton'],
 ]
 
 

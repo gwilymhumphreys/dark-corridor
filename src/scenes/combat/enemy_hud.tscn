@@ -10,7 +10,7 @@ script = ExtResource("1")
 visible = false
 
 [node name="HealthBar" parent="Row/Readout" index="1"]
-bar_size = Vector2(320, 36)
+bar_size = Vector2(640, 48)
 fill_colour_name = "ENEMY_HP_BAR_FILL"
 background_colour_name = "ENEMY_HP_BAR_BG"
 

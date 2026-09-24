@@ -12,10 +12,6 @@ const BUS_MUSIC: String = 'Music'
 const CROSSFADE_TIME: float = 2.0
 ## Audio driver name used when there is no real output device (headless runs).
 const DUMMY_DRIVER: String = 'Dummy'
-## Command-line flags for runs that play no sound — the autotest harness and a --shot screenshot
-## capture. Prefs mutes the Master bus for these; here they also skip decoding the tracks. Kept as
-## its own list because Prefs is a later autoload and may not exist yet when this one starts.
-const SILENT_ARGS: Array[String] = ['--autotest', '--shot']
 
 var _tracks: Array[AudioStream] = []
 var _shuffle_order: Array[int] = []
@@ -64,10 +60,8 @@ func _load_tracks() -> void:
   if AudioServer.get_driver_name() == DUMMY_DRIVER:
     return
   # Autotest and screenshot runs are silent, so don't decode the music folder.
-  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
-  for flag: String in SILENT_ARGS:
-    if flag in args:
-      return
+  if DevArgs.is_silent_run():
+    return
   var dir: DirAccess = DirAccess.open(MUSIC_DIR)
   if dir == null:
     return

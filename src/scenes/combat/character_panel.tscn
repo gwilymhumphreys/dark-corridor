@@ -46,7 +46,7 @@ theme_type_variation = &"LabelMedium"
 
 [node name="HealthBar" parent="Row/Readout" instance=ExtResource("health_bar")]
 layout_mode = 2
-bar_size = Vector2(200, 30)
+bar_size = Vector2(400, 40)
 
 [node name="Statuses" parent="Row/Readout" instance=ExtResource("status_icons")]
 layout_mode = 2

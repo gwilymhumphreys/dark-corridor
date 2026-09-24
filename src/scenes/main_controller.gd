@@ -19,10 +19,6 @@ var _current: Node = null
 func _ready() -> void:
   Game.phase_changed.connect(_on_phase_changed)
   _show_for_phase(Game.phase)
-  # Dev hook (mirrors the sandbox): `--shot` captures a frame then quits — combine
-  # with the title's `--autostart` to screenshot a live fight.
-  if _has_flag('--shot'):
-    _auto_shot()
 
 
 func _on_phase_changed(phase: int) -> void:
@@ -48,27 +44,3 @@ func _swap(screen: Node) -> void:
     _current.queue_free()
   _current = screen
   _holder.add_child(screen)
-
-
-func _has_flag(flag: String) -> bool:
-  return flag in OS.get_cmdline_args() or flag in OS.get_cmdline_user_args()
-
-
-## `--shot-delay <seconds>` overrides the default capture delay. The default of 1.5s
-## lands during the corridor approach, before the first fight starts; pair `--autofight`
-## with about 6s for a mid-fight frame, or longer for a later fight or the win screen.
-func _shot_delay() -> float:
-  var args: Array = []
-  args.append_array(OS.get_cmdline_args())
-  args.append_array(OS.get_cmdline_user_args())
-  var i: int = args.find('--shot-delay')
-  if i >= 0 and i + 1 < args.size():
-    return float(args[i + 1])
-  return 1.5
-
-
-func _auto_shot() -> void:
-  await get_tree().create_timer(_shot_delay()).timeout   # mid-fight when paired with --autostart
-  await RenderingServer.frame_post_draw
-  Screenshot.save(get_viewport(), 'run_shot')
-  get_tree().quit()

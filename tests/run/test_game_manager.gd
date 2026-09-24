@@ -48,6 +48,26 @@ func test_start_run_enters_run_phase() -> void:
   assert_true(Save.has_save(), 'the entry snapshot was written')
 
 
+func test_run_started_fires_before_the_run_phase() -> void:
+  # The dev tools add to a new run on this signal, so it must come before any screen is shown.
+  var phase_at_signal: Array = []
+  var on_started: Callable = func(run: RunManager) -> void:
+    phase_at_signal.append(Game.phase)
+    assert_eq(run, Game.run, 'the signal carries the new run')
+  Game.run_started.connect(on_started)
+  Game.start_run(1, FixtureCharacter.ID)
+  Game.run_started.disconnect(on_started)
+  assert_eq(phase_at_signal.size(), 1, 'emitted once')
+  assert_ne(phase_at_signal[0], GameManagerAutoload.Phase.RUN, 'emitted before the phase changes to RUN')
+
+
+func test_resume_does_not_fire_run_started() -> void:
+  Game.start_run(1, FixtureCharacter.ID)
+  watch_signals(Game)
+  assert_true(Game.resume_run())
+  assert_signal_not_emitted(Game, 'run_started')
+
+
 func test_win_sets_win_phase_and_clears_save() -> void:
   Game.start_run(1, FixtureCharacter.ID)
   _play_to_end(Game.run, 0)

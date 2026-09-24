@@ -16,9 +16,9 @@ custom_minimum_size = Vector2(110, 110)
 theme_override_constants/separation = 8
 
 [node name="Name" parent="Row/Readout" index="0"]
-custom_minimum_size = Vector2(110, 0)
+custom_minimum_size = Vector2(220, 0)
 theme_type_variation = &"LabelSmall"
 
 [node name="HealthBar" parent="Row/Readout" index="1"]
-bar_size = Vector2(110, 24)
+bar_size = Vector2(220, 32)
 label_variation = &"LabelSmall"

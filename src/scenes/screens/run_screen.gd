@@ -56,56 +56,11 @@ func _ready() -> void:
   # the instant the HUD button changes it. Each new fight also picks it up on entry.
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
   DebugPanels.panels_open_changed.connect(_on_debug_panels_open_changed)
-  _seed_demo_allies()   # dev hook (`--allies N`): populate the ally slots for inspection
-  _seed_demo_board_items()   # dev hook (`--board-items N`): fill the player's board for inspection
-  _seed_demo_potions()   # dev hook (`--potions N`): give the player potions for inspection
   _report_button.pressed.connect(_toggle_report)
   _map.setup(RunMap.TOTAL_BEATS, _run.position)
   _refresh_gold()       # seed the HUD from run-state (covers a resumed run's banked gold)
   _enter_beat()
 
-
-# Dev hook (`--allies N`, pairs with `--autofight --shot`): recruit N placeholder allies so the
-# flanking ally slots can be inspected. Inert without the flag. Presentation/screenshot only.
-func _seed_demo_allies() -> void:
-  var args: Array = []
-  args.append_array(OS.get_cmdline_args())
-  args.append_array(OS.get_cmdline_user_args())
-  var i: int = args.find('--allies')
-  if i < 0 or i + 1 >= args.size():
-    return
-  for _n in int(args[i + 1]):
-    _run.add_ally('spore_thrall')
-
-
-
-# Dev hook (`--board-items N`, pairs with `--autofight --shot`): add copies of the starting items until
-# the player's board holds N, so a late-run board can be inspected. Inert without the flag.
-# Presentation/screenshot only.
-func _seed_demo_board_items() -> void:
-  var args: Array = []
-  args.append_array(OS.get_cmdline_args())
-  args.append_array(OS.get_cmdline_user_args())
-  var i: int = args.find('--board-items')
-  if i < 0 or i + 1 >= args.size():
-    return
-  var player: Actor = _run.player
-  var starting: Array = player.board.duplicate()
-  while player.board.size() < int(args[i + 1]) and not starting.is_empty():
-    player.board.append(Item.new((starting[player.board.size() % starting.size()] as Item).def, player))
-
-
-# Dev hook (`--potions N`, pairs with `--autofight --shot`): give the player N Healing Draughts, so the
-# potion row can be inspected. Inert without the flag. Presentation/screenshot only.
-func _seed_demo_potions() -> void:
-  var args: Array = []
-  args.append_array(OS.get_cmdline_args())
-  args.append_array(OS.get_cmdline_user_args())
-  var i: int = args.find('--potions')
-  if i < 0 or i + 1 >= args.size():
-    return
-  for _n in int(args[i + 1]):
-    _run.potions.append(Consumable.new(ConsumableCatalog.get_def('healing_draught')))
 
 func _exit_tree() -> void:
   _log = null
@@ -137,18 +92,6 @@ func _show_choice() -> void:
   add_child(_choice)
   _choice.picked.connect(_on_choice_picked)
   _choice.setup(_run.pending_choice())
-  # Dev hook (`--autofight`, pairs with `--shot`): auto-pick the first fight so a live combat
-  # view can be captured — the choice layer otherwise parks here. Presentation-only.
-  if '--autofight' in OS.get_cmdline_args() or '--autofight' in OS.get_cmdline_user_args():
-    _on_choice_picked.call_deferred(_first_fight_candidate())
-
-
-func _first_fight_candidate() -> int:
-  var candidates: Array = _run.pending_choice()
-  for i in candidates.size():
-    if EncounterCatalog.get_def(candidates[i]).type == EncounterDef.Type.FIGHT:
-      return i
-  return 0
 
 
 func _on_choice_picked(index: int) -> void:

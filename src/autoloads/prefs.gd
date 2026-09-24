@@ -32,9 +32,6 @@ const AUDIO_DEFAULTS: Dictionary = {
   'game': 0.5,
 }
 
-# Command-line flags that mean nobody is listening: the autotest harness and a --shot screenshot
-# capture. Any of these mutes the Master bus for the whole process.
-const SILENT_ARGS: Array[String] = ['--autotest', '--shot']
 
 # When true the disk write is skipped. The game leaves it false; TestCleanup sets it so tests
 # stay hermetic (in-memory + bus only, never writing user://). Like Save.disabled in spirit.
@@ -56,11 +53,7 @@ func _ready() -> void:
 ## play no sound at all: the Master bus is muted at boot and the stored volumes are left alone, so
 ## the player's own settings are untouched.
 func is_silent_run() -> bool:
-  var args: PackedStringArray = OS.get_cmdline_args() + OS.get_cmdline_user_args()
-  for flag: String in SILENT_ARGS:
-    if flag in args:
-      return true
-  return false
+  return DevArgs.is_silent_run()
 
 
 ## Autoloads are in the tree, so they receive APPLICATION_FOCUS_OUT / _IN: mute / unmute the

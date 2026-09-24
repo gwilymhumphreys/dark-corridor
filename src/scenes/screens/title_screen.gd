@@ -1,3 +1,4 @@
+class_name TitleScreen
 extends Control
 ## Title screen (docs/systems/game_manager.md, phase TITLE). Start a fresh seeded run (via the
 ## character-select screen) or resume the saved one — the two run-lifecycle intents.
@@ -20,32 +21,15 @@ func _ready() -> void:
   var resume_button: Button = $Menu/ResumeButton
   var settings_button: Button = $Menu/SettingsButton
   var exit_button: Button = $Menu/ExitButton
-  start_button.pressed.connect(_open_select)
+  start_button.pressed.connect(open_select)
   resume_button.pressed.connect(_on_resume)
-  settings_button.pressed.connect(_open_settings)
+  settings_button.pressed.connect(open_settings)
   exit_button.pressed.connect(_exit_game)
   resume_button.disabled = not Save.has_save()
-  # Dev hook: skip the menu + select and drop straight into a run (pairs with `--shot`), as the
-  # default character or the one named by `--character=ID`. `--select` instead opens the
-  # character-select screen (to inspect it).
-  if '--autostart' in OS.get_cmdline_args() or '--autostart' in OS.get_cmdline_user_args():
-    _start_run.bind(_autostart_character()).call_deferred()
-  elif '--select' in OS.get_cmdline_args() or '--select' in OS.get_cmdline_user_args():
-    _open_select.call_deferred()
-  elif '--settings' in OS.get_cmdline_args() or '--settings' in OS.get_cmdline_user_args():
-    _open_settings.call_deferred()
-
-
-## The character named by `--character=ID`, or the default.
-func _autostart_character() -> String:
-  for arg: String in OS.get_cmdline_args() + OS.get_cmdline_user_args():
-    if arg.begins_with('--character='):
-      return arg.trim_prefix('--character=')
-  return CharacterCatalog.DEFAULT
 
 
 # Start → the character-select screen; its pick supplies the character to Game.start_run.
-func _open_select() -> void:
+func open_select() -> void:
   if _select != null:
     return
   _select = CHARACTER_SELECT.instantiate()
@@ -65,7 +49,7 @@ func _start_run(character_id: String) -> void:
 
 
 # Settings → the audio-volume screen (Prefs-backed); Close frees it back to the title.
-func _open_settings() -> void:
+func open_settings() -> void:
   if _settings != null:
     return
   _settings = SETTINGS_SCREEN.instantiate()
