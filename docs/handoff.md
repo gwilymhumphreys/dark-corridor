@@ -88,7 +88,7 @@ the character system #23/#27). See the per-item status in "Your task" below.
 - **Phase 1 — combat spine** (`src/combat/`): `Ticker` · `Timekeeper` (fixed-step
   clock) · `Actor` · `Item` (+ fire pipeline) · `Delivery`/`Payload` · `EventBus` ·
   `CombatManager` (the one tick) + `StatusManager` autoload. Minimal **opaque** VFX
-  wall (`src/vfx/`) + a watchable host `src/scenes/combat_sandbox.tscn`.
+  wall (`src/vfx/`) + a watchable host `src/debug/scenes/combat_sandbox.tscn`.
 - **Phase 2 — autotest harness** (`src/autotest/`): `AutoTestMode` (+ scene
   `autotest.tscn`) · stub `AutoTestDriver` · `AutoTestStuckDetector` ·
   `AutoTestLogger`. Drives fights headless + deterministic.
@@ -171,11 +171,9 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
   are always passed. `--single-fight` runs one fight; `--encounters N` caps; flags in
   [`autotest.md`](systems/autotest.md).
 - **Watch the run** (Phase 4): `<exe> --path . res://src/scenes/main.tscn > _temp/run.txt 2>&1` → Start
-  (append `-- --autostart` to skip the menu; `--shot [--shot-delay s]` screenshots). For look
-  screenshots of a real fight add `--autofight --nosave --notutorial` and the look arguments in
-  [debug_panel.md](systems/debug_panel.md#start-up-arguments).
-  The fixed **combat sandbox** (one fight, not the run) is still there:
-  `<exe> --path . res://src/scenes/combat_sandbox.tscn` (hover to slow-mo, R restarts).
+  (append `-- --autostart` to skip the menu). Screenshots, the other start-up arguments and the
+  dev scenes (the fixed combat sandbox, the corridor testbed, the tooltip demo) are in
+  [dev_tools.md](systems/dev_tools.md).
 - **Discipline:** test-first; drive logic via `sim_step()` / intents in GUT (no
   `_physics_process` in tests). **Each step green headless before the next. Commit
   each green step; NO self-attribution / Co-Authored-By** (CLAUDE.md overrides).
@@ -340,8 +338,7 @@ replace-vs-multiply** open is now resolved → replace, with the battle-speed di
 Decision-AI: the Driver's **potion / choice / event** policies stay stubs until those beats exist.
 
 **Run / watch:** `<exe> --path . res://src/scenes/main.tscn > _temp/run.txt 2>&1` → Start
-Run; append `-- --autostart --shot [--shot-delay s]` to capture a frame (the 1.5s default
-catches the corridor approach — add `--autofight --shot-delay 6` for a mid-fight frame). **Autotest:**
+Run; for screenshots see [dev_tools.md](systems/dev_tools.md#screenshot-commands). **Autotest:**
 `tools/autotest.sh --seed 1 --strategy greedy-synergy --report autotest_results/r.md`.
 **Suite:** `tools/gut.sh`.
 

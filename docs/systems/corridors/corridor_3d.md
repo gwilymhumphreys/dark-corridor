@@ -5,7 +5,7 @@ the camera, with the enemies drawn as lit sprites inside it.
 
 **Location:** `src/scenes/corridors/corridor_3d.gd` + `.tscn`, piece sources beside it. Hosts:
 `CombatCorridor` in fights ([run_screen.md](../run_screen.md#enemies-in-the-corridor)) and the corridor
-testbed (`src/scenes/corridor_testbed.tscn`).
+testbed (`src/debug/scenes/corridor_testbed.tscn`).
 
 ## Structure
 
@@ -227,17 +227,11 @@ look setting, kept until the effects pass decides on hit visuals.
 
 ## Testing it
 
-- Corridor testbed: `<godot> --path . res://src/scenes/corridor_testbed.tscn`. Forward/Back buttons
+- Corridor testbed: `<godot> --path . res://src/debug/scenes/corridor_testbed.tscn`. Forward/Back buttons
   glide; N places a random cut-out monster at `APPROACH_DEPTH_START` and walks the corridor up to
   it, overriding the buttons until the walk finishes.
-- Testbed arguments (after `--`): `--set=property=value` sets any corridor export; `--monster` spawns a
-  monster for the shot; `--shot` saves `screenshots/corridor_shot_<date>_<time>.png` mid-glide and quits (`--still` for a stopped
-  frame, `--shot-delay=SECONDS` to wait longer), printing `SHOT_SAVED:<path>`. `--view=WIDTHxHEIGHT`
-  (before `--`) forces a fixed `view_size`. The debug panel's `--monster-image=` and `--world-palette=` also
-  apply.
-- A real fight: `<godot> --path . -- --autostart --autofight --shot --shot-delay 6 --nosave --notutorial
-  --corridor-set=light_energy=<value> > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt` ([debug_panel.md](../debug_panel.md#start-up-arguments)).
-  The redirect keeps the Godot output out of an agent's context; the `PreToolUse` hook requires it.
+- The testbed's arguments (`--set=`, `--view=`, `--still`, `--monster`), `--shot`, and the command for
+  a screenshot of a real fight are in [dev_tools.md](../dev_tools.md#dev-scenes).
 - Light settings: edit the root node's "Light" exports in `corridor_3d.tscn`; fights and the testbed both
   build from that scene.
 - Headless reimport after adding or replacing textures: `tools/import.sh`.

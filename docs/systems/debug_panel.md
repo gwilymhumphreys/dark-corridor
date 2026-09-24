@@ -1,8 +1,7 @@
 # Debug panel
 
 A dev-only panel for trying and saving looks in game, with a [preset bar](look_presets.md) at the top and
-one tab per part of the look, plus start-up arguments for screenshots of real fights. It is on every
-screen, including the corridor testbed and combat sandbox.
+one tab per part of the look. It is on every screen, including the [dev scenes](dev_tools.md#dev-scenes).
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
 as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`,
@@ -89,35 +88,9 @@ preset's corridor part, and the interface rows and its dithering in its interfac
 
 ## Start-up arguments
 
-Read once at start-up from the user arguments (after `--`), after the default preset:
-
-| Argument | Effect |
-|---|---|
-| `--preset=<name or res path>` | Loads a [preset](look_presets.md) before the other arguments, so they can override it |
-| `--world-palette=<res path>`, `--perceptual`, `--dither` | World clamp settings ([palette_clamp.md](palette_clamp.md)) |
-| `--interface-dither` | Turns dithering on for the interface clamp, which `--dither` does not touch |
-| `--corridor-set=property=value` | Sets any `Corridor3D` export (`corridor_settings`). Repeatable |
-| `--monster-image=<res path>` | Every enemy uses this image (`MonsterImages.forced_path`) |
-| `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
-| `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
-| `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
-| `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
-| `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay, layout or token setting. Repeatable |
-| `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
-| `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
-| `--feedback-demo=<amount>` | Holds every control at that much hover, for screenshots of the feedback |
-| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel`, `--tokens-panel` | Opens the panel on the Corridor, Interface, Print, Background, Feedback, Icons or Tokens tab |
-| `--glow-demo=<brightness>` | Every node drawn through the interface look material glows ([interface_glow.md](interface_glow.md)); read by `InterfaceGlow` |
-
-`--shot` saves into the project's gitignored `screenshots/` folder, one file per shot named with the
-date and time (`src/debug/screenshot.gd`), and prints `SHOT_SAVED:<path>`.
-
-For example, a real fight with a saved preset:
-`<godot> --path . -- --autostart --autofight --shot --shot-delay 6 --nosave --notutorial --preset=candlelit > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt`
-
-The redirect keeps the Godot output out of an agent's context; the `PreToolUse` hook in
-`.claude/settings.json` requires it. A delay under about 6 seconds catches the corridor
-approach instead of the fight.
+The look arguments (`--preset=`, `--corridor-set=`, `--look-panel` and the rest) are read once at
+start-up, after the default preset, by `_apply_command_line`. The list and the screenshot commands are
+in [dev_tools.md](dev_tools.md#look-arguments).
 
 ## Public API
 

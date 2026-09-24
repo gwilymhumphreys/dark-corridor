@@ -83,6 +83,6 @@ Panel wear is saved in a preset's `print_panel` section and reset with the rest 
 `Colours`.
 
 For screenshots, `--panel-set=<uniform>=<value>` sets one setting (repeatable)
-([debug_panel.md](debug_panel.md#start-up-arguments)).
+([dev_tools.md](dev_tools.md#look-arguments)).
 
 Tests: `tests/debug/test_print_look.gd`, `tests/debug/test_worn_style_box.gd`.

@@ -30,6 +30,7 @@ InterfaceGlow="*res://src/autoloads/interface_glow.gd"
 ControlFeedback="*res://src/autoloads/control_feedback.gd"
 Cursor="*res://src/scenes/ui/mouse_cursor.tscn"
 DebugPanels="*res://src/debug/debug_panels.tscn"
+Dev="*res://src/debug/dev.gd"
 
 [display]
 

@@ -65,11 +65,11 @@ named by path, for example `new/world`), for the panel dropdown.
 ## Screenshots
 
 `DebugPanels` reads user arguments at start-up: `--world-palette=<res path>`, `--perceptual`, `--dither`, plus
-`--corridor-set=` and `--monster-image=` (see [debug_panel.md](debug_panel.md#start-up-arguments)). For
+`--corridor-set=` and `--monster-image=` (see [dev_tools.md](dev_tools.md#look-arguments)). For
 example, with the corridor testbed's `--shot`:
 
 ```
-<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --world-palette=res://assets/palettes/good/waldgeist-32x.png
+<godot> --path . res://src/debug/scenes/corridor_testbed.tscn -- --shot --world-palette=res://assets/palettes/good/waldgeist-32x.png
 ```
 
 Tests: `tests/utils/test_palette_loader.gd`.

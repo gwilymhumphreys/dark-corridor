@@ -20,14 +20,12 @@ main.tscn (Main) ── main_controller.gd
 **Title overlays.** Start raises **`character_select.tscn`** (one `character_card`
 per `CharacterCatalog.ids()` — personal name + role subtitle + portrait; a pick →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
-kit, #27). The Settings button raises **`settings_screen.tscn`** (below). Dev hooks skip
-the menu: `--autostart` (default-character run), `--select`, `--settings`.
+kit, #27). The Settings button raises **`settings_screen.tscn`** (below).
 
 `MainController` boots with `Game` (already in TITLE — autoloads ready first) and
 **swaps the active screen on `Game.phase_changed`** (TITLE / RUN / DEATH / WIN). It
-holds no game state. Dev hooks: title `--autostart` (with `--character=ID` to pick the character), MainController `--shot
-[--shot-delay s]`. `project.godot`'s `main_scene` is `main.tscn` (the corridor
-testbed + combat sandbox stay runnable as direct scenes).
+holds no game state. `project.godot`'s `main_scene` is `main.tscn`. The screens hold no dev code; the
+start-up arguments for screenshots and the dev scenes are in [dev_tools.md](dev_tools.md).
 
 ## The real-time seam (how the run runs)
 
@@ -133,8 +131,8 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   `Balance.ENEMY_REVEAL_DURATION` seconds of the walk, so it is up when the fight starts (the run
   screen calls `CombatView.show_enemies`); a summon that spawns mid-fight fades in over the shorter
   `ENEMY_FADE_IN` instead. The row is `status_icons.tscn`; each OUTSIDE-set status in it shows as a `status_icon.tscn`:
-  the status's icon on a square of its colour. The mechanic statuses are shown by the health bar:
-  shield above it, the others as stack counts beside it. An empty status row is hidden, so it adds
+  the status's icon on a square of its colour. The mechanic statuses are shown on the health bar:
+  shield at its left end, the others as stack counts at its right end. An empty status row is hidden, so it adds
   no gap. The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
   count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`, kept inside the corridor panel's
@@ -161,9 +159,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   the gap scaled to match, and refits whenever the item or potion count or the section changes
   (`board_cell_size`, which counts the potion row as one extra row). The potions take the same cell
   size. Behind the cells is a pencil grid with one square per cell, and each item and potion sits
-  slightly askew on it ([print_frame.md](print_frame.md#how-it-works)). For screenshots,
-  `--board-items N` (with `--autofight --shot`) fills the board with copies of the starting items up
-  to N, and `--potions N` gives the player N Healing Draughts.
+  slightly askew on it ([print_frame.md](print_frame.md#how-it-works)).
   **Temporary things fade out when the fight ends.** A created item stays on the board and a summon
   token stays on the roster until the `CombatManager` is torn down at the next advance, so
   `release()` drops them from the view itself: each created item's cell

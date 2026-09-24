@@ -41,7 +41,7 @@ video / accessibility keys as settings grow.
 **Silent runs.** A process launched with `--autotest` or `--shot` plays no sound: `Prefs`
 mutes the Master bus at boot and leaves the stored levels alone, so the player's own
 settings are untouched. Mute-when-unfocused is skipped in those runs, since the bus is
-already muted. The flags are the `SILENT_ARGS` constant in `prefs.gd`.
+already muted. The check is `DevArgs.is_silent_run()` ([dev_tools.md](dev_tools.md)).
 
 ## SfxManager (`src/autoloads/sfx_manager.gd`)
 

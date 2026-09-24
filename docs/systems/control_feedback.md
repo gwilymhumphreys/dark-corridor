@@ -70,6 +70,6 @@ In a preset, the feedback part has a `control_highlight` section for the shader 
 
 Start-up arguments `--feedback-set=name=value`, `--feedback-panel` and `--feedback-demo=<amount>`
 (hold every control hovered, for screenshots) are listed in
-[debug_panel.md](debug_panel.md#start-up-arguments).
+[dev_tools.md](dev_tools.md#look-arguments).
 
 Tests: `tests/ui/test_control_feedback.gd`.

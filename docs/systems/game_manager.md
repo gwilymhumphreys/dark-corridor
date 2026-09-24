@@ -41,7 +41,7 @@ What it **is not**:
 
 `Game` owns the phase machine — the built enum is **`Phase { BOOT, TITLE, RUN, DEATH, WIN }`**; a **Meta** phase (skill-tree → new run) is deferred. Each phase owns its screen; `Game` drives the transitions and the run-lifecycle hooks that hang off them:
 
-- **→ Run (fresh):** seed a new run from the chosen `Characters` definition (starting board + relic), create the `Run manager`.
+- **→ Run (fresh):** seed a new run from the chosen `Characters` definition (starting board + relic), create the `Run manager`, then emit **`run_started(run)`** before the phase changes to RUN. The dev tools add to a new run on this signal ([dev_tools.md](dev_tools.md)); it is not emitted on resume.
 - **→ Run (resume):** `Save.read()`; if a run save exists, create the `Run manager` and have it **rehydrate** from the snapshot; resume at the saved encounter.
 - **Run → Death / Win:** the `Run manager` signals the outcome up; `Game` calls `Save.clear()`, tears down the run, and transitions to the death (loss) or win/credits → meta screen.
 

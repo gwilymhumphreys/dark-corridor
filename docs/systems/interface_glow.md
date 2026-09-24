@@ -42,6 +42,6 @@ editing a preset file.
 | `InterfaceGlow.settings`, `setting(property)`, `apply_settings()`, `reset()` | Glow settings |
 
 `--glow-demo=<brightness>` makes every node drawn through a picture material glow, for
-screenshots.
+screenshots. The debug panel reads it and sets `InterfaceGlow.demo_brightness` ([dev_tools.md](dev_tools.md#look-arguments)).
 
 Tests: `tests/debug/test_interface_glow.gd`.

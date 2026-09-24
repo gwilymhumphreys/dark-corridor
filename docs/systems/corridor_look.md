@@ -64,10 +64,10 @@ The corridor part has sections `corridor_shader` (every look uniform), `corridor
 `corridor_environment` (every Light and Environment property). Reading it starts from the look defaults and
 the corridor scene's own values, and leaves the palettes and the other parts unchanged.
 
-For a screenshot of a saved preset (arguments in [debug_panel.md](debug_panel.md#start-up-arguments)):
+For a screenshot of a saved preset (arguments in [dev_tools.md](dev_tools.md#look-arguments)):
 
 ```
-<godot> --path . res://src/scenes/corridor_testbed.tscn -- --shot --still --monster --shot-delay=3 --preset=<name> > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt
+<godot> --path . res://src/debug/scenes/corridor_testbed.tscn -- --shot --still --monster --shot-delay=3 --preset=<name> > _temp/shot.txt 2>&1; grep SHOT_SAVED _temp/shot.txt
 ```
 
 Tests: `tests/debug/test_corridor_look.gd`.

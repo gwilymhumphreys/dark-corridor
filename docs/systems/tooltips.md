@@ -235,14 +235,12 @@ of your [attack] items", "[attack] +50% to a random [attack] item of yours".
 
 ## Dev host
 
-`src/scenes/dev/tooltip_demo.tscn` (+`.gd`) — a throwaway host (like `combat_sandbox`):
+`src/debug/scenes/tooltip_demo.tscn` (+`.gd`), one of the [dev scenes](dev_tools.md#dev-scenes):
 builds one player `Item`, mounts an `ItemCell` + a `TooltipCluster`, and force-shows
-the cluster over the cell. Supports `--shot`. The headless verification harness;
-excluded from `extract_pot` (`EXCLUDE_FILES`). The live run screen (`--autostart`)
-covers the real hover wiring.
+the cluster over the cell. The live run screen (`--autostart`) covers the real hover wiring.
 
 ```
-/c/projects/godot/godot --path . res://src/scenes/dev/tooltip_demo.tscn --shot
+<godot> --path . res://src/debug/scenes/tooltip_demo.tscn -- --shot
 ```
 
 ## Settings

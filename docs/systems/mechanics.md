@@ -326,12 +326,12 @@ each frame and writes nothing.
   hides the health under it.
 - A faint line (`Colours.HP_BAR_LINE`) marks every `LINE_STEP` points. When shield is larger than
   max health, a thicker line marks where max health ends.
-- The label on the bar shows current health only.
-- Above the bar, the shield icon and value in the shield colour. The row keeps its space when shield
-  is 0, so the bar does not move.
-- `StatusNumbers` (`status_numbers.tscn`) sits to the right of the bar: one label per mechanic
-  status (poison, burn, bleed, regen) showing its stack count in the mechanic's colour. The numbers
-  are not translated.
+- The numbers are all on the bar. The shield and status numbers use the `LabelOnBar` text style
+  (the small rung with a dark outline, so a coloured number reads on any fill). The shield icon and value sit at the left, in the
+  text colour because they are drawn over the shield fill, and are hidden when shield is 0. Current health is in the centre. `StatusNumbers`
+  (`status_numbers.tscn`) sits at the right: one label per mechanic status (poison, burn, bleed,
+  regen) showing its stack count in the mechanic's colour. The numbers are not translated.
+- Nothing is drawn above the bar, so the name sits directly on it.
 
 The status-icon row (`status_icons.tscn`, one `StatusIcon` per status) on the enemy HUD and under
 the player's health bar shows only the OUTSIDE-set statuses; the health bar shows the mechanic statuses.

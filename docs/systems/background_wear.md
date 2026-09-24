@@ -60,6 +60,6 @@ part. The mark colours are not saved; they come from `Colours`.
 
 For screenshots, `--background-set=<uniform>=<value>` sets one setting (repeatable), for example
 `--background-set=background_folds_on=true`, and `--background-panel` opens the Background tab
-([debug_panel.md](debug_panel.md#start-up-arguments)).
+([dev_tools.md](dev_tools.md#look-arguments)).
 
 Tests: `tests/debug/test_corridor_look.gd`, `tests/debug/test_print_frame.gd`.

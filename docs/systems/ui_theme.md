@@ -23,6 +23,7 @@ press and selection, and the files are no longer referenced.
 | `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it. `PanelSlot` is the same, with smaller content margins |
 | `ButtonBare` | a button that draws no body of its own (`StyleBoxEmpty` in every state): used where the button only carries the click and the juice, and something inside it is the picture — the reward options in the draft overlay (`reward_option.tscn`) and the potion slots (`potion_slot.tscn`) |
 | `LabelDim` | dimmer section labels ("Potions", "Items") |
+| `LabelOnBar` | the small text rung with a dark outline: the shield, health and status numbers drawn on a health bar |
 
 `PanelFramed` is used by most overlay panels, by the tooltip panel
 (`tooltip_panel.tscn`) and by Godot's own built-in tooltip popup (the `TooltipPanel`

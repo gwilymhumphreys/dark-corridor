@@ -85,7 +85,7 @@ like a printed sleeve, using the grade, colour ramp and halftone or hatching. Th
 placeholders.
 
 For screenshots, `--print-set=<name>=<value>` sets one border, overlay or layout setting (repeatable)
-and `--print-panel` opens the Print tab ([debug_panel.md](debug_panel.md#start-up-arguments)).
+and `--print-panel` opens the Print tab ([dev_tools.md](dev_tools.md#look-arguments)).
 
 ## Public API
 

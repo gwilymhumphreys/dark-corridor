@@ -138,7 +138,7 @@ In a preset, the interface part has an `interface_shader` section listing every 
 | `InterfaceLook.copy_from_corridor()`, `copy_to_corridor()` | Copy shared settings between the looks |
 
 Start-up arguments `--interface-set=` and `--interface-panel` are listed in
-[debug_panel.md](debug_panel.md#start-up-arguments). `DebugPanels.reset_settings()` resets the interface
+[dev_tools.md](dev_tools.md#look-arguments). `DebugPanels.reset_settings()` resets the interface
 look.
 
 Tests: `tests/debug/test_interface_look.gd`.
