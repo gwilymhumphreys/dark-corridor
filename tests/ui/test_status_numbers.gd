@@ -47,7 +47,7 @@ func test_poison_label_shows_its_count_and_shield_and_weak_do_not() -> void:
   numbers._process(0.0)
   assert_false(numbers.has_node('Shield'), 'shield has no label here: the health bar shows it')
   assert_true(numbers.get_node('Poison').visible, 'the poison label is visible')
-  assert_eq(numbers.get_node('Poison').text, '3', 'the poison label shows its count')
+  assert_eq(numbers.get_node('Poison/Value').text, '3', 'the poison label shows its count')
   assert_false(numbers.get_node('Burn').visible, 'no burn, no label')
   assert_false(numbers.get_node('Bleed').visible, 'no bleed, no label')
   assert_false(numbers.get_node('Regen').visible, 'no regen, no label')
@@ -59,4 +59,4 @@ func test_null_actor_hides_every_label() -> void:
   numbers.actor = null
   numbers._process(0.0)
   for label_name in ['Poison', 'Burn', 'Bleed', 'Regen']:
-    assert_false((numbers.get_node(label_name) as Label).visible, '%s is hidden with a null actor' % label_name)
+    assert_false((numbers.get_node(label_name) as Control).visible, '%s is hidden with a null actor' % label_name)

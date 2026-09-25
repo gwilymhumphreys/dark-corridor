@@ -6,7 +6,7 @@ extends CharacterPanel
 ## approach and fade_in() brings it up when the fight starts. Reads the Actor; writes nothing. The
 ## VFX wall reads hud_centre / cell_centre.
 
-const CELL_PX: float = 90.0   # smaller than the player's prominent board
+const CELL_PX: float = 45.0   # smaller than the player's prominent board
 const CELL_SEPARATION: float = 20.0   # the Items separation in enemy_hud.tscn
 
 var _fade: Tween

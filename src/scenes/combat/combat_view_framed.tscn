@@ -150,15 +150,14 @@ theme_override_constants/separation = 24
 
 [node name="PlayerPanel" parent="Portraits" instance=ExtResource("character_panel")]
 layout_mode = 2
+show_items = false
 
 [node name="Portrait" parent="Portraits/PlayerPanel/Row" index="0"]
 size_flags_vertical = 4
 
-[node name="Name" parent="Portraits/PlayerPanel/Row/Readout" index="0"]
+[node name="Name" parent="Portraits/PlayerPanel/Row/Readout/Top/NameBar/NameRow" index="0"]
 text = "You"
 
-[node name="Items" parent="Portraits/PlayerPanel/Row/Readout" index="3"]
-visible = false
 
 [node name="AllyRight" type="HBoxContainer" parent="Portraits"]
 layout_mode = 2

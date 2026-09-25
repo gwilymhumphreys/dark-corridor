@@ -39,7 +39,7 @@ The run screen is split into four sections that match the folds in the paper bac
 - The run screen owns one `ScreenSections`, on its HUD. The information section's contents sit in it directly. The combat view is given the same node (`CombatView.sections`) and moves its corridor, item column and portrait row onto the sections' rectangles whenever `sections_changed` fires. A view made without one, as in tests, makes its own.
 - The **split point** is where the sections meet. The **padding** is taken off every side of each section, so everything sits the same distance from the screen edge and from the folds. Both are print frame settings (`split_across`, `split_down`, `padding` in `PrintLook.PRINT_SETTING_DEFAULTS`), set from the Layout group of the [Print tab](print_frame.md).
 - The folds line up with the split point on their own: with follow layout on, the [background wear](background_wear.md) puts the last fold at the corridor's far edge plus its padding.
-- Moving the split point or changing the padding reflows the parts. The item grid uses as many columns as fit the width. The player portrait stays square and takes the section's full height, with the name and HP bar beside it. Ally portraits do the same, but never grow past their size in `ally_slot.tscn`.
+- Moving the split point or changing the padding reflows the parts. The item grid uses as many columns as fit the width. The portraits do not follow the section: each stays square and as tall as the column beside it in its character panel (`CharacterPanel._fit_portrait`).
 
 ## The corridor & the approaching encounter
 

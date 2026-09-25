@@ -120,28 +120,37 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   draws the optional border and overlay ([print_frame.md](print_frame.md)).
 - **One character panel for the player, each ally and each enemy** — `character_panel.tscn`
   (`CharacterPanel`): a portrait, and beside it a column of the **name**, the **health bar**
-  (`health_bar.tscn`, [mechanics.md → Health bar](mechanics.md#health-bar)), the **status-icon row**
-  and the **item cells**. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
+  (`health_bar.tscn`, [mechanics.md → Health bar](mechanics.md#health-bar)), the **status icons**
+  and the **item cells**. Two print settings place the items and the status icons, and every layout
+  is built into the scene (`CharacterPanel.set_layout`). `item_layout`: *Beside* (the default) puts
+  the items in a grid three cells tall to the right of the name, bar and status icons; *Under bar*
+  puts them in a row under the bar; *Name row* puts them in a row on the name's line, right-aligned
+  to the bar's end. `status_layout`: *Beside bar* puts the status icons in a grid two tall to the
+  right of the name and bar; *Under bar* (the default) puts them in one row under it. Both grids fill
+  each column top to bottom, then the next column. The `enemy_panel_background` print setting leaves
+  the enemy panels transparent. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
   change only sizes, colours and which parts show, and the player's `PlayerPanel` is an instance of
-  it, so the three cannot drift apart in layout. The enemy hides the portrait (its sprite is right
+  it, so the three cannot drift apart in layout. The portrait stays square and as tall as the column beside it, so it follows the
+  text size and the bar and cell sizes by itself. The enemy hides the portrait (its sprite is right
   below); the player hides the item row (its items are on the board). The panel itself is drawn
   only with the `portrait_panel` print setting ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — the enemy's character panel: its
-  **name** (`Actor.display_name`, `tr()`'d), health bar, status-icon row and **item cells**. The HUD is **hidden for most of the approach** and fades in over the last
+  **name** (`Actor.display_name`, `tr()`'d), health bar, status icons and **item cells**. The HUD is **hidden for most of the approach** and fades in over the last
   `Balance.ENEMY_REVEAL_DURATION` seconds of the walk, so it is up when the fight starts (the run
   screen calls `CombatView.show_enemies`); a summon that spawns mid-fight fades in over the shorter
   `ENEMY_FADE_IN` instead. The row is `status_icons.tscn`; each OUTSIDE-set status in it shows as a `status_icon.tscn`:
-  the status's icon on a square of its colour. The mechanic statuses are shown on the health bar:
-  shield at its left end, the others as stack counts at its right end. An empty status row is hidden, so it adds
-  no gap. The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
+  the status's icon on a square of its colour, with its stacks (when more than one) in a value pill (the same pill as an
+  item's values) centred on its bottom-left corner, half outside the frame. The mechanic statuses are shown on the health bar:
+  in one centred row after the health number, shield first and the others after it, each shown as its icon and stack count. The corridor renders **one sprite per enemy**, arranged side by side and shrunk by
   count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`, kept inside the corridor panel's
   top and side edges. The HUD / ally-slot item cells
-  are smaller than the player's board (`ItemCell.set_cell_size`). The view **reconciles** its
+  are much smaller than the player's board (`ItemCell.set_cell_size`); their value pills stop
+  shrinking at `ItemCell.PILL_MIN_RATIO` so the numbers stay readable. The view **reconciles** its
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
-  aligned to the top of the section, the left-aligned name ("You") over the health bar and the status-icon row (the player's character
+  aligned to the top of the section, the left-aligned name ("You") over the health bar and the status icons (the player's character
   panel, `PlayerPanel`) — centred between the ally slots; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
   centred row of mechanic-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per mechanic effect; an effect that applies a status gets no pill)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a

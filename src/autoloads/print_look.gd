@@ -48,7 +48,9 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## pixels at full cell size (`CombatViewFramed`). Then the token look (`apply_token_style`): the
 ## shadow's blur and offset in pixels and its opacity; the card colour the token fill is blended
 ## towards and how far (0 keeps the interface background, 1 is the card colour); and whether the portraits are tokens too and
-## whether the player's portrait, name and HP bar sit on one token panel (`CombatViewFramed`).
+## whether the player's portrait, name and HP bar sit on one token panel (`CombatViewFramed`). Then
+## the character panel layout: where the items and status icons go (`CharacterPanel.ItemLayout`
+## and `StatusLayout`, as their index) and whether the enemy panels draw their background.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'split_across': 1700.0,
@@ -62,6 +64,9 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'token_fill_amount': 0.0,
   'token_portraits': false,
   'portrait_panel': false,
+  'item_layout': 0,
+  'status_layout': 1,
+  'enemy_panel_background': true,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']

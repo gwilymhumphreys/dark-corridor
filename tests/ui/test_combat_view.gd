@@ -52,9 +52,9 @@ func test_enemy_hud_hp_text_tracks_actor() -> void:
   var a := _spawn(100.0, [FixtureItems.attack()])
   hud.setup(a)
   a.take_damage(40.0)
-  var bar: HealthBar = hud.get_node('Row/Readout/HealthBar')
+  var bar: HealthBar = hud.get_node('Row/Readout/Top/NameBar/HealthBar')
   bar._process(0.0)   # the per-frame refresh, called directly — deterministic, no _process race
-  assert_eq(bar.get_node('Bar/Label').text, '60', 'HP text tracks the actor')
+  assert_eq(bar.get_node('Bar/Readout/Label').text, '60', 'HP text tracks the actor')
 
 
 func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
@@ -66,8 +66,9 @@ func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
   StatusManager.apply(a, ShieldStatus.ID, 5.0)
   StatusManager.apply(a, 'weak', 1.0)
   hud.setup(a)
-  (hud.get_node('Row/Readout/Statuses') as StatusIcons).refresh()
-  assert_eq(hud.get_node('Row/Readout/Statuses').get_child_count(), 1,
+  var row: StatusIcons = hud.get_node('Row/Readout/Top/Statuses')
+  row.refresh()
+  assert_eq(row.icon_count(), 1,
       'shield is a mechanic (its number shows beside the HP bar), only weak gets an icon')
 
 
@@ -114,9 +115,9 @@ func test_player_portrait_shows_outside_set_status_icons() -> void:
   StatusManager.apply(p, ShieldStatus.ID, 5.0)
   StatusManager.apply(p, 'weak', 1.0)
   view.bind(null, p, [])
-  var row: StatusIcons = view.get_node('Portraits/PlayerPanel/Row/Readout/Statuses')
+  var row: StatusIcons = view.get_node('Portraits/PlayerPanel/Row/Readout/Top/Statuses')
   row.refresh()
-  assert_eq(row.get_child_count(), 1, 'shield shows on the health bar, only weak gets an icon')
+  assert_eq(row.icon_count(), 1, 'shield shows on the health bar, only weak gets an icon')
 
 
 func test_allies_show_outside_a_fight() -> void:

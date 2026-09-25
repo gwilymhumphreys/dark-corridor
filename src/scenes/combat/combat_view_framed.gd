@@ -19,7 +19,6 @@ const SCREEN_SECTIONS: PackedScene = preload('res://src/ui/screen_sections.tscn'
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
 const POTION_SLOTS: int = 3   # squares drawn in the potion row's grid (docs/design/game_design.md)
-const PORTRAIT_MIN_SIZE: float = 40.0   # the player portrait shrinks to fit its section, down to this
 const MIN_CELL_SIZE: float = 48.0       # the player's item cells shrink to fit the board, down to this
 const ENEMY_FADE_IN: float = 0.25       # seconds an enemy HUD takes to fade up when the fight starts
 const TEMPORARY_FADE_OUT: float = 0.45  # seconds a temporary item's cell / a token's slot takes to fade away at fight end
@@ -68,7 +67,7 @@ var _gap_ratio: float = 0.0   # the gap between the player's item cells as a sha
 var _cell_size: float = ItemCell.CELL_SIZE.x   # the player's item cells' current size, set by _fit_board
 var _fitted: Vector4 = -Vector4.ONE   # the board width, height, cell count and potion count _fit_board last fitted to
 var _askew_set: Vector3 = -Vector3.ONE   # the tilt, shift and cell size _set_items_askew last applied
-var _tokens_set: Array = []   # the token_portraits, portrait_panel, ally count and enemy count _set_token_styles last applied
+var _tokens_set: Array = []   # the portrait settings, ally count and enemy count _set_token_styles last applied
 
 
 func _ready() -> void:
@@ -83,14 +82,12 @@ func _ready() -> void:
   _place_in_sections()
 
 
-## Put the corridor, the item column and the portrait row in their screen sections. The portraits are
-## fitted to the new sizes first, so no container is held larger than its section, and the player's
+## Put the corridor, the item column and the portrait row in their screen sections. The player's
 ## items are fitted to the board once the item column is in place.
 func _place_in_sections() -> void:
   var corridor_rect: Rect2 = sections.section('Corridor').get_global_rect()
   var items_rect: Rect2 = sections.section('Items').get_global_rect()
   var portraits_rect: Rect2 = sections.section('Portraits').get_global_rect()
-  _fit_portraits(portraits_rect.size.y)
   _place(_corridor_part, corridor_rect)
   _place(_corridor_area, corridor_rect)
   _place(_items_part, items_rect)
@@ -184,12 +181,17 @@ func _draw_grid() -> void:
 
 ## Whether the portraits are cardboard tokens like the items, and whether every character panel (the
 ## player's, each ally slot's and each enemy HUD's) is drawn, from the print settings `token_portraits`
-## and `portrait_panel` (docs/systems/print_frame.md). Does nothing unless a setting or the number of
+## and `portrait_panel`, where each panel puts its items and status icons, from `item_layout` and
+## `status_layout`, and whether the enemy panels draw their background, from `enemy_panel_background`
+## (docs/systems/print_frame.md). Does nothing unless a setting or the number of
 ## allies or enemies changed.
 func _set_token_styles() -> void:
   var portraits: bool = PrintLook.print_setting('token_portraits')
   var panel: bool = PrintLook.print_setting('portrait_panel')
-  var wanted: Array = [portraits, panel, _ally_slots.size(), _enemy_huds.size()]
+  var item_layout: int = PrintLook.print_setting('item_layout')
+  var status_layout: int = PrintLook.print_setting('status_layout')
+  var enemy_background: bool = PrintLook.print_setting('enemy_panel_background')
+  var wanted: Array = [portraits, panel, item_layout, status_layout, enemy_background, _ally_slots.size(), _enemy_huds.size()]
   if wanted == _tokens_set:
     return
   _tokens_set = wanted
@@ -197,19 +199,9 @@ func _set_token_styles() -> void:
   var panels: Array = [_player_panel] + _ally_slots.values() + _enemy_huds.values()
   for character_panel in panels:
     (character_panel as CharacterPanel).set_portrait_style(portrait_style)
-    (character_panel as CharacterPanel).set_panel_shown(panel)
-  _place_in_sections()   # the panel's margins change the room left for the portraits
+    (character_panel as CharacterPanel).set_panel_shown(panel and (enemy_background or not character_panel is EnemyHud))
+    (character_panel as CharacterPanel).set_layout(item_layout as CharacterPanel.ItemLayout, status_layout as CharacterPanel.StatusLayout)
   _portraits_part.queue_sort()   # the row keeps the panel's old size otherwise
-
-
-## The player portrait stays square and takes the section's full height, less the margins of the panel
-## around it, sitting to the left of the name and HP bar. Each ally slot fits itself the same way.
-func _fit_portraits(height: float) -> void:
-  var room: float = height - _player_panel.get_theme_stylebox('panel').get_minimum_size().y
-  var side: float = maxf(floorf(room), PORTRAIT_MIN_SIZE)
-  _portrait.custom_minimum_size = Vector2(side, side)
-  for slot in _ally_slots.values():
-    (slot as AllySlot).fit_height(height)
 
 
 ## Bind the live fight: the player's portrait + HP (lower left) and its board column (top right),
@@ -317,7 +309,6 @@ func _sync_ally_slots(player_side: Array) -> void:
       var slot: AllySlot = ALLY_SLOT.instantiate()
       _pick_ally_box().add_child(slot)
       slot.setup(a, _cm.timekeeper if _cm != null else null)
-      slot.fit_height(sections.section('Portraits').size.y)
       slot.set_cooldowns_shown(_cooldowns_shown)
       _ally_slots[a] = slot
 

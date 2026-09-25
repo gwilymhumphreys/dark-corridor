@@ -6,7 +6,7 @@ extends LookPanel
 ## with its Print part; the tab has no preset row of its own.
 
 ## The token settings by section: section title -> {setting -> [min, max, step]} ([] for a switch or
-## a colour).
+## a colour, the option names for a dropdown, in the order of the enum they index).
 const SECTIONS: Dictionary = {
   'Placement': {
     'token_tilt': [0.0, 15.0, 0.1],
@@ -24,6 +24,11 @@ const SECTIONS: Dictionary = {
   'Portraits': {
     'token_portraits': [],
     'portrait_panel': [],
+  },
+  'Character panels': {
+    'item_layout': ['Beside', 'Under bar', 'Name row'],
+    'status_layout': ['Beside bar', 'Under bar'],
+    'enemy_panel_background': [],
   },
 }
 

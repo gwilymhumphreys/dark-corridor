@@ -4,5 +4,5 @@
 
 [node name="StatusIcons" type="HBoxContainer"]
 mouse_filter = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 14
 script = ExtResource("1")

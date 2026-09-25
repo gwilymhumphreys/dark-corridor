@@ -14,6 +14,7 @@ extends Control
 ## teardown safely.
 
 const CELL_SIZE := Vector2(120, 120)   # the default (the player's prominent board); HUDs shrink it
+const PILL_MIN_RATIO: float = 0.6      # pills on small cells stop shrinking here, so their numbers stay readable
 const COOLDOWN_SHADER: Shader = preload('res://src/shaders/cooldown_fill.gdshader')
 const RECOIL_SCALE: float = 1.3
 const RECOIL_DURATION: float = 0.18    # combat-clock seconds
@@ -143,7 +144,7 @@ func _build_pills() -> void:
     (pill as ValuePill).visible = false
   if item == null:
     return
-  var ratio: float = cell_size.x / CELL_SIZE.x
+  var ratio: float = maxf(cell_size.x / CELL_SIZE.x, PILL_MIN_RATIO)
   _pills.add_theme_constant_override('separation', int(round(4.0 * ratio)))  # scales with the cell
   var index: int = 0
   for effect: ItemEffect in item.def.effects:

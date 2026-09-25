@@ -68,23 +68,15 @@ func test_view_uses_the_sections_it_is_given() -> void:
   assert_eq(view.get_node('Items').get_global_rect(), sections.section('Items').get_global_rect(), 'items placed')
 
 
-func test_player_portrait_fits_the_portrait_section_height() -> void:
+func test_player_portrait_matches_the_column_beside_it() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
+  await get_tree().process_frame
   var portrait: Control = view.get_node('Portraits/PlayerPanel/Row/Portrait')
-  var box: Control = view.get_node('Portraits/PlayerPanel/Row')
-  for split_down: float in [1000.0, 1150.0, 1250.0]:
-    PrintLook.print_settings['split_down'] = split_down
-    view.sections._process(0.0)
-    var height: float = view.sections.section('Portraits').size.y
-    assert_eq(portrait.custom_minimum_size.x, portrait.custom_minimum_size.y, 'the portrait stays square')
-    assert_true(box.get_combined_minimum_size().y <= height, 'the portrait row fits in %d pixels' % height)
-  PrintLook.print_settings['split_down'] = 1000.0
-  view.sections._process(0.0)
-  var tall: float = portrait.custom_minimum_size.y
-  PrintLook.print_settings['split_down'] = 1250.0
-  view.sections._process(0.0)
-  assert_lt(portrait.custom_minimum_size.y, tall, 'a shorter section gives a smaller portrait')
+  var readout: Control = view.get_node('Portraits/PlayerPanel/Row/Readout')
+  var height: float = ceilf(readout.get_combined_minimum_size().y)
+  assert_eq(portrait.custom_minimum_size, Vector2(height, height),
+      'the portrait is square and as tall as the column beside it')
 
 
 func test_item_columns_fit_the_items_section_width() -> void:

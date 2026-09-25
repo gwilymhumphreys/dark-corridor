@@ -46,15 +46,20 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   has the interface background colour and at 1 the card colour. It is worked out again after a palette
   change, because the palette sets the fill to `UI_BACKGROUND`. The token's edge is the
   panel wear's worn edge ([panel_wear.md](panel_wear.md)); it has no border.
-- Two switches try the token look on the portrait section. `token_portraits` puts the player and ally
+- Two switches try looks on the portrait section. `token_portraits` puts the player and ally
   portraits in `PanelToken` frames instead of `PanelSlot`. `portrait_panel` draws every character panel
   (the player's, each ally's and each enemy's, `character_panel.tscn`) as a `PanelTokenWide` panel
-  (`PanelBare`, which draws nothing, when off), and the portraits shrink by the panel's margins to stay
-  inside the section. `CombatViewFramed` applies both.
+  (`PanelBare`, which draws nothing, when off).
+- Three settings try character panel layouts ([run_screen.md](run_screen.md)). `item_layout` is a
+  dropdown for where each panel's item cells go: beside (a grid to the right of the name, bar and
+  status icons), under the bar, or on the name's line. `status_layout` is a dropdown for the status
+  icons: beside the bar or under it. `enemy_panel_background` (on by default) lets the enemy panels
+  draw the `portrait_panel` background; off leaves them transparent over the corridor with their
+  name, bar, statuses and items still shown. `CombatViewFramed` applies all five settings.
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
-  `TokensPanel`), in four sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (colour, amount) and Portraits (the two switches).
+  `TokensPanel`), in five sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
+  (colour, amount), Portraits (the two switches) and Character panels (the three layout settings).
 
 | Group | Does |
 |---|---|
