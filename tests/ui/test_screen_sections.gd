@@ -35,6 +35,35 @@ func test_section_rects_split_the_screen_and_take_off_the_padding() -> void:
   assert_eq(rects['Info'], Rect2(1720, 1170, 820, 250), 'information lower right')
 
 
+func test_portraits_above_items_share_the_top_right_section() -> void:
+  var rects: Dictionary = ScreenSections.section_rects(Vector2(2560, 1440), Vector2(1700, 1150), 20.0,
+    ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS)
+  assert_eq(rects['Corridor'], Rect2(20, 20, 1660, 1400), 'the corridor takes the whole left side')
+  assert_eq(rects['Items'], Rect2(1720, 20, 820, 1110), 'items top right')
+  assert_eq(rects['Portraits'], rects['Items'], 'the portraits share the items section')
+  assert_eq(rects['Info'], Rect2(1720, 1170, 820, 250), 'information lower right')
+
+
+func test_view_stacks_the_portraits_above_the_items() -> void:
+  var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
+  _host(view)
+  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS
+  view.sections._process(0.0)
+  var portraits: BoxContainer = view.get_node('Portraits')
+  var items: Rect2 = view.get_node('Items').get_global_rect()
+  var section: Rect2 = view.sections.section('Items').get_global_rect()
+  assert_true(portraits.vertical, 'the portraits are in a column')
+  assert_eq(portraits.get_child(0), view.get_node('Portraits/PlayerPanel'), 'the player comes first')
+  assert_eq(portraits.get_global_rect().position, section.position, 'the portraits sit at the top of the section')
+  assert_gt(items.position.y, portraits.get_global_rect().end.y, 'the items start below the portraits')
+  assert_eq(items.end, section.end, 'the items take the rest of the section')
+  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_LOWER_LEFT
+  view.sections._process(0.0)
+  assert_false(portraits.vertical, 'back in one row')
+  assert_eq(portraits.get_child(1), view.get_node('Portraits/PlayerPanel'), 'the player between the ally rows')
+  assert_eq(view.get_node('Items').get_global_rect(), section, 'the items fill the section again')
+
+
 func test_sections_follow_the_print_settings() -> void:
   var sections: ScreenSections = _host(SECTIONS_SCENE.instantiate())
   watch_signals(sections)
@@ -126,12 +155,9 @@ func test_player_portrait_fits_inside_the_portrait_panel() -> void:
   assert_eq(panel.theme_type_variation, &'PanelBare', 'no panel when off')
 
 
-func test_portraits_become_tokens_when_set() -> void:
+func test_player_portrait_is_always_a_token() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
   var portrait: Control = view.get_node('Portraits/PlayerPanel/Row/Portrait')
   view._process(0.0)
-  assert_eq(portrait.theme_type_variation, &'PanelSlot', 'a plain frame by default')
-  PrintLook.set_print_value('token_portraits', true)
-  view._process(0.0)
-  assert_eq(portrait.theme_type_variation, &'PanelToken', 'a token when set')
+  assert_eq(portrait.theme_type_variation, &'PanelToken', 'a token with token_portraits off')

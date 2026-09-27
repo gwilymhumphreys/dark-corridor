@@ -62,16 +62,16 @@ exists (approach, fight, report, draft) and hidden only while the pause menu is 
 
 **Combat log surfaces** (the watchable read of [combat_log.md](combat_log.md)). On building the
 fight the screen creates a `CombatLog` and assigns it to the live `CombatManager.combat_log`,
-keeping its own ref (`_log`). A small `combat_stats_readout.tscn` on the HUD shows the player's
-running **Dealt · Taken** (net), refreshed each tick, visible only while FIGHTING. When a fight
-resolves, its log becomes `_last_log` — the fight the **Report** button shows — and the run goes
-straight on to `after-beat`; nothing parks. Holding `_last_log` separately from `_log` is what lets
+keeping its own ref (`_log`). When a fight resolves, its log becomes `_last_log` — the fight the
+**Report** button shows until the next fight's log is created — and the run goes straight on to `after-beat`; nothing parks. Holding `_last_log` separately from `_log` is what lets
 the report outlive the `CombatManager`'s teardown at the next advance.
 
 **Combat report** — `combat_summary.tscn` (the per-item damage report from `summary(PLAYER)` + the
 event-log timeline from `events` + a Close button), raised and dismissed by the **Report** button in
-the information section. The button appears once a fight has finished and stays through the beats
-that follow, so the last fight can be read during the draft, an event or the next approach. The run
+the information section. The button is always visible. It shows the current fight's log from the
+moment that fight is built (so during the approach it reads zero), otherwise the last finished
+fight's, so the last fight can be read during the draft or an event. Before the first fight it opens
+empty. The panel is filled when it opens and does not update while open. The run
 keeps running behind the panel; opening the next beat (`_advance`) puts the report away.
 
 **Battle-speed + pause (the player's clock controls).** Both are presentation-only —
@@ -126,9 +126,14 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   the items in a grid three cells tall to the right of the name, bar and status icons; *Under bar*
   puts them in a row under the bar; *Name row* puts them in a row on the name's line, right-aligned
   to the bar's end. `status_layout`: *Beside bar* puts the status icons in a grid two tall to the
-  right of the name and bar; *Under bar* (the default) puts them in one row under it. Both grids fill
+  right of the name and bar; *Under bar* (the default) puts them in one row under it; *Under items*
+  puts that row under the item row instead, so a status appearing does not push the items down (with
+  the items beside the bar or on the name's line it is the same as *Under bar*). Both grids fill
   each column top to bottom, then the next column. The `enemy_panel_background` print setting leaves
-  the enemy panels transparent. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
+  the enemy panels transparent. `enemy_item_size` and `ally_item_size` set the largest item cell in
+  enemy and ally panels (a row too long for its width shrinks), and `status_size` sets the status
+  icons on every panel. Every value pill, on an item or a status icon, is the same size whatever the
+  cell or icon size: the `pill_size` print setting scales them all together. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
   change only sizes, colours and which parts show, and the player's `PlayerPanel` is an instance of
   it, so the three cannot drift apart in layout. The portrait stays square and as tall as the column beside it, so it follows the
   text size and the bar and cell sizes by itself. The enemy hides the portrait (its sprite is right
@@ -145,13 +150,15 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   count (`CombatCorridor.set_enemies`); the view pins each HUD's bottom-centre just above
   its sprite each frame via `CombatCorridor.enemy_anchor(i)`, kept inside the corridor panel's
   top and side edges. The HUD / ally-slot item cells
-  are much smaller than the player's board (`ItemCell.set_cell_size`); their value pills stop
-  shrinking at `ItemCell.PILL_MIN_RATIO` so the numbers stay readable. The view **reconciles** its
+  are smaller than the player's board (`ItemCell.set_cell_size`); their value pills do not shrink
+  with them, so the numbers read the same size everywhere. The view **reconciles** its
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
   aligned to the top of the section, the left-aligned name ("You") over the health bar and the status icons (the player's character
-  panel, `PlayerPanel`) — centred between the ally slots; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
+  panel, `PlayerPanel`) — centred between the ally slots. The player's panel keeps one size through the
+  fight (`CharacterPanel.fixed_size`): its status icons keep their full height with no statuses, and
+  with the portraits above the items it fills the section's width; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
   centred row of mechanic-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per mechanic effect; an effect that applies a status gets no pill)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
@@ -178,7 +185,8 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
 - **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (the ally's character
   panel at a smaller size; its item cells shrink so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
   capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
-  `AllyLeft` / `AllyRight`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
+  `AllyLeft` / `AllyRight`). With the *Portraits above items* screen layout the player and the two
+  ally rows are stacked in a column above the potions instead ([ui_layout.md](ui_layout.md#screen-sections)). A **downed run-scoped ally keeps its slot** (dimmed; it stops
   participating, revived to full next fight); a **dead combat-scoped token is reaped** like an
   enemy (slot removed). The view reads the CombatManager's rosters (`enemies` +
   `player_side()`) each frame, so mid-fight summons (a boss add, a player token) appear as
@@ -280,8 +288,8 @@ full-screen.
   for off-screen beats; `mark_position` on each advance.
 - **Speed button** — `speed_button.tscn` in the information section: an always-visible
   ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
-- **Report button** — beside the speed button in the information section: hidden until the first
-  fight has finished, then a toggle that raises and hides the combat report of the last fight.
+- **Report button** — beside the speed button in the information section: always visible, a toggle
+  that raises and hides the combat report of the current or last fight.
 - **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque
   centered panel (no translucent scrim) + Resume / Settings /
   Quit-to-menu / Exit Game; its full-rect Catcher swallows input so the paused board can't be clicked
@@ -300,7 +308,6 @@ registered in `project.godot`) — see [localization](localization.md).
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
 map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
-`src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell ·
-combat_stats_readout); `src/vfx/vfx_driver.gd`;
+`src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell); `src/vfx/vfx_driver.gd`;
 `src/scenes/combat/monster_images.gd`; the corridor is `src/scenes/corridors/corridor_3d.gd`.
 Tests in `tests/ui/` and `tests/corridors/`.

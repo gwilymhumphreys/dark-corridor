@@ -5,7 +5,6 @@ extends CharacterPanel
 ## its name, HP bar, status row and board items) at a smaller size. setup() builds the item row.
 ## Reads the Actor; writes nothing. The VFX wall reads slot_centre / cell_centre.
 
-const CELL_PX: float = 38.0              # compact — these slots flank the player
 const CELL_MIN_PX: float = 12.0
 const CELL_SEPARATION: float = 10.0      # the Items separation in character_panel.tscn
 const ITEMS_WIDTH: float = 240.0         # the item row's budget under the HP bar; cells shrink to fit
@@ -15,12 +14,21 @@ const ITEMS_WIDTH: float = 240.0         # the item row's budget under the HP ba
 func setup(target: Actor, timekeeper: Timekeeper = null) -> void:
   set_actor(target)
   show_name(tr(target.display_name) if target.display_name != '' else tr('Ally'))
-  # The row sits under the HP bar, so the cells shrink to fit its width rather than widening the slot.
-  var cell_px: float = CELL_PX
-  if not target.board.is_empty():
-    var n: float = float(target.board.size())
-    cell_px = clampf((ITEMS_WIDTH - CELL_SEPARATION * (n - 1.0)) / n, CELL_MIN_PX, CELL_PX)
-  build_items(timekeeper, cell_px)
+  build_items(timekeeper, _fit_cell_px(PrintLook.print_setting('ally_item_size')))
+
+
+## Resize the item cells to `px` (the `ally_item_size` print setting), or smaller if the row would be
+## too long for its width.
+func set_item_size(px: float) -> void:
+  resize_items(_fit_cell_px(px))
+
+
+# The row sits under the HP bar, so the cells shrink to fit its width rather than widening the slot.
+func _fit_cell_px(px: float) -> float:
+  if actor == null or actor.board.is_empty():
+    return px
+  var n: float = float(actor.board.size())
+  return clampf((ITEMS_WIDTH - CELL_SEPARATION * (n - 1.0)) / n, CELL_MIN_PX, px)
 
 
 func _process(_delta: float) -> void:

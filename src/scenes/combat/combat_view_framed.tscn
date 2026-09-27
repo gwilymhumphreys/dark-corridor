@@ -137,7 +137,7 @@ theme_override_constants/h_separation = 24
 theme_override_constants/v_separation = 24
 columns = 5
 
-[node name="Portraits" type="HBoxContainer" parent="."]
+[node name="Portraits" type="BoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 0
 mouse_filter = 2
@@ -151,6 +151,7 @@ theme_override_constants/separation = 24
 [node name="PlayerPanel" parent="Portraits" instance=ExtResource("character_panel")]
 layout_mode = 2
 show_items = false
+fixed_size = true
 
 [node name="Portrait" parent="Portraits/PlayerPanel/Row" index="0"]
 size_flags_vertical = 4

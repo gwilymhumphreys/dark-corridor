@@ -46,12 +46,13 @@ func test_a_finished_fight_offers_its_report_on_the_hud() -> void:
   # A fight no longer parks the run: it resolves straight on to the draft, and its log stays
   # available behind the Report button, which toggles the report panel open and shut.
   var screen := _mount_into_fight(1)
+  assert_true(screen._report_button.visible, 'the Report button is up before any fight has finished')
   var guard: int = 0
   while screen._last_log == null and Game.phase == GameManagerAutoload.Phase.RUN and guard < 400:
     screen._physics_process(1.0)
     guard += 1
   assert_not_null(screen._last_log, 'the finished fight left its log for the report')
-  assert_true(screen._report_button.visible, 'the Report button is up once a fight has finished')
+  assert_true(screen._report_button.visible, 'the Report button stays up once a fight has finished')
   assert_null(screen._summary, 'the report is not raised on its own')
   screen._toggle_report()
   assert_not_null(screen._summary, 'the Report button raises the report')

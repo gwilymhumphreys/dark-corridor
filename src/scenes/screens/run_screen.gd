@@ -28,7 +28,7 @@ var _run: RunManager
 var _cm: CombatManager
 var _view: CombatView   # the swappable surface — framed today, full-screen drops in here
 var _log: CombatLog       # the live fight's observation log
-var _last_log: CombatLog  # the last finished fight's log — what the Report button shows
+var _last_log: CombatLog  # the last finished fight's log — what the Report button shows between fights
 var _draft: DraftOverlay
 var _choice: ChoiceOverlay
 var _event: EventOverlay
@@ -43,7 +43,6 @@ var _settings: SettingsScreen = null
 
 @onready var _sections: ScreenSections = $HUD/Sections   # the screen's four sections; the combat view places its parts in them
 @onready var _map: MapStrip = $HUD/Sections/Info/MapStrip
-@onready var _stats: CombatStatsReadout = $HUD/StatsReadout
 @onready var _gold: Label = $HUD/Sections/Info/GoldReadout
 @onready var _report_button: Button = $HUD/Sections/Info/ReportButton
 
@@ -159,8 +158,6 @@ func _arrive() -> void:
   _walk(Balance.APPROACH_DEPTH_START)
   _view.show_enemies()       # a backstop: normally the fade already started during the walk
   _view.begin_fight()        # the clock starts, so the boards' cooldown fills come on
-  _stats.update_from(_log)   # seed at 0 before the first tick
-  _stats.show()              # the live Dealt / Taken readout is up only during the fight
   _state = State.FIGHTING   # boards activate — the clock starts ticking next frame
 
 
@@ -194,17 +191,14 @@ func _physics_process(delta: float) -> void:
         # The clock stops at resolution, so the last hits' numbers and rings would stay frozen in
         # the corridor under the reward panel. Stop drawing them now.
         _view.release()
-        _stats.hide()
         _state = State.IDLE
-        # The fight's log becomes the one the Report button shows. Nothing parks here: the
-        # run goes straight on to the reward draft, and the player reads the report when
-        # they want to (docs/systems/combat_log.md).
+        # The fight's log stays the one the Report button shows until the next fight starts.
+        # Nothing parks here: the run goes straight on to the reward draft, and the player
+        # reads the report when they want to (docs/systems/combat_log.md).
         _last_log = _log
-        _report_button.show()
         _after_beat()
       else:
         _cm.tick(delta)
-        _stats.update_from(_log)
 
 
 # Battle-speed (a Game session preference) sets the fight clock's BASE scale; the
@@ -372,10 +366,11 @@ func _after_beat() -> void:
     _advance()
 
 
-# The combat report (docs/systems/combat_log.md): the damage report + event log of the last
-# finished fight, raised and dismissed by the Report button in the information section. It
-# parks nothing — the run carries on behind it. The log is held in _last_log, so the report
-# still reads after the CombatManager has been torn down.
+# The combat report (docs/systems/combat_log.md): the damage report + event log of the current
+# fight, or of the last finished fight between fights, raised and dismissed by the Report button
+# in the information section. It parks nothing — the run carries on behind it. The finished
+# fight's log is held in _last_log, so the report still reads after the CombatManager has been
+# torn down. Before the first fight there is no log and the report opens empty.
 func _toggle_report() -> void:
   if _summary != null:
     _hide_report()
@@ -384,12 +379,10 @@ func _toggle_report() -> void:
 
 
 func _show_report() -> void:
-  if _last_log == null:
-    return
   _summary = COMBAT_SUMMARY.instantiate()
   add_child(_summary)   # on top of the combat view; the HUD CanvasLayer stays above it
   _summary.close_pressed.connect(_hide_report)
-  _summary.setup(_last_log)
+  _summary.setup(_log if _log != null else _last_log)
 
 
 func _hide_report() -> void:
@@ -478,7 +471,6 @@ func _on_potion_thrown(index: int) -> void:
 
 
 func _teardown_combat_view() -> void:
-  _stats.hide()
   _log = null   # drop the live ref; _last_log keeps the finished fight's numbers for the report
   if _view != null:
     _view.release()      # stop the VFX wall reading the CombatManager we're about to free

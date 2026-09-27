@@ -1,7 +1,7 @@
 class_name CombatSummary
 extends Control
 ## The combat report (docs/systems/combat_log.md): the player's per-item damage report + the
-## ordered event-log timeline of the last finished fight, read from its CombatLog. The run
+## ordered event-log timeline of the current or last fight, read from its CombatLog. The run
 ## screen raises and dismisses it from the Report button on the HUD; Close emits
 ## `close_pressed`. It reads the log and writes no game state.
 

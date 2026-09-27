@@ -16,12 +16,17 @@ const ITEM_ROWS: int = 3   # cells per column in the item grid beside the name a
 ## name's line, right-aligned.
 enum ItemLayout { BESIDE, UNDER, NAME_ROW }
 ## Where the status icons go (the `status_layout` print setting). BESIDE_BAR: a grid two tall to the
-## right of the name and bar. UNDER_BAR: one row under the bar.
-enum StatusLayout { BESIDE_BAR, UNDER_BAR }
+## right of the name and bar. UNDER_BAR: one row under the bar. UNDER_ITEMS: one row under the item
+## row (under the bar when the items are elsewhere).
+enum StatusLayout { BESIDE_BAR, UNDER_BAR, UNDER_ITEMS }
 
 var actor: Actor
 ## Whether the panel shows an item row. The player's panel turns it off: its items are on the board.
 @export var show_items: bool = true
+## Whether the panel keeps one size through the fight: the status icons keep their full height with no
+## statuses, so a status added or removed does not resize the panel. The player's panel turns it on;
+## its width is set by the combat view (CombatViewFramed._stack_portraits).
+@export var fixed_size: bool = false
 
 @onready var _portrait_frame: PanelContainer = $Row/Portrait
 @onready var _portrait: TextureRect = $Row/Portrait/Image
@@ -49,6 +54,8 @@ func _ready() -> void:
   _items.visible = show_items
   _items_beside_row.visible = false
   _statuses_under.visible = false
+  _statuses.reserve_height = fixed_size
+  _statuses_under.reserve_height = fixed_size
   _fit_portrait()
 
 
@@ -66,7 +73,7 @@ func set_actor(target: Actor) -> void:
   actor = target
   _health_bar.actor = target
   _statuses.actor = target if _status_layout == StatusLayout.BESIDE_BAR else null
-  _statuses_under.actor = target if _status_layout == StatusLayout.UNDER_BAR else null
+  _statuses_under.actor = target if _status_layout != StatusLayout.BESIDE_BAR else null
   if _portrait_frame.visible and target.portrait != '':
     _portrait.texture = load(target.portrait)
 
@@ -121,6 +128,9 @@ func set_layout(item_layout: ItemLayout, status_layout: StatusLayout) -> void:
   _statuses_under.visible = not beside_bar
   _statuses.actor = actor if beside_bar else null
   _statuses_under.actor = actor if not beside_bar else null
+  # The one row of icons sits just under the bar, or last in the column, under the item row.
+  var under_bar_index: int = _statuses.get_parent().get_index() + 1   # just after Top, which holds the bar
+  _readout.move_child(_statuses_under, -1 if status_layout == StatusLayout.UNDER_ITEMS else under_bar_index)
   if _items_built and items_changed:
     for cell: Node in _cells.values():
       cell.get_parent().remove_child(cell)
@@ -130,6 +140,19 @@ func set_layout(item_layout: ItemLayout, status_layout: StatusLayout) -> void:
       _items_beside_row.remove_child(column)
       column.queue_free()
     _build_cells()
+
+
+## Make the status icons `px` square (the `status_size` print setting).
+func set_status_size(px: float) -> void:
+  _statuses.set_icon_size(px)
+  _statuses_under.set_icon_size(px)
+
+
+## Resize the item cells already built to `cell_px`, keeping them where they are.
+func resize_items(cell_px: float) -> void:
+  _cell_px = cell_px
+  for cell: ItemCell in _cells.values():
+    cell.set_cell_size(cell_px)
 
 
 ## Draw the panel (`PanelTokenWide`) or leave it out (`PanelBare`, which draws nothing), from the

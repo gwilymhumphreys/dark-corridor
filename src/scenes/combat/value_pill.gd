@@ -3,8 +3,8 @@ extends PanelContainer
 ## A small value badge straddling the top of an ItemCell (docs/systems/run_screen.md): one per
 ## value-bearing effect, its background tinted by that effect's family colour. The static look
 ## (white, black-outlined text) lives in value_pill.tscn; setup() only sets the run-time DATA — the
-## per-effect fill (a StyleBoxFlat, the only way to carry a dynamic colour) and the cell-size ratio
-## that scales every metric so pills shrink on the smaller enemy HUD / ally cells.
+## per-effect fill (a StyleBoxFlat, the only way to carry a dynamic colour) and the ratio that scales
+## every metric (the `pill_size` print setting, the same for every pill).
 
 const BASE_FONT_SIZE: int = 22
 const BASE_BORDER: float = 2.0
@@ -16,7 +16,7 @@ const BASE_OUTLINE: int = 4
 @onready var _label: Label = $Value
 
 
-## `ratio` scales every metric so pills shrink with the cell (enemy HUDs / ally slots).
+## `ratio` scales every metric (the `pill_size` print setting).
 func setup(text: String, color: Color, ratio: float = 1.0) -> void:
   _label.text = text
   _label.add_theme_font_size_override('font_size', int(round(BASE_FONT_SIZE * ratio)))

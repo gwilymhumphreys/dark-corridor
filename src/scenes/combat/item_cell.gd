@@ -14,13 +14,13 @@ extends Control
 ## teardown safely.
 
 const CELL_SIZE := Vector2(120, 120)   # the default (the player's prominent board); HUDs shrink it
-const PILL_MIN_RATIO: float = 0.6      # pills on small cells stop shrinking here, so their numbers stay readable
 const COOLDOWN_SHADER: Shader = preload('res://src/shaders/cooldown_fill.gdshader')
 const RECOIL_SCALE: float = 1.3
 const RECOIL_DURATION: float = 0.18    # combat-clock seconds
 
 var item: Item
 var cell_size: Vector2 = CELL_SIZE
+var _pill_ratio: float = 1.0   # the `pill_size` print setting the pills were built with
 # False outside a fight: the fill is hidden whatever the item's progress. Applies at once.
 var show_cooldown: bool = true:
   set(value):
@@ -142,10 +142,12 @@ func _build_pills() -> void:
   var pills: Array[Node] = _pills.get_children()
   for pill: Node in pills:
     (pill as ValuePill).visible = false
+  _pill_ratio = PrintLook.print_setting('pill_size')
   if item == null:
     return
-  var ratio: float = maxf(cell_size.x / CELL_SIZE.x, PILL_MIN_RATIO)
-  _pills.add_theme_constant_override('separation', int(round(4.0 * ratio)))  # scales with the cell
+  # Every pill is the same size whatever the cell's size, so its number reads the same everywhere.
+  var ratio: float = _pill_ratio
+  _pills.add_theme_constant_override('separation', int(round(4.0 * ratio)))
   var index: int = 0
   for effect: ItemEffect in item.def.effects:
     if effect.kind != Delivery.Kind.MECHANIC:
@@ -168,6 +170,8 @@ func _effect_color(effect: ItemEffect) -> Color:
 
 
 func _process(_delta: float) -> void:
+  if _pill_ratio != PrintLook.print_setting('pill_size'):
+    _build_pills()
   if item == null:
     return
   var progress: float = item.cooldown.progress()

@@ -5,8 +5,7 @@ writes to at each mutation site (damage / heal / shield / status / fire / charge
 **single source of truth** for combat numbers — the [autotest](autotest.md) reads it instead
 of reconstructing tallies from HP diffs. Session-only, combat-scoped, gone at fight teardown.
 
-**Engine:** Godot 4. **Built:** 2026-06-21 (data layer + presentation: the live HUD readout +
-the combat report — see *Presentation*). Plan lineage: `docs/plans/combat_log.md`.
+**Engine:** Godot 4. **Built:** 2026-06-21 (data layer + presentation: the combat report — see *Presentation*). Plan lineage: `docs/plans/combat_log.md`.
 
 ---
 
@@ -129,12 +128,10 @@ Both surfaces read the live log; the run screen owns its lifetime (`run_screen.g
 finished fight's log in `_last_log`, so the report still reads after the manager's teardown
 nulls its side). See [run_screen.md](run_screen.md).
 
-- **Live HUD readout** — `combat_stats_readout.tscn` on the run-screen HUD: the player's
-  running *Dealt · Taken* (net) this fight, refreshed each tick. Shown only while FIGHTING.
 - **Combat report** — `combat_summary.tscn`, raised and dismissed by the **Report** button in the
-  run screen's information section. It shows the **last finished fight** and parks nothing: a fight
-  resolves straight on to the reward draft, and the button stays available through the beats that
-  follow. Shows the player per-item damage report (Item · Fires · Damage · Shield · Healing, from
+  run screen's information section, which is always visible. It shows the **current fight** (as of
+  the moment it is opened), or the **last finished fight** between fights, and is empty before the
+  first fight. It parks nothing: a fight resolves straight on to the reward draft. Shows the player per-item damage report (Item · Fires · Damage · Shield · Healing, from
   `summary(PLAYER)` — Damage is **direct hits only**), a **Status damage** section (Status ·
   Damage, from `status_damage(PLAYER)`, hidden when no status dealt damage), and the ordered
   event-log timeline (from `events`), with a Close button.

@@ -2,13 +2,21 @@ class_name ScreenSections
 extends Control
 ## The four sections of the run screen, laid out to match the folds in the paper background
 ## (docs/systems/ui_layout.md#screen-sections): the corridor top left, the player's items top right, the
-## portraits lower left and the run information lower right. The split point (where the folds cross)
-## and the padding are print frame settings from the Print tab. Each section is its part of the
-## screen with the padding taken off every side. Emits `sections_changed` after moving the sections.
+## portraits lower left and the run information lower right. The split point (where the folds cross),
+## the padding and the layout are print frame settings from the Print tab. Each section is its part of
+## the screen with the padding taken off every side. Emits `sections_changed` after moving the sections.
 
 signal sections_changed
 
+## Where the sections go (the `screen_layout` print setting). PORTRAITS_LOWER_LEFT: the four sections
+## above. PORTRAITS_ABOVE_ITEMS: the corridor takes the whole left side, and the portraits and the items
+## share the top right section, which the combat view splits with the portraits on top.
+enum Layout { PORTRAITS_LOWER_LEFT, PORTRAITS_ABOVE_ITEMS }
+
 const SECTIONS: Array[String] = ['Corridor', 'Items', 'Portraits', 'Info']
+
+## The layout the sections were last placed in.
+var layout: Layout = Layout.PORTRAITS_LOWER_LEFT
 
 var _split: Vector2 = -Vector2.ONE
 var _padding: float = -1.0
@@ -22,12 +30,14 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
   var split: Vector2 = Vector2(PrintLook.print_setting('split_across'), PrintLook.print_setting('split_down'))
   var padding: float = PrintLook.print_setting('padding')
-  if split == _split and padding == _padding and size == _laid_out_size:
+  var new_layout: Layout = PrintLook.print_setting('screen_layout') as Layout
+  if split == _split and padding == _padding and new_layout == layout and size == _laid_out_size:
     return
+  layout = new_layout
   _split = split
   _padding = padding
   _laid_out_size = size
-  var rects: Dictionary = section_rects(size, split, padding)
+  var rects: Dictionary = section_rects(size, split, padding, layout)
   for section_name: String in SECTIONS:
     var node: Control = get_node(section_name)
     node.position = rects[section_name].position
@@ -41,8 +51,8 @@ func section(section_name: String) -> Control:
 
 
 ## Each section's rectangle (section name -> Rect2) on a screen of `screen_size`, split at `split` and
-## with `padding` taken off every side. Positions and sizes are whole pixels.
-static func section_rects(screen_size: Vector2, split: Vector2, padding: float) -> Dictionary:
+## with `padding` taken off every side, in `layout`. Positions and sizes are whole pixels.
+static func section_rects(screen_size: Vector2, split: Vector2, padding: float, layout: Layout = Layout.PORTRAITS_LOWER_LEFT) -> Dictionary:
   split = split.clamp(Vector2.ZERO, screen_size).round()
   var parts: Dictionary = {
     'Corridor': Rect2(Vector2.ZERO, split),
@@ -50,6 +60,9 @@ static func section_rects(screen_size: Vector2, split: Vector2, padding: float) 
     'Portraits': Rect2(0.0, split.y, split.x, screen_size.y - split.y),
     'Info': Rect2(split, screen_size - split),
   }
+  if layout == Layout.PORTRAITS_ABOVE_ITEMS:
+    parts['Corridor'] = Rect2(0.0, 0.0, split.x, screen_size.y)
+    parts['Portraits'] = parts['Items']
   var rects: Dictionary = {}
   for section_name: String in parts:
     var part: Rect2 = parts[section_name]

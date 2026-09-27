@@ -44,7 +44,7 @@ var _allies: Array = []   # the run's allies, shared by reference; drawn from he
 @onready var _potion_board: Control = $Items/PotionBoard
 @onready var _potion_grid: ColorRect = $Items/PotionBoard/Grid
 @onready var _potions: HBoxContainer = $Items/PotionBoard/Potions
-@onready var _portraits_part: HBoxContainer = $Portraits
+@onready var _portraits_part: BoxContainer = $Portraits
 @onready var _player_panel: CharacterPanel = $Portraits/PlayerPanel
 @onready var _portrait: Control = $Portraits/PlayerPanel/Row/Portrait
 @onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
@@ -68,6 +68,7 @@ var _cell_size: float = ItemCell.CELL_SIZE.x   # the player's item cells' curren
 var _fitted: Vector4 = -Vector4.ONE   # the board width, height, cell count and potion count _fit_board last fitted to
 var _askew_set: Vector3 = -Vector3.ONE   # the tilt, shift and cell size _set_items_askew last applied
 var _tokens_set: Array = []   # the portrait settings, ally count and enemy count _set_token_styles last applied
+var _portraits_height: float = -1.0   # the portraits' height when last placed; a change re-places them when stacked
 
 
 func _ready() -> void:
@@ -82,17 +83,39 @@ func _ready() -> void:
   _place_in_sections()
 
 
-## Put the corridor, the item column and the portrait row in their screen sections. The player's
-## items are fitted to the board once the item column is in place.
+## Put the corridor, the item column and the portrait row in their screen sections. With the
+## portraits above the items (`ScreenSections.Layout`), the portraits are stacked, the player first and
+## then the allies, at the top of the section they share, and the items take the height left below
+## them. The player's items are fitted to the board once the item column is in place.
 func _place_in_sections() -> void:
   var corridor_rect: Rect2 = sections.section('Corridor').get_global_rect()
   var items_rect: Rect2 = sections.section('Items').get_global_rect()
   var portraits_rect: Rect2 = sections.section('Portraits').get_global_rect()
+  var stacked: bool = sections.layout == ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS
+  _stack_portraits(stacked)
+  _portraits_height = _portraits_part.get_combined_minimum_size().y
+  if stacked:
+    portraits_rect.size.y = _portraits_height
+    var gap: float = round(PrintLook.print_setting('padding')) * 2.0
+    items_rect = items_rect.grow_side(SIDE_TOP, -(_portraits_height + gap))
   _place(_corridor_part, corridor_rect)
   _place(_corridor_area, corridor_rect)
   _place(_items_part, items_rect)
   _place(_portraits_part, portraits_rect)
   _fit_board()
+
+
+# Lay the portraits out in a column, the player first and then each side's ally slots as a row, or
+# back in one row with the allies either side of the player. Stacked, the player's panel fills the
+# section's width, so a status added or removed does not change its size.
+func _stack_portraits(stacked: bool) -> void:
+  if _portraits_part.vertical == stacked:
+    return
+  _portraits_part.vertical = stacked
+  _portraits_part.move_child(_player_panel, 0 if stacked else 1)
+  if not stacked:
+    _ally_left.visible = true
+    _ally_right.visible = true
 
 
 func _place(part: Control, rect: Rect2) -> void:
@@ -157,6 +180,18 @@ static func board_cell_size(width: float, height: float, count: int, gap_ratio: 
   return MIN_CELL_SIZE
 
 
+# With the portraits above the items, place the sections again when the portraits' height changes (an
+# ally joins or leaves, or the text size changes), so the items start below them.
+# An empty ally row is hidden, so it adds no gap to the column.
+func _refit_stacked_portraits() -> void:
+  if not _portraits_part.vertical:
+    return
+  _ally_left.visible = _ally_left.get_child_count() > 0
+  _ally_right.visible = _ally_right.get_child_count() > 0
+  if _portraits_part.get_combined_minimum_size().y != _portraits_height:
+    _place_in_sections()
+
+
 ## Set the player's items and potions down askew on the grid (`ItemCell.set_askew`), by the print
 ## settings `token_tilt` and `token_shift`, the shift scaled to the cells' size. Does nothing unless a
 ## setting or the cell size changed; adding a cell or rebuilding the potions clears `_askew_set`, so
@@ -179,7 +214,8 @@ func _draw_grid() -> void:
   PrintLook.grid_material.set_shader_parameter('pencil_colour', Colours.UI_BACKGROUND_WEAR_LIGHT)
 
 
-## Whether the portraits are cardboard tokens like the items, and whether every character panel (the
+## Whether the ally and enemy portraits are cardboard tokens like the items (the player's always is),
+## and whether every character panel (the
 ## player's, each ally slot's and each enemy HUD's) is drawn, from the print settings `token_portraits`
 ## and `portrait_panel`, where each panel puts its items and status icons, from `item_layout` and
 ## `status_layout`, and whether the enemy panels draw their background, from `enemy_panel_background`
@@ -191,16 +227,26 @@ func _set_token_styles() -> void:
   var item_layout: int = PrintLook.print_setting('item_layout')
   var status_layout: int = PrintLook.print_setting('status_layout')
   var enemy_background: bool = PrintLook.print_setting('enemy_panel_background')
-  var wanted: Array = [portraits, panel, item_layout, status_layout, enemy_background, _ally_slots.size(), _enemy_huds.size()]
+  var enemy_item_size: float = PrintLook.print_setting('enemy_item_size')
+  var ally_item_size: float = PrintLook.print_setting('ally_item_size')
+  var status_size: float = PrintLook.print_setting('status_size')
+  var wanted: Array = [portraits, panel, item_layout, status_layout, enemy_background, enemy_item_size,
+    ally_item_size, status_size, _ally_slots.size(), _enemy_huds.size()]
   if wanted == _tokens_set:
     return
   _tokens_set = wanted
   var portrait_style: StringName = &'PanelToken' if portraits else &'PanelSlot'
   var panels: Array = [_player_panel] + _ally_slots.values() + _enemy_huds.values()
   for character_panel in panels:
-    (character_panel as CharacterPanel).set_portrait_style(portrait_style)
+    # The player's portrait always has the items' drop shadow.
+    (character_panel as CharacterPanel).set_portrait_style(&'PanelToken' if character_panel == _player_panel else portrait_style)
     (character_panel as CharacterPanel).set_panel_shown(panel and (enemy_background or not character_panel is EnemyHud))
     (character_panel as CharacterPanel).set_layout(item_layout as CharacterPanel.ItemLayout, status_layout as CharacterPanel.StatusLayout)
+    (character_panel as CharacterPanel).set_status_size(status_size)
+    if character_panel is EnemyHud:
+      (character_panel as EnemyHud).set_item_size(enemy_item_size)
+    elif character_panel is AllySlot:
+      (character_panel as AllySlot).set_item_size(ally_item_size)
   _portraits_part.queue_sort()   # the row keeps the panel's old size otherwise
 
 
@@ -230,6 +276,7 @@ func bind(cm: CombatManager, player: Actor, potions: Array, allies: Array = []) 
 func _process(_delta: float) -> void:
   _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
   _sync_player_items()    # pick up items created or removed during the fight
+  _refit_stacked_portraits()
   _fit_board()            # shrink or grow the cells when the count or the section changed
   _set_items_askew()
   _set_token_styles()

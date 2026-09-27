@@ -6,10 +6,10 @@ extends CharacterPanel
 ## approach and fade_in() brings it up when the fight starts. Reads the Actor; writes nothing. The
 ## VFX wall reads hud_centre / cell_centre.
 
-const CELL_PX: float = 45.0   # smaller than the player's prominent board
 const CELL_SEPARATION: float = 20.0   # the Items separation in enemy_hud.tscn
 
 var _fade: Tween
+var _max_width: float = 0.0
 
 
 ## `timekeeper` drives the cells' fire recoil on the combat clock; `max_width` (>0)
@@ -17,11 +17,22 @@ var _fade: Tween
 func setup(target: Actor, timekeeper: Timekeeper = null, max_width: float = 0.0) -> void:
   set_actor(target)
   show_name(tr(target.display_name) if target.display_name != '' else '')
-  var cell_px: float = CELL_PX
-  if max_width > 0.0 and not target.board.is_empty():
-    var n: float = float(target.board.size())
-    cell_px = minf(CELL_PX, (max_width - CELL_SEPARATION * (n - 1.0)) / n)
-  build_items(timekeeper, cell_px)
+  _max_width = max_width
+  build_items(timekeeper, _fit_cell_px(PrintLook.print_setting('enemy_item_size')))
+
+
+## Resize the item cells to `px` (the `enemy_item_size` print setting), or smaller if the row would
+## be too long for its width.
+func set_item_size(px: float) -> void:
+  resize_items(_fit_cell_px(px))
+
+
+# `px`, or less so the whole item row fits `_max_width` (when set).
+func _fit_cell_px(px: float) -> float:
+  if _max_width <= 0.0 or actor == null or actor.board.is_empty():
+    return px
+  var n: float = float(actor.board.size())
+  return minf(px, (_max_width - CELL_SEPARATION * (n - 1.0)) / n)
 
 
 func _exit_tree() -> void:

@@ -23,8 +23,8 @@ const MIN_COUNT_SHRINK: float = 1.0 / 3.0   # the smallest fraction of full size
 ## Metres between enemies that share a depth, so overlapping sprites are never drawn at the same
 ## distance.
 const DEPTH_STEP: float = 0.05
-const FLINCH_DURATION: float = 0.18    # render-time seconds for a hit enemy to settle back
-const FLINCH_DISTANCE: float = 0.35    # metres a hit knocks the sprite away from the camera
+const FLINCH_DURATION: float = 0.1   # render-time seconds for a hit enemy to settle back
+const FLINCH_DISTANCE: float = 0.05   # metres a hit knocks the sprite away from the camera
 
 var _corridor: Corridor3D
 var _enemies: Array = []       # Array[Sprite3D], left to right
@@ -42,6 +42,7 @@ func _ready() -> void:
   _corridor.input_enabled = false   # the view drives the glide; W/S must not scroll the fight
   $SubViewport.add_child(_corridor)
   _corridor.apply_settings(DebugPanels.corridor_settings, DebugPanels.environment_settings)
+  _corridor.settings_applied.connect(_arrange)
   _walk_start = _corridor.player_z
   if Game.run != null and Game.run.character != null:
     _corridor.stride_length = Game.run.character.stride_length
@@ -135,7 +136,7 @@ func enemy_anchor(index: int) -> Vector2:
     return global_position + size * 0.5
   index = clampi(index, 0, n - 1)
   var sprite: Sprite3D = _enemies[index]
-  var top: Vector3 = _enemy_position(index, n, 0.0) + Vector3(0.0, _half_height(sprite), 0.0)
+  var top: Vector3 = _enemy_position(index, n, 0.0) + Vector3(0.0, Corridor3D.enemy_half_height(sprite), 0.0)
   return global_position + size * 0.5 + _corridor.unproject(top, true) - Vector2(0.0, HUD_GAP)
 
 
@@ -210,13 +211,8 @@ func _arrange() -> void:
 
 # Enemy i of n at `depth_cells`, each one DEPTH_STEP further than the one before.
 func _enemy_position(i: int, n: int, depth_cells: float) -> Vector3:
-  return _corridor.enemy_position(depth_cells, _offset_x(i, n)) - Vector3(0.0, 0.0, DEPTH_STEP * float(i))
-
-
-func _half_height(sprite: Sprite3D) -> float:
-  if sprite.texture == null:
-    return 0.0
-  return sprite.pixel_size * float(sprite.texture.get_height()) * 0.5
+  var half_height: float = Corridor3D.enemy_half_height(_enemies[i])
+  return _corridor.enemy_position(depth_cells, _offset_x(i, n), half_height) - Vector3(0.0, 0.0, DEPTH_STEP * float(i))
 
 
 # The fraction of full size each enemy keeps with `n` side by side (1 = a single enemy at full
@@ -229,5 +225,5 @@ func _count_shrink(n: int) -> float:
 
 # The horizontal screen offset of enemy i at depth 0, from the panel centre.
 func _offset_x(i: int, n: int) -> float:
-  var slot: float = (size.x * SPREAD) / float(n)
+  var slot: float = (size.x * SPREAD * _corridor.enemy_spacing) / float(n)
   return (float(i) - float(n - 1) * 0.5) * slot
