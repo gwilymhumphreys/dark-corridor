@@ -227,22 +227,6 @@ msgstr "Deals less damage while it lasts."
 msgid "Ally"
 msgstr "Ally"
 
-#: src/scenes/combat/combat_stats_readout.gd
-msgid "Dealt {0}"
-msgstr "Dealt {0}"
-
-#: src/scenes/combat/combat_stats_readout.gd
-msgid "Taken {0}"
-msgstr "Taken {0}"
-
-#: src/scenes/combat/combat_stats_readout.tscn
-msgid "Dealt 0"
-msgstr "Dealt 0"
-
-#: src/scenes/combat/combat_stats_readout.tscn
-msgid "Taken 0"
-msgstr "Taken 0"
-
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "Potions"
 msgstr "Potions"

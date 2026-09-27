@@ -227,22 +227,6 @@ msgstr ""
 msgid "Ally"
 msgstr ""
 
-#: src/scenes/combat/combat_stats_readout.gd
-msgid "Dealt {0}"
-msgstr ""
-
-#: src/scenes/combat/combat_stats_readout.gd
-msgid "Taken {0}"
-msgstr ""
-
-#: src/scenes/combat/combat_stats_readout.tscn
-msgid "Dealt 0"
-msgstr ""
-
-#: src/scenes/combat/combat_stats_readout.tscn
-msgid "Taken 0"
-msgstr ""
-
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "Potions"
 msgstr ""
