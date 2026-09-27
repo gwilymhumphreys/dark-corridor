@@ -71,7 +71,7 @@ func _spawn_monster() -> void:
   _monster_elapsed = 0.0
   _monster_walking = true
   _walk_start_z = _corridor.player_z
-  _monster.position = _corridor.enemy_position(Balance.APPROACH_DEPTH_START, 0.0)
+  _monster.position = _corridor.enemy_position(Balance.APPROACH_DEPTH_START, 0.0, Corridor3D.enemy_half_height(_monster))
 
 
 # The monster stands still and the corridor moves up to it, as the run screen's approach does: the
@@ -85,7 +85,8 @@ func _process(delta: float) -> void:
   var eased: float = lerpf(t, smoothstep(0.0, 1.0, t), Balance.APPROACH_EASE)
   var travelled: float = Balance.APPROACH_DEPTH_START * eased
   _corridor.player_z = _walk_start_z + travelled
-  _monster.position = _corridor.enemy_position(Balance.APPROACH_DEPTH_START - travelled, 0.0)
+  _monster.position = _corridor.enemy_position(Balance.APPROACH_DEPTH_START - travelled, 0.0,
+      Corridor3D.enemy_half_height(_monster))
   if t >= 1.0:
     _monster_walking = false
 

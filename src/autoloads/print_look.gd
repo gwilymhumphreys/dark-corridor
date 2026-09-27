@@ -42,19 +42,23 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ]
 ## Print frame settings that are not shader uniforms (setting -> default), from the Print tab,
 ## presets and `--print-set=`: the screen's split point, where the folds cross and the four
-## screen sections meet (`ScreenSections`, docs/systems/ui_layout.md), and the padding inside each
-## section. In pixels on the interface canvas. Also how far the player's items sit askew on the board
+## screen sections meet (`ScreenSections`, docs/systems/ui_layout.md), the padding inside each
+## section, and which layout the sections use (`ScreenSections.Layout`, as its index). In pixels on the interface canvas. Also how far the player's items sit askew on the board
 ## grid, like cardboard tokens put down by hand: the largest tilt in degrees and the largest shift in
 ## pixels at full cell size (`CombatViewFramed`). Then the token look (`apply_token_style`): the
 ## shadow's blur and offset in pixels and its opacity; the card colour the token fill is blended
 ## towards and how far (0 keeps the interface background, 1 is the card colour); and whether the portraits are tokens too and
 ## whether the player's portrait, name and HP bar sit on one token panel (`CombatViewFramed`). Then
 ## the character panel layout: where the items and status icons go (`CharacterPanel.ItemLayout`
-## and `StatusLayout`, as their index) and whether the enemy panels draw their background.
+## and `StatusLayout`, as their index) and whether the enemy panels draw their background. Then the
+## sizes in pixels of the enemy and ally item cells (the largest; a row too long for its width
+## shrinks) and of the status icons on every panel, and the size of every value pill (item values and
+## status stacks) against its base size, the same whatever the cell or icon size.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'split_across': 1700.0,
   'split_down': 1150.0,
+  'screen_layout': 0,
   'token_tilt': 3.0,
   'token_shift': 4.0,
   'token_shadow_size': 6.0,
@@ -67,6 +71,10 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'item_layout': 0,
   'status_layout': 1,
   'enemy_panel_background': true,
+  'enemy_item_size': 80.0,
+  'ally_item_size': 60.0,
+  'status_size': 44.0,
+  'pill_size': 1.0,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']

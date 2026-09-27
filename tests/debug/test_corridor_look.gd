@@ -77,7 +77,7 @@ func test_panel_has_a_section_per_effect_plus_light_environment_and_fog() -> voi
   var groups: int = _group_count(DebugPanels.world_material.shader)
   var sections: Node = panel.get_node('Scroll/Sections')
   assert_gt(groups, 0, 'the look shader has effect groups')
-  assert_eq(sections.get_child_count(), groups + 3, 'one section per effect, then Light, Environment and Fog')
+  assert_eq(sections.get_child_count(), groups + 4, 'one section per effect, then View, Light, Environment and Fog')
   assert_null(_section('Background Specks'), 'the background wear is in the Print tab')
 
 

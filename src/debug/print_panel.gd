@@ -6,12 +6,14 @@ extends LookPanel
 ## then the panel wear groups. The wear on screen backgrounds is in the Background tab
 ## (`BackgroundPanel`).
 
-## Print frame settings shown in the Layout section: setting -> [min, max, step]. The token settings
+## Print frame settings shown in the Layout section: setting -> [min, max, step], or the option names
+## for a dropdown, in the order of the enum they index. The token settings
 ## are print frame settings too, but have their own tab (`TokensPanel`).
 const LAYOUT_PROPERTIES: Dictionary = {
   'padding': [0.0, 160.0, 1.0],
   'split_across': [800.0, 2400.0, 1.0],
   'split_down': [600.0, 1400.0, 1.0],
+  'screen_layout': ['Portraits lower left', 'Portraits above items'],
 }
 
 

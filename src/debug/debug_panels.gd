@@ -555,7 +555,7 @@ func scene_values() -> Array[Dictionary]:
 func write_corridor_look(file: ConfigFile) -> void:
   for uniform: String in look_defaults():
     file.set_value('corridor_shader', uniform, world_material.get_shader_parameter(uniform))
-  for property: String in LookPanel.CORRIDOR_PROPERTIES:
+  for property: String in LookPanel.corridor_properties():
     file.set_value('corridor_light', property, corridor_settings.get(property, scene_values()[0][property]))
   for property: String in LookPanel.environment_properties():
     file.set_value('corridor_environment', property, environment_settings.get(property, scene_values()[1][property]))

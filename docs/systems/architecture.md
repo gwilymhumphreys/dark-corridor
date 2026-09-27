@@ -241,8 +241,7 @@ main.tscn  (Main, Node)                 main_controller swaps screens off Game.p
    │   ├─ CombatView         combat_view_framed.tscn (full-screen variant deferred — see below)
    │   │     ├─ VfxDriver        reads the Delivery set + render_time()
    │   │     ├─ Player/EnemyBoardView
-   │   │     ├─ Portrait · HP · PotionSlots
-   │   │     └─ combat_stats_readout   live Dealt · Taken (reads the CombatLog)
+   │   │     └─ Portrait · HP · PotionSlots
    │   └─ OverlayLayer       draft / event / 1D-map (choice overlay dormant)
    ├─ combat_summary.tscn    the combat report: per-item report + event timeline (reads the CombatLog)
    └─ outcome_screen.tscn    death + win

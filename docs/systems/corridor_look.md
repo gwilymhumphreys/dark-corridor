@@ -48,11 +48,14 @@ of a [look preset](look_presets.md).
 - Defaults come from the shader and include code (`DebugPanels.look_defaults()`), because the rendering
   server does not report them when running headless. `PALETTE_UNIFORMS` (colour count, matching, the
   dithering switch) are left out; `DebugPanels` writes them in the preset's `corridor_palette` section.
-- Three more sections set the corridor: **Light** (`Corridor3D` exports), **Environment** (properties of
+- Four more sections set the corridor: **View** and **Light** (`Corridor3D` exports; View holds the
+  camera, the corridor's width and where enemies stand, see
+  [corridor_3d.md](corridors/corridor_3d.md#view)), **Environment** (properties of
   the corridor camera's `Environment`: Godot's glow and the tonemap exposure) and **Fog** (the same
   `Environment`'s fog properties, with the `fog_` prefix dropped from the row labels). Their lists are
-  `CORRIDOR_PROPERTIES`, `ENVIRONMENT_PROPERTIES` and `FOG_PROPERTIES` in `look_panel.gd`; presets and
-  `scene_values()` use `environment_properties()`, which is the last two merged. Changes go into
+  `VIEW_PROPERTIES`, `CORRIDOR_PROPERTIES`, `ENVIRONMENT_PROPERTIES` and `FOG_PROPERTIES` in
+  `look_panel.gd`; presets and `scene_values()` use `corridor_properties()` (the first two merged) and
+  `environment_properties()` (the last two merged). Changes go into
   `DebugPanels.corridor_settings` and `environment_settings` and are applied to every corridor in the
   `Corridor3D.GROUP` group; corridors built later apply them too.
 - A group with no settings gets no section. The Print tab ([print_frame.md](print_frame.md)) and the
@@ -61,7 +64,7 @@ of a [look preset](look_presets.md).
 ## In a preset
 
 The corridor part has sections `corridor_shader` (every look uniform), `corridor_light` and
-`corridor_environment` (every Light and Environment property). Reading it starts from the look defaults and
+`corridor_environment` (every View, Light and Environment property; View is stored in `corridor_light`). Reading it starts from the look defaults and
 the corridor scene's own values, and leaves the palettes and the other parts unchanged.
 
 For a screenshot of a saved preset (arguments in [dev_tools.md](dev_tools.md#look-arguments)):

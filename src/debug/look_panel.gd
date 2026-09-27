@@ -25,8 +25,19 @@ const CORRIDOR_PROPERTIES: Dictionary = {
   'hit_light_range': [0.5, 20.0, 0.1],
   'hit_light_duration': [0.05, Balance.DELIVERY_VISUAL_HOLD, 0.01],
   'hit_light_distance': [0.0, 3.0, 0.01],
-  'fov': [30.0, 110.0, 1.0],
   'alpha_scissor_threshold': [0.0, 1.0, 0.01],
+}
+## Corridor exports shown in the View section: the camera, the corridor's width and where the
+## enemies stand. Stored with the Light section's in presets.
+const VIEW_PROPERTIES: Dictionary = {
+  'fov': [30.0, 110.0, 1.0],
+  'camera_height': [-1.4, 1.4, 0.01],
+  'camera_pitch': [-30.0, 30.0, 0.5],
+  'width_scale': [0.5, 3.0, 0.01],
+  'enemies_on_floor': [],
+  'fight_depth': [-0.5, 2.0, 0.01],
+  'enemy_scale': [0.3, 2.0, 0.01],
+  'enemy_spacing': [0.2, 2.0, 0.01],
 }
 ## Environment properties shown in the Environment section: property -> [min, max, step] ([] for a
 ## switch or a colour).
@@ -68,6 +79,13 @@ func _exit_tree() -> void:
   _clear_sections()
 
 
+## Every corridor export the tab sets: the Light section's and the View section's.
+static func corridor_properties() -> Dictionary:
+  var properties: Dictionary = CORRIDOR_PROPERTIES.duplicate()
+  properties.merge(VIEW_PROPERTIES)
+  return properties
+
+
 ## Every Environment property the tab sets: the Environment section's and the Fog section's.
 static func environment_properties() -> Dictionary:
   var properties: Dictionary = ENVIRONMENT_PROPERTIES.duplicate()
@@ -82,7 +100,7 @@ static func scene_values() -> Array[Dictionary]:
   var environment: Environment = (corridor.get_node('SubViewport/Camera') as Camera3D).environment
   var corridor_values: Dictionary = {}
   var environment_values: Dictionary = {}
-  for property: String in CORRIDOR_PROPERTIES:
+  for property: String in corridor_properties():
     corridor_values[property] = corridor.get(property)
   for property: String in environment_properties():
     environment_values[property] = environment.get(property)
@@ -113,6 +131,7 @@ func rebuild() -> void:
   _clear_sections()
   _build_shader_sections(DebugPanels.world_material, DebugPanels.look_defaults())
   var values: Array[Dictionary] = scene_values()
+  _build_property_section('View', VIEW_PROPERTIES, values[0], DebugPanels.corridor_settings)
   _build_property_section('Light', CORRIDOR_PROPERTIES, values[0], DebugPanels.corridor_settings)
   _build_property_section('Environment', ENVIRONMENT_PROPERTIES, values[1], DebugPanels.environment_settings)
   _build_property_section('Fog', FOG_PROPERTIES, values[1], DebugPanels.environment_settings, 'fog_')

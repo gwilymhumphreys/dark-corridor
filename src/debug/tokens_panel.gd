@@ -27,8 +27,12 @@ const SECTIONS: Dictionary = {
   },
   'Character panels': {
     'item_layout': ['Beside', 'Under bar', 'Name row'],
-    'status_layout': ['Beside bar', 'Under bar'],
+    'status_layout': ['Beside bar', 'Under bar', 'Under items'],
     'enemy_panel_background': [],
+    'enemy_item_size': [24.0, 120.0, 1.0],
+    'ally_item_size': [24.0, 120.0, 1.0],
+    'status_size': [16.0, 96.0, 1.0],
+    'pill_size': [0.4, 1.6, 0.05],
   },
 }
 

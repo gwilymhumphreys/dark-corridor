@@ -24,6 +24,29 @@ testbed (`src/debug/scenes/corridor_testbed.tscn`).
 - Both hosts draw the corridor image through `DebugPanels.world_material` (the
   [corridor look shader](../corridor_look.md)).
 
+## View
+
+The camera, the corridor's width and where enemies stand. All are `Corridor3D` exports in the `View`
+group, shown in the View section of the [Corridor tab](../corridor_look.md#the-corridor-tab) with the
+field of view, and saved in look presets.
+
+| Export | Controls |
+|---|---|
+| `fov` | The camera's vertical field of view. Depth 0 is worked out from it, so an enemy at depth 0 keeps its size; a lower value moves the camera back and flattens the perspective |
+| `camera_height` | Metres the camera and the light sit above the corridor's middle height |
+| `camera_pitch` | Degrees the camera tilts up; negative looks down |
+| `width_scale` | The corridor's width as a multiple of the piece source's `section_width`. Each corridor duplicates its piece source so this does not change the scene's. Only the code-built source uses the width; kit models keep their size |
+| `enemies_on_floor` | Off: an enemy's centre is at the corridor's middle height. On: the bottom of its image is on the floor, so empty space under a monster's feet in its image shows as a gap |
+| `fight_depth` | Sections past depth 0 where arrived enemies stand. It is added to every enemy depth, so the approach starts this much further away as well |
+| `enemy_scale` | Multiplies each enemy's height on screen (`size_enemy`) |
+| `enemy_spacing` | Multiplies the sideways gap between enemies side by side. `CombatCorridor` sets the gap (`SPREAD` of its width, shared out between the enemies) |
+
+- The light moves with the camera, so a lower field of view or a wider corridor puts the walls further
+  from the light and darkens them. Raise `light_energy` or `light_range` to compensate.
+- `enemy_position(depth, offset, half_height)` takes half the sprite's height in metres
+  (`Corridor3D.enemy_half_height(sprite)`) to stand it on the floor.
+- `apply_settings` emits `settings_applied`; `CombatCorridor` re-sizes and re-places its enemies on it.
+
 ## Movement
 
 - `set_forward_held` / `set_back_held`, or the `move_forward` / `move_back` actions while `input_enabled`
@@ -33,7 +56,7 @@ testbed (`src/debug/scenes/corridor_testbed.tscn`).
   does this for the fight approach ([run_screen.md](../run_screen.md#enemies-in-the-corridor)), so
   the walk's timing comes from `Balance.APPROACH_DURATION` rather than `speed` (see
   [the walking pace](#the-walking-pace)).
-- The light never moves. The camera only moves for the head bob below. Each frame `_layout` places
+- The light never moves. The camera only moves for the head bob below (both sit at `camera_height`). Each frame `_layout` places
   section `i` with its near edge `i - player_z` sections past depth 0, which keeps positions small
   however long the run is.
 
@@ -150,8 +173,8 @@ they go; the corridor creates, sizes and places them.
 | Method | Use |
 |---|---|
 | `add_enemy(texture) -> Sprite3D` | A lit sprite with alpha scissor, linear mipmapped filtering |
-| `size_enemy(sprite, height_pixels)` | Sets `pixel_size` so the sprite is that tall on screen at depth 0 |
-| `enemy_position(depth_cells, offset_pixels) -> Vector3` | The centre of a sprite at that depth, offset sideways by screen pixels measured at depth 0 |
+| `size_enemy(sprite, height_pixels)` | Sets `pixel_size` so the sprite is that tall on screen at depth 0, times `enemy_scale` |
+| `enemy_position(depth_cells, offset_pixels, half_height) -> Vector3` | The centre of a sprite at that depth past `fight_depth`, offset sideways by screen pixels measured at depth 0; on the floor with `enemies_on_floor` |
 | `pixels_to_metres(pixels)` | A screen distance at depth 0 in metres: `pixels / view_size.y * section_height` |
 | `unproject(point) -> Vector2` | Where a 3D point appears, in the node's local coordinates (origin at the view centre) |
 | `remove_enemy(sprite)` | Clears the texture and frees the sprite |
@@ -201,7 +224,7 @@ look setting, kept until the effects pass decides on hit visuals.
 
 | Source | Pieces | Configured by |
 |---|---|---|
-| `CodeBuiltPieceSource` (default in the scene) | Four `QuadMesh` rectangles (left, right, ceiling, floor), textured per side, repeated `uv_repeat` times per section | Per-side textures, section size |
+| `CodeBuiltPieceSource` (default in the scene) | Four `QuadMesh` rectangles (left, right, ceiling, floor), textured per side, repeated `uv_repeat` times per section; the floor and ceiling repeat more across a corridor wider than it is tall, so their texture stays the walls' size in metres | Per-side textures, section size |
 | `KitPieceSource` | One model scene per side, instanced per section | Per-side scenes and offset transforms, section size |
 
 - Section space: near edge at z = 0, far edge at z = `-section_length`, centred on X and Y.

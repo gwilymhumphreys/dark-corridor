@@ -4,7 +4,8 @@ extends Node2D
 ## the camera, the light, the corridor sections and the enemy sprites; its image is drawn at
 ## `view_size`, centred on this node's origin.
 ##
-## The camera stays at the origin. Each frame the sections are placed from `player_z`, so
+## The camera stays in one place (`camera_height` above the corridor's middle, tilted by
+## `camera_pitch`), apart from the walk's bob. Each frame the sections are placed from `player_z`, so
 ## positions stay small however long the run is. Sections are created ahead up to the light's
 ## reach and removed behind.
 ##
@@ -33,6 +34,24 @@ const GROUP: StringName = &'corridors'
 @export var piece_source: CorridorPieceSource
 ## The camera's vertical field of view, in degrees.
 @export var fov: float = 70.0
+
+@export_group('View')
+## Metres the camera and its light sit above the corridor's middle height. Negative is lower.
+@export var camera_height: float = 0.0
+## Degrees the camera tilts up. Negative looks down at the floor.
+@export var camera_pitch: float = 0.0
+## The corridor's width as a multiple of the piece source's own `section_width`.
+@export var width_scale: float = 1.0
+## Whether enemies stand with their feet on the floor. Off, each is centred on the corridor's middle
+## height.
+@export var enemies_on_floor: bool = false
+## Sections past depth 0 where enemies stand once they have arrived. Added to every enemy depth, so
+## the approach starts this much further away too.
+@export var fight_depth: float = 0.0
+## Multiplies every enemy's height on screen.
+@export var enemy_scale: float = 1.0
+## Multiplies the sideways gap between enemies that stand side by side. The host sets the gap.
+@export var enemy_spacing: float = 1.0
 
 @export_group('Walk')
 ## Metres covered per footstep. `CombatCorridor` overwrites it from the run's character; the
@@ -91,6 +110,8 @@ const MIN_WALK_SPEED: float = 0.05
 const SPEED_EASE_TIME: float = 0.12
 
 signal footstep(index: int)   ## each time a foot lands, with the running count since the walk was last reset
+## After `apply_settings`, so a host can re-size and re-place its enemy sprites.
+signal settings_applied
 
 var player_z: float = 0.0               ## continuous forward position, in sections
 var velocity: float = 0.0               ## eased sections per second; ramps over ramp_time
@@ -106,6 +127,8 @@ var _flicker_noise: FastNoiseLite = FastNoiseLite.new()
 var _flicker_time: float = 0.0
 var _last_player_z: float = 0.0
 var _step_count: int = 0
+## The piece source's own section width, before `width_scale`.
+var _base_width: float = 3.0
 
 @onready var _viewport: SubViewport = $SubViewport
 @onready var _camera: Camera3D = $SubViewport/Camera
@@ -125,6 +148,10 @@ func _ready() -> void:
   # Each corridor gets its own copy, so changing one corridor's environment does not change the
   # scene resource the others share.
   _camera.environment = _camera.environment.duplicate()
+  # Each corridor gets its own piece source too, so `width_scale` does not change the scene's.
+  if piece_source != null:
+    piece_source = piece_source.duplicate()
+    _base_width = piece_source.section_width
   if auto_view_size:
     _sync_view_size()
     get_viewport().size_changed.connect(_on_viewport_resized)
@@ -163,6 +190,13 @@ func _build() -> void:
   _viewport.size = Vector2i(maxi(int(view_size.x), 1), maxi(int(view_size.y), 1))
   _camera.fov = fov
   _camera.far = light_range + piece_source.section_length
+  _camera.rotation_degrees.x = camera_pitch
+  _camera.position = _camera_base()
+  _light.position = _camera_base()
+  var width: float = _base_width * width_scale
+  if not is_equal_approx(piece_source.section_width, width):
+    piece_source.section_width = width
+    _clear_sections()
   _apply_light()
   _display.texture = _viewport.get_texture()
   _display.centered = true
@@ -212,12 +246,19 @@ func _update_walk(delta: float) -> void:
     if footsteps_on:
       SfxManager.play_footstep()
   if not bob_on:
-    _camera.position = Vector3.ZERO
+    _camera.position = _camera_base()
     return
   # Steps per second, capped at one, so the camera settles level as a walk stops.
   var weight: float = clampf(walk_speed / maxf(stride_length, 0.01), 0.0, 1.0)
-  _camera.position.y = -bob_height * (0.5 + 0.5 * cos(TAU * phase)) * weight
-  _camera.position.x = bob_sway * sin(PI * phase) * weight
+  _camera.position = _camera_base() + Vector3(
+      bob_sway * sin(PI * phase) * weight,
+      -bob_height * (0.5 + 0.5 * cos(TAU * phase)) * weight,
+      0.0)
+
+
+# Where the camera and its light sit when the walk is not bobbing it.
+func _camera_base() -> Vector3:
+  return Vector3(0.0, camera_height, 0.0)
 
 
 ## Put the walk back to nothing: for a host reseating the corridor (a new fight, a jump). The
@@ -227,7 +268,7 @@ func reset_walk() -> void:
   walk_speed = 0.0
   _step_count = 0
   _last_player_z = player_z
-  _camera.position = Vector3.ZERO
+  _camera.position = _camera_base()
 
 
 func set_forward_held(held: bool) -> void:
@@ -251,6 +292,7 @@ func apply_settings(corridor_values: Dictionary, environment_values: Dictionary)
   for sprite: Sprite3D in _enemy_root.get_children():
     sprite.alpha_scissor_threshold = alpha_scissor_threshold
   _build()
+  settings_applied.emit()
 
 
 ## The camera's Environment (this corridor's own copy).
@@ -340,18 +382,28 @@ func remove_enemy(sprite: Sprite3D) -> void:
   sprite.queue_free()
 
 
-## Size `sprite` so that at depth 0 it is `height_pixels` tall on screen.
+## Size `sprite` so that at depth 0 it is `height_pixels` tall on screen, times `enemy_scale`.
 func size_enemy(sprite: Sprite3D, height_pixels: float) -> void:
   if sprite.texture == null or sprite.texture.get_height() <= 0:
     return
-  sprite.pixel_size = pixels_to_metres(height_pixels) / float(sprite.texture.get_height())
+  sprite.pixel_size = pixels_to_metres(height_pixels * enemy_scale) / float(sprite.texture.get_height())
 
 
-## The 3D position of an enemy centred `depth_cells` sections past depth 0, `offset_pixels` to the
-## right of the view's centre (measured at depth 0).
-func enemy_position(depth_cells: float, offset_pixels: float) -> Vector3:
-  var distance: float = depth_zero_distance() + depth_cells * piece_source.section_length
-  return Vector3(pixels_to_metres(offset_pixels), 0.0, -distance)
+## The 3D centre of an enemy `depth_cells` sections past where arrived enemies stand
+## (`fight_depth`), `offset_pixels` to the right of the view's centre (measured at depth 0). With
+## `enemies_on_floor`, the centre is `half_height` metres above the floor, so the sprite's feet are
+## on it; otherwise it is at the corridor's middle height.
+func enemy_position(depth_cells: float, offset_pixels: float, half_height: float = 0.0) -> Vector3:
+  var distance: float = depth_zero_distance() + (fight_depth + depth_cells) * piece_source.section_length
+  var y: float = half_height - piece_source.section_height * 0.5 if enemies_on_floor else 0.0
+  return Vector3(pixels_to_metres(offset_pixels), y, -distance)
+
+
+## Half of `sprite`'s height in metres, as `enemy_position` takes it.
+static func enemy_half_height(sprite: Sprite3D) -> float:
+  if sprite.texture == null:
+    return 0.0
+  return sprite.pixel_size * float(sprite.texture.get_height()) * 0.5
 
 
 ## A screen distance at depth 0 in metres. The corridor's height fills the view's height there.
@@ -362,10 +414,10 @@ func pixels_to_metres(pixels: float) -> float:
 
 ## Where the 3D `point` appears on screen, in this node's local coordinates (origin at the view's
 ## centre). With `ignore_bob`, the point is unprojected as if the camera were level, so what is
-## pinned to it holds still while the walk bobs the image. The camera only ever moves sideways and
-## up and down, so shifting the point by the camera's position undoes the bob exactly.
+## pinned to it holds still while the walk bobs the image. The bob only moves the camera sideways
+## and up and down, so shifting the point by the bob undoes it exactly.
 func unproject(point: Vector3, ignore_bob: bool = false) -> Vector2:
-  var target: Vector3 = (point + _camera.position) if ignore_bob else point
+  var target: Vector3 = (point + _camera.position - _camera_base()) if ignore_bob else point
   return _camera.unproject_position(target) - Vector2(_viewport.size) * 0.5
 
 

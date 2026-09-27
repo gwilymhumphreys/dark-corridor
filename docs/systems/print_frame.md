@@ -46,16 +46,20 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   has the interface background colour and at 1 the card colour. It is worked out again after a palette
   change, because the palette sets the fill to `UI_BACKGROUND`. The token's edge is the
   panel wear's worn edge ([panel_wear.md](panel_wear.md)); it has no border.
-- Two switches try looks on the portrait section. `token_portraits` puts the player and ally
-  portraits in `PanelToken` frames instead of `PanelSlot`. `portrait_panel` draws every character panel
+- Two switches try looks on the portrait section. `token_portraits` puts the ally and enemy
+  portraits in `PanelToken` frames instead of `PanelSlot`; the player's portrait is always in a
+  `PanelToken` frame, so it has the items' drop shadow. `portrait_panel` draws every character panel
   (the player's, each ally's and each enemy's, `character_panel.tscn`) as a `PanelTokenWide` panel
   (`PanelBare`, which draws nothing, when off).
 - Three settings try character panel layouts ([run_screen.md](run_screen.md)). `item_layout` is a
   dropdown for where each panel's item cells go: beside (a grid to the right of the name, bar and
   status icons), under the bar, or on the name's line. `status_layout` is a dropdown for the status
-  icons: beside the bar or under it. `enemy_panel_background` (on by default) lets the enemy panels
+  icons: beside the bar, under it, or under the items. `enemy_panel_background` (on by default) lets the enemy panels
   draw the `portrait_panel` background; off leaves them transparent over the corridor with their
-  name, bar, statuses and items still shown. `CombatViewFramed` applies all five settings.
+  name, bar, statuses and items still shown. `enemy_item_size`, `ally_item_size` and `status_size`
+  are sliders for the enemy and ally item cells and the status icons, in pixels, and `pill_size`
+  scales every value pill (item values and status stacks) together. `CombatViewFramed`
+  applies all of these settings.
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
   `TokensPanel`), in five sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
@@ -63,7 +67,7 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
 
 | Group | Does |
 |---|---|
-| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Defaults in `PRINT_SETTING_DEFAULTS`. The token settings are on the Tokens tab (above) |
+| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Screen layout: where the portraits go ([ui_layout.md](ui_layout.md#screen-sections)). Defaults in `PRINT_SETTING_DEFAULTS`. The token settings are on the Tokens tab (above) |
 | Print Border | A solid line around the corridor: width, gap from the corridor, edge roughness, rubbed spots and their size |
 | Corridor Wear | The background wear, with its current settings, drawn over the corridor too |
 | Corridor Worn Edge | The corridor image's edges rubbed away into the background colour, heavier at the corners: width, amount, patch size, corners |
