@@ -98,10 +98,11 @@ in here before release.
 | Monster volumes | `assets/monsters/cut_out/` | not recorded yet |
 | UI Bundle (`BlackandWhiteUI.png`) | `assets/ui/` | not recorded yet |
 | Palettes | `assets/palettes/` | not recorded yet |
-| Cursors Pack 3 [RPG, RTS, MMO, TPS], by Wenrexa | `assets/ui/cursors/stone_pointer.png` | https://wenrexa.itch.io/cursors-pack-03 |
+| Cool Cursors, by TheWiseHedgehog | `assets/ui/cursors/hand_pointer.png`, `hand_pointer_pressed.png` (edited) | https://thewisehedgehog.itch.io/cc |
 
-Cursors Pack 3 is CC0, so attribution is not required; the row is kept for the
-record. Its itch.io page states that no generative AI was used.
+Cool Cursors requires credit, given as a link to https://thewisehedgehog.itch.io/.
+The pack may be edited but not redistributed. The original is in
+`../dark-corridor-design/cursors/Cool Cursors/`.
 
 ## Fonts
 
