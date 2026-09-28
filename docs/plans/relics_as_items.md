@@ -14,8 +14,9 @@ character traits do (grail's `localization_1.1.1.tsv`, `trait_*_info` rows).
   set off triggers as usual.
 - Enemies can have relics, drawn first in the same place as the enemy's items.
 - A relic can fire every time its trigger happens, or be limited ("the first time each fight").
-- Statuses as the way a relic delivers an always-on effect are kept where they fit, re-checked
-  against the systems built since `docs/systems/content.md` was written.
+- An always-on relic ability is not a status; it shares the hook functions statuses use, so it
+  works the same way without special cases for hidden statuses.
+- A relic's effects are listed in its tooltip the same way as an item's.
 
 ## Current state
 
@@ -40,9 +41,9 @@ character traits do (grail's `localization_1.1.1.tsv`, `trait_*_info` rows).
 | When something happens, do something | "When you shield, heal 2"; "When you take damage, poison 3" | Item effects fired by a trigger (stage 1) |
 | At the start of each fight | Stone Ward, Iron Idol; "At battle start, play an extra attack card" | Same, on a new fight start event (stage 1) |
 | Limited per fight | "The first time you heal, shield twice the amount" | `fires_per_fight` on the definition (stage 1) |
-| Always-on bonus | "Your attack items have +2 attack"; "+5% crit chance" | A status held for the fight (stage 2) |
+| Always-on bonus | "Your attack items have +2 attack"; "+5% crit chance" | A passive: an item effect that holds for the whole fight (stage 2) |
 | Outside fights | "When you win a fight, gain max HP"; "When you skip a draft, gain gold"; Vital Charm | Run events and run effects (stage 3) |
-| Health thresholds and rule changes | "The first time your health reaches 0, heal back to 30%"; "When you crit, fire another item" | A status class written for the relic, with a new hook where needed (stage 4) |
+| Health thresholds and rule changes | "The first time your health reaches 0, heal back to 30%"; "When you crit, fire another item" | A passive class written for the relic, with a new hook where needed (stage 4) |
 
 ## Design
 
@@ -57,7 +58,7 @@ character traits do (grail's `localization_1.1.1.tsv`, `trait_*_info` rows).
 | Field | Meaning |
 |---|---|
 | `fires_per_fight: int` | 0 = no limit; 1 = "the first time each fight" |
-| `fight_status_id`, `fight_status_count` | A status applied to the relic's owner at the start of each fight, for always-on bonuses and rule changes (stage 2 and 4) |
+| `passives: Array[ItemEffect]` | Always-on effects, written like item effects, that hold for the whole fight (stage 2 and 4) |
 | `run_triggers: Array[Dictionary]` | `{event: RunEvent, effect, amount}` for outside-fight abilities (stage 3) |
 
 - A relic's trigger entry is the same dictionary as an item's (`event`, `filter`, `source_filter`)
@@ -105,15 +106,45 @@ character traits do (grail's `localization_1.1.1.tsv`, `trait_*_info` rows).
 
 ### Always-on bonuses (stage 2)
 
-- A relic with `fight_status_id` applies that status to its owner at the start of each fight,
-  the same way Stone Ward works today. The behaviour lives in a `StatusEffect` subclass.
-- The status is hidden from the owner's status row, because the relic token already stands for
-  it. A new `StatusEffect.hidden` flag (default false) does this.
-- `outgoing_bonus` is extended from attacks to every mechanic an item delivers, so "+2 shield on
-  shield items" and "+2 heal on heal items" work. The status receives the effect's mechanic to
-  decide which it raises.
-- The relic's tooltip shows the status's description (`desc_key` with `desc_args`) as one effect
-  line.
+Owner decisions (2026-09-29): an always-on relic ability is not a status, so nothing that acts on
+statuses (removing, stealing, counting, consuming, the `APPLIED` event) can touch it. It works
+through the same hook functions statuses use. Its tooltip lines are the same as an item's effect
+lines.
+
+**Shared hook base class.** The hook functions move from `StatusEffect` into a new base class,
+`CombatHooks` (owner, 2026-09-29). `StatusEffect` extends it, and keeps what only statuses have
+(`count`, `duration`, `ticker`, `setup`, `reapply`, `consume`, `is_spent`, presentation).
+
+**Passives.** A relic's `passives` are `ItemEffect`s, written the same way as its `effects`
+(mechanic, value, shape, target filter). "Your weapon items have +2 attack" is an `attack_bonus`
+effect of 2 with shape `ALL_OWN_ITEMS` and a weapon type filter.
+
+- When a relic's `Item` is built for a fight, each passive becomes an instance of a hook class,
+  chosen by the effect's mechanic from a new registry (mechanic id to class). The instances live on
+  the relic's `Item` in `passives`. A mechanic with no passive class is an authoring error, caught by
+  a content check.
+- The first passive classes are for the existing `attack_bonus` and `attack_percent_bonus`
+  mechanics. Their `outgoing_bonus` returns the bonus when the firing item belongs to the relic's
+  owner and matches the effect's shape and filter (`TargetFilter.matches`). Items created during the
+  fight are covered, because the check runs at fire time.
+- Every place that loops over an actor's statuses to call a hook also loops over the passives of
+  that actor's relics, passives first. These places are `StatusManager.resolve_incoming_damage`,
+  `outgoing_bonuses` and `has_evasion`, and `CombatManager._drain_actor_fire_statuses` and
+  `_on_holder_attacked`. A small helper returns the list in that order so the order stays fixed
+  (decision #24). A passive is never removed during a fight, so the return value of
+  `on_owner_item_fired` and `on_holder_attacked` is ignored for passives.
+- The relic's fire path does not use passives, and a relic with only passives has no triggers and
+  never fires.
+- `outgoing_bonus` is extended from attacks to every mechanic an item delivers:
+  `Item._scaled_value` asks for bonuses for every effect, and the hook receives the effect's mechanic
+  so each class decides which it raises. Existing statuses keep raising attacks only. Shield and heal
+  bonuses need their own bonus mechanics, added when a relic needs one.
+
+**Tooltip.** Passive lines are built by `_effect_line` exactly as an item's effect lines, so the
+example above reads "[attack] +2 to each of your weapon items". They come after the trigger line and
+the triggered effects, with no heading; the wording keeps them apart (owner's example: "When you
+[poison] deal that much [bleed]" then "Your [poison] items have +2 [poison]"). A passive's value is shown as written, not scaled by bonuses.
+`TooltipContent.keyword_ids` also looks at passives, so their keyword cards appear.
 
 ### Outside fights (stage 3)
 
@@ -156,7 +187,8 @@ Unchanged: the snapshot stores relic ids. Nothing a relic does in a fight is sav
    tooltip, inspectable tokens and reward option, the firing flash. Stone Ward and Iron Idol are
    rewritten as `FIGHT_START` relics. Their shield now arrives as a delivery a few steps into the
    fight instead of before the first step, which can change fight results and autotest baselines.
-2. `fight_status_id`, the hidden status flag, bonuses for every mechanic.
+2. The shared hook base class, `passives` and their registry, the attack bonus passive classes,
+   bonuses for every mechanic, passive tooltip lines.
 3. Run events and run effects. Vital Charm is rewritten.
 4. Health thresholds and rule changes, one at a time as relics are authored.
 
@@ -193,9 +225,17 @@ needed, `docs/decision_log.md`.
   items.
 - The tooltip builder for a relic: no charge line, "Relic" type line, trigger line.
 - The sheet's hit test finds a relic token; the reward panel returns a relic option target.
+- A weapon attack bonus passive raises a matching item's attack, including an item created during
+  the fight, and not an item of another type or another actor.
+- A passive is not listed in the status row, and removing or counting statuses never finds it.
+- Passive tooltip lines match the item effect line for the same effect, and come after the
+  trigger line and its effects.
+- A content check fails for a passive whose mechanic has no passive class.
 - All on fixture relics (`FixtureContent`), not the authored ones.
 
 ## Open questions
 
 - The trigger line and "Once per fight" wording.
 - Allies' relics: not planned; allies have none.
+- "Deal that much": a triggered effect whose value is the amount of the event that set it off. Events
+  carry no amount today (`APPLIED` carries only the mechanic id); added when a relic needs it.
