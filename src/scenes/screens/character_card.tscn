@@ -43,7 +43,7 @@ theme_type_variation = &"LabelHeading"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Subtitle" type="Label" parent="."]
+[node name="Class" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 0
 offset_left = 24.0

@@ -37,3 +37,9 @@ something else.
 | **Point** | The unit items are priced in. One point is one damage from a single-target attack ([item_heuristics.md](item_heuristics.md)). |
 | **Budget** | The points an item may spend, worked out from its cooldown and rarity (`ItemPoints.budget`). |
 | **Spend** | The points an item's effects actually cost (`ItemPoints.spend`). |
+
+## Characters
+
+| Term | Meaning |
+|---|---|
+| **Class** | The kind of character a playable character is, shown under its personal name on the select screen and in the Class field of the player's panel, for example Rot Shepherd (`CharacterDef.class_key`). |

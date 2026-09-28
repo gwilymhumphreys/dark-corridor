@@ -60,7 +60,7 @@ func _build_data() -> Dictionary:
     characters.append({
       'id': character_id,
       'name': tr(character.name_key),
-      'subtitle': tr(character.subtitle_key) if character.subtitle_key != '' else '',
+      'character_class': tr(character.class_key) if character.class_key != '' else '',
     })
     for item_id: String in character.item_pool:
       _append_to(pools, item_id, character_id)

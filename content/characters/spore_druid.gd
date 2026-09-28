@@ -7,7 +7,7 @@ extends CharacterDef
 func _init() -> void:
   id = 'spore_druid'
   name_key = 'Maren'                 # PLACEHOLDER personal name — owner's to rename
-  subtitle_key = 'Rot Shepherd'      # the owner's lead role name (spore_druid.md)
+  class_key = 'Rot Shepherd'         # the owner's lead class name (spore_druid.md)
   portrait = 'res://assets/portraits/characters/shaman.png'   # PLACEHOLDER portrait — owner's to swap
   item_pool = [
     'druid_staff',

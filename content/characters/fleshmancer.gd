@@ -8,7 +8,7 @@ extends CharacterDef
 func _init() -> void:
   id = 'fleshmancer'
   name_key = 'Aldous'                # PLACEHOLDER personal name — owner's to rename
-  subtitle_key = 'Disgraced Surgeon' # the owner's role name (2026-09-18)
+  class_key = 'Disgraced Surgeon'    # the owner's class name (2026-09-18)
   portrait = 'res://assets/portraits/characters/leper_nb.png'
   item_pool = [
     'carving_knife',

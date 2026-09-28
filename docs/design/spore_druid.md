@@ -7,11 +7,11 @@
 **Status-identity character (the Silent analog):** most cards are spore appliers, which are skills/utility. Expect this character to run skill-heavy — the attack-heavy default likely inverts here.
 
 **Two-line names (owner, 2026-09-18):** every character shows a **personal name** with the role
-name as a **subtitle** under it on the select screen (built: `CharacterDef.subtitle_key`). So the
-options below are now competing for the *subtitle*, not for the whole name. That loosens the brief
-they were judged against: a subtitle can afford to be plainer and more descriptive, because the
+name as its **class** under it on the select screen (built: `CharacterDef.class_key`). So the
+options below are now competing for the *class*, not for the whole name. That loosens the brief
+they were judged against: a class can afford to be plainer and more descriptive, because the
 personal name carries the flavour and the obliqueness. **Rot Shepherd** is in the def as the
-subtitle; the personal name is still open (`'Maren'` is a placeholder).
+class; the personal name is still open (`'Maren'` is a placeholder).
 
 **Name candidate (Vermis register — placeholder, undecided 2026-06-15):** display-name options in
 the *Vermis* register (oblique, mournful, the name does *not* telegraph the mechanic). All pair

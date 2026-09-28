@@ -93,10 +93,10 @@ func _scan_gd(path: String) -> void:
   _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*'(%s)'" % Q1, label, true)
   _match_all(text, "(?<![A-Za-z0-9_])tr\\(\\s*\"(%s)\"" % Q2, label, true)
   # Single-literal player-facing def fields, each shown via tr(def.<field>):
-  #   name_key (every def) · subtitle_key (character role line) ·
+  #   name_key (every def) · class_key (character class) ·
   #   label_key (event option button) ·
   #   desc_key (status keyword card) · description_key (item flavor line) — tooltip copy.
-  for field: String in ['name_key', 'subtitle_key', 'label_key', 'desc_key', 'description_key']:
+  for field: String in ['name_key', 'class_key', 'label_key', 'desc_key', 'description_key']:
     _match_all(text, "%s\\s*=\\s*'(%s)'" % [field, Q1], label, true)
     _match_all(text, "%s\\s*=\\s*\"(%s)\"" % [field, Q2], label, true)
     # …and the dict-entry form `'<field>': '...'` (KeywordCatalog authors mechanic copy as dict entries).

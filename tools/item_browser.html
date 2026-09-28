@@ -453,12 +453,12 @@ function renderCharacters() {
   const box = document.getElementById('characters');
   box.replaceChildren();
   const entries = [
-    ...DATA.characters.map((c) => [c.id, c.name, c.subtitle]),
+    ...DATA.characters.map((c) => [c.id, c.name, c.character_class]),
     ['all', 'All items', ''],
     ['none', 'In no pool', ''],
     ['enemies', 'Enemy boards', ''],
   ];
-  for (const [id, name, subtitle] of entries) {
+  for (const [id, name, characterClass] of entries) {
     box.append(el('button', {
       type: 'button',
       class: 'character',
@@ -466,7 +466,7 @@ function renderCharacters() {
       onclick: () => { state.character = id; render(); },
     }, [
       el('strong', { text: name }),
-      el('small', { text: [subtitle, `${counts[id] ?? 0} items`].filter(Boolean).join(' · ') }),
+      el('small', { text: [characterClass, `${counts[id] ?? 0} items`].filter(Boolean).join(' · ') }),
     ]));
   }
 }
