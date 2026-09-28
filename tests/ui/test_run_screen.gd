@@ -29,7 +29,7 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
     if screen._event != null:
       screen._on_event_picked(0)    # the event's binary choice
     elif screen._draft != null:
-      screen._on_draft_picked(0)    # stand in for the player picking the first card
+      screen._draft.picked.emit(0)    # stand in for the player picking the first card or relic
     else:
       screen._physics_process(1.0)   # ~8 sim-steps/call; drives fights + advances beats
     guard += 1

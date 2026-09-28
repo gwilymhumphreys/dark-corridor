@@ -67,12 +67,7 @@ static var ALLY_DOWNED: Color = Color(0.45, 0.45, 0.45)     # darken a downed (d
 
 # ── Map strip (1D progress map) ──────────────────────────────────────────────
 # BEAT_BOSS / BEAT_RELIC above are shared with the choice cards; these are map-strip-only.
-static var MAP_TRACK: Color = Color(0.4, 0.4, 0.45)
 static var MAP_CURRENT_HALO: Color = Color(0.95, 0.92, 0.55)
-static var MAP_CLEARED: Color = Color(0.5, 0.46, 0.3)       # a cleared beat — dim gold
-static var MAP_ARROW: Color = Color(0.55, 0.55, 0.6)        # the scroll chevrons
-static var MAP_LABEL: Color = Color(0.85, 0.85, 0.88)       # the "Act N" label
-static var MAP_ROLLED_BEAT: Color = Color(0.65, 0.4, 0.4)   # a beat whose type is rolled on arrival
 
 # ── Tooltip ──────────────────────────────────────────────────────────────────
 # PLACEHOLDER rarity tint and changed-value accent — the colour treatment is the owner's call (tooltips.md).

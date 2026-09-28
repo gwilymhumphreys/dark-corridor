@@ -67,9 +67,4 @@ Columns: 8
 112 150 116	beat rest
 110 126 160	beat event
 160 100  96	beat combat
- 85  85 100	map track
 233 239 236	map current halo
-160 160 139	map cleared
-120 120 112	map arrow
-200 204 196	map label
-150 110 106	map rolled beat

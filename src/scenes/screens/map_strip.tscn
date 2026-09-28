@@ -2,11 +2,35 @@
 
 [ext_resource type="Script" path="res://src/scenes/screens/map_strip.gd" id="1"]
 
-[node name="MapStrip" type="Control"]
-layout_mode = 3
+[node name="MapStrip" type="VBoxContainer"]
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 150.0
 grow_horizontal = 2
 mouse_filter = 2
+theme_type_variation = &"SheetSection"
 script = ExtResource("1")
+
+[node name="ActLabel" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"LabelDim"
+
+[node name="Track" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Boxes" type="ColorRect" parent="Track"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Tokens" type="HBoxContainer" parent="Track"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Marks" type="Control" parent="Track"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

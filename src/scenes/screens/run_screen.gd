@@ -55,7 +55,7 @@ func _ready() -> void:
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
   DebugPanels.panels_open_changed.connect(_on_debug_panels_open_changed)
   _report_button.pressed.connect(_toggle_report)
-  _map.setup(RunMap.TOTAL_BEATS, _run.position)
+  _map.setup(_run.rng.seed, _run.position)
   _enter_beat()
 
 
@@ -360,6 +360,8 @@ func _after_beat() -> void:
     return
   if _run.has_pending_draft():
     _show_draft()
+  elif _run.has_pending_relic_offer():
+    _show_relic_offer()
   else:
     _advance()
 
@@ -400,6 +402,23 @@ func _show_draft() -> void:
   _draft.picked.connect(_on_draft_picked)
   _draft.skipped.connect(_on_draft_skipped)
   _draft.setup(_run.pending_draft())
+
+
+# The relic encounter's reward: the same panel as the draft, offering relics, with no skip.
+func _show_relic_offer() -> void:
+  _state = State.DRAFTING
+  _ensure_view()
+  _draft = DRAFT_OVERLAY.instantiate()
+  _view.corridor_area().add_child(_draft)
+  _draft.picked.connect(_on_relic_picked)
+  _draft.setup_relics(_run.pending_relic_offer())
+
+
+func _on_relic_picked(index: int) -> void:
+  _draft.queue_free()
+  _draft = null
+  _run.apply_relic_pick(index)
+  _advance()
 
 
 func _on_draft_picked(index: int) -> void:
@@ -454,12 +473,14 @@ func _ensure_view() -> void:
 func _mount_view(cm: CombatManager) -> void:
   _view = COMBAT_VIEW.instantiate()
   _view.sections = _sections
+  _view.map = _map
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
   _view.bind(cm, _run.player, _run.potions, _run.allies)   # the rosters come off the CM; with no fight, the run's allies
   var character: CharacterDef = _run.character
   _view.show_character(tr(character.name_key), tr(character.class_key) if character.class_key != '' else '')
   _refresh_gold()
+  _view.show_relics(_run.relics)
   _view.potion_thrown.connect(_on_potion_thrown)
 
 

@@ -38,15 +38,16 @@ screen is the one real-time client: each `_physics_process` it calls
 `run_screen.gd` is a **polling FSM** mirroring `AutoTestMode.run_full`:
 
 ```
-IDLE → enter beat (auto-rolled or fixed — a live encounter already) → begin beat
+IDLE → enter beat (drawn or fixed — a live encounter already) → begin beat
                     begin:  event?  EVENTING (await option pick) → after-beat
                             fight?  APPROACHING → FIGHTING ─(resolved)→ after-beat
-                            rest?   resolves on begin → after-beat
-after-beat: pending draft? DRAFTING (await pick OR skip-for-gold) ; else advance → enter beat
+                            rest or relic?  resolves on begin → after-beat
+after-beat: pending draft? DRAFTING (await pick OR skip-for-gold)
+            pending relic offer? DRAFTING (the same panel with relics, no skip) ; else advance → enter beat
 run_ended → Game → outcome screen
 ```
 
-Beats **auto-roll** their content (`RunManager._roll_beat`), so every beat enters with a live
+Every beat's encounter is set by the map (`RunManager._enter_beat`), so every beat enters with a live
 encounter — there's no player path-pick. An **EVENT** beat raises `event_overlay.tscn` (prose + a
 binary choice → `Encounter.pick_event_option`, applying the outcome + resolving), parking the FSM
 until the pick, like the draft overlay. *(The `CHOOSING` state + `choice_overlay.tscn` are
@@ -188,7 +189,9 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   `AllyLeft` / `AllyRight`). With the *Portraits above items* screen layout the player and the two
   ally rows are stacked in a column above the potions instead ([ui_layout.md](ui_layout.md#screen-sections)),
   and with the `allies_box` print setting the ally rows sit in a pencil box under an "Allies" label,
-  shown even with no allies (`_place_ally_rows`; the slots are rebuilt when the rows move). A **downed run-scoped ally keeps its slot** (dimmed; it stops
+  shown even with no allies (`_place_ally_rows`; the slots are rebuilt when the rows move). Pencil lines
+  divide the box into a cell for each slot, two across and a row for each row of allies, and each slot
+  is made as wide as its cell (`_size_allies_box`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
   participating, revived to full next fight); a **dead combat-scoped token is reaped** like an
   enemy (slot removed). The view reads the CombatManager's rosters (`enemies` +
   `player_side()`) each frame, so mid-fight summons (a boss add, a player token) appear as
@@ -286,9 +289,24 @@ full-screen.
 - **Gold** — a "Gold" box beside the potions in the combat view: the amount in a box drawn with the
   potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
   screen writes it when it builds the view (covering a resumed run's banked gold) and after each skip.
-- **Map** — `map_strip.tscn`, at the top of the information section, draws the run's beats as a line of colour-coded dots (cleared
-  solid, upcoming rings, the current beat haloed) with an "Act N" label and edge chevrons
-  for off-screen beats; `mark_position` on each advance.
+- **Relics** — a "Relics" box beside the gold: the potions' pencil grid, as many squares across as fit
+  in the rest of the potion row, with a token per relic (an `ItemCell` showing `RelicDef.icon`) in each
+  square. More relics than squares across wrap onto more rows, and the board fits the items to the
+  height left. The run screen hands the view the run's `relics` array
+  (`CombatView.show_relics`); the view builds tokens again when its size changes, so a granted relic
+  shows. Relic tokens have no tooltip yet.
+- **Map** — `map_strip.tscn` shows the current act's squares (`RunMap.SQUARES`) under an "Act N"
+  label: a row of pencil grid squares (the grid material in box mode), each holding a small cardboard
+  token (an `ItemCell`) with a single-colour icon (`assets/icons/map/`: fight, elite, relic, boss),
+  tinted from the palette (`ItemCell.tint_picture`). The tokens are the small token size, the same as
+  the status icons (`status_size`), set askew like the items. A cleared square's token is face down (no
+  icon), and the current one has the highlight border (`ItemCell.set_marked`); during an event, a
+  marker sits on the grid line before the next square. It
+  needs the run seed, because the events' places come from it (`setup(run_seed, position)`,
+  `mark_position` on each advance). The label is laid out like the sheet's other labels
+  (`SheetSection`, `LabelDim`). With the `map_in_column` print setting on, the combat view places it
+  at the bottom of the item column ([ui_layout.md](ui_layout.md#screen-sections)); otherwise it is
+  at the top of the information section.
 - **Speed button** — `speed_button.tscn` in the information section: an always-visible
   ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
 - **Report button** — beside the speed button in the information section: always visible, a toggle

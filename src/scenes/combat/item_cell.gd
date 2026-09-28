@@ -134,6 +134,20 @@ func show_picture(texture: Texture2D) -> void:
   _build_pills()
 
 
+## Tint the picture, for a single-colour icon such as a map square's. The icon is then drawn with the
+## interface element material, like the value pills, so the palette colour is kept
+## (docs/systems/interface_look.md).
+func tint_picture(colour: Color) -> void:
+  _icon.self_modulate = colour
+  _icon.material = InterfaceLook.element_material
+
+
+## Show the hover border without the pointer and without the hover sound, such as on the map's
+## current square.
+func set_marked(marked: bool) -> void:
+  _hover_to(1.0 if marked else 0.0)
+
+
 ## A pill per mechanic effect (damage, shield, heal ...), tinted by the mechanic's colour. An effect
 ## that applies a status (Mighty Blow's Empowered) gets no pill; its amount is in the tooltip. The
 ## pills sit in a centred row straddling the top edge (vertical centre on the frame's top border).
