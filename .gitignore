@@ -28,6 +28,7 @@ comparisons/
 
 # Screenshots saved by --shot (src/debug/screenshot.gd)
 screenshots/
+screenshots-archive/
 
 .claude/worktrees/
 .claude/cache/

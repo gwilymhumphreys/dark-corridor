@@ -142,10 +142,9 @@ func tint_picture(colour: Color) -> void:
   _icon.material = InterfaceLook.element_material
 
 
-## Show the hover border without the pointer and without the hover sound, such as on the map's
-## current square.
+## Keep the selected border on, such as on the map's current square (docs/systems/control_feedback.md).
 func set_marked(marked: bool) -> void:
-  _hover_to(1.0 if marked else 0.0)
+  ControlFeedback.set_selected(_frame, marked)
 
 
 ## A pill per mechanic effect (damage, shield, heal ...), tinted by the mechanic's colour. An effect
