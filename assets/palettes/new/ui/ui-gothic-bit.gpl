@@ -11,6 +11,7 @@ Columns: 8
  51  51  70	ui background wear
 128 128 164	ui background wear light
   8   8  11	ui panel shadow
+160 160 139	ui token card
  26  26  36	ui panel
  51  51  70	ui panel edge
  83  83 115	ui panel light

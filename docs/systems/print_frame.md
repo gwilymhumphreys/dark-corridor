@@ -48,9 +48,10 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   drop shadow onto the paper. `PrintLook.apply_token_style()` writes the shadow and fill settings onto
   `PanelToken` and `PanelTokenWide` whenever a print setting changes, on reset, and when the
   interface palette changes (the shadow colour is `Colours.UI_PANEL_SHADOW`). The fill is
-  `Colours.UI_BACKGROUND` blended towards `token_fill_colour` by `token_fill_amount`, so at 0 a token
-  has the interface background colour and at 1 the card colour. It is worked out again after a palette
-  change, because the palette sets the fill to `UI_BACKGROUND`. The token's edge is the
+  `Colours.UI_BACKGROUND` blended towards the card colour `Colours.UI_TOKEN_CARD` by
+  `token_fill_amount`, so at 0 a token has the interface background colour and at 1 the card colour.
+  Both colours come from the [interface palette](interface_palette.md), so the fill is worked out again
+  after a palette change. The token's edge is the
   panel wear's worn edge ([panel_wear.md](panel_wear.md)); it has no border.
 - `token_portraits` puts the ally and enemy portraits in `PanelToken` frames instead of
   `PanelSlot`; the player's portrait is always in a `PanelToken` frame, so it has the items' drop
@@ -63,14 +64,15 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   status icons), under the bar, or on the name's line. `status_layout` is a dropdown for the status
   icons: beside the bar, under it, or under the items. `allies_box` (on by default) puts the ally rows
   in a box labelled "Allies" when the portraits are above the items, shown even with no allies.
-  `enemy_item_size`, `ally_item_size` and `status_size`
-  are sliders for the enemy and ally item cells and the status icons, in pixels, and `pill_size`
+  `medium_token_size`, `ally_item_size` and `status_size`
+  are sliders for the enemy and ally item cells and the status icons, in pixels
+  (`medium_token_size` is the medium token size, which the map tokens also use), and `pill_size`
   scales every value pill (item values and status stacks) together. `CombatViewFramed`
   applies all of these settings.
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
   `TokensPanel`), in five sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (colour, amount), Portraits (the two switches) and Character panels (the three layout settings).
+  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the two switches) and Character panels (the three layout settings).
 
 | Group | Does |
 |---|---|

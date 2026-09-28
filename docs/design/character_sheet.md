@@ -60,9 +60,9 @@ whole sheet at once:
 | Pencil lines: the grids, the allies box and the write-in lines | `UI_BACKGROUND_WEAR_LIGHT` |
 | Printed labels | `UI_TEXT_DIM` |
 | Panels | `UI_PANEL` and the other `UI_PANEL_*` variables |
+| Token card, blended onto the paper by `token_fill_amount` (a print setting on the F7 tab) | `UI_TOKEN_CARD` |
 
-The one exception is the token card colour (`token_fill_colour`, a print setting on the F7 tab),
-which is blended onto `UI_BACKGROUND`. New sheet parts should take their colours from `Colours`.
+New sheet parts should take their colours from `Colours`.
 
 ## Directions for the whole screen
 
@@ -123,9 +123,10 @@ Each as a setting on the F7 or F2 tab, screenshotted in the same fight on one co
   with its "Act N" label in the same style as the other labels (the `map_in_column` setting on the F3
   Layout group).
 - **Map as tokens** (2026-09-28): the act's squares as a row of pencil grid squares, each with a
-  small token showing an icon (fight, elite, relic, boss); cleared tokens face down, the current one
-  bordered, and a marker between squares during an event. Two token sizes: large for items, potions
-  and relics, small (`status_size`) for status icons and map tokens ([run_screen.md](../systems/run_screen.md#overlays)).
+  cardboard token showing an icon (fight, elite, relic, boss); cleared tokens face down, the current one
+  bordered, and a marker between squares during an event. Three token sizes: large for items, potions
+  and relics, medium (`medium_token_size`) for enemy items and map tokens, small (`status_size`) for
+  status icons ([run_screen.md](../systems/run_screen.md#overlays)).
 - **Relics box** (2026-09-28): a "Relics" label over a pencil grid beside the gold, with a token for
   each relic in its own square ([run_screen.md](../systems/run_screen.md#overlays)).
 - **Allies box** (2026-09-28): an "Allies" label over one pencil rectangle holding the ally rows,

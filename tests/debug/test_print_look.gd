@@ -88,12 +88,14 @@ func test_token_settings_are_written_onto_both_token_styles() -> void:
 
 func test_token_fill_blends_from_the_interface_background_to_the_card_colour() -> void:
   var theme: Theme = ThemeDB.get_project_theme()
-  PrintLook.set_print_value('token_fill_colour', Color(1, 0, 0))
+  var card_colour: Color = Colours.UI_TOKEN_CARD
+  Colours.UI_TOKEN_CARD = Color(1, 0, 0)
   PrintLook.set_print_value('token_fill_amount', 0.5)
   var expected: Color = Colours.UI_BACKGROUND.lerp(Color(1, 0, 0), 0.5)
   for type: String in PrintLook.TOKEN_STYLES:
     var box: StyleBoxFlat = (theme.get_stylebox('panel', type) as WornStyleBox).base as StyleBoxFlat
     assert_true(box.bg_color.is_equal_approx(expected), '%s fill is halfway to the card colour' % type)
+  Colours.UI_TOKEN_CARD = card_colour
   PrintLook.reset_print_look()
   var reset_box: StyleBoxFlat = (theme.get_stylebox('panel', 'PanelToken') as WornStyleBox).base as StyleBoxFlat
   assert_true(reset_box.bg_color.is_equal_approx(Colours.UI_BACKGROUND), 'reset gives the interface background')
