@@ -155,7 +155,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
-  aligned to the top of the section, a "Name:" and a "Class:" field, each written on an underline that runs to the panel's right edge, like a character sheet (`CharacterPanel.sheet_fields`; the run screen passes the character's `name_key` and `class_key` through `CombatView.show_character`), over the health bar and the status icons (the player's character
+  aligned to the top of the section, a "Name:" and a "Class:" field, each written on a pencil line (`PencilLine`) that runs to the panel's right edge, like a character sheet (`CharacterPanel.sheet_fields`; the run screen passes the character's `name_key` and `class_key` through `CombatView.show_character`), over the health bar and the status icons (the player's character
   panel, `PlayerPanel`) — centred between the ally slots. The player's panel keeps one size through the
   fight (`CharacterPanel.fixed_size`): its status icons keep their full height with no statuses, and
   with the portraits above the items it fills the section's width; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a

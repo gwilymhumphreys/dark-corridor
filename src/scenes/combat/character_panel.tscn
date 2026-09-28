@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" path="res://src/scenes/combat/status_icons.tscn" id="status_icons"]
 [ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
 [ext_resource type="Material" path="res://src/shaders/interface_portrait_material.tres" id="interface_portrait_material"]
-[ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="named_colour_rect"]
+[ext_resource type="Script" path="res://src/ui/pencil_line.gd" id="pencil_line"]
 
 [node name="CharacterPanel" type="PanelContainer"]
 size_flags_vertical = 0
@@ -66,12 +66,10 @@ layout_mode = 2
 theme_type_variation = &"LabelMedium"
 
 [node name="Line" type="ColorRect" parent="Row/Readout/Fields/NameField"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
 mouse_filter = 2
-color = Color(0.6, 0.6, 0.66, 1)
-script = ExtResource("named_colour_rect")
-colour_name = "UI_TEXT_DIM"
+script = ExtResource("pencil_line")
 
 [node name="ClassFieldLabel" type="Label" parent="Row/Readout/Fields"]
 layout_mode = 2
@@ -91,12 +89,10 @@ layout_mode = 2
 theme_type_variation = &"LabelMedium"
 
 [node name="Line" type="ColorRect" parent="Row/Readout/Fields/ClassField"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
 mouse_filter = 2
-color = Color(0.6, 0.6, 0.66, 1)
-script = ExtResource("named_colour_rect")
-colour_name = "UI_TEXT_DIM"
+script = ExtResource("pencil_line")
 
 [node name="Top" type="HBoxContainer" parent="Row/Readout"]
 layout_mode = 2

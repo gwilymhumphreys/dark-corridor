@@ -15,6 +15,9 @@ uniform float square_size = 144.0;
 // material, such as the allies box: above 0, one rectangle this size is drawn around the node's rect
 // instead of a grid, inset by the line width so the whole line shows.
 instance uniform vec2 box_size = vec2(0.0);
+// Set per node with `box_size` by a `PencilLine`: one horizontal line along the bottom of the rect
+// instead of the rectangle.
+instance uniform bool underline = false;
 
 group_uniforms board_grid;
 uniform bool board_grid_on = true;
@@ -72,6 +75,10 @@ void fragment() {
   }
   float vertical = pencil_lines(local.x, local.y, spacing.x, 0.0);
   float horizontal = pencil_lines(local.y, local.x, spacing.y, 41.0);
+  if (underline) {
+    vertical = 0.0;
+    horizontal = pencil_lines(local_position.y - (box_size.y - board_grid_line_width), local_position.x, 1.0e5, 41.0);
+  }
   float cover = 1.0 - (1.0 - vertical) * (1.0 - horizontal);   // crossings are darker, as in pencil
   float grain = hash12(FRAGCOORD.xy) * 0.5 + value_noise(FRAGCOORD.xy / 2.5) * 0.5;
   cover *= mix(1.0, grain, board_grid_grain);
