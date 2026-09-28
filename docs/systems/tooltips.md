@@ -2,8 +2,9 @@
 
 The combat item tooltip (gen 3, built). Hover a board item → a **cluster** appears
 beside it: a main panel plus one card per keyword the item references. Scope: board
-`Item`s (player cells + enemy-HUD cells + ally-slot cells) and the reward icons on the
-draft overlay. Potions (Consumables, not Items)
+`Item`s (player cells + enemy-HUD cells + ally-slot cells), relics (the sheet's relic tokens and an
+enemy's relic cells, each an `Item` built from its `RelicDef`) and the reward icons on the
+draft overlay, relic choices included. Potions (Consumables, not Items)
 are a follow-on — the builder is `Item`-typed.
 
 Shipped from [`docs/plans/tooltip_system.md`](../plans/tooltip_system.md), which
@@ -48,6 +49,13 @@ A trigger line names its event and then the charge icon with the seconds the tri
 it goes off: "When [poison] is applied, [charge] 1s". A trigger on destroyed items reads as the
 Reclaim keyword instead.
 
+A **relic** (`item.def is RelicDef`) has no charge line (`TooltipPanel` hides the empty row) and
+its type line reads "Relic". Its lines are, in order: when it fires ("At the start of each fight:",
+"When [poison] is applied:", "When you take damage:"), then its effect lines, its crit chance, and
+its limit ("Once per fight", "N times per fight") (`TooltipContent._relic_lines`). A relic shows
+no Trigger or Reclaim keyword card, because its triggers fire it rather than charge it. The
+wording is placeholder copy for the owner.
+
 An effect whose value is read from a status its owner holds (`ItemEffect.per_owner_stack_id`) names
 that status instead of a number: "[attack] equal to your [shield]".
 
@@ -75,8 +83,8 @@ and the cluster has to re-read a moving cell's rect every frame anyway):
    picks the target: a reward icon from `DraftOverlay.inspectable_at` first; nothing when the
    mouse is over the draft or summary panel; otherwise the view's `inspectable_at`. The view exists
    during events too (built without a fight), so board tooltips work there as well. Slow-mo is still requested only while fighting.
-2. `combat_view_framed.gd::inspectable_at(point)` hit-tests enemy-HUD cells, ally-slot
-   cells, then player cells, returning `{item, rect (global), side}` or `{}`. The rect
+2. `combat_view_framed.gd::inspectable_at(point)` hit-tests enemy-HUD cells (relics included),
+   ally-slot cells, then player cells and the relic tokens, returning `{item, rect (global), side}` or `{}`. The rect
    is re-read each frame (enemy HUDs reposition every frame, so the cluster tracks a
    moving cell). Helpers: `EnemyHud`/`AllySlot` `item_at(point)` + `cell_rect(item)`.
 3. The view owns the cluster and feeds it the target via `update_target(target)`, and sets

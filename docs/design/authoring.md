@@ -87,6 +87,23 @@ pattern in their own `content/` folder — see the matching PRD ([item](../syste
 [content](../systems/content.md) (relics/enchants/potions) · [encounter](../systems/encounter.md))
 for each def's fields and how it resolves.
 
+- A **relic** is a `RelicDef` (`content/relics/<id>.gd`), which extends `ItemDef`: write `effects`,
+  `mechanics` and `trigger_subs` as for an item, but a trigger has no `'seconds'` (it fires the
+  relic) and there is no `cooldown` to set. `fires_per_fight = 1` makes it "the first time each
+  fight". Add it to `RelicCatalog.REWARD_POOL` to make it a reward. See
+  [content.md → Relic](../systems/content.md#relic).
+
+  ```gdscript
+  extends RelicDef
+
+  func _init() -> void:
+    id = 'iron_idol'
+    name_key = 'Iron Idol'
+    mechanics = [ShieldMechanic.ID]
+    effects = [ItemEffect.shield(6.0)]
+    trigger_subs = [{'event': EventBus.Event.FIGHT_START}]
+  ```
+
 - A **status** is NOT a def — it's a **`StatusEffect` subclass** (`statuses/<name>_status.gd`)
   overriding the hooks it needs (`outgoing_bonus`, `absorb`, `on_step`, …; default no-op),
   extending an intermediate base (`TimedStatus` / `PeriodicStatus` / `PoolStatus`) or `StatusEffect`

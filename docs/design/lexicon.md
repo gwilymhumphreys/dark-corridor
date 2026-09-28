@@ -14,7 +14,8 @@ something else.
 | **Cooldown bar** | An item's progress towards firing, shown as the fill over its icon. |
 | **Fire** | An item acting when its cooldown bar is full: every one of its effects happens, then the bar starts again. |
 | **Effect** | One thing an item does when it fires (`ItemEffect`): a mechanic with a value, or a status to apply with an amount, aimed at a target shape. |
-| **Trigger** | An event an item listens for that adds seconds to its own cooldown bar each time it happens (`ItemDef.trigger_subs`). |
+| **Trigger** | An event an item listens for that adds seconds to its own cooldown bar each time it happens (`ItemDef.trigger_subs`). A relic's trigger fires the relic instead. |
+| **Relic** | An item with no cooldown: it fires only when one of its triggers happens. The run owns the player's relics; in a fight they sit apart from the board (`RelicDef`, `Actor.relics`). |
 | **Type tag** | A label on an item (`weapon`, `armour`, `spell`, `skill`, `trinket`). It does nothing by itself; other items and statuses can refer to it. |
 | **Value pill** | The number on the top edge of an item's icon. There is one for each mechanic effect; a status effect has none. |
 

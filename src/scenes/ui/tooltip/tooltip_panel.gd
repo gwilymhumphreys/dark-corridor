@@ -107,9 +107,12 @@ func _set_type_line(type_line: String) -> void:
 
 
 ## The charge-time row: the item's cooldown beside the charge-time glyph, under the type line.
+## Hidden when the line is empty (a relic has no charge time).
 func _set_charge(charge_line: Array) -> void:
   var holder: Control = $Margin/Body/Charge
   for child in holder.get_children():
     holder.remove_child(child)
     child.queue_free()
-  holder.add_child(_build_line(charge_line))
+  holder.visible = not charge_line.is_empty()
+  if holder.visible:
+    holder.add_child(_build_line(charge_line))

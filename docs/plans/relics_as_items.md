@@ -89,8 +89,8 @@ character traits do (grail's `localization_1.1.1.tsv`, `trait_*_info` rows).
   relic's attack does not use up the Smith's Empowered stacks. The events its effects cause when they land (`APPLIED` for poison, shield and so
   on, `DAMAGE_TAKEN`) are published as usual, so those triggers do react. `CRIT` is still published
   when a relic crits.
-- After `fires_per_fight` fires, the relic stops firing for the rest of the fight. The combat
-  manager counts each relic item's fires; nothing is added to `Item`.
+- After `fires_per_fight` fires, the relic stops firing for the rest of the fight. `Item.fires`
+  counts every item's fires in the fight; the relic token also uses it to flash.
 - Because the relics are not on the board, board-wide effects ("your items", "charge a random
   item", consume) never pick a relic.
 - New combat event `FIGHT_START`, published once in the first sim step after crossings are

@@ -468,6 +468,42 @@ msgid "Keyword"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Once per fight"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} times per fight"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "At the start of each fight:"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When you take damage:"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When {0} is applied:"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When an item fires:"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When an item is destroyed:"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When you crit:"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "On trigger:"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "{0} {1} by {2}s"
 msgstr ""
 

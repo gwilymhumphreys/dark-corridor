@@ -7,7 +7,7 @@ func _init() -> void:
   id = 'iron_idol'
   name_key = 'Iron Idol'
   icon = 'res://assets/icons/relics/statue_warrior_nb.png'   # placeholder picture for the owner to replace
-  kind = Kind.COMBAT_START_STATUS
-  status_id = 'shield'
-  status_count = 6.0
+  mechanics = [ShieldMechanic.ID]
+  effects = [ItemEffect.shield(6.0)]
+  trigger_subs = [{'event': EventBus.Event.FIGHT_START}]
   panel_colour_name = 'RELIC_IRON_IDOL'

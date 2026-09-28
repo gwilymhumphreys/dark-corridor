@@ -14,7 +14,10 @@ extends RefCounted
 ## Side is resolved AT EVENT TIME via `side_resolver`, never cached at subscribe time
 ## (rosters change mid-fight — a summon subscribes before it is inserted into its roster).
 
-enum Event { ITEM_FIRED, APPLIED, ITEM_DESTROYED, CRIT }
+## FIGHT_START is published once, in the first sim step, with no source (subscribe it with ANY).
+## DAMAGE_TAKEN is published when an actor loses health; its source actor is the one that lost it
+## and its data is the mechanic or status id that dealt the damage.
+enum Event { ITEM_FIRED, APPLIED, ITEM_DESTROYED, CRIT, FIGHT_START, DAMAGE_TAKEN }
 
 ## Which event sources a subscription listens to, relative to the SUBSCRIBER's side.
 enum SourceFilter { OWN_SIDE, ANY, OPPONENT_SIDE }

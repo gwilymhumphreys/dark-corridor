@@ -51,6 +51,7 @@ var hovered: bool = false:
 
 var _timekeeper: Timekeeper = null     # the fight's clock; null = no recoil (sandbox/tests)
 var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurious recoil on bind
+var _last_fires: int = 0               # a relic's fire count at the last frame (relics recoil on a new fire)
 var _recoil_start: float = -1.0        # render_time at the last fire; -1 = idle
 var _hover: float = 0.0                # how far the highlight has come in
 var _hover_tween: Tween
@@ -118,6 +119,7 @@ func _exit_tree() -> void:
 func setup(target_item: Item, timekeeper: Timekeeper = null, temporary: bool = false) -> void:
   item = target_item
   _timekeeper = timekeeper
+  _last_fires = item.fires if item != null else 0
   _temporary_tag.visible = temporary
   _icon.texture = load(item.def.icon) as Texture2D if item != null and item.def.icon != '' else null
   _build_pills()
@@ -188,9 +190,13 @@ func _process(_delta: float) -> void:
   if item == null:
     return
   var progress: float = item.cooldown.progress()
-  if show_cooldown and progress < _last_progress - 0.2:   # cooldown reset -> it just fired
+  # A relic's bar is full for a single step before it fires, which a frame can miss, so a relic
+  # recoils on a new fire instead of on its bar emptying.
+  var fired: bool = item.fires > _last_fires if item.def is RelicDef else progress < _last_progress - 0.2
+  if show_cooldown and fired:
     _recoil_start = _timekeeper.render_time() if _timekeeper != null else -1.0
   _last_progress = progress
+  _last_fires = item.fires
   _update_recoil()
   _update_cooldown()
 
@@ -215,7 +221,8 @@ func _update_recoil() -> void:
 ## ready, so a charged item shows its art unobscured. Hidden entirely when show_cooldown is off.
 func _update_cooldown() -> void:
   var progress: float = item.cooldown.progress() if item != null else 1.0
-  _cooldown.visible = show_cooldown and progress < 1.0
+  # A relic has no bar to show (docs/systems/content.md → Relic).
+  _cooldown.visible = show_cooldown and progress < 1.0 and not (item != null and item.def is RelicDef)
   if _cooldown.visible:
     (_cooldown.material as ShaderMaterial).set_shader_parameter('cooldown_progress', progress)
 

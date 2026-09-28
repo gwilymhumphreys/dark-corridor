@@ -149,21 +149,22 @@ func pick_path(index: int) -> void:
   _save()
 
 
-## Begin resolving the current beat. Applies relic combat-start statuses (fights),
-## then begins it. A rest resolves synchronously (its heal lands and `resolved`
+## Begin resolving the current beat. For a fight, builds the player's relic items first, so the
+## Combat manager registers them with the board, then begins it. A rest resolves synchronously (its heal lands and `resolved`
 ## fires here); a fight readies its CombatManager for the caller to step.
 func begin_current() -> void:
   if _current == null or _ended:
     return
   if not _current.resolved.is_connected(_on_encounter_resolved):
     _current.resolved.connect(_on_encounter_resolved)
+  if _current.is_fight():
+    _build_relic_items()      # before begin(): the Combat manager registers them at start()
   _current.begin()
-  # Ordering constraint: revive + relic statuses run AFTER begin() (the CM exists, its
-  # registration done). Safe because registration reads neither HP nor statuses and no
-  # sim time passes until the caller steps — don't insert anything between that changes that.
+  # Ordering constraint: revive runs AFTER begin() (the CM exists, its registration done). Safe
+  # because registration reads no HP and no sim time passes until the caller steps — don't insert
+  # anything between that changes that.
   if _current.is_fight():
     _revive_allies()          # run-scoped allies enter every fight at full HP (downed → revived)
-    _apply_relics_to_player()
 
 
 ## Run-scoped allies are revived to full HP at the start of every fight (design: allies revive
@@ -174,13 +175,14 @@ func _revive_allies() -> void:
     ally.hp = ally.max_hp
 
 
-## Relic effect shape (a): apply each combat-start relic's status to the player at
-## fight start (docs/systems/content.md). Combat-scoped — CombatManager.teardown clears it, so
-## it is re-applied fresh each fight.
-func _apply_relics_to_player() -> void:
+## Give the player one Item per relic for this fight (Actor.relics, docs/systems/content.md → Relic).
+## Combat-scoped: CombatManager.teardown dissolves and empties the list, so each fight starts fresh.
+func _build_relic_items() -> void:
+  for it in player.relics:
+    it.dissolve()
+  player.relics.clear()
   for relic in relics:
-    if relic.def.kind == RelicDef.Kind.COMBAT_START_STATUS:
-      StatusManager.apply(player, relic.def.status_id, relic.def.status_count, relic.def.status_duration)
+    player.relics.append(Item.new(relic.def, player))
 
 
 func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
@@ -253,11 +255,11 @@ func apply_relic_pick(index: int) -> void:
   _pending_relic_offer = []
 
 
-## Apply a granted relic's ONE-TIME direct run-state mod (MAX_HP_BONUS raises max + current
-## HP). Baked into the saved snapshot's hp/max_hp — NOT re-applied on rehydrate. A
-## COMBAT_START_STATUS relic has no grant-time effect (it applies per fight, below).
+## Apply a granted relic's ONE-TIME direct run-state mod (max_hp_bonus raises max + current HP).
+## Baked into the saved snapshot's hp/max_hp — NOT re-applied on rehydrate. A relic's fight
+## triggers have no grant-time effect (its item is built per fight, above).
 func _apply_relic_grant(relic: Relic) -> void:
-  if relic.def.kind == RelicDef.Kind.MAX_HP_BONUS:
+  if relic.def.max_hp_bonus > 0.0:
     player.max_hp += roundi(relic.def.max_hp_bonus)
     player.hp += roundi(relic.def.max_hp_bonus)
 

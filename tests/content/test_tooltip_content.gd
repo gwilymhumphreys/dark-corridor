@@ -295,3 +295,21 @@ func _first_segment(line: Array, kind: String) -> Dictionary:
     if seg['t'] == kind:
       return seg
   return {}
+
+
+func test_a_relic_has_no_charge_line_and_says_relic() -> void:
+  var content: Dictionary = TooltipContent.new().build(Item.new(FixtureKit.shield_relic()))
+  assert_eq(content['charge_line'], [], 'a relic has no charge time')
+  assert_eq(content['type_line'], 'Relic', 'its type line reads Relic')
+
+
+func test_a_relic_lists_its_trigger_then_its_effects_then_its_limit() -> void:
+  var def := FixtureKit.shield_relic()
+  def.fires_per_fight = 1
+  var lines: Array = TooltipContent.new().build(Item.new(def))['lines']
+  assert_eq(lines.size(), 3, 'the trigger, the shield, and the limit')
+  assert_eq(lines[0], [{'t': 'text', 's': 'At the start of each fight:'}], 'when it fires comes first')
+  assert_eq(_first_segment(lines[1], 'icon')['id'], ShieldMechanic.ID, 'then what it does')
+  assert_eq(lines[2], [{'t': 'text', 's': 'Once per fight'}], 'then how often')
+  var keywords: Array[String] = TooltipContent.keyword_ids(Item.new(def))
+  assert_false(KeywordCatalog.TRIGGER in keywords, 'a relic shows no item trigger card')

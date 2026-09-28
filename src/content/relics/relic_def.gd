@@ -1,30 +1,20 @@
 class_name RelicDef
-extends RefCounted
-## A relic definition (docs/systems/content.md, decision #23) — authored in GDScript, collected
-## in RelicCatalog. Carries the Draftable definition-face (id / name / rarity) by
-## composition. Two effect shapes built:
-##   COMBAT_START_STATUS — apply a status to the player Actor at each fight start
-##     (re-applied every fight; the RunManager does it in _apply_relics_to_player).
-##   MAX_HP_BONUS — a direct run-state mod applied ONCE on grant (baked into the saved
-##     snapshot's max_hp; never re-applied on rehydrate). The design's max-HP-via-relics.
-## The triggered event-push Ticker shape arrives later.
+extends ItemDef
+## A relic definition (docs/systems/content.md → Relic) — an item with no timer, authored in
+## GDScript and collected in RelicCatalog. It uses the item fields (effects, trigger_subs, mechanics,
+## crit_chance, the tooltip) and builds an Item for each fight (Actor.relics), but its bar never
+## fills over time: each trigger fills it completely, and it fires on the next step.
+## A relic trigger entry is an item trigger without 'seconds':
+##   { event: EventBus.Event, filter: Variant (a status or mechanic id), source_filter: EventBus.SourceFilter }
 
-enum Kind { COMBAT_START_STATUS, MAX_HP_BONUS }
-enum Rarity { COMMON, UNCOMMON, RARE }
-
-var id: String = ''
-var name_key: String = ''           # source English; displayed via tr() — localizable
-var icon: String = ''               # res:// path of the relic's picture (assets/icons/relics/); empty = none
-var rarity: int = Rarity.COMMON     # feel-based for relics (docs/systems/content.md), not a power ladder
-var kind: int = Kind.COMBAT_START_STATUS
-var status_id: String = ''          # status id applied at combat start (COMBAT_START_STATUS, #23)
-var status_count: float = 0.0       # stacks / pool applied (COMBAT_START_STATUS)
-var status_duration: float = 0.0    # per-application duration (timed statuses; 0 for pools/counters)
-var max_hp_bonus: float = 0.0       # max-HP added on grant (MAX_HP_BONUS)
-var panel_colour_name: String = ''  # the `Colours` variable the panel is drawn in ('RELIC_STONE_WARD')
-var panel_color: Color:             # read each time, so a palette change shows at once
-  get = _get_panel_color
+# How many times the relic can fire in one fight. 0 = no limit; 1 = "the first time each fight".
+var fires_per_fight: int = 0
+# Maximum health added once, when the relic is granted (a direct run-state change, baked into the
+# saved snapshot's max_hp and never re-applied on load).
+var max_hp_bonus: float = 0.0
 
 
-func _get_panel_color() -> Color:
-  return Colours.named(panel_colour_name) if panel_colour_name != '' else Color.WHITE
+func _init() -> void:
+  # One sim step, so the Item's Ticker crosses on a single full push. Never shown: a relic's
+  # tooltip has no charge line.
+  cooldown = Balance.STEP

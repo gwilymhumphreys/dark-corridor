@@ -12,6 +12,10 @@ var hp: int     # whole numbers — every value is rounded when it lands (docs/s
 var max_hp: int
 var board: Array[Item] = []              # ordered, not a grid
 var statuses: Array[StatusEffect] = []   # actor-targeted instances
+# One Item per relic for the current fight (docs/systems/content.md → Relic), separate from the
+# board so board-wide effects never pick a relic. Empty between fights: the run fills the player's
+# before each fight and CombatManager.teardown empties it; an enemy's comes from its def.
+var relics: Array[Item] = []
 var display_name: String = ''  # presentation label (the def's name_key, tr()'d by the view); combat ignores it
 var portrait: String = ''      # presentation: res:// path of the def's portrait, shown by the view; combat ignores it
 var image: String = ''         # presentation: res:// path of the def's corridor image, '' = random; combat ignores it
@@ -68,4 +72,7 @@ func dissolve() -> void:
   for it in board:
     it.dissolve()   # the single-item cycle break (Item.dissolve)
   board.clear()
+  for it in relics:
+    it.dissolve()
+  relics.clear()
   statuses.clear()

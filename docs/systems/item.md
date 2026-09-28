@@ -34,7 +34,7 @@ Reconciling design's vocabulary with `combat_model.md`'s *composition, not inher
 
 - **Every item is active** — it owns a Ticker whose accumulator fills as the combat clock steps (its cooldown) and fires its effect(s) on crossing. Effect subtypes (design): Weapon (damage; single-target / AOE), Armor (shield), Heal, Apply-status (poison / burn / freeze / …).
 - **Triggers are an additional accrual input, not a separate type** — a triggered item *still ticks normally*; declared events **push the same accumulator** on top of the time accrual (the charges model — combat_model.md; an instant reaction is a ~100% push). Triggers accelerate / supplement firing; they don't replace the cooldown.
-- **No passive item type** — always-on / passive effects are **statuses** (`StatusManager`'s static-modifier shape), applied to actors or items and usually sourced from relics (design). An item confers a lasting effect by *applying a status*, not via a passive mechanism. (Global flat modifiers like "+10% all damage" are stat-like statuses — deferred with the stat-status problem.)
+- **No passive board item** — always-on / passive effects are **statuses** (`StatusManager`'s static-modifier shape), applied to actors or items and usually sourced from relics (design). The one exception is a **relic**: an item with no timer that fires only on its triggers, held apart from the board ([content.md → Relic](content.md#relic), decision #51). An item confers a lasting effect by *applying a status*, not via a passive mechanism. (Global flat modifiers like "+10% all damage" are stat-like statuses — deferred with the stat-status problem.)
 
 One `Item` class, configured by its definition; some definitions also declare trigger inputs.
 
@@ -134,7 +134,7 @@ the item counts as: its identity, not a summary of its effects. A target filter 
 - **Read in three places.** The fire pipeline itself never branches on `types`, so a tag still has no *inherent* effect, but three things read tag membership: a status can (the firing item is threaded into the outgoing-damage / actor-fire hooks, #35); a **target filter** can, which is how "all your weapons" is targeted; and the tooltip shows an item's tags as a type line. Tags are the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2").
 - **Display names.** `ItemType.display_name` / `display_name_plural` give each tag its word, singular and plural. Placeholder copy — the owner's to write.
 - **An array, not a single field** — most items carry exactly one tag; the array just lets a rare carry more later. A synergy checks `types.has('weapon')`.
-- **Items only.** Tags live on `ItemDef`; **Relic / Enchantment / Consumable are separate `Draftable` categories** (#21) and stay untagged.
+- **Board items only.** Tags live on `ItemDef`; relics (a `RelicDef` is an `ItemDef`, #51) carry none, and **Enchantment / Consumable are separate `Draftable` categories** (#21) and stay untagged.
 
 Decision + rationale: [decision_log.md #34](../decision_log.md).
 

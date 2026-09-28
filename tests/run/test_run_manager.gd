@@ -100,15 +100,39 @@ func test_draft_pick_lands_on_the_board() -> void:
   assert_eq(run.position, 1, 'and the run advanced a beat')
 
 
-func test_starting_relic_grants_combat_start_shield() -> void:
+func test_starting_relic_grants_fight_start_shield() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   # Granted here: the fixture character has no starting relic, and this is about the hook.
   run.relics.append(Relic.new(FixtureKit.shield_relic()))
-  # beat 0 auto-rolls to a live (easy) fight — begin it; relics apply at fight start, before any step
+  # beat 0 auto-rolls to a live (easy) fight — begin it; the relic fires on step two and its shield
+  # lands one delivery flight later.
   run.begin_current()
+  assert_eq(run.player.relics.size(), 1, 'the player holds an item for the relic during the fight')
+  var cm: CombatManager = run.combat_manager()
+  var steps: int = 0
+  while _shield_count(run.player) <= 0.0 and steps < 2 + Balance.TRAVEL_STEPS:
+    cm.sim_step()
+    steps += 1
   assert_almost_eq(_shield_count(run.player), FixtureKit.RELIC_SHIELD, 0.0001,
-    'the relic applies its shield when the fight begins')
+    'the relic gives its shield at the start of the fight')
+
+
+func test_each_fight_gets_fresh_relic_items() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.relics.append(Relic.new(FixtureKit.shield_relic()))
+  run.begin_current()
+  var first: Item = run.player.relics[0]
+  run.combat_manager().run_headless()
+  if run.has_pending_draft():
+    run.apply_draft_pick(0)
+  run.advance()
+  assert_true(run.player.relics.is_empty(), 'the relic items leave with the fight when the run moves on')
+  run.begin_current()
+  if run.combat_manager() != null:
+    assert_eq(run.player.relics.size(), 1, 'the next fight builds the relic item again')
+    assert_ne(run.player.relics[0], first, 'as a new item, so its fire count starts at zero')
 
 
 func test_loss_ends_run_died() -> void:

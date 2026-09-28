@@ -9,20 +9,13 @@ extends Button
 @onready var cell: ItemCell = $Cell
 
 
-## Bind the offered item. Call after the option is in the tree.
+## Bind the offered item or relic. Call after the option is in the tree.
 func setup(item: Item) -> void:
   cell.show_cooldown = false   # a reward is not in a fight, so no cooldown fill covers the icon
   cell.setup(item)
 
 
-## Bind an offered relic: its icon, with its name as the button's tooltip (relics have no item
-## tooltip). Call after the option is in the tree.
-func setup_relic(relic: RelicDef) -> void:
-  cell.show_cooldown = false
-  cell.show_picture(load(relic.icon) as Texture2D if relic.icon != '' else null)
-  tooltip_text = tr(relic.name_key)
-
-
-## The live Item this option offers — the tooltip reads it. Null for a relic.
+## The live Item this option offers (a relic is offered as the Item built from its def) — the
+## tooltip reads it.
 func item() -> Item:
   return cell.item

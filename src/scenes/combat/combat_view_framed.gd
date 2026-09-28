@@ -89,6 +89,8 @@ var _allies_boxed: bool = false   # the ally rows are in the allies box (_place_
 var _portraits_height: float = -1.0   # the portraits' height when last placed; a change re-places them when stacked
 var _map_in_column: bool = false   # the map is placed at the bottom of the item column (_place_map)
 var _relics: Array = []   # the run's relics, shared by reference (show_relics)
+var _relic_cells: Dictionary = {}   # Item -> ItemCell (the relics box)
+var _run_relic_items: Array[Item] = []   # an Item per run relic, for the tooltip outside a fight
 
 
 func _ready() -> void:
@@ -320,19 +322,35 @@ func _relic_rows(square: float) -> int:
   return maxi(1, ceili(float(_relic_tokens.get_child_count()) / _relic_columns(square)))
 
 
-# Build a token for each relic when the number of relics changes (a relic is granted).
+# Build a token for each relic item when they change: a relic is granted, or a fight starts or ends.
 func _sync_relics() -> void:
-  if _relics.size() == _relic_tokens.get_child_count():
+  var items: Array = _relic_items()
+  if items.size() == _relic_cells.size() and items.all(func(it: Item) -> bool: return _relic_cells.has(it)):
     return
   for child: Node in _relic_tokens.get_children():
     _relic_tokens.remove_child(child)
     child.queue_free()
-  for relic: Relic in _relics:
+  _relic_cells.clear()
+  for item: Item in items:
     var cell: ItemCell = ITEM_CELL.instantiate()
     _relic_tokens.add_child(cell)
-    cell.show_picture(load(relic.def.icon) as Texture2D if relic.def.icon != '' else null)
+    cell.setup(item, _cm.timekeeper if _cm != null else null)
+    cell.show_cooldown = _cooldowns_shown
+    _relic_cells[item] = cell
   _fitted = -Vector4.ONE   # size and tilt the new tokens with the board's cells
   _askew_set = -Vector3.ONE
+
+
+# The relic items the tokens show: the player's for this fight (Actor.relics), or outside a fight
+# an Item built from each run relic's def, so the tooltip works between fights too.
+func _relic_items() -> Array:
+  if _player != null and not _player.relics.is_empty():
+    return _player.relics
+  if _run_relic_items.size() != _relics.size():
+    _run_relic_items.clear()
+    for relic: Relic in _relics:
+      _run_relic_items.append(Item.new(relic.def))
+  return _run_relic_items
 
 
 # The height of the potion row's label and the gap under it.
@@ -720,6 +738,8 @@ func _set_cooldowns_shown(shown: bool) -> void:
   _cooldowns_shown = shown
   for cell in _player_cells.values():
     (cell as ItemCell).show_cooldown = shown
+  for cell in _relic_cells.values():
+    (cell as ItemCell).show_cooldown = shown   # relics show no fill; this gates their fire recoil
   for slot in _ally_slots.values():
     (slot as AllySlot).set_cooldowns_shown(shown)
   for hud in _enemy_huds.values():
@@ -741,6 +761,8 @@ func _exit_tree() -> void:
   sections = null
   map = null
   _relics = []
+  _relic_cells.clear()
+  _run_relic_items.clear()
   _enemy_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()
@@ -783,10 +805,11 @@ func inspectable_at(point: Vector2) -> Dictionary:
     var slot_item: Item = (slot as AllySlot).item_at(point)
     if slot_item != null:
       return {'item': slot_item, 'rect': (slot as AllySlot).cell_rect(slot_item), 'side': TooltipCluster.Side.LEFT}
-  for item in _player_cells:
-    var cell: ItemCell = _player_cells[item]
-    if cell.get_global_rect().has_point(point):
-      return {'item': item, 'rect': cell.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
+  for cells: Dictionary in [_player_cells, _relic_cells]:
+    for item in cells:
+      var cell: ItemCell = cells[item]
+      if cell.get_global_rect().has_point(point):
+        return {'item': item, 'rect': cell.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
   return {}
 
 
@@ -821,6 +844,8 @@ func _cell_for(item: Item) -> ItemCell:
     return null
   if _player_cells.has(item):
     return _player_cells[item] as ItemCell
+  if _relic_cells.has(item):
+    return _relic_cells[item] as ItemCell
   for hud in _enemy_huds.values():
     var hud_cell: ItemCell = (hud as EnemyHud).cell_at(item)
     if hud_cell != null:
@@ -847,6 +872,8 @@ func item_pos(item: Item) -> Vector2:
     return actor_pos(_player)
   if _player_cells.has(item):
     return (_player_cells[item] as ItemCell).cell_centre()
+  if _relic_cells.has(item):
+    return (_relic_cells[item] as ItemCell).cell_centre()
   for hud in _enemy_huds.values():
     var c: Vector2 = (hud as EnemyHud).cell_centre(item)
     if c != Vector2.INF:

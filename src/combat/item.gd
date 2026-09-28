@@ -12,6 +12,7 @@ var cooldown: Ticker
 var statuses: Array[StatusEffect] = []   # item-targeted instances (silence = gate, decay = use-status).
                                          # NOTE: value modifiers are NOT read from here — see docs/systems/item.md.
 var enchant: Enchantment = null          # one enchant slot
+var fires: int = 0                       # times fired this fight (items are rebuilt or reset per fight)
 
 
 func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
@@ -40,6 +41,7 @@ func fire() -> Array:
   if is_gated():
     return []
   cooldown.reset()
+  fires += 1
   var payloads: Array[Payload] = []
   for effect in def.effects:
     payloads.append(_resolve_effect(effect))

@@ -23,8 +23,8 @@ func build(item: Item) -> Dictionary:
     'title': tr(item.def.name_key),
     'rarity': item.def.rarity,
     'panel_color': item.def.panel_color,
-    'type_line': _type_line(item.def.types),
-    'charge_line': _charge_line(item),
+    'type_line': tr('Relic') if item.def is RelicDef else _type_line(item.def.types),
+    'charge_line': [] if item.def is RelicDef else _charge_line(item),
     'lines': _effect_lines(item),
     'flavor': tr(item.def.description_key) if item.def.description_key != '' else '',
     'keyword_ids': keyword_ids(item),
@@ -53,6 +53,8 @@ func _type_line(types: Array[String]) -> String:
 
 
 func _effect_lines(item: Item) -> Array:
+  if item.def is RelicDef:
+    return _relic_lines(item)
   var lines: Array = []
   for effect: ItemEffect in item.def.effects:
     lines.append(_effect_line(item, effect))
@@ -67,6 +69,47 @@ func _effect_lines(item: Item) -> Array:
       {'t': 'text', 's': fmt(item.def.crit_chance * 100.0) + '%'},
     ])
   return lines
+
+
+## A relic's lines (docs/systems/tooltips.md): when it fires, then what it does, then its crit chance
+## and its limit per fight. The wording is placeholder copy for the owner to rewrite.
+func _relic_lines(item: Item) -> Array:
+  var lines: Array = []
+  for sub: Dictionary in item.def.trigger_subs:
+    lines.append(_relic_trigger_line(sub))
+  for effect: ItemEffect in item.def.effects:
+    lines.append(_effect_line(item, effect))
+  if item.def.crit_chance > 0.0:
+    lines.append([
+      {'t': 'icon', 'id': CritMechanic.ID},
+      {'t': 'text', 's': fmt(item.def.crit_chance * 100.0) + '%'},
+    ])
+  var limit: int = (item.def as RelicDef).fires_per_fight
+  if limit == 1:
+    lines.append([{'t': 'text', 's': tr('Once per fight')}])
+  elif limit > 1:
+    lines.append([{'t': 'text', 's': tr('{0} times per fight').format([limit])}])
+  return lines
+
+
+## The line naming the event a relic fires on. PLACEHOLDER wording for the owner.
+func _relic_trigger_line(sub: Dictionary) -> Array:
+  var filter: Variant = sub.get('filter', null)
+  match sub.get('event', -1):
+    EventBus.Event.FIGHT_START:
+      return [{'t': 'text', 's': tr('At the start of each fight:')}]
+    EventBus.Event.DAMAGE_TAKEN:
+      return [{'t': 'text', 's': tr('When you take damage:')}]
+    EventBus.Event.APPLIED:
+      if filter is String and filter != '':
+        return interpolate(tr('When {0} is applied:'), [{'t': 'icon', 'id': filter}])
+    EventBus.Event.ITEM_FIRED:
+      return [{'t': 'text', 's': tr('When an item fires:')}]
+    EventBus.Event.ITEM_DESTROYED:
+      return [{'t': 'text', 's': tr('When an item is destroyed:')}]
+    EventBus.Event.CRIT:
+      return [{'t': 'text', 's': tr('When you crit:')}]
+  return [{'t': 'text', 's': tr('On trigger:')}]
 
 
 ## One effect's line. A basic apply (see `_is_basic_apply`) is the icon and then the value, with no
@@ -324,12 +367,17 @@ static func _item_uses_mechanic(item: Item, mech: String) -> bool:
     KeywordCatalog.UNBLOCKABLE:
       return _any_effect(item, func(e): return (e.flags & Delivery.Flag.UNBLOCKABLE) != 0)
     KeywordCatalog.TRIGGER:
-      # Generic trigger — but an ITEM_DESTROYED sub surfaces Reclaim instead (below), not Trigger.
+      # Generic trigger — but an ITEM_DESTROYED sub surfaces Reclaim instead (below), not Trigger. A
+      # relic's triggers fire it rather than charge it, so they show neither card.
+      if item.def is RelicDef:
+        return false
       for sub: Dictionary in item.def.trigger_subs:
         if sub.get('event', -1) != EventBus.Event.ITEM_DESTROYED:
           return true
       return false
     KeywordCatalog.RECLAIM:
+      if item.def is RelicDef:
+        return false
       for sub: Dictionary in item.def.trigger_subs:
         if sub.get('event', -1) == EventBus.Event.ITEM_DESTROYED:
           return true

@@ -47,9 +47,9 @@ static func shield_relic(id: String = SHIELD_RELIC_ID) -> RelicDef:
   var d := RelicDef.new()
   d.id = id
   d.name_key = 'Fixture Shield Relic'
-  d.kind = RelicDef.Kind.COMBAT_START_STATUS
-  d.status_id = 'shield'
-  d.status_count = RELIC_SHIELD
+  d.mechanics = [ShieldMechanic.ID]
+  d.effects = [ItemEffect.shield(RELIC_SHIELD)]
+  d.trigger_subs = [{'event': EventBus.Event.FIGHT_START}]
   d.panel_colour_name = 'SHIELD'
   return d
 
@@ -59,7 +59,6 @@ static func max_hp_relic() -> RelicDef:
   var d := RelicDef.new()
   d.id = MAX_HP_RELIC_ID
   d.name_key = 'Fixture Health Relic'
-  d.kind = RelicDef.Kind.MAX_HP_BONUS
   d.max_hp_bonus = RELIC_MAX_HP
   d.panel_colour_name = 'HEAL'
   return d

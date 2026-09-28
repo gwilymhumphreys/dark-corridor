@@ -29,9 +29,9 @@ func set_item_size(px: float) -> void:
 
 # `px`, or less so the whole item row fits `_max_width` (when set).
 func _fit_cell_px(px: float) -> float:
-  if _max_width <= 0.0 or actor == null or actor.board.is_empty():
+  if _max_width <= 0.0 or actor == null or actor.board.size() + actor.relics.size() == 0:
     return px
-  var n: float = float(actor.board.size())
+  var n: float = float(actor.board.size() + actor.relics.size())
   return minf(px, (_max_width - CELL_SEPARATION * (n - 1.0)) / n)
 
 

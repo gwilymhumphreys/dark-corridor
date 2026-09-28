@@ -40,6 +40,8 @@ func land(delivery: Delivery, combat: CombatManager) -> void:
     var dealt: float = delivery.target.take_damage(delivery.value, delivery.flags, AttackMechanic.ID)
     combat.bus.publish(EventBus.Event.APPLIED, AttackMechanic.ID, delivery.source_actor,
         combat._source_item_of(delivery))
+    if dealt > 0.0:
+      combat.publish_damage_taken(delivery.target, AttackMechanic.ID)
     if combat.combat_log != null:
       # `delivery.value` is the GROSS hit (pre-shield); `dealt` is the NET HP lost — log both
       # (gross = the threat metric, survives a full shield; net = what HP actually did).

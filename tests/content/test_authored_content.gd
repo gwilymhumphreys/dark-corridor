@@ -76,17 +76,16 @@ func test_catalog_builds_the_scale_value_enchant() -> void:
   assert_gt(d.value_mult, 1.0, 'it raises the values')
 
 
-func test_catalog_builds_the_combat_start_relic() -> void:
+func test_catalog_builds_the_fight_start_relic() -> void:
   var d := RelicCatalog.get_def('stone_ward')
-  assert_eq(d.kind, RelicDef.Kind.COMBAT_START_STATUS)
-  assert_eq(d.status_id, 'shield', 'Stone Ward grants shield')
-  assert_gt(d.status_count, 0.0)
+  assert_eq(d.trigger_subs[0]['event'], EventBus.Event.FIGHT_START, 'Stone Ward fires at the start of each fight')
+  assert_eq(d.effects[0].mechanic, ShieldMechanic.ID, 'and grants shield')
+  assert_gt(d.effects[0].value, 0.0)
   assert_eq(d.name_key, 'Stone Ward')
 
 
 func test_catalog_builds_the_max_hp_relic() -> void:
   var d := RelicCatalog.get_def('vital_charm')
-  assert_eq(d.kind, RelicDef.Kind.MAX_HP_BONUS)
   assert_gt(d.max_hp_bonus, 0.0)
 
 

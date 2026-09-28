@@ -38,6 +38,10 @@ var _discarded: Array[Actor] = []       # combat-scoped bodies reaped on death; 
 var _discarded_player_side: Array[Actor] = []   # the reaped that still resolve player-side
 
 var _items: Array[Item] = []            # cooldown Tickers, registration order
+# Every actor's relic items (Actor.relics, docs/systems/content.md → Relic), registration order. Never
+# stepped by time: a trigger fills the bar, and a full bar fires on the next step.
+var _relic_items: Array[Item] = []
+var _fight_started: bool = false        # FIGHT_START has been published
 # Items CREATED mid-fight (docs/systems/item_creation_and_decay.md Cap 1) — combat-scoped, like
 # _player_tokens: tracked here so teardown strips them from their (possibly run-scoped) board and
 # they never reach the run snapshot. A created item still lives on actor.board for targeting/firing.
@@ -127,8 +131,24 @@ func _register_actor(actor: Actor) -> void:
     # — breaking decision #20's "a re-entered fight replays identically." Enemy items
     # are fresh instances each fight, so this only matters for the player.
     it.cooldown.accum = 0.0
+    it.fires = 0
     _register_item(it)
     _seed_item_uses(it)
+  for it in actor.relics:
+    it.cooldown.accum = 0.0
+    it.fires = 0
+    _register_relic(it)
+
+
+## Register one relic item: its triggers subscribe with a push that fills the whole bar, so each
+## event fires it once. FIGHT_START has no source, so it always subscribes with ANY; other events
+## default to OWN_SIDE like an item's (decision #30).
+func _register_relic(it: Item) -> void:
+  _relic_items.append(it)
+  for sub in it.def.trigger_subs:
+    var event: int = sub['event']
+    var source_filter: int = EventBus.SourceFilter.ANY if event == EventBus.Event.FIGHT_START         else sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE)
+    bus.subscribe(event, it.cooldown, 1.0, sub.get('filter', null), source_filter, it)
 
 
 ## Register one item with the sweep + event bus: append its cooldown Ticker to the swept set and
@@ -248,6 +268,22 @@ func sim_step() -> void:
       continue
     if it.cooldown.step():
       fired_items.append(it)
+  # Relics are never stepped by time; one whose bar a trigger filled fires with the items. A relic
+  # that used its fires for this fight drops the push instead.
+  for it in _relic_items:
+    if it.owner != null and not it.owner.is_alive():
+      continue
+    if not it.cooldown.crossed():
+      continue
+    var limit: int = (it.def as RelicDef).fires_per_fight
+    if limit > 0 and it.fires >= limit:
+      it.cooldown.accum = 0.0
+      continue
+    fired_items.append(it)
+  # Published after this step's crossings are collected, so a start-of-fight relic fires next step.
+  if not _fight_started:
+    _fight_started = true
+    bus.publish(EventBus.Event.FIGHT_START)
   # Advance every status uniformly — actor-targeted AND item-targeted alike. A
   # status lives on its target (the target is its own owner for advancement), so
   # the same pass serves both; item statuses are not a special case.
@@ -312,6 +348,7 @@ func _advance_statuses_on(target) -> void:
       var dealt: float = hp_before - target.hp
       if dealt > 0.0:
         _deliveries.append(_dot_visual(st, target, dealt))
+        publish_damage_taken(target, st.id)
         # The DoT damage is logged HERE — the bus publishes no event for a tick, so this is the
         # only place the log catches it. Bucketed by the STATUS (its name_key + id), not the applier
         # item: merged appliers make per-item DoT attribution a fiction (docs/systems/combat_log.md
@@ -361,7 +398,11 @@ func _fire_item(it: Item) -> void:
   var payloads := it.fire()
   if payloads.is_empty():
     return   # gated (silence)
-  bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
+  # A relic firing is not an item firing (owner, docs/plans/relics_as_items.md): no ITEM_FIRED, and
+  # no use-status or fire-status drain below. The events its effects cause when they land still publish.
+  var relic: bool = it.def is RelicDef
+  if not relic:
+    bus.publish(EventBus.Event.ITEM_FIRED, it.def.id, it.owner, it)
   if combat_log != null:
     combat_log.on_item_fired(it.def.name_key, _side_of(it.owner), timekeeper.sim_time)
   # Crit (docs/systems/mechanics.md → Crit): one roll per fire, on the seeded per-fight RNG. The
@@ -399,6 +440,8 @@ func _fire_item(it: Item) -> void:
       _deliveries.append(d)
   # Drain the item's use-statuses AFTER its payload(s) are spawned (docs/systems/item.md fire
   # pipeline): decay spends one activation, so the final fire still lands, then removes the item at 0.
+  if relic:
+    return
   _drain_uses(it)
   # Any actor-level fire-status (the Smith empower) cashes out on the OWNER's activation — the
   # actor twin of the item-use drain above. The firing item is threaded in so a status can scope to
@@ -456,11 +499,18 @@ func _on_holder_attacked(target: Actor) -> void:
     target.statuses.erase(st)
 
 
+## Publish DAMAGE_TAKEN for health `actor` just lost to `mechanic_id` (a mechanic or status id). The
+## attack mechanic's land and the status damage paths call this; the source is the actor that lost it.
+func publish_damage_taken(actor: Actor, mechanic_id: String) -> void:
+  bus.publish(EventBus.Event.DAMAGE_TAKEN, mechanic_id, actor)
+
+
 ## Surface a status's damage to its holder on the VFX wall + combat log (the damage itself was
 ## already applied by the status's hook) — the shared code of the DoT-tick, fire-status and
 ## attack-triggered paths.
 func _show_status_damage(st: StatusEffect, actor: Actor, dealt: float) -> void:
   _deliveries.append(_dot_visual(st, actor, dealt))
+  publish_damage_taken(actor, st.id)
   if combat_log != null:
     combat_log.on_status_damage(st.name_key, _status_source_side(st, actor),
         actor.display_name, _side_of(actor), dealt, timekeeper.sim_time, st.id)
@@ -823,6 +873,9 @@ func _reap_from(roster: Array, player_side_roster: bool) -> void:
         # directly (drop from the sweep + unsubscribe) and publishes nothing.
         _items.erase(it)
         bus.unsubscribe(it)   # a reaped body's items stop receiving trigger pushes
+      for it in actor.relics:
+        _relic_items.erase(it)
+        bus.unsubscribe(it)
       roster.remove_at(i)
       if player_side_roster:
         # A reaped player-side token must still resolve as player-side for events its
@@ -945,6 +998,11 @@ func teardown() -> void:
   _clear_statuses(player)
   for a in allies:
     _clear_statuses(a)
+  # The run-scoped side's relic items are combat-scoped: the run rebuilds them before each fight.
+  for a in [player] + allies:
+    for it in a.relics:
+      it.dissolve()
+    a.relics.clear()
   for e in enemies:
     e.dissolve()
   for t in _player_tokens:
@@ -952,6 +1010,7 @@ func teardown() -> void:
   for d in _discarded:   # combat-scoped bodies reaped mid-fight — dissolve them here too
     d.dissolve()
   _items.clear()
+  _relic_items.clear()
   _deliveries.clear()
   enemies = []
   allies = []

@@ -1,9 +1,7 @@
 class_name Relic
 extends RefCounted
-## A relic instance (docs/systems/content.md) — held in the player run-state, NOT Actor-owned
-## (decision #6). Thin in Phase 3: it carries its def. The Run manager reads it to
-## apply the combat-start status when a fight begins, and stores its id in the run
-## snapshot. (Triggered / direct shapes — and an enchant slot equivalent — later.)
+## A relic the run owns (docs/systems/content.md → Relic): it carries its def. The Run manager
+## builds an Item from it for each fight (Actor.relics) and stores its id in the run snapshot.
 
 var def: RelicDef
 

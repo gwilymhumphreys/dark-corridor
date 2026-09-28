@@ -43,14 +43,15 @@ func setup(candidates: Array) -> void:
     _options.append(option)
 
 
-## Offer relics instead of items: each option shows the relic's icon, and there is no gold button.
+## Offer relics instead of items: each option is the Item built from the relic's def, with the same
+## tooltip, and there is no gold button.
 func setup_relics(candidates: Array) -> void:
   _skip_button.visible = false
   for i in candidates.size():
     var option: RewardOption = REWARD_OPTION.instantiate()
     option.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     _cards.add_child(option)
-    option.setup_relic(candidates[i])
+    option.setup(Item.new(candidates[i]))
     option.pressed.connect(_on_option_pressed.bind(i))
     _options.append(option)
 

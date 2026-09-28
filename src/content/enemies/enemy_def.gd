@@ -5,6 +5,7 @@ extends ActorDef
 ## the ids. Tier / signature come later.
 
 var item_ids: Array[String] = []     # Array[String] -> ItemCatalog ids, in board order
+var relic_ids: Array[String] = []    # Array[String] -> RelicCatalog ids, built into Actor.relics
 
 
 func _init() -> void:
@@ -21,9 +22,11 @@ func points() -> float:
   return total
 
 
-## The Actor at full health with its authored board.
+## The Actor at full health with its authored board and relics.
 func make_actor() -> Actor:
   var actor: Actor = super.make_actor()
   for item_id: String in item_ids:
     actor.board.append(Item.new(ItemCatalog.get_def(item_id), actor))
+  for relic_id: String in relic_ids:
+    actor.relics.append(Item.new(RelicCatalog.get_def(relic_id), actor))
   return actor

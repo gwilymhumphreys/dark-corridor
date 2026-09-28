@@ -30,7 +30,7 @@ Layers depend *downward* only for **structural** ownership (who creates / holds 
  
 - **`Item`** → `StatusManager` (apply / read statuses); reads its owner `Actor` (self-target, board membership). It declares a target-*shape*; the `Combat manager` resolves it and lands the Delivery — no direct `Item → Actor` damage call.
 - **`Enchantment`** (a `Draftable`) → modifies its host `Item`; drafted/inspected like the others, but applied to a chosen item on pick (no slot of its own).
-- **`Relic`** → `StatusManager` and/or direct `Actor` modification. A relic rides the shared accrual engine like everything else — a *triggered* relic owns an event-push Ticker (Combat PRD), a *timed* effect can be applied as a status — so it needs no special `Timekeeper` handling.
+- **`Relic`** → an `Item` with no timer for each fight (`Actor.relics`, decision #51): its triggers fill its one-step Ticker and it fires through the item pipeline, so it needs no special `Timekeeper` handling. Its maximum health bonus is a direct `Actor` change on grant.
 - **`Consumable`** → shares Item's *resolution* surface (spawns a Delivery) but carries no Ticker — manually activated.
 - **`Enemy`** → not a class — an `Actor` built from an authored *enemy definition* (HP + an authored board of enemy-pool Items + tier + optional boss signature), spawned by `Encounter`. No enemy AI; no special arrows. See [enemy.md](enemy.md).
 (Item / Relic / Enchantment / Consumable share the **Draftable** base — see design doc; Relic / Enchantment / Consumable internals: [content.md](content.md).)
@@ -71,7 +71,7 @@ Two layers the downward rule treats differently:
 - **Shared definition-face.** Every content definition (item / relic / consumable / enchant) carries a common header — `id`, `name`, `icon`, `rarity`, `category`, `tooltip` — by composition (the def *has* it; it doesn't *inherit* it). The `category` set is **open** — a new kind is additive.
 - **`Draft` + inspection are category-blind.** They read only that header to offer, rarity/depth-weight, and tooltip — never branching on category to draw or show.
 - **Application dispatches on `category`** — the one category switch, owned by the `Run manager`: item → board, relic → relics, consumable → potion slot, enchant → a chosen item.
-- **Runtime entities stay distinct types.** `Item` owns a Ticker + board membership; `Relic` is run-state; `Enchantment` lives on an item; `Consumable` is hand-fired. None inherits a `Draftable` runtime class — they share the draft-time *face*, not a runtime base.
+- **Runtime entities stay distinct types.** `Item` owns a Ticker + board membership; `Relic` is run-state and becomes an `Item` (apart from the board) for each fight (#51); `Enchantment` lives on an item; `Consumable` is hand-fired. None inherits a `Draftable` runtime class — they share the draft-time *face*, not a runtime base.
 
 ---
 
@@ -115,7 +115,7 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
  
 ### `Item` — PRD: [item.md](item.md)
  
-- **Exposes:** a data-configured board participant owning a `Ticker` (combat_model.md). On fire it produces **payload(s)** — `(kind, value)` — each with a *relative* target-shape (self / opponent-leftmost / all-opponents / opponent-item-random / all-opponent-items), **not** a resolved target; the `Combat manager` turns each into a **Delivery**. Declares trigger conditions + emits events (on-fire, …). One enchant slot; holds item-targeted statuses. Every item is active (its accumulator fills as the clock steps); triggers are an additional event-push input on the *same* accumulator (it still ticks), not a separate type — and there is no passive item type (passive effects are statuses).
+- **Exposes:** a data-configured board participant owning a `Ticker` (combat_model.md). On fire it produces **payload(s)** — `(kind, value)` — each with a *relative* target-shape (self / opponent-leftmost / all-opponents / opponent-item-random / all-opponent-items), **not** a resolved target; the `Combat manager` turns each into a **Delivery**. Declares trigger conditions + emits events (on-fire, …). One enchant slot; holds item-targeted statuses. Every item is active (its accumulator fills as the clock steps); triggers are an additional event-push input on the *same* accumulator (it still ticks), not a separate type — and there is no passive board item (passive effects are statuses; a relic is an item with no timer, held apart from the board, #51).
 - **Calls down to:** `StatusManager` (apply statuses on resolve; read its own gate/value statuses). **Reads** its owner `Actor` (self-target, board membership).
 - **Driven by (above):** the `Combat manager` — registers the item's Ticker in its registry, collects fired payloads (resolves shape → target, spawns the Delivery), routes events to push trigger items. The item returns / emits; it never calls up.
 - **Does not:** resolve its own target or Deliveries (`Combat manager` + combat_model.md); tick itself (`Timekeeper`); own status rules (`StatusManager`); draw (presentation reads its panel/cooldown). Shares the `Draftable` base with `Relic` / `Enchantment` / `Consumable`.
@@ -171,9 +171,9 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
 
 ### `Content` (Relic · Enchantment · Consumable) — PRD: [content.md](content.md)
 
-- **Exposes:** three run-level categories, data-defined and thin: a **`Relic`** (persistent modifier — combat-start status / triggered Ticker / direct mod), an **`Enchantment`** (one-per-item modifier hooking the host `Item`'s fire/resolve), a **`Consumable`** (manually-fired reserve — a Delivery on throw, no Ticker).
+- **Exposes:** three run-level categories, data-defined and thin: a **`Relic`** (an item with no timer: triggers, and a maximum health bonus on grant), an **`Enchantment`** (one-per-item modifier hooking the host `Item`'s fire/resolve), a **`Consumable`** (manually-fired reserve — a Delivery on throw, no Ticker).
 - **Inbound:** the `Run manager` holds them in run-state, applies a drafted pick (relic → relics, enchant → chosen item, potion → slot) and grants relics on reward; `Draft` offers them; `Save` persists them; the `Combat manager` activates a thrown consumable (throw-potion intent).
-- **Outbound:** `StatusManager.apply` (relic/enchant statuses); the `Combat manager`'s event bus (a triggered relic's Ticker; a consumable's Delivery); the host `Item`'s pipeline (enchant hooks); direct `Actor` mods (relics).
+- **Outbound:** `StatusManager.apply` (enchant statuses); the `Combat manager` (a relic's items in `Actor.relics`; a consumable's Delivery); the host `Item`'s pipeline (enchant hooks); direct `Actor` mods (relics).
 - **Does not:** introduce new combat mechanics (all route through existing systems); act as a board `Item`; own the draft draw or the reward grant (`Draft` / `Run manager`). Relic, Enchantment + Consumable share the `Draftable` base with `Item` (Enchantment differs only in application — it attaches to a chosen item).
  
 ---

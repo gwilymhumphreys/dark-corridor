@@ -14,17 +14,29 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Conten
 
 These are the run-level content categories that decorate the player's engine without being board items. Each is **data-defined** (definition vs. instance, like Item/Enemy) and **mechanically thin** — it expresses its effect through systems that already exist, not new combat code. Why one PRD: all three lean on the same foundation and would each be a short file; collected here, split later if one grows.
 
-What it **is not**: not new combat mechanics (all route through `StatusManager` / `Combat manager` / `combat_model.md`); not a board `Item` (a relic/potion is not a board participant); not the draft *draw* (`Draft` offers them; the `Run manager` applies the pick) or the reward grant (`Run manager` / `Encounter`).
+What it **is not**: not new combat mechanics (all route through `StatusManager` / `Combat manager` / `combat_model.md`); not on the board (a relic is an `Item` but held apart from the board; a potion is not an item); not the draft *draw* (`Draft` offers them; the `Run manager` applies the pick) or the reward grant (`Run manager` / `Encounter`).
 
 ---
 
 ## Relic
 
-A **persistent run-level modifier** — run-state, not Actor-owned (decision #6); distinct UI region (background power, not foreground play — design).
+An **item with no timer** (decision #51): a powerful, run-changing ability made of triggers and, later, passives. The run owns the player's relics; during a fight each relic is an `Item` that fires when one of its triggers happens. Plan and later stages: [`plans/relics_as_items.md`](../plans/relics_as_items.md).
 
-- **Definition** — rarity tier (common/uncommon/rare, *feel*-based for relics — not a clean power ladder, design), the effect, an icon (`RelicDef.icon`, a picture in `assets/icons/relics/`; the current three are placeholders), an optional passive-trait flag (a character's starting relic may carry its passive — design). Data-defined; format deferred.
-- **Effect surface** — three shapes, all existing mechanisms: (a) **combat-start status** (BUILT — Stone Ward / Iron Idol) — applied to the player `Actor` via `StatusManager.apply` when a fight begins; (b) **triggered** — owns an event-push `Ticker` subscribed to the Combat manager's event bus (a relic reacts like a trigger item — combat_model.md; not yet built); (c) **direct** (BUILT — `MAX_HP_BONUS`, Vital Charm) — a one-time run-state mod applied on grant (raises max + current HP, baked into the snapshot, **not** re-applied on rehydrate; +1 potion slot etc. would be the same shape). *(Which relics use which is content.)*
-- **Lifetime** — run-level: held in run-state, persists across fights, **saved** (Save PRD). Acquired at the guaranteed midpoint / per elite / per boss / character-start (the `Run manager` grants — design's acquisition rates).
+**Location:** `src/content/relics/` (`RelicDef`, `Relic`, `RelicCatalog`), `content/relics/` (one file per relic).
+
+- **Definition** — `RelicDef extends ItemDef`, so a relic has the item fields: `effects`, `trigger_subs`, `mechanics`, `crit_chance`, `rarity` (feel-based for relics, not a power ladder), `icon` (placeholders in `assets/icons/relics/`). A relic trigger is an item trigger without `seconds`. Relic-only fields:
+
+| Field | Meaning |
+|---|---|
+| `fires_per_fight` | 0 = no limit; 1 = "the first time each fight" |
+| `max_hp_bonus` | Maximum health added once, on grant (baked into the snapshot, not re-applied on load) |
+
+- **Run** — `RunManager.relics: Array[Relic]` holds the player's relics for the run (saved as ids). Before each fight `RunManager.begin_current` builds one `Item` per relic into `Actor.relics`; `CombatManager.teardown` dissolves them, so per-fight state (the fire count) starts fresh.
+- **Enemies** — `EnemyDef.relic_ids` builds the enemy's `Actor.relics` in `make_actor`.
+- **In a fight** — `Actor.relics` is separate from the board, so board-wide effects never pick a relic. A relic's bar is one step long and never fills over time; each trigger fills it completely (its subscription pushes 1.0) and it fires on the next step through the item fire pipeline (targeting, crit, deliveries, combat log). Two events in one step fire it twice. After `fires_per_fight` fires it drops further pushes.
+- **Not an item firing** — a relic's fire publishes no `ITEM_FIRED` and skips the use-status and fire-status drains, so it does not use up an Empowered stack. The events its effects cause when they land (`APPLIED`, `DAMAGE_TAKEN`) publish as usual.
+- **Events** — relics mostly use `FIGHT_START` (published once in the first step, so a start-of-fight relic fires on step two) and `DAMAGE_TAKEN` alongside the item events ([combat_manager.md](combat_manager.md)).
+- **Display** — relic tokens in the sheet's Relics box and the enemy's item row (before its items), with the item tooltip ([tooltips.md](tooltips.md)).
 
 ## Enchantment
 
@@ -58,7 +70,7 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 > code paths are all still exercised by the test suite. Giving a character a starting kit, or
 > adding a potion or enchant reward, is content work for the owner.
 
-- One **relic** — Stone Ward (a combat-start shield status applier), in run-state, applied at each fight start, saved (`src/content/relics/relic*.gd`).
+- Relics — Stone Ward and Iron Idol (shield at the start of each fight), Vital Charm (maximum health on grant).
 - One **enchant** — Whetstone (scale-a-value, +50%), applied to a chosen item, saved on the board entry; the Item fire pipeline scales payload values (`src/content/enchants/enchant*.gd`, `Item._resolve_effect`).
 - One **consumable** — Healing Draught (a thrown self-heal), in a potion slot, fired via `RunManager.throw_potion` → `CombatManager.throw_consumable` → a Delivery that lands on the next step (`src/content/consumables/consumable*.gd`). **Not** in scope: the relic/potion/enchant pools' content, rarity tuning, the re-enchant + potion-drop sub-choice UIs, character starting-relic passives.
 
@@ -68,12 +80,12 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 
 - **The pools' content** (relic / potion / enchant catalogues) + rarity tuning — content/design (the pool work).
 - **Definition data formats — resolved (#23):** typed GDScript def objects + catalogs, not data files (player-facing strings stay localizable via `tr(def.name)` — `CLAUDE.md`).
-- **Relics-as-items** — whether `Relic` and `Item` collapse to one type with different presentation (design open question) — resolve in prototype.
+- **Relic passives, outside-fight events and rule changes** — stages 2 to 4 of [`plans/relics_as_items.md`](../plans/relics_as_items.md).
 - **Re-enchant + the potion-drop / enchant-target sub-choice UIs** — a UI pass.
 - **Character starting-relic passive trait** — the Characters PRD's (deferred).
 
 ## Dependencies
 
-- **Calls down to:** `StatusManager` (relic/enchant status effects), `Combat manager` (a triggered relic's event-push Ticker; a thrown consumable's Delivery), `Item` (an enchant hooks its host's pipeline), `Actor` (relic direct mods).
+- **Calls down to:** `StatusManager` (enchant status effects), `Combat manager` (a relic's items and triggers; a thrown consumable's Delivery), `Item` (an enchant hooks its host's pipeline), `Actor` (relic direct mods).
 - **Driven by (above):** the `Run manager` — holds them in run-state, applies a drafted pick (relic → relics, enchant → chosen item, potion → slot), grants relics on reward; `Draft` offers them; `Save` persists them (run-state).
 - **Shares** the **Draftable** base with `Item` (Relic, Enchantment + Consumable; design).

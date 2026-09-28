@@ -512,6 +512,18 @@ func test_the_relics_box_shows_a_token_for_each_relic() -> void:
   assert_eq(board.size.y, new_square * new_rows, 'and the relics wrap onto it')
 
 
+func test_a_relic_token_shows_the_relic_tooltip() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var def := FixtureKit.shield_relic()
+  view.show_relics([Relic.new(def)])
+  await get_tree().process_frame
+  var tokens: GridContainer = view.get_node('Items/PotionRow/Boxes/RelicColumn/RelicBoard/Relics')
+  var token: ItemCell = tokens.get_child(0)
+  var target: Dictionary = view.inspectable_at(token.get_global_rect().get_center())
+  assert_eq((target['item'] as Item).def, def, 'hovering a relic token inspects the relic')
+
+
 func test_the_allies_box_gives_each_ally_slot_an_equal_cell() -> void:
   PrintLook.set_print_value('screen_layout', ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS)
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()

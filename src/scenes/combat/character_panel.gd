@@ -100,7 +100,7 @@ func show_sheet_fields(character_name: String, character_class: String) -> void:
   _class_field.text = character_class
 
 
-## A cell per board item, each `cell_px` square. `timekeeper` drives the cells' fire recoil on the
+## A cell per relic and board item (relics first), each `cell_px` square. `timekeeper` drives the cells' fire recoil on the
 ## combat clock (null = no recoil). The cells go where the item layout puts them (set_layout).
 func build_items(timekeeper: Timekeeper, cell_px: float) -> void:
   _timekeeper = timekeeper
@@ -111,7 +111,10 @@ func build_items(timekeeper: Timekeeper, cell_px: float) -> void:
 
 func _build_cells() -> void:
   var column: Node = null
-  for i in actor.board.size():
+  var items: Array[Item] = []
+  items.append_array(actor.relics)   # an enemy's relics come before its items
+  items.append_array(actor.board)
+  for i in items.size():
     var row: Node = _items if _item_layout == ItemLayout.UNDER else _items_by_name
     if _item_layout == ItemLayout.BESIDE:
       if i % ITEM_ROWS == 0:
@@ -121,9 +124,9 @@ func _build_cells() -> void:
     var cell: ItemCell = ITEM_CELL.instantiate()
     row.add_child(cell)
     cell.set_cell_size(_cell_px)
-    cell.setup(actor.board[i], _timekeeper)
+    cell.setup(items[i], _timekeeper)
     cell.show_cooldown = _cooldowns_shown
-    _cells[actor.board[i]] = cell
+    _cells[items[i]] = cell
 
 
 ## Place the item cells and the status icons, from the `item_layout` and `status_layout` print

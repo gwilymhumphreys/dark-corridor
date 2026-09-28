@@ -290,11 +290,13 @@ full-screen.
   potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
   screen writes it when it builds the view (covering a resumed run's banked gold) and after each skip.
 - **Relics** — a "Relics" box beside the gold: the potions' pencil grid, as many squares across as fit
-  in the rest of the potion row, with a token per relic (an `ItemCell` showing `RelicDef.icon`) in each
+  in the rest of the potion row, with a relic token (an `ItemCell` holding the relic's `Item`) in each
   square. More relics than squares across wrap onto more rows, and the board fits the items to the
   height left. The run screen hands the view the run's `relics` array
-  (`CombatView.show_relics`); the view builds tokens again when its size changes, so a granted relic
-  shows. Relic tokens have no tooltip yet.
+  (`CombatView.show_relics`). During a fight the tokens hold the player's `Actor.relics` items, so
+  they flash when a relic fires and its effects start from the token; outside a fight they hold an
+  `Item` built from each relic's def. Tokens are rebuilt when a relic is granted or a fight starts or
+  ends. Hovering a token shows the relic tooltip; relic tokens show no cooldown fill.
 - **Map** — `map_strip.tscn` shows the current act's squares (`RunMap.SQUARES`) under an "Act N"
   label: a row of pencil grid squares (the grid material in box mode), each holding a small cardboard
   token (an `ItemCell`) with a single-colour icon (`assets/icons/map/`: fight, elite, relic, boss),
