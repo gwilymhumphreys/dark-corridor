@@ -4,7 +4,7 @@ extends PanelContainer
 ## column of the name and health bar, the status icons and the board items, placed by set_layout. The player's panel,
 ## each ally slot (AllySlot) and each enemy HUD (EnemyHud) are this scene, so they look the same;
 ## the enemy hides the portrait, and the player's items are on its board instead of the panel.
-## The panel is drawn only with the `portrait_panel` print setting (set_panel_shown). The health bar
+## The panel's background is drawn only for the panels the `panel_background` print setting names (set_panel_shown). The health bar
 ## and status row read the actor themselves. Reads the Actor; writes nothing.
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
@@ -19,6 +19,8 @@ enum ItemLayout { BESIDE, UNDER, NAME_ROW }
 ## right of the name and bar. UNDER_BAR: one row under the bar. UNDER_ITEMS: one row under the item
 ## row (under the bar when the items are elsewhere).
 enum StatusLayout { BESIDE_BAR, UNDER_BAR, UNDER_ITEMS }
+## Which character panels draw their background (the `panel_background` print setting).
+enum PanelBackground { NONE, PLAYER_AND_ALLIES, ENEMIES, ALL }
 
 var actor: Actor
 ## Whether the panel shows an item row. The player's panel turns it off: its items are on the board.
@@ -171,7 +173,7 @@ func resize_items(cell_px: float) -> void:
 
 
 ## Draw the panel (`PanelTokenWide`) or leave it out (`PanelBare`, which draws nothing), from the
-## `portrait_panel` print setting (`CombatViewFramed._set_token_styles`).
+## `panel_background` print setting (`CombatViewFramed._set_token_styles`).
 func set_panel_shown(shown: bool) -> void:
   theme_type_variation = &'PanelTokenWide' if shown else &'PanelBare'
 

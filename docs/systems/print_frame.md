@@ -34,7 +34,9 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   `PrintLook.grid_material`: grid paper drawn in pencil, one square per item cell, with each line
   running through the middle of the gap between cells. The potion row has its own grid of three
   squares on the same material. Each grid reads its own rectangle's pixels, so `CombatViewFramed`
-  sets only the square size and the pencil colour, `Colours.UI_BACKGROUND_WEAR_LIGHT`.
+  sets only the square size and the pencil colour, `Colours.UI_BACKGROUND_WEAR_LIGHT`. The gold box
+  uses it too. The same material draws a single pencil rectangle instead of a grid when a node sets
+  its `box_size` instance uniform; the allies box (`PanelPencilBox`) is drawn this way.
 - The player's items and potions are set down askew on the grid, like cardboard tokens placed by hand: each cell
   has its own random tilt and shift, scaled by the token settings `token_tilt` and `token_shift`
   (`ItemCell.set_askew`, drawn with the visual-only offset transform).
@@ -46,17 +48,18 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   has the interface background colour and at 1 the card colour. It is worked out again after a palette
   change, because the palette sets the fill to `UI_BACKGROUND`. The token's edge is the
   panel wear's worn edge ([panel_wear.md](panel_wear.md)); it has no border.
-- Two switches try looks on the portrait section. `token_portraits` puts the ally and enemy
-  portraits in `PanelToken` frames instead of `PanelSlot`; the player's portrait is always in a
-  `PanelToken` frame, so it has the items' drop shadow. `portrait_panel` draws every character panel
-  (the player's, each ally's and each enemy's, `character_panel.tscn`) as a `PanelTokenWide` panel
-  (`PanelBare`, which draws nothing, when off).
+- `token_portraits` puts the ally and enemy portraits in `PanelToken` frames instead of
+  `PanelSlot`; the player's portrait is always in a `PanelToken` frame, so it has the items' drop
+  shadow. `panel_background` is a dropdown for which character panels (`character_panel.tscn`) are
+  drawn as a `PanelTokenWide` panel: none, the player's and the allies', the enemies', or all of them
+  (`CharacterPanel.PanelBackground`). The others use `PanelBare`, which draws nothing, so an enemy
+  panel without one sits transparent over the corridor.
 - Three settings try character panel layouts ([run_screen.md](run_screen.md)). `item_layout` is a
   dropdown for where each panel's item cells go: beside (a grid to the right of the name, bar and
   status icons), under the bar, or on the name's line. `status_layout` is a dropdown for the status
-  icons: beside the bar, under it, or under the items. `enemy_panel_background` (on by default) lets the enemy panels
-  draw the `portrait_panel` background; off leaves them transparent over the corridor with their
-  name, bar, statuses and items still shown. `enemy_item_size`, `ally_item_size` and `status_size`
+  icons: beside the bar, under it, or under the items. `allies_box` (on by default) puts the ally rows
+  in a box labelled "Allies" when the portraits are above the items, shown even with no allies.
+  `enemy_item_size`, `ally_item_size` and `status_size`
   are sliders for the enemy and ally item cells and the status icons, in pixels, and `pill_size`
   scales every value pill (item values and status stacks) together. `CombatViewFramed`
   applies all of these settings.

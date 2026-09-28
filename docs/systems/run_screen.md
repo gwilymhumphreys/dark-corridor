@@ -129,8 +129,8 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   right of the name and bar; *Under bar* (the default) puts them in one row under it; *Under items*
   puts that row under the item row instead, so a status appearing does not push the items down (with
   the items beside the bar or on the name's line it is the same as *Under bar*). Both grids fill
-  each column top to bottom, then the next column. The `enemy_panel_background` print setting leaves
-  the enemy panels transparent. `enemy_item_size` and `ally_item_size` set the largest item cell in
+  each column top to bottom, then the next column. The `panel_background` print setting chooses
+  which panels draw their background. `enemy_item_size` and `ally_item_size` set the largest item cell in
   enemy and ally panels (a row too long for its width shrinks), and `status_size` sets the status
   icons on every panel. Every value pill, on an item or a status icon, is the same size whatever the
   cell or icon size: the `pill_size` print setting scales them all together. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
@@ -138,7 +138,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   it, so the three cannot drift apart in layout. The portrait stays square and as tall as the column beside it, so it follows the
   text size and the bar and cell sizes by itself. The enemy hides the portrait (its sprite is right
   below); the player hides the item row (its items are on the board). The panel itself is drawn
-  only with the `portrait_panel` print setting ([print_frame.md](print_frame.md)).
+  only for the panels the `panel_background` print setting names ([print_frame.md](print_frame.md)).
 - **An `enemy_hud` pinned above each enemy's corridor sprite** — the enemy's character panel: its
   **name** (`Actor.display_name`, `tr()`'d), health bar, status icons and **item cells**. The HUD is **hidden for most of the approach** and fades in over the last
   `Balance.ENEMY_REVEAL_DURATION` seconds of the walk, so it is up when the fight starts (the run
@@ -186,7 +186,9 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   panel at a smaller size; its item cells shrink so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
   capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
   `AllyLeft` / `AllyRight`). With the *Portraits above items* screen layout the player and the two
-  ally rows are stacked in a column above the potions instead ([ui_layout.md](ui_layout.md#screen-sections)). A **downed run-scoped ally keeps its slot** (dimmed; it stops
+  ally rows are stacked in a column above the potions instead ([ui_layout.md](ui_layout.md#screen-sections)),
+  and with the `allies_box` print setting the ally rows sit in a pencil box under an "Allies" label,
+  shown even with no allies (`_place_ally_rows`; the slots are rebuilt when the rows move). A **downed run-scoped ally keeps its slot** (dimmed; it stops
   participating, revived to full next fight); a **dead combat-scoped token is reaped** like an
   enemy (slot removed). The view reads the CombatManager's rosters (`enemies` +
   `player_side()`) each frame, so mid-fight summons (a boss add, a player token) appear as

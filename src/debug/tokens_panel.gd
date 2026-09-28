@@ -23,12 +23,12 @@ const SECTIONS: Dictionary = {
   },
   'Portraits': {
     'token_portraits': [],
-    'portrait_panel': [],
   },
   'Character panels': {
     'item_layout': ['Beside', 'Under bar', 'Name row'],
     'status_layout': ['Beside bar', 'Under bar', 'Under items'],
-    'enemy_panel_background': [],
+    'panel_background': ['None', 'Player and allies', 'Enemies', 'All'],
+    'allies_box': [],
     'enemy_item_size': [24.0, 120.0, 1.0],
     'ally_item_size': [24.0, 120.0, 1.0],
     'status_size': [16.0, 96.0, 1.0],

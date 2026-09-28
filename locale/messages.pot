@@ -255,6 +255,10 @@ msgstr ""
 msgid "You"
 msgstr ""
 
+#: src/scenes/combat/combat_view_framed.tscn
+msgid "Allies"
+msgstr ""
+
 #: src/scenes/combat/item_cell.tscn
 msgid "Temporary"
 msgstr ""

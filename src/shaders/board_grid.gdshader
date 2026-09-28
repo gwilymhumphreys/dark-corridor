@@ -11,6 +11,10 @@ shader_type canvas_item;
 // reads its own rectangle's pixels, so neither needs its size set.
 uniform vec3 pencil_colour : source_color = vec3(0.48, 0.47, 0.47);
 uniform float square_size = 144.0;
+// Set per node (RenderingServer.canvas_item_set_instance_shader_parameter) by a box drawn with this
+// material, such as the allies box: above 0, one rectangle this size is drawn around the node's rect
+// instead of a grid, inset by the line width so the whole line shows.
+instance uniform vec2 box_size = vec2(0.0);
 
 group_uniforms board_grid;
 uniform bool board_grid_on = true;
@@ -60,9 +64,14 @@ void vertex() {
 
 void fragment() {
   vec2 local = local_position;
-  float spacing = square_size / float(max(board_grid_squares_per_cell, 1));
-  float vertical = pencil_lines(local.x, local.y, spacing, 0.0);
-  float horizontal = pencil_lines(local.y, local.x, spacing, 41.0);
+  vec2 spacing = vec2(square_size / float(max(board_grid_squares_per_cell, 1)));
+  if (box_size.x > 0.0) {
+    vec2 inset = vec2(board_grid_line_width);
+    local -= inset;
+    spacing = max(box_size - 2.0 * inset, vec2(1.0));
+  }
+  float vertical = pencil_lines(local.x, local.y, spacing.x, 0.0);
+  float horizontal = pencil_lines(local.y, local.x, spacing.y, 41.0);
   float cover = 1.0 - (1.0 - vertical) * (1.0 - horizontal);   // crossings are darker, as in pencil
   float grain = hash12(FRAGCOORD.xy) * 0.5 + value_noise(FRAGCOORD.xy / 2.5) * 0.5;
   cover *= mix(1.0, grain, board_grid_grain);

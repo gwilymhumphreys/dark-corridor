@@ -64,6 +64,27 @@ func test_view_stacks_the_portraits_above_the_items() -> void:
   assert_eq(view.get_node('Items').get_global_rect(), section, 'the items fill the section again')
 
 
+func test_stacked_allies_sit_in_the_allies_box() -> void:
+  var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
+  _host(view)
+  var ally_left: Control = view.get_node('Portraits/AllyLeft')
+  var group: Control = view.get_node('Portraits/Allies')
+  var rows: Control = view.get_node('Portraits/Allies/Box/Rows')
+  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS
+  view.sections._process(0.0)
+  assert_true(group.visible, 'the allies box shows, even with no allies')
+  assert_eq(ally_left.get_parent(), rows, 'the ally rows are in the box')
+  PrintLook.print_settings['allies_box'] = false
+  view._place_ally_rows()
+  assert_false(group.visible, 'no box with the setting off')
+  assert_eq(ally_left.get_parent(), view.get_node('Portraits'), 'the rows are back under the player')
+  PrintLook.print_settings['allies_box'] = true
+  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_LOWER_LEFT
+  view.sections._process(0.0)
+  assert_false(group.visible, 'no box with the allies beside the player')
+  assert_eq(view.get_node('Portraits').get_child(1), view.get_node('Portraits/PlayerPanel'), 'the player between the ally rows')
+
+
 func test_sections_follow_the_print_settings() -> void:
   var sections: ScreenSections = _host(SECTIONS_SCENE.instantiate())
   watch_signals(sections)
@@ -141,7 +162,7 @@ func test_item_cells_shrink_so_a_full_board_fits() -> void:
 
 
 func test_player_portrait_fits_inside_the_portrait_panel() -> void:
-  PrintLook.set_print_value('portrait_panel', true)
+  PrintLook.set_print_value('panel_background', CharacterPanel.PanelBackground.PLAYER_AND_ALLIES)
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
   for frame: int in 3:
@@ -150,9 +171,9 @@ func test_player_portrait_fits_inside_the_portrait_panel() -> void:
   assert_eq(panel.theme_type_variation, &'PanelTokenWide', 'the panel is a token')
   var height: float = view.sections.section('Portraits').size.y
   assert_true(panel.size.y <= height, 'the panel fits in %d pixels' % height)
-  PrintLook.set_print_value('portrait_panel', false)
+  PrintLook.set_print_value('panel_background', CharacterPanel.PanelBackground.ENEMIES)
   view._process(0.0)
-  assert_eq(panel.theme_type_variation, &'PanelBare', 'no panel when off')
+  assert_eq(panel.theme_type_variation, &'PanelBare', 'no player panel when only the enemies have one')
 
 
 func test_player_portrait_is_always_a_token() -> void:

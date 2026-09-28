@@ -114,3 +114,7 @@ Each as a setting on the F7 or F2 tab, screenshotted in the same fight on one co
 - **Name and Class fields** (2026-09-28): the player's panel shows "Name:" and "Class:" with the
   character's name and class written on underlines. "Class" replaced "subtitle" as the name for a
   character's role line ([lexicon.md](lexicon.md#characters)).
+- **No panel backgrounds by default** (2026-09-28): the `panel_background` dropdown on the F7 tab
+  chooses which character panels draw one (none, player and allies, enemies, all).
+- **Allies box** (2026-09-28): an "Allies" label over one pencil rectangle holding the ally rows,
+  shown even with no allies (the `allies_box` setting on the F7 tab).

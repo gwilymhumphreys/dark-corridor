@@ -47,10 +47,12 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## grid, like cardboard tokens put down by hand: the largest tilt in degrees and the largest shift in
 ## pixels at full cell size (`CombatViewFramed`). Then the token look (`apply_token_style`): the
 ## shadow's blur and offset in pixels and its opacity; the card colour the token fill is blended
-## towards and how far (0 keeps the interface background, 1 is the card colour); and whether the portraits are tokens too and
-## whether the player's portrait, name and HP bar sit on one token panel (`CombatViewFramed`). Then
+## towards and how far (0 keeps the interface background, 1 is the card colour); and whether the portraits are tokens too
+## (`CombatViewFramed`). Then
 ## the character panel layout: where the items and status icons go (`CharacterPanel.ItemLayout`
-## and `StatusLayout`, as their index) and whether the enemy panels draw their background. Then the
+## and `StatusLayout`, as their index) and which panels draw their background
+## (`CharacterPanel.PanelBackground`, as its index), and whether the allies sit in a labelled pencil box
+## when the portraits are above the items. Then the
 ## sizes in pixels of the enemy and ally item cells (the largest; a row too long for its width
 ## shrinks) and of the status icons on every panel, and the size of every value pill (item values and
 ## status stacks) against its base size, the same whatever the cell or icon size.
@@ -67,10 +69,10 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'token_fill_colour': Color(0.55, 0.45, 0.32),
   'token_fill_amount': 0.0,
   'token_portraits': false,
-  'portrait_panel': false,
   'item_layout': 0,
   'status_layout': 1,
-  'enemy_panel_background': true,
+  'panel_background': 0,
+  'allies_box': true,
   'enemy_item_size': 80.0,
   'ally_item_size': 60.0,
   'status_size': 44.0,
