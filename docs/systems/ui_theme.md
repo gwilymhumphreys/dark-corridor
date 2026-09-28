@@ -23,7 +23,9 @@ press and selection, and the files are no longer referenced.
 | `PanelBare` | a `PanelContainer` that draws nothing: that panel when the setting is off |
 | `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it. `PanelSlot` is the same, with smaller content margins |
 | `ButtonBare` | a button that draws no body of its own (`StyleBoxEmpty` in every state): used where the button only carries the click and the juice, and something inside it is the picture — the reward options in the draft overlay (`reward_option.tscn`) and the potion slots (`potion_slot.tscn`) |
-| `LabelDim` | dimmer section labels ("Potions", "Items") |
+| `LabelDim` | dimmer section labels ("Potions", "Gold", "Items", "Allies", "Name:", "Class:") |
+| `SheetColumn` / `SheetRow` / `SheetStack` | the vertical, horizontal and switchable containers that hold the parts of the character sheet, with the section gap between them ([below](#spacing-on-the-character-sheet)) |
+| `SheetSection` | a label over its box, with the label gap between them |
 | `LabelOnBar` | the small text size with a dark outline: the shield and status numbers drawn on a health bar |
 | `LabelOnBarLarge` | the medium text size with a dark outline: the health number on a health bar |
 
@@ -33,6 +35,16 @@ theme type the engine wraps a [tooltip](tooltips.md) custom node in) — the com
 item tooltip is therefore also a flat background-coloured block now, over the
 corridor image instead of over another UI panel (owner's call whether that still
 reads well enough).
+
+### Spacing on the character sheet
+
+The combat view's right column (the player, the allies box, the potions, gold and items) takes all its
+spacing from four variations. `SheetColumn` (a `VBoxContainer`), `SheetRow` (an `HBoxContainer`) and
+`SheetStack` (a `BoxContainer`, for the portraits, which switch between a row and a column) hold the
+parts with the section gap between them. `SheetSection` holds one label over its box with the label
+gap. Their `separation` constants in the theme are defaults: `PrintLook.apply_sheet_spacing()` writes
+the `section_gap` and `label_gap` print settings onto them at start-up and whenever a print setting
+changes. A new part of the sheet uses these variations instead of its own `separation` override.
 
 ### Flat, palette-following panels
 

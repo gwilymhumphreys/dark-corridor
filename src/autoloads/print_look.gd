@@ -52,7 +52,8 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## the character panel layout: where the items and status icons go (`CharacterPanel.ItemLayout`
 ## and `StatusLayout`, as their index) and which panels draw their background
 ## (`CharacterPanel.PanelBackground`, as its index), and whether the allies sit in a labelled pencil box
-## when the portraits are above the items. Then the
+## when the portraits are above the items. Then the gap between the parts of the character sheet and
+## the gap between a label and its box, in pixels (`apply_sheet_spacing`). Then the
 ## sizes in pixels of the enemy and ally item cells (the largest; a row too long for its width
 ## shrinks) and of the status icons on every panel, and the size of every value pill (item values and
 ## status stacks) against its base size, the same whatever the cell or icon size.
@@ -73,6 +74,8 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'status_layout': 1,
   'panel_background': 0,
   'allies_box': true,
+  'section_gap': 32.0,
+  'label_gap': 8.0,
   'enemy_item_size': 80.0,
   'ally_item_size': 60.0,
   'status_size': 44.0,
@@ -80,6 +83,8 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']
+## The theme styles the section gap is written to (apply_sheet_spacing).
+const SHEET_GAP_STYLES: Array[String] = ['SheetColumn', 'SheetRow', 'SheetStack']
 
 ## The material every screen background is drawn through (background_wear.gdshader).
 var background_material: ShaderMaterial = ShaderMaterial.new()
@@ -115,6 +120,7 @@ func _ready() -> void:
   _write_background_defaults()
   push_wear_colours()
   get_tree().node_removed.connect(_on_node_removed)
+  apply_sheet_spacing()
 
 
 func _exit_tree() -> void:
@@ -197,6 +203,19 @@ func apply_token_style() -> void:
     worn.emit_changed()
 
 
+## Write the character sheet's two gaps onto the theme (docs/systems/ui_theme.md): `section_gap` between
+## the parts of the sheet (`SheetColumn`, `SheetRow`, `SheetStack`) and `label_gap` between a label and
+## its box (`SheetSection`). Every part of the combat view's right column is laid out with these styles,
+## so the gaps are the same everywhere.
+func apply_sheet_spacing() -> void:
+  var theme: Theme = ThemeDB.get_project_theme()
+  if theme == null:
+    return
+  for type: String in SHEET_GAP_STYLES:
+    theme.set_constant('separation', type, roundi(print_setting('section_gap')))
+  theme.set_constant('separation', 'SheetSection', roundi(print_setting('label_gap')))
+
+
 ## Every background wear uniform with a default in the shader code or its settings include (uniform
 ## name -> value), except `BACKGROUND_COLOUR_UNIFORMS`.
 func background_defaults() -> Dictionary:
@@ -238,6 +257,7 @@ func set_print_value(setting: String, value: Variant) -> void:
   elif PRINT_SETTING_DEFAULTS.has(setting):
     print_settings[setting] = value
     apply_token_style()
+    apply_sheet_spacing()
 
 
 func _print_material(uniform: String) -> ShaderMaterial:
@@ -274,6 +294,7 @@ func reset_print_look() -> void:
   _write_print_defaults()
   print_settings.clear()
   apply_token_style()
+  apply_sheet_spacing()
 
 
 ## Every background wear effect back to its shader default.

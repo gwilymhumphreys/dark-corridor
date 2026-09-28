@@ -180,7 +180,7 @@ func test_framed_view_binds_a_fight_without_error() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  assert_eq(view.get_node('Items/Board/PlayerItems').get_child_count(), 3, 'player board built (the right-edge column)')
+  assert_eq(view.get_node('Items/ItemsSection/Board/PlayerItems').get_child_count(), 3, 'player board built (the right-edge column)')
   assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 1, 'one HUD for the one enemy')
   cm.free()   # after_each dissolves the actors (breaks the Actor<->Item cycles)
 
@@ -196,7 +196,7 @@ func test_a_full_player_board_shrinks_its_cells() -> void:
   var cm := CombatManager.new(p, [e])
   cm.start()
   view.bind(cm, p, [])
-  var grid: GridContainer = view.get_node('Items/Board/PlayerItems')
+  var grid: GridContainer = view.get_node('Items/ItemsSection/Board/PlayerItems')
   var cell: ItemCell = grid.get_child(0)
   assert_lt(cell.cell_size.x, ItemCell.CELL_SIZE.x, 'the cells shrink to fit 60 items')
   assert_eq((grid.get_child(59) as ItemCell).cell_size, cell.cell_size, 'every cell takes the same size')
@@ -213,7 +213,7 @@ func test_potions_are_drawn_like_board_items() -> void:
   view.bind(cm, p, [Consumable.new(FixtureKit.potion())])
   view._process(0.0)
   var slot: PotionSlot = view.get_node('Items/PotionRow/Boxes/PotionColumn/PotionBoard/Potions').get_child(0)
-  var board_cell: ItemCell = view.get_node('Items/Board/PlayerItems').get_child(0)
+  var board_cell: ItemCell = view.get_node('Items/ItemsSection/Board/PlayerItems').get_child(0)
   assert_eq(slot.theme_type_variation, &'ButtonBare', 'the button draws no body of its own')
   assert_eq((slot.cell.get_node('Frame') as Control).theme_type_variation, &'PanelToken', 'the same frame as an item')
   assert_eq((slot.cell.get_node('Frame/Icon') as CanvasItem).material, InterfaceLook.framed_material, 'the same icon material')
@@ -236,10 +236,13 @@ func test_the_potion_grid_has_three_squares_and_the_column_still_fits() -> void:
   view.bind(cm, p, [Consumable.new(FixtureKit.potion())])
   for frame: int in 3:
     await get_tree().process_frame
-  var grid: GridContainer = view.get_node('Items/Board/PlayerItems')
+  var grid: GridContainer = view.get_node('Items/ItemsSection/Board/PlayerItems')
   var square: float = (grid.get_child(0) as ItemCell).cell_size.x + grid.get_theme_constant('h_separation')
   var potion_grid: Control = view.get_node('Items/PotionRow/Boxes/PotionColumn/PotionBoard/Grid')
   assert_eq(potion_grid.size, Vector2(3.0 * square, square), 'three squares in one row, the same size as the board squares')
+  var slot: Control = view.get_node('Items/PotionRow/Boxes/PotionColumn/PotionBoard/Potions').get_child(0)
+  var cell_size: float = (grid.get_child(0) as ItemCell).cell_size.x
+  assert_eq(slot.size, Vector2(cell_size, cell_size), 'a potion stays square when the cells shrink')
   var last_cell: ItemCell = grid.get_child(59)
   var column: Rect2 = view.get_node('Items').get_global_rect()
   assert_true(last_cell.get_global_rect().end.y <= column.end.y, 'the potion row and 60 items fit the column')
@@ -296,7 +299,7 @@ func test_release_clears_the_cooldown_fills() -> void:
   var cm := CombatManager.new(p, [e], 0, [ally])
   cm.start()
   view.bind(cm, p, [])
-  var cell: ItemCell = view.get_node('Items/Board/PlayerItems').get_child(0)
+  var cell: ItemCell = view.get_node('Items/ItemsSection/Board/PlayerItems').get_child(0)
   cell.item.cooldown.accum = cell.item.cooldown.threshold * 0.5   # part-way through its cooldown
   cell._update_cooldown()
   assert_false(cell.get_node('Cooldown').visible, 'no fill while the player is still walking in')
@@ -317,7 +320,7 @@ func test_view_without_a_fight_shows_no_cooldown_fills() -> void:
   _host(view)
   var p := _spawn(100.0, [FixtureItems.attack()])
   view.bind(null, p, [])
-  var cell: ItemCell = view.get_node('Items/Board/PlayerItems').get_child(0)
+  var cell: ItemCell = view.get_node('Items/ItemsSection/Board/PlayerItems').get_child(0)
   assert_false(cell.get_node('Cooldown').visible, 'an event beat shows the board with no fill')
 
 

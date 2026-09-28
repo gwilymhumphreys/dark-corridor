@@ -81,7 +81,7 @@ mouse_filter = 2
 layout_mode = 1
 anchors_preset = 0
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_type_variation = &"SheetColumn"
 
 [node name="PotionRow" type="Control" parent="Items"]
 custom_minimum_size = Vector2(0, 186)
@@ -91,12 +91,12 @@ mouse_filter = 2
 [node name="Boxes" type="HBoxContainer" parent="Items/PotionRow"]
 layout_mode = 0
 mouse_filter = 2
-theme_override_constants/separation = 60
+theme_type_variation = &"SheetRow"
 
 [node name="PotionColumn" type="VBoxContainer" parent="Items/PotionRow/Boxes"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_type_variation = &"SheetSection"
 
 [node name="PotionsLabel" type="Label" parent="Items/PotionRow/Boxes/PotionColumn"]
 layout_mode = 2
@@ -124,7 +124,7 @@ theme_override_constants/separation = 24
 [node name="GoldColumn" type="VBoxContainer" parent="Items/PotionRow/Boxes"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_type_variation = &"SheetSection"
 
 [node name="GoldLabel" type="Label" parent="Items/PotionRow/Boxes/GoldColumn"]
 layout_mode = 2
@@ -157,22 +157,23 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Spacer" type="Control" parent="Items"]
-custom_minimum_size = Vector2(0, 14)
+[node name="ItemsSection" type="VBoxContainer" parent="Items"]
 layout_mode = 2
+size_flags_vertical = 3
 mouse_filter = 2
+theme_type_variation = &"SheetSection"
 
-[node name="ItemsLabel" type="Label" parent="Items"]
+[node name="ItemsLabel" type="Label" parent="Items/ItemsSection"]
 layout_mode = 2
 theme_type_variation = &"LabelDim"
 text = "Items"
 
-[node name="Board" type="Control" parent="Items"]
+[node name="Board" type="Control" parent="Items/ItemsSection"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Grid" type="ColorRect" parent="Items/Board"]
+[node name="Grid" type="ColorRect" parent="Items/ItemsSection/Board"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -181,7 +182,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="PlayerItems" type="GridContainer" parent="Items/Board"]
+[node name="PlayerItems" type="GridContainer" parent="Items/ItemsSection/Board"]
 layout_mode = 0
 mouse_filter = 2
 theme_override_constants/h_separation = 24
@@ -192,7 +193,7 @@ columns = 5
 layout_mode = 1
 anchors_preset = 0
 mouse_filter = 2
-theme_override_constants/separation = 30
+theme_type_variation = &"SheetStack"
 
 [node name="AllyLeft" type="HBoxContainer" parent="Portraits"]
 layout_mode = 2
@@ -224,7 +225,7 @@ theme_override_constants/separation = 24
 visible = false
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_type_variation = &"SheetSection"
 
 [node name="AlliesLabel" type="Label" parent="Portraits/Allies"]
 layout_mode = 2

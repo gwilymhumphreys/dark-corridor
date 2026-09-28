@@ -14,6 +14,8 @@ const LAYOUT_PROPERTIES: Dictionary = {
   'split_across': [800.0, 2400.0, 1.0],
   'split_down': [600.0, 1400.0, 1.0],
   'screen_layout': ['Portraits lower left', 'Portraits above items'],
+  'section_gap': [0.0, 120.0, 1.0],
+  'label_gap': [0.0, 40.0, 1.0],
 }
 
 

@@ -38,9 +38,11 @@ var _allies: Array = []   # the run's allies, shared by reference; drawn from he
 @onready var _corridor: CombatCorridor = $Corridor/CorridorPanel
 @onready var _enemy_huds_box: Control = $EnemyArea/EnemyHuds
 @onready var _items_part: VBoxContainer = $Items
-@onready var _board: Control = $Items/Board
-@onready var _grid: ColorRect = $Items/Board/Grid
-@onready var _player_items: GridContainer = $Items/Board/PlayerItems
+@onready var _items_section: VBoxContainer = $Items/ItemsSection
+@onready var _items_label: Label = $Items/ItemsSection/ItemsLabel
+@onready var _board: Control = $Items/ItemsSection/Board
+@onready var _grid: ColorRect = $Items/ItemsSection/Board/Grid
+@onready var _player_items: GridContainer = $Items/ItemsSection/Board/PlayerItems
 @onready var _potion_row: Control = $Items/PotionRow
 @onready var _potion_boxes: HBoxContainer = $Items/PotionRow/Boxes
 @onready var _potion_column: VBoxContainer = $Items/PotionRow/Boxes/PotionColumn
@@ -111,7 +113,7 @@ func _place_in_sections() -> void:
   _portraits_height = _portraits_part.get_combined_minimum_size().y
   if stacked:
     portraits_rect.size.y = _portraits_height
-    var gap: float = round(PrintLook.print_setting('padding')) * 2.0
+    var gap: float = _portraits_part.get_theme_constant('separation')   # the section gap, as between the portraits
     items_rect = items_rect.grow_side(SIDE_TOP, -(_portraits_height + gap))
   _place(_corridor_part, corridor_rect)
   _place(_corridor_area, corridor_rect)
@@ -194,7 +196,6 @@ func _fit_board() -> void:
     (cell as ItemCell).set_cell_size(_cell_size)
   _potion_grid.size = Vector2(maxi(POTION_SLOTS, potion_count) * square, square)
   _potion_board.custom_minimum_size = _potion_grid.size
-  _potion_boxes.add_theme_constant_override('separation', int(square * 0.5))
   _fit_gold()
   # The row is a plain Control so the boxes' width does not widen the column; it takes their height.
   _potion_row.custom_minimum_size = Vector2(0.0, _potion_label_height() + square)
@@ -202,6 +203,7 @@ func _fit_board() -> void:
   _potions.position = Vector2(gap, gap) * 0.5
   for slot: Node in _potions.get_children():
     (slot as PotionSlot).set_cell_size(_cell_size)
+  _potions.reset_size()   # it is not in a container, so it would keep a larger old height and stretch the slots
   PrintLook.grid_material.set_shader_parameter('square_size', square)
 
 
@@ -212,6 +214,7 @@ func _fit_gold() -> void:
   var text_width: float = _gold_amount.get_combined_minimum_size().x
   var squares: int = maxi(1, ceili((text_width + square * 0.25) / square))
   _gold_board.custom_minimum_size = Vector2(squares * square, square)
+  _potion_boxes.reset_size()
 
 
 # The height of the potion row's label and the gap under it.
@@ -219,16 +222,11 @@ func _potion_label_height() -> float:
   return _potions_label.get_combined_minimum_size().y + _potion_column.get_theme_constant('separation')
 
 
-# The height of the item column's parts that are not grid squares: the labels, the spacer and the gaps
-# between the column's children. The potion row adds its label and the gap under it.
+# The height of the item column's parts that are not grid squares: the section gap between the potion
+# row and the items, and each one's label with the gap under it.
 func _labels_height() -> float:
-  var total: float = _items_part.get_theme_constant('separation') * (_items_part.get_child_count() - 1)
-  for child: Node in _items_part.get_children():
-    if child == _potion_row:
-      total += _potion_label_height()
-    elif child != _board:
-      total += (child as Control).get_combined_minimum_size().y
-  return total
+  var items_label: float = _items_label.get_combined_minimum_size().y + _items_section.get_theme_constant('separation')
+  return _items_part.get_theme_constant('separation') + _potion_label_height() + items_label
 
 
 ## The largest whole-pixel cell size, from `ItemCell.CELL_SIZE` down to `MIN_CELL_SIZE`, at which

@@ -132,7 +132,7 @@ func test_player_portrait_matches_the_column_beside_it() -> void:
 func test_item_columns_fit_the_items_section_width() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
-  var grid: GridContainer = view.get_node('Items/Board/PlayerItems')
+  var grid: GridContainer = view.get_node('Items/ItemsSection/Board/PlayerItems')
   PrintLook.print_settings['split_across'] = 1700.0
   view.sections._process(0.0)
   var wide: int = grid.columns

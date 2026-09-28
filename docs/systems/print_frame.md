@@ -36,7 +36,10 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   squares on the same material. Each grid reads its own rectangle's pixels, so `CombatViewFramed`
   sets only the square size and the pencil colour, `Colours.UI_BACKGROUND_WEAR_LIGHT`. The gold box
   uses it too. The same material draws a single pencil rectangle instead of a grid when a node sets
-  its `box_size` instance uniform; the allies box (`PanelPencilBox`) is drawn this way.
+  its `box_size` instance uniform; the allies box (`PanelPencilBox`) is drawn this way. With its
+  `underline` instance uniform as well it draws one line along the node's bottom edge instead:
+  `PencilLine` (`src/ui/pencil_line.gd`) sets both, and draws the write-in lines under the Name and
+  Class fields.
 - The player's items and potions are set down askew on the grid, like cardboard tokens placed by hand: each cell
   has its own random tilt and shift, scaled by the token settings `token_tilt` and `token_shift`
   (`ItemCell.set_askew`, drawn with the visual-only offset transform).
@@ -82,7 +85,9 @@ The owner's chosen settings are in the print part of the default [look preset](l
 
 F3 opens the [debug panel](debug_panel.md) on this tab. `PrintPanel` extends the
 [Corridor tab](corridor_look.md#the-corridor-tab) and builds its sections the same way: Layout, then
-the border and overlay groups, then panel wear. The background wear groups are in the
+the border and overlay groups, then panel wear. The Layout group holds the split point, the padding,
+the screen layout, and the character sheet's section gap and label gap
+([ui_layout.md](ui_layout.md#screen-sections)). The background wear groups are in the
 [Background tab](background_wear.md#the-background-tab).
 
 ## In a preset
@@ -106,6 +111,7 @@ and `--print-panel` opens the Print tab ([dev_tools.md](dev_tools.md#look-argume
 | `PrintLook.border_material`, `overlay_material`, `grid_material`, `panel_material` | The border, corridor overlay, board grid and [panel wear](panel_wear.md) materials |
 | `PrintLook.print_settings`, `print_setting(setting) -> Variant` | Print frame settings changed from `PRINT_SETTING_DEFAULTS`, and a setting's current value |
 | `PrintLook.set_print_value(name, value)` | Set a border, overlay, board grid or panel wear uniform, or a print frame setting, by name |
+| `PrintLook.apply_sheet_spacing()` | Write the `section_gap` and `label_gap` print settings onto the `Sheet*` theme variations ([ui_theme.md](ui_theme.md#spacing-on-the-character-sheet)) |
 | `PrintLook.apply_token_style()` | Write the token shadow and fill settings onto the `PanelToken` and `PanelTokenWide` styles |
 | `PrintLook.print_defaults() -> Dictionary`, `panel_defaults() -> Dictionary` | Border/overlay and panel wear uniform defaults, read from the shader code |
 | `PrintLook.write_print_look(file)`, `read_print_look(file)`, `reset_print_look()` | The [print part](#in-a-preset) of a preset, and the print defaults |

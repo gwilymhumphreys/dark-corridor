@@ -57,8 +57,8 @@ whole sheet at once:
 | Part | `Colours` variable |
 |---|---|
 | Paper (screen background, corridor overlay) | `UI_BACKGROUND` |
-| Pencil grid lines | `UI_BACKGROUND_WEAR_LIGHT` |
-| Printed labels and the write-in underlines | `UI_TEXT_DIM` |
+| Pencil lines: the grids, the allies box and the write-in lines | `UI_BACKGROUND_WEAR_LIGHT` |
+| Printed labels | `UI_TEXT_DIM` |
 | Panels | `UI_PANEL` and the other `UI_PANEL_*` variables |
 
 The one exception is the token card colour (`token_fill_colour`, a print setting on the F7 tab),
@@ -116,5 +116,8 @@ Each as a setting on the F7 or F2 tab, screenshotted in the same fight on one co
   character's role line ([lexicon.md](lexicon.md#characters)).
 - **No panel backgrounds by default** (2026-09-28): the `panel_background` dropdown on the F7 tab
   chooses which character panels draw one (none, player and allies, enemies, all).
+- **One spacing for the whole sheet** (2026-09-28): a section gap between the parts and a label gap
+  between a label and its box, set in the theme and tuned on the Print tab
+  ([ui_theme.md](../systems/ui_theme.md#spacing-on-the-character-sheet)).
 - **Allies box** (2026-09-28): an "Allies" label over one pencil rectangle holding the ally rows,
   shown even with no allies (the `allies_box` setting on the F7 tab).
