@@ -131,8 +131,8 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   puts that row under the item row instead, so a status appearing does not push the items down (with
   the items beside the bar or on the name's line it is the same as *Under bar*). Both grids fill
   each column top to bottom, then the next column. The `panel_background` print setting chooses
-  which panels draw their background. `enemy_item_size` and `ally_item_size` set the largest item cell in
-  enemy and ally panels (a row too long for its width shrinks), and `status_size` sets the status
+  which panels draw their background. `medium_token_size` (the medium token size, also used by the map) and `ally_item_size` set the
+  largest item cell in enemy and ally panels (a row too long for its width shrinks), and `status_size` sets the status
   icons on every panel. Every value pill, on an item or a status icon, is the same size whatever the
   cell or icon size: the `pill_size` print setting scales them all together. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
   change only sizes, colours and which parts show, and the player's `PlayerPanel` is an instance of
@@ -298,8 +298,9 @@ full-screen.
 - **Map** — `map_strip.tscn` shows the current act's squares (`RunMap.SQUARES`) under an "Act N"
   label: a row of pencil grid squares (the grid material in box mode), each holding a small cardboard
   token (an `ItemCell`) with a single-colour icon (`assets/icons/map/`: fight, elite, relic, boss),
-  tinted from the palette (`ItemCell.tint_picture`). The tokens are the small token size, the same as
-  the status icons (`status_size`), set askew like the items. A cleared square's token is face down (no
+  tinted from the palette (`ItemCell.tint_picture`). The tokens are the medium token size, the same
+  as the enemy items (`medium_token_size`), or smaller if the row would be wider than the strip, and
+  are set askew like the items. A cleared square's token is face down (no
   icon), and the current one has the highlight border (`ItemCell.set_marked`); during an event, a
   marker sits on the grid line before the next square. It
   needs the run seed, because the events' places come from it (`setup(run_seed, position)`,

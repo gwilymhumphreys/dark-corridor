@@ -411,10 +411,10 @@ func _set_token_styles() -> void:
   var item_layout: int = PrintLook.print_setting('item_layout')
   var status_layout: int = PrintLook.print_setting('status_layout')
   var background: int = PrintLook.print_setting('panel_background')
-  var enemy_item_size: float = PrintLook.print_setting('enemy_item_size')
+  var medium_token_size: float = PrintLook.print_setting('medium_token_size')
   var ally_item_size: float = PrintLook.print_setting('ally_item_size')
   var status_size: float = PrintLook.print_setting('status_size')
-  var wanted: Array = [portraits, item_layout, status_layout, background, enemy_item_size,
+  var wanted: Array = [portraits, item_layout, status_layout, background, medium_token_size,
     ally_item_size, status_size, _ally_slots.size(), _enemy_huds.size()]
   if wanted == _tokens_set:
     return
@@ -430,7 +430,7 @@ func _set_token_styles() -> void:
     (character_panel as CharacterPanel).set_layout(item_layout as CharacterPanel.ItemLayout, status_layout as CharacterPanel.StatusLayout)
     (character_panel as CharacterPanel).set_status_size(status_size)
     if character_panel is EnemyHud:
-      (character_panel as EnemyHud).set_item_size(enemy_item_size)
+      (character_panel as EnemyHud).set_item_size(medium_token_size)
     elif character_panel is AllySlot:
       (character_panel as AllySlot).set_item_size(ally_item_size)
   _portraits_part.queue_sort()   # the row keeps the panel's old size otherwise

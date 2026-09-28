@@ -43,5 +43,17 @@ func test_cleared_squares_are_face_down() -> void:
   for index: int in 3:
     assert_null((tokens.get_child(index) as ItemCell).get_node('Frame/Icon').texture, 'a cleared square is face down')
   assert_not_null((tokens.get_child(3) as ItemCell).get_node('Frame/Icon').texture, 'the current square shows its icon')
-  assert_eq((tokens.get_child(0) as ItemCell).cell_size.x, float(PrintLook.print_setting('status_size')),
-    'the tokens are the small token size, the same as the status icons')
+
+
+func test_the_tokens_are_the_medium_size_and_shrink_to_fit_the_width() -> void:
+  var strip: MapStrip = _strip()
+  var medium: float = PrintLook.print_setting('medium_token_size')
+  var token: ItemCell = strip.get_node('Track/Tokens').get_child(0)
+  strip.size.x = medium * RunMap.SQUARES.size() * 2.0
+  await wait_process_frames(2)
+  assert_eq(token.cell_size.x, medium, 'the medium token size, the same as the enemy items')
+  strip.size.x = medium * RunMap.SQUARES.size() * 0.5
+  await wait_process_frames(2)
+  assert_lt(token.cell_size.x, medium, 'smaller when the row would be wider than the strip')
+  var track: Control = strip.get_node('Track')
+  assert_lte(strip.get_node('Track/Boxes').size.x, track.size.x, 'the row fits the strip')

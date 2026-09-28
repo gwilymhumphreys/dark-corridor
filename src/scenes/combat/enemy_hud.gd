@@ -18,10 +18,10 @@ func setup(target: Actor, timekeeper: Timekeeper = null, max_width: float = 0.0)
   set_actor(target)
   show_name(tr(target.display_name) if target.display_name != '' else '')
   _max_width = max_width
-  build_items(timekeeper, _fit_cell_px(PrintLook.print_setting('enemy_item_size')))
+  build_items(timekeeper, _fit_cell_px(PrintLook.print_setting('medium_token_size')))
 
 
-## Resize the item cells to `px` (the `enemy_item_size` print setting), or smaller if the row would
+## Resize the item cells to `px` (the `medium_token_size` print setting), or smaller if the row would
 ## be too long for its width.
 func set_item_size(px: float) -> void:
   resize_items(_fit_cell_px(px))

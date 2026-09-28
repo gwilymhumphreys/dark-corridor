@@ -3,8 +3,8 @@ extends VBoxContainer
 ## The 1D progress map (docs/systems/ui_layout.md): the current act's squares (RunMap.SQUARES) under
 ## an "Act N" label, as a row of pencil grid squares with a small cardboard token in each, showing
 ## what the square is (a fight, an elite fight, the relic encounter, the boss). The tokens are the
-## small token size, the same as the status icons (the `status_size` print setting). A cleared
-## square's token is flipped over (its blank back), and the current one has the highlight border.
+## medium token size, the same as the enemy items (the `medium_token_size` print setting), or smaller
+## if the row would be wider than the strip. A cleared square's token is flipped over (its blank back), and the current one has the highlight border.
 ## Events are not squares: during one, a marker sits on the line before the next square. Reads
 ## RunMap and the position and run seed it is handed; writes nothing. The label is laid out like the
 ## character sheet's other labels (the `SheetSection` theme variation).
@@ -21,7 +21,7 @@ const ICONS: Dictionary = {
 var _run_seed: int = 0
 var _position: int = 0
 var _set_up: bool = false
-var _fitted: Vector3 = -Vector3.ONE   # the token size, tilt and shift the tokens were last fitted to
+var _fitted: Vector4 = -Vector4.ONE   # the token size, tilt, shift and strip width last fitted to
 
 @onready var _act_label: Label = $ActLabel
 @onready var _track: Control = $Track
@@ -43,7 +43,8 @@ func _exit_tree() -> void:
   _boxes.material = null
 
 
-# The token size and the askew settings are print settings, so follow them as they change.
+# The token size and the askew settings are print settings, so follow them and the strip's width as
+# they change.
 func _process(_delta: float) -> void:
   _fit()
 
@@ -93,19 +94,22 @@ func _icon_colour(kind: RunMap.Square) -> Color:
   return Colours.UI_TEXT_DIM
 
 
-# Size the tokens to the small token size with the board's spacing, and draw one pencil rectangle
-# divided into a grid square per token (the grid material in box mode).
+# Size the tokens to the medium token size, shrunk if the row would be wider than the strip, with a
+# gap of GAP_SHARE, and draw one pencil rectangle divided into a grid square per token (the grid
+# material in box mode).
 func _fit() -> void:
-  var size_px: float = PrintLook.print_setting('status_size')
+  var count: int = RunMap.SQUARES.size()
+  var size_px: float = PrintLook.print_setting('medium_token_size')
+  if _track.size.x > 0.0:
+    size_px = minf(size_px, floorf((_track.size.x / count - 0.5) / (1.0 + GAP_SHARE)))   # 0.5: the gap is rounded up
   var tilt: float = PrintLook.print_setting('token_tilt')
   var shift: float = PrintLook.print_setting('token_shift') * size_px / ItemCell.CELL_SIZE.x
-  var wanted: Vector3 = Vector3(size_px, tilt, shift)
+  var wanted: Vector4 = Vector4(size_px, tilt, shift, _track.size.x)
   if wanted == _fitted:
     return
   _fitted = wanted
   var gap: int = roundi(size_px * GAP_SHARE)
   var square: float = size_px + gap
-  var count: int = RunMap.SQUARES.size()
   _track.custom_minimum_size.y = square
   _boxes.size = Vector2(square * count, square)
   var canvas_item: RID = _boxes.get_canvas_item()
