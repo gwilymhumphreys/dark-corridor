@@ -36,7 +36,7 @@ Walk forward (2-3s)
   → Restart
 ```
 
-Each act holds a boss (telegraphed ahead of time), a guaranteed relic at the act midpoint, 1-5 elites offered, and a mix of basic fights and events filling the rest. Full successful run ≈ 45 encounters ≈ 30-45 minutes.
+Each act is 15 encounters: 11 on the map (basic fights, two elite fights, a relic encounter in the middle where the player picks one of three relics, and the boss last) and 4 events that fall between them, never first, never before an elite, the relic encounter or the boss, and never two in a row (decided 2026-09-28; [run_manager.md](../systems/run_manager.md#the-act-layout)). Full successful run ≈ 45 encounters ≈ 30-45 minutes.
 
 ## Structure
 

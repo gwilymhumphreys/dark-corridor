@@ -51,6 +51,8 @@ Read by `Dev`.
 | `--allies N` | Adds N placeholder allies to a new run (`DEMO_ALLY_ID`) |
 | `--board-items N` | Fills the board up to N items with copies of the starting items |
 | `--potions N` | Gives the player N potions (`DEMO_POTION_ID`) |
+| `--square N` | Starts the run on square N (1-based) of the first act's map, such as 6 for the relic encounter (`RunManager.jump_to`) |
+| `--relics N` | Gives the player N relics, cycling through `DEMO_RELIC_IDS`. Added to the list only, so a relic's grant effect does not happen |
 
 The title arguments act on the first title screen only, so Quit to Menu stays on the title. The last
 three act only on a new run (not on Resume). The first beat is saved before they are added, so use

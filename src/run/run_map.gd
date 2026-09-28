@@ -1,39 +1,42 @@
 class_name RunMap
 ## The act/beat structure of a descent (docs/systems/run_manager.md) — a single linear track of
-## ACTS acts x BEATS_PER_ACT beats. PLACEHOLDER layout + numbers: the owner tunes act
-## count, beat count, the per-band placement, and the candidate pools. The design target
-## is 3 acts of ~15 beats; the content is intentionally a tiny pool drawn repeatedly, not
-## 45 unique encounters (that's the owner's content).
+## ACTS acts x BEATS_PER_ACT beats. PLACEHOLDER numbers and pools: the owner tunes them.
 ##
 ## Beats are addressed by a single global `position` (0 .. total-1); the act and the
-## beat-within-act are derived. Each beat is either FIXED (the boss at an act's end, the
-## guaranteed midpoint relic) or a ROLL: the RunManager rolls COMBAT vs EVENT (an anti-repeat
-## weighted roll) and draws a def from the matching pool. There is no player-facing choice —
-## the beat's content is auto-selected (RunManager._roll_beat). An empty event pool forces
-## combat (the easy opener).
+## beat-within-act are derived. Each act is the same row of SQUARES (the fights and the relic
+## encounter the map shows) with EVENTS_PER_ACT events placed between them. Where the events fall
+## is drawn per act from the run seed (act_layout), so a resumed run gets the same layout without
+## saving it. An event may only come straight before one of EVENT_GAPS: never first, never straight
+## before an elite fight, the relic encounter or the boss, and one per gap, so never two in a row.
 ##
-## Per-act bands (0-based beat index; the boundaries are the consts below — beat_spec is
-## the authority, this is the shape):
-##   the easy opener (0 .. EASY_BEATS_END)      easy combat (draft), no events
-##   the mid band (up to ELITE_FROM_BEAT)       combat or event
-##   from ELITE_FROM_BEAT on                    combat or event; a rolled combat may be an elite
-##   RELIC_BEAT                                 FIXED — the guaranteed midpoint relic
-##   BOSS_BEAT (the act's last)                 FIXED — the act-end boss (the final act's ends the run)
+## A beat's spec (beat_spec) is FIXED — it names its encounter (an elite fight, the relic
+## encounter, the boss) — or DRAWN: the RunManager draws a def from its pool on the run RNG (a
+## regular fight from the combat pool, an event from the event pool).
 
-enum BeatKind { FIXED, ROLL }
+enum BeatKind { FIXED, DRAWN }
+## What a square on the map is.
+enum Square { FIGHT, ELITE, RELIC, BOSS }
 
 const ACTS: int = 3
 const BEATS_PER_ACT: int = 15
 const TOTAL_BEATS: int = ACTS * BEATS_PER_ACT
 
-# Fixed placements within each act (0-based beat index). Boss is always the last beat.
-const RELIC_BEAT: int = 7    # the guaranteed midpoint relic
-const BOSS_BEAT: int = BEATS_PER_ACT - 1
-
-# The easy opener: beats 0 .. EASY_BEATS_END are forced (easy) combat with a draft — no events.
-const EASY_BEATS_END: int = 2
-# From this beat on, a rolled combat may be an elite (the deeper combat pool includes one).
-const ELITE_FROM_BEAT: int = 6
+## The squares of every act, in order. The boss is always last.
+const SQUARES: Array[Square] = [
+  Square.FIGHT, Square.FIGHT, Square.FIGHT, Square.ELITE, Square.FIGHT, Square.RELIC,
+  Square.FIGHT, Square.ELITE, Square.FIGHT, Square.FIGHT, Square.BOSS,
+]
+## Events per act. SQUARES plus these make BEATS_PER_ACT (a test checks it).
+const EVENTS_PER_ACT: int = 4
+## The squares (0-based index into SQUARES) an event may come straight before.
+const EVENT_GAPS: Array[int] = [1, 2, 4, 6, 8, 9]
+const BOSS_BEAT: int = BEATS_PER_ACT - 1   # no event comes after the boss, so it is the act's last beat
+## The first fights of each act (squares 0 .. EASY_SQUARES_END) draw from the easy combat pool.
+const EASY_SQUARES_END: int = 2
+const ELITE_ENCOUNTER_ID: String = 'fight_elite'
+const RELIC_ENCOUNTER_ID: String = 'relic_cache'
+# Spreads the run seed into a distinct layout stream per act (a prime stride).
+const LAYOUT_SEED_STRIDE: int = 7919
 
 # The most enemies a generated fight may hold (docs/systems/encounter.md — 1 to 4, most 1 to 2).
 const MAX_ENEMIES_PER_FIGHT: int = 4
@@ -57,21 +60,44 @@ static func crosses_act(position: int) -> bool:
   return act_of(position) != act_of(position + 1)
 
 
-## The spec for the beat at `position`: a FIXED beat names its encounter `id` (boss / midpoint
-## relic); every other beat is a ROLL carrying the `combat_pool` + `event_pool` the RunManager
-## rolls between (an empty event pool forces combat — the easy opener).
-static func beat_spec(position: int) -> Dictionary:
-  var beat: int = beat_in_act(position)
-  var act: int = act_of(position)
-  if beat == BOSS_BEAT:
-    return { 'kind': BeatKind.FIXED, 'id': boss_for(act) }
-  if beat == RELIC_BEAT:
-    return { 'kind': BeatKind.FIXED, 'id': 'fight_relic' }
-  return {
-    'kind': BeatKind.ROLL,
-    'combat_pool': combat_pool(beat),
-    'event_pool': event_pool(beat),
-  }
+## The act's beats in order, BEATS_PER_ACT long: each is the index into SQUARES of the square it
+## is, or -1 for an event. The events go in EVENTS_PER_ACT of the EVENT_GAPS, drawn on a random
+## number generator seeded from `run_seed` and the act, so the same run always gets the same layout.
+static func act_layout(act: int, run_seed: int) -> Array[int]:
+  var layout_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+  layout_rng.seed = run_seed + (act + 1) * LAYOUT_SEED_STRIDE
+  var gaps: Array[int] = EVENT_GAPS.duplicate()
+  var event_before: Array[int] = []
+  for _n in EVENTS_PER_ACT:
+    event_before.append(gaps.pop_at(layout_rng.randi_range(0, gaps.size() - 1)))
+  var beats: Array[int] = []
+  for square: int in SQUARES.size():
+    if square in event_before:
+      beats.append(-1)
+    beats.append(square)
+  return beats
+
+
+## The index into SQUARES of the beat at `position`, or -1 when it is an event.
+static func square_at(position: int, run_seed: int) -> int:
+  return act_layout(act_of(position), run_seed)[beat_in_act(position)]
+
+
+## The spec for the beat at `position`: FIXED names its encounter `id` (an elite fight, the relic
+## encounter, the boss); DRAWN carries the `pool` the RunManager draws from. Both carry the
+## `square` (-1 for an event).
+static func beat_spec(position: int, run_seed: int) -> Dictionary:
+  var square: int = square_at(position, run_seed)
+  if square == -1:
+    return { 'kind': BeatKind.DRAWN, 'pool': event_pool(), 'square': square }
+  match SQUARES[square]:
+    Square.ELITE:
+      return { 'kind': BeatKind.FIXED, 'id': ELITE_ENCOUNTER_ID, 'square': square }
+    Square.RELIC:
+      return { 'kind': BeatKind.FIXED, 'id': RELIC_ENCOUNTER_ID, 'square': square }
+    Square.BOSS:
+      return { 'kind': BeatKind.FIXED, 'id': boss_for(act_of(position)), 'square': square }
+  return { 'kind': BeatKind.DRAWN, 'pool': combat_pool(square), 'square': square }
 
 
 ## The act's boss encounter (placeholder: one boss def reused per act — the FINAL-act boss
@@ -80,22 +106,16 @@ static func boss_for(_act: int) -> String:
   return 'fight_boss'
 
 
-## The combat defs a rolled beat draws from when it rolls COMBAT. The easy opener is a single
-## easy fight; from ELITE_FROM_BEAT on the pool includes the elite (a richer relic+draft fight);
-## the middle band is regular fights. PLACEHOLDER ids — the owner scales the pools per act/depth.
-static func combat_pool(beat: int) -> Array:
-  if beat <= EASY_BEATS_END:
+## The combat defs a regular fight square draws from: the easy fight for the act's first squares,
+## then regular fights. PLACEHOLDER ids — the owner scales the pools per act/depth.
+static func combat_pool(square: int) -> Array:
+  if square <= EASY_SQUARES_END:
     return ['fight_grunt']
-  if beat >= ELITE_FROM_BEAT:
-    return ['fight_grunt', 'fight_tough', 'fight_elite']
   return ['fight_grunt', 'fight_tough']
 
 
-## The event defs a rolled beat draws from when it rolls EVENT. Empty for the easy opener
-## (0 .. EASY_BEATS_END) so those beats are always combat. PLACEHOLDER ids — the owner adds events.
-static func event_pool(beat: int) -> Array:
-  if beat <= EASY_BEATS_END:
-    return []
+## The event defs an event beat draws from. PLACEHOLDER ids — the owner adds events.
+static func event_pool() -> Array:
   return ['event_shrine', 'event_wanderer']
 
 

@@ -1,12 +1,13 @@
 class_name DevAutoload
 extends Node
 ## The dev tools' start-up arguments for the game (docs/systems/dev_tools.md): skip saving, take a
-## screenshot and quit, skip the title screen, pick fights on its own, and add allies, board items or
-## potions to a new run for screenshots. Does nothing unless one of its arguments is present, and
+## screenshot and quit, skip the title screen, pick fights on its own, and add allies, board items,
+## potions or relics to a new run for screenshots. Does nothing unless one of its arguments is present, and
 ## the screens hold no code for any of it.
 
 const DEMO_ALLY_ID: String = 'spore_thrall'         # the ally `--allies` recruits
 const DEMO_POTION_ID: String = 'healing_draught'    # the potion `--potions` gives
+const DEMO_RELIC_IDS: Array[String] = ['iron_idol', 'stone_ward', 'vital_charm']   # `--relics` cycles these
 const DEFAULT_SHOT_DELAY: float = 1.5   # seconds; lands during the corridor approach of the first fight
 
 var _title_handled: bool = false   # the title arguments act on the first title screen only
@@ -35,7 +36,8 @@ func _wants_title_action() -> bool:
 
 
 func _wants_run_additions() -> bool:
-  return DevArgs.has('--allies') or DevArgs.has('--board-items') or DevArgs.has('--potions')
+  return DevArgs.has('--allies') or DevArgs.has('--board-items') or DevArgs.has('--potions') or DevArgs.has('--relics') \
+    or DevArgs.has('--square')
 
 
 func _on_node_added(node: Node) -> void:
@@ -79,8 +81,10 @@ func _pick_first_fight(overlay: ChoiceOverlay) -> void:
   overlay.picked.emit(index)
 
 
-## `--allies N`, `--board-items N`, `--potions N`: add to a new run before any screen shows it.
-## Board items are copies of the starting items, up to N on the board in total.
+## `--allies N`, `--board-items N`, `--potions N`, `--relics N`: add to a new run before any screen
+## shows it. `--square N` starts the run on square N (1-based) of the first act, such as 6 for the
+## relic encounter. Board items are copies of the starting items, up to N on the board in total. Relics are
+## added to the run's list only, so a relic that acts when granted (more maximum HP) does not.
 func _add_to_run(run: RunManager) -> void:
   var ally_count: int = int(DevArgs.value('--allies', '0'))
   if ally_count > 0:
@@ -100,6 +104,14 @@ func _add_to_run(run: RunManager) -> void:
     if potion != null:
       for _n in potion_count:
         run.potions.append(Consumable.new(potion))
+  var square: int = int(DevArgs.value('--square', '0'))
+  if square > 1:
+    run.jump_to(RunMap.act_layout(0, run.rng.seed).find(square - 1))
+  var relic_count: int = int(DevArgs.value('--relics', '0'))
+  for n in relic_count:
+    var relic: RelicDef = RelicCatalog.get_def(DEMO_RELIC_IDS[n % DEMO_RELIC_IDS.size()])
+    if relic != null:
+      run.relics.append(Relic.new(relic))
 
 
 ## `--shot [--shot-delay SECONDS]`: save one frame of whatever scene is running, named after its

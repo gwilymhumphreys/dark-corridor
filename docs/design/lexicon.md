@@ -43,3 +43,14 @@ something else.
 | Term | Meaning |
 |---|---|
 | **Class** | The kind of character a playable character is, shown under its personal name on the select screen and in the Class field of the player's panel, for example Rot Shepherd (`CharacterDef.class_key`). |
+
+## The run and the map
+
+| Term | Meaning |
+|---|---|
+| **Act** | One part of a run, ending in a boss. The player is fully healed between acts. |
+| **Beat** | One encounter along an act, in order (`RunManager.position`). |
+| **Square** | A beat shown on the map: a fight, an elite fight, the relic encounter or the boss (`RunMap.SQUARES`). Events are beats but not squares. |
+| **Event** | A beat with prose and a choice of outcomes, and no fight. Events fall between squares. |
+| **Elite fight** | A harder fight that rewards a relic and a draft. Two per act, at fixed squares. |
+| **Relic encounter** | The beat in the middle of each act where the player picks one of three relics, with no fight. |

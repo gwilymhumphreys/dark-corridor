@@ -66,6 +66,16 @@ static func event(id: String = EVENT) -> EncounterDef:
   return d
 
 
+## A relic encounter: no fight, a choice of relics.
+static func relic(id: String) -> EncounterDef:
+  var d := EncounterDef.new()
+  d.id = id
+  d.type = EncounterDef.Type.RELIC
+  d.name_key = 'A fixture reliquary'
+  d.reward = EncounterDef.Reward.RELIC_CHOICE
+  return d
+
+
 ## The fixture encounter that stands in for `authored`: same id, type and reward.
 static func standing_in_for(authored: EncounterDef) -> EncounterDef:
   match authored.type:
@@ -73,4 +83,6 @@ static func standing_in_for(authored: EncounterDef) -> EncounterDef:
       return rest(authored.id)
     EncounterDef.Type.EVENT:
       return event(authored.id)
+    EncounterDef.Type.RELIC:
+      return relic(authored.id)
   return fight(authored.id, authored.reward)

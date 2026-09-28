@@ -6,12 +6,12 @@ extends RefCounted
 ## telegraph are player-facing → localizable via tr(def.name_key). Phase 3 builds
 ## fight + rest only (events with prose, elite/boss tiers, telegraph demands later).
 
-enum Type { FIGHT, REST, EVENT }
+enum Type { FIGHT, REST, EVENT, RELIC }
 # What a WIN reports up for the RunManager to fulfil. ELITE = a relic AND a draft (the
 # reward asymmetry — an elite is richer than a regular fight; #2). RELIC = a relic only
-# (a mid-boss / guaranteed-relic beat). DRAFT = a 1-of-3 item offer. NONE = rest / event
-# (the event's outcome is its own reward).
-enum Reward { NONE, DRAFT, RELIC, ELITE }
+# (an act boss). RELIC_CHOICE = the player picks one of a few relics (the relic encounter). DRAFT =
+# a 1-of-3 item offer. NONE = rest / event (the event's outcome is its own reward).
+enum Reward { NONE, DRAFT, RELIC, ELITE, RELIC_CHOICE }
 
 var id: String = ''
 var type: int = Type.FIGHT

@@ -68,6 +68,8 @@ func _play_one_beat(run: RunManager, pick: int) -> void:
     return
   if run.has_pending_draft():
     run.apply_draft_pick(pick)
+  if run.has_pending_relic_offer():
+    run.apply_relic_pick(0)
   run.advance()
 
 
@@ -347,55 +349,82 @@ func test_add_ally_respects_the_four_slot_cap() -> void:
 
 # --- multi-act structure + HP economy + the auto-roll map (#1) ---------------
 
-func test_opening_beat_auto_rolls_a_live_fight() -> void:
-  # Beats auto-roll their content — no player choice. The easy opener (0 .. EASY_BEATS_END) is
-  # forced combat, so the run opens straight into a live fight.
+func test_opening_beat_is_a_live_fight() -> void:
+  # The first square of every act is a fight, and no event comes before it.
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  assert_false(run.has_pending_choice(), 'no choice — beats auto-roll')
+  assert_false(run.has_pending_choice(), 'no choice — the map sets every beat')
   assert_not_null(run.current_encounter(), 'the opening beat has a live encounter at once')
-  assert_true(run.current_encounter().is_fight(), 'the easy opener is forced combat')
+  assert_true(run.current_encounter().is_fight(), 'the opening beat is a fight')
 
 
-func test_rolled_beat_and_streak_survive_resume() -> void:
-  # The current beat's rolled def + the COMBAT/EVENT streak round-trip the snapshot, so a resumed
-  # run re-enters the same encounter and reproduces the next beat's roll (no save-scum).
+func test_the_drawn_beat_survives_resume() -> void:
+  # The current beat's drawn def round-trips the snapshot, so a resumed run re-enters the same
+  # encounter (no save-scum).
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run._roll_streak = RunManager.RollType.EVENT
-  run._roll_streak_count = 2
   var def_id: String = run._current_def_id
   var run_b := _run()
   run_b.rehydrate(run.snapshot())
-  assert_eq(run_b._current_def_id, def_id, 'the rolled encounter is restored (not re-rolled)')
-  assert_eq(run_b._roll_streak, RunManager.RollType.EVENT, 'the streak type round-trips')
-  assert_eq(run_b._roll_streak_count, 2, 'and the streak count')
+  assert_eq(run_b._current_def_id, def_id, 'the drawn encounter is restored (not redrawn)')
 
 
-func test_roll_bias_force_breaks_a_maxed_streak() -> void:
-  # The −ROLL_BIAS_STEP-per-repeat bias: after 5 straight rolls the streaking type's chance floors
-  # at 0 (50 − 10×5), so the next roll MUST land the other type and reset the streak (count 1).
+func test_every_act_has_the_squares_and_the_events() -> void:
+  assert_eq(RunMap.SQUARES.size() + RunMap.EVENTS_PER_ACT, RunMap.BEATS_PER_ACT, 'the squares and events fill the act')
+  for run_seed: int in [1, 2, 3, 99, 12345]:
+    for act: int in RunMap.ACTS:
+      var layout: Array[int] = RunMap.act_layout(act, run_seed)
+      assert_eq(layout.size(), RunMap.BEATS_PER_ACT, 'an act is BEATS_PER_ACT beats')
+      assert_eq(layout.count(-1), RunMap.EVENTS_PER_ACT, 'with EVENTS_PER_ACT events')
+      assert_eq(layout.filter(func(beat: int) -> bool: return beat != -1), range(RunMap.SQUARES.size()),
+        'and every square once, in order')
+
+
+func test_events_keep_to_their_gaps() -> void:
+  for run_seed: int in range(40):
+    var layout: Array[int] = RunMap.act_layout(0, run_seed)
+    assert_ne(layout[0], -1, 'an act never opens on an event')
+    for beat: int in layout.size():
+      if layout[beat] != -1:
+        continue
+      var next: int = layout[beat + 1]
+      assert_ne(next, -1, 'never two events in a row')
+      assert_true(next in RunMap.EVENT_GAPS, 'an event comes only before a square in EVENT_GAPS')
+      assert_true(RunMap.SQUARES[next] == RunMap.Square.FIGHT, 'so never before an elite, the relic encounter or the boss')
+
+
+func test_the_layout_is_the_same_for_the_same_seed() -> void:
+  assert_eq(RunMap.act_layout(1, 77), RunMap.act_layout(1, 77), 'the layout comes from the seed alone')
+
+
+func test_fixed_squares_name_their_encounters() -> void:
+  var layout: Array[int] = RunMap.act_layout(0, 1)
+  var elite_beat: int = layout.find(3)
+  var relic_beat: int = layout.find(5)
+  assert_eq(RunMap.beat_spec(elite_beat, 1)['id'], RunMap.ELITE_ENCOUNTER_ID, 'square 4 is an elite fight')
+  assert_eq(RunMap.beat_spec(layout.find(7), 1)['id'], RunMap.ELITE_ENCOUNTER_ID, 'so is square 8')
+  assert_eq(RunMap.beat_spec(relic_beat, 1)['id'], RunMap.RELIC_ENCOUNTER_ID, 'square 6 is the relic encounter')
+  assert_eq(RunMap.beat_spec(RunMap.BOSS_BEAT, 1)['id'], 'fight_boss', 'the act ends on the boss')
+  assert_eq(int(RunMap.beat_spec(layout.find(-1), 1)['kind']), RunMap.BeatKind.DRAWN, 'an event is drawn from a pool')
+  assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
+
+
+func test_the_relic_encounter_offers_a_choice_of_relics() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run._roll_streak = RunManager.RollType.COMBAT
-  run._roll_streak_count = 5
-  assert_eq(run._roll_type(), RunManager.RollType.EVENT, 'a maxed combat streak forces an event')
-  assert_eq(run._roll_streak, RunManager.RollType.EVENT, 'and the streak switches to event')
-  assert_eq(run._roll_streak_count, 1, 'reset to a fresh count')
-  run._roll_streak_count = 5   # now a maxed EVENT streak forces a combat (the other direction)
-  assert_eq(run._roll_type(), RunManager.RollType.COMBAT, 'a maxed event streak forces a combat')
-
-
-func test_fixed_beats_are_boss_and_relic_others_roll() -> void:
-  assert_eq(RunMap.beat_spec(RunMap.BOSS_BEAT)['id'], 'fight_boss', 'act end = boss')
-  assert_eq(RunMap.beat_spec(RunMap.RELIC_BEAT)['id'], 'fight_relic', 'midpoint = relic')
-  assert_eq(int(RunMap.beat_spec(0)['kind']), RunMap.BeatKind.ROLL, 'other beats auto-roll')
-  assert_true(RunMap.beat_spec(0)['event_pool'].is_empty(), 'the easy opener forces combat (no events)')
-  assert_false(RunMap.beat_spec(RunMap.EASY_BEATS_END + 1)['event_pool'].is_empty(),
-    'events become possible after the opener')
-  assert_true('fight_elite' in RunMap.beat_spec(RunMap.ELITE_FROM_BEAT)['combat_pool'],
-    'an elite is possible in the combat pool from ELITE_FROM_BEAT on')
-  assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
+  run.position = RunMap.act_layout(0, run.rng.seed).find(5)
+  run._current_def_id = RunMap.RELIC_ENCOUNTER_ID
+  run._create_current_encounter()
+  run.begin_current()
+  assert_true(run.has_pending_relic_offer(), 'the relic encounter resolves at once with a relic offer')
+  var offer: Array = run.pending_relic_offer()
+  assert_eq(offer.size(), mini(RunManager.RELIC_OFFER_COUNT, RelicCatalog.REWARD_POOL.size()), 'up to three relics')
+  var picked: RelicDef = offer[1]
+  var before: int = run.relics.size()
+  run.apply_relic_pick(1)
+  assert_eq(run.relics.size(), before + 1, 'the pick adds one relic')
+  assert_eq(run.relics[-1].def, picked, 'the one picked')
+  assert_false(run.has_pending_relic_offer(), 'and clears the offer')
 
 
 func test_crossing_into_a_new_act_full_heals() -> void:

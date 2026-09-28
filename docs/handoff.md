@@ -15,7 +15,7 @@
 > ids, kind-grouped `src/content/`, a **character system** + per-character pools, #23/#27).
 > Then 2026-06-10: the **status system refactored to polymorphic `StatusEffect` classes**
 > (string-id, per-application duration, one file per status — #29), the beat model **CHOICE→ROLL**
-> (beats auto-roll combat/event, the choice layer dormant), the **Spore Druid's first common
+> (each act a fixed row of fights, elites, a relic encounter and a boss, with events between; the choice layer dormant), the **Spore Druid's first common
 > weapons** + Wilt Frond, and a **central colour/const palette** (`Colours` / `Consts`).
 > Latest 2026-06-21: the **combat item tooltip** (#31, 2026-06-19) and the **combat log** — a
 > combat-scoped observation sink that is the **single source of truth** for damage / heal / shield
@@ -262,28 +262,24 @@ content unless explicitly asked.** The prototype loop is feature-complete; what'
 for engineering is below, roughly highest-value first. Pick *with the owner*; each is
 test-first + its own green commit, with the headless autotest as the regression backstop.
 
-1. **Run structure — multi-act + HP economy + the auto-roll map — DONE (mechanism;
-   placeholder content).** `RunMap` = 3 acts × 15 beats (tunable): boss at each act end
-   (final-act boss wins) + a guaranteed midpoint relic are fixed; every other beat is a
-   **ROLL** beat. The `Run manager` **auto-rolls** each ROLL beat's content — COMBAT vs EVENT
-   on the run RNG, **anti-repeat biased** (`ROLL_BASE_CHANCE − ROLL_BIAS_STEP × streak`, floored,
-   reset on a type change; streak saved) — and draws a def from per-band pools (easy-combat opener,
-   elites possible from `ELITE_FROM_BEAT`). No player path-pick. The **event** type (`event_overlay`,
-   prose + binary outcome, `pick_event_option`) is built; the run-screen FSM has EVENTING. *(The old
-   choice layer — `has_pending_choice` / `pending_choice` / `pick_path` + `choice_overlay` + the
-   CHOOSING state — is **dormant**, inert behind an always-false `has_pending_choice()`.)* **HP economy:**
-   between-act full heal, max-HP via relics. Snapshot/resume carry the rolled beat + the streak.
-   **Still the owner's:** the real encounter/enemy/event content + boss **signature mechanics**;
-   band/pool tuning (combat-vs-event mix, elite budget, rest placement). PRDs: [run_manager](systems/run_manager.md) ·
+1. **Run structure — multi-act + HP economy + the act layout — DONE (mechanism;
+   placeholder content).** `RunMap` = 3 acts × 15 beats. Each act is a fixed row of 11 squares
+   (fights, elites at squares 4 and 8, the relic encounter at square 6, the boss last) with 4 events
+   placed between them from the run seed ([act layout](systems/run_manager.md#the-act-layout)). The map
+   strip shows the squares with icons. No player path-pick. The **event** type (`event_overlay`, prose +
+   binary outcome, `pick_event_option`) is built; the run-screen FSM has EVENTING. *(The old choice
+   layer — `has_pending_choice` / `pending_choice` / `pick_path` + `choice_overlay` + the CHOOSING
+   state — is **dormant**, inert behind an always-false `has_pending_choice()`.)* **HP economy:**
+   between-act full heal, max-HP via relics. **Still the owner's:** the real encounter/enemy/event
+   content + boss **signature mechanics**; pool tuning. PRDs: [run_manager](systems/run_manager.md) ·
    [encounter](systems/encounter.md).
 2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**
-   `RunManager._on_encounter_resolved` now grants a relic on the **RELIC** reward (drawn from
-   `RelicCatalog.REWARD_POOL` on the run RNG — deterministic + resume-stable) and a **relic +
-   draft** on the new **ELITE** reward (the reward asymmetry). Relics gained a **MAX_HP_BONUS**
-   direct-mod shape (applied once on grant, baked into the snapshot). Placeholder reward relics
-   (Vital Charm / Iron Idol) + placeholder elite/relic `EncounterDef`s. **Still the owner's:** which
-   relics/elites exist, and elite frequency/depth (an elite is now a rolled-combat outcome from
-   `ELITE_FROM_BEAT` on — tune the `combat_pool` — item 1). [content](systems/content.md) · [encounter](systems/encounter.md).
+   `RunManager._on_encounter_resolved` grants a random relic on the **RELIC** reward (act bosses),
+   offers a choice of relics on **RELIC_CHOICE** (the relic encounter), and a **relic + draft** on
+   **ELITE** (the reward asymmetry). Relics have a **MAX_HP_BONUS** direct-mod shape (applied once on
+   grant, baked into the snapshot). Placeholder reward relics (Vital Charm / Iron Idol) and placeholder
+   elite and relic `EncounterDef`s. **Still the owner's:** which relics and elites exist.
+   [content](systems/content.md) · [encounter](systems/encounter.md).
 3. **Settings / pause + battle-speed — DONE.** The ×1/×2/×3 **battle-speed dial** + in-run
    **pause** (2026-06-06), and now (2026-06-09) the **settings screen** itself — audio volume
    sliders (Master / Music / Effects) bound to a new **`Prefs`** autoload (a `ConfigFile` at

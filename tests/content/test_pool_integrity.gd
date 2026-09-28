@@ -15,7 +15,7 @@ const ENCOUNTER_IDS: Array = [
   'fight_grunt',
   'rest',
   'fight_elite',
-  'fight_relic',
+  'relic_cache',
   'fight_tough',
   'fight_boss',
   'event_shrine',
@@ -46,11 +46,11 @@ func test_character_pools_and_kits_resolve() -> void:
 
 func test_map_beat_pools_resolve() -> void:
   for position in RunMap.TOTAL_BEATS:
-    var spec: Dictionary = RunMap.beat_spec(position)
+    var spec: Dictionary = RunMap.beat_spec(position, 1)
     if spec['kind'] == RunMap.BeatKind.FIXED:
       assert_not_null(EncounterCatalog.get_def(spec['id']), 'beat %d: fixed encounter resolves' % position)
     else:
-      for encounter_id in spec['combat_pool'] + spec['event_pool']:
+      for encounter_id in spec['pool']:
         assert_not_null(EncounterCatalog.get_def(encounter_id), 'beat %d: pool encounter %s resolves' % [position, encounter_id])
 
 

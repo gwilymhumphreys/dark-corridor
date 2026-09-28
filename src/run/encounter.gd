@@ -3,7 +3,7 @@ extends Node
 ## The per-beat orchestrator (docs/systems/encounter.md) — one resolved beat, instanced by the
 ## Run manager. A FIGHT spawns enemy Actors from their definitions (left-to-right)
 ## and, on begin(), creates the per-fight CombatManager; a REST applies a partial
-## heal. It reports its outcome + reward-kind up via `resolved`; the Run manager
+## heal; a RELIC encounter resolves at once and its reward is a relic choice. It reports its outcome + reward-kind up via `resolved`; the Run manager
 ## fulfils the reward and applies HP/relic policy.
 ##
 ## Phase 3 driving model: the Encounter (and its CombatManager) are NOT mounted in
@@ -73,6 +73,8 @@ func begin() -> void:
     _combat_manager.start()
   elif is_event():
     pass   # await the tier-2 binary choice (pick_event_option) — the event's resolution
+  elif def.type == EncounterDef.Type.RELIC:
+    _resolve(Outcome.RESOLVED)   # no fight: the reward (a relic choice) is the whole encounter
   else:
     player.heal(def.heal_fraction * player.max_hp)
     _resolve(Outcome.RESOLVED)

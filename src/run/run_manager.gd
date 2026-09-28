@@ -26,13 +26,8 @@ const COMBAT_SEED_STRIDE: int = 1000003
 # avoid offering a "join me" choice that can't be filled.
 const MAX_ALLIES: int = 4
 
-# Auto-roll bias for ROLL beats (run_map). A beat with both a combat and an event option rolls
-# COMBAT vs EVENT: the streaking type's chance falls ROLL_BIAS_STEP points per consecutive prior
-# roll of it (from ROLL_BASE_CHANCE), floored at 0 so a long run is force-broken; the first beat
-# that lands the OTHER type resets the streak. (#1 — the owner's map design.)
-enum RollType { COMBAT, EVENT }
-const ROLL_BASE_CHANCE: int = 50
-const ROLL_BIAS_STEP: int = 10
+# How many relics the relic encounter offers to choose from.
+const RELIC_OFFER_COUNT: int = 3
 
 # Run-state (the snapshot persists exactly this). `position` is the global beat index
 # (0 .. RunMap.TOTAL_BEATS-1); the act/beat-within-act are derived (RunMap).
@@ -61,13 +56,9 @@ var _current_enemy_ids: Array[String] = []
 ## ids — bosses and authored compositions included — so a tuning run reads one composition rather
 ## than generation noise. Static so the autotest can set it before a run starts. Never set in play.
 static var pinned_enemy_ids: Array[String] = []
-# The COMBAT/EVENT anti-repeat streak for ROLL beats (run-state — saved so resume reproduces the
-# rolls). `_roll_streak_count == 0` means no streak (base 50/50); otherwise `_roll_streak` is the
-# type on the streak and the count is the bias depth.
-var _roll_streak: int = RollType.COMBAT
-var _roll_streak_count: int = 0
-var _pending_choice: Array[String] = []  # kept empty — the choice layer is dormant (see _roll_beat)
+var _pending_choice: Array[String] = []  # kept empty — the choice layer is dormant
 var _pending_offer: Array[ItemDef] = []   # the held draft offer (1-of-3)
+var _pending_relic_offer: Array[RelicDef] = []   # the relic encounter's offer (pick one)
 var _ended: bool = false
 var _outcome: int = Outcome.WON
 var _torn_down: bool = false
@@ -94,10 +85,9 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   gold = 0
   _ended = false
   _pending_offer = []
+  _pending_relic_offer = []
   _current_def_id = ''
   _pending_choice = []
-  _roll_streak = RollType.COMBAT
-  _roll_streak_count = 0
   allies = []                  # no starting allies by default (the owner wires acquisition)
   _ally_def_ids = []
   _enter_beat(position)
@@ -131,13 +121,13 @@ func beat_in_act() -> int:
   return RunMap.beat_in_act(position)
 
 
-# --- the choice layer (DORMANT — beats auto-roll; see _roll_beat) ------------
-# Every beat now auto-rolls its content (RunManager._roll_beat), so no beat produces a pending
+# --- the choice layer (DORMANT — every beat's encounter is set by the map; see _enter_beat) ----
+# Every beat's encounter is fixed or drawn by the map (RunManager._enter_beat), so no beat produces a pending
 # choice: has_pending_choice() is always false and these three are inert. They're kept so the run
 # screen / autotest choice branch + the choice_overlay component stay wired for a possible future
 # fork-beat (one that genuinely offers the player a pick). Remove them if that's ruled out.
 
-## True only when a beat is waiting on a player pick — never, while beats auto-roll.
+## True only when a beat is waiting on a player pick — never, while the map sets every beat.
 func has_pending_choice() -> bool:
   return not _pending_choice.is_empty()
 
@@ -204,7 +194,9 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
     EncounterDef.Reward.DRAFT:
       _pending_offer = Draft.draw(_draft_pool(), position, rng)
     EncounterDef.Reward.RELIC:
-      _grant_relic()                                          # a mid-boss / guaranteed-relic beat
+      _grant_relic()                                          # an act boss
+    EncounterDef.Reward.RELIC_CHOICE:
+      _pending_relic_offer = _draw_relic_offer()              # the relic encounter: pick one
     EncounterDef.Reward.ELITE:
       _grant_relic()                                          # an elite is richer: a relic AND
       _pending_offer = Draft.draw(_draft_pool(), position, rng)   # a draft (reward asymmetry, #2)
@@ -230,6 +222,35 @@ func _grant_relic() -> void:
   var relic := Relic.new(RelicCatalog.get_def(id))
   relics.append(relic)
   _apply_relic_grant(relic)
+
+
+## The relic encounter's offer: up to RELIC_OFFER_COUNT different relics from the reward pool,
+## drawn on the run RNG (deterministic + resume-stable, like a draft).
+func _draw_relic_offer() -> Array[RelicDef]:
+  var pool: Array = RelicCatalog.REWARD_POOL.duplicate()
+  var offer: Array[RelicDef] = []
+  while not pool.is_empty() and offer.size() < RELIC_OFFER_COUNT:
+    offer.append(RelicCatalog.get_def(pool.pop_at(rng.randi_range(0, pool.size() - 1))))
+  return offer
+
+
+func has_pending_relic_offer() -> bool:
+  return not _pending_relic_offer.is_empty()
+
+
+func pending_relic_offer() -> Array:
+  return _pending_relic_offer
+
+
+## Apply the player's pick from the relic offer: add the relic to run-state, apply its one-time
+## effect, clear the offer.
+func apply_relic_pick(index: int) -> void:
+  if _pending_relic_offer.is_empty():
+    return
+  var relic := Relic.new(_pending_relic_offer[clampi(index, 0, _pending_relic_offer.size() - 1)])
+  relics.append(relic)
+  _apply_relic_grant(relic)
+  _pending_relic_offer = []
 
 
 ## Apply a granted relic's ONE-TIME direct run-state mod (MAX_HP_BONUS raises max + current
@@ -346,6 +367,9 @@ func advance() -> void:
     # drop the offer loudly rather than carry it unsaved into the next beat.
     push_error('RunManager.advance: advancing past an unconsumed draft offer — dropping it')
     _pending_offer = []
+  if not _pending_relic_offer.is_empty():
+    push_error('RunManager.advance: advancing past an unconsumed relic offer — dropping it')
+    _pending_relic_offer = []
   _teardown_current()
   if RunMap.crosses_act(position):   # the act boss was just cleared → enter the next act full
     _full_heal()
@@ -373,19 +397,21 @@ func outcome() -> int:
 
 # --- map + run-end ----------------------------------------------------------
 
-## Set up the beat at `pos`: a FIXED beat (boss / midpoint relic) creates its live encounter
-## immediately; a ROLL beat auto-selects COMBAT vs EVENT and draws a def (no player choice —
-## the encounter is live at once). Clears any prior beat's transient state.
+## Set up the beat at `pos` (RunMap.beat_spec): a FIXED beat (an elite fight, the relic encounter,
+## the boss) names its encounter; a DRAWN beat (a regular fight or an event) draws a def from its
+## pool on the run RNG (deterministic + resume-stable). The encounter is live at once. Clears any
+## prior beat's transient state.
 func _enter_beat(pos: int) -> void:
   _current_def_id = ''
   _current_enemy_ids = []
-  var spec: Dictionary = RunMap.beat_spec(pos)
+  var spec: Dictionary = RunMap.beat_spec(pos, rng.seed)
   if spec['kind'] == RunMap.BeatKind.FIXED:
     _current_def_id = spec['id']
-    _current_enemy_ids = _draw_enemies(EncounterCatalog.get_def(_current_def_id))
-    _create_current_encounter()
   else:
-    _roll_beat(spec['combat_pool'], spec['event_pool'])
+    var pool: Array = spec['pool']
+    _current_def_id = pool[rng.randi_range(0, pool.size() - 1)]
+  _current_enemy_ids = _draw_enemies(EncounterCatalog.get_def(_current_def_id))
+  _create_current_encounter()
 
 
 func _create_current_encounter() -> void:
@@ -408,41 +434,6 @@ func _draw_enemies(def: EncounterDef) -> Array[String]:
   if def.reward == EncounterDef.Reward.ELITE:
     target *= Balance.POINTS_ELITE_MULTIPLIER
   return RunMap.draw_enemies(RunMap.enemy_pool(RunMap.act_of(position)), target, rng)
-
-
-## Roll a ROLL beat's content (run_map bands): pick COMBAT or EVENT via the anti-repeat weighted
-## roll, then draw a def from that pool on the run RNG (deterministic + resume-stable). An empty
-## event pool forces combat (the easy opener) and does NOT count toward the streak — only genuine
-## two-way rolls bias it.
-func _roll_beat(combat_pool: Array, event_pool: Array) -> void:
-  var pool: Array
-  if event_pool.is_empty():
-    pool = combat_pool
-  elif combat_pool.is_empty():
-    pool = event_pool
-  else:
-    pool = combat_pool if _roll_type() == RollType.COMBAT else event_pool
-  _current_def_id = pool[rng.randi_range(0, pool.size() - 1)]
-  _current_enemy_ids = _draw_enemies(EncounterCatalog.get_def(_current_def_id))
-  _create_current_encounter()
-
-
-## Roll COMBAT vs EVENT with the −ROLL_BIAS_STEP-per-repeat bias and update the streak. The
-## streaking type's chance is ROLL_BASE_CHANCE − step×count (floored at 0); landing the other
-## type resets the streak to that type (count 1).
-func _roll_type() -> int:
-  var combat_chance: int = ROLL_BASE_CHANCE
-  if _roll_streak_count > 0:
-    var bias: int = ROLL_BIAS_STEP * _roll_streak_count
-    combat_chance = ROLL_BASE_CHANCE - bias if _roll_streak == RollType.COMBAT else ROLL_BASE_CHANCE + bias
-  combat_chance = clampi(combat_chance, 0, 100)
-  var picked: int = RollType.COMBAT if rng.randi_range(1, 100) <= combat_chance else RollType.EVENT
-  if picked == _roll_streak and _roll_streak_count > 0:
-    _roll_streak_count += 1
-  else:
-    _roll_streak = picked
-    _roll_streak_count = 1
-  return picked
 
 
 ## The per-fight RNG seed for beat `pos` (decision #20): derived from the run SEED (a
@@ -492,12 +483,9 @@ func snapshot() -> Dictionary:
     'potions': potion_ids,
     'position': position,
     'gold': gold,   # banked run-state (decision #33); optional on read (.get) — no migration
-    # The current beat's resolution: the rolled/fixed encounter id (resume re-enters it, never
-    # re-rolled) + the COMBAT/EVENT streak so the NEXT beat's roll reproduces on resume.
+    # The current beat's encounter id (resume re-enters it, never redrawn).
     'current_def_id': _current_def_id,
     'current_enemy_ids': _current_enemy_ids,   # the drawn set — the RNG has already moved past it
-    'roll_streak': _roll_streak,
-    'roll_streak_count': _roll_streak_count,
     # RNG full state as strings — a JSON double can't hold a 64-bit value exactly.
     'rng': { 'seed': str(rng.seed), 'state': str(rng.state) },
   }
@@ -544,14 +532,13 @@ func rehydrate(snap: Dictionary) -> bool:
   rng.state = int(snap['rng']['state'])
   _ended = false
   _pending_offer = []
+  _pending_relic_offer = []
   _pending_choice = []
-  # Restore the current beat's resolution + the roll streak exactly — never re-roll (no save-scum).
+  # Restore the current beat's encounter exactly — never redraw it (no save-scum).
   _current_def_id = str(snap['current_def_id'])
   _current_enemy_ids = []
   for enemy_id: Variant in snap.get('current_enemy_ids', []):
     _current_enemy_ids.append(str(enemy_id))
-  _roll_streak = int(snap.get('roll_streak', RollType.COMBAT))
-  _roll_streak_count = int(snap.get('roll_streak_count', 0))
   _create_current_encounter()
   return true
 
@@ -569,6 +556,13 @@ func _snapshot_usable(snap: Dictionary) -> bool:
 
 
 # --- teardown ---------------------------------------------------------------
+
+## Dev and test only: move the run to beat `pos` and enter it, without playing the beats before it.
+func jump_to(pos: int) -> void:
+  _teardown_current()
+  position = pos
+  _enter_beat(pos)
+
 
 func _teardown_current() -> void:
   if _current != null:

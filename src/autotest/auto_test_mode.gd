@@ -190,7 +190,7 @@ func run_full() -> Dictionary:
       fail = fight_result['outcome']
     var beat_outcome: String = fail
     if beat_outcome == '':
-      beat_outcome = ('WON' if cm.player_won() else 'LOST') if cm != null else ('event' if enc.is_event() else 'rest')
+      beat_outcome = ('WON' if cm.player_won() else 'LOST') if cm != null else _beat_type(enc).to_lower()
     logger.record_encounter({
       'beat': run.position, 'type': _beat_type(enc), 'name': beat_name,
       'duration': fight_steps * Balance.STEP, 'hp_before': hp_before, 'hp_after': run.player.hp,
@@ -215,6 +215,10 @@ func run_full() -> Dictionary:
         var pick: int = driver.choose_draft(offer, run.player.board)
         logger.log_event('draft', { 'beat': run.position, 'picked': offer[pick].name_key, 'strategy': strategy })
         run.apply_draft_pick(pick)
+    if run.has_pending_relic_offer():
+      # The Driver has no relic strategy yet: it takes the first relic on offer.
+      logger.log_event('relic', { 'beat': run.position, 'picked': run.pending_relic_offer()[0].name_key })
+      run.apply_relic_pick(0)
     beats_cleared += 1
     run.advance()
 
@@ -326,6 +330,8 @@ func _beat_type(enc: Encounter) -> String:
     return 'Fight'
   if enc.is_event():
     return 'Event'
+  if enc.def.type == EncounterDef.Type.RELIC:
+    return 'Relic'
   return 'Rest'
 
 

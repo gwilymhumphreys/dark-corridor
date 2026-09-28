@@ -248,6 +248,10 @@ msgid "0"
 msgstr ""
 
 #: src/scenes/combat/combat_view_framed.tscn
+msgid "Relics"
+msgstr ""
+
+#: src/scenes/combat/combat_view_framed.tscn
 msgid "Items"
 msgstr ""
 
@@ -631,12 +635,12 @@ msgstr ""
 msgid "A dim corridor"
 msgstr ""
 
-#: content/encounters/fight_relic.gd
-msgid "A warded vault"
-msgstr ""
-
 #: content/encounters/fight_tough.gd
 msgid "A blocked passage"
+msgstr ""
+
+#: content/encounters/relic_cache.gd
+msgid "A forgotten reliquary"
 msgstr ""
 
 #: content/encounters/rest.gd

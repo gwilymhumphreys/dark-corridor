@@ -50,3 +50,19 @@ func test_skip_button_emits_skipped() -> void:
   assert_eq(skip.text, '+%d gold' % Balance.GOLD_SKIP, 'the button shows the gold amount')
   skip.pressed.emit()
   assert_signal_emitted(overlay, 'skipped')
+
+
+func test_overlay_offers_relics_without_the_gold_button() -> void:
+  var overlay: DraftOverlay = preload('res://src/scenes/screens/draft_overlay.tscn').instantiate()
+  add_child(overlay)
+  _nodes.append(overlay)
+  var relic: RelicDef = FixtureKit.shield_relic()
+  overlay.setup_relics([relic, FixtureKit.max_hp_relic()])
+  assert_eq(overlay.get_node('Panel/Cards').get_child_count(), 2, 'one option per relic')
+  assert_false(overlay.get_node('Panel/SkipButton').visible, 'a relic offer cannot be skipped for gold')
+  var option: RewardOption = overlay.get_node('Panel/Cards').get_child(0)
+  assert_eq(option.tooltip_text, relic.name_key, 'the relic is named in the option tooltip')
+  assert_eq(overlay.inspectable_at(option.get_global_rect().get_center()), {}, 'and has no item tooltip')
+  watch_signals(overlay)
+  (overlay.get_node('Panel/Cards').get_child(1) as RewardOption).pressed.emit()
+  assert_signal_emitted_with_parameters(overlay, 'picked', [1])

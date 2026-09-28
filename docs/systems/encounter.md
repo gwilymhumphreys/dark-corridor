@@ -21,7 +21,7 @@ An `Encounter` resolves one beat and reports its outcome up. The descent's beats
 
 What it **is not**:
 
-- **Not the beat *selection*.** Which beat happens is the `Run manager`'s — it **auto-rolls** a ROLL beat's content (COMBAT vs EVENT on the run RNG, anti-repeat biased) or takes a fixed beat, then draws a def from the per-band pool. The Encounter is the *resolved unit*, not the selector. *(The within-encounter tier-2 choice — an event's binary pick — is the Encounter's own resolution.)*
+- **Not the beat *selection*.** Which beat happens is the `Run manager`'s — the map fixes it or names the pool it is drawn from ([run_manager.md](run_manager.md#the-act-layout)). The Encounter is the *resolved unit*, not the selector. *(The within-encounter tier-2 choice — an event's binary pick — is the Encounter's own resolution.)*
 - **Not the fight.** A fight `Encounter` creates the `Combat manager` and awaits its result; it never runs the combat tick (`Timekeeper` / `Combat manager`).
 - **Not run-state.** Event/rest outcomes and rewards mutate the player run-state, which the `Run manager` owns — the Encounter reports them; the `Run manager` applies them.
 - **Not enemy/draft content** — it *uses* enemy definitions ([Enemy PRD](enemy.md)) and triggers the reward `Draft` (via the `Run manager`); it doesn't define them.
@@ -75,7 +75,8 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 - **Fight** Encounter (regular / elite / boss): spawns its enemy `Actor`s in order, creates the `Combat manager` on begin, awaits win/loss, reports the reward up (DRAFT / RELIC / ELITE = relic+draft).
 - **Event** Encounter: `begin()` **awaits** the tier-2 binary choice; the pick (routed through `RunManager.pick_event_option(index)`) applies the chosen `EventOptionDef`'s direct outcome and resolves (reward NONE — the outcome is the reward). Player-Actor effects (heal / max-HP / damage) are applied by the Encounter; an **ADD_ALLY** outcome (the **recruit event** — the event-driven ally-acquisition path) touches the *roster*, so the `RunManager` applies it (`add_ally`, capped at `MAX_ALLIES` = the 4 ally slots) before delegating. Prose + options are localized.
 - **Rest** Encounter: a partial heal on begin, resolves immediately.
-- Instantiated by the `Run manager` from a FIXED beat (boss / midpoint relic) or an auto-ROLLED def (the choice layer is dormant); reports outcome (died / won / resolved) + reward up. The event overlay is live; the choice overlay survives as a dormant component (run_screen).
+- **Relic** Encounter (`Type.RELIC`): no fight; resolves on begin with the `RELIC_CHOICE` reward, and the `Run manager` offers a choice of relics.
+- Instantiated by the `Run manager` from a FIXED beat (an elite fight, the relic encounter, the boss) or a def drawn from a pool (the choice layer is dormant); reports outcome (died / won / resolved) + reward up. The event overlay is live; the choice overlay survives as a dormant component (run_screen).
 
 **Not** in scope: the real ~30-encounter pool + event prose (the owner's content), boss **signature mechanics**, relic/potion event outcomes (route through the `Run manager`'s run-state surface — added with real content), reward tuning.
 

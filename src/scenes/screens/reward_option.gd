@@ -15,6 +15,14 @@ func setup(item: Item) -> void:
   cell.setup(item)
 
 
-## The live Item this option offers — the tooltip reads it.
+## Bind an offered relic: its icon, with its name as the button's tooltip (relics have no item
+## tooltip). Call after the option is in the tree.
+func setup_relic(relic: RelicDef) -> void:
+  cell.show_cooldown = false
+  cell.show_picture(load(relic.icon) as Texture2D if relic.icon != '' else null)
+  tooltip_text = tr(relic.name_key)
+
+
+## The live Item this option offers — the tooltip reads it. Null for a relic.
 func item() -> Item:
   return cell.item

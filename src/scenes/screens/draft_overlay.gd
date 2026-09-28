@@ -7,6 +7,7 @@ extends Control
 ## option's own border; clicking it emits
 ## `picked(index)` — a draft-pick intent the run screen forwards to RunManager.apply_draft_pick. The
 ## gold button emits `skipped` instead (bank gold; docs decision #33) → RunManager.apply_draft_skip.
+## The same panel offers the relic encounter's relics (`setup_relics`), with no gold button.
 ## Reads the candidate defs; writes nothing.
 
 signal picked(index: int)
@@ -42,10 +43,22 @@ func setup(candidates: Array) -> void:
     _options.append(option)
 
 
+## Offer relics instead of items: each option shows the relic's icon, and there is no gold button.
+func setup_relics(candidates: Array) -> void:
+  _skip_button.visible = false
+  for i in candidates.size():
+    var option: RewardOption = REWARD_OPTION.instantiate()
+    option.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    _cards.add_child(option)
+    option.setup_relic(candidates[i])
+    option.pressed.connect(_on_option_pressed.bind(i))
+    _options.append(option)
+
+
 ## The reward icon under `point` as {item, rect (global), side} for the tooltip cluster, or {}.
 func inspectable_at(point: Vector2) -> Dictionary:
   for option: RewardOption in _options:
-    if option.get_global_rect().has_point(point):
+    if option.item() != null and option.get_global_rect().has_point(point):
       return {'item': option.item(), 'rect': option.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
   return {}
 
