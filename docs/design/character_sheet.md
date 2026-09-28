@@ -102,12 +102,14 @@ three.
 
 Each as a setting on the F7 or F2 tab, screenshotted in the same fight on one comparison page:
 
-1. Paper colour of the right column as candidate interface palettes: dark, mid-tone and light.
-2. Printed, labelled boxes around the existing parts: player, potions, items, gold and map.
-3. HP as a written number with a pencil-shaded row of boxes instead of the filled bar.
-4. The map as a row of encounter boxes.
+1. HP as a written number with a pencil-shaded row of boxes instead of the filled bar.
 
 ## Built
+
+- **Paper colour tried** (2026-09-29): dark, mid-tone and light paper palettes were compared in the
+  same fight. The owner did not like the lighter papers and is staying with the dark sheet for now.
+  Only `ui-paper-light.gpl` is kept in `assets/palettes/new/ui/` as an option. On it the text is dark,
+  so the enemy names and HP numbers over the corridor are hard to read.
 
 - **Gold beside the potions** (2026-09-28): a "Gold" label and a pencil-grid box in line with the
   potion row ([run_screen.md](../systems/run_screen.md#overlays)).
