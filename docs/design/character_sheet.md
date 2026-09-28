@@ -119,5 +119,14 @@ Each as a setting on the F7 or F2 tab, screenshotted in the same fight on one co
 - **One spacing for the whole sheet** (2026-09-28): a section gap between the parts and a label gap
   between a label and its box, set in the theme and tuned on the Print tab
   ([ui_theme.md](../systems/ui_theme.md#spacing-on-the-character-sheet)).
+- **Map in the item column** (2026-09-28): the map sits under the items, one section gap below them,
+  with its "Act N" label in the same style as the other labels (the `map_in_column` setting on the F3
+  Layout group).
+- **Map as tokens** (2026-09-28): the act's squares as a row of pencil grid squares, each with a
+  small token showing an icon (fight, elite, relic, boss); cleared tokens face down, the current one
+  bordered, and a marker between squares during an event. Two token sizes: large for items, potions
+  and relics, small (`status_size`) for status icons and map tokens ([run_screen.md](../systems/run_screen.md#overlays)).
+- **Relics box** (2026-09-28): a "Relics" label over a pencil grid beside the gold, with a token for
+  each relic in its own square ([run_screen.md](../systems/run_screen.md#overlays)).
 - **Allies box** (2026-09-28): an "Allies" label over one pencil rectangle holding the ally rows,
-  shown even with no allies (the `allies_box` setting on the F7 tab).
+  divided by pencil lines into a cell for each ally slot, shown even with no allies (the `allies_box` setting on the F7 tab).

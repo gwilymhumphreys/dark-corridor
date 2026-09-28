@@ -15,6 +15,9 @@ uniform float square_size = 144.0;
 // material, such as the allies box: above 0, one rectangle this size is drawn around the node's rect
 // instead of a grid, inset by the line width so the whole line shows.
 instance uniform vec2 box_size = vec2(0.0);
+// With `box_size`: the rectangle is divided into this many equal cells across and down, such as one
+// cell per ally slot in the allies box.
+instance uniform vec2 box_cells = vec2(1.0);
 // Set per node with `box_size` by a `PencilLine`: one horizontal line along the bottom of the rect
 // instead of the rectangle.
 instance uniform bool underline = false;
@@ -71,7 +74,7 @@ void fragment() {
   if (box_size.x > 0.0) {
     vec2 inset = vec2(board_grid_line_width);
     local -= inset;
-    spacing = max(box_size - 2.0 * inset, vec2(1.0));
+    spacing = max((box_size - 2.0 * inset) / max(box_cells, vec2(1.0)), vec2(1.0));
   }
   float vertical = pencil_lines(local.x, local.y, spacing.x, 0.0);
   float horizontal = pencil_lines(local.y, local.x, spacing.y, 41.0);

@@ -449,3 +449,84 @@ func test_a_thrown_consumable_starts_from_its_slot() -> void:
   assert_eq((cm.deliveries()[0] as Delivery).consumable, potion, 'the delivery carries the thrown consumable')
   cm.free()
   await wait_process_frames(1)   # the thrown potion's slot is queue_free'd; let it go before the orphan count
+
+
+func test_the_map_sits_below_the_items_in_the_column() -> void:
+  var map: MapStrip = _host(preload('res://src/scenes/screens/map_strip.tscn').instantiate())
+  map.setup(1, 0)
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  view.map = map
+  _host(view)
+  var items: Array = []
+  for i in 60:
+    items.append(FixtureItems.attack())
+  var p := _spawn(100.0, items)
+  var e := _spawn(40.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e])
+  cm.start()
+  view.bind(cm, p, [])
+  for frame: int in 3:
+    await get_tree().process_frame
+  var column: Rect2 = view.get_node('Items').get_global_rect()
+  var map_rect: Rect2 = map.get_global_rect()
+  assert_eq(map_rect.end.y, column.end.y, 'the map is at the bottom of the item column')
+  assert_eq(map_rect.size.x, column.size.x, 'and as wide as it')
+  var board: Rect2 = view.get_node('Items/ItemsSection/Board').get_global_rect()
+  var section_gap: float = view.get_node('Items').get_theme_constant('separation')
+  assert_almost_eq(board.end.y + section_gap, map_rect.position.y, 1.0, 'the section gap separates the items and the map')
+  var last_cell: ItemCell = view.get_node('Items/ItemsSection/Board/PlayerItems').get_child(59)
+  assert_true(last_cell.get_global_rect().end.y <= board.end.y, '60 items still fit above the map')
+  PrintLook.set_print_value('map_in_column', false)
+  await get_tree().process_frame
+  assert_false(view.get_node('Items/MapSlot').visible, 'with the setting off the column keeps no room for the map')
+  assert_eq(map.position, Vector2.ZERO, 'and the map goes back to the top of its own section')
+  PrintLook.set_print_value('map_in_column', true)
+  cm.free()
+
+
+func test_the_relics_box_shows_a_token_for_each_relic() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var relics: Array = [Relic.new(RelicDef.new()), Relic.new(RelicDef.new())]
+  view.show_relics(relics)
+  await get_tree().process_frame
+  var tokens: GridContainer = view.get_node('Items/PotionRow/Boxes/RelicColumn/RelicBoard/Relics')
+  assert_eq(tokens.get_child_count(), 2, 'one token per relic')
+  relics.append(Relic.new(RelicDef.new()))
+  await get_tree().process_frame
+  assert_eq(tokens.get_child_count(), 3, 'a relic granted later gets a token')
+  var board: Control = view.get_node('Items/PotionRow/Boxes/RelicColumn/RelicBoard')
+  var column: Rect2 = view.get_node('Items').get_global_rect()
+  var square: float = view.get_node('Items/PotionRow/Boxes/PotionColumn/PotionBoard/Grid').size.y
+  assert_true(board.get_global_rect().end.x <= column.end.x + 0.5, 'the relics grid fits in the column')
+  assert_eq(fmod(board.size.x, square), 0.0, 'and is whole squares wide')
+  var rows: int = ceili(3.0 / tokens.columns)
+  assert_eq(board.size.y, square * rows, 'a row of squares, like the potions, for each row of relics')
+  for i in tokens.columns:
+    relics.append(Relic.new(RelicDef.new()))
+  await get_tree().process_frame
+  await get_tree().process_frame
+  var new_square: float = view.get_node('Items/PotionRow/Boxes/PotionColumn/PotionBoard/Grid').size.y
+  var new_rows: int = ceili(float(relics.size()) / tokens.columns)
+  assert_gt(new_rows, rows, 'the added relics need another row')
+  assert_eq(board.size.y, new_square * new_rows, 'and the relics wrap onto it')
+
+
+func test_the_allies_box_gives_each_ally_slot_an_equal_cell() -> void:
+  PrintLook.set_print_value('screen_layout', ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS)
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(100.0, [FixtureItems.attack()])
+  var allies: Array = [_spawn(20.0, [FixtureItems.attack()]), _spawn(20.0, [FixtureItems.attack()])]
+  view.bind(null, p, [], allies)
+  for frame: int in 3:
+    await get_tree().process_frame
+  var box: Control = view.get_node('Portraits/Allies/Box')
+  var row: HBoxContainer = view.get_node('Portraits/Allies/Box/Rows/AllyLeft')
+  assert_eq(row.get_child_count(), 2, 'both allies are in the first row of the box')
+  var first: Rect2 = (row.get_child(0) as Control).get_global_rect()
+  var second: Rect2 = (row.get_child(1) as Control).get_global_rect()
+  assert_eq(first.size.x, second.size.x, 'the slots are the same width')
+  var middle: float = box.get_global_rect().get_center().x
+  assert_almost_eq((first.end.x + second.position.x) * 0.5, middle, 1.0, 'the gap between them is at the dividing line')
+  PrintLook.set_print_value('screen_layout', PrintLook.PRINT_SETTING_DEFAULTS['screen_layout'])

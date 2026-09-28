@@ -6,6 +6,7 @@ extends RelicDef
 func _init() -> void:
   id = 'iron_idol'
   name_key = 'Iron Idol'
+  icon = 'res://assets/icons/relics/statue_warrior_nb.png'   # placeholder picture for the owner to replace
   kind = Kind.COMBAT_START_STATUS
   status_id = 'shield'
   status_count = 6.0

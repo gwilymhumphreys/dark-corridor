@@ -14,6 +14,7 @@ enum Rarity { COMMON, UNCOMMON, RARE }
 
 var id: String = ''
 var name_key: String = ''           # source English; displayed via tr() — localizable
+var icon: String = ''               # res:// path of the relic's picture (assets/icons/relics/); empty = none
 var rarity: int = Rarity.COMMON     # feel-based for relics (docs/systems/content.md), not a power ladder
 var kind: int = Kind.COMBAT_START_STATUS
 var status_id: String = ''          # status id applied at combat start (COMBAT_START_STATUS, #23)

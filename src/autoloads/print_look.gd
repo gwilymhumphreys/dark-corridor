@@ -53,7 +53,8 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## and `StatusLayout`, as their index) and which panels draw their background
 ## (`CharacterPanel.PanelBackground`, as its index), and whether the allies sit in a labelled pencil box
 ## when the portraits are above the items. Then the gap between the parts of the character sheet and
-## the gap between a label and its box, in pixels (`apply_sheet_spacing`). Then the
+## the gap between a label and its box, in pixels (`apply_sheet_spacing`), and whether the run's map
+## sits at the bottom of the item column (`CombatViewFramed`) rather than in the information section. Then the
 ## sizes in pixels of the enemy and ally item cells (the largest; a row too long for its width
 ## shrinks) and of the status icons on every panel, and the size of every value pill (item values and
 ## status stacks) against its base size, the same whatever the cell or icon size.
@@ -76,6 +77,7 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'allies_box': true,
   'section_gap': 32.0,
   'label_gap': 8.0,
+  'map_in_column': true,
   'enemy_item_size': 80.0,
   'ally_item_size': 60.0,
   'status_size': 44.0,

@@ -157,6 +157,34 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="RelicColumn" type="VBoxContainer" parent="Items/PotionRow/Boxes"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"SheetSection"
+
+[node name="RelicsLabel" type="Label" parent="Items/PotionRow/Boxes/RelicColumn"]
+layout_mode = 2
+theme_type_variation = &"LabelDim"
+text = "Relics"
+
+[node name="RelicBoard" type="Control" parent="Items/PotionRow/Boxes/RelicColumn"]
+custom_minimum_size = Vector2(144, 144)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Box" type="ColorRect" parent="Items/PotionRow/Boxes/RelicColumn/RelicBoard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Relics" type="GridContainer" parent="Items/PotionRow/Boxes/RelicColumn/RelicBoard"]
+layout_mode = 0
+mouse_filter = 2
+
 [node name="ItemsSection" type="VBoxContainer" parent="Items"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -188,6 +216,11 @@ mouse_filter = 2
 theme_override_constants/h_separation = 24
 theme_override_constants/v_separation = 24
 columns = 5
+
+[node name="MapSlot" type="Control" parent="Items"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
 
 [node name="Portraits" type="BoxContainer" parent="."]
 layout_mode = 1

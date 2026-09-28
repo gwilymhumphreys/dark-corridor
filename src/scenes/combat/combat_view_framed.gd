@@ -17,6 +17,7 @@ const TOOLTIP_CLUSTER: PackedScene = preload('res://src/scenes/ui/tooltip/toolti
 const SCREEN_SECTIONS: PackedScene = preload('res://src/ui/screen_sections.tscn')
 
 const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
+const ALLY_SLOT_GAP: int = 24   # between ally slots outside the allies box
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
 const POTION_SLOTS: int = 3   # squares drawn in the potion row's grid (docs/design/game_design.md)
 const MIN_CELL_SIZE: float = 48.0       # the player's item cells shrink to fit the board, down to this
@@ -53,6 +54,10 @@ var _allies: Array = []   # the run's allies, shared by reference; drawn from he
 @onready var _gold_board: Control = $Items/PotionRow/Boxes/GoldColumn/GoldBoard
 @onready var _gold_grid: ColorRect = $Items/PotionRow/Boxes/GoldColumn/GoldBoard/Grid
 @onready var _gold_amount: Label = $Items/PotionRow/Boxes/GoldColumn/GoldBoard/Amount
+@onready var _map_slot: Control = $Items/MapSlot
+@onready var _relic_board: Control = $Items/PotionRow/Boxes/RelicColumn/RelicBoard
+@onready var _relic_box: ColorRect = $Items/PotionRow/Boxes/RelicColumn/RelicBoard/Box
+@onready var _relic_tokens: GridContainer = $Items/PotionRow/Boxes/RelicColumn/RelicBoard/Relics
 @onready var _portraits_part: BoxContainer = $Portraits
 @onready var _player_panel: CharacterPanel = $Portraits/PlayerPanel
 @onready var _portrait: Control = $Portraits/PlayerPanel/Row/Portrait
@@ -82,6 +87,8 @@ var _askew_set: Vector3 = -Vector3.ONE   # the tilt, shift and cell size _set_it
 var _tokens_set: Array = []   # the portrait settings, ally count and enemy count _set_token_styles last applied
 var _allies_boxed: bool = false   # the ally rows are in the allies box (_place_ally_rows)
 var _portraits_height: float = -1.0   # the portraits' height when last placed; a change re-places them when stacked
+var _map_in_column: bool = false   # the map is placed at the bottom of the item column (_place_map)
+var _relics: Array = []   # the run's relics, shared by reference (show_relics)
 
 
 func _ready() -> void:
@@ -96,6 +103,8 @@ func _ready() -> void:
   _allies_box.material = PrintLook.grid_material
   _allies_box.resized.connect(_size_allies_box)
   _gold_grid.material = PrintLook.grid_material
+  _relic_box.material = PrintLook.grid_material
+  _place_map()
   _place_in_sections()
 
 
@@ -119,7 +128,28 @@ func _place_in_sections() -> void:
   _place(_corridor_area, corridor_rect)
   _place(_items_part, items_rect)
   _place(_portraits_part, portraits_rect)
+  if _map_in_column:
+    var map_height: float = _map_slot.custom_minimum_size.y
+    _place(map, Rect2(items_rect.position.x, items_rect.end.y - map_height, items_rect.size.x, map_height))
   _fit_board()
+
+
+## With the `map_in_column` print setting on, the run's map goes at the bottom of the item column, the
+## section gap below the items: the map slot there takes the map's height from the board, and the map
+## is placed over the slot. Otherwise the map goes back to the top of the information section. Places
+## the sections again when the setting or the map's height changed.
+func _place_map() -> void:
+  var in_column: bool = map != null and PrintLook.print_setting('map_in_column')
+  var map_height: float = map.get_combined_minimum_size().y if in_column else 0.0
+  if in_column == _map_in_column and map_height == _map_slot.custom_minimum_size.y:
+    return
+  _map_in_column = in_column
+  _map_slot.visible = in_column
+  _map_slot.custom_minimum_size.y = map_height
+  if map != null and not in_column:
+    map.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+  if is_node_ready():
+    _place_in_sections()
 
 
 # Lay the portraits out in a column, the player first and then each side's ally slots as a row, or
@@ -151,6 +181,12 @@ func _place_ally_rows() -> void:
   var rows_parent: Control = _ally_rows if boxed else _portraits_part
   _ally_left.reparent(rows_parent, false)
   _ally_right.reparent(rows_parent, false)
+  # In the box, the gap between slots is twice the box's margin, so the lines dividing its cells fall
+  # in the middle of each gap.
+  var slot_gap: int = roundi(_allies_box_margin() * 2.0) if boxed else ALLY_SLOT_GAP
+  for row: HBoxContainer in [_ally_left, _ally_right]:
+    row.add_theme_constant_override('separation', slot_gap)
+  _ally_rows.add_theme_constant_override('separation', slot_gap)
   _allies_group.visible = boxed
   var order: Array = [_player_panel, _allies_group]
   if not boxed:
@@ -160,9 +196,32 @@ func _place_ally_rows() -> void:
     _portraits_part.move_child(order[index], index)
 
 
-# The pencil box is drawn by the grid material in its box mode, as one rectangle the box's size.
+# The pencil box is drawn by the grid material in its box mode: one rectangle the box's size, divided
+# into a cell for each ally slot, `MAX_SLOTS_PER_SIDE` across (more if a row holds more) and a row for
+# each row of allies (one when there are none). Each slot is made as wide as its cell.
 func _size_allies_box() -> void:
-  RenderingServer.canvas_item_set_instance_shader_parameter(_allies_box.get_canvas_item(), 'box_size', _allies_box.size)
+  if not _allies_boxed:
+    return
+  var columns: int = MAX_SLOTS_PER_SIDE
+  var rows: int = 0
+  for row: HBoxContainer in [_ally_left, _ally_right]:
+    columns = maxi(columns, row.get_child_count())
+    if row.visible:
+      rows += 1
+  var cells: Vector2 = Vector2(columns, maxi(rows, 1))
+  var canvas_item: RID = _allies_box.get_canvas_item()
+  RenderingServer.canvas_item_set_instance_shader_parameter(canvas_item, 'box_size', _allies_box.size)
+  RenderingServer.canvas_item_set_instance_shader_parameter(canvas_item, 'box_cells', cells)
+  var margin: float = _allies_box_margin()
+  var slot_width: float = floorf((_allies_box.size.x - margin * 2.0 * columns) / columns)
+  for row: HBoxContainer in [_ally_left, _ally_right]:
+    for slot: Control in row.get_children():
+      slot.custom_minimum_size.x = slot_width
+
+
+# The allies box's content margin (the `PanelPencilBox` theme style).
+func _allies_box_margin() -> float:
+  return _allies_box.get_theme_stylebox('panel').get_margin(SIDE_LEFT)
 
 
 func _place(part: Control, rect: Rect2) -> void:
@@ -186,6 +245,10 @@ func _fit_board() -> void:
     return
   _fitted = wanted
   _cell_size = board_cell_size(width, height, count, _gap_ratio, 1)
+  var relic_rows: int = _relic_rows(_square_of(_cell_size))
+  if relic_rows > 1:   # the relics wrap onto more rows of the potion row, so the board has less height
+    _cell_size = board_cell_size(width, height, count, _gap_ratio, relic_rows)
+    relic_rows = _relic_rows(_square_of(_cell_size))
   var gap: int = int(_cell_size * _gap_ratio)
   var square: float = _cell_size + gap
   _player_items.columns = maxi(1, int(width / square))
@@ -198,12 +261,13 @@ func _fit_board() -> void:
   _potion_board.custom_minimum_size = _potion_grid.size
   _fit_gold()
   # The row is a plain Control so the boxes' width does not widen the column; it takes their height.
-  _potion_row.custom_minimum_size = Vector2(0.0, _potion_label_height() + square)
+  _potion_row.custom_minimum_size = Vector2(0.0, _potion_label_height() + square * relic_rows)
   _potions.add_theme_constant_override('separation', gap)
   _potions.position = Vector2(gap, gap) * 0.5
   for slot: Node in _potions.get_children():
     (slot as PotionSlot).set_cell_size(_cell_size)
   _potions.reset_size()   # it is not in a container, so it would keep a larger old height and stretch the slots
+  _fit_relics()
   PrintLook.grid_material.set_shader_parameter('square_size', square)
 
 
@@ -211,10 +275,64 @@ func _fit_board() -> void:
 ## square size, so it grows by a square when the number no longer fits.
 func _fit_gold() -> void:
   var square: float = _potion_grid.size.y
-  var text_width: float = _gold_amount.get_combined_minimum_size().x
-  var squares: int = maxi(1, ceili((text_width + square * 0.25) / square))
-  _gold_board.custom_minimum_size = Vector2(squares * square, square)
+  _gold_board.custom_minimum_size = Vector2(_gold_squares(square) * square, square)
   _potion_boxes.reset_size()
+
+
+# How many grid squares of `square` size the gold amount needs.
+func _gold_squares(square: float) -> int:
+  var text_width: float = _gold_amount.get_combined_minimum_size().x
+  return maxi(1, ceili((text_width + square * 0.25) / square))
+
+
+# The grid square a cell of `cell_size` sits in: the cell plus the gap.
+func _square_of(cell_size: float) -> float:
+  return cell_size + int(cell_size * _gap_ratio)
+
+
+## The relics box beside the gold: a pencil grid of whole squares at the potions' size, as many across
+## as fit in the rest of the potion row, with a relic token in each square. When there are more relics
+## than squares across, they wrap onto more rows (`_fit_board` makes room for them).
+func _fit_relics() -> void:
+  var square: float = _potion_grid.size.y
+  var columns: int = _relic_columns(square)
+  _relic_board.custom_minimum_size = Vector2(columns, _relic_rows(square)) * square
+  _relic_tokens.columns = columns
+  var gap: int = int(square - _cell_size)
+  _relic_tokens.add_theme_constant_override('h_separation', gap)
+  _relic_tokens.add_theme_constant_override('v_separation', gap)
+  for cell: Node in _relic_tokens.get_children():
+    (cell as ItemCell).set_cell_size(_cell_size)
+  _relic_tokens.reset_size()
+  _relic_tokens.position = Vector2(gap, gap) * 0.5
+  _potion_boxes.reset_size()
+
+
+# How many squares of `square` size fit across the potion row after the potions and the gold.
+func _relic_columns(square: float) -> int:
+  var row_gap: float = _potion_boxes.get_theme_constant('separation')
+  var used: float = (maxi(POTION_SLOTS, _potions.get_child_count()) + _gold_squares(square)) * square + row_gap * 2.0
+  return maxi(1, int((_items_part.size.x - used) / square))
+
+
+# How many rows of `square` size the relics take (at least one, so the empty box shows).
+func _relic_rows(square: float) -> int:
+  return maxi(1, ceili(float(_relic_tokens.get_child_count()) / _relic_columns(square)))
+
+
+# Build a token for each relic when the number of relics changes (a relic is granted).
+func _sync_relics() -> void:
+  if _relics.size() == _relic_tokens.get_child_count():
+    return
+  for child: Node in _relic_tokens.get_children():
+    _relic_tokens.remove_child(child)
+    child.queue_free()
+  for relic: Relic in _relics:
+    var cell: ItemCell = ITEM_CELL.instantiate()
+    _relic_tokens.add_child(cell)
+    cell.show_picture(load(relic.def.icon) as Texture2D if relic.def.icon != '' else null)
+  _fitted = -Vector4.ONE   # size and tilt the new tokens with the board's cells
+  _askew_set = -Vector3.ONE
 
 
 # The height of the potion row's label and the gap under it.
@@ -223,10 +341,13 @@ func _potion_label_height() -> float:
 
 
 # The height of the item column's parts that are not grid squares: the section gap between the potion
-# row and the items, and each one's label with the gap under it.
+# row and the items, and each one's label with the gap under it. With the map in the column, also the
+# map's height and the section gap above it.
 func _labels_height() -> float:
+  var section_gap: float = _items_part.get_theme_constant('separation')
   var items_label: float = _items_label.get_combined_minimum_size().y + _items_section.get_theme_constant('separation')
-  return _items_part.get_theme_constant('separation') + _potion_label_height() + items_label
+  var map_height: float = _map_slot.custom_minimum_size.y + section_gap if _map_in_column else 0.0
+  return section_gap + _potion_label_height() + items_label + map_height
 
 
 ## The largest whole-pixel cell size, from `ItemCell.CELL_SIZE` down to `MIN_CELL_SIZE`, at which
@@ -270,6 +391,8 @@ func _set_items_askew() -> void:
     (cell as ItemCell).set_askew(tilt, shift)
   for slot: Node in _potions.get_children():
     (slot as PotionSlot).cell.set_askew(tilt, shift)
+  for cell: Node in _relic_tokens.get_children():
+    (cell as ItemCell).set_askew(tilt, shift)
 
 
 ## The pencil grids behind the board and the potions take their colour from the interface palette.
@@ -338,9 +461,12 @@ func bind(cm: CombatManager, player: Actor, potions: Array, allies: Array = []) 
 
 func _process(_delta: float) -> void:
   _place_ally_rows()      # the allies box setting may have changed; before the sync rebuilds the slots
+  _place_map()            # the map setting or the map's height may have changed
   _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
   _sync_player_items()    # pick up items created or removed during the fight
+  _sync_relics()          # a relic granted after a fight
   _refit_stacked_portraits()
+  _size_allies_box()      # a slot added or a row shown changes the box's cells
   _fit_board()            # shrink or grow the cells when the count or the section changed
   _set_items_askew()
   _set_token_styles()
@@ -510,6 +636,13 @@ func show_gold(amount: int) -> void:
   _fit_gold()
 
 
+## Show the run's relics as tokens in the relics box. The array is kept, so a relic granted later
+## gets a token on the next frame.
+func show_relics(relics: Array) -> void:
+  _relics = relics
+  _sync_relics()
+
+
 ## Write the character's name and class in the fields on the player's panel.
 func show_character(character_name: String, character_class: String) -> void:
   _player_panel.show_sheet_fields(character_name, character_class)
@@ -606,6 +739,8 @@ func _exit_tree() -> void:
   if sections != null and sections.sections_changed.is_connected(_place_in_sections):
     sections.sections_changed.disconnect(_place_in_sections)
   sections = null
+  map = null
+  _relics = []
   _enemy_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()

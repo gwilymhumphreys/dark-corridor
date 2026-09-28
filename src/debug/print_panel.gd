@@ -16,6 +16,7 @@ const LAYOUT_PROPERTIES: Dictionary = {
   'screen_layout': ['Portraits lower left', 'Portraits above items'],
   'section_gap': [0.0, 120.0, 1.0],
   'label_gap': [0.0, 40.0, 1.0],
+  'map_in_column': [],
 }
 
 

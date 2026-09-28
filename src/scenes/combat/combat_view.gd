@@ -12,6 +12,9 @@ signal potion_thrown(index: int)
 ## The screen sections the view places its parts in (docs/systems/ui_layout.md#screen-sections), set by
 ## the run screen before the view enters the tree. Left null, a variant makes its own.
 var sections: ScreenSections
+## The run's map, set by the run screen with `sections`. A variant may place it among its own parts
+## (the `map_in_column` print setting); left null, the map stays where the run screen put it.
+var map: MapStrip
 
 
 ## Bind the live fight (the view reads the full rosters off the CombatManager; with no fight,
@@ -79,6 +82,11 @@ func refresh_potions(_potions: Array) -> void:
 
 ## The player's banked gold.
 func show_gold(_amount: int) -> void:
+  pass
+
+
+## The player's relics (the run's `relics` array, shared by reference so a new relic shows).
+func show_relics(_relics: Array) -> void:
   pass
 
 
