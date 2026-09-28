@@ -43,7 +43,6 @@ var _settings: SettingsScreen = null
 
 @onready var _sections: ScreenSections = $HUD/Sections   # the screen's four sections; the combat view places its parts in them
 @onready var _map: MapStrip = $HUD/Sections/Info/MapStrip
-@onready var _gold: Label = $HUD/Sections/Info/GoldReadout
 @onready var _report_button: Button = $HUD/Sections/Info/ReportButton
 
 
@@ -57,7 +56,6 @@ func _ready() -> void:
   DebugPanels.panels_open_changed.connect(_on_debug_panels_open_changed)
   _report_button.pressed.connect(_toggle_report)
   _map.setup(RunMap.TOTAL_BEATS, _run.position)
-  _refresh_gold()       # seed the HUD from run-state (covers a resumed run's banked gold)
   _enter_beat()
 
 
@@ -421,10 +419,11 @@ func _on_draft_skipped() -> void:
   _advance()
 
 
-# The banked-gold HUD readout (docs decision #33). Localizable, updated from run-state on entry
-# (covers resume) and after each skip. Placeholder placement — the owner can relocate / juice it.
+# The banked gold in the combat view's gold box (docs decision #33): written when the view is built
+# (covers a resumed run's gold) and after each skip.
 func _refresh_gold() -> void:
-  _gold.text = tr('Gold: {0}').format([_run.gold])
+  if _view != null:
+    _view.show_gold(_run.gold)
 
 
 func _advance() -> void:
@@ -458,6 +457,9 @@ func _mount_view(cm: CombatManager) -> void:
   add_child(_view)
   move_child(_view, 1)   # above the Background, below the HUD CanvasLayer
   _view.bind(cm, _run.player, _run.potions, _run.allies)   # the rosters come off the CM; with no fight, the run's allies
+  var character: CharacterDef = _run.character
+  _view.show_character(tr(character.name_key), tr(character.class_key) if character.class_key != '' else '')
+  _refresh_gold()
   _view.potion_thrown.connect(_on_potion_thrown)
 
 

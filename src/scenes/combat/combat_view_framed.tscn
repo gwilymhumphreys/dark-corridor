@@ -83,28 +83,79 @@ anchors_preset = 0
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="PotionsLabel" type="Label" parent="Items"]
+[node name="PotionRow" type="Control" parent="Items"]
+custom_minimum_size = Vector2(0, 186)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Boxes" type="HBoxContainer" parent="Items/PotionRow"]
+layout_mode = 0
+mouse_filter = 2
+theme_override_constants/separation = 60
+
+[node name="PotionColumn" type="VBoxContainer" parent="Items/PotionRow/Boxes"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="PotionsLabel" type="Label" parent="Items/PotionRow/Boxes/PotionColumn"]
 layout_mode = 2
 theme_type_variation = &"LabelDim"
 text = "Potions"
 
-[node name="PotionBoard" type="Control" parent="Items"]
-custom_minimum_size = Vector2(0, 144)
+[node name="PotionBoard" type="Control" parent="Items/PotionRow/Boxes/PotionColumn"]
+custom_minimum_size = Vector2(432, 144)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Grid" type="ColorRect" parent="Items/PotionBoard"]
+[node name="Grid" type="ColorRect" parent="Items/PotionRow/Boxes/PotionColumn/PotionBoard"]
 layout_mode = 0
 offset_right = 432.0
 offset_bottom = 144.0
 mouse_filter = 2
 
-[node name="Potions" type="HBoxContainer" parent="Items/PotionBoard"]
+[node name="Potions" type="HBoxContainer" parent="Items/PotionRow/Boxes/PotionColumn/PotionBoard"]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 12.0
 mouse_filter = 2
 theme_override_constants/separation = 24
+
+[node name="GoldColumn" type="VBoxContainer" parent="Items/PotionRow/Boxes"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="GoldLabel" type="Label" parent="Items/PotionRow/Boxes/GoldColumn"]
+layout_mode = 2
+theme_type_variation = &"LabelDim"
+text = "Gold"
+
+[node name="GoldBoard" type="Control" parent="Items/PotionRow/Boxes/GoldColumn"]
+custom_minimum_size = Vector2(144, 144)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Grid" type="ColorRect" parent="Items/PotionRow/Boxes/GoldColumn/GoldBoard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Amount" type="Label" parent="Items/PotionRow/Boxes/GoldColumn/GoldBoard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"LabelLarge"
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Spacer" type="Control" parent="Items"]
 custom_minimum_size = Vector2(0, 14)
@@ -152,9 +203,13 @@ theme_override_constants/separation = 24
 layout_mode = 2
 show_items = false
 fixed_size = true
+sheet_fields = true
 
 [node name="Portrait" parent="Portraits/PlayerPanel/Row" index="0"]
 size_flags_vertical = 4
+
+[node name="Readout" parent="Portraits/PlayerPanel/Row" index="1"]
+size_flags_horizontal = 3
 
 [node name="Name" parent="Portraits/PlayerPanel/Row/Readout/Top/NameBar/NameRow" index="0"]
 text = "You"

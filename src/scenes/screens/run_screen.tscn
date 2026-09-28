@@ -35,18 +35,6 @@ folds_shown = true
 [node name="MapStrip" parent="HUD/Sections/Info" instance=ExtResource("2")]
 offset_bottom = 110.0
 
-[node name="GoldReadout" type="Label" parent="HUD/Sections/Info"]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -48.0
-offset_right = 296.0
-grow_vertical = 0
-theme_type_variation = &"LabelLarge"
-text = "Gold: 0"
-vertical_alignment = 1
-
 [node name="ReportButton" type="Button" parent="HUD/Sections/Info"]
 mouse_default_cursor_shape = 2
 layout_mode = 1

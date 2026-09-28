@@ -32,7 +32,7 @@ Mock up one of each with placeholder items; decide on feel. Everything below hol
 
 ## Screen sections
 
-The run screen is split into four sections that match the folds in the paper background: the corridor top left, the potions and the player's items top right, the portraits lower left, and the run information (map, gold, battle-speed button, combat-report button) lower right.
+The run screen is split into four sections that match the folds in the paper background: the corridor top left, the potions, gold and the player's items top right, the portraits lower left, and the run information (map, battle-speed button, combat-report button) lower right.
 
 **Location:** `src/ui/screen_sections.gd` (class `ScreenSections`) and `screen_sections.tscn`.
 
@@ -78,7 +78,7 @@ Hover anything important (own items, enemy items, potions, enemies) → time slo
 ## The out-of-combat screens
 
 - **Choice layer** — the 2–3 location options at a choice point (two-tier: pick a location, then the within-choice); telegraphs the *category* (first-run legible — design). The pick is a **choice-point intent** → `Run manager`.
-- **Draft** — the 1-of-3 reward, shown as a panel in the corridor area with the board and HUD still usable around it (events use the same placement — [run_screen.md](run_screen.md#overlays)); the rewards are the board's own item icons with the same tooltips; the pick is a **draft-pick intent**, and a **gold button** (`+{0} gold`) is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A minimal **gold HUD counter** in the information section displays the banked total (no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
+- **Draft** — the 1-of-3 reward, shown as a panel in the corridor area with the board and HUD still usable around it (events use the same placement — [run_screen.md](run_screen.md#overlays)); the rewards are the board's own item icons with the same tooltips; the pick is a **draft-pick intent**, and a **gold button** (`+{0} gold`) is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A **gold box** beside the potions displays the banked total (no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
 - **1D progress map** — the act's beats + the player's position (boss at the end, relic at midpoint); forward visibility on a linear track, not a route map (design).
 
 ## Localization

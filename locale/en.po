@@ -227,9 +227,25 @@ msgstr "Deals less damage while it lasts."
 msgid "Ally"
 msgstr "Ally"
 
+#: src/scenes/combat/character_panel.tscn
+msgid "Name:"
+msgstr "Name:"
+
+#: src/scenes/combat/character_panel.tscn
+msgid "Class:"
+msgstr "Class:"
+
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "Potions"
 msgstr "Potions"
+
+#: src/scenes/combat/combat_view_framed.tscn
+msgid "Gold"
+msgstr "Gold"
+
+#: src/scenes/combat/combat_view_framed.tscn
+msgid "0"
+msgstr "0"
 
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "Items"
@@ -238,10 +254,6 @@ msgstr "Items"
 #: src/scenes/combat/combat_view_framed.tscn
 msgid "You"
 msgstr "You"
-
-#: src/scenes/combat/health_bar.tscn
-msgid "0"
-msgstr "0"
 
 #: src/scenes/combat/item_cell.tscn
 msgid "Temporary"
@@ -398,14 +410,6 @@ msgstr "Quit to Menu"
 #: src/scenes/screens/pause_menu.tscn
 msgid "Exit Game"
 msgstr "Exit Game"
-
-#: src/scenes/screens/run_screen.gd
-msgid "Gold: {0}"
-msgstr "Gold: {0}"
-
-#: src/scenes/screens/run_screen.tscn
-msgid "Gold: 0"
-msgstr "Gold: 0"
 
 #: src/scenes/screens/run_screen.tscn
 msgid "Report"

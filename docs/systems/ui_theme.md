@@ -130,7 +130,7 @@ Every font size in the game comes from one of **seven named rungs**, defined in
 | `Small` | 18 | status numbers, the tooltip's type line, ally slot readouts |
 | `Body` | 24 | **the theme's default size** — tooltip effect lines, keyword descriptions, HP readouts, anything with no variation |
 | `Medium` | 30 | the tooltip title, keyword card names, enemy names, section titles, the settings Back button |
-| `Large` | 36 | the settings row labels, the gold readout, the pause menu buttons |
+| `Large` | 36 | the settings row labels, the gold amount, the pause menu buttons |
 | `Heading` | 44 | screen titles and menu buttons |
 | `Title` | 64 | the pause menu title |
 | `Display` | 96 | the title and outcome screens |

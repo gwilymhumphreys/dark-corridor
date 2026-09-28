@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/character_panel.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/health_bar.tscn" id="health_bar"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/status_icons.tscn" id="status_icons"]
 [ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
 [ext_resource type="Material" path="res://src/shaders/interface_portrait_material.tres" id="interface_portrait_material"]
+[ext_resource type="Script" path="res://src/ui/named_colour_rect.gd" id="named_colour_rect"]
 
 [node name="CharacterPanel" type="PanelContainer"]
 size_flags_vertical = 0
@@ -38,6 +39,64 @@ layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 theme_override_constants/separation = 4
+
+[node name="Fields" type="GridContainer" parent="Row/Readout"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="NameFieldLabel" type="Label" parent="Row/Readout/Fields"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"LabelDim"
+text = "Name:"
+
+[node name="NameField" type="VBoxContainer" parent="Row/Readout/Fields"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Text" type="Label" parent="Row/Readout/Fields/NameField"]
+layout_mode = 2
+theme_type_variation = &"LabelMedium"
+
+[node name="Line" type="ColorRect" parent="Row/Readout/Fields/NameField"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.6, 0.6, 0.66, 1)
+script = ExtResource("named_colour_rect")
+colour_name = "UI_TEXT_DIM"
+
+[node name="ClassFieldLabel" type="Label" parent="Row/Readout/Fields"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"LabelDim"
+text = "Class:"
+
+[node name="ClassField" type="VBoxContainer" parent="Row/Readout/Fields"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Text" type="Label" parent="Row/Readout/Fields/ClassField"]
+layout_mode = 2
+theme_type_variation = &"LabelMedium"
+
+[node name="Line" type="ColorRect" parent="Row/Readout/Fields/ClassField"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.6, 0.6, 0.66, 1)
+script = ExtResource("named_colour_rect")
+colour_name = "UI_TEXT_DIM"
 
 [node name="Top" type="HBoxContainer" parent="Row/Readout"]
 layout_mode = 2

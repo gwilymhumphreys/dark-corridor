@@ -41,9 +41,16 @@ var _allies: Array = []   # the run's allies, shared by reference; drawn from he
 @onready var _board: Control = $Items/Board
 @onready var _grid: ColorRect = $Items/Board/Grid
 @onready var _player_items: GridContainer = $Items/Board/PlayerItems
-@onready var _potion_board: Control = $Items/PotionBoard
-@onready var _potion_grid: ColorRect = $Items/PotionBoard/Grid
-@onready var _potions: HBoxContainer = $Items/PotionBoard/Potions
+@onready var _potion_row: Control = $Items/PotionRow
+@onready var _potion_boxes: HBoxContainer = $Items/PotionRow/Boxes
+@onready var _potion_column: VBoxContainer = $Items/PotionRow/Boxes/PotionColumn
+@onready var _potions_label: Label = $Items/PotionRow/Boxes/PotionColumn/PotionsLabel
+@onready var _potion_board: Control = $Items/PotionRow/Boxes/PotionColumn/PotionBoard
+@onready var _potion_grid: ColorRect = $Items/PotionRow/Boxes/PotionColumn/PotionBoard/Grid
+@onready var _potions: HBoxContainer = $Items/PotionRow/Boxes/PotionColumn/PotionBoard/Potions
+@onready var _gold_board: Control = $Items/PotionRow/Boxes/GoldColumn/GoldBoard
+@onready var _gold_grid: ColorRect = $Items/PotionRow/Boxes/GoldColumn/GoldBoard/Grid
+@onready var _gold_amount: Label = $Items/PotionRow/Boxes/GoldColumn/GoldBoard/Amount
 @onready var _portraits_part: BoxContainer = $Portraits
 @onready var _player_panel: CharacterPanel = $Portraits/PlayerPanel
 @onready var _portrait: Control = $Portraits/PlayerPanel/Row/Portrait
@@ -80,6 +87,7 @@ func _ready() -> void:
   _gap_ratio = _player_items.get_theme_constant('h_separation') / ItemCell.CELL_SIZE.x
   _grid.material = PrintLook.grid_material
   _potion_grid.material = PrintLook.grid_material
+  _gold_grid.material = PrintLook.grid_material
   _place_in_sections()
 
 
@@ -147,8 +155,12 @@ func _fit_board() -> void:
   _player_items.position = Vector2(gap, gap) * 0.5
   for cell: Node in _player_items.get_children():
     (cell as ItemCell).set_cell_size(_cell_size)
-  _potion_board.custom_minimum_size = Vector2(0.0, square)
   _potion_grid.size = Vector2(maxi(POTION_SLOTS, potion_count) * square, square)
+  _potion_board.custom_minimum_size = _potion_grid.size
+  _potion_boxes.add_theme_constant_override('separation', int(square * 0.5))
+  _fit_gold()
+  # The row is a plain Control so the boxes' width does not widen the column; it takes their height.
+  _potion_row.custom_minimum_size = Vector2(0.0, _potion_label_height() + square)
   _potions.add_theme_constant_override('separation', gap)
   _potions.position = Vector2(gap, gap) * 0.5
   for slot: Node in _potions.get_children():
@@ -156,12 +168,28 @@ func _fit_board() -> void:
   PrintLook.grid_material.set_shader_parameter('square_size', square)
 
 
+## The gold box beside the potions: as many grid squares wide as the amount needs, at the potions'
+## square size, so it grows by a square when the number no longer fits.
+func _fit_gold() -> void:
+  var square: float = _potion_grid.size.y
+  var text_width: float = _gold_amount.get_combined_minimum_size().x
+  var squares: int = maxi(1, ceili((text_width + square * 0.25) / square))
+  _gold_board.custom_minimum_size = Vector2(squares * square, square)
+
+
+# The height of the potion row's label and the gap under it.
+func _potion_label_height() -> float:
+  return _potions_label.get_combined_minimum_size().y + _potion_column.get_theme_constant('separation')
+
+
 # The height of the item column's parts that are not grid squares: the labels, the spacer and the gaps
-# between the column's children.
+# between the column's children. The potion row adds its label and the gap under it.
 func _labels_height() -> float:
   var total: float = _items_part.get_theme_constant('separation') * (_items_part.get_child_count() - 1)
   for child: Node in _items_part.get_children():
-    if child != _potion_board and child != _board:
+    if child == _potion_row:
+      total += _potion_label_height()
+    elif child != _board:
       total += (child as Control).get_combined_minimum_size().y
   return total
 
@@ -438,6 +466,17 @@ func _on_potion_pressed(index: int) -> void:
 
 func refresh_potions(potions: Array) -> void:
   _build_potions(potions)
+
+
+## Write the banked gold in the gold box beside the potions, widening the box if the number needs it.
+func show_gold(amount: int) -> void:
+  _gold_amount.text = str(amount)
+  _fit_gold()
+
+
+## Write the character's name and class in the fields on the player's panel.
+func show_character(character_name: String, character_class: String) -> void:
+  _player_panel.show_sheet_fields(character_name, character_class)
 
 
 ## Approach controls (docs/history/phase4_plan.md Step 7) — the run screen walks the player up to the

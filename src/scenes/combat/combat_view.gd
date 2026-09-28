@@ -77,6 +77,16 @@ func refresh_potions(_potions: Array) -> void:
   pass
 
 
+## The player's banked gold.
+func show_gold(_amount: int) -> void:
+  pass
+
+
+## The player's character name and class (already translated).
+func show_character(_character_name: String, _character_class: String) -> void:
+  pass
+
+
 # --- layout lookups the VFX wall reads (global / screen space) ---------------
 
 ## Where a thrown consumable's effects start: the slot it was thrown from.

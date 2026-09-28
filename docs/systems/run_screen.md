@@ -18,7 +18,7 @@ main.tscn (Main) ── main_controller.gd
 ```
 
 **Title overlays.** Start raises **`character_select.tscn`** (one `character_card`
-per `CharacterCatalog.ids()` — personal name + role subtitle + portrait; a pick →
+per `CharacterCatalog.ids()` — personal name + class + portrait; a pick →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below).
 
@@ -155,7 +155,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
 - **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
-  aligned to the top of the section, the left-aligned name ("You") over the health bar and the status icons (the player's character
+  aligned to the top of the section, a "Name:" and a "Class:" field, each written on an underline that runs to the panel's right edge, like a character sheet (`CharacterPanel.sheet_fields`; the run screen passes the character's `name_key` and `class_key` through `CombatView.show_character`), over the health bar and the status icons (the player's character
   panel, `PlayerPanel`) — centred between the ally slots. The player's panel keeps one size through the
   fight (`CharacterPanel.fixed_size`): its status icons keep their full height with no statuses, and
   with the portraits above the items it fills the section's width; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
@@ -280,9 +280,10 @@ full-screen.
   tooltip, and pressing it emits `picked(index)` → `RunManager.apply_draft_pick`. The **gold button** in the
   panel's bottom right (`'+{0} gold'`, the amount from `Balance.GOLD_SKIP`) emits `skipped` →
   `RunManager.apply_draft_skip` instead, banking gold and
-  refreshing the gold HUD before advancing (decision #33). Both paths then advance.
-- **Gold HUD** — a minimal `GoldReadout` label in the information section (`tr('Gold: {0}')`),
-  seeded from run-state on entry (covers a resumed run's banked gold) and refreshed after each skip.
+  refreshing the gold box before advancing (decision #33). Both paths then advance.
+- **Gold** — a "Gold" box beside the potions in the combat view: the amount in a box drawn with the
+  potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
+  screen writes it when it builds the view (covering a resumed run's banked gold) and after each skip.
 - **Map** — `map_strip.tscn`, at the top of the information section, draws the run's beats as a line of colour-coded dots (cleared
   solid, upcoming rings, the current beat haloed) with an "Act N" label and edge chevrons
   for off-screen beats; `mark_position` on each advance.
@@ -298,7 +299,7 @@ full-screen.
 ## Localization
 
 Player-facing text is localizable: **static UI text lives in the `.tscn`s**
-(auto-translated — titles, buttons, "Choose a reward", the "You" portrait); **dynamic
+(auto-translated — titles, buttons, "Choose a reward", the "Name:", "Class:" and "Gold" labels); **dynamic
 text uses `tr()`** (item names/rarity/tooltips, the map labels, the outcome title).
 The POT pipeline is built (`tools/extract_pot.gd` → `locale/messages.pot` + `en.po`,
 registered in `project.godot`) — see [localization](localization.md).
