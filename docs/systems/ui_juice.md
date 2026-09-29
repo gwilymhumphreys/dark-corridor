@@ -57,9 +57,6 @@ squash size and timing stay in the presets here.
 - `hover_sound` / `click_sound` are optional per-node `AudioStream` overrides;
   leave them null to use [SfxManager](audio.md)'s shared UI bank.
 
-Sounds do nothing until audio assets exist, so juice is safe to add before sound
-is wired.
-
 ## Behaviour notes
 
 - **Offset transform (Godot 4.7)**: the squash runs on the parent's visual-only

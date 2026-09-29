@@ -55,8 +55,8 @@ hand does not jump when the button goes down.
   an interface palette applied at runtime changes the cursor with everything else. That is on top
   of the palette clamp in the material, which is a separate thing, driven by the portrait palette
   choice ([interface_palette.md](interface_palette.md#images)).
-- The combat board item cells are hover-only, not clickable, and keep the plain hand. The draft
-  overlay sets the shape on its reward cells in code (`draft_overlay.gd`).
+- The combat board item cells are hover-only, not clickable, and keep the plain hand. The reward
+  options set the pointing shape in their scenes (`reward_option.tscn`, `draft_overlay.tscn`).
 - The operating system's cursor is hidden with `Input.mouse_mode`, and given back while the window
   is not focused and before the game closes. A run with no mouse, which covers the headless test
   and autotest runs, is left alone.

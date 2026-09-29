@@ -3,8 +3,8 @@
 Presentation PRD (output layer). Sits under the [Architecture Map](architecture.md). The `VFX driver` is **the wall** — it renders combat visuals as a **pure function of handed state + the clock**, and **writes no game state**. It computes where every projectile / impact / number is from the [Combat manager](combat_manager.md)'s Delivery set and the [Timekeeper](timekeeper.md)'s `render_time()`; the renderer paints what it computes.
 
 **Engine:** Godot 4.
-**Date:** 2026-06-05. Pre-prototype.
-**Naming:** a driver + leaf render nodes — *not* a manager (it holds no game state); concrete node split is impl (deferred).
+**Date:** 2026-06-05 (written before the build; the driver and its drawers are built).
+**Naming:** a driver + leaf render nodes — *not* a manager (it holds no game state); one `VfxDriver` node (`src/vfx/vfx_driver.gd`) with one drawer class per effect in `src/vfx/drawers/`.
 
 Boundaries live in the hub: [architecture.md → Interface contracts → `VFX driver`](architecture.md#interface-contracts-boundary-hub). This PRD specifies the *internals* of the wall the architecture's "Visuals and time" section sketches.
 
@@ -32,7 +32,7 @@ Combat decides *what happens and when*; the driver decides *where the pretty thi
 - **Impact visuals** (flash / particle on landing) — `f(render_time() − impact_time)` (the Delivery's stored impact timestamp). Same stateless pattern; honours the clock (the flash slows with the bind).
 - **Fire-emotes** — when an item fires it recoils / flashes / punches: the *source* half of the causal bind (art doc — silent-source + damage-on-enemy reads as a weak connection). The driver plays the item's fire-reaction; the same-coloured impact lands simultaneously so the eye binds them.
 - **Damage numbers** — a travelling / popup number, a pure function of time; for precision under hover (the gestalt is carried by flinch + flash + thud, not the numbers — art doc).
-- **Screen pulse / shake** on big hits — `f(time)` off the same timestamps.
+- **Screen shake** on big hits — a real-time tween on the view (below), not a function of the sim clock.
 - **SFX one-shots** — triggered at `impact_time` (the sim clock), then **played at wall-clock pitch** (unslowed — slowing audio sounds bad). Same stored timestamp as the flash, read two ways: a continuous function (visual) and a fire-and-forget event (sound). *(What the SFX sound like is `art_audio.md`, not here.)*
 
 Because fire-rate and travel are decoupled (combat_model.md), many Deliveries can be in flight at once; the driver renders each independently from its own timestamps — chaos at full speed reads as "the machine went off," and under slow-mo-hover a single inspected chain resolves cleanly (art doc).
@@ -57,14 +57,14 @@ and a shake of the whole view, both growing with the strength. The pause only de
 results are unchanged, and the autotest has no view, so it never pauses. The shake is a tween of
 the view's `offset_transform_position` on real time, so it plays through the pause. The firing item's own
 reaction is not the driver's: `item_cell.gd` punches the cell's scale off the same clock. A hit
-enemy also flinches back in the corridor and is lit ([run_screen.md](run_screen.md#enemies-in-the-corridor)).
+enemy also flinches back in the corridor and is lit ([run_screen.md](run_screen.md#enemies-in-the-corridor-the-approach)).
 
 Each shape is its own class under `src/vfx/drawers/`, extending `EffectDrawer`: `duration()`,
 `progress(age)` and `draw_effect(canvas, delivery, point, age)`. A drawer holds no state, so slow
 motion and pause keep working. The driver keeps a dictionary from a mechanic id (for a `MECHANIC` delivery) or
 `Delivery.Kind.APPLY_STATUS` to the drawer, so a new effect is a new file rather than another branch in
-`_draw()`. The eight built [mechanics](mechanics.md) and status application currently share one
-`ImpactRingDrawer`; `SUMMON` and `CREATE_ITEM` have no entry, so they draw a projectile in flight and nothing on landing. Numbers draw for
+`_draw()`. Eight [mechanics](mechanics.md) (attack, shield, heal, poison, burn, bleed, regen, crit) and status application currently share one
+`ImpactRingDrawer`; the other mechanics have no ring; `SUMMON` and `CREATE_ITEM` have no entry, so they draw a projectile in flight and nothing on landing. Numbers draw for
 attack and heal landings and for every visual-only delivery (a poison tick or bleed carries its status
 id as its mechanic).
 
@@ -107,7 +107,7 @@ Per the architecture's "full VFX *path*, minimal *content*" — build the driver
 - one **projectile** type (position from `render_time − fire_time`),
 - one **fire-emote** (item recoil / flash),
 - **travelling damage numbers** — including DoT ticks, which carry no landing Delivery of their own, so the Combat manager hands the wall a **visual-only** Delivery (pre-landed, payload-less) per tick to pop the number,
-- a **screen pulse**.
+- a **screen pulse** (not built; big hits shake the view instead).
 
 This validates the cleanest boundary on the map at the cheapest moment.
 
@@ -123,7 +123,6 @@ This validates the cleanest boundary on the map at the cheapest moment.
 - **Effects style** — open. The look is being explored with full-resolution painted art, post-processing and palettes, not pixel art. Effect colours are the interface's effect colours in `Colours` ([interface_palette.md](interface_palette.md)). See `art_audio.md`.
 - **Hit lights** — a short light at a hit enemy inside the 3D corridor already exists as a look setting ([corridor_3d.md](corridors/corridor_3d.md#hit-lights)); the effects pass keeps, changes or replaces it.
 - **Projectile density tuning** (small/fast tracers for commons vs. crisp arcs for rares) — art doc, when the cascade is real.
-- **The node split** (driver vs. leaf render nodes; all-2D vs. SubViewport) — impl, settled when the UI-layout approach is picked (`art_audio.md` UI-implementation note).
 
 ## Dependencies
 

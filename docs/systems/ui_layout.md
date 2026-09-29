@@ -3,7 +3,7 @@
 Presentation PRD (input layer + screen composition). Sits under the [Architecture Map](architecture.md). The `UI` is **how the player reads the game and acts on it** — the screen composition (the corridor/combat scene, the item boards, potions, portrait, the choice/draft/map screens) and the **input layer** that emits *intents* (it never mutates game state). Its companion is the [VFX driver](vfx_driver.md) (the combat wall); this doc is the layout + the input seam.
 
 **Engine:** Godot 4.
-**Date:** 2026-06-05. Pre-prototype.
+**Date:** 2026-06-05 (written before the build; the framed layout is built).
 **Built with** the theme resource + `.tscn` scenes (`CLAUDE.md`: theme over code, scenes over code).
 
 Boundaries live in the hub: [architecture.md → Interface contracts → `UI`](architecture.md#interface-contracts-boundary-hub). This PRD specifies the *internals*.
@@ -103,8 +103,8 @@ Static UI text → English in the `.tscn`, auto-translated (no `tr()`); dynamic 
 ## Open / deferred
 
 - **Framed vs. full-screen** (above) + **item arrangement** (type-zoned grid vs. arc-around-character) — mockup decisions (art doc).
-- **UI implementation in Godot** — all-2D (z-order) vs. items-in-3D-via-SubViewport vs. viewport-texture-on-quad; the deciding factor is items travelling over the frame + authoring 60 items (art doc). Build 3 placeholder items in the simplest (all-2D) first.
-- **The theme resource** (`assets/themes/`) — palette + control styling; a content pass.
+- **UI implementation in Godot** — resolved: the interface is 2D and the corridor is a 3D scene in a `SubViewport` (`combat_corridor.tscn`).
+- **The theme resource** — built: `assets/themes/dark_corridor.tres` ([ui_theme.md](ui_theme.md)).
 - **Camera bob / walk feel** during the approach — a feel question (art doc).
 - **Cascade-readability at 30 activations** — the hardest open problem; validated only by seeing it (art doc + design open questions).
 

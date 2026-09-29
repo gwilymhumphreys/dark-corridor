@@ -23,7 +23,7 @@ We are not building a deferred-resolve queue. If a genuine event-reactive case e
 
 ### Fire / Delivery
 
-When an item's Ticker crosses, the item fires: it resets its cooldown immediately and plays its fire-emote (recoil / flash). It does not resolve its payload at fire time — it produces a payload (kind, value) and a target-shape, and a Delivery is spawned carrying (payload, target, travel_time).
+When an item's Ticker crosses, the item fires: it resets its cooldown immediately and plays its fire-emote (recoil / flash). It does not resolve its payload at fire time — it produces a payload (kind, value) and a target-shape, and a Delivery is spawned carrying (payload, target) and a travel time in steps.
 
 The Delivery owns a travel Ticker that advances each tick and lands its payload (damage / status / etc.) when travel elapses — on arrival, not on fire.
 Fire-rate and travel are decoupled. A fast item can have several Deliveries in flight at once. Preserves the size→cooldown tempo design (fast items ping often regardless of travel) and looks correct in a cascade.

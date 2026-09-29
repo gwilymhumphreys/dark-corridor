@@ -4,7 +4,7 @@ The first-person corridor behind every fight: a real 3D scene of corridor sectio
 the camera, with the enemies drawn as lit sprites inside it.
 
 **Location:** `src/scenes/corridors/corridor_3d.gd` + `.tscn`, piece sources beside it. Hosts:
-`CombatCorridor` in fights ([run_screen.md](../run_screen.md#enemies-in-the-corridor)) and the corridor
+`CombatCorridor` in fights ([run_screen.md](../run_screen.md#enemies-in-the-corridor-the-approach)) and the corridor
 testbed (`src/debug/scenes/corridor_testbed.tscn`).
 
 ## Structure
@@ -53,7 +53,7 @@ field of view, and saved in look presets.
   is on. `CombatCorridor` turns input off so W/S cannot scroll a fight.
 - `velocity` eases toward `speed` over `ramp_time`; `player_z` is the position in sections.
 - A host can set `player_z` itself instead of holding a direction. `CombatCorridor.set_walk_distance`
-  does this for the fight approach ([run_screen.md](../run_screen.md#enemies-in-the-corridor)), so
+  does this for the fight approach ([run_screen.md](../run_screen.md#enemies-in-the-corridor-the-approach)), so
   the walk's timing comes from `Balance.APPROACH_DURATION` rather than `speed` (see
   [the walking pace](#the-walking-pace)).
 - The light never moves. The camera only moves for the head bob below (both sit at `camera_height`). Each frame `_layout` places

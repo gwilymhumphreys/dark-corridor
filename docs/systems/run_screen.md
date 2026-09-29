@@ -10,7 +10,7 @@ PRD](vfx_driver.md) in the **framed** layout. The presentation only
 ```
 main.tscn (Main) ── main_controller.gd
 └─ ScreenHolder (Control)
-   ├─ title_screen.tscn      Start Run → character_select → Game.start_run ;
+   ├─ title_screen.tscn      Start → character_select → Game.start_run ;
    │                         Resume → resume_run ; Settings → settings_screen ;
    │                         Exit Game → closes the application
    ├─ run_screen.tscn        the live run (below)
@@ -49,7 +49,7 @@ run_ended → Game → outcome screen
 
 Every beat's encounter is set by the map (`RunManager._enter_beat`), so every beat enters with a live
 encounter — there's no player path-pick. An **EVENT** beat raises `event_overlay.tscn` (prose + a
-binary choice → `Encounter.pick_event_option`, applying the outcome + resolving), parking the FSM
+binary choice → `RunManager.pick_event_option`, which applies an ally outcome and hands the pick to `Encounter.pick_event_option` to apply the rest + resolve), parking the FSM
 until the pick, like the draft overlay. *(The `CHOOSING` state + `choice_overlay.tscn` are
 **dormant** — kept inert behind `has_pending_choice()` (always false now) for a possible future
 fork-beat.)*
@@ -67,8 +67,8 @@ keeping its own ref (`_log`). When a fight resolves, its log becomes `_last_log`
 **Report** button shows until the next fight's log is created — and the run goes straight on to `after-beat`; nothing parks. Holding `_last_log` separately from `_log` is what lets
 the report outlive the `CombatManager`'s teardown at the next advance.
 
-**Combat report** — `combat_summary.tscn` (the per-item damage report from `summary(PLAYER)` + the
-event-log timeline from `events` + a Close button), raised and dismissed by the **Report** button in
+**Combat report** — `combat_summary.tscn` (the per-item damage report from `summary(PLAYER)`, the status damage from `status_damage(PLAYER)`,
+the event-log timeline from `events` and a Close button), raised and dismissed by the **Report** button in
 the information section. The button is always visible. It shows the current fight's log from the
 moment that fight is built (so during the approach it reads zero), otherwise the last finished
 fight's, so the last fight can be read during the draft or an event. Before the first fight it opens

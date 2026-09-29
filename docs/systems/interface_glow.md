@@ -4,7 +4,7 @@ A way to make a specific interface node glow, for code that has a reason to high
 example an item that just triggered). Nothing glows unless code asks for it.
 
 **Location:** `InterfaceGlow` (`src/autoloads/interface_glow.gd`, class `InterfaceGlowAutoload`), the
-`rendering/viewport/hdr_2d` project setting, and the glow step in `interface_look.gdshader`.
+`rendering/viewport/hdr_2d` project setting, and the glow step in `interface_look.gdshaderinc` (included by the interface shaders).
 
 ## How it works
 

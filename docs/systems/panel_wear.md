@@ -48,7 +48,7 @@ Images outside a panel frame have their own picture wear in the Interface tab ([
   `PanelFlat`, `PanelFramed`, `PanelSmall`, `PanelDetail`, `PanelPause` and `PanelSlot` each wrap a flat,
   palette-following `PaletteStyleBox` ([interface_palette.md](interface_palette.md),
   [ui_theme.md](ui_theme.md#flat-palette-following-panels)). `PanelSlot` is the frame behind icons and
-  portraits. Godot's built-in `TooltipPanel` stays unwrapped pack art.
+  portraits. Godot's built-in `TooltipPanel` uses the worn framed panel (`pb_framed_worn`).
 - The picture inside a `PanelSlot` draws on top of the wear unworn, and takes no picture wear of its
   own: those pictures are drawn through `InterfaceLook.framed_material`, which keeps picture wear off
   ([interface_look.md](interface_look.md#picture-wear)). The frame's wear is what shows around them.

@@ -47,7 +47,7 @@ Read by `Dev`.
 | `--notutorial` | Accepted and ignored; there is no tutorial yet |
 | `--autostart`, `--character=ID` | Skips the title screen and starts a run as the default character or `ID` |
 | `--select`, `--settings` | Opens character select or the settings screen on the title screen |
-| `--autofight` | Picks the first fight on every path choice |
+| `--autofight` | Picks the first fight on every path choice (does nothing today: the choice layer is dormant, so no path choice appears) |
 | `--allies N` | Adds N placeholder allies to a new run (`DEMO_ALLY_ID`) |
 | `--board-items N` | Fills the board up to N items with copies of the starting items |
 | `--potions N` | Gives the player N potions (`DEMO_POTION_ID`) |

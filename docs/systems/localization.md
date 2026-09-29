@@ -7,8 +7,8 @@ text must be localizable (dev/debug/testbed UI stays English).
 
 Registered in `project.godot` (`internationalization/locale/translations`):
 `en` — `locale/en.po`. `en.po` mirrors the source English (every `msgstr` equals its
-`msgid`); add more locales by dropping `locale/<code>.po` files and listing them in
-the same setting. An empty `msgstr` falls back to the source string.
+`msgid`); to add a locale, add its `locale/<code>.po`, list it in the same setting, and add its
+code to `LOCALES` in `tools/extract_pot.gd` so the extractor merges it. An empty `msgstr` falls back to the source string.
 
 ## Two ways text gets translated
 
@@ -22,28 +22,28 @@ title (`Choose a reward`), the outcome buttons, the `You` portrait label. Set
 
 **2. Explicit `tr()` (for dynamic / formatted / data-driven text).** Use `tr('...')`
 when the string is built at runtime, formatted, or comes from data — auto-translate
-can't help there. Examples: item/enemy names via `tr(def.name_key)`, the map labels
-(`tr('Fight')`…), the rarity labels, the outcome title (`tr('Victory')`), the draft
-gold button (`tr('+{0} gold').format(...)`). **Put the literal inside `tr()`**,
-not behind a variable — `tr('Common')`, not `tr(rarity_var)` — so the extractor sees
-it. **Avoid** `node.text = tr('...')` for *static*
+can't help there. Examples: item/enemy names via `tr(def.name_key)`, the map strip's act label
+(`tr('Act {0}')`), the outcome title (`tr('Victory')`), the draft gold button
+(`tr('+{0} gold').format(...)`). **Put the literal inside `tr()`**, not behind a
+variable — `tr('Victory')`, not `tr(title_var)` — so the extractor sees it. **Avoid** `node.text = tr('...')` for *static*
 text: it stores the translated string and won't re-translate on a live locale switch.
 
 ## String sources & the catalog
 
-Translatable strings come from three places (Dark Corridor authors content in
+Translatable strings come from these places (Dark Corridor authors content in
 GDScript — decision #23 — not data files):
 
 | Source | Holds |
 |--------|-------|
-| `.gd` — `tr('...')` / `tr("...")` literals | code-built UI, formatted strings, the map/rarity/outcome labels |
+| `.gd` — `tr('...')` / `tr("...")` literals | code-built UI, formatted strings, the map and outcome labels |
 | `.tscn` — `text` / `tooltip_text` / `popup/item_<n>/text` | static scene UI (menus, titles, buttons, OptionButton / menu items) |
 | `.gd` — `name_key = '...'` literals | item / enemy / status / encounter / relic / enchant / consumable names (shown via `tr(def.name_key)`) |
 | `.gd` — `class_key = '...'` literals | a character's class, under its name on the select screen and in the player's Class field (`tr(def.class_key)`) |
+| `.gd` — `label_key`, `desc_key`, `description_key` literals (also as `'desc_key': '...'` dictionary entries) | event option buttons, status keyword card text, item flavour lines |
+| `.gd` — `event_prose_key` (may be split across lines and joined) | event body text |
 
-Dev / throwaway hosts are excluded (see `EXCLUDE_FILES` in `tools/extract_pot.gd`):
-the corridor testbed, the panel example, the combat sandbox — their text stays English.
-The whole `src/debug/` folder (the [debug panel](debug_panel.md)) is skipped too (`EXCLUDE_DIRS`).
+The whole `src/debug/` folder is skipped (`EXCLUDE_DIRS` in `tools/extract_pot.gd`): the
+[debug panel](debug_panel.md), the corridor testbed and the combat sandbox, whose text stays English.
 
 ## Regenerating the catalog
 
@@ -55,7 +55,7 @@ string:**
 tools/pot.sh   # extract the POT, merge the .po files, then reimport
 ```
 
-It writes `locale/messages.pot` and merges every `locale/*.po`, preserving existing
+It writes `locale/messages.pot` and merges each locale in `LOCALES`, preserving existing
 `msgstr` translations and dropping strings no longer present (no gettext / msgmerge
 dependency). Then translate the empty `msgstr` entries in non-English `.po`s, and
 **re-import** so the `.po` → `.translation` resources rebuild:

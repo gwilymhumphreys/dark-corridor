@@ -23,7 +23,7 @@ What it **is not**:
 
 - **Not the beat *selection*.** Which beat happens is the `Run manager`'s — the map fixes it or names the pool it is drawn from ([run_manager.md](run_manager.md#the-act-layout)). The Encounter is the *resolved unit*, not the selector. *(The within-encounter tier-2 choice — an event's binary pick — is the Encounter's own resolution.)*
 - **Not the fight.** A fight `Encounter` creates the `Combat manager` and awaits its result; it never runs the combat tick (`Timekeeper` / `Combat manager`).
-- **Not run-state.** Event/rest outcomes and rewards mutate the player run-state, which the `Run manager` owns — the Encounter reports them; the `Run manager` applies them.
+- **Not run-state.** The `Run manager` owns the run-state. The Encounter applies rest and event outcomes to the player `Actor` directly; the `Run manager` applies rewards and anything that touches the roster (an ally).
 - **Not enemy/draft content** — it *uses* enemy definitions ([Enemy PRD](enemy.md)) and triggers the reward `Draft` (via the `Run manager`); it doesn't define them.
 
 ---
@@ -43,18 +43,18 @@ The `Run manager` instantiates the picked Encounter; it resolves by type, then r
 
 - **Fight** (regular / elite / boss) — spawn the authored enemy `Actor`s from their definitions ([Enemy PRD](enemy.md)), set their **left-to-right ordering** (composition: tank in front, adds before boss — design), and create the `Combat manager` with the player + enemy `Actor`s (+ any run-scoped allies) + ordering. Await win/loss. **Loss** → report **died** (the `Run manager` signals run-ended up to `Game`). **Win** → report the reward.
 - **Event** — present the prose + the **binary choice** (a UI intent — the player picks an option); apply the chosen option's **outcome** — one of `HEAL_FRACTION` / `MAX_HP_BONUS` / `DAMAGE` (applied directly on the player `Actor`) or `ADD_ALLY` (which the `Run manager` applies to the run roster). Events are lore + a tradeoff (design); outcomes are *direct*, not the combat path. A **lethal** damaging outcome resolves the beat **LOST** on the spot — the run ends there, never a dead player walking to the next fight.
-- **Rest** (the in-act small rest — one guaranteed per act, design) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()`. No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
+- **Rest** (an in-act small rest; `content/encounters/rest.gd` exists but no map square or pool schedules it today) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()`. No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
 
 ## Composition & ordering (the fight case)
 
-**A fight's enemies can be generated against a points target** instead of coming from the def. The `Run manager` draws from the act's enemy pool until the drawn set's points reach the beat's target (`RunMap.target_points` / `RunMap.draw_enemies`; [`../plans/encounter_points_budget.md`](../plans/encounter_points_budget.md)), and passes the ids to the `Encounter`, which uses them in place of `EncounterDef.enemy_ids`. The def still supplies the location frame, the type and the reward. The draw is random and ignores composition — positioning comes later. **The pools are empty until the owner authors them**, so every fight currently uses its authored `enemy_ids`; a boss is never generated.
+**A fight's enemies can be generated against a points target** instead of coming from the def. The `Run manager` draws from the act's enemy pool until the drawn set's points reach the beat's target (`RunMap.target_points` / `RunMap.draw_enemies`; [`../plans/encounter_points_budget.md`](../plans/encounter_points_budget.md)), and passes the ids to the `Encounter`, which uses them in place of `EncounterDef.enemy_ids`. The def still supplies the location frame, the type and the reward. The draw is random and ignores composition — positioning comes later. **The pools are empty until the owner authors them**, so every fight currently uses its authored `enemy_ids`. A boss is never generated against points: it takes its act's `EnemyPools.BOSS` list when that has entries, otherwise its authored `enemy_ids`.
 
 
 A fight Encounter spawns **1–4 enemies** (most 1–2; group fights authored to give AOE a reason — design) and places them in a **left-to-right order** before handing the set to the `Combat manager` (which owns runtime ordering + the leftmost-targeting rule). Spatial composition is the puzzle — "tank in front of DPS," "adds before the boss." This resolves the composition/ordering authoring the [Enemy PRD](enemy.md) deferred here.
 
 ## Telegraph (the option's advertisement — DORMANT with the choice layer)
 
-*The choice layer is dormant (beats auto-roll — decision-log build status; `has_pending_choice()` is always false), so nothing currently presents a telegraph and `EncounterDef` carries no telegraph field. Kept as the spec for a possible future fork-beat:* each candidate would advertise its **category** — combat-heavy/item-reward · safe/healing · risk/high-reward — and, for an **elite**, its **demand** (e.g. "high single-target burst," "applies poison — bring cleanse"). First-run legible (telegraph the category, not the contents — design). Today an **elite** is a rolled-combat outcome from the deeper per-band pool (`ELITE_FROM_BEAT` on), not an engage/skip pick.
+*The choice layer is dormant (beats auto-roll — decision-log build status; `has_pending_choice()` is always false), so nothing currently presents a telegraph and `EncounterDef` carries no telegraph field. Kept as the spec for a possible future fork-beat:* each candidate would advertise its **category** — combat-heavy/item-reward · safe/healing · risk/high-reward — and, for an **elite**, its **demand** (e.g. "high single-target burst," "applies poison — bring cleanse"). First-run legible (telegraph the category, not the contents — design). Today an **elite** is a fixed map square (`RunMap.Square.ELITE`, the `fight_elite` encounter), not an engage/skip pick.
 
 ## Reward
 
@@ -95,5 +95,5 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 
 - **Above:** the `Run manager` — assembles the candidate set, instantiates the picked Encounter with context, reads its outcome, and fulfills its reward. Owns the lifetime.
 - **Creates / owns (fight):** the `Combat manager` (player + enemy `Actor`s + ordering); awaits its win/loss.
-- **Uses:** enemy definitions → spawns enemy `Actor`s ([Enemy PRD](enemy.md)); the player `Actor` (read for the fight; heal/damage via the `Run manager`'s surface for rest/event).
+- **Uses:** enemy definitions → spawns enemy `Actor`s ([Enemy PRD](enemy.md)); the player `Actor` (read for the fight; healed or damaged directly by a rest or event).
 - **Does not:** own the map / run-state / game-state machine (`Run manager` / `Game manager`); run the combat tick (`Combat manager` / `Timekeeper`); define the `Draft` (triggered via the `Run manager`).

@@ -23,7 +23,7 @@ press and selection, and the files are no longer referenced.
 | `PanelBare` | a `PanelContainer` that draws nothing: that panel when the setting is off |
 | `Panel` / `PanelContainer` / `PanelFlat` / `PanelFramed` / `PanelSmall` / `PanelDetail` / `PanelPause` | flat fills of `Colours.UI_BACKGROUND` (no border, corner radius or shadow), each wrapped in a `WornStyleBox` so the panel wear marks it. `PanelSlot` is the same, with smaller content margins |
 | `ButtonBare` | a button that draws no body of its own (`StyleBoxEmpty` in every state): used where the button only carries the click and the juice, and something inside it is the picture — the reward options in the draft overlay (`reward_option.tscn`) and the potion slots (`potion_slot.tscn`) |
-| `LabelDim` | dimmer section labels ("Potions", "Gold", "Items", "Allies", "Name:", "Class:") |
+| `LabelDim` | dimmer section labels ("Potions", "Gold", "Relics", "Items", "Allies", "Name:", "Class:") |
 | `SheetColumn` / `SheetRow` / `SheetStack` | the vertical, horizontal and switchable containers that hold the parts of the character sheet, with the section gap between them ([below](#spacing-on-the-character-sheet)) |
 | `SheetSection` | a label over its box, with the label gap between them |
 | `LabelOnBar` | the small text size with a dark outline: the shield and status numbers drawn on a health bar |

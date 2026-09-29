@@ -33,7 +33,8 @@ What it **is not**: not the run-flow (the `Run manager` builds the snapshot, wri
 - **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant. (No statuses — all statuses are combat-scoped, never saved; decision #26.)
 - **Relics & potions** — the player run-state (not Actor-owned).
 - **Gold** — a banked run-state resource (`gold: int`, decision #33). **Optional on read** (`.get('gold', 0)` — absent in a pre-gold snapshot → 0, so old saves still load; deliberately **not** in `SNAPSHOT_KEYS`, per the no-migration rule).
-- **Run position** — act + encounter index, floor-map progress, character.
+- **Run position** — the global beat `position` (the act and beat are derived from it — `RunMap`), the character id, and the current beat's encounter (`current_def_id` and the drawn `current_enemy_ids`).
+- **Allies** — each run-scoped ally's def id only; allies are revived to full health each fight, so their health is not saved.
 - **RNG state** — the `Run manager`'s run RNG, captured as its **full state** (not just the seed), so resume is **deterministic**: reloading reproduces the same future draft offers and encounter beats *every time* — not re-rollable by quit-and-resume (no save-scum; consistent with "death is final").
 
 **Explicitly not saved:** live combat state — the fight, the `Timekeeper`, `Delivery`s, combat-scoped statuses (shield, in-fight poison). Combat is ephemeral and the save sits *between* fights, so there's nothing mid-fight to persist; resume re-enters at the saved encounter. Enemy actors aren't saved either — they're regenerated per encounter from their definitions (Enemy PRD). **Items created mid-fight** (the `CREATE_ITEM` seam — [`item_creation_and_decay.md`](item_creation_and_decay.md)) are combat-scoped too: the Combat manager strips them from the board at teardown, so the snapshot — taken between fights — only ever sees the *drafted* board.
@@ -56,7 +57,7 @@ We do **not** migrate saves. An absent, unreadable, or format-incompatible save 
 
 ## Format / location
 
-`user://` (Godot). The serialization format (a dict via JSON / `var_to_bytes` / a Resource) is impl/content — deferred. Write atomically (temp → rename).
+`user://` (Godot): JSON at `Save.PATH`, stamped with `Save.VERSION`, written atomically (temp → rename). An absent, unreadable or other-version save reads as `{}` (start fresh, no migration). `has_save()` checks for a file; `disabled` makes `write` a no-op (the headless autotest sets it).
 
 ---
 
@@ -72,13 +73,12 @@ Meta-progression (the skill tree / unlocks) persists *across* runs and survives 
 - On launch, load it and resume at the saved encounter (the `Game manager` reads it; the `Run manager` rehydrates).
 - Clear on death.
 
-**Not** in scope: relics/potions/RNG content, meta-progression, the final format.
+**Not** in scope: meta-progression.
 
 ---
 
 ## Open / deferred
 
-- **Serialization format + exact snapshot schema** — impl/content.
 - **Status lifetime — resolved (#26):** all statuses are combat-scoped; **none are saved**. Run persistence is Relics / Enchantments (stored by id + value).
 - **RNG capture — resolved (#20):** the snapshot stores the `Run manager`'s **full** run-RNG state (not just the seed), so resume reproduces all future draws. The per-fight combat stream is *derived* (run seed + encounter index), not saved — combat state is ephemeral.
 - **Resolved (review #3):** push model — systems hand `Save` a snapshot; it never reads up.

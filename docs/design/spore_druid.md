@@ -152,7 +152,7 @@ On-mechanism standouts: thallid counter, decompose-for-fuel, board-linking, spaw
 
 **Running count:** Commons — Attacks 5 (Druid Staff, Spore Spitter, Capped Cudgel, Bloomhammer, Wilt Frond) · Skills 0 (shield 0 / resource 0 / utility 0). Rares — 1 (Pocket Shrooms, attack).
 
-**Character:** `CharacterCatalog.SPORE_DRUID` scaffolded (pool: the 5 commons + Pocket Shrooms — the running count above; no signature relic yet; not yet selectable).
+**Character:** `content/characters/spore_druid.gd` (pool: the 5 commons + Pocket Shrooms — the running count above; no signature relic yet; selectable on the character select screen).
 
 **Opening board:** three weapons, drawn at random from the pool at run start. Every item the Spore
 Druid has is weapon-typed, so three weapons is the only constraint it can express today — it has no

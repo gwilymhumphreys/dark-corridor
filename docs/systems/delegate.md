@@ -21,16 +21,17 @@ domain. Not for design decisions.
   held to are the same ones written there, with no second copy to drift.
 - **Denied paths** — `.git/`, `.godot/`, `.claude/`, `.worktrees/`,
   `autotest_results/` and the vendored `addons/gut/`.
-- **Verification**, three stages run in order, stopping at the first failure,
+- **Verification**, four stages run in order, stopping at the first failure,
   with the failures handed back to the model to fix:
   1. A text check of the GDScript standards on the changed `.gd` files: tabs,
      odd indentation, double-quoted strings, missing type annotations and
      missing return types. It only reports lines the model actually added or
      altered, so it never asks the model to change pre-existing code.
-  2. `godot --headless --path . --import --exit`, scanning for script and parse
-     errors. This also imports new files, which the GUT suite needs in order to
-     see a new `class_name`.
-  3. The GUT suite, as described in [handoff.md](../handoff.md).
+  2. `godot --headless --path . --import --exit`, ignoring its output: it imports
+     new files and refreshes the class list, so a new `class_name` is known.
+  3. The same import again, this time scanning for script and parse errors (the
+     first run can report errors for classes it has not listed yet).
+  4. The GUT suite, as described in [handoff.md](../handoff.md).
 
 None of that checks whether the change does what was asked, which is why the
 diff review is Claude Code's job and not optional.

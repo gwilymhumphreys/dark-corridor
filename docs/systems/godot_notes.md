@@ -60,13 +60,13 @@ change. In `_exit_tree()`:
 | Signals, tweens, timers | Disconnect and stop them |
 | Arrays and dictionaries holding node references | Clear them |
 | Nodes owning render resources | Free with `call_deferred('queue_free')` |
-| Textures registered with a server (custom mouse cursors) | Unregister them and drop the reference in `_exit_tree()` |
+| Textures registered with a server | Unregister them and drop the reference in `_exit_tree()` |
 
 A "RID allocations of type 'N5GLES37TextureE' were leaked at exit" error, followed by
 "Parameter "RenderingServer::get_singleton()" is null" from `~ImageTexture`, means a texture
 was still referenced when the rendering server shut down. Find who holds it and release it
-during scene-tree teardown — for the custom mouse cursors that is `Cursor._exit_tree()`
-([cursor.md](cursor.md)).
+during scene-tree teardown. (The mouse cursor is drawn as an ordinary node and registers no
+texture with the display server — [cursor.md](cursor.md).)
 
 Avoid reparenting nodes during teardown. If a node must be reparented, store its
 original parent with `set_meta()` and put it back.

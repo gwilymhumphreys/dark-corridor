@@ -63,10 +63,10 @@ So `Game` decides *whether to resume*; the `Run manager` decides *what the run-s
 ## Prototype scope
 
 - A **thin state machine**: Title → Run → Death → restart (Run). The meta screen + meta-save are deferred (no meta in the prototype).
-- Start a fresh run (seed via a stand-in `Characters`), end it on death/win, restart.
+- Start a fresh run with the character picked on the character select screen (`CharacterCatalog`), end it on death/win, restart.
 - `Save.read()` on resume + `Save.clear()` on death; create / tear down the `Run manager`; receive its run-ended signal.
 
-**Not** in scope: the meta/skill-tree screen + meta-save schema, settings/options, pause UI, title-screen content.
+**Not** in scope: the meta/skill-tree screen + meta-save schema. (The title, character select, settings and pause screens are built — [run_screen](run_screen.md).)
 
 ---
 
@@ -74,7 +74,7 @@ So `Game` decides *whether to resume*; the `Run manager` decides *what the run-s
 
 - **Exact phase list + screen content** (title, death, meta) — settle as screens are built. **Pause is not a phase** (resolved below).
 - **Meta-save schema + the meta screen** — Meta PRD (a separate cross-run dataset; uses the same `Save` service).
-- **Settings / options ownership — partly resolved:** the **battle-speed** preference (×1/×2/×3) lives on `Game` as a session-level setting (`battle_speed` + `cycle_battle_speed`, never saved) — confirming `Game`-level ownership. A full settings *screen* + persisting preferences to disk is still deferred.
+- **Settings / options ownership — partly resolved:** the **battle-speed** preference (×1/×2/×3) lives on `Game` as a session-level setting (`battle_speed` + `cycle_battle_speed`, never saved) — confirming `Game`-level ownership. The settings screen is built and player settings persist to disk through `Prefs`; `battle_speed` itself is still never saved.
 - **Pause semantics — resolved:** pause is a **run-screen presentation gate** (it freezes the screen's tick), **not** a `Game` phase and **not** the combat dial's ×0. Quit-to-menu from pause routes through `Game.return_to_title()` (keeps the save). See [run_screen](run_screen.md).
 
 ## Dependencies
@@ -84,3 +84,14 @@ So `Game` decides *whether to resume*; the `Run manager` decides *what the run-s
 - **Calls:** `Save` (`read` on resume, `clear` on death/win) + the meta-save; reads `Characters` to seed a fresh run.
 - **Signalled by (below):** the `Run manager` → **run-ended (died / won)**.
 - **Does not:** touch the `Timekeeper` / `Combat manager`; own per-run state or the map (`Run manager`); serialize (`Save`).
+
+## Signals and public API
+
+| Member | Purpose |
+|---|---|
+| `phase_changed(phase)` | Emitted when the phase changes (the screens swap on it) |
+| `run_started(run)` | Emitted for a fresh run, before the phase changes to RUN |
+| `battle_speed_changed(scale)` | Emitted when the battle speed changes, so a live fight retimes at once |
+| `start_run(seed, character_id)` / `resume_run()` / `end_run(outcome)` / `return_to_title()` | The run lifecycle |
+| `cycle_battle_speed()` / `set_battle_speed_index(index)` | Set the battle speed from `Balance.BATTLE_SPEEDS` |
+| `reset()` | Tests only: drop the run and return to the title phase at ×1 speed, silently and without clearing the save |

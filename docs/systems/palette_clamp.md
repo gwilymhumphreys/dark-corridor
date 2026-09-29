@@ -47,7 +47,7 @@ both together.
 ## Palettes
 
 `assets/palettes/` keeps the owner's `good/`, `maybe/`, `na/`, `unsorted/` and dated (for example
-`2026_09_15/`) subfolders. `shortlist/` collects palettes moved there with the debug panel's `'` key.
+`2026_09_15/`) subfolders. `shortlist/` collects palettes moved there with the debug panel's `\` key.
 `new/` holds candidates for separate world, effects and interface
 palettes (see [`../plans/separate_palettes.md`](../plans/separate_palettes.md)).
 

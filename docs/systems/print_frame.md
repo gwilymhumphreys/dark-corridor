@@ -72,7 +72,7 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
   `TokensPanel`), in five sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the two switches) and Character panels (the three layout settings).
+  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch) and Character panels (the layout, background, allies box and size settings).
 
 | Group | Does |
 |---|---|
@@ -100,10 +100,6 @@ The print part has sections `print_panel` (every [panel wear](panel_wear.md) uni
 (every border, overlay and board grid uniform) and `print_layout` (every print frame setting). Reading it starts
 from the print defaults. Sizes and colours set by `PrintFrame` are not saved. Background wear is a
 part of its own ([background_wear.md](background_wear.md#presets-and-screenshots)).
-
-The presets `print_red_halftone` and `print_red_hatching` are two-ink corridor looks, red on dark grey
-like a printed sleeve, using the grade, colour ramp and halftone or hatching. Their names are
-placeholders.
 
 For screenshots, `--print-set=<name>=<value>` sets one border, overlay or layout setting (repeatable)
 and `--print-panel` opens the Print tab ([dev_tools.md](dev_tools.md#look-arguments)).

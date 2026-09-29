@@ -1,6 +1,6 @@
 class_name LookPanel
 extends VBoxContainer
-## The corridor tab of the debug panel (docs/systems/corridor_look.md), opened with F2 by `DebugPanels`.
+## The corridor tab of the debug panel (docs/systems/corridor_look.md), opened with F1 by `DebugPanels`.
 ## One section per effect in corridor_look.gdshader, built from the shader's uniform groups, then
 ## sections for the corridor's light and its camera Environment. The background wear is in the print
 ## tab (`PrintPanel`, which extends this). Every change applies at once to what is on screen. The row

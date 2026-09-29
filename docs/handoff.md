@@ -64,7 +64,7 @@ Whole-game pitch + core loop: [`game_design.md`](design/game_design.md). The sys
    `class_name` PascalCase, autoloads `<Name>Autoload` registered `<Name>`, **no
    self-attribution in git messages**). These OVERRIDE defaults.
 2. **[`decision_log.md`](decision_log.md)** — the canonical record: every decision
-   (numbered #1–#50) and what's still open. **Don't re-litigate anything in it.**
+   (numbered) and what's still open. **Don't re-litigate anything in it.**
 3. **[`architecture.md`](systems/architecture.md)** — system map, the combat spine, the
    **Scene tree & node model**, and the boundary hub.
 4. The per-system **PRDs** as needed (one per system in `docs/systems/`, spec +
@@ -142,10 +142,11 @@ Lifetime tiers: **`Game` (session) → `Run` (descent) → `Encounter` (beat) �
 (`RunManager` / `Encounter` / `CombatManager`) are `Node`s, and **only
 `CombatManager` runs `_physics_process`** (the one fixed-step tick).
 
-**Autoloads (7, in `project.godot`):** `SfxManager`, `MusicManager`, `StatusManager`
-(stateless rules), `Save` (JSON run snapshot), `Prefs` (disk-persisted session prefs —
-audio bus volumes, separate from the run `Save`), `Draft` (stateless reward draw),
-`Game` (session singleton — phase machine + run lifecycle).
+**Autoloads (the `[autoload]` section of `project.godot`):** game logic — `SfxManager`,
+`MusicManager`, `StatusManager` (stateless rules), `Save` (JSON run snapshot), `Prefs`
+(disk-persisted player settings, separate from the run `Save`), `Draft` (stateless reward draw),
+`Game` (session singleton — phase machine + run lifecycle); look — `PrintLook`, `InterfaceLook`,
+`InterfaceGlow`, `ControlFeedback`, `Cursor`; dev only — `DebugPanels`, `Dev`.
 
 **The driving seam — important.** The run-logic Nodes stay **out of the scene tree**
 (a Phase-3 invariant Phase 4 preserved — it did *not* mount them). Two clients drive
@@ -204,7 +205,7 @@ resolution.
 | What | Doc |
 |---|---|
 | `Corridor3D`: real 3D corridor, one steady light at the camera, painted enemies as lit `Sprite3D` cut-outs, hit lights in the effect colour | [corridor_3d.md](systems/corridors/corridor_3d.md) |
-| Debug panel (F1 to F5 open its tabs): world palette (Corridor tab), interface palette and font choice (Interface tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
+| Debug panel (F1 to F7 open its tabs): world palette (Corridor tab), interface palette and font choice (Interface tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
 | Look presets: the whole look in one file, the default preset loaded at start-up, the history of past defaults; `assets/presets/` | [look_presets.md](systems/look_presets.md) |
 | F1 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog | [corridor_look.md](systems/corridor_look.md) |
 | F2 interface look: the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look | [interface_look.md](systems/interface_look.md) |
@@ -224,8 +225,8 @@ circles for projectiles and impacts are placeholders waiting on real VFX animati
 
 - **Statuses are combat-scoped (decision #26).** Created in a fight, cleared at
   teardown, **never saved**. Run persistence is **Relics / Enchantments** (a relic
-  may carry a counter and re-apply a fresh combat-scoped status each fight — Stone
-  Ward does this). The run snapshot never serializes status instances. Statuses live
+  is rebuilt as a fresh `Item` each fight, so Stone Ward's fight-start trigger gives
+  a new shield every fight). The run snapshot never serializes status instances. Statuses live
   *on* their targets (`Actor.statuses` / `Item.statuses`) only to keep
   `StatusManager` stateless + `Actor.take_damage` self-contained — not for persistence.
 - **`Actor` ↔ `Item` is a RefCounted cycle** (`board` ↔ `owner`). Broken with
@@ -276,8 +277,8 @@ test-first + its own green commit, with the headless autotest as the regression 
 2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**
    `RunManager._on_encounter_resolved` grants a random relic on the **RELIC** reward (act bosses),
    offers a choice of relics on **RELIC_CHOICE** (the relic encounter), and a **relic + draft** on
-   **ELITE** (the reward asymmetry). Relics have a **MAX_HP_BONUS** direct-mod shape (applied once on
-   grant, baked into the snapshot). Placeholder reward relics (Vital Charm / Iron Idol) and placeholder
+   **ELITE** (the reward asymmetry). Relics can raise maximum health through a `PICKED_UP` run trigger
+   (applied once on grant, baked into the snapshot). Placeholder reward relics (Vital Charm / Iron Idol) and placeholder
    elite and relic `EncounterDef`s. **Still the owner's:** which relics and elites exist.
    [content](systems/content.md) · [encounter](systems/encounter.md).
 3. **Settings / pause + battle-speed — DONE.** The ×1/×2/×3 **battle-speed dial** + in-run

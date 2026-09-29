@@ -16,7 +16,7 @@ The single source of **combat time and speed**. Combat runs on a **fixed timeste
 
 - **`sim_time`** — the stepped clock (advances by `STEP` per sim-step); what *logic* reads.
 - **`render_time()`** — a *continuous* clock for the VFX/audio "wall"; smooth between steps.
-- **`timescale`** — the one speed dial.
+- **the dial** — the one speed setting: `effective_scale()`, which is `base_scale` (`set_base_scale`) unless a momentary `override_scale` is set (`set_override` / `clear_override`).
 - the **accumulator** + **`steps_due()`** — turns real elapsed time × the dial into a whole number of fixed steps.
 
 It is **combat-scoped** (fresh per fight, `sim_time` from 0) and a **passive clock the `Combat manager` drives** — it doesn't loop or advance components itself.
@@ -29,9 +29,9 @@ It is **combat-scoped** (fresh per fight, `sim_time` from 0) and a **passive clo
 
 ## The dial
 
-One `timescale`, set via input-intent (the `Combat manager` sets it from a UI intent — UI never writes it directly):
+One dial, set via input-intent (the `Combat manager` sets it from a UI intent — UI never writes it directly):
 
-| Use | `timescale` |
+| Use | Dial |
 |-----|--------|
 | Pause | ×0 |
 | Hover slow-mo (inspect) | ~×0.05 |
@@ -46,7 +46,7 @@ Each physics frame the `Combat manager` hands the Timekeeper the (fixed) real de
 
 ```
 steps_due(real_delta):
-  acc += real_delta * timescale
+  acc += real_delta * effective_scale()
   n = 0
   while acc >= STEP and n < MAX_STEPS:   # MAX_STEPS = live ceiling
     acc -= STEP; n += 1
@@ -73,11 +73,11 @@ Hold the component registry or advance components (the `Combat manager` owns the
 
 ## Lifecycle
 
-Created by the `Combat manager` at combat start (`sim_time` 0); the manager calls `steps_due` / `advance` each tick and sets `timescale` from intents; torn down at combat end. Owns no state outliving one fight.
+Created by the `Combat manager` at combat start (`sim_time` 0); the manager calls `steps_due` / `advance` each tick and sets the dial from intents; torn down at combat end. Owns no state outliving one fight.
 
 ## Prototype scope
 
-`STEP` + `timescale` + `steps_due` (accumulator, cap, backlog-drop) + `sim_time` / `render_time`; the `Combat manager` (or a stand-in) drives it. One base speed + a hover slow-mo override. Headless: the manager calls `advance` directly in a loop (no real delta).
+`STEP` + the dial + `steps_due` (accumulator, cap, backlog-drop) + `sim_time` / `render_time`; the `Combat manager` (or a stand-in) drives it. One base speed + a hover slow-mo override. Headless: the manager calls `advance` directly in a loop (no real delta).
 
 ## Open / deferred
 
@@ -87,5 +87,5 @@ Created by the `Combat manager` at combat start (`sim_time` 0); the manager call
 ## Dependencies
 
 - **Above:** nothing — a passive clock.
-- **Driven by:** the `Combat manager` (per fight) — `steps_due` / `advance`, sets `timescale`, owns the registry it advances.
+- **Driven by:** the `Combat manager` (per fight) — `steps_due` / `advance`, sets the dial, owns the registry it advances.
 - **Read by:** logic (`sim_time`); the VFX/audio wall (`render_time()`).

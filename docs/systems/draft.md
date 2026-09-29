@@ -18,14 +18,14 @@ What it **is not**:
 
 - **Not the pool's *contents*.** `Meta-progression` owns what's unlocked into the pool; `Draft` pulls from it and never reaches into meta internals (architecture). It reads the pool, doesn't define it. The pool handed in is **character-scoped** (decision #27 — per-character item pools); `Draft` stays **pool-agnostic** — it draws from whatever pool the `Run manager` hands it.
 - **Not run-state.** It produces candidates; the **`Run manager` holds the pending offer and applies the pick** to run-state (board / potion slots / enchant target / relics). `Draft` writes nothing.
-- **Not the relic/elite/boss grants.** Those relics are granted directly by the `Run manager` (Encounter reward) — see *open*; `Draft` is the 1-of-3 reward draw.
+- **Not the relic rewards.** Boss and elite relics are granted directly by the `Run manager`, and the relic encounter's pick-one-of-three offer is drawn by the `Run manager` too (`_draw_relic_offer` / `apply_relic_pick`), not through `Draft`; `Draft` is the 1-of-3 item draw.
 - **Not presentation.** The offer is presented + inspected by `UI` (tooltips on hover — the draft is a paused, between-fights decision, no combat clock).
 
 ---
 
 ## The draw
 
-The `Run manager` calls `Draft` with the pool, the run-state, and the run RNG; `Draft` returns the offer (default **3** candidates):
+The `Run manager` calls `Draft` with the pool, the beat depth (unused today) and the run RNG; `Draft` returns the offer (default **3** candidates):
 
 - **Slot composition** — each slot is **usually an item**; each has a **low chance** of an **enchant** or a **potion** instead (a per-slot roll). The exact chances are tuning (design).
 - **Depth-weighting** — rarity is a complexity and power tier (common / uncommon / rare — [Item PRD](item.md)), and **drop odds shift with depth** (later drafts → better rarity odds — design). Weighting reads **depth/position only**.
@@ -64,7 +64,7 @@ The player picks one candidate (a `draft pick` intent — architecture); the **`
 ## Open / deferred
 
 - **Slot chances** (item vs enchant vs potion per slot) + **rarity-by-depth odds** — tuning (design's pool work).
-- **Relic offers** — whether relics are ever a draw (1-of-N relic offer) or only direct grants (midpoint / elite / boss). Design leans direct grants; confirm when relic acquisition is built.
+- **Relic offers** — built outside `Draft`: the relic encounter offers a pick of relics (`RunManager._draw_relic_offer`), and bosses and elites grant one directly. Whether relics ever join the item draw is open.
 - **Enchant-target / potion-drop sub-choices** — the UI interactions when a picked enchant needs a target or a potion needs a slot — a UI pass (the choices are intents the `Run manager` applies).
 - **Draftable definition format — resolved (#23):** typed GDScript def objects + catalogs, keyed by **string id**. **Pool data:** the live draw pool is the **character's item pool + the shared colorless pool** (#27, built — `RunManager._draft_pool()`); what's *unlocked* into a character's pool is `Meta-progression` / content.
 - **RNG — resolved (#20):** the draw uses the `Run manager`'s run RNG (full state saved for deterministic resume), handed in by the `Run manager`.
@@ -72,6 +72,6 @@ The player picks one candidate (a `draft pick` intent — architecture); the **`
 
 ## Dependencies
 
-- **Above:** the `Run manager` — calls `Draft.draw(pool, run_state, rng)` on a reward, holds the pending offer, applies the pick to run-state.
+- **Above:** the `Run manager` — calls `Draft.draw(pool, depth, rng)` on a reward, holds the pending offer, applies the pick to run-state.
 - **Reads:** the draft **pool** (its *contents* are `Meta-progression`'s — unlocks); the run-state's **depth** (for weighting) and the **run RNG** (handed in).
 - **Does not:** own the pool contents (`Meta-progression`); hold the pending offer or apply the pick (`Run manager`); present / inspect (`UI`); grant relics (`Run manager` / `Encounter`).

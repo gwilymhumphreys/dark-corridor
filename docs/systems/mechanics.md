@@ -221,7 +221,7 @@ Naming a specific item definition as the target is still not built.
 
 Landing publishes one event, `EventBus.Event.APPLIED`, when a `MECHANIC` or `APPLY_STATUS` delivery
 lands and applies. It replaced `DAMAGE_DEALT`, `HEALED` and `STATUS_APPLIED`. The data is the
-mechanic id (attack, heal, shield, poison, burn, bleed, regen, charge, decharge) or the status id
+mechanic id (attack, heal, shield, poison, burn, bleed, regen, charge, decharge, attack_bonus, attack_percent_bonus) or the status id
 for `APPLY_STATUS`;
 the source is the delivery's `source_actor`. Ticks, bleed's own damage, `SUMMON` and `CREATE_ITEM`
 publish nothing. A trigger's `filter` names the id — Spite Ward (`content/items/examples/spite_ward.gd`) subscribes to
@@ -231,7 +231,7 @@ publish nothing. A trigger's `filter` names the id — Spite Ward (`content/item
 
 `ItemEffect`, `Payload` and `Delivery` have a `mechanic` id. `Delivery.Kind` is `{ MECHANIC,
 APPLY_STATUS, SUMMON, CREATE_ITEM }`, and `MECHANIC` is the default. An effect using a mechanic sets
-only `mechanic` (plus value, shape, travel, flags), not `status_id` or `color`:
+only `mechanic` (plus value, shape, flags), not `status_id` or `color`:
 `Payload.from_effect` takes the colour from the mechanic.
 
 - `CombatManager._land` calls `MechanicRegistry.get_mechanic(d.mechanic).land(d, self)` for a
@@ -257,7 +257,7 @@ only `mechanic` (plus value, shape, travel, flags), not `status_id` or `color`:
 | `shield_multiplier() -> float` | How much shield a hit of this mechanic uses. 1.0 by default. |
 | `land(delivery, combat)` | What happens when a delivery lands. The base applies the mechanic's `status_id` (shield); `AttackMechanic` and `HealMechanic` override it for their direct effects. Each `land` publishes the `APPLIED` event and writes the combat log entry for its mechanic. Only `CombatManager._land` calls it. |
 
-`ShieldStatus`, `PoisonStatus`, `BurnStatus`, `BleedStatus` and `RegenStatus` each copy their
+`ShieldStatus`, `PoisonStatus`, `BurnStatus`, `BleedStatus`, `RegenStatus`, `AttackBonusStatus` and `AttackPercentBonusStatus` each copy their
 `name_key`, `desc_key` and `icon` from their mechanic. The statuses keep these fields because the
 combat log, status icons and combat summary read them.
 
@@ -343,13 +343,13 @@ show only the OUTSIDE-set statuses; the health bar shows the mechanic statuses.
 
 `KeywordCatalog.has` / `get_entry` resolve a **mechanic** id from its `Mechanic` class (name /
 desc / colour / icon), so all twelve mechanics have cards
-([tooltips.md](tooltips.md)). `TooltipContent.keyword_ids` adds each effect's mechanic id (attack and
-heal included) and `crit` for an item with a crit chance, and such an item gets an extra effect
-line reading its chance as a percentage beside the crit glyph.
+([tooltips.md](tooltips.md)). `TooltipContent.keyword_ids` shows the cards of the item's authored
+`mechanics` list, so an item with a crit chance lists `crit` there; such an item also gets an extra
+effect line reading its chance as a percentage beside the crit glyph.
 
 ## Content
 
-No items use burn, regen, crit or charge yet — they are covered by items built inside the tests.
+No items use regen, crit or charge yet — they are covered by items built inside the tests.
 The Smith's Warhammer is the first item to use decharge. Writing items for them is the owner's
 work. Bleed items cash out on attacks received rather than on the
 holder's own fires, and were not re-tuned for the change.

@@ -21,7 +21,7 @@ the default file's names, sets the one changed name, writes the whole file, and 
 screen always matches the file.
 
 A `.gpl` carries no alpha — the loader forces it to 1 — so a `Colours` variable that is translucent
-cannot be set from a palette. `COOLDOWN_FILL` is the only one, and it is left out of the files.
+cannot be set from a palette. `COOLDOWN_FILL` and `HP_BAR_LINE` are the translucent ones, and they are left out of the files.
 
 Every palette in that folder lists every settable name, even though leaving one out is legal. A
 palette that skips a name shows that colour's default inside its own scheme, which stands out badly
@@ -56,10 +56,10 @@ coherent with the interface and stand out against the desaturated corridor.
 Interface images are drawn through the picture materials, `InterfaceLook.picture_materials`
 ([interface_look.md](interface_look.md)), whose shader includes the
 [palette clamp](palette_clamp.md). `DebugPanels.set_portrait_palette` writes the portrait palette's
-distinct colours into both of them, so each pixel of those images becomes the nearest palette colour. The HP bars and value pills use `InterfaceLook.element_material`, which no palette is written
+distinct colours into all of them, so each pixel of those images becomes the nearest palette colour. The HP bars and value pills use `InterfaceLook.element_material`, which no palette is written
 to, so they are left at the colours the interface palette gave them. The portrait palette is its own Interface tab choice: off, the world palette, the interface palette,
 or any palette file (default: the interface palette). The clamp follows the Corridor tab's colour matching
-(RGB or OKLab) and does not dither. With no colours the colour count is 0 and images are unchanged.
+(RGB or OKLab) and dithers when the Interface tab's dithering switch is on (`set_interface_dithering`). With no colours the colour count is 0 and images are unchanged.
 
 Enemy images in the corridor are part of the corridor and use the [world clamp](palette_clamp.md#world-clamp).
 

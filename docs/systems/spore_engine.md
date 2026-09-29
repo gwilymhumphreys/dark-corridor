@@ -12,7 +12,7 @@
 Content PRD's engine counterpart. Sits under the [Architecture Map](architecture.md). Extends the [`combat_model.md`](combat_model.md) resolution model + [StatusManager](status_manager.md) / [Item](item.md) / [Combat manager](combat_manager.md); adds no new resolution model.
 
 **Engine:** Godot 4.
-**Date:** 2026-06-06. **Deferred capability — not yet built.** Build alongside the content that needs it (coordinate with the owner — see *Build order*).
+**Date:** 2026-06-06. **Capabilities 1, 2 and 3 are built** (each section's *Realized* note says what was built; the text around those notes is the original plan).
 
 Boundaries live in the hub: [architecture.md → Interface contracts](architecture.md#interface-contracts-boundary-hub). Hub entries get added **when each capability is built** (this is a forward spec, like the pre-prototype PRDs were).
 
@@ -43,7 +43,7 @@ The engine hardcodes **no spore** — it gains verbs, hooks, and one capability;
 
 ## Capability 1 — Status-stack consumption (spend spores as fuel) — BUILT (2026-06-07)
 
-> **Realized:** `StatusManager.consume(target, id, amount) → float` (stacks removed; a
+> **Realized:** `StatusManager.consume(target, id, amount) → int` (stacks removed; a
 > no-op returning 0 for non-fuel statuses — those whose `is_fuel()` is false). `ItemEffect` /
 > `Payload` carry the consume declaration (`consume_id` / `consume_amount` / `consume_from_target` / `consume_scale`).
 > **Self-fuel** resolves in `Item._resolve_effect` (spend the owner's stacks, scale the
@@ -58,7 +58,7 @@ The engine hardcodes **no spore** — it gains verbs, hooks, and one capability;
 
 **The work:**
 
-- **`StatusManager.consume(target, id, amount) → float`** (stacks actually removed). Removes up to `amount` additive stacks from the target's instance of `id`, returns how many were available-and-removed (so the consuming effect scales by what was present — "consume up to X", capped by the stacks there). Meaningful only for **additive-stack (periodic/stacked)** statuses; a no-op (returns 0) for timed/pool/static — matches the design's stacked-only Mass rule, so a Mass effect that names a timed spore simply gets 0 and the author has authored it wrong (don't special-case; the rule is "name a stacked spore").
+- **`StatusManager.consume(target, id, amount) → int`** (stacks actually removed). Removes up to `amount` additive stacks from the target's instance of `id`, returns how many were available-and-removed (so the consuming effect scales by what was present — "consume up to X", capped by the stacks there). Meaningful only for **additive-stack (periodic/stacked)** statuses; a no-op (returns 0) for timed/pool/static — matches the design's stacked-only Mass rule, so a Mass effect that names a timed spore simply gets 0 and the author has authored it wrong (don't special-case; the rule is "name a stacked spore").
 - **Where the consume + scale happens depends on whose spores are spent — this is the key implementation decision:**
   - **Self-fuel** (Self pillar / masochist — consume the *owner's* own spores): the owner is known at fire, so this resolves in the **Item fire pipeline** (step 3, beside the enchant/status value modifiers — [Item PRD](item.md)). Simple.
   - **Opponent-fuel** (Mass — consume the spores *stacked on the target*, e.g. the poison you applied to the enemy): the target is **not known at fire** — the Item declares a relative target-shape and the **Combat manager** resolves shape → target at Delivery spawn ([Item PRD](item.md), [combat_model.md](combat_model.md)). So the read-fuel-and-scale step must land in the **Combat manager's per-target spawn path** (it already resolves the target there): resolve target → `StatusManager.consume(target, id, X)` → scale the payload by the returned count → the Delivery carries the scaled payload. The Item stays downward-clean (declares "I consume `id` from my target"); the manager executes it.
@@ -114,10 +114,11 @@ The engine hardcodes **no spore** — it gains verbs, hooks, and one capability;
 > the run-scoped player side survives. Placeholder token `EnemyDef` (Spore Thrall).
 >
 > **Stage B — BUILT:** run-scoped (persistent) **allies** live in the `RunManager` (`allies`
-> roster, saved in the snapshot + rehydrated, full-healed between acts, dissolved at run end);
-> the `Encounter` seeds each fight's CombatManager with them, and they persist HP across fights.
+> roster, saved in the snapshot by def id + rehydrated, dissolved at run end); the `Encounter`
+> seeds each fight's CombatManager with them, and they are revived to full health at every fight start (their health is not saved).
 > So an ally can be **either scope** — combat-scoped (a summon) or run-scoped (persistent) — the
-> shared combat roster serves both. The **acquisition** (a draftable `ally` category / a
+> shared combat roster serves both. One acquisition path is built: a recruit event option
+> (`EventOptionDef.Effect.ADD_ALLY`, the placeholder Wanderer event). Other paths (a draftable `ally` category / a
 > character-start ally) + the token/ally content stay the owner's. (Original deferral note below.)
 
 

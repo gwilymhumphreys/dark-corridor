@@ -19,7 +19,7 @@ The layout, by the kind of question you're answering:
 | Doc | Covers |
 |-----|--------|
 | [handoff.md](handoff.md) | Fresh-agent orientation: what the game is, build status, how to run and test, settled lessons, the engineering backlog. |
-| [decision_log.md](decision_log.md) | The canonical decision record (#1–#50): what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
+| [decision_log.md](decision_log.md) | The canonical numbered decision record: what was decided and why, and what is open or deferred. Don't re-litigate anything in it. |
 | [documentation.md](documentation.md) | How the docs work: where each kind lives and the rules for writing them (sync with code in the same change, catalog every doc, intent not numbers, plan to system). |
 
 ## Systems (`docs/systems/`)
@@ -34,7 +34,7 @@ contracts (boundary hub)**, which every system doc links to.
 | [systems/combat_model.md](systems/combat_model.md) | How effects resolve in combat: the Ticker accrual primitive, accrual-only triggers, the fire/Delivery split, travel time, targeting and fizzle. |
 | [systems/timekeeper.md](systems/timekeeper.md) | The combat clock: fixed-step `sim_time`, continuous `render_time`, the one speed dial and the step cadence; owned by the Combat manager. |
 | [systems/actor.md](systems/actor.md) | The symmetric combatant: HP, a board of items, a status list. Player and enemy are the same type. |
-| [systems/mechanics.md](systems/mechanics.md) | One class per combat rule (attack, shield, heal, poison, burn, bleed, regen, crit, charge, decharge) holding its name, description, icon, colour, sound folder and landing behaviour, plus `MechanicRegistry`, the mechanic colours, and `IconSlots` (the thirteen icon slots and the icon chosen for each). |
+| [systems/mechanics.md](systems/mechanics.md) | One class per combat rule (attack, shield, heal, poison, burn, bleed, regen, crit, charge, decharge, and the two attack bonuses) holding its name, description, icon, colour, sound folder and landing behaviour, plus `MechanicRegistry`, the mechanic colours, and `IconSlots` (every icon slot and the icon chosen for each). |
 | [systems/status_manager.md](systems/status_manager.md) | The status system: a stateless facade over polymorphic `StatusEffect` classes, one file per status; stacking, the incoming-damage pipeline (amplify then absorb), the hook interface. |
 | [systems/item.md](systems/item.md) | The board participant: data-defined, owns a Ticker; the fire pipeline (gate, fire, resolve, target-shape), target filters and the authored mechanics list, own-side trigger source filters, rarity, size, the one enchant slot, duplicate stacking. |
 | [systems/combat_manager.md](systems/combat_manager.md) | The per-fight orchestrator: rosters and ordering, the Timekeeper lifecycle, the central tick, target resolution as pool then filter then pick, the trigger event bus, player input-intents. |

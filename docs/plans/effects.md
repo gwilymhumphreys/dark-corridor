@@ -12,7 +12,7 @@ Plans are not catalogued in `docs/index.md`. If this ships, its content moves in
 `VfxDriver` draws a disc for a projectile in flight, a ring where it lands, and a rising damage
 number, each in the delivery's colour and each a pure function of `render_time()`. The firing item
 punches its own cell (`item_cell.gd`), a hit enemy flinches and is lit in the corridor
-([`../systems/run_screen.md`](../systems/run_screen.md#enemies-in-the-corridor)), and each landing
+([`../systems/run_screen.md`](../systems/run_screen.md#enemies-in-the-corridor-the-approach)), and each landing
 plays one sound. The circles are placeholders. There is no effects framework and this plan does not
 propose one: what is needed is one drawing layer with settings for comparing looks.
 

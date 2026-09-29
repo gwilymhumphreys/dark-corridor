@@ -123,7 +123,7 @@ is correctly excluded: no fight is live.)
 
 ## Presentation (built)
 
-Both surfaces read the live log; the run screen owns its lifetime (`run_screen.gd` creates a
+The combat report reads the live log; the run screen owns its lifetime (`run_screen.gd` creates a
 `CombatLog` per fight, assigns it to the live `CombatManager.combat_log`, and keeps the last
 finished fight's log in `_last_log`, so the report still reads after the manager's teardown
 nulls its side). See [run_screen.md](run_screen.md).

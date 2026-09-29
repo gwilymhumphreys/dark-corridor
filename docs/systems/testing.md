@@ -29,7 +29,7 @@ the fixture files and are never read from `Balance`.
 | `fixture_character.gd` | `FixtureCharacter`: a character with a fixed starting board and a pool of fixture items only. |
 | `fixture_enemies.gd` | `FixtureEnemies`: a small and a large enemy, and an ally for summons and recruits, each with fixed health and one fixture attack. |
 | `fixture_encounters.gd` | `FixtureEncounters`: a fight against one fixture enemy, a rest, and an event with a heal, a maximum-health and a recruit option (`OPTION_*` give their indexes). |
-| `fixture_kit.gd` | `FixtureKit`: a heal potion, a value-multiplying enchant, a combat-start shield relic and a maximum-health relic. |
+| `fixture_kit.gd` | `FixtureKit`: a heal potion, a value-multiplying enchant, a combat-start shield relic, a maximum-health relic (a pickup run trigger) and a relic with a weapon attack bonus passive. |
 | `fixture_content.gd` | `FixtureContent.install()`: adds every fixture to its catalog, puts a fixture in place of every authored enemy, encounter and relic under the authored id, and empties every act's `EnemyPools` lists. |
 
 A test that plays a run, an encounter or an autotest, or that builds fixture content by id
@@ -63,8 +63,9 @@ func before_each() -> void:
 ```
 
 `reset_all_managers()` frees the live run held by `Game`, re-enables saving,
-keeps `Prefs` in memory rather than on disk, resets the debug panel settings, and
-removes the fixtures if a test installed them.
+keeps `Prefs` in memory rather than on disk, puts the text size ladder back to 100%, resets the
+debug panel settings, dissolves actors registered with `dissolve_at_reset`, and removes the
+fixtures if a test installed them.
 
 A test that builds an `Actor` without a `RunManager` should register it with
 `TestCleanup.dissolve_at_reset(actor)`. In the game `RunManager.teardown` dissolves

@@ -364,11 +364,11 @@ likely ships).
   of the (not-yet-built) ammo charge-counter (count down → dissolve, no reload); the item-dissolve
   teardown path already exists.
 - **Open — engine seams (the build risk / graduation gate):**
-  - **Mid-fight item creation** = adding an Item to a *live* board mid-fight — **confirmed NOT
-    built (code check 2026-06-19):** no runtime item-board mutation exists; the *only* mid-fight
+  - **Mid-fight item creation** = adding an Item to a *live* board mid-fight — **built since**
+    ([item_creation_and_decay.md](../systems/item_creation_and_decay.md)). **Code check 2026-06-19, before it was built:** no runtime item-board mutation exists; the *only* mid-fight
     spawn is a **summon**, which is a full Actor (a body with HP/board slot), not an item. Building
     item-creation is the cousin-of-summon the doc anticipated. This is the primary gate.
-  - **Decay / use-counter — confirmed NOT built (code check 2026-06-19):** no charges/uses/lifespan
+  - **Decay / use-counter — built since** ([item_creation_and_decay.md](../systems/item_creation_and_decay.md)). **Code check 2026-06-19, before it was built:** no charges/uses/lifespan
     on items *or* summons; items fire forever until removed, summons die by HP or at combat end.
     The chunk-of-flesh's "gone after N activations" needs this built (small — the item-dissolve
     teardown path already exists). Routing the chunk through summons does NOT supply decay and turns

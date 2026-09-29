@@ -15,7 +15,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 
 ## How it works
 
-- There are four material files on the same shader, each set in the scene of the nodes that use it.
+- There are four material files, each set in the scene of the nodes that use it: three on `interface_look.gdshader` and the portrait material on `interface_portrait.gdshader`, which adds the per-node `picture_zoom`.
   Godot shares one loaded copy of each file, so a setting changed on it changes every node using it
   at once.
   - `interface_look_material.tres` (`InterfaceLook.material`) draws the pictures that are not inside a
@@ -66,7 +66,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   look settings; its dither pattern, size and supersample are, and appear in the Dithering section.
   The interface dithering switch is separate from the corridor's, so Backspace and `--dither` do not
   touch it.
-- All three materials are also present in release builds, with every effect off.
+- All four materials are also present in release builds, with every effect off.
 
 | Element | Scene and node | Material |
 |---|---|---|
@@ -74,7 +74,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 | Potion icons | `potion_slot.tscn` `Cell/Frame/Icon` (an item cell) | framed pictures |
 | Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` | images |
 | Character portraits | `character_panel.tscn` `Row/Portrait/Image` (player and allies), `character_card.tscn` `Portrait/Image` | framed pictures |
-| HP bars | `Background` and `Fill` in `health_bar.tscn`, used by every character panel | elements |
+| HP bars | `Bar/Background`, `HealthFill`, `ShieldFill` and `Lines` in `health_bar.tscn`, used by every character panel | elements |
 | Item value pills (the numbers on items) | `value_pill.tscn` root panel and its `Value` label | elements |
 | The mouse cursor ([cursor.md](cursor.md)) | `mouse_cursor.tscn` `Hand` | images |
 

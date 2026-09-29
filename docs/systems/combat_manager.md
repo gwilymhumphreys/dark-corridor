@@ -36,17 +36,17 @@ What it **is not**:
 
 ## The central tick (the heart)
 
-The `Combat manager` owns the single combat loop — *the* central tick (no other combat logic runs `_process`). It runs on a **fixed timestep** (see the Timekeeper): the loop lives in `_physics_process`, and the `Timekeeper` converts real time × the dial into a whole number of fixed **sim-steps** to run this frame.
+The `Combat manager` owns the single combat loop — *the* central tick (no other combat logic runs `_process`). It runs on a **fixed timestep** (see the Timekeeper): the loop is `tick(delta)`, which the run screen calls each physics frame (a manager added to the tree directly, as in the sandbox, calls it from its own `_physics_process`), and the `Timekeeper` converts real time × the dial into a whole number of fixed **sim-steps** to run this frame.
 
 ```
-_physics_process(physics_delta):                  # physics_delta fixed (1/60), Godot-driven
+tick(physics_delta):                              # physics_delta fixed (1/60), Godot-driven
     for i in timekeeper.steps_due(physics_delta):  # dial → step count, capped, backlog dropped
         sim_step()
 
 sim_step():                                        # ONE combat tick — a fixed STEP of game-time
     timekeeper.advance()                           # sim_time += STEP
     crossed = advance_all_components()             # advance every registered component one step; collect crossings
-    fire(crossed); land(); route_events(); check_win_loss()
+    land(); reap(); if check_win_loss(): return; fire(crossed)   # events are routed inline
 ```
 
 Each **sim-step** (one combat tick):
@@ -85,7 +85,7 @@ Items declare a *relative* shape (Item PRD); the manager resolves it against the
 
 A per-fight pub-sub the manager owns (it holds every participant) — this resolves the "trigger delivery" the StatusManager and Item PRDs deferred:
 
-- **Subscribe** — at start (and whenever an item is added) each item registers its declared trigger conditions (event type → seconds of charge, plus the data + source filters below). **Unsubscribe** — a reaped body's items are dropped from the bus (no zombie pushes); mid-fight item removal would ride the same call.
+- **Subscribe** — at start (and whenever an item is added) each item registers its declared trigger conditions (event type → seconds of charge, plus the data + source filters below). **Unsubscribe** — a reaped body's items are dropped from the bus (no zombie pushes), and so is an item removed mid-fight (`remove_item`).
 - **Publish** — during a tick, emitted events (`ITEM_FIRED`, `APPLIED`, `ITEM_DESTROYED`, `CRIT`, `FIGHT_START`, `DAMAGE_TAKEN`) carry **source identity** — the acting Actor + the acting Item where one exists (`ITEM_FIRED` carries the firing item + its owner; a Delivery's land carries its `source_actor`; a thrown consumable's events carry the thrower with a null item). Matching subscriptions get their accumulator pushed by the declared amount; a push to a **gated** item is dropped (decision #30 — the gate freezes the item's time).
 - **Filtering** — a subscription filters on the event's **data** (e.g. APPLIED scoped to `'poison'`) and on the **source's side** relative to the subscriber: `OWN_SIDE` ("when MY side does X" — the content default, decision #30) / `ANY` / `OPPONENT_SIDE` (the Avenger shape — opt-in per subscription via `trigger_subs.source_filter`). Side is resolved **at event time** through the manager's side resolver, never cached at subscribe time (rosters mutate — a summon subscribes before its roster insertion). A side filter needs the whole identity chain (resolver + subscriber owner + source actor); a null-identity event only reaches `ANY`.
 - **Timing** — pushes take effect for the *next* tick's advance (loop-proof, above).
@@ -101,7 +101,7 @@ The event catalog and push amounts are content (the Item PRD: item declares; com
 
 ## The component registry (pull-based)
 
-The manager **owns the registry** of live time components — the boards' item cooldown Tickers, active statuses, and in-flight Deliveries — and advances them each sim-step (step 1 above). Membership is **pull-based**: it registers components **returned from** a component's step / `StatusManager.apply()` (a firing item hands back its Delivery; an applied status hands back its instance) and deregisters resolved/expired ones. Content never reaches *up* to register itself. The iteration order must be **deterministic** (same board state → same result); the concrete order (board position? insertion?) is deferred until there are real boards. (The `Timekeeper` no longer holds this — it's just the clock.)
+The manager **owns the registry** of live time components — the boards' item cooldown Tickers, active statuses, and in-flight Deliveries — and advances them each sim-step (step 1 above). Items are registered in `_items` (and relic items in `_relic_items`) at start and by `add_item`, and dropped by `remove_item` or a reap; a fired payload becomes a Delivery in `_deliveries`; statuses have no list of their own and are advanced by walking each actor's and item's `statuses`. Content never reaches *up* to register itself. The iteration order must be **deterministic** (same board state → same result); the order is item cooldowns, then statuses, then Delivery travel, each in insertion order. (The `Timekeeper` no longer holds this — it's just the clock.)
 
 ---
 
@@ -122,6 +122,7 @@ The manager holds an **optional** `var combat_log: CombatLog = null` ([combat_lo
 The manager receives UI *input-intents* during a fight (the input/output split — see architecture):
 
 - **timescale intent** (hover slow-mo / throw) → sets the `Timekeeper`'s dial (base vs. override — Timekeeper PRD).
+- **hit-pause intent** (`request_hit_pause`) → holds the `Timekeeper` for a moment of real time on a big hit.
 - **throw-potion intent** → activates the consumable: builds its payload(s) (no Ticker — combat_model.md), resolves the shape, spawns its Deliveries.
 
 UI never writes combat state directly; the manager interprets the intent.

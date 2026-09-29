@@ -27,7 +27,7 @@ a stone corridor and is tuned in the editor's audio panel.
 
 ## Prefs (`src/autoloads/prefs.gd`)
 
-The settings autoload — persists per-player **volume** preferences to `user://` (a
+The settings autoload — persists per-player settings to `user://` (a
 `ConfigFile`, **separate** from the run `Save`, which holds run-state only and is cleared
 on death/win). It stores a 0..1 linear level per audio key (`master` / `music` /
 `interface` / `game`), applies each to its bus via `AudioServer.set_bus_volume_db` (`linear_to_db`;
@@ -35,8 +35,8 @@ on death/win). It stores a 0..1 linear level per audio key (`master` / `music` /
 to its default in `AUDIO_DEFAULTS`. `set_volume(key, value)` clamps, applies,
 and writes through immediately; `disabled` (mirrors `Save.disabled` — the tests / a nosave
 run) skips the disk write. The [settings screen](run_screen.md) binds its sliders here.
-Defaults + bus map are constants at the top of `prefs.gd`; the owner extends it with
-video / accessibility keys as settings grow.
+Defaults + bus map are constants at the top of `prefs.gd`. It also stores mute-when-unfocused, the
+display mode and the interface text scale ([run_screen.md](run_screen.md)).
 
 **Silent runs.** A process launched with `--autotest` or `--shot` plays no sound: `Prefs`
 mutes the Master bus at boot and leaves the stored levels alone, so the player's own
@@ -155,14 +155,14 @@ API:
   caller already holds, on the Interface bus. [UIJuice](ui_juice.md) uses these for a node's
   own hover or click sound. `play_world` and `play_guarded_world` are the World bus forms.
 
-**What is in the project now:**
+**What is in the project now:** the folders under `assets/sound-effects/` — `ui/` (hover and
+click), `world/footsteps/`, `mechanics/<mechanic id>/`, and `combat/` (`hurt/` for the hit
+reactions, `travel/` for the sounds of deliveries in flight, with a `volume.cfg`). No category has
+a `_default` folder yet, so a folder with no recordings and no recorded parent is silent.
 
-- `assets/sound-effects/ui/hover/` — 7 page turns
-- `assets/sound-effects/ui/click/` — 3 book closes
 - `assets/sound-effects/ui/paper/` — a pool of paper candidates that nothing plays. Its `.gdignore`
   keeps Godot from importing it, so it is not in a build. Move a sound into a folder the game
   plays from to use it.
-- `assets/sound-effects/world/footsteps/steps/` — single footsteps, one per footfall
 
 Wav files must be 8-bit or 16-bit PCM; a 24-bit one imports as silence without failing the
 import. See [godot_notes.md](godot_notes.md#importing-assets).
