@@ -301,7 +301,8 @@ full-screen.
 - **Map** — `map_strip.tscn` shows the current act's squares (`RunMap.SQUARES`) under an "Act N"
   label: a row of pencil grid squares (the grid material in box mode), each holding a small cardboard
   token (an `ItemCell`) with a single-colour icon (`assets/icons/map/`: fight, elite, relic, boss),
-  tinted from the palette (`ItemCell.tint_picture`). The tokens are the medium token size, the same
+  tinted from the palette (`ItemCell.tint_picture`) and drawn with the item icons' picture effects
+  unless the `map_icons_as_pictures` print setting is off ([print_frame.md](print_frame.md)). The tokens are the medium token size, the same
   as the enemy items (`medium_token_size`), or smaller if the row would be wider than the strip, and
   are set askew like the items. A cleared square's token is face down (no
   icon), and the current one has the selected border (`ItemCell.set_marked`, [control_feedback.md](control_feedback.md)); during an event, a
