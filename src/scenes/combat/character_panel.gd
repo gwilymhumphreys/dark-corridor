@@ -205,11 +205,18 @@ func cell_centre(item: Item) -> Vector2:
   return Vector2.INF
 
 
+## Whether `point` is over an item cell or a status icon (the slow-mo hover surface).
 func mouse_over(point: Vector2) -> bool:
   for cell in _cells.values():
     if (cell as ItemCell).get_global_rect().has_point(point):
       return true
-  return false
+  return status_icon_at(point) != null
+
+
+## The status icon under `point` (the status tooltip's hover target), or null.
+func status_icon_at(point: Vector2) -> StatusIcon:
+  var icon: StatusIcon = _statuses.icon_at(point)
+  return icon if icon != null else _statuses_under.icon_at(point)
 
 
 ## The Item whose cell is under `point` (the tooltip hover target), or null. Mirrors mouse_over.

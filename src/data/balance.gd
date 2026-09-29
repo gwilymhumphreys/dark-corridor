@@ -18,7 +18,7 @@ const MAX_STEPS: int = 8
 
 # ── Timescale dial (one scalar; Timekeeper PRD) ──────────────────────────────
 const TIMESCALE_PAUSE: float = 0.0
-const TIMESCALE_SLOWMO: float = 0.05        # hover-to-inspect
+const TIMESCALE_SLOWMO: float = 0.02        # hover-to-inspect
 const TIMESCALE_BASE: float = 1.0           # default battle-speed
 const TIMESCALE_FAST_TEST: float = 5.0      # --speed dev / autotest
 const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3

@@ -22,6 +22,7 @@ var _run_seed: int = 0
 var _position: int = 0
 var _set_up: bool = false
 var _fitted: Vector4 = -Vector4.ONE   # the token size, tilt, shift and strip width last fitted to
+var _as_pictures: bool = false   # the `map_icons_as_pictures` print setting the icons were drawn with
 
 @onready var _act_label: Label = $ActLabel
 @onready var _track: Control = $Track
@@ -47,6 +48,8 @@ func _exit_tree() -> void:
 # they change.
 func _process(_delta: float) -> void:
   _fit()
+  if PrintLook.print_setting('map_icons_as_pictures') != _as_pictures:
+    _update()
 
 
 func setup(run_seed: int, pos: int) -> void:
@@ -75,12 +78,13 @@ func _update() -> void:
     return
   _act_label.text = tr('Act {0}').format([RunMap.act_of(_position) + 1])
   var current: Array = current_square() if _set_up else [0, false]
+  _as_pictures = PrintLook.print_setting('map_icons_as_pictures')
   for index: int in RunMap.SQUARES.size():
     var token: ItemCell = _tokens.get_child(index)
     var kind: RunMap.Square = RunMap.SQUARES[index]
     var cleared: bool = index < current[0]
     token.show_picture(null if cleared else ICONS[kind])   # a cleared square's token is face down
-    token.tint_picture(_icon_colour(kind))
+    token.tint_picture(_icon_colour(kind), _as_pictures)
     token.set_marked(index == current[0] and not current[1])
   _marks.queue_redraw()
 

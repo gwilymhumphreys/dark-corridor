@@ -25,9 +25,9 @@ var types: Array[String] = []
 var mechanics: Array[String] = []
 # The folder under mechanics/attack/ whose recordings this item's attacks play
 # (docs/systems/audio.md) — 'blade' and 'blunt' to start with, and any other name works by
-# making the folder. Sound only: nothing but the sound layer reads it, which is what separates
-# it from `types` above, whose values are synergy labels content may key off. Empty = the plain
-# mechanics/attack folder.
+# making the folder. Presentation only: the sound layer reads it, and AttackHitDrawer draws a slash
+# for 'blade' and an impact otherwise. That is what separates it from `types` above, whose values
+# are synergy labels content may key off. Empty = the plain mechanics/attack folder.
 var attack_sound: String = ''
 # The folder under combat/travel/ this item's projectiles play in flight (docs/systems/audio.md),
 # ahead of the folders for its type tags and mechanic. Sound only, like attack_sound. Empty = the

@@ -7,7 +7,7 @@ const INTERFACE_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
 
 ## Nodes drawn through `InterfaceLook.material`: the pictures that are not inside a panel frame.
 const SCENE_NODES: Array[Array] = [
-  ['res://src/scenes/combat/status_icon.tscn', 'Icon'],
+  ['res://src/scenes/combat/status_icon.tscn', 'Frame/Icon'],
   ['res://src/scenes/ui/tooltip/keyword_chip.tscn', 'Margin/Row/Icon'],
 ]
 

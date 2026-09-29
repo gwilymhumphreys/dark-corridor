@@ -72,6 +72,24 @@ func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
       'shield is a mechanic (its number shows beside the HP bar), only weak gets an icon')
 
 
+func test_character_panel_finds_the_hovered_status_icon() -> void:
+  # A status icon is a hover target: the tooltip shows its status and the fight slows.
+  var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
+  _host(hud)
+  var a := _spawn(100.0, [FixtureItems.attack()])
+  StatusManager.apply(a, 'weak', 1.0)
+  hud.setup(a)
+  var row: StatusIcons = hud.get_node('Row/Readout/Top/Statuses')
+  row.refresh()
+  await get_tree().process_frame   # let the containers lay the icon out
+  var icon: StatusIcon = row.get_child(0).get_child(0)
+  var centre: Vector2 = icon.global_position + icon.size * 0.5
+  assert_eq(hud.status_icon_at(centre), icon, 'the icon under the point is found')
+  assert_eq(icon.status.id, 'weak', 'the icon holds its status for the tooltip')
+  assert_true(hud.mouse_over(centre), 'a status icon counts as a slow-mo hover surface')
+  assert_null(hud.status_icon_at(centre + Vector2(10000, 10000)), 'a far point finds no icon')
+
+
 func test_ally_slot_builds_one_cell_per_item() -> void:
   var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
   _host(slot)

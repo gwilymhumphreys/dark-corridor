@@ -41,7 +41,8 @@ static func make(id: String, size: int) -> TextureRect:
 
 ## `id`'s icon as a RichTextLabel `[img]` tag of `size` pixels, for an icon inside a line of rich
 ## text. It takes the same tint as `make`, but a rich text image cannot take a material, so it is
-## drawn without the interface look.
+## drawn without the interface look. The tag has no alignment value (`[img=center ...]`): Godot
+## ignores the width and height when it has one, and draws the icon at its full size.
 static func bbcode(id: String, size: int) -> String:
   var entry: Dictionary = KeywordCatalog.get_entry(id)
   var path: String = entry['icon'] if not entry.is_empty() else IconSlots.icon_for(id)
@@ -50,7 +51,7 @@ static func bbcode(id: String, size: int) -> String:
   var colour: Color = Color.WHITE
   if path.begins_with(GLYPH_DIR):
     colour = entry['color'] if not entry.is_empty() else Colours.UI_TEXT_DIM
-  return '[img=center width=%d height=%d color=#%s]%s[/img]' % [size, size, colour.to_html(), path]
+  return '[img width=%d height=%d color=#%s]%s[/img]' % [size, size, colour.to_html(), path]
 
 
 static func _blank(size: int) -> TextureRect:

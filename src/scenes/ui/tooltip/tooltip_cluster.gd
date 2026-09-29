@@ -5,7 +5,8 @@ extends CanvasLayer
 ## (layer 50, below the pause menu's 100). Owned by the combat view, which feeds it a target every
 ## frame via update_target; the cluster positions + clamps itself and rebuilds content when the
 ## target item changes, and hides as soon as the cursor leaves the item. Opaque (no alpha) — a scale
-## reveal. Nothing in the cluster is interactive: it takes no mouse input at all.
+## reveal. Nothing in the cluster is interactive: it takes no mouse input at all. A hovered status
+## icon shows the status's keyword card on its own, with no main panel.
 ##
 ## Coordinate space: positions with the cell's global rect and clamps to the viewport rect, assuming
 ## the run-screen UI has NO custom canvas transform (it has no camera). If a transform is ever added,
@@ -24,7 +25,7 @@ var _body: Control = null
 var _panel: TooltipPanel = null
 var _column: VBoxContainer = null
 
-var _current_item: Item = null
+var _current: Object = null           # the Item or StatusEffect shown
 var _side: int = Side.LEFT
 var _anchor_rect: Rect2 = Rect2()    # the hovered cell's global rect (re-read each frame; cells move)
 var _pending_show: bool = false      # rebuilt this frame; reveal next frame once wrapped sizes settle
@@ -45,25 +46,25 @@ func _ready() -> void:
 func _exit_tree() -> void:
   # CLAUDE.md runtime cleanup: drop the live Item ref + stop the tween on free (the Actor↔Item
   # cycle is broken at dissolve() — the cluster must not retain an Item across teardown).
-  _current_item = null
+  _current = null
   if _reveal != null and _reveal.is_valid():
     _reveal.kill()
 
 
-## Fed every frame by the view. `target` is {} (no cell under the cursor) or {item, rect, side}.
-## Drives show / retarget / hide.
+## Fed every frame by the view. `target` is {} (nothing under the cursor), {item, rect, side} for a
+## board item, or {status, rect, side} for a status icon. Drives show / retarget / hide.
 func update_target(target: Dictionary) -> void:
-  if not target.is_empty() and is_instance_valid(target['item']):
-    var item: Item = target['item']
+  var subject: Object = target.get('item', target.get('status')) as Object
+  if is_instance_valid(subject):
     _anchor_rect = target['rect']
     _side = target.get('side', Side.LEFT)
-    if item != _current_item:
+    if subject != _current:
       # New item: rebuild + lock the fixed panel width now, but DON'T show this frame. The
       # HFlowContainer / RichTextLabel wrapped HEIGHT is only correct after one layout pass
       # (measuring the same frame reports a too-tall size), so reveal next frame at the settled
       # size — avoids a one-frame position jump.
-      _current_item = item
-      _rebuild(item)
+      _current = subject
+      _rebuild(subject)
       _panel.reset_size()
       _column.reset_size()
       _pending_show = true
@@ -81,17 +82,22 @@ func update_target(target: Dictionary) -> void:
 
 func hide_cluster() -> void:
   visible = false
-  _current_item = null
+  _current = null
   _pending_show = false
 
 
-func _rebuild(item: Item) -> void:
-  var content: Dictionary = TooltipContent.new().build(item)
-  _panel.set_content(content)
+func _rebuild(subject: Object) -> void:
+  var keyword_ids: Array = []
+  if subject is Item:
+    var content: Dictionary = TooltipContent.new().build(subject as Item)
+    _panel.set_content(content)
+    keyword_ids = content['keyword_ids']
+  else:
+    keyword_ids = [(subject as StatusEffect).id]
+  _panel.visible = subject is Item
   for child in _column.get_children():
     _column.remove_child(child)
     child.queue_free()
-  var keyword_ids: Array = content['keyword_ids']
   for id: String in keyword_ids:
     var frame := PanelContainer.new()
     frame.theme_type_variation = 'PanelFramed'
@@ -109,9 +115,11 @@ func _reposition(side: int) -> void:
   _panel.reset_size()
   _column.reset_size()
   var screen: Vector2 = get_viewport().get_visible_rect().size
-  var main_size: Vector2 = _panel.get_combined_minimum_size()
+  var main_size: Vector2 = _panel.get_combined_minimum_size() if _panel.visible else Vector2.ZERO
   var col_size: Vector2 = _column.get_combined_minimum_size() if _column.visible else Vector2.ZERO
-  var col_span: float = (GAP + col_size.x) if _column.visible else 0.0
+  var col_span: float = 0.0
+  if _column.visible:
+    col_span = col_size.x + (GAP if _panel.visible else 0.0)
   var cluster_w: float = main_size.x + col_span
   var cluster_h: float = maxf(main_size.y, col_size.y)
 
@@ -138,7 +146,7 @@ func _reposition(side: int) -> void:
     _panel.position = Vector2(col_span, 0.0)
   else:            # item is to the LEFT of the cluster
     _panel.position = Vector2.ZERO
-    _column.position = Vector2(main_size.x + GAP, 0.0)
+    _column.position = Vector2(main_size.x + GAP if _panel.visible else 0.0, 0.0)
 
 
 func _play_reveal() -> void:

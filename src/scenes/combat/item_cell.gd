@@ -136,12 +136,13 @@ func show_picture(texture: Texture2D) -> void:
   _build_pills()
 
 
-## Tint the picture, for a single-colour icon such as a map square's. The icon is then drawn with the
-## interface element material, like the value pills, so the palette colour is kept
+## Tint the picture, for a single-colour icon such as a map square's. With `as_picture` the icon keeps
+## the item icons' material and takes every picture effect; otherwise it is drawn with the interface
+## element material, like the value pills, so the palette colour is kept
 ## (docs/systems/interface_look.md).
-func tint_picture(colour: Color) -> void:
+func tint_picture(colour: Color, as_picture: bool = false) -> void:
   _icon.self_modulate = colour
-  _icon.material = InterfaceLook.element_material
+  _icon.material = InterfaceLook.framed_material if as_picture else InterfaceLook.element_material
 
 
 ## Keep the selected border on, such as on the map's current square (docs/systems/control_feedback.md).

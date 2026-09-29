@@ -7,6 +7,10 @@ enemy's relic cells, each an `Item` built from its `RelicDef`) and the reward ic
 draft overlay, relic choices included. Potions (Consumables, not Items)
 are a follow-on — the builder is `Item`-typed.
 
+A hovered **status icon** on any character panel shows that status's keyword card on its own, with
+no main panel, and takes the same hover border as a board item. It also slows the fight, like
+hovering an item.
+
 Shipped from [`docs/plans/tooltip_system.md`](../plans/tooltip_system.md), which
 holds the design rationale, the ratified decisions, and the prior-art lineage
 (`../a-machine` `BuildingTooltip`, `../battledraft` `TooltipManager`).
@@ -89,12 +93,13 @@ and the cluster has to re-read a moving cell's rect every frame anyway):
    picks the target: a reward icon from `DraftOverlay.inspectable_at` first; nothing when the
    mouse is over the draft or summary panel; otherwise the view's `inspectable_at`. The view exists
    during events too (built without a fight), so board tooltips work there as well. Slow-mo is still requested only while fighting.
-2. `combat_view_framed.gd::inspectable_at(point)` hit-tests enemy-HUD cells (relics included),
-   ally-slot cells, then player cells and the relic tokens, returning `{item, rect (global), side}` or `{}`. The rect
+2. `combat_view_framed.gd::inspectable_at(point)` hit-tests the status icons on every character
+   panel (`CharacterPanel.status_icon_at`), returning `{status, icon, rect, side}`, then enemy-HUD cells (relics included),
+   ally-slot cells, then player cells and the relic tokens, returning `{item, rect (global), side}`, or `{}`. The rect
    is re-read each frame (enemy HUDs reposition every frame, so the cluster tracks a
    moving cell). Helpers: `EnemyHud`/`AllySlot` `item_at(point)` + `cell_rect(item)`.
 3. The view owns the cluster and feeds it the target via `update_target(target)`, and sets
-   `hovered` on the target's `ItemCell` so it takes the hover highlight
+   `hovered` on the target's `ItemCell` or `StatusIcon` so it takes the hover highlight
    ([control_feedback.md](control_feedback.md)). Board items take no mouse events of their own, so
    this poll is the only thing that knows which cell the pointer is over.
 4. The run screen passes only the target; there is no cursor position to track once the cluster

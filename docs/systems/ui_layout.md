@@ -70,7 +70,7 @@ The enemy board mirrors the player's (loadouts visible — "watch the cascades c
 
 ## Slow-mo-on-hover (one verb)
 
-Hover anything important (own items, enemy items, potions, enemies) → time slows (~×0.05) → read. One consistent verb. It is a **timescale intent** the `Combat manager` interprets (sets the `Timekeeper` dial) — slow-mo slows **both sides** proportionally (can't dodge by inspecting). Out of combat (draft / choice) there's no clock — inspection is just tooltips.
+Hover anything important (own items, enemy items, potions, status icons, enemies) → time slows (`Balance.TIMESCALE_SLOWMO`) → read. One consistent verb. It is a **timescale intent** the `Combat manager` interprets (sets the `Timekeeper` dial) — slow-mo slows **both sides** proportionally (can't dodge by inspecting). Out of combat (draft / choice) there's no clock — inspection is just tooltips.
 
 ## Battle-speed dial + pause (built)
 

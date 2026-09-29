@@ -148,8 +148,9 @@ works by making the folder. Empty means the plain attack folder.
 
 It is deliberately separate from `types`. A type tag is part of the synergy vocabulary that
 content reads, so adding `blade` there would make it something an item could key off. Nothing
-but the sound layer reads `attack_sound`. If a blade synergy is ever wanted, it becomes a type
-tag then; until it does, telling a sword from a mace is a sound decision alone. The folder
+but the sound layer and the attack hit effect read `attack_sound` (`blade` draws a slash, anything
+else an impact — [vfx_driver.md](vfx_driver.md)). If a blade synergy is ever wanted, it becomes a
+type tag then; until it does, telling a sword from a mace is a presentation decision alone. The folder
 scheme and the other two layers of a hit: [audio.md](audio.md).
 
 `ItemDef.travel_sound` works the same way for the sound a projectile makes in flight. It names a

@@ -58,6 +58,16 @@ func icon_count() -> int:
   return _icons.size()
 
 
+## The icon under `point` (global), or null.
+func icon_at(point: Vector2) -> StatusIcon:
+  if not is_visible_in_tree():
+    return null
+  for icon in _icons:
+    if icon.get_global_rect().has_point(point):
+      return icon
+  return null
+
+
 ## Lay out `count` icons in columns of `rows`. Only runs when the number of statuses changes.
 func _rebuild(count: int) -> void:
   for old_column: Node in get_children():

@@ -72,6 +72,7 @@ var _enemy_huds: Dictionary = {}    # Actor -> EnemyHud
 var _ally_slots: Dictionary = {}    # Actor -> AllySlot
 var _player_cells: Dictionary = {}  # Item -> ItemCell (the player's right-panel board)
 var _hovered_cell: ItemCell = null  # the cell the tooltip poll last reported under the pointer
+var _hovered_status_icon: StatusIcon = null  # the status icon it last reported
 var _throw_origins: Dictionary = {}  # Consumable -> the global centre of the slot it was thrown from
 var _cooldowns_shown: bool = false  # whether board cells show their cooldown fill (off outside a fight)
 var _cluster: TooltipCluster = null   # the floating item tooltip (its own CanvasLayer, layer 50)
@@ -768,6 +769,7 @@ func _exit_tree() -> void:
   _fading_out.clear()
   _throw_origins.clear()
   _cluster = null
+  _hovered_status_icon = null
 
 
 ## The hover surface for the slow-mo intent: a board item on any HUD / ally slot / the player's
@@ -781,6 +783,8 @@ func mouse_over_inspectable(point: Vector2) -> bool:
   for slot in _ally_slots.values():
     if (slot as AllySlot).mouse_over(point):
       return true
+  if _player_panel.status_icon_at(point) != null:
+    return true
   for cell in _player_cells.values():
     if (cell as ItemCell).get_global_rect().has_point(point):
       return true
@@ -793,9 +797,14 @@ func mouse_over_inspectable(point: Vector2) -> bool:
 # --- tooltip cluster (docs/systems/tooltips.md) ------------------------------
 
 ## The board item under `point` — enemy-HUD cells, ally-slot cells, then the player's column —
-## as {item, rect (global), side} for the cluster, or {} if the point is over no cell. The rect is
-## re-read each frame so the cluster tracks a moving cell (enemy HUDs reposition every frame).
+## as {item, rect (global), side} for the cluster, or a status icon as {status, icon, rect, side},
+## or {} if the point is over neither. The rect is re-read each frame so the cluster tracks a moving
+## cell (enemy HUDs reposition every frame).
 func inspectable_at(point: Vector2) -> Dictionary:
+  for panel: CharacterPanel in [_player_panel] + _ally_slots.values() + _enemy_huds.values():
+    var icon: StatusIcon = panel.status_icon_at(point)
+    if icon != null and icon.status != null:
+      return {'status': icon.status, 'icon': icon, 'rect': icon.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
   for hud in _enemy_huds.values():
     var hud_item: Item = (hud as EnemyHud).item_at(point)
     if hud_item != null:
@@ -814,12 +823,14 @@ func inspectable_at(point: Vector2) -> Dictionary:
 
 func update_inspection(target: Dictionary) -> void:
   _set_hovered_cell(target.get('item') as Item)
+  _set_hovered_status_icon(target.get('icon') as StatusIcon)
   if _cluster != null:
     _cluster.update_target(target)
 
 
 func stop_inspection() -> void:
   _set_hovered_cell(null)
+  _set_hovered_status_icon(null)
   if _cluster != null:
     _cluster.hide_cluster()
 
@@ -836,6 +847,17 @@ func _set_hovered_cell(item: Item) -> void:
   _hovered_cell = cell
   if cell != null:
     cell.hovered = true
+
+
+# The status icon the poll reports takes the hover highlight, as a board cell does.
+func _set_hovered_status_icon(icon: StatusIcon) -> void:
+  if icon == _hovered_status_icon:
+    return
+  if is_instance_valid(_hovered_status_icon):
+    _hovered_status_icon.hovered = false
+  _hovered_status_icon = icon
+  if icon != null:
+    icon.hovered = true
 
 
 func _cell_for(item: Item) -> ItemCell:
