@@ -33,6 +33,9 @@ const SECTIONS: Dictionary = {
     'status_size': [16.0, 96.0, 1.0],
     'pill_size': [0.4, 1.6, 0.05],
   },
+  'Map': {
+    'map_icons_as_pictures': [],
+  },
 }
 
 

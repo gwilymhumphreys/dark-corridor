@@ -21,7 +21,8 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   - `interface_look_material.tres` (`InterfaceLook.material`) draws the pictures that are not inside a
     panel frame: status icons and keyword chip icons.
   - `interface_framed_material.tres` (`InterfaceLook.framed_material`) draws the pictures that sit
-    inside a panel frame and do not breathe: the item cell icons, which include the potions. Picture wear is kept off on
+    inside a panel frame and do not breathe: the item cell icons, which include the potions and, by
+    default, the map icons. Picture wear is kept off on
     this material (`FRAMED_OFF_UNIFORMS`), because the frame around them draws its own
     [panel wear](panel_wear.md); everything else applies.
   - `interface_portrait_material.tres` (`InterfaceLook.portrait_material`) draws the breathing

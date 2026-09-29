@@ -17,7 +17,7 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
 | Icons | F6 | Which icon and colour each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice; a mechanic's colour is written to the [custom palette](interface_palette.md) |
-| Tokens | F7 | The [cardboard token look](print_frame.md) of items, potions and portraits: placement, shadow, fill and the portrait switches |
+| Tokens | F7 | The [cardboard token look](print_frame.md) of items, potions and portraits: placement, shadow, fill, the portrait switches, the character panel layout and the map icon switch |
 
 The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The first five line up
 with the parts, but a tab that saves its own files rather than being part of a

@@ -57,7 +57,9 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## sits at the bottom of the item column (`CombatViewFramed`) rather than in the information section. Then the
 ## sizes in pixels of the enemy and ally item cells (the largest; a row too long for its width
 ## shrinks) and of the status icons on every panel, and the size of every value pill (item values and
-## status stacks) against its base size, the same whatever the cell or icon size.
+## status stacks) against its base size, the same whatever the cell or icon size. Last, whether the
+## map's icons are drawn like the item icons, with every picture effect (`MapStrip`), rather than
+## keeping their exact palette colour like the value pills.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'split_across': 1700.0,
@@ -81,6 +83,7 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'ally_item_size': 60.0,
   'status_size': 44.0,
   'pill_size': 1.0,
+  'map_icons_as_pictures': true,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']
