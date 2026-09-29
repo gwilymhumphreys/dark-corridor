@@ -41,7 +41,7 @@ func setup(amount: float, dur: float, src, applied_flags: int) -> void:
 
 # --- lifecycle ---
 
-func on_apply(target, ctx) -> void:
+func on_apply(_target, _ctx) -> void:
   pass
 
 
@@ -49,19 +49,19 @@ func on_apply(target, ctx) -> void:
 ## consumed-to-zero (StatusManager.consume), and spent-removal after a damage pass
 ## (an emptied shield pool). NOT called at combat teardown — the fight ending is a
 ## clear, not an expiry (an on-expire effect must not fire into a finished fight).
-func on_expire(target, ctx) -> void:
+func on_expire(_target, _ctx) -> void:
   pass
 
 
 ## Re-application onto an existing instance of the same id. Default = STACK (additive count);
 ## time-driven subclasses also extend their duration. Override for refresh / max semantics.
-func reapply(add_count: float, add_duration: float, src, new_flags: int) -> void:
+func reapply(add_count: float, _add_duration: float, _src, _new_flags: int) -> void:
   count += roundi(add_count)
 
 
 # --- per-step active effect (PUSH). Return true the step it has expired. ---
 
-func on_step(target, ctx) -> bool:
+func on_step(_target, _ctx) -> bool:
   return false
 
 
@@ -69,7 +69,7 @@ func on_step(target, ctx) -> bool:
 ## docs/systems/item_creation_and_decay.md Cap 2). The decay use-status decrements here and asks
 ## `ctx` to remove the host item when spent; default no-op. `ctx` is the Combat manager's
 ## StatusContext (it may be null outside combat — tolerate that).
-func on_holder_fired(item, ctx) -> void:
+func on_holder_fired(_item, _ctx) -> void:
   pass
 
 

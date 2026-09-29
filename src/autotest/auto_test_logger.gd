@@ -49,11 +49,11 @@ func log_event(type: String, data: Dictionary = {}) -> void:
 ## separate by the log's side-keying). `damage_by_family` is per ITEM, DIRECT hits only; status
 ## (DoT / cash-out) damage is bucketed by the STATUS in `damage_by_status` (the applier merge makes
 ## per-item DoT attribution a fiction).
-func ingest_combat_log(log: CombatLog) -> void:
-  if log == null:
+func ingest_combat_log(combat_log: CombatLog) -> void:
+  if combat_log == null:
     return
   var side: int = CombatLog.Side.PLAYER
-  for row in log.summary(side):
+  for row in combat_log.summary(side):
     var name: String = row['name']
     if row['fires'] > 0:
       fires_by_item[name] = int(fires_by_item.get(name, 0)) + int(row['fires'])
@@ -64,20 +64,20 @@ func ingest_combat_log(log: CombatLog) -> void:
     if float(row['healing']) > 0.0:
       healing_by_item[name] = float(healing_by_item.get(name, 0.0)) + float(row['healing'])
   # Status (DoT / cash-out) damage, bucketed by status — the player's output + the enemy's incoming.
-  for row in log.status_damage(side):
+  for row in combat_log.status_damage(side):
     if float(row['damage']) > 0.0:
       damage_by_status[row['name']] = float(damage_by_status.get(row['name'], 0.0)) + float(row['damage'])
-  for row in log.status_damage(CombatLog.Side.ENEMY):
+  for row in combat_log.status_damage(CombatLog.Side.ENEMY):
     if float(row['damage']) > 0.0:
       incoming_by_status[row['name']] = float(incoming_by_status.get(row['name'], 0.0)) + float(row['damage'])
-  total_damage += float(log.total_damage_dealt.get(side, 0.0))
+  total_damage += float(combat_log.total_damage_dealt.get(side, 0.0))
   # Incoming pressure = the enemy side's GROSS output (it lands on the player side). Gross, not
   # net, so a hit the player fully shielded still registers as threat.
-  for row in log.summary(CombatLog.Side.ENEMY):
+  for row in combat_log.summary(CombatLog.Side.ENEMY):
     if float(row['gross']) > 0.0:
       var src: String = row['name']
       incoming_by_enemy[src] = float(incoming_by_enemy.get(src, 0.0)) + float(row['gross'])
-  total_incoming += float(log.total_gross.get(CombatLog.Side.ENEMY, 0.0))
+  total_incoming += float(combat_log.total_gross.get(CombatLog.Side.ENEMY, 0.0))
 
 
 ## Record one resolved beat (a fight or rest) for the per-encounter table. `rec` =

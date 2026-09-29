@@ -10,9 +10,9 @@ extends Button
 
 
 ## Bind the offered item or relic. Call after the option is in the tree.
-func setup(item: Item) -> void:
+func setup(offered: Item) -> void:
   cell.show_cooldown = false   # a reward is not in a fight, so no cooldown fill covers the icon
-  cell.setup(item)
+  cell.setup(offered)
 
 
 ## The live Item this option offers (a relic is offered as the Item built from its def) — the

@@ -121,10 +121,10 @@ func test_regen_tick_in_a_running_combat_manager_is_logged_as_a_heal() -> void:
     cm.sim_step()
   assert_eq(p.hp, roundi(60.0 + 2.0 * Balance.REGEN_HEAL_PER_TICK), 'the regen tick healed the player')
   assert_eq(_find(p, 'regen').count, 2, 'and it kept its stacks')
-  var log: CombatLog = cm.combat_log
-  assert_gt(float(log.total_healing[CombatLog.Side.PLAYER]), 0.0, 'the heal is tallied on the player side')
+  var combat_log: CombatLog = cm.combat_log
+  assert_gt(float(combat_log.total_healing[CombatLog.Side.PLAYER]), 0.0, 'the heal is tallied on the player side')
   var saw_heal := false
-  for ev in log.events:
+  for ev in combat_log.events:
     if ev['type'] == 'heal' and ev['source'] == 'Regen' and ev['source_side'] == CombatLog.Side.PLAYER:
       saw_heal = true
   assert_true(saw_heal, 'a regen heal event is in the timeline, sourced by the status name')

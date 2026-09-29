@@ -15,5 +15,5 @@ func _init() -> void:
   icon = 'res://assets/icons/statuses/skill_split_armor_nb.png'
 
 
-func modify_incoming(amount: float, target, ctx) -> float:
+func modify_incoming(amount: float, _target, _ctx) -> float:
   return amount * Balance.STATUS_VULNERABLE_DAMAGE_MULT

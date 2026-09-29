@@ -25,7 +25,7 @@ func setup(amount: float, dur: float, src, applied_flags: int) -> void:
 
 ## Per tick: heal the holder (actors only — items have no HP, so a regen authored onto an item
 ## ticks down harmlessly) and reset the ticker. Never loses stacks, never expires.
-func on_step(target, ctx) -> bool:
+func on_step(target, _ctx) -> bool:
   if ticker.step():
     if target is Actor:
       target.heal(count * Balance.REGEN_HEAL_PER_TICK)

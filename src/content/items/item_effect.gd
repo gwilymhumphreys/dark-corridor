@@ -65,39 +65,40 @@ var consume_item_amount: int = 0       # up to this many (<= 0 = all present)
 var consume_item_scale: float = 0.0    # value added to the payload per item consumed
 
 
-## An attack for `value` damage.
-static func attack(value: float, shape: int = Shape.OPPONENT_LEFTMOST) -> ItemEffect:
-  return make(AttackMechanic.ID, value, shape)
+## An attack for `amount` damage.
+static func attack(amount: float, target_shape: int = Shape.OPPONENT_LEFTMOST) -> ItemEffect:
+  return make(AttackMechanic.ID, amount, target_shape)
 
 
-## Shield of `value` on the holder.
-static func shield(value: float) -> ItemEffect:
-  return make(ShieldMechanic.ID, value, Shape.SELF)
+## Shield of `amount` on the holder.
+static func shield(amount: float) -> ItemEffect:
+  return make(ShieldMechanic.ID, amount, Shape.SELF)
 
 
-## Healing of `value` on the holder.
-static func heal(value: float) -> ItemEffect:
-  return make(HealMechanic.ID, value, Shape.SELF)
+## Healing of `amount` on the holder.
+static func heal(amount: float) -> ItemEffect:
+  return make(HealMechanic.ID, amount, Shape.SELF)
 
 
-## Any mechanic (`MechanicRegistry` id) for `value` on `shape`.
-static func make(mechanic_id: String, value: float, shape: int) -> ItemEffect:
+## Any mechanic (`MechanicRegistry` id) for `amount` on `target_shape`.
+static func make(mechanic_id: String, amount: float, target_shape: int) -> ItemEffect:
   var effect := ItemEffect.new()
   effect.mechanic = mechanic_id
-  effect.value = value
-  effect.shape = shape
+  effect.value = amount
+  effect.shape = target_shape
   return effect
 
 
-## Apply `value` of the status `status_id` on `shape`; `duration` is for a timed status.
-static func apply_status(status_id: String, value: float, shape: int,
-    duration: float = 0.0) -> ItemEffect:
+## Apply `amount` of the status `applied_status_id` on `target_shape`; `timed_duration` is for a
+## timed status.
+static func apply_status(applied_status_id: String, amount: float, target_shape: int,
+    timed_duration: float = 0.0) -> ItemEffect:
   var effect := ItemEffect.new()
   effect.kind = Delivery.Kind.APPLY_STATUS
-  effect.status_id = status_id
-  effect.value = value
-  effect.shape = shape
-  effect.duration = duration
+  effect.status_id = applied_status_id
+  effect.value = amount
+  effect.shape = target_shape
+  effect.duration = timed_duration
   return effect
 
 

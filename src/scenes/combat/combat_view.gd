@@ -7,6 +7,7 @@ extends Control
 
 ## Emitted when a potion slot is clicked — a throw-potion intent the run screen forwards
 ## to RunManager.throw_potion (which activates it through the Combat manager).
+@warning_ignore('unused_signal')   # emitted by the variants that draw potion slots
 signal potion_thrown(index: int)
 
 ## The screen sections the view places its parts in (docs/systems/ui_layout.md#screen-sections), set by

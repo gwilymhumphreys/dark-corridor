@@ -12,7 +12,7 @@ func setup(amount: float, dur: float, src, applied_flags: int) -> void:
 
 
 ## Expired the step the duration Ticker crosses.
-func on_step(target, ctx) -> bool:
+func on_step(_target, _ctx) -> bool:
   return ticker.step()
 
 

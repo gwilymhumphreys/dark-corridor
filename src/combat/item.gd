@@ -147,7 +147,7 @@ func _scaled_value(effect: ItemEffect, with_statuses: bool) -> float:
     bonuses.append({'percent': enchant.def.value_mult - 1.0})   # a permanent item modifier
   if with_statuses:
     bonuses.append_array(StatusManager.outgoing_bonuses(owner, self, effect.mechanic))
-  return StatusManager.combine(base, bonuses)
+  return StatusManagerAutoload.combine(base, bonuses)
 
 
 ## The item-side stages on top of the shared template copy (Payload.from_effect):

@@ -41,7 +41,6 @@ var _allies: Array = []   # the run's allies, shared by reference; drawn from he
 @onready var _items_part: VBoxContainer = $Items
 @onready var _items_section: VBoxContainer = $Items/ItemsSection
 @onready var _items_label: Label = $Items/ItemsSection/ItemsLabel
-@onready var _board: Control = $Items/ItemsSection/Board
 @onready var _grid: ColorRect = $Items/ItemsSection/Board/Grid
 @onready var _player_items: GridContainer = $Items/ItemsSection/Board/PlayerItems
 @onready var _potion_row: Control = $Items/PotionRow

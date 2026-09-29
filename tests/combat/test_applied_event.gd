@@ -43,7 +43,7 @@ func _mechanic_item(owner_actor: Actor, mechanic_id: String, value: float,
 
 
 ## Land one delivery of `mechanic_id` from `p` onto `e` and return the APPLIED data seen.
-func _land_mechanic(cm: CombatManager, p: Actor, e: Actor, mechanic_id: String,
+func _land_mechanic(cm: CombatManager, p: Actor, _e: Actor, mechanic_id: String,
     shape: int = ItemEffect.Shape.OPPONENT_LEFTMOST) -> Array:
   var applied_data: Array = []
   cm.bus.add_listener(EventBus.Event.APPLIED,

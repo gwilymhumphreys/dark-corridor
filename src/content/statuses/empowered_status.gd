@@ -30,7 +30,7 @@ func desc_args() -> Array:
 ## Raise an attack's damage while a stack is held, as a positive percentage bonus
 ## (Balance.EMPOWER_MULT 1.5 = +50%). PURE — no mutation (this also runs in Item.display_value's
 ## tooltip preview; using up a stack lives on on_owner_item_fired).
-func outgoing_bonus(target, item = null, mechanic_id: String = AttackMechanic.ID) -> Dictionary:
+func outgoing_bonus(_target, item = null, mechanic_id: String = AttackMechanic.ID) -> Dictionary:
   if count > 0 and item != null and mechanic_id == AttackMechanic.ID:
     return {'percent': Balance.EMPOWER_MULT - 1.0}
   return {}

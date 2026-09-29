@@ -47,18 +47,18 @@ static func ids() -> Array:
 static func starting_board(def: CharacterDef, rng: RandomNumberGenerator) -> Array:
   if def.starting_item_types.is_empty():
     return def.starting_item_ids.duplicate()
-  var ids: Array = []
+  var board_ids: Array = []
   for type: String in def.starting_item_types:
     var candidates: Array = []
     for item_id: String in def.item_pool:
       var item_def: ItemDef = ItemCatalog.get_def(item_id)
-      if item_def != null and item_def.types.has(type) and not ids.has(item_id):
+      if item_def != null and item_def.types.has(type) and not board_ids.has(item_id):
         candidates.append(item_id)
     if candidates.is_empty():
       push_warning('CharacterCatalog: %s has no unused "%s" item for its starting board' % [def.id, type])
       continue
-    ids.append(candidates[rng.randi_range(0, candidates.size() - 1)])
-  return ids
+    board_ids.append(candidates[rng.randi_range(0, candidates.size() - 1)])
+  return board_ids
 
 
 static func _build() -> void:

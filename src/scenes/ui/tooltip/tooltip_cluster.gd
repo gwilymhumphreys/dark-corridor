@@ -93,12 +93,12 @@ func _rebuild(item: Item) -> void:
     child.queue_free()
   var keyword_ids: Array = content['keyword_ids']
   for id: String in keyword_ids:
-    var wrap := PanelContainer.new()
-    wrap.theme_type_variation = 'PanelFramed'
-    wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var frame := PanelContainer.new()
+    frame.theme_type_variation = 'PanelFramed'
+    frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var card: KeywordCard = KEYWORD_CARD.instantiate()
-    wrap.add_child(card)
-    _column.add_child(wrap)
+    frame.add_child(card)
+    _column.add_child(frame)
     card.setup(id)
   _column.visible = not keyword_ids.is_empty()
 

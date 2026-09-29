@@ -188,12 +188,12 @@ func _flying_delivery(source: Variant) -> Delivery:
 
 
 func test_travel_folders_run_from_the_item_override_to_the_shared_default() -> void:
-  var owner := Actor.new(100.0)
-  _actors.append(owner)
+  var holder := Actor.new(100.0)
+  _actors.append(holder)
   var def := ItemDef.new()
   def.types = [ItemType.SPELL, ItemType.TRINKET]
   def.travel_sound = 'wand'
-  var d := _flying_delivery(Item.new(def, owner))
+  var d := _flying_delivery(Item.new(def, holder))
   var expected: Array[String] = [
     'combat/travel/wand',
     'combat/travel/spell',

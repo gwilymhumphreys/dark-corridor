@@ -51,8 +51,8 @@ func section(section_name: String) -> Control:
 
 
 ## Each section's rectangle (section name -> Rect2) on a screen of `screen_size`, split at `split` and
-## with `padding` taken off every side, in `layout`. Positions and sizes are whole pixels.
-static func section_rects(screen_size: Vector2, split: Vector2, padding: float, layout: Layout = Layout.PORTRAITS_LOWER_LEFT) -> Dictionary:
+## with `padding` taken off every side, in `section_layout`. Positions and sizes are whole pixels.
+static func section_rects(screen_size: Vector2, split: Vector2, padding: float, section_layout: Layout = Layout.PORTRAITS_LOWER_LEFT) -> Dictionary:
   split = split.clamp(Vector2.ZERO, screen_size).round()
   var parts: Dictionary = {
     'Corridor': Rect2(Vector2.ZERO, split),
@@ -60,7 +60,7 @@ static func section_rects(screen_size: Vector2, split: Vector2, padding: float, 
     'Portraits': Rect2(0.0, split.y, split.x, screen_size.y - split.y),
     'Info': Rect2(split, screen_size - split),
   }
-  if layout == Layout.PORTRAITS_ABOVE_ITEMS:
+  if section_layout == Layout.PORTRAITS_ABOVE_ITEMS:
     parts['Corridor'] = Rect2(0.0, 0.0, split.x, screen_size.y)
     parts['Portraits'] = parts['Items']
   var rects: Dictionary = {}

@@ -25,11 +25,11 @@ func test_ingest_folds_player_side_fires_and_damage() -> void:
   clog.on_item_fired('Fixture Blade', PLAYER, 0.1)
   clog.on_item_fired('Fixture Blade', PLAYER, 0.2)
   clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.2)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  assert_eq(log.fires_by_item['Fixture Blade'], 2, 'fires folded in')
-  assert_almost_eq(log.damage_by_family['Fixture Blade'], 12.0, 0.0001, 'damage per item folded in')
-  assert_almost_eq(log.total_damage, 12.0, 0.0001, 'player-side dealt total folded in')
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  assert_eq(logger.fires_by_item['Fixture Blade'], 2, 'fires folded in')
+  assert_almost_eq(logger.damage_by_family['Fixture Blade'], 12.0, 0.0001, 'damage per item folded in')
+  assert_almost_eq(logger.total_damage, 12.0, 0.0001, 'player-side dealt total folded in')
 
 
 func test_ingest_buckets_dot_by_status_not_the_applier() -> void:
@@ -38,11 +38,11 @@ func test_ingest_buckets_dot_by_status_not_the_applier() -> void:
   var clog := CombatLog.new()
   clog.on_status_damage('Poison', PLAYER, 'Grunt', ENEMY, 3.0, 0.5, 'poison')
   clog.on_status_damage('Poison', PLAYER, 'Grunt', ENEMY, 3.0, 1.0, 'poison')
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  assert_almost_eq(log.damage_by_status['Poison'], 6.0, 0.0001, 'DoT damage bucketed by status')
-  assert_true(log.damage_by_family.is_empty(), 'not credited to any applier item')
-  assert_almost_eq(log.total_damage, 6.0, 0.0001, 'still folds into the player dealt total')
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  assert_almost_eq(logger.damage_by_status['Poison'], 6.0, 0.0001, 'DoT damage bucketed by status')
+  assert_true(logger.damage_by_family.is_empty(), 'not credited to any applier item')
+  assert_almost_eq(logger.total_damage, 6.0, 0.0001, 'still folds into the player dealt total')
 
 
 func test_ingest_records_enemy_status_pressure_by_status() -> void:
@@ -50,10 +50,10 @@ func test_ingest_records_enemy_status_pressure_by_status() -> void:
   # not per enemy item. It still folds into total incoming via the gross total.
   var clog := CombatLog.new()
   clog.on_status_damage('Bleed', ENEMY, 'Player', PLAYER, 4.0, 0.3, 'bleed')
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  assert_almost_eq(log.incoming_by_status['Bleed'], 4.0, 0.0001, 'enemy status damage bucketed by status')
-  assert_almost_eq(log.total_incoming, 4.0, 0.0001, 'and folds into total incoming (gross)')
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  assert_almost_eq(logger.incoming_by_status['Bleed'], 4.0, 0.0001, 'enemy status damage bucketed by status')
+  assert_almost_eq(logger.total_incoming, 4.0, 0.0001, 'and folds into total incoming (gross)')
 
 
 func test_ingest_folds_shield_and_healing() -> void:
@@ -61,10 +61,10 @@ func test_ingest_folds_shield_and_healing() -> void:
   clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
   clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
   clog.on_heal('Salve', PLAYER, 'Player', PLAYER, 12.0, 0.3)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  assert_almost_eq(log.shield_by_item['Fixture Guard'], 16.0, 0.0001, 'shield accumulates per item')
-  assert_almost_eq(log.healing_by_item['Salve'], 12.0, 0.0001, 'healing accumulates per item')
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  assert_almost_eq(logger.shield_by_item['Fixture Guard'], 16.0, 0.0001, 'shield accumulates per item')
+  assert_almost_eq(logger.healing_by_item['Salve'], 12.0, 0.0001, 'healing accumulates per item')
 
 
 func test_ingest_is_player_side_only() -> void:
@@ -72,11 +72,11 @@ func test_ingest_is_player_side_only() -> void:
   var clog := CombatLog.new()
   clog.on_item_fired('Claw', ENEMY, 0.1)
   clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 7.0, 0.1)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  assert_false(log.fires_by_item.has('Claw'), 'enemy fires are excluded')
-  assert_false(log.damage_by_family.has('Claw'), 'enemy damage is excluded')
-  assert_almost_eq(log.total_damage, 0.0, 0.0001, 'the total is player-dealt only')
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  assert_false(logger.fires_by_item.has('Claw'), 'enemy fires are excluded')
+  assert_false(logger.damage_by_family.has('Claw'), 'enemy damage is excluded')
+  assert_almost_eq(logger.total_damage, 0.0, 0.0001, 'the total is player-dealt only')
 
 
 func test_ingest_records_incoming_gross_by_enemy() -> void:
@@ -86,12 +86,12 @@ func test_ingest_records_incoming_gross_by_enemy() -> void:
   clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 7.0, 0.1)
   clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 5.0, 0.4)
   clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 9.0, 0.2)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  assert_almost_eq(log.incoming_by_enemy['Claw'], 12.0, 0.0001, 'enemy gross output tallied by source')
-  assert_false(log.incoming_by_enemy.has('Fixture Blade'), 'player output is not "incoming"')
-  assert_almost_eq(log.total_incoming, 12.0, 0.0001, 'total incoming is the enemy gross')
-  assert_almost_eq(log.total_damage, 9.0, 0.0001, 'total dealt stays player output')
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  assert_almost_eq(logger.incoming_by_enemy['Claw'], 12.0, 0.0001, 'enemy gross output tallied by source')
+  assert_false(logger.incoming_by_enemy.has('Fixture Blade'), 'player output is not "incoming"')
+  assert_almost_eq(logger.total_incoming, 12.0, 0.0001, 'total incoming is the enemy gross')
+  assert_almost_eq(logger.total_damage, 9.0, 0.0001, 'total dealt stays player output')
 
 
 func test_ingest_incoming_counts_fully_shielded_hits() -> void:
@@ -99,28 +99,28 @@ func test_ingest_incoming_counts_fully_shielded_hits() -> void:
   # so a shield-heavy build does not read as "the enemy did nothing".
   var clog := CombatLog.new()
   clog.on_damage('Claw', ENEMY, 'Player', PLAYER, 0.0, 0.1, 8.0)   # net 0, gross 8 (all shielded)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  assert_almost_eq(log.incoming_by_enemy['Claw'], 8.0, 0.0001, 'a fully-shielded hit still shows as incoming')
-  assert_almost_eq(log.total_incoming, 8.0, 0.0001)
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  assert_almost_eq(logger.incoming_by_enemy['Claw'], 8.0, 0.0001, 'a fully-shielded hit still shows as incoming')
+  assert_almost_eq(logger.total_incoming, 8.0, 0.0001)
 
 
 func test_ingest_accumulates_across_multiple_fights() -> void:
-  var log := AutoTestLogger.new()
+  var logger := AutoTestLogger.new()
   for _fight in 2:
     var clog := CombatLog.new()
     clog.on_item_fired('Fixture Blade', PLAYER, 0.1)
     clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 10.0, 0.1)
-    log.ingest_combat_log(clog)
-  assert_eq(log.fires_by_item['Fixture Blade'], 2, 'fires accumulate across fights')
-  assert_almost_eq(log.total_damage, 20.0, 0.0001, 'damage accumulates across fights')
+    logger.ingest_combat_log(clog)
+  assert_eq(logger.fires_by_item['Fixture Blade'], 2, 'fires accumulate across fights')
+  assert_almost_eq(logger.total_damage, 20.0, 0.0001, 'damage accumulates across fights')
 
 
 func test_ingest_null_is_a_noop() -> void:
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(null)
-  assert_almost_eq(log.total_damage, 0.0, 0.0001, 'a null log folds nothing')
-  assert_true(log.fires_by_item.is_empty())
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(null)
+  assert_almost_eq(logger.total_damage, 0.0, 0.0001, 'a null logger folds nothing')
+  assert_true(logger.fires_by_item.is_empty())
 
 
 # --- accumulation + summary -------------------------------------------------
@@ -128,9 +128,9 @@ func test_ingest_null_is_a_noop() -> void:
 func test_summarize_merges_result_with_the_ingested_tally() -> void:
   var clog := CombatLog.new()
   clog.on_damage('Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.1)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  var s := log.summarize({
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  var s := logger.summarize({
     'outcome': 'WIN', 'resolved': true, 'won': true, 'steps': 120,
     'sim_seconds': 2.0, 'wall_ms': 5,
     'player_hp': 80.0, 'player_max_hp': 100.0,
@@ -148,18 +148,18 @@ func test_format_summary_and_report_write() -> void:
   var clog := CombatLog.new()
   clog.on_damage('Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.1)
   clog.on_damage('Fixture Fang', PLAYER, 'Grunt', ENEMY, 3.0, 0.5)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  var s := log.summarize({
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  var s := logger.summarize({
     'outcome': 'WIN', 'resolved': true, 'won': true, 'steps': 90,
     'sim_seconds': 1.5, 'wall_ms': 4,
     'player_hp': 88.0, 'player_max_hp': 100.0,
     'enemies': [{ 'name': 'Corridor Grunt', 'hp': 0.0, 'max_hp': 40.0 }],
   })
-  assert_gt(log.format_summary(s).size(), 0, 'summary renders some lines')
+  assert_gt(logger.format_summary(s).size(), 0, 'summary renders some lines')
 
   var path := 'user://autotest_report_test.md'
-  log.write_report(path, s)
+  logger.write_report(path, s)
   var text := FileAccess.get_file_as_string(path)
   assert_string_contains(text, '# AutoTest report')
   assert_string_contains(text, 'Blade')
@@ -169,12 +169,12 @@ func test_format_summary_and_report_write() -> void:
 # --- Phase 5: per-encounter + per-item contribution -------------------------
 
 func test_record_encounter_is_summarized() -> void:
-  var log := AutoTestLogger.new()
-  log.record_encounter({
+  var logger := AutoTestLogger.new()
+  logger.record_encounter({
     'beat': 0, 'type': 'Fight', 'name': 'Corridor Grunt',
     'duration': 5.0, 'hp_before': 100.0, 'hp_after': 80.0, 'outcome': 'WON',
   })
-  var s := log.summarize({})
+  var s := logger.summarize({})
   assert_eq(s['encounters'].size(), 1, 'the beat is recorded')
   assert_almost_eq(s['encounters'][0]['duration'], 5.0, 0.0001, 'duration captured')
   assert_almost_eq(s['encounters'][0]['hp_after'], 80.0, 0.0001, 'HP attrition captured')
@@ -187,11 +187,11 @@ func test_item_contribution_flags_never_fired_as_trap() -> void:
   clog.on_damage('Fixture Blade', PLAYER, 'Grunt', ENEMY, 12.0, 0.2)
   clog.on_item_fired('Fixture Fang', PLAYER, 0.3)   # fires, but no DIRECT damage here
   # The shield never fired.
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  var s := log.summarize({ 'player_items': ['Fixture Blade', 'Fixture Guard', 'Fixture Fang'] })
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  var s := logger.summarize({ 'player_items': ['Fixture Blade', 'Fixture Guard', 'Fixture Fang'] })
   var by := {}
-  for r in log._item_contribution_rows(s):
+  for r in logger._item_contribution_rows(s):
     by[r['name']] = r
   assert_eq(by['Fixture Blade']['fires'], 2, 'fires counted')
   assert_almost_eq(by['Fixture Blade']['damage'], 12.0, 0.0001, 'damage attributed')
@@ -203,9 +203,9 @@ func test_item_contribution_flags_never_fired_as_trap() -> void:
 func test_item_contribution_aggregates_duplicates() -> void:
   var clog := CombatLog.new()
   clog.on_item_fired('Spite Ward', PLAYER, 0.1)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  var rows := log._item_contribution_rows(log.summarize({ 'player_items': ['Spite Ward', 'Spite Ward'] }))
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  var rows := logger._item_contribution_rows(logger.summarize({ 'player_items': ['Spite Ward', 'Spite Ward'] }))
   assert_eq(rows.size(), 1, 'duplicates aggregate to one row')
   assert_eq(rows[0]['count'], 2, 'with a count')
 
@@ -216,19 +216,19 @@ func test_item_contribution_carries_shield_and_healing() -> void:
   clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.1)
   clog.on_shield('Fixture Guard', PLAYER, 'Player', PLAYER, 8.0, 0.2)
   clog.on_heal('Salve', PLAYER, 'Player', PLAYER, 12.0, 0.3)
-  var log := AutoTestLogger.new()
-  log.ingest_combat_log(clog)
-  var rows := log._item_contribution_rows(log.summarize({ 'player_items': ['Fixture Guard', 'Salve'] }))
+  var logger := AutoTestLogger.new()
+  logger.ingest_combat_log(clog)
+  var rows := logger._item_contribution_rows(logger.summarize({ 'player_items': ['Fixture Guard', 'Salve'] }))
   assert_almost_eq(float(rows[0]['shield']), 16.0, 0.0001, 'shield accumulates per item')
   assert_almost_eq(float(rows[1]['healing']), 12.0, 0.0001, 'healing accumulates per item')
   assert_false(rows[0]['trap'], 'a firing shield item is not a trap')
 
 
 func test_report_header_carries_seed_and_strategy() -> void:
-  var log := AutoTestLogger.new()
-  var summary := log.summarize({ 'seed': 42, 'strategy': 'greedy-synergy' })
+  var logger := AutoTestLogger.new()
+  var summary := logger.summarize({ 'seed': 42, 'strategy': 'greedy-synergy' })
   var path := 'user://test_tune_report.md'
-  log.write_report(path, summary)
+  logger.write_report(path, summary)
   var text := FileAccess.get_file_as_string(path)
   DirAccess.open('user://').remove(path)
   assert_string_contains(text, '- Seed: 42', 'the report identifies its seed')

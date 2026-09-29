@@ -17,8 +17,8 @@ func _init() -> void:
 ## their points reach the beat's target.
 func points() -> float:
   var total: float = max_hp
-  for id: String in item_ids:
-    total += ItemPoints.spend(ItemCatalog.get_def(id))
+  for item_id: String in item_ids:
+    total += ItemPoints.spend(ItemCatalog.get_def(item_id))
   return total
 
 

@@ -65,10 +65,10 @@ func test_every_button_state_draws_the_same_flat_fill() -> void:
 
 func test_the_theme_draws_no_pack_art() -> void:
   for type: String in _theme().get_stylebox_type_list():
-    for name: String in _theme().get_stylebox_list(type):
-      var style: StyleBox = _theme().get_stylebox(name, type)
+    for style_name: String in _theme().get_stylebox_list(type):
+      var style: StyleBox = _theme().get_stylebox(style_name, type)
       var worn: WornStyleBox = style as WornStyleBox
       if worn != null:
         style = worn.base
-      assert_false(style is StyleBoxTexture, '%s/%s is not pack art' % [type, name])
+      assert_false(style is StyleBoxTexture, '%s/%s is not pack art' % [type, style_name])
   assert_eq(_theme().get_icon_type_list().size(), 0, 'no pack art icons are left')

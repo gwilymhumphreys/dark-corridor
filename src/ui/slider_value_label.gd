@@ -40,7 +40,7 @@ func _refresh() -> void:
   text = str(roundi(_slider.value)) + suffix
   reset_size()
   var grabber: Texture2D = _slider.get_theme_icon('grabber')
-  var grabber_width: float = grabber.get_width() if grabber != null else 0.0
+  var grabber_width: float = float(grabber.get_width()) if grabber != null else 0.0
   var handle_x: float = grabber_width * 0.5 + _slider.get_as_ratio() * (_slider.size.x - grabber_width)
   var x: float = clampf(handle_x - size.x * 0.5, 0.0, maxf(0.0, _slider.size.x - size.x))
   position = Vector2(x, -size.y)

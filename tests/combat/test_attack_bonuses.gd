@@ -51,22 +51,22 @@ func _bonus_item(owner_actor: Actor, mechanic_id: String, value: float, shape: i
 # --- the combining rule ---
 
 func test_flat_is_added_before_percentages() -> void:
-  var value: float = StatusManager.combine(10.0, [{'flat': 10.0}, {'percent': 0.5}])
+  var value: float = StatusManagerAutoload.combine(10.0, [{'flat': 10.0}, {'percent': 0.5}])
   assert_almost_eq(value, 30.0, 0.0001, '(10 + 10) x 1.5')
 
 
 func test_positive_percentages_add() -> void:
-  var value: float = StatusManager.combine(10.0, [{'percent': 0.5}, {'percent': 1.0}])
+  var value: float = StatusManagerAutoload.combine(10.0, [{'percent': 0.5}, {'percent': 1.0}])
   assert_almost_eq(value, 25.0, 0.0001, '10 x (1 + 0.5 + 1.0), not 10 x 1.5 x 2')
 
 
 func test_negative_percentages_multiply() -> void:
-  var value: float = StatusManager.combine(10.0, [{'percent': -0.25}, {'percent': -0.25}])
+  var value: float = StatusManagerAutoload.combine(10.0, [{'percent': -0.25}, {'percent': -0.25}])
   assert_almost_eq(value, 10.0 * 0.75 * 0.75, 0.0001, 'two -25% give x0.5625')
 
 
 func test_positive_and_negative_groups_apply_separately() -> void:
-  var value: float = StatusManager.combine(10.0, [{'percent': 1.0}, {'percent': -0.25}, {'percent': 0.5}])
+  var value: float = StatusManagerAutoload.combine(10.0, [{'percent': 1.0}, {'percent': -0.25}, {'percent': 0.5}])
   assert_almost_eq(value, 10.0 * 2.5 * 0.75, 0.0001, 'positives summed, then the negative multiplies')
 
 

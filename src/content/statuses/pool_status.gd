@@ -12,7 +12,7 @@ extends StatusEffect
 ## The pool is a whole number: the cost of a hit is rounded (`roundi(amount * m)`). A pool that can
 ## pay it loses the cost and lets nothing through; one that can't covers `count / m` damage, drops
 ## to 0 and passes the fractional rest on (take_damage rounds it when it reaches HP).
-func absorb(amount: float, incoming_flags: int, target, ctx, mechanic_id: String = '') -> float:
+func absorb(amount: float, incoming_flags: int, _target, _ctx, mechanic_id: String = '') -> float:
   if (incoming_flags & Delivery.Flag.UNBLOCKABLE) != 0:
     return amount
   var m: float = MechanicRegistry.shield_multiplier(mechanic_id)

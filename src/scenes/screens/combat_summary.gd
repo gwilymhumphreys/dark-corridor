@@ -19,20 +19,20 @@ func _ready() -> void:
 
 
 ## Populate from the fight's log. Call after the screen is in the tree.
-func setup(log: CombatLog) -> void:
-  if log == null:
+func setup(combat_log: CombatLog) -> void:
+  if combat_log == null:
     return
-  _fill_report(log)
-  _fill_status_damage(log)
-  _fill_log(log)
+  _fill_report(combat_log)
+  _fill_status_damage(combat_log)
+  _fill_log(combat_log)
 
 
 # The player per-item contribution: Item · Fires · Damage · Shield · Healing. Damage is
 # DIRECT hits only — status (DoT / cash-out) damage is bucketed by status (see
 # _fill_status_damage), not credited to the applier. The header cells are static in the
 # .tscn (auto-translated); data cells are appended after them.
-func _fill_report(log: CombatLog) -> void:
-  for row in log.summary(CombatLog.Side.PLAYER):
+func _fill_report(combat_log: CombatLog) -> void:
+  for row in combat_log.summary(CombatLog.Side.PLAYER):
     _add_cell(_rows, tr(row['name']), false)
     _add_cell(_rows, '%d' % int(row['fires']), true)
     _add_cell(_rows, '%.0f' % float(row['damage']), true)
@@ -42,8 +42,8 @@ func _fill_report(log: CombatLog) -> void:
 
 # The player's status damage, bucketed by status (Poison / Bleed / …) — the DoT / cash-out
 # output the per-item table no longer carries. Hidden when no status dealt damage.
-func _fill_status_damage(log: CombatLog) -> void:
-  var rows: Array = log.status_damage(CombatLog.Side.PLAYER)
+func _fill_status_damage(combat_log: CombatLog) -> void:
+  var rows: Array = combat_log.status_damage(CombatLog.Side.PLAYER)
   if rows.is_empty():
     _status_section.hide()
     return
@@ -62,8 +62,8 @@ func _add_cell(grid: GridContainer, text: String, numeric: bool) -> void:
 
 
 # The ordered timeline — one line per event, with its sim-time stamp.
-func _fill_log(log: CombatLog) -> void:
-  for ev in log.events:
+func _fill_log(combat_log: CombatLog) -> void:
+  for ev in combat_log.events:
     var label := Label.new()
     label.text = _format_event(ev)
     _events.add_child(label)

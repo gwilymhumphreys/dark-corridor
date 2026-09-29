@@ -12,7 +12,7 @@ extends RefCounted
 ## tooltip preview), so consuming state belongs here, not in outgoing_bonus. Returns true when a
 ## status has expired (the Combat manager removes it + runs on_expire); a passive's return is
 ## ignored. Default no-op.
-func on_owner_item_fired(actor, item, ctx) -> bool:
+func on_owner_item_fired(_actor, _item, _ctx) -> bool:
   return false
 
 
@@ -21,7 +21,7 @@ func on_owner_item_fired(actor, item, ctx) -> bool:
 ## damage never call it, so a hook cannot repeat within a step. Returns true when a status has
 ## expired (the Combat manager removes it + runs on_expire); a passive's return is ignored. Default
 ## no-op.
-func on_holder_attacked(target, ctx) -> bool:
+func on_holder_attacked(_target, _ctx) -> bool:
   return false
 
 
@@ -36,18 +36,18 @@ func on_holder_attacked(target, ctx) -> bool:
 ## docs/systems/mechanics.md → Combining bonuses. MUST stay PURE — it also runs on the read-only
 ## tooltip-preview path (Item.display_value), so nothing here may mutate state (using up an Empowered
 ## stack lives on on_owner_item_fired).
-func outgoing_bonus(target, item = null, mechanic_id: String = AttackMechanic.ID) -> Dictionary:
+func outgoing_bonus(_target, _item = null, _mechanic_id: String = AttackMechanic.ID) -> Dictionary:
   return {}
 
 
-func modify_incoming(amount: float, target, ctx) -> float:
+func modify_incoming(amount: float, _target, _ctx) -> float:
   return amount
 
 
 ## Absorb from an incoming hit, returning the unabsorbed remainder (Shield overrides; mutates pool).
 ## `mechanic_id` names the mechanic that dealt the damage — the shield pool spends its multiplier
 ## against it (docs/systems/mechanics.md → Shield).
-func absorb(amount: float, incoming_flags: int, target, ctx, mechanic_id: String = '') -> float:
+func absorb(amount: float, _incoming_flags: int, _target, _ctx, _mechanic_id: String = '') -> float:
   return amount
 
 
