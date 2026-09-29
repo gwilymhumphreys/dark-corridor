@@ -358,6 +358,7 @@ func _exit_game() -> void:
 func _after_beat() -> void:
   if _run.is_ended():
     return
+  _refresh_gold()   # a relic's fight-won trigger may have added gold
   if _run.has_pending_draft():
     _show_draft()
   elif _run.has_pending_relic_offer():
@@ -439,7 +440,7 @@ func _on_draft_skipped() -> void:
 
 
 # The banked gold in the combat view's gold box (docs decision #33): written when the view is built
-# (covers a resumed run's gold) and after each skip.
+# (covers a resumed run's gold and a relic picked from an offer), after each beat and after each skip.
 func _refresh_gold() -> void:
   if _view != null:
     _view.show_gold(_run.gold)

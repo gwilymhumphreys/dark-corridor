@@ -16,7 +16,7 @@ const PASSIVE_RELIC_ID: String = 'fixture_passive_relic'
 const POTION_HEAL: float = 20.0
 const ENCHANT_MULT: float = 1.5
 const RELIC_SHIELD: float = 5.0
-const RELIC_MAX_HP: float = 10.0
+const RELIC_MAX_HP: int = 10
 const RELIC_WEAPON_ATTACK_BONUS: float = 3.0
 
 
@@ -61,7 +61,7 @@ static func max_hp_relic() -> RelicDef:
   var d := RelicDef.new()
   d.id = MAX_HP_RELIC_ID
   d.name_key = 'Fixture Health Relic'
-  d.max_hp_bonus = RELIC_MAX_HP
+  d.run_triggers = [{'event': RunManager.RunEvent.PICKED_UP, 'effects': [RunEffect.max_hp(RELIC_MAX_HP)]}]
   d.panel_colour_name = 'HEAL'
   return d
 

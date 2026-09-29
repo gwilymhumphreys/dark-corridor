@@ -95,7 +95,10 @@ for each def's fields and how it resolves.
   `{'event': EventBus.Event.APPLIED, 'filter': AttackMechanic.ID, 'effects': [ItemEffect.heal(4.0)]}`.
   Always-on abilities go in `passives`, written as item effects (an attack bonus effect with
   shape `ALL_OWN_ITEMS` and a target filter reads "[attack] +2 to each of your weapon items"); each
-  mechanic used there needs a class in `PassiveRegistry`. Add it to `RelicCatalog.REWARD_POOL` to make it a reward. See
+  mechanic used there needs a class in `PassiveRegistry`. Abilities outside fights go in
+  `run_triggers`: `{'event': RunManager.RunEvent.PICKED_UP, 'effects': [RunEffect.max_hp(20)]}`
+  (events: picked up, fight won, draft skipped; effects: `max_hp`, `heal`, `gold`). Add it to
+  `RelicCatalog.REWARD_POOL` to make it a reward. See
   [content.md → Relic](../systems/content.md#relic).
 
   ```gdscript
@@ -146,8 +149,8 @@ a mistake.
 
 ## After authoring
 
-- **Added a new `class_name` script?** Run a headless `--import --exit` once or the test suite won't
-  see the global (commands in [`../handoff.md`](../handoff.md)).
+- **Added a new `class_name` script?** Run `tools/import.sh` once or the test suite won't see the
+  global.
 - **Player-facing strings** (names, encounter prose) show via `tr(def.name_key)` — run the POT
   pipeline after adding them ([localization](../systems/localization.md)).
 - Keep the GUT suite green; update the relevant design doc if the design shifted, and the card-pool

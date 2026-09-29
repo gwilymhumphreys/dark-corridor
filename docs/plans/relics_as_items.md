@@ -59,7 +59,7 @@ character traits do (grail's `localization_1.1.1.tsv`, `trait_*_info` rows).
 |---|---|
 | `fires_per_fight: int` | 0 = no limit; 1 = "the first time each fight" |
 | `passives: Array[ItemEffect]` | Always-on effects, written like item effects, that hold for the whole fight (stage 2 and 4) |
-| `run_triggers: Array[Dictionary]` | `{event: RunEvent, effect, amount}` for outside-fight abilities (stage 3) |
+| `run_triggers: Array[Dictionary]` | `{event: RunEvent, effects: Array[RunEffect]}` for outside-fight abilities (stage 3) |
 
 - A relic's trigger entry is the same dictionary as an item's (`event`, `filter`, `source_filter`)
   without `seconds`: a relic trigger always fills its whole bar.
@@ -182,12 +182,48 @@ every effect.
 
 ### Outside fights (stage 3)
 
-- New `RunEvent` values in the run manager: `PICKED_UP`, `FIGHT_WON`, `FIGHT_LOST`,
-  `DRAFT_SKIPPED`. The run manager checks every relic's `run_triggers` when one happens.
-- Run effects: `MAX_HP` (raises max and current HP), `HEAL`, `GOLD`. More are added as relics need
+Reviewed against the code 2026-09-29; the owner agreed the changes below.
+
+**Definition.** `RelicDef.run_triggers: Array[Dictionary]`, one entry per ability, each with a list
+of effects, the same pattern as stage 2b's trigger entries:
+
+```gdscript
+run_triggers = [
+  {'event': RunManager.RunEvent.PICKED_UP, 'effects': [RunEffect.max_hp(20)]},
+]
+```
+
+- `RunManager.RunEvent`: `PICKED_UP`, `FIGHT_WON`, `DRAFT_SKIPPED`. `FIGHT_LOST` is left out:
+  losing a fight ends the run at once, so a relic reacting to it could do nothing. It is added with
+  the first relic that can stop a death (stage 4).
+- `RunEffect` (new, `src/run/run_effect.gd`, `RefCounted`): a `Kind` (`MAX_HP`, `HEAL`, `GOLD`) and
+  an `amount`, with static builders per kind. It is separate from `ItemEffect` because these change
+  run state, not a fight, and have no mechanic, shape or target. More kinds are added as relics need
   them.
-- Vital Charm becomes `{event: PICKED_UP, effect: MAX_HP, amount: 20}`. A `PICKED_UP` effect is
-  applied once, on grant, and is not re-applied when a save is loaded, as today.
+  - `MAX_HP` raises maximum and current health.
+  - `HEAL` heals the player through `Actor.heal`, capped at maximum health.
+  - `GOLD` adds to `RunManager.gold`.
+
+**Firing.** `RunManager._fire_run_event(event)` goes through `relics` in order and applies the
+effects of every entry whose event matches.
+
+| Event | Where it fires |
+|---|---|
+| `PICKED_UP` | For the new relic only, in `_apply_relic_grant`, which `_grant_relic`, `apply_relic_pick` and now `start()` (the character's starting relic) all call |
+| `FIGHT_WON` | `_on_encounter_resolved`, when the outcome is `Encounter.Outcome.WON` and the encounter was a fight, before the reward is drawn, so a relic won from this fight does not react to it. The final boss ends the run first, so it does not fire there |
+| `DRAFT_SKIPPED` | `apply_draft_skip`, after the skip gold is added |
+
+- A `PICKED_UP` effect is applied once. Its result is kept in the saved health and gold, and
+  `rehydrate` does not fire it again, as today.
+- `max_hp_bonus` is removed from `RelicDef` and Vital Charm is rewritten with a `PICKED_UP` entry.
+  `FixtureKit`'s max health relic and the content check for Vital Charm change to match.
+- The run screen shows the new gold after a fight is won and after a relic is picked
+  (`_refresh_gold`), not only after a skip. Health is already redrawn when the next view is built.
+
+**Tooltip.** `_relic_lines` adds each run trigger entry after the fight trigger entries and before
+the passives: a trigger line ("When picked up:", "When you win a fight:", "When you skip a draft:")
+then one line per effect ("+20 maximum health", "Heal 5", "+3 gold"). The wording is placeholder
+copy for the owner to rewrite. Vital Charm's tooltip today has no line for its maximum health.
 
 ### Tooltip and display
 
@@ -224,7 +260,8 @@ Unchanged: the snapshot stores relic ids. Nothing a relic does in a fight is sav
 2. Built 2026-09-29. The shared hook base class, `passives` and their registry, the attack bonus passive classes,
    bonuses for every mechanic, passive tooltip lines.
 2b. Built 2026-09-29. Several triggers per relic, each with its own effects and limit.
-3. Run events and run effects. Vital Charm is rewritten.
+3. Built 2026-09-29. Run events and run effects, their tooltip lines, the starting relic's pickup. Vital Charm is
+   rewritten and `max_hp_bonus` removed.
 4. Health thresholds and rule changes, one at a time as relics are authored.
 
 Each stage is its own change with its own tests and doc updates.
@@ -270,6 +307,11 @@ needed, `docs/decision_log.md`.
   events happen in one step; an entry's limit stops only that entry; an entry without effects still
   fires the relic's effects.
 - The tooltip lists each entry's trigger line with its own effects.
+- Stage 3: a `PICKED_UP` entry applies once when a relic is granted, picked or given as the starting
+  relic, and not again on rehydrate; `FIGHT_WON` fires after a won fight, not for a rest or event,
+  and not for a relic granted by that fight's reward; `DRAFT_SKIPPED` fires on a skip; `MAX_HP`,
+  `HEAL` (capped) and `GOLD` change the run state; the tooltip lists run trigger lines before
+  passives.
 - All on fixture relics (`FixtureContent`), not the authored ones.
 
 ## Open questions

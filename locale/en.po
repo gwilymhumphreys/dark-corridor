@@ -468,6 +468,22 @@ msgid "Keyword"
 msgstr "Keyword"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When picked up:"
+msgstr "When picked up:"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When you win a fight:"
+msgstr "When you win a fight:"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "When you skip a draft:"
+msgstr "When you skip a draft:"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "+{0} maximum health"
+msgstr "+{0} maximum health"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "Once per fight"
 msgstr "Once per fight"
 

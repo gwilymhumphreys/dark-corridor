@@ -17,9 +17,9 @@ extends ItemDef
 var passives: Array[ItemEffect] = []
 # How many times the relic can fire in one fight. 0 = no limit; 1 = "the first time each fight".
 var fires_per_fight: int = 0
-# Maximum health added once, when the relic is granted (a direct run-state change, baked into the
-# saved snapshot's max_hp and never re-applied on load).
-var max_hp_bonus: float = 0.0
+# Abilities outside fights: { event: RunManager.RunEvent, effects: Array[RunEffect] }. The Run
+# manager applies an entry's effects when its event happens (docs/systems/content.md → Relic).
+var run_triggers: Array[Dictionary] = []
 
 
 func _init() -> void:

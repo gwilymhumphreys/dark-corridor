@@ -94,7 +94,10 @@ func test_every_relic_passive_has_a_passive_class() -> void:
 
 func test_catalog_builds_the_max_hp_relic() -> void:
   var d := RelicCatalog.get_def('vital_charm')
-  assert_gt(d.max_hp_bonus, 0.0)
+  var entry: Dictionary = d.run_triggers[0]
+  assert_eq(entry['event'], RunManager.RunEvent.PICKED_UP, 'Vital Charm acts when picked up')
+  assert_eq(entry['effects'][0].kind, RunEffect.Kind.MAX_HP, 'and raises maximum health')
+  assert_gt(entry['effects'][0].amount, 0)
 
 
 func test_shrine_event_offers_a_heal_and_a_max_hp_option() -> void:

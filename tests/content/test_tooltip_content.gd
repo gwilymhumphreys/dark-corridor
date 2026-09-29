@@ -181,7 +181,7 @@ func test_no_crit_chance_adds_no_line() -> void:
 ## ahead of any structural kw: id (the AOE shape's kw:aoe).
 func test_keyword_column_leads_with_authored_mechanics() -> void:
   var it: Item = Item.new(_attack_def([ItemType.WEAPON], [AttackMechanic.ID]), _actor(100.0))
-  var ids: Array[String] = TooltipContent.new().keyword_ids(it)
+  var ids: Array[String] = TooltipContent.keyword_ids(it)
   var authored_idx: int = ids.find(AttackMechanic.ID)
   assert_true(authored_idx != -1, 'the authored attack mechanic is in the keyword column')
   var structural_idx: int = ids.find(KeywordCatalog.AOE)
@@ -193,14 +193,14 @@ func test_keyword_column_leads_with_authored_mechanics() -> void:
 ## non-mechanic part (the regression guard — the most likely thing to be silently lost).
 func test_status_keyword_still_appears() -> void:
   var it: Item = Item.new(_status_def(WeakStatus.ID), _actor(100.0))
-  var ids: Array[String] = TooltipContent.new().keyword_ids(it)
+  var ids: Array[String] = TooltipContent.keyword_ids(it)
   assert_true(ids.has(WeakStatus.ID), 'the applied status keyword is in the keyword column')
 
 
 ## An authored mechanic no effect names still appears — what makes the list authored, not derived.
 func test_authored_mechanic_not_named_by_effects_still_appears() -> void:
   var it: Item = Item.new(_attack_def([ItemType.WEAPON], [PoisonMechanic.ID]), _actor(100.0))
-  var ids: Array[String] = TooltipContent.new().keyword_ids(it)
+  var ids: Array[String] = TooltipContent.keyword_ids(it)
   assert_true(ids.has(PoisonMechanic.ID), 'an authored mechanic absent from the effects is still listed')
 
 
@@ -246,6 +246,23 @@ func test_each_trigger_entry_lists_its_own_effects_and_limit() -> void:
   assert_eq(lines[2], [{'t': 'text', 's': 'When you take damage:'}])
   assert_eq(_first_segment(lines[3], 'icon')['id'], HealMechanic.ID, 'the second entry heals')
   assert_eq(lines[4], [{'t': 'text', 's': 'Once per fight'}], "the second entry's limit follows it")
+
+
+func test_run_triggers_list_after_fight_triggers_and_before_passives() -> void:
+  var def := FixtureKit.shield_relic()
+  def.passives = FixtureKit.weapon_bonus_relic().passives
+  def.run_triggers = [
+    {'event': RunManager.RunEvent.PICKED_UP, 'effects': [RunEffect.max_hp(20)]},
+    {'event': RunManager.RunEvent.FIGHT_WON, 'effects': [RunEffect.heal(5), RunEffect.gold(3)]},
+  ]
+  var lines: Array = TooltipContent.new().build(Item.new(def))['lines']
+  assert_eq(lines.size(), 8, 'fight trigger and shield, two run triggers with three effects, the passive')
+  assert_eq(lines[2], [{'t': 'text', 's': 'When picked up:'}])
+  assert_eq(lines[3], [{'t': 'text', 's': '+20 maximum health'}])
+  assert_eq(lines[4], [{'t': 'text', 's': 'When you win a fight:'}])
+  assert_eq(lines[5], [{'t': 'icon', 'id': HealMechanic.ID}, {'t': 'text', 's': '5'}])
+  assert_eq(lines[6], [{'t': 'text', 's': '+3 gold'}])
+  assert_eq(_first_segment(lines[7], 'icon')['id'], AttackMechanic.ID, 'the passive comes last')
 
 
 ## The target phrase `_shape_text` produces for a shape + filter, as its text with each icon

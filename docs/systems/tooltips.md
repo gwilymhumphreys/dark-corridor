@@ -54,7 +54,9 @@ its type line reads "Relic". Its lines are, in order: the trigger lines of the e
 relic's own effects ("At the start of each fight:", "When [poison] is applied:", "When you take
 damage:"), then its effect lines, its crit chance, and its limit ("Once per fight", "N times per
 fight"); then each trigger entry with its own effects, as its trigger line, its effect lines and its
-limit; then its passives with no heading, each the same
+limit; then each run trigger ("When picked up:", "When you win a fight:", "When you skip a draft:")
+followed by one line per run effect ("+20 maximum health", "[heal] 5", "+3 gold"); then its passives
+with no heading, each the same
 line an item with that effect shows (`TooltipContent._relic_lines`). Keyword cards come from the
 effects, the trigger entries' effects and the passives. A relic shows
 no Trigger or Reclaim keyword card, because its triggers fire it rather than charge it. The

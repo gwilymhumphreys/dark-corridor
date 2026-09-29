@@ -17,6 +17,9 @@ signal run_ended(outcome: int)
 
 enum Outcome { WON, DIED }
 
+# The run events a relic's run_triggers react to (docs/systems/content.md → Relic).
+enum RunEvent { PICKED_UP, FIGHT_WON, DRAFT_SKIPPED }
+
 # Spreads the run seed into a distinct per-beat combat stream (a prime stride).
 const COMBAT_SEED_STRIDE: int = 1000003
 
@@ -37,8 +40,9 @@ var allies: Array[Actor] = []        # run-scoped (persistent) player-side allie
 var relics: Array[Relic] = []
 var potions: Array[Consumable] = []
 var position: int = 0
-# Banked gold — a run-state resource (docs decision #33). The ONLY source today is skipping a
-# draft (apply_draft_skip); there is NO sink yet (shops are out of scope). Persists in the snapshot.
+# Banked gold — a run-state resource (docs decision #33). Sources: skipping a draft
+# (apply_draft_skip) and relic run triggers (RunEffect.GOLD); there is NO sink yet (shops are out
+# of scope). Persists in the snapshot.
 var gold: int = 0
 var rng: RandomNumberGenerator
 var character: CharacterDef    # the chosen character (#27) — its item pool feeds the draft
@@ -74,15 +78,17 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   # Starting kit from the character (#27): its signature relic, any starting enchants on
   # the board, and its starting potions — the run opens in the character's identity.
   relics = []
+  gold = 0
   if character.starting_relic_id != '':
-    relics.append(Relic.new(RelicCatalog.get_def(character.starting_relic_id)))
+    var starting_relic := Relic.new(RelicCatalog.get_def(character.starting_relic_id))
+    relics.append(starting_relic)
+    _apply_relic_grant(starting_relic)
   potions = []
   for potion_id in character.starting_potion_ids:
     potions.append(Consumable.new(ConsumableCatalog.get_def(potion_id)))
   for enchant_spec in character.starting_enchants:
     apply_enchant(Enchantment.new(EnchantCatalog.get_def(enchant_spec['enchant_id'])), enchant_spec['item_index'])
   position = 0
-  gold = 0
   _ended = false
   _pending_offer = []
   _pending_relic_offer = []
@@ -192,6 +198,10 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
   if RunMap.is_final_beat(position):   # the final act's boss — beating it ends the descent
     _end_run(Outcome.WON)
     return
+  # Before the reward, so a relic won in this fight does not react to winning it. Only a fight
+  # resolves WON (a rest or event resolves RESOLVED).
+  if outcome_value == Encounter.Outcome.WON:
+    _fire_run_event(RunEvent.FIGHT_WON)
   match reward:
     EncounterDef.Reward.DRAFT:
       _pending_offer = Draft.draw(_draft_pool(), position, rng)
@@ -255,13 +265,36 @@ func apply_relic_pick(index: int) -> void:
   _pending_relic_offer = []
 
 
-## Apply a granted relic's ONE-TIME direct run-state mod (max_hp_bonus raises max + current HP).
-## Baked into the saved snapshot's hp/max_hp — NOT re-applied on rehydrate. A relic's fight
+## Fire a newly granted relic's PICKED_UP run triggers, once. Their result is kept in the saved
+## health and gold, and rehydrate does not call this, so it is never applied twice. A relic's fight
 ## triggers have no grant-time effect (its item is built per fight, above).
 func _apply_relic_grant(relic: Relic) -> void:
-  if relic.def.max_hp_bonus > 0.0:
-    player.max_hp += roundi(relic.def.max_hp_bonus)
-    player.hp += roundi(relic.def.max_hp_bonus)
+  _fire_relic_run_triggers(relic, RunEvent.PICKED_UP)
+
+
+## Apply the run triggers for `event` of every relic the run holds, in relic order.
+func _fire_run_event(event: RunEvent) -> void:
+  for relic in relics:
+    _fire_relic_run_triggers(relic, event)
+
+
+func _fire_relic_run_triggers(relic: Relic, event: RunEvent) -> void:
+  for entry: Dictionary in relic.def.run_triggers:
+    if entry.get('event', -1) != event:
+      continue
+    for effect: RunEffect in entry.get('effects', []):
+      _apply_run_effect(effect)
+
+
+func _apply_run_effect(effect: RunEffect) -> void:
+  match effect.kind:
+    RunEffect.Kind.MAX_HP:
+      player.max_hp += effect.amount
+      player.hp += effect.amount
+    RunEffect.Kind.HEAL:
+      player.heal(effect.amount)
+    RunEffect.Kind.GOLD:
+      gold += effect.amount
 
 
 func has_pending_draft() -> bool:
@@ -291,6 +324,7 @@ func apply_draft_skip() -> void:
     return
   gold += Balance.GOLD_SKIP
   _pending_offer = []
+  _fire_run_event(RunEvent.DRAFT_SKIPPED)
 
 
 ## Whether the player side has a free ally slot (cap = MAX_ALLIES). The gating surface for
@@ -463,7 +497,10 @@ func _save() -> void:
 func snapshot() -> Dictionary:
   var board: Array = []
   for item in player.board:
-    board.append({ 'id': item.def.id, 'enchant': item.enchant.def.id if item.enchant != null else null })
+    var enchant_id: Variant = null
+    if item.enchant != null:
+      enchant_id = item.enchant.def.id
+    board.append({ 'id': item.def.id, 'enchant': enchant_id })
   var relic_ids: Array = []
   for relic in relics:
     relic_ids.append(relic.def.id)

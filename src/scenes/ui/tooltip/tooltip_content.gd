@@ -73,7 +73,8 @@ func _effect_lines(item: Item) -> Array:
 
 ## A relic's lines (docs/systems/tooltips.md): the trigger entries that fire the relic's own effects,
 ## then those effects, its crit chance and its limit per fight; then each entry with its own effects,
-## as its trigger line, its effects and its limit; then its passives as item effect lines, with no
+## as its trigger line, its effects and its limit; then each run trigger (outside fights) as its
+## trigger line and its effects; then its passives as item effect lines, with no
 ## heading (the owner's wording keeps them apart). The trigger wording is placeholder copy for the
 ## owner to rewrite.
 func _relic_lines(item: Item) -> Array:
@@ -96,9 +97,37 @@ func _relic_lines(item: Item) -> Array:
       for effect: ItemEffect in def.trigger_effects(i):
         lines.append(_effect_line(item, effect))
       _append_limit_line(lines, def.trigger_subs[i].get('fires_per_fight', 0))
+  for entry: Dictionary in def.run_triggers:
+    lines.append(_run_trigger_line(entry))
+    for effect: RunEffect in entry.get('effects', []):
+      lines.append(_run_effect_line(effect))
   for effect: ItemEffect in def.passives:
     lines.append(_effect_line(item, effect))
   return lines
+
+
+## The line naming the run event a relic's run trigger reacts to. PLACEHOLDER wording for the owner.
+func _run_trigger_line(entry: Dictionary) -> Array:
+  match entry.get('event', -1):
+    RunManager.RunEvent.PICKED_UP:
+      return [{'t': 'text', 's': tr('When picked up:')}]
+    RunManager.RunEvent.FIGHT_WON:
+      return [{'t': 'text', 's': tr('When you win a fight:')}]
+    RunManager.RunEvent.DRAFT_SKIPPED:
+      return [{'t': 'text', 's': tr('When you skip a draft:')}]
+  return []
+
+
+## One run effect's line. PLACEHOLDER wording for the owner.
+func _run_effect_line(effect: RunEffect) -> Array:
+  match effect.kind:
+    RunEffect.Kind.MAX_HP:
+      return [{'t': 'text', 's': tr('+{0} maximum health').format([effect.amount])}]
+    RunEffect.Kind.HEAL:
+      return [{'t': 'icon', 'id': HealMechanic.ID}, {'t': 'text', 's': str(effect.amount)}]
+    RunEffect.Kind.GOLD:
+      return [{'t': 'text', 's': tr('+{0} gold').format([effect.amount])}]
+  return []
 
 
 ## "Once per fight" / "{0} times per fight" for a relic limit; nothing for no limit. PLACEHOLDER

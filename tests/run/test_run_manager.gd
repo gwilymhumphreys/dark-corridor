@@ -193,8 +193,83 @@ func test_max_hp_relic_grant_raises_max_and_current_hp() -> void:
   var charm := Relic.new(FixtureKit.max_hp_relic())
   run.relics.append(charm)
   run._apply_relic_grant(charm)
-  assert_eq(run.player.max_hp, roundi(before_max + FixtureKit.RELIC_MAX_HP), 'max HP grew')
-  assert_eq(run.player.hp, roundi(before_hp + FixtureKit.RELIC_MAX_HP), 'and current HP too')
+  assert_eq(run.player.max_hp, before_max + FixtureKit.RELIC_MAX_HP, 'max HP grew')
+  assert_eq(run.player.hp, before_hp + FixtureKit.RELIC_MAX_HP, 'and current HP too')
+
+
+# --- relic run triggers (docs/systems/content.md → Relic) ----------------------
+
+## A relic with one run trigger entry.
+func _run_trigger_relic(event: RunManager.RunEvent, effects: Array[RunEffect]) -> RelicDef:
+  var d := RelicDef.new()
+  d.id = 'test_run_trigger_relic'
+  d.run_triggers = [{'event': event, 'effects': effects}]
+  return d
+
+
+func test_starting_relic_fires_its_pickup_trigger() -> void:
+  var plain := _run()
+  plain.start(1, FixtureCharacter.ID)
+  CharacterCatalog.get_def(FixtureCharacter.ID).starting_relic_id = FixtureKit.MAX_HP_RELIC_ID
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  assert_eq(run.player.max_hp, plain.player.max_hp + FixtureKit.RELIC_MAX_HP,
+      'the starting relic raises maximum health like a granted one')
+
+
+func test_pickup_trigger_is_not_applied_again_on_resume() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var charm := Relic.new(FixtureKit.max_hp_relic())
+  run.relics.append(charm)
+  run._apply_relic_grant(charm)
+  var max_after: int = run.player.max_hp
+  var run_b := _run()
+  run_b.rehydrate(run.snapshot())
+  assert_eq(run_b.player.max_hp, max_after, 'the raised maximum is loaded, not raised again')
+
+
+func test_fight_won_trigger_fires_after_a_won_fight_only() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.FIGHT_WON, [RunEffect.gold(3)])))
+  run._on_encounter_resolved(Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE)
+  assert_eq(run.gold, 0, 'a rest or event is not a won fight')
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  assert_eq(run.gold, 3, 'a won fight adds the gold')
+
+
+func test_relic_won_from_a_fight_does_not_react_to_that_fight() -> void:
+  for id: String in RelicCatalog.REWARD_POOL:
+    var d := _run_trigger_relic(RunManager.RunEvent.FIGHT_WON, [RunEffect.gold(3)])
+    d.id = id
+    RelicCatalog._defs[id] = d
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
+  assert_eq(run.relics[-1].def.run_triggers[0]['event'], RunManager.RunEvent.FIGHT_WON, 'the fight-won relic was granted')
+  assert_eq(run.gold, 0, 'but the fight that granted it does not count')
+
+
+func test_draft_skipped_trigger_adds_to_the_skip_gold() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.DRAFT_SKIPPED, [RunEffect.gold(4)])))
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  run.apply_draft_skip()
+  assert_eq(run.gold, Balance.GOLD_SKIP + 4, 'the skip gold and the relic gold')
+
+
+func test_run_heal_is_capped_at_maximum_health() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.FIGHT_WON, [RunEffect.heal(5)])))
+  run.player.hp = run.player.max_hp - 2
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  assert_eq(run.player.hp, run.player.max_hp, 'healed to full, not past it')
+  run.player.hp = run.player.max_hp - 10
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  assert_eq(run.player.hp, run.player.max_hp - 5, 'healed by the amount')
 
 
 func test_relic_grant_is_deterministic_by_seed() -> void:
@@ -436,9 +511,8 @@ func test_fixed_squares_name_their_encounters() -> void:
 func test_the_relic_encounter_offers_a_choice_of_relics() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.position = RunMap.act_layout(0, run.rng.seed).find(5)
-  run._current_def_id = RunMap.RELIC_ENCOUNTER_ID
-  run._create_current_encounter()
+  run.jump_to(RunMap.act_layout(0, run.rng.seed).find(5))
+  assert_eq(run._current_def_id, RunMap.RELIC_ENCOUNTER_ID, 'square 6 is the relic encounter')
   run.begin_current()
   assert_true(run.has_pending_relic_offer(), 'the relic encounter resolves at once with a relic offer')
   var offer: Array = run.pending_relic_offer()

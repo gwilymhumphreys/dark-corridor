@@ -30,7 +30,7 @@ An **item with no timer** (decision #51): a powerful, run-changing ability made 
 |---|---|
 | `passives` | Always-on abilities for the whole fight, written as `ItemEffect`s like `effects` |
 | `fires_per_fight` | 0 = no limit; 1 = "the first time each fight" |
-| `max_hp_bonus` | Maximum health added once, on grant (baked into the snapshot, not re-applied on load) |
+| `run_triggers` | Abilities outside fights: `{'event': RunManager.RunEvent, 'effects': Array[RunEffect]}` entries |
 
 - **Run** — `RunManager.relics: Array[Relic]` holds the player's relics for the run (saved as ids). Before each fight `RunManager.begin_current` builds one `Item` per relic into `Actor.relics`; `CombatManager.teardown` dissolves them, so per-fight state (the fire count) starts fresh.
 - **Enemies** — `EnemyDef.relic_ids` builds the enemy's `Actor.relics` in `make_actor`.
@@ -38,6 +38,7 @@ An **item with no timer** (decision #51): a powerful, run-changing ability made 
 - **Not an item firing** — a relic's fire publishes no `ITEM_FIRED` and skips the use-status and fire-status drains, so it does not use up an Empowered stack. The events its effects cause when they land (`APPLIED`, `DAMAGE_TAKEN`) publish as usual.
 - **Events** — relics mostly use `FIGHT_START` (published once in the first step, so a start-of-fight relic fires on step two) and `DAMAGE_TAKEN` alongside the item events ([combat_manager.md](combat_manager.md)).
 - **Passives** — each `passives` entry becomes a `RelicPassive` on the relic's `Item` (`Item.passives`), its class chosen by the effect's mechanic in `PassiveRegistry` (attack bonus and attack percent bonus so far; a content check fails for any other). A passive is not a status: it extends `CombatHooks`, the hook base class `StatusEffect` also extends, and the status manager and Combat manager call the passives of an actor's relics before its statuses ([status_manager.md → Behaviour hooks](status_manager.md#behaviour-hooks-the-combathooks-and-statuseffect-interface)). Nothing that removes, counts or consumes statuses reaches it. The attack bonus passives raise the attacks of the owner's board items that the effect's shape (`ALL_OWN_ITEMS`) and target filter pick, checked at fire time, so items created during the fight are covered. A relic with only passives never fires.
+- **Outside fights** — the Run manager applies the effects of each `run_triggers` entry whose event happens, in relic order. `PICKED_UP` fires once for the new relic when it is granted, picked from an offer, or given as the character's starting relic; its result is kept in the saved health and gold and is not applied again on load. `FIGHT_WON` fires after a won fight (not the final boss, which ends the run), before that fight's reward, so a relic won there does not react to it. `DRAFT_SKIPPED` fires after the skip gold is added. A `RunEffect` (`src/run/run_effect.gd`) raises maximum and current health (`max_hp`), heals up to maximum health (`heal`), or adds gold (`gold`).
 - **Display** — relic tokens in the sheet's Relics box and the enemy's item row (before its items), with the item tooltip ([tooltips.md](tooltips.md)).
 
 ## Enchantment
@@ -67,7 +68,7 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 
 > **Not reachable in play right now (2026-09-18).** A starting kit was the only way a run got a
 > potion or an enchant, and the only character that carried them was the deleted Wanderer
-> placeholder. Neither authored character has a starting relic, potion or enchant, and Stone Ward is
+> placeholder. None of the authored characters has a starting relic, potion or enchant, and Stone Ward is
 > not in `RelicCatalog.REWARD_POOL`, so only Vital Charm and Iron Idol can be earned mid-run. The
 > code paths are all still exercised by the test suite. Giving a character a starting kit, or
 > adding a potion or enchant reward, is content work for the owner.
@@ -82,12 +83,12 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 
 - **The pools' content** (relic / potion / enchant catalogues) + rarity tuning — content/design (the pool work).
 - **Definition data formats — resolved (#23):** typed GDScript def objects + catalogs, not data files (player-facing strings stay localizable via `tr(def.name)` — `CLAUDE.md`).
-- **Relic passives, outside-fight events and rule changes** — stages 2 to 4 of [`plans/relics_as_items.md`](../plans/relics_as_items.md).
+- **Relic health thresholds and rule changes** — stage 4 of [`plans/relics_as_items.md`](../plans/relics_as_items.md).
 - **Re-enchant + the potion-drop / enchant-target sub-choice UIs** — a UI pass.
 - **Character starting-relic passive trait** — the Characters PRD's (deferred).
 
 ## Dependencies
 
-- **Calls down to:** `StatusManager` (enchant status effects), `Combat manager` (a relic's items and triggers; a thrown consumable's Delivery), `Item` (an enchant hooks its host's pipeline), `Actor` (relic direct mods).
-- **Driven by (above):** the `Run manager` — holds them in run-state, applies a drafted pick (relic → relics, enchant → chosen item, potion → slot), grants relics on reward; `Draft` offers them; `Save` persists them (run-state).
+- **Calls down to:** `StatusManager` (enchant status effects), `Combat manager` (a relic's items and triggers; a thrown consumable's Delivery), `Item` (an enchant hooks its host's pipeline). A relic's run triggers are applied by the `Run manager`.
+- **Driven by (above):** the `Run manager` — holds them in run-state, grants relics on reward or from the relic encounter's offer, applies an enchant to a chosen item (`apply_enchant`); `Draft` offers them; `Save` persists them (run-state).
 - **Shares** the **Draftable** base with `Item` (Relic, Enchantment + Consumable; design).
