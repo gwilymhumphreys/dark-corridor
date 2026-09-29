@@ -14,8 +14,9 @@ Repeat the periodic "is the codebase clean and are the docs honest?" pass. Scope
 Canonical commands + the Godot console-exe path live in [`docs/handoff.md`](../../docs/handoff.md) ("How to work"). Always **import first** after any new `class_name` script, then run the suite:
 
 ```bash
-tools/import.sh   # required before the suite sees new globals
+tools/import.sh      # required before the suite sees new globals
 tools/gut.sh
+tools/lsp_check.sh   # analyzer warnings for every .gd file (step 3)
 ```
 
 The at-exit `ObjectDB leaked` / `resources still in use` lines are **benign** (the static catalog caches — handoff confirms this), not a leak.
@@ -28,10 +29,10 @@ Read [`docs/index.md`](../../docs/index.md), [`docs/handoff.md`](../../docs/hand
 ### 2. Baseline health
 Import, run the GUT suite, record the **test count** and whether the totals show any **`Warnings`/`Deprecated`** rows. Note the real Godot version (`project.godot` → `config/features`) — compare it to what the docs claim.
 
-### 3. LSP warning sweep — check EVERY `.gd` file yourself
-**Reliability note (learned the hard way):** a backgrounded `godot-lsp:gdscript-validate` agent reported "0 warnings" but silently missed a real `UNUSED_PARAMETER` — its diagnostic channel wasn't firing. The **headless editor does not print analyzer warnings** to stdout either. The reliable signal is the harness's `<new-diagnostics>` block, which fires on **any** `Read` of a file — including a partial `Read(file, limit=2)`, which triggers whole-file diagnostics with almost no context cost.
+### 3. LSP warning sweep — check EVERY `.gd` file
+Run `tools/lsp_check.sh`. It starts a headless editor with its own language server on port 6015, asks it about every `.gd` file under `src/`, `tests/` and `tools/` (or only the files you pass), prints each warning and error, and stops the editor. The summary line must say every file replied; a file with no reply was not checked.
 
-So: `Glob` all `{src,tests,tools}/**/*.gd`, then `Read(…, limit=2)` each (batch ~20-30 parallel reads per message). A file that returns **no** `<new-diagnostics>` block is clean. Do not trust a subagent's summary "clean" — verify.
+**Do not use the other channels.** The `<new-diagnostics>` block on a `Read`, the `godot-mcp` diagnostics tools and the `godot-lsp:gdscript-validate` agent all return nothing, not an error, when the open editor's language server is unavailable. It accepts eight clients, and in the 2026-09-29 audit all eight were taken, so those channels reported a clean project that had 108 warnings. The command-line import and `--check-only` print errors but never warnings.
 
 Common, correct fixes:
 - `UNUSED_PARAMETER` on an interface/signature-symmetry method → prefix `_` (don't delete — it keeps the call-site shape). Genuinely dead → remove.

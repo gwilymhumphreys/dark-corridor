@@ -54,7 +54,7 @@ var data: Dictionary = {
 
 - **Filenames**: `snake_case` per the Godot 4 style guide (e.g., `corridor_3d.gd`, `combat_corridor.tscn`, `corridor_look.gdshader`). `class_name` and in-scene node names stay PascalCase — so `class_name CombatCorridor` lives in `combat_corridor.gd`.
 - **No preloads for `class_name` classes** — Godot makes them globally available
-- **Autoload class names**: Use `<Name>Autoload` suffix (e.g., `class_name CursorManagerAutoload`) to avoid conflict with the autoload's registered name. Access via the registered name (e.g., `CursorManager.request_hand()`).
+- **Autoload class names**: Use `<Name>Autoload` suffix (e.g., `class_name StatusManagerAutoload`) to avoid conflict with the autoload's registered name. Access via the registered name (e.g., `StatusManager.apply(...)`).
 - **Surgical edits only** — Modify least code possible; ask before major refactors
 - **Theme over code** — Style UI via the theme resource (`assets/themes/dark_corridor.tres`, the project default), not `add_theme_*_override()` in code
 - **Never hardcode a font size** — every label and button takes a rung of the text ladder through `theme_type_variation` (`LabelSmall`, `LabelMedium`, `ButtonHeading`, …); a label with no variation gets the body size. A `theme_override_font_sizes/font_size` in a scene does not follow the player's text size setting, so it is always wrong. The rungs and the setting: [`docs/systems/ui_theme.md`](docs/systems/ui_theme.md)
@@ -73,7 +73,8 @@ var data: Dictionary = {
 
 Use the wrappers, never a raw Godot command: `tools/gut.sh` (GUT suite),
 `tools/autotest.sh` (headless run), `tools/import.sh` (reimport, required after adding
-a file or a new `class_name`). Each writes the full output to `_temp/` and prints only
+a file or a new `class_name`), `tools/lsp_check.sh` (GDScript analyzer warnings, for every
+`.gd` file or the files you name). Each writes the full output to `_temp/` and prints only
 the failures and the summary. A raw Godot command is refused by the `PreToolUse` hook
 in `.claude/settings.json` unless its output is redirected to a file or piped through
 `tail` or `grep`.
@@ -98,9 +99,9 @@ invalid frees at scene changes and exit):
 
 ## Shell
 
-- This is a Windows machine but Bash runs via Git Bash — do NOT use `cd /d` or Windows-style path arguments in commands. Run commands directly from the working directory (e.g., `git status`, not `cd /d C:\projects\a-machine && git status`).
-- Do not prefix commands with `cd /c/projects/a-machine &&` — the working directory is already set and persists between commands.
-- When paths are needed in Bash commands, use Unix-style paths in quotes (e.g., `git -C "/c/projects/a-machine" status`).
+- This is a Windows machine but Bash runs via Git Bash — do NOT use `cd /d` or Windows-style path arguments in commands. Run commands directly from the working directory (e.g., `git status`, not `cd /d C:\projects\dark-corridor && git status`).
+- Do not prefix commands with `cd /c/projects/dark-corridor &&` — the working directory is already set and persists between commands.
+- When paths are needed in Bash commands, use Unix-style paths in quotes (e.g., `git -C "/c/projects/dark-corridor" status`).
 
 ## Git
 
@@ -113,7 +114,7 @@ invalid frees at scene changes and exit):
 - **Always update the docs in the SAME change as the behaviour they describe.** After any change, review the affected doc(s) and create/update as needed — code and its doc are never left out of sync. This is mandatory, not a follow-up.
 - **Every new doc gets a catalog entry in [`docs/index.md`](docs/index.md)** — an uncatalogued doc is invisible (the index is read first). **Exception: `docs/plans/` plans are temporary and NOT catalogued** — a plan earns an index row only if it ships as a `systems/` doc.
 - Keep all documentation concise with minimal examples so that an agent can quickly reference it to understand the subject
-- **Docs describe systems, mechanics, and design intent — not specific numbers.** Point to source files (`upgrades/*.json`, GDScript constants) for tunable values. This prevents docs from going stale when values are tuned. If a formula is important for understanding the system, include it but reference the source file for the actual constants.
+- **Docs describe systems, mechanics, and design intent — not specific numbers.** Point to source files (`Balance` constants in `src/data/balance.gd`, the content definitions in `content/`) for tunable values. This prevents docs from going stale when values are tuned. If a formula is important for understanding the system, include it but reference the source file for the actual constants.
 
 ## Localization
 

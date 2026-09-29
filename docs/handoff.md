@@ -166,6 +166,9 @@ overlay) and call `run.advance()` — neither mounts `Run`/`Encounter`/`Combat`.
   `tools/gut.sh -gdir=res://tests/combat -gselect=test_item.gd`.
 - **GOTCHA:** after adding any new `class_name` script, run `tools/import.sh` FIRST
   or GUT won't see the new global.
+- **GDScript warnings** (unused parameters, shadowed names and the like, which the import
+  never prints): `tools/lsp_check.sh`, for every `.gd` file or the files you name. It starts
+  its own headless editor and language server, so it works whether or not the editor is open.
 - **Drive a whole run headless** (the product loop): `tools/autotest.sh --seed 1`
   → prints a summary, writes a log + markdown report to `autotest_results/`
   (git-ignored), exit `0` = resolved / `1` = stuck-or-timeout. `--nosave --notutorial`
