@@ -102,6 +102,59 @@ func test_fires_per_fight_limits_a_relic() -> void:
   assert_eq(relic.fires, 1, 'a once-per-fight relic fires the first time only')
 
 
+## A relic with two trigger entries, each with its own effects: shield 2 when poison is applied, and
+## an attack of 4, once per fight, when shield is applied.
+func _two_entry_relic() -> RelicDef:
+  var d := RelicDef.new()
+  d.id = 'test_two_entry_relic'
+  d.name_key = 'Test Two Entry Relic'
+  d.trigger_subs = [
+    {'event': EventBus.Event.APPLIED, 'filter': PoisonMechanic.ID, 'effects': [ItemEffect.shield(2.0)]},
+    {'event': EventBus.Event.APPLIED, 'filter': ShieldMechanic.ID, 'effects': [ItemEffect.attack(4.0)],
+     'fires_per_fight': 1},
+  ]
+  return d
+
+
+func test_each_trigger_entry_fires_only_its_own_effects() -> void:
+  var relic := Item.new(_two_entry_relic())
+  var first: Array = relic.fire_trigger(0)
+  assert_eq(first.size(), 1)
+  assert_eq(first[0].mechanic, ShieldMechanic.ID, 'the first entry shields')
+  var second: Array = relic.fire_trigger(1)
+  assert_eq(second[0].mechanic, AttackMechanic.ID, 'the second entry attacks')
+  assert_eq(relic.fires, 2, 'both count for the flash')
+
+
+func test_trigger_entries_fire_separately_and_together() -> void:
+  var p := Actor.new(100.0)
+  var e := Actor.new(1000.0)
+  var relic := _give(p, _two_entry_relic())
+  var cm := _manager(p, [e])
+  cm.start()
+  cm.sim_step()
+  cm.bus.publish(EventBus.Event.APPLIED, PoisonMechanic.ID, p)
+  cm.sim_step()
+  assert_eq(relic.trigger_fires, [1, 0], 'poison fires only the first entry')
+  cm.bus.publish(EventBus.Event.APPLIED, PoisonMechanic.ID, p)
+  cm.bus.publish(EventBus.Event.APPLIED, ShieldMechanic.ID, p)
+  cm.sim_step()
+  assert_eq(relic.trigger_fires, [2, 1], 'both fire when both events happen in one step')
+  cm.bus.publish(EventBus.Event.APPLIED, PoisonMechanic.ID, p)
+  cm.bus.publish(EventBus.Event.APPLIED, ShieldMechanic.ID, p)
+  cm.sim_step()
+  assert_eq(relic.trigger_fires, [3, 1], "the second entry's limit stops only that entry")
+
+
+func test_entries_without_effects_share_the_relics_limit() -> void:
+  var d := _relic(ItemEffect.shield(2.0), {'event': EventBus.Event.APPLIED, 'filter': PoisonMechanic.ID}, 1)
+  d.trigger_subs.append({'event': EventBus.Event.APPLIED, 'filter': ShieldMechanic.ID})
+  var relic := Item.new(d)
+  assert_false(relic.trigger_spent(1))
+  relic.fire_trigger(0)
+  assert_true(relic.trigger_spent(1), "a fire from one entry uses up the relic's shared limit")
+
+
 func test_a_dead_owners_relic_does_not_fire() -> void:
   var p := Actor.new(100.0)
   var e := Actor.new(1000.0)

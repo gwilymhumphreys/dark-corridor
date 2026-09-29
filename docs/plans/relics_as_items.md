@@ -146,6 +146,40 @@ the triggered effects, with no heading; the wording keeps them apart (owner's ex
 [poison] deal that much [bleed]" then "Your [poison] items have +2 [poison]"). A passive's value is shown as written, not scaled by bonuses.
 `TooltipContent.keyword_ids` also looks at passives, so their keyword cards appear.
 
+### Several triggers with their own effects (stage 2b)
+
+Owner (2026-09-29): a relic must be able to have several triggers that do different things, and
+several passives, so a relic is not limited in what it can do. Passives are already a list with one
+entry per ability. Triggers today share one bar and one `effects` list, so every trigger fires
+every effect.
+
+- A relic trigger entry may carry its own `'effects'` and `'fires_per_fight'`. An entry without them
+  fires the relic's `effects` and counts against the relic's `fires_per_fight`, as today, so Stone
+  Ward and Iron Idol are unchanged.
+
+  ```gdscript
+  trigger_subs = [
+    {'event': EventBus.Event.APPLIED, 'filter': ShieldMechanic.ID, 'effects': [ItemEffect.heal(2.0)]},
+    {'event': EventBus.Event.APPLIED, 'filter': AttackMechanic.ID, 'effects': [ItemEffect.heal(4.0)],
+     'fires_per_fight': 1},
+  ]
+  ```
+
+- In a fight the relic stays one `Item`, so the token, tooltip, passives and flash are unchanged.
+  The `Item` gets one one-step `Ticker` per trigger entry (`Item.trigger_tickers`) and a fire count
+  per entry; each entry subscribes its own ticker. The relic's `cooldown` ticker is no longer used.
+- `CombatManager.sim_step` checks each entry's ticker. A full one queues that entry, unless its
+  limit (the entry's, or the relic's for an entry without its own effects) is reached. Queued relic
+  entries fire after the items, in relic order then entry order. Two entries full in one step both
+  fire.
+- `_fire_item` takes the effects to fire; `Item.fire` gains an optional effects argument, default
+  `def.effects`. Crit uses the relic's `crit_chance` for every entry. `Item.fires` still counts every
+  fire, for the flash.
+- Tooltip: each entry with its own effects is its trigger line followed by its effects and its limit.
+  The entries without their own effects keep the current layout (their trigger lines, then the
+  relic's effects, crit and limit). Passives come last.
+- Keyword cards also look at the entries' effects.
+
 ### Outside fights (stage 3)
 
 - New `RunEvent` values in the run manager: `PICKED_UP`, `FIGHT_WON`, `FIGHT_LOST`,
@@ -189,6 +223,7 @@ Unchanged: the snapshot stores relic ids. Nothing a relic does in a fight is sav
    fight instead of before the first step, which can change fight results and autotest baselines.
 2. Built 2026-09-29. The shared hook base class, `passives` and their registry, the attack bonus passive classes,
    bonuses for every mechanic, passive tooltip lines.
+2b. Built 2026-09-29. Several triggers per relic, each with its own effects and limit.
 3. Run events and run effects. Vital Charm is rewritten.
 4. Health thresholds and rule changes, one at a time as relics are authored.
 
@@ -231,6 +266,10 @@ needed, `docs/decision_log.md`.
 - Passive tooltip lines match the item effect line for the same effect, and come after the
   trigger line and its effects.
 - A content check fails for a passive whose mechanic has no passive class.
+- Two trigger entries with their own effects each fire only their own effects; both fire when both
+  events happen in one step; an entry's limit stops only that entry; an entry without effects still
+  fires the relic's effects.
+- The tooltip lists each entry's trigger line with its own effects.
 - All on fixture relics (`FixtureContent`), not the authored ones.
 
 ## Open questions

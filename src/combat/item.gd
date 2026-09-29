@@ -16,6 +16,10 @@ var fires: int = 0                       # times fired this fight (items are reb
 # A relic's always-on abilities, one per RelicDef.passives entry (docs/systems/content.md → Relic).
 # Empty for every other item.
 var passives: Array[RelicPassive] = []
+# A relic's trigger entries (RelicDef.trigger_subs): one one-step Ticker each, which the entry's
+# subscription fills, and how many times each entry fired this fight. A relic's `cooldown` is unused.
+var trigger_tickers: Array[Ticker] = []
+var trigger_fires: Array[int] = []
 
 
 func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
@@ -23,6 +27,9 @@ func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
   owner = item_owner
   cooldown = Ticker.from_seconds(def.cooldown)
   if def is RelicDef:
+    for sub: Dictionary in def.trigger_subs:
+      trigger_tickers.append(Ticker.new(1.0))
+      trigger_fires.append(0)
     for effect: ItemEffect in (def as RelicDef).passives:
       var passive: RelicPassive = PassiveRegistry.create(effect)
       if passive == null:
@@ -56,6 +63,35 @@ func fire() -> Array:
   for effect in def.effects:
     payloads.append(_resolve_effect(effect))
   return payloads
+
+
+## A relic's fire for its trigger entry `index` (docs/systems/content.md → Relic): empties that
+## entry's ticker and resolves the entry's effects (its own, or the relic's). Counts in `fires` too,
+## for the token's flash.
+func fire_trigger(index: int) -> Array:
+  trigger_tickers[index].reset()
+  trigger_fires[index] += 1
+  fires += 1
+  var payloads: Array[Payload] = []
+  for effect in (def as RelicDef).trigger_effects(index):
+    payloads.append(_resolve_effect(effect))
+  return payloads
+
+
+## True when a relic's trigger entry `index` has used its fires for this fight: an entry with its own
+## effects against its own 'fires_per_fight'; the others share the relic's `fires_per_fight`.
+func trigger_spent(index: int) -> bool:
+  var relic_def := def as RelicDef
+  if relic_def.has_own_effects(index):
+    var own_limit: int = relic_def.trigger_subs[index].get('fires_per_fight', 0)
+    return own_limit > 0 and trigger_fires[index] >= own_limit
+  if relic_def.fires_per_fight <= 0:
+    return false
+  var shared: int = 0
+  for i in trigger_fires.size():
+    if not relic_def.has_own_effects(i):
+      shared += trigger_fires[i]
+  return shared >= relic_def.fires_per_fight
 
 
 ## True while a gate status (silence) sits on this item. The Combat manager consults

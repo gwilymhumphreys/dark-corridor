@@ -93,7 +93,7 @@ A per-fight pub-sub the manager owns (it holds every participant) — this resol
 - **Teardown** — the manager's teardown clears the bus (subscriptions hold strong refs to their Items; clearing releases them).
 
 - **`FIGHT_START`** is published once, in the first step after crossings are collected, with no source (relics subscribe it with `ANY`). **`DAMAGE_TAKEN`** is published by `publish_damage_taken` wherever health loss is already reported (the attack mechanic's land, DoT ticks, `_show_status_damage`); its source actor is the one that lost health and its data the mechanic or status id.
-- **Relics** — each actor's `relics` items are registered by `_register_relic` into `_relic_items`, never stepped by time; their subscriptions push 1.0 (a full bar). In step 1 a relic whose bar is full is collected with the crossed items, unless it has used its `fires_per_fight`, and fires through `_fire_item` without `ITEM_FIRED` or the fire drains ([content.md → Relic](content.md#relic)).
+- **Relics** — each actor's `relics` items are registered by `_register_relic` into `_relic_items`, never stepped by time; each trigger entry's subscription pushes 1.0 into that entry's own ticker. In step 1 each full entry is collected (unless it has used its fires for the fight) and fires after the crossed items, in relic then entry order, through `_fire_item(item, trigger_index)` without `ITEM_FIRED` or the fire drains ([content.md → Relic](content.md#relic)).
 
 The event catalog and push amounts are content (the Item PRD: item declares; combat_model.md: charges model). "Scales with item count" reads board state at resolve — a computed modifier, not an event.
 

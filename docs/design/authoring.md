@@ -90,7 +90,10 @@ for each def's fields and how it resolves.
 - A **relic** is a `RelicDef` (`content/relics/<id>.gd`), which extends `ItemDef`: write `effects`,
   `mechanics` and `trigger_subs` as for an item, but a trigger has no `'seconds'` (it fires the
   relic) and there is no `cooldown` to set. `fires_per_fight = 1` makes it "the first time each
-  fight". Always-on abilities go in `passives`, written as item effects (an attack bonus effect with
+  fight". For several triggers that do different things, give each trigger entry its own
+  `'effects'` (and `'fires_per_fight'` if it is limited):
+  `{'event': EventBus.Event.APPLIED, 'filter': AttackMechanic.ID, 'effects': [ItemEffect.heal(4.0)]}`.
+  Always-on abilities go in `passives`, written as item effects (an attack bonus effect with
   shape `ALL_OWN_ITEMS` and a target filter reads "[attack] +2 to each of your weapon items"); each
   mechanic used there needs a class in `PassiveRegistry`. Add it to `RelicCatalog.REWARD_POOL` to make it a reward. See
   [content.md → Relic](../systems/content.md#relic).

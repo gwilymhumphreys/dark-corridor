@@ -135,20 +135,23 @@ func _register_actor(actor: Actor) -> void:
     _register_item(it)
     _seed_item_uses(it)
   for it in actor.relics:
-    it.cooldown.accum = 0.0
     it.fires = 0
+    for i in it.trigger_tickers.size():
+      it.trigger_tickers[i].accum = 0.0
+      it.trigger_fires[i] = 0
     _register_relic(it)
 
 
-## Register one relic item: its triggers subscribe with a push that fills the whole bar, so each
-## event fires it once. FIGHT_START has no source, so it always subscribes with ANY; other events
+## Register one relic item: each trigger entry subscribes its own ticker with a push that fills it,
+## so each event fires that entry once. FIGHT_START has no source, so it always subscribes with ANY; other events
 ## default to OWN_SIDE like an item's (decision #30).
 func _register_relic(it: Item) -> void:
   _relic_items.append(it)
-  for sub in it.def.trigger_subs:
+  for i in it.def.trigger_subs.size():
+    var sub: Dictionary = it.def.trigger_subs[i]
     var event: int = sub['event']
     var source_filter: int = EventBus.SourceFilter.ANY if event == EventBus.Event.FIGHT_START         else sub.get('source_filter', EventBus.SourceFilter.OWN_SIDE)
-    bus.subscribe(event, it.cooldown, 1.0, sub.get('filter', null), source_filter, it)
+    bus.subscribe(event, it.trigger_tickers[i], 1.0, sub.get('filter', null), source_filter, it)
 
 
 ## Register one item with the sweep + event bus: append its cooldown Ticker to the swept set and
@@ -255,6 +258,7 @@ func sim_step() -> void:
 
   # 1. Advance every component one step; collect crossings.
   var fired_items: Array[Item] = []
+  var fired_relics: Array = []   # [relic Item, trigger entry index] pairs, fired after the items
   for it in _items:
     # A dead actor's items neither tick nor fire (Cap 3 — matters once a side has >1 body:
     # in a multi-enemy fight a slain body must stop swinging). Its statuses still resolve
@@ -268,18 +272,18 @@ func sim_step() -> void:
       continue
     if it.cooldown.step():
       fired_items.append(it)
-  # Relics are never stepped by time; one whose bar a trigger filled fires with the items. A relic
-  # that used its fires for this fight drops the push instead.
+  # Relics are never stepped by time; each trigger entry whose ticker an event filled fires after the
+  # items, in relic order then entry order. An entry that used its fires for this fight drops the push.
   for it in _relic_items:
     if it.owner != null and not it.owner.is_alive():
       continue
-    if not it.cooldown.crossed():
-      continue
-    var limit: int = (it.def as RelicDef).fires_per_fight
-    if limit > 0 and it.fires >= limit:
-      it.cooldown.accum = 0.0
-      continue
-    fired_items.append(it)
+    for i in it.trigger_tickers.size():
+      if not it.trigger_tickers[i].crossed():
+        continue
+      if it.trigger_spent(i):
+        it.trigger_tickers[i].accum = 0.0
+        continue
+      fired_relics.append([it, i])
   # Published after this step's crossings are collected, so a start-of-fight relic fires next step.
   if not _fight_started:
     _fight_started = true
@@ -320,6 +324,10 @@ func sim_step() -> void:
       if it.owner == null:
         continue
       _fire_item(it)
+    for fired: Array in fired_relics:
+      if fired[0].owner == null:
+        continue
+      _fire_item(fired[0], fired[1])
 
   # 6. Drop spent Deliveries (fizzled = no visual; landed = held briefly for the
   #    impact number/flash) so the in-flight set can't grow unbounded over a long
@@ -389,15 +397,17 @@ func _dot_visual(status: StatusEffect, target, dealt: float) -> Delivery:
   return d
 
 
-func _fire_item(it: Item) -> void:
+## `trigger_index` is the relic trigger entry that fires (docs/systems/content.md → Relic); -1 for an
+## item.
+func _fire_item(it: Item, trigger_index: int = -1) -> void:
   # Re-check the owner: the status pass and the landings run AFTER crossings are collected, so a
   # DoT tick or a hit can kill an actor whose item crossed this same step — a slain body must not
   # swing (the Cap 3 rule; the loop's check above only covers earlier deaths).
   if it.owner != null and not it.owner.is_alive():
     return
-  var payloads := it.fire()
+  var payloads: Array = it.fire() if trigger_index < 0 else it.fire_trigger(trigger_index)
   if payloads.is_empty():
-    return   # gated (silence)
+    return   # gated (silence), or a relic entry with no effects
   # A relic firing is not an item firing (owner, docs/plans/relics_as_items.md): no ITEM_FIRED, and
   # no use-status or fire-status drain below. The events its effects cause when they land still publish.
   var relic: bool = it.def is RelicDef

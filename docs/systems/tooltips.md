@@ -50,11 +50,13 @@ it goes off: "When [poison] is applied, [charge] 1s". A trigger on destroyed ite
 Reclaim keyword instead.
 
 A **relic** (`item.def is RelicDef`) has no charge line (`TooltipPanel` hides the empty row) and
-its type line reads "Relic". Its lines are, in order: when it fires ("At the start of each fight:",
-"When [poison] is applied:", "When you take damage:"), then its effect lines, its crit chance, and
-its limit ("Once per fight", "N times per fight"), then its passives with no heading, each the same
+its type line reads "Relic". Its lines are, in order: the trigger lines of the entries that fire the
+relic's own effects ("At the start of each fight:", "When [poison] is applied:", "When you take
+damage:"), then its effect lines, its crit chance, and its limit ("Once per fight", "N times per
+fight"); then each trigger entry with its own effects, as its trigger line, its effect lines and its
+limit; then its passives with no heading, each the same
 line an item with that effect shows (`TooltipContent._relic_lines`). Keyword cards come from the
-effects and the passives. A relic shows
+effects, the trigger entries' effects and the passives. A relic shows
 no Trigger or Reclaim keyword card, because its triggers fire it rather than charge it. The
 wording is placeholder copy for the owner.
 

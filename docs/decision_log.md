@@ -100,6 +100,8 @@ The full catalog (with keywords) is [`index.md`](index.md): system specs in `doc
 
 52. **A relic's always-on abilities are passives, not statuses (2026-09-29, owner).** A passive is written like an item effect in `RelicDef.passives` and listed in the tooltip as the same line an item with that effect shows. It shares the hook functions statuses use through the `CombatHooks` base class, and is called before the owner's statuses, so it works the same way without being in the status list: nothing that removes, counts or consumes statuses can touch it, and no hidden-status special cases are needed. Replaces the plan's hidden fight-long status. Status and passive bonuses are now asked for every mechanic; each class decides which it raises. Homes: [`content.md`](systems/content.md#relic) / [`status_manager.md`](systems/status_manager.md).
 
+53. **A relic can have several triggers, each with its own effects (2026-09-29, owner).** So a relic is not limited in what it can do, a trigger entry may carry its own effects and per-fight limit, and each entry fires separately; an entry without them fires the relic's effects as before. Passives were already a list. Home: [`content.md`](systems/content.md#relic).
+
 ## Open / deferred (each has a home)
 
 - Timescale override **replace-vs-multiply — resolved → replace** (absolute slow-mo, independent of the ×1/×2/×3 battle-speed dial; the dial is a `Game` session preference applied to each fight's Timekeeper base scale). timekeeper.md / combat_model.md.

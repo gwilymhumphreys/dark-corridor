@@ -233,6 +233,21 @@ func test_a_relic_passive_reads_as_the_same_item_effect_line_after_the_trigger()
       'the passive, which covers your items, adds the item-target keyword card')
 
 
+func test_each_trigger_entry_lists_its_own_effects_and_limit() -> void:
+  var def := RelicDef.new()
+  def.trigger_subs = [
+    {'event': EventBus.Event.FIGHT_START, 'effects': [ItemEffect.shield(2.0)]},
+    {'event': EventBus.Event.DAMAGE_TAKEN, 'effects': [ItemEffect.heal(4.0)], 'fires_per_fight': 1},
+  ]
+  var lines: Array = TooltipContent.new().build(Item.new(def))['lines']
+  assert_eq(lines.size(), 5, 'two trigger lines, two effects and one limit')
+  assert_eq(lines[0], [{'t': 'text', 's': 'At the start of each fight:'}])
+  assert_eq(_first_segment(lines[1], 'icon')['id'], ShieldMechanic.ID, 'the first entry shields')
+  assert_eq(lines[2], [{'t': 'text', 's': 'When you take damage:'}])
+  assert_eq(_first_segment(lines[3], 'icon')['id'], HealMechanic.ID, 'the second entry heals')
+  assert_eq(lines[4], [{'t': 'text', 's': 'Once per fight'}], "the second entry's limit follows it")
+
+
 ## The target phrase `_shape_text` produces for a shape + filter, as its text with each icon
 ## written as [id].
 func _phrase(shape: int, filter: TargetFilter) -> String:

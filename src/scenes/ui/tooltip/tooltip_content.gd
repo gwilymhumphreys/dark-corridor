@@ -71,28 +71,43 @@ func _effect_lines(item: Item) -> Array:
   return lines
 
 
-## A relic's lines (docs/systems/tooltips.md): when it fires, then what it does, then its crit chance
-## and its limit per fight, then its passives as item effect lines, with no heading (the owner's
-## wording keeps them apart). The trigger wording is placeholder copy for the owner to rewrite.
+## A relic's lines (docs/systems/tooltips.md): the trigger entries that fire the relic's own effects,
+## then those effects, its crit chance and its limit per fight; then each entry with its own effects,
+## as its trigger line, its effects and its limit; then its passives as item effect lines, with no
+## heading (the owner's wording keeps them apart). The trigger wording is placeholder copy for the
+## owner to rewrite.
 func _relic_lines(item: Item) -> Array:
+  var def := item.def as RelicDef
   var lines: Array = []
-  for sub: Dictionary in item.def.trigger_subs:
-    lines.append(_relic_trigger_line(sub))
-  for effect: ItemEffect in item.def.effects:
+  for i in def.trigger_subs.size():
+    if not def.has_own_effects(i):
+      lines.append(_relic_trigger_line(def.trigger_subs[i]))
+  for effect: ItemEffect in def.effects:
     lines.append(_effect_line(item, effect))
-  if item.def.crit_chance > 0.0:
+  if def.crit_chance > 0.0:
     lines.append([
       {'t': 'icon', 'id': CritMechanic.ID},
-      {'t': 'text', 's': fmt(item.def.crit_chance * 100.0) + '%'},
+      {'t': 'text', 's': fmt(def.crit_chance * 100.0) + '%'},
     ])
-  var limit: int = (item.def as RelicDef).fires_per_fight
+  _append_limit_line(lines, def.fires_per_fight)
+  for i in def.trigger_subs.size():
+    if def.has_own_effects(i):
+      lines.append(_relic_trigger_line(def.trigger_subs[i]))
+      for effect: ItemEffect in def.trigger_effects(i):
+        lines.append(_effect_line(item, effect))
+      _append_limit_line(lines, def.trigger_subs[i].get('fires_per_fight', 0))
+  for effect: ItemEffect in def.passives:
+    lines.append(_effect_line(item, effect))
+  return lines
+
+
+## "Once per fight" / "{0} times per fight" for a relic limit; nothing for no limit. PLACEHOLDER
+## wording for the owner.
+func _append_limit_line(lines: Array, limit: int) -> void:
   if limit == 1:
     lines.append([{'t': 'text', 's': tr('Once per fight')}])
   elif limit > 1:
     lines.append([{'t': 'text', 's': tr('{0} times per fight').format([limit])}])
-  for effect: ItemEffect in (item.def as RelicDef).passives:
-    lines.append(_effect_line(item, effect))
-  return lines
 
 
 ## The line naming the event a relic fires on. PLACEHOLDER wording for the owner.
@@ -397,11 +412,16 @@ static func _any_effect(item: Item, predicate: Callable) -> bool:
   return false
 
 
-## The item's effects, and for a relic its passives after them — every effect the tooltip lists.
+## The item's effects, and for a relic the effects of its trigger entries and its passives after
+## them — every effect the tooltip lists.
 static func _effects_of(item: Item) -> Array[ItemEffect]:
   var effects: Array[ItemEffect] = item.def.effects.duplicate()
   if item.def is RelicDef:
-    effects.append_array((item.def as RelicDef).passives)
+    var def := item.def as RelicDef
+    for i in def.trigger_subs.size():
+      if def.has_own_effects(i):
+        effects.append_array(def.trigger_effects(i))
+    effects.append_array(def.passives)
   return effects
 
 
