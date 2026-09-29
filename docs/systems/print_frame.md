@@ -72,11 +72,14 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
 - `map_icons_as_pictures` (on by default) draws the map's icons with the item icons' material, so they
   take every picture effect ([interface_look.md](interface_look.md)). Off, they use the interface
   element material like the value pills and keep their exact palette colour, which made them stand
-  out against the graded item icons and portraits. `MapStrip` applies it.
+  out against the graded item icons and portraits. `MapStrip` applies it. `map_cleared_look` is a
+  dropdown for a cleared map square: its token face down, or burnt away when its fight is won (the
+  default).
+- The `paper_burn_*` settings set the [paper burn](paper_burn.md) effect.
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
-  `TokensPanel`), in six sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings) and Map (the map icon switch).
+  `TokensPanel`), in seven sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
+  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings) Map (the map icon switch and the cleared square look) and Paper burn.
 
 | Group | Does |
 |---|---|

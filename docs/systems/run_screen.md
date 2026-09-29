@@ -50,8 +50,8 @@ run_ended → Game → outcome screen
 ```
 
 A fight beat enters with a live encounter. A choice beat has none until the player picks one of
-the encounter cards ([below](#the-choice-of-encounters)). An **EVENT** beat raises `event_overlay.tscn` (prose + a
-binary choice → `RunManager.pick_event_option`, which applies an ally outcome and hands the pick to `Encounter.pick_event_option` to apply the rest + resolve), parking the FSM
+the encounter cards ([below](#the-choice-of-encounters)). An **EVENT** beat raises `event_overlay.tscn` (prose + one
+button per available option, `RunManager.available_event_options` → `RunManager.pick_event_option`, which applies the option's effects and resolves the event), parking the FSM
 until the pick, like the draft overlay.
 
 ### The choice of encounters
@@ -328,8 +328,10 @@ A view built without a fight never shows the fills. The combat report is still f
   tinted from the palette (`ItemCell.tint_picture`) and drawn with the item icons' picture effects
   unless the `map_icons_as_pictures` print setting is off ([print_frame.md](print_frame.md)). The tokens are the medium token size, the same
   as the enemy items (`medium_token_size`), or smaller if the row would be wider than the strip, and
-  are set askew like the items. A cleared square's token is face down (no
-  icon), and the current one has the selected border (`ItemCell.set_marked`, [control_feedback.md](control_feedback.md)); during a choice of
+  are set askew like the items. A cleared square has no token: when its
+  fight is won, `RunScreen` calls `burn_current_square()` and the token burns away
+  ([paper_burn.md](paper_burn.md)). With the `map_cleared_look` print setting on Face down, the token
+  is turned face down (no icon) instead. The current one has the selected border (`ItemCell.set_marked`, [control_feedback.md](control_feedback.md)); during a choice of
   encounters and the encounter picked from it, a marker sits on the grid line before the next square
   (`setup(position)`, `mark_position` on each advance). The label is laid out like the sheet's other labels
   (`SheetSection`, `LabelDim`). With the `map_in_column` print setting on, the combat view places it

@@ -69,6 +69,12 @@ static var ALLY_DOWNED: Color = Color(0.45, 0.45, 0.45)     # darken a downed (d
 # BEAT_BOSS / BEAT_RELIC above are shared with the encounter cards; these are map-strip-only.
 static var MAP_CURRENT_HALO: Color = Color(0.95, 0.92, 0.55)
 
+# ── Paper burn (a token burning away; paper_burn.md) ─────────────────────────
+# A visual effect only, not the Burn mechanic above.
+static var PAPER_BURN_EMBER: Color = Color8(255, 170, 80)    # the glowing line at the hole's edge
+static var PAPER_BURN_CHAR: Color = Color8(12, 8, 5)         # the black band behind it
+static var PAPER_BURN_SCORCH: Color = Color8(90, 50, 20)     # the brown ahead of it
+
 # ── Tooltip ──────────────────────────────────────────────────────────────────
 # PLACEHOLDER rarity tint and changed-value accent — the colour treatment is the owner's call (tooltips.md).
 static var RARITY_COMMON: Color = Color(1.0, 1.0, 1.0)

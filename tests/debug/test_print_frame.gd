@@ -73,7 +73,7 @@ func test_tokens_panel_has_the_token_sections() -> void:
   var tokens_panel: TokensPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Tokens') as TokensPanel
   tokens_panel.rebuild()
   var titles: Array[String] = _section_titles(tokens_panel)
-  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits', 'Character panels', 'Map'] as Array[String], 'one section per part of the token look')
+  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits', 'Character panels', 'Map', 'Paper burn'] as Array[String], 'one section per part of the token look')
   assert_false(PrintPanel.LAYOUT_PROPERTIES.has('token_tilt'), 'the token settings left the Print tab')
 
 

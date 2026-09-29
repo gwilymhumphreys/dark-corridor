@@ -141,7 +141,7 @@ func _begin_beat() -> void:
     _after_beat()
 
 
-# An EVENT beat (the tier-2 binary choice): raise the prose + options and wait. The pick
+# An EVENT beat: raise the prose + the available options and wait. The pick
 # applies the chosen outcome to run-state and resolves the beat; then advance as usual.
 func _show_event(enc: Encounter) -> void:
   _state = State.EVENTING
@@ -149,13 +149,13 @@ func _show_event(enc: Encounter) -> void:
   _event = EVENT_OVERLAY.instantiate()
   _view.corridor_area().add_child(_event)   # in the corridor; the board, potions and HUD stay live
   _event.option_picked.connect(_on_event_picked)
-  _event.setup(enc)
+  _event.setup(enc, _run.available_event_options())
 
 
 func _on_event_picked(index: int) -> void:
   _event.queue_free()
   _event = null
-  _run.pick_event_option(index)   # via the RunManager so an ADD_ALLY option recruits a run-scoped ally
+  _run.pick_event_option(index)   # the RunManager applies the option's effects, then resolves the event
   _after_beat()
 
 
@@ -225,6 +225,8 @@ func _physics_process(delta: float) -> void:
         # Nothing parks here: the run goes straight on to the reward draft, and the player
         # reads the report when they want to (docs/systems/combat_log.md).
         _last_log = _log
+        if not _run.is_ended():
+          _map.burn_current_square()   # the fight was won: its square's token burns away
         _after_beat()
       else:
         _cm.tick(delta)

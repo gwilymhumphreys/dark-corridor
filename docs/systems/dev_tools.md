@@ -91,6 +91,7 @@ Run one directly instead of the game: `<godot> --path . res://src/debug/scenes/<
 | `combat_sandbox` | One real fight between the default character and an enemy (hover to slow down, R restarts) | none |
 | `corridor_testbed` | The corridor with Forward and Back buttons; N places a monster ([corridor_3d.md](corridors/corridor_3d.md)) | `--set=property=value` sets a corridor export (repeatable); `--view=WIDTHxHEIGHT` fixes the view size; with `--shot`, `--still` keeps it from moving and `--monster` places a monster |
 | `tooltip_demo` | The item tooltip held open over one item ([tooltips.md](tooltips.md)) | none |
+| `paper_burn_preview` | Tokens held partway through a paper burn, and a map token, an item token and a wide panel burning over and over ([paper_burn.md](paper_burn.md)) | none |
 | `hit_effects_preview` | The dagger's slash and the warhammer's impact repeating over an enemy image, and a strip of frames through each ([vfx_driver.md](vfx_driver.md)) | none |
 
 ## Screenshot commands

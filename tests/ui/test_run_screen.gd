@@ -27,7 +27,7 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   var guard: int = 0
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
     if screen._event != null:
-      screen._on_event_picked(0)    # the event's binary choice
+      screen._on_event_picked(0)    # the event's first option
     elif screen._state == RunScreen.State.CHOOSING:
       screen._choice.picked.emit(0)   # stand in for the player picking the left encounter card
     elif screen._draft != null:
@@ -60,6 +60,18 @@ func test_a_finished_fight_offers_its_report_on_the_hud() -> void:
   assert_not_null(screen._summary, 'the Report button raises the report')
   screen._toggle_report()
   assert_null(screen._summary, 'pressing it again puts the report away')
+  screen.free()
+
+
+func test_a_won_fight_burns_its_map_square() -> void:
+  var screen := _mount_into_fight(1)
+  var square: int = screen._map.current_square()[0]
+  var guard: int = 0
+  while screen._last_log == null and Game.phase == GameManagerAutoload.Phase.RUN and guard < 400:
+    screen._physics_process(1.0)
+    guard += 1
+  assert_eq(Game.phase, GameManagerAutoload.Phase.RUN, 'the fixture fight is won')
+  assert_true(screen._map.is_burning(square), 'the square of the won fight is burning away')
   screen.free()
 
 

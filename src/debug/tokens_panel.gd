@@ -35,6 +35,18 @@ const SECTIONS: Dictionary = {
   },
   'Map': {
     'map_icons_as_pictures': [],
+    'map_cleared_look': ['Face down', 'Burnt away'],
+  },
+  'Paper burn': {
+    'paper_burn_duration': [0.2, 6.0, 0.1],
+    'paper_burn_raggedness': [0.0, 40.0, 0.5],
+    'paper_burn_detail': [2.0, 60.0, 0.5],
+    'paper_burn_ember_width': [0.0, 12.0, 0.25],
+    'paper_burn_char_width': [0.0, 20.0, 0.25],
+    'paper_burn_scorch_width': [0.0, 60.0, 0.5],
+    'paper_burn_brightness': [1.0, 6.0, 0.05],
+    'paper_burn_dither': [],
+    'paper_burn_particles': [],
   },
 }
 

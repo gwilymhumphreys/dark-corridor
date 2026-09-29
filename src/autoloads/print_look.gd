@@ -59,7 +59,11 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## shrinks) and of the status icons on every panel, and the size of every value pill (item values and
 ## status stacks) against its base size, the same whatever the cell or icon size. Last, whether the
 ## map's icons are drawn like the item icons, with every picture effect (`MapStrip`), rather than
-## keeping their exact palette colour like the value pills.
+## keeping their exact palette colour like the value pills, and how a cleared square's token looks
+## (`MapStrip.ClearedLook`, as its index). Then the paper burn effect (`PaperBurn`,
+## docs/systems/paper_burn.md): its length in seconds, how far in pixels the noise pushes its edge and
+## the size of the edge's bumps, the widths in pixels of the ember line, the char and the scorch, how
+## far above white the ember line goes, whether the scorch is dithered, and whether sparks and ash fly.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'split_across': 1700.0,
@@ -84,6 +88,16 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'status_size': 44.0,
   'pill_size': 1.0,
   'map_icons_as_pictures': true,
+  'map_cleared_look': 1,
+  'paper_burn_duration': 1.6,
+  'paper_burn_raggedness': 10.0,
+  'paper_burn_detail': 12.0,
+  'paper_burn_ember_width': 5.0,
+  'paper_burn_char_width': 4.0,
+  'paper_burn_scorch_width': 14.0,
+  'paper_burn_brightness': 2.5,
+  'paper_burn_dither': true,
+  'paper_burn_particles': true,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']
