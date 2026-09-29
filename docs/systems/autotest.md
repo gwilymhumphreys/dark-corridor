@@ -23,7 +23,7 @@ Combat is automatic — the driver does **not** play fights. It makes the opt-in
 - **Draft pick** — 1-of-3 each draft (the main lever; a-machine's "build archetypes" → here, **draft strategies**).
 - **Draft skip** — whether to skip the draft and bank gold instead (`should_skip_draft`, decision #33). **Defaults never-skip**, so every existing headless run draws the run RNG identically → **byte-identical baselines**; skip is opt-in per strategy/test.
 - **Encounter pick** — which of the encounters offered before each fight to take (`choose_path`): a seeded pick among the filled positions. It never walks past, so the only gold in a default run is the fight-won gold.
-- **Event-option pick** — the binary choice inside a non-combat event.
+- **Event-option pick** — a seeded pick among the event's available options (`RunManager.available_event_options`).
 - **Potion throw** — whether / when / which.
 
 (Walk/advance is automatic.) Initially the driver is a **stub** (e.g. "pick the first viable draft, never throw potions"); real strategies come later.

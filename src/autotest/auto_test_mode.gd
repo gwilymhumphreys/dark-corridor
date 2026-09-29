@@ -178,12 +178,13 @@ func run_full() -> Dictionary:
       'beat': run.position, 'frame': enc.def.name_key, 'fight': is_fight,
     })
     run.begin_current()
-    # EVENT beat: the Driver makes the binary choice (the tier-2 pick), which applies the
-    # outcome + resolves it. A FIXED/CHOICE fight has a CombatManager; a rest resolved on begin.
+    # EVENT beat: the Driver picks one of the available options, and the RunManager applies its
+    # effects + resolves it. A FIXED/CHOICE fight has a CombatManager; a rest resolved on begin.
     if enc.is_event():
-      var event_pick: int = driver.choose_event_option(enc.event_options())
-      logger.log_event('event', { 'beat': run.position, 'options': enc.event_options().size(), 'picked': event_pick })
-      run.pick_event_option(event_pick)   # via the RunManager so an ADD_ALLY option recruits a run-scoped ally
+      var available: Array[int] = run.available_event_options()
+      var event_pick: int = driver.choose_event_option(available)
+      logger.log_event('event', { 'beat': run.position, 'options': available.size(), 'picked': event_pick })
+      run.pick_event_option(event_pick)
     var cm: CombatManager = run.combat_manager()
     var fight_steps: int = 0
     var fail: String = ''

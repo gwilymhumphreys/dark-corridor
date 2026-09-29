@@ -97,7 +97,8 @@ for each def's fields and how it resolves.
   shape `ALL_OWN_ITEMS` and a target filter reads "[attack] +2 to each of your weapon items"); each
   mechanic used there needs a class in `PassiveRegistry`. Abilities outside fights go in
   `run_triggers`: `{'event': RunManager.RunEvent.PICKED_UP, 'effects': [RunEffect.max_hp(20)]}`
-  (events: picked up, fight won, draft skipped; effects: `max_hp`, `heal`, `gold`). Add it to
+  (events: picked up, fight won, draft skipped; the effects are the same `RunEffect` list event
+  options use, [encounter.md → Event options](../systems/encounter.md#event-options)). Add it to
   `RelicCatalog.REWARD_POOL` to make it a reward. See
   [content.md → Relic](../systems/content.md#relic).
 
@@ -142,12 +143,26 @@ for each def's fields and how it resolves.
   offered) and `weights` (rules that make it more or less likely while their condition holds). Each
   position list needs one encounter with no requirements, so its card can always be filled. The
   conditions (items held, a combination of items, item types, relics, health, gold, which fight is
-  next, a free ally slot) are listed in [encounter.md → Offer rules](../systems/encounter.md#offer-rules).
+  next, a free ally slot, run flags, how often an encounter was picked) are listed in
+  [encounter.md → Offer rules](../systems/encounter.md#offer-rules).
 
   ```gdscript
   rarity = Rarity.RARE
   requires = [HasItems.new(['warhammer', 'dagger'])]   # only with both items on the board
   weights = [{ 'if': HealthBelow.new(0.4), 'multiplier': 3.0 }]
+  ```
+
+  An event's options each have `effects` (a list of `RunEffect`: health, damage, gold, an ally, an
+  item, a relic, a potion, or a run flag) and can have `requires`, using the same conditions. An
+  option whose conditions fail is not shown, and an event with no option to pick is not offered. A
+  run flag lets a later visit offer something new: one option sets a flag, another requires it
+  ([encounter.md → Event options](../systems/encounter.md#event-options)).
+
+  ```gdscript
+  var take := EventOptionDef.new()
+  take.label_key = 'Take back the offering'
+  take.effects = [RunEffect.gold(-5), RunEffect.gain_relic('vital_charm')]
+  take.requires = [FlagAtLeast.new('offering_left'), GoldAtLeast.new(5)]   # an option that costs gold requires it
   ```
 
 - **Enemies are shared by every character** and the **reward-relic pool stays shared** — only *item*

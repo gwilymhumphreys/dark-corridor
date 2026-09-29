@@ -167,13 +167,14 @@ func _status_applied_by(def: ItemDef) -> String:
   return ''
 
 
-## The binary choice inside a non-combat event (the tier-2 pick). Seeded so a run takes a
-## deterministic option (different seeds explore both). Real value-aware policies (heal at
-## low HP, growth when safe) arrive with richer run state.
-func choose_event_option(options: Array) -> int:
-  if options.is_empty():
+## The option to pick inside an event, from `available` (RunManager.available_event_options: the
+## indices of the options whose conditions hold). Seeded so a run takes a deterministic option
+## (different seeds explore each). Returns -1 when none is available. Real value-aware policies
+## (heal at low HP, growth when safe) arrive with richer run state.
+func choose_event_option(available: Array[int]) -> int:
+  if available.is_empty():
     return -1
-  return _rng.randi_range(0, options.size() - 1)
+  return available[_rng.randi_range(0, available.size() - 1)]
 
 
 ## Which of the encounters offered before a fight to take (docs/plans/encounter_choice.md). A seeded

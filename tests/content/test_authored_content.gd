@@ -102,12 +102,12 @@ func test_catalog_builds_the_max_hp_relic() -> void:
 
 func test_shrine_event_offers_a_heal_and_a_max_hp_option() -> void:
   var d := EncounterCatalog.get_def('event_shrine')
-  assert_eq(d.event_options[0].effect, EventOptionDef.Effect.HEAL_FRACTION)
-  assert_eq(d.event_options[1].effect, EventOptionDef.Effect.MAX_HP_BONUS)
-  assert_gt(d.event_options[1].amount, 0.0)
+  assert_eq(d.event_options[0].effects[0].kind, RunEffect.Kind.HEAL_FRACTION)
+  assert_eq(d.event_options[1].effects[0].kind, RunEffect.Kind.MAX_HP)
+  assert_gt(d.event_options[1].effects[0].amount, 0)
 
 
 func test_wanderer_event_recruits_the_spore_thrall() -> void:
   var d := EncounterCatalog.get_def('event_wanderer')
-  assert_eq(d.event_options[0].effect, EventOptionDef.Effect.ADD_ALLY)
-  assert_eq(d.event_options[0].ally_def_id, 'spore_thrall')
+  assert_eq(d.event_options[0].effects[0].kind, RunEffect.Kind.ADD_ALLY)
+  assert_eq(d.event_options[0].effects[0].id, 'spore_thrall')

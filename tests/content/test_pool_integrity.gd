@@ -82,9 +82,31 @@ func test_encounter_defs_resolve_their_references() -> void:
     var def: EncounterDef = EncounterCatalog.get_def(encounter_id)
     for enemy_id in def.enemy_ids:
       assert_not_null(EnemyCatalog.get_def(enemy_id), '%s: enemy id %s resolves' % [encounter_id, enemy_id])
-    for opt in def.event_options:
-      if opt.effect == EventOptionDef.Effect.ADD_ALLY and opt.ally_def_id != '':
-        assert_not_null(EnemyCatalog.get_def(opt.ally_def_id), '%s: recruit ally def resolves' % encounter_id)
+    for opt: EventOptionDef in def.event_options:
+      for effect: RunEffect in opt.effects:
+        _assert_run_effect_resolves(effect, encounter_id)
+
+
+func test_relic_run_trigger_effects_resolve() -> void:
+  var relic_defs: Array = ContentFolder.load_defs(RelicCatalog.FOLDER).values()
+  assert_false(relic_defs.is_empty(), 'there are relics to check')
+  for relic_def: RelicDef in relic_defs:
+    for entry: Dictionary in relic_def.run_triggers:
+      for effect: RunEffect in entry.get('effects', []):
+        _assert_run_effect_resolves(effect, relic_def.id)
+
+
+# A run effect that names an ally, item, relic or potion names one that exists.
+func _assert_run_effect_resolves(effect: RunEffect, owner_id: String) -> void:
+  match effect.kind:
+    RunEffect.Kind.ADD_ALLY:
+      assert_not_null(EnemyCatalog.get_def(effect.id), '%s: ally %s resolves' % [owner_id, effect.id])
+    RunEffect.Kind.GAIN_ITEM:
+      assert_not_null(ItemCatalog.get_def(effect.id), '%s: item %s resolves' % [owner_id, effect.id])
+    RunEffect.Kind.GAIN_RELIC:
+      assert_not_null(RelicCatalog.get_def(effect.id), '%s: relic %s resolves' % [owner_id, effect.id])
+    RunEffect.Kind.GAIN_POTION:
+      assert_not_null(ConsumableCatalog.get_def(effect.id), '%s: potion %s resolves' % [owner_id, effect.id])
 
 
 func test_enemy_boards_resolve() -> void:
