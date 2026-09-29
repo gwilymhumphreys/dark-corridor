@@ -92,6 +92,28 @@ func test_can_add_ally() -> void:
   assert_false(CanAddAlly.new().holds(run), 'none once the slots are full')
 
 
+func test_flag_at_least_and_below_read_the_run_flags() -> void:
+  var run := _run()
+  assert_false(FlagAtLeast.new('test_flag').holds(run), 'an unset flag is 0')
+  assert_true(FlagBelow.new('test_flag').holds(run), 'so it is below 1')
+  run.flags['test_flag'] = 2
+  assert_true(FlagAtLeast.new('test_flag', 2).holds(run), 'at least 2 once set to 2')
+  assert_false(FlagAtLeast.new('test_flag', 3).holds(run), 'but not at least 3')
+  assert_false(FlagBelow.new('test_flag', 2).holds(run), 'and no longer below 2')
+
+
+func test_times_picked_counts_finished_picks_of_one_encounter() -> void:
+  var run := _run()
+  var condition := TimesPicked.new(FixtureEncounters.REST)
+  assert_false(condition.holds(run), 'never picked')
+  run.pick_path(FixtureEncounters.CHOICE_REST)
+  assert_false(condition.holds(run), 'the visit in progress is not counted')
+  run.begin_current()   # the rest resolves at once
+  assert_true(condition.holds(run), 'counted once the rest is finished')
+  assert_false(TimesPicked.new(FixtureEncounters.REST, 2).holds(run), 'but only once')
+  assert_false(TimesPicked.new(FixtureEncounters.EVENT).holds(run), 'and only for that encounter')
+
+
 func test_not_and_any_of() -> void:
   var run := _run()
   var yes := GoldAtLeast.new(0)
@@ -131,3 +153,14 @@ func test_weight_rules_multiply_while_they_hold() -> void:
   assert_eq(def.offer_weight(run), Balance.ENCOUNTER_WEIGHT_COMMON * 3.0, 'only the rule that holds applies')
   def.weights = [{ 'if': GoldAtLeast.new(0), 'multiplier': 0.0 }]
   assert_eq(def.offer_weight(run), 0.0, 'a multiplier of 0 stops it being offered')
+
+
+func test_an_event_with_no_available_option_has_weight_zero() -> void:
+  var run := _run()
+  var def := FixtureEncounters.event('test_weight')
+  for option: EventOptionDef in def.event_options:
+    option.requires = [GoldAtLeast.new(999)]
+  assert_eq(def.offer_weight(run), 0.0, 'an event the player could not pick an option in is not offered')
+  def.event_options[1].requires = []
+  assert_eq(def.available_options(run), [1] as Array[int], 'one option is available')
+  assert_eq(def.offer_weight(run), Balance.ENCOUNTER_WEIGHT_COMMON, 'so it is offered')

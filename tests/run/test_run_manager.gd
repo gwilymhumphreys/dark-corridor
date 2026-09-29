@@ -54,7 +54,7 @@ func _shield_count(actor: Actor) -> float:
 
 
 ## Resolve one beat. At a choice of encounters, pick the fixture rest; begin the encounter; resolve
-## an event's binary choice; step a fight's CombatManager to a verdict; take the draft if offered;
+## an event by picking its first option; step a fight's CombatManager to a verdict; take the draft if offered;
 ## advance. (Mirrors the autotest run loop.) `pick` indexes the draft card.
 func _play_one_beat(run: RunManager, pick: int) -> void:
   if run.has_pending_choice():
@@ -62,7 +62,7 @@ func _play_one_beat(run: RunManager, pick: int) -> void:
   run.begin_current()
   var enc: Encounter = run.current_encounter()
   if enc != null and enc.is_event():
-    run.pick_event_option(0)   # resolve the event's binary choice (option 0)
+    run.pick_event_option(0)   # resolve the event with its first option
   var cm: CombatManager = run.combat_manager()
   if cm != null:
     cm.run_headless()
@@ -428,7 +428,7 @@ func _resolve_event(run: RunManager, def_id: String, option: int) -> void:
 
 
 func test_recruit_event_adds_a_run_scoped_ally() -> void:
-  # The ADD_ALLY option, routed through RunManager.pick_event_option, recruits a run-scoped
+  # The option with an ADD_ALLY effect, applied by RunManager.pick_event_option, recruits a run-scoped
   # ally (the event-driven acquisition path) — it then joins every later fight + persists.
   var run := _run()
   run.start(1, FixtureCharacter.ID)
@@ -457,6 +457,147 @@ func test_add_ally_respects_the_four_slot_cap() -> void:
   assert_false(run.can_add_ally(), 'and report full')
   run.add_ally(FixtureEnemies.ALLY_ID)   # one past the cap
   assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'a 5th recruit is a no-op (the cap holds)')
+
+
+# --- event options and run effects (docs/plans/encounter_choice.md) ------------
+
+## Add an event under `id` to the catalog with one option per entry of `options`, each
+## { 'effects': Array[RunEffect], 'requires': Array[RunCondition] } (either key may be left out).
+func _test_event(id: String, options: Array) -> EncounterDef:
+  var def := FixtureEncounters.event(id)
+  def.event_options = []
+  for spec: Dictionary in options:
+    var option := EventOptionDef.new()
+    option.label_key = 'Option'
+    option.effects.assign(spec.get('effects', []))
+    option.requires.assign(spec.get('requires', []))
+    def.event_options.append(option)
+  EncounterCatalog._defs[id] = def
+  return def
+
+
+func test_max_hp_option_grows_max_and_current_hp() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var before_max: int = run.player.max_hp
+  var before_hp: int = run.player.hp
+  _resolve_event(run, FixtureEncounters.EVENT, FixtureEncounters.OPTION_MAX_HP)
+  assert_eq(run.player.max_hp, before_max + FixtureEncounters.EVENT_MAX_HP, 'max HP grew')
+  assert_eq(run.player.hp, before_hp + FixtureEncounters.EVENT_MAX_HP, 'and current HP too')
+
+
+func test_an_option_applies_every_effect() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.gold = 5
+  var board_size: int = run.player.board.size()
+  _test_event('test_trade', [{ 'effects': [RunEffect.gold(-3), RunEffect.gain_item(FixtureItems.attack().id)] }])
+  _resolve_event(run, 'test_trade', 0)
+  assert_eq(run.gold, 2, 'the option cost gold')
+  assert_eq(run.player.board.size(), board_size + 1, 'and gave an item')
+
+
+func test_run_effects_change_the_run() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.player.hp = 50
+  run._apply_run_effect(RunEffect.heal_fraction(0.1))
+  assert_eq(run.player.hp, 50 + roundi(0.1 * run.player.max_hp), 'HEAL_FRACTION heals a fraction of maximum health')
+  run._apply_run_effect(RunEffect.damage(7))
+  assert_eq(run.player.hp, 43 + roundi(0.1 * run.player.max_hp), 'DAMAGE takes health')
+  run._apply_run_effect(RunEffect.add_ally(FixtureEnemies.ALLY_ID))
+  assert_eq(run.allies.size(), 1, 'ADD_ALLY adds an ally')
+  run._apply_run_effect(RunEffect.set_flag('test_flag', 4))
+  assert_eq(run.flag('test_flag'), 4, 'SET_FLAG sets a flag')
+  run._apply_run_effect(RunEffect.add_flag('test_flag', 2))
+  run._apply_run_effect(RunEffect.add_flag('test_other'))
+  assert_eq(run.flag('test_flag'), 6, 'ADD_FLAG adds to a flag')
+  assert_eq(run.flag('test_other'), 1, 'and starts an unset one from 0')
+  run._apply_run_effect(RunEffect.gain_potion(FixtureKit.POTION_ID))
+  assert_eq(run.potions[-1].def.id, FixtureKit.POTION_ID, 'GAIN_POTION adds a potion')
+
+
+func test_gain_relic_fires_the_relics_pickup_trigger() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var before_max: int = run.player.max_hp
+  run._apply_run_effect(RunEffect.gain_relic(FixtureKit.MAX_HP_RELIC_ID))
+  assert_eq(run.relics[-1].def.id, FixtureKit.MAX_HP_RELIC_ID, 'the relic is held')
+  assert_eq(run.player.max_hp, before_max + FixtureKit.RELIC_MAX_HP, 'and its pickup trigger fired')
+
+
+func test_a_lethal_option_ends_the_run_died() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  _test_event('test_deathtrap', [{ 'effects': [RunEffect.damage(9999)] }])
+  _resolve_event(run, 'test_deathtrap', 0)
+  assert_true(run.is_ended(), 'the run ends at once')
+  assert_eq(run.outcome(), RunManager.Outcome.DIED, 'as a loss')
+
+
+func test_an_option_whose_conditions_fail_is_hidden_and_cannot_be_picked() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  _test_event('test_locked', [
+    { 'effects': [RunEffect.gold(10)], 'requires': [GoldAtLeast.new(999)] },
+    { 'effects': [RunEffect.gold(1)] },
+  ])
+  _resolve_event(run, 'test_locked', 0)
+  assert_eq(run.available_event_options(), [1] as Array[int], 'only the second option is available')
+  assert_eq(run.gold, 0, 'the locked option gave nothing')
+  var watched: Encounter = run.current_encounter()
+  watch_signals(watched)
+  run.pick_event_option(1)
+  assert_eq(run.gold, 1, 'the available option is picked')
+  assert_signal_emitted(watched, 'resolved', 'and the event resolves')
+
+
+func test_an_event_with_no_available_option_is_never_offered() -> void:
+  for option: EventOptionDef in EncounterCatalog.get_def(FixtureEncounters.EVENT).event_options:
+    option.requires = [GoldAtLeast.new(999)]
+  for run_seed: int in range(10):
+    var run := _run()
+    run.start(run_seed, FixtureCharacter.ID)
+    assert_false(FixtureEncounters.EVENT in run.pending_choice(), 'no option could be picked, so the event is left out')
+
+
+func test_acting_once_unlocks_a_reward_on_a_later_visit() -> void:
+  # The first visit offers to leave an offering (sets a flag, gives nothing); a later visit offers
+  # to take it back, which needs the flag and gives a relic. Walking on is always there.
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  _test_event('test_shrine', [
+    { 'effects': [RunEffect.set_flag('offering_left')], 'requires': [FlagBelow.new('offering_left')] },
+    { 'effects': [RunEffect.gain_relic(FixtureKit.SHIELD_RELIC_ID)], 'requires': [FlagAtLeast.new('offering_left')] },
+    {},
+  ])
+  var relic_count: int = run.relics.size()
+  _resolve_event(run, 'test_shrine', 0)
+  assert_eq(run.flag('offering_left'), 1, 'the offering is remembered')
+  assert_eq(run.relics.size(), relic_count, 'and gave nothing yet')
+  run._teardown_current()
+  run._current_def_id = 'test_shrine'
+  run._create_current_encounter()
+  run.begin_current()
+  assert_eq(run.available_event_options(), [1, 2] as Array[int], 'a later visit offers to take it back')
+  run.pick_event_option(1)
+  assert_eq(run.relics.size(), relic_count + 1, 'which gives the relic')
+
+
+func test_flags_and_times_picked_survive_save_and_resume() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run._apply_run_effect(RunEffect.set_flag('test_flag', 3))
+  run.pick_path(FixtureEncounters.CHOICE_REST)
+  run.begin_current()
+  run.advance()
+  var snap: Dictionary = JSON.parse_string(JSON.stringify(run.snapshot()))   # as a save file reads back
+  var run_b := _run()
+  assert_true(run_b.rehydrate(snap), 'the save is usable')
+  assert_eq(run_b.flag('test_flag'), 3, 'the flag is restored')
+  assert_eq(run_b.times_picked.get(FixtureEncounters.REST), 1, 'and the pick count')
+  assert_eq(typeof(run_b.times_picked[FixtureEncounters.REST]), TYPE_INT, 'as a whole number')
+  assert_true(TimesPicked.new(FixtureEncounters.REST).holds(run_b), 'so conditions read it after resume')
 
 
 # --- the map (docs/plans/encounter_choice.md) ---------------------------------

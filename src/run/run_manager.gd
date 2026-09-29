@@ -41,9 +41,16 @@ var relics: Array[Relic] = []
 var potions: Array[Consumable] = []
 var position: int = 0
 # Banked gold — a run-state resource (docs decision #33). Sources: skipping a draft
-# (apply_draft_skip) and relic run triggers (RunEffect.GOLD); there is NO sink yet (shops are out
-# of scope). Persists in the snapshot.
+# (apply_draft_skip), walking past a choice, winning a fight, and run effects (RunEffect.GOLD, which
+# an event option can also use as a cost). Persists in the snapshot.
 var gold: int = 0
+## Run flags (docs/plans/encounter_choice.md): a flag name to a whole number, set by run effects
+## (SET_FLAG, ADD_FLAG) and read by conditions (FlagAtLeast, FlagBelow), so an encounter can remember
+## what the player did. Never shown to the player. Persists in the snapshot.
+var flags: Dictionary = {}
+## How many times each encounter id was picked from a choice of encounters and finished (counted
+## when it resolves), read by TimesPicked. Persists in the snapshot.
+var times_picked: Dictionary = {}
 var rng: RandomNumberGenerator
 var character: CharacterDef    # the chosen character (#27) — its item pool feeds the draft
 
@@ -84,6 +91,8 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   # the board, and its starting potions — the run opens in the character's identity.
   relics = []
   gold = 0
+  flags = {}
+  times_picked = {}
   if character.starting_relic_id != '':
     var starting_relic := Relic.new(RelicCatalog.get_def(character.starting_relic_id))
     relics.append(starting_relic)
@@ -249,6 +258,8 @@ func _build_relic_items() -> void:
 
 
 func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
+  if RunMap.is_choice_beat(position):   # the encounter was picked from the choice of encounters
+    times_picked[_current_def_id] = int(times_picked.get(_current_def_id, 0)) + 1
   if outcome_value == Encounter.Outcome.LOST:
     _end_run(Outcome.DIED)
     return
@@ -354,6 +365,8 @@ func _fire_relic_run_triggers(relic: Relic, event: RunEvent) -> void:
       _apply_run_effect(effect)
 
 
+## Apply one run effect (relic run triggers, event options). Lethal DAMAGE is not handled here: an
+## event checks the player after its effects (Encounter.resolve_event).
 func _apply_run_effect(effect: RunEffect) -> void:
   match effect.kind:
     RunEffect.Kind.MAX_HP:
@@ -363,6 +376,29 @@ func _apply_run_effect(effect: RunEffect) -> void:
       player.heal(effect.amount)
     RunEffect.Kind.GOLD:
       gold += effect.amount
+    RunEffect.Kind.HEAL_FRACTION:
+      player.heal(effect.fraction * player.max_hp)
+    RunEffect.Kind.DAMAGE:
+      player.take_damage(effect.amount)
+    RunEffect.Kind.ADD_ALLY:
+      add_ally(effect.id)
+    RunEffect.Kind.SET_FLAG:
+      flags[effect.id] = effect.amount
+    RunEffect.Kind.ADD_FLAG:
+      flags[effect.id] = flag(effect.id) + effect.amount
+    RunEffect.Kind.GAIN_ITEM:
+      player.board.append(Item.new(ItemCatalog.get_def(effect.id), player))
+    RunEffect.Kind.GAIN_RELIC:
+      var relic := Relic.new(RelicCatalog.get_def(effect.id))
+      relics.append(relic)
+      _apply_relic_grant(relic)
+    RunEffect.Kind.GAIN_POTION:
+      potions.append(Consumable.new(ConsumableCatalog.get_def(effect.id)))
+
+
+## The value of the run flag `flag_name`; 0 when it was never set.
+func flag(flag_name: String) -> int:
+  return int(flags.get(flag_name, 0))
 
 
 func has_pending_draft() -> bool:
@@ -405,7 +441,7 @@ func can_add_ally() -> bool:
 ## Acquire a run-scoped (persistent) ally (docs/systems/spore_engine.md Cap 3, Stage B): build an Actor
 ## from an EnemyDef and add it to the player-side roster. It persists across fights, is saved
 ## in the snapshot, and joins every fight (the Encounter seeds the CombatManager with it).
-## The acquisition path today is the recruit EVENT (RunManager.pick_event_option → here); a
+## The acquisition path today is a run effect (RunEffect.ADD_ALLY, used by the recruit event); a
 ## draftable `ally` category is the deferred alternative. No-op past the MAX_ALLIES cap.
 func add_ally(def_id: String) -> void:
   if not can_add_ally():
@@ -418,20 +454,32 @@ func add_ally(def_id: String) -> void:
     combat.register_ally(ally)   # acquired mid-fight → register its Tickers so it joins the fight
 
 
-## The event's binary-choice intent, routed through the RunManager (not straight to the
-## Encounter) so an option can touch run-state beyond the player Actor. An ADD_ALLY option
-## recruits a run-scoped ally here; the player-Actor effects (heal / max-HP / damage) + the
-## beat resolution stay in the Encounter, which this then delegates to. The autotest + run
-## screen call THIS, not Encounter.pick_event_option, for events.
+## The indices of the current event's options that the player can pick now (their conditions
+## hold). The event panel shows only these, and pick_event_option refuses any other. Empty when
+## the current beat is not an event.
+func available_event_options() -> Array[int]:
+  if _current == null or not _current.is_event():
+    return []
+  return _current.def.available_options(self)
+
+
+## The event option intent (docs/systems/encounter.md): apply every run effect of the option at
+## `index` in the event's authored list, in order, then resolve the event (lost if the effects
+## killed the player). Refuses an index out of range or an option whose conditions do not hold.
+## The autotest and the run screen call this for events.
 func pick_event_option(index: int) -> void:
   if _current == null or not _current.is_event():
     return
-  var opts: Array = _current.event_options()
-  if not opts.is_empty():
-    var opt: EventOptionDef = opts[clampi(index, 0, opts.size() - 1)]
-    if opt.effect == EventOptionDef.Effect.ADD_ALLY:
-      add_ally(opt.ally_def_id)
-  _current.pick_event_option(index)
+  var options: Array[EventOptionDef] = _current.def.event_options
+  if index < 0 or index >= options.size():
+    return
+  var option: EventOptionDef = options[index]
+  if not option.is_available(self):
+    push_warning('RunManager: event option %d of %s was picked but its conditions do not hold' % [index, _current_def_id])
+    return
+  for effect: RunEffect in option.effects:
+    _apply_run_effect(effect)
+  _current.resolve_event()
 
 
 func _make_ally(def_id: String) -> Actor:
@@ -600,6 +648,8 @@ func snapshot() -> Dictionary:
     'potions': potion_ids,
     'position': position,
     'gold': gold,   # banked run-state (decision #33); optional on read (.get) — no migration
+    'flags': flags,
+    'times_picked': times_picked,
     # The current beat's encounter id (resume re-enters it, never redrawn); '' at a choice beat.
     'current_def_id': _current_def_id,
     'pending_choice': _pending_choice,   # the offered encounters — the RNG has already moved past them
@@ -645,6 +695,15 @@ func rehydrate(snap: Dictionary) -> bool:
     potions.append(Consumable.new(ConsumableCatalog.get_def(str(potion_id))))
   position = int(snap['position'])
   gold = int(snap.get('gold', 0))   # absent in pre-gold snapshots → 0 (forward-compatible, no migration)
+  # JSON reads every number back as a float, so the counts are made whole again.
+  flags = {}
+  var saved_flags: Dictionary = snap.get('flags', {})
+  for flag_name: Variant in saved_flags:
+    flags[str(flag_name)] = int(saved_flags[flag_name])
+  times_picked = {}
+  var saved_picks: Dictionary = snap.get('times_picked', {})
+  for encounter_id: Variant in saved_picks:
+    times_picked[str(encounter_id)] = int(saved_picks[encounter_id])
   rng = RandomNumberGenerator.new()
   rng.seed = int(snap['rng']['seed'])
   rng.state = int(snap['rng']['state'])
@@ -711,5 +770,7 @@ func teardown() -> void:
   _ally_def_ids.clear()
   relics.clear()
   potions.clear()
+  flags.clear()
+  times_picked.clear()
   _pending_offer.clear()
   _pending_choice.clear()
