@@ -7,7 +7,8 @@ extends Control
 ## option's own border; clicking it emits
 ## `picked(index)` — a draft-pick intent the run screen forwards to RunManager.apply_draft_pick. The
 ## gold button emits `skipped` instead (bank gold; docs decision #33) → RunManager.apply_draft_skip.
-## The same panel offers the relic encounter's relics (`setup_relics`), with no gold button.
+## The same panel offers the relic encounter's relics (`setup_relics`), with no gold button. Under the
+## title, `show_gain` lists what the fight just won gave the player.
 ## Reads the candidate defs; writes nothing.
 
 signal picked(index: int)
@@ -18,6 +19,7 @@ const REWARD_OPTION: PackedScene = preload('res://src/scenes/screens/reward_opti
 @onready var _panel: Control = $Panel
 @onready var _cards: HBoxContainer = $Panel/Cards
 @onready var _skip_button: Button = $Panel/SkipButton
+@onready var _gain: Label = $Panel/Gain
 
 var _options: Array[RewardOption] = []
 
@@ -41,6 +43,14 @@ func setup(candidates: Array) -> void:
     option.setup(Item.new(candidates[i]))
     option.pressed.connect(_on_option_pressed.bind(i))
     _options.append(option)
+
+
+## Show what the fight won gave before this reward (RunManager.last_fight_gain: health and gold).
+## An empty gain shows nothing.
+func show_gain(gain: Dictionary) -> void:
+  _gain.visible = not gain.is_empty()
+  if _gain.visible:
+    _gain.text = tr('+{0} health, +{1} gold').format([gain.get('health', 0), gain.get('gold', 0)])
 
 
 ## Offer relics instead of items: each option is the Item built from the relic's def, with the same

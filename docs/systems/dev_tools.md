@@ -18,7 +18,7 @@ exposes a plain seam and the tool uses it:
 |---|---|
 | `Game.run_started(run)` | `Dev`, to add to a new run before any screen reads it |
 | `TitleScreen.open_select()`, `open_settings()`, `DEFAULT_SEED` | `Dev`, for the title arguments |
-| `ChoiceOverlay.picked` | `Dev`, for `--autofight` |
+| `EncounterChoice.skipped` | `Dev`, for `--autofight` |
 | `Save.disabled` | `Dev` (`--nosave`), the autotest |
 | `InterfaceGlow.demo_brightness`, `MonsterImages.forced_path`, `ControlFeedback.set_demo` | the debug panel |
 | `RunManager.pinned_enemy_ids` | the autotest (`--enemies`) |
@@ -47,11 +47,11 @@ Read by `Dev`.
 | `--notutorial` | Accepted and ignored; there is no tutorial yet |
 | `--autostart`, `--character=ID` | Skips the title screen and starts a run as the default character or `ID` |
 | `--select`, `--settings` | Opens character select or the settings screen on the title screen |
-| `--autofight` | Picks the first fight on every path choice (does nothing today: the choice layer is dormant, so no path choice appears) |
+| `--autofight` | Walks past every choice of encounters, so the run goes from fight to fight |
 | `--allies N` | Adds N placeholder allies to a new run (`DEMO_ALLY_ID`) |
 | `--board-items N` | Fills the board up to N items with copies of the starting items |
 | `--potions N` | Gives the player N potions (`DEMO_POTION_ID`) |
-| `--square N` | Starts the run on square N (1-based) of the first act's map, such as 6 for the relic encounter (`RunManager.jump_to`) |
+| `--square N` | Starts the run on square N (1-based) of the first act's map, such as 4 for the first elite fight (`RunManager.jump_to`), skipping the choice before it |
 | `--relics N` | Gives the player N relics, cycling through `DEMO_RELIC_IDS`. Added to the list only, so a relic's grant effect does not happen |
 
 The title arguments act on the first title screen only, so Quit to Menu stays on the title. The last

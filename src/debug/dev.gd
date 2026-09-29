@@ -1,7 +1,7 @@
 class_name DevAutoload
 extends Node
 ## The dev tools' start-up arguments for the game (docs/systems/dev_tools.md): skip saving, take a
-## screenshot and quit, skip the title screen, pick fights on its own, and add allies, board items,
+## screenshot and quit, skip the title screen, walk past every choice of encounters, and add allies, board items,
 ## potions or relics to a new run for screenshots. Does nothing unless one of its arguments is present, and
 ## the screens hold no code for any of it.
 
@@ -44,8 +44,8 @@ func _on_node_added(node: Node) -> void:
   if node is TitleScreen and not _title_handled:
     _title_handled = true
     _title_action(node as TitleScreen)
-  elif node is ChoiceOverlay and DevArgs.has('--autofight'):
-    _pick_first_fight.call_deferred(node)
+  elif node is EncounterChoice and DevArgs.has('--autofight'):
+    _walk_past.call_deferred(node)
 
 
 ## `--autostart` starts a run as the default character or the one named by `--character=ID`;
@@ -67,23 +67,17 @@ func _autostart_character() -> String:
   return id
 
 
-## `--autofight`: pick the first fight on every path choice, as a click on its card would. Deferred,
-## so the run screen has connected to the overlay and filled it by now.
-func _pick_first_fight(overlay: ChoiceOverlay) -> void:
-  if not is_instance_valid(overlay) or Game.run == null:
+## `--autofight`: walk past every choice of encounters, as a click on its Walk past button would, so
+## the run goes from fight to fight. Deferred, so the run screen has connected to the cards by now.
+func _walk_past(choice: EncounterChoice) -> void:
+  if not is_instance_valid(choice) or Game.run == null:
     return
-  var candidates: Array = Game.run.pending_choice()
-  var index: int = 0
-  for i in candidates.size():
-    if EncounterCatalog.get_def(candidates[i]).type == EncounterDef.Type.FIGHT:
-      index = i
-      break
-  overlay.picked.emit(index)
+  choice.skipped.emit()
 
 
 ## `--allies N`, `--board-items N`, `--potions N`, `--relics N`: add to a new run before any screen
-## shows it. `--square N` starts the run on square N (1-based) of the first act, such as 6 for the
-## relic encounter. Board items are copies of the starting items, up to N on the board in total. Relics are
+## shows it. `--square N` starts the run on square N (1-based) of the first act, such as 4 for the
+## first elite fight. Board items are copies of the starting items, up to N on the board in total. Relics are
 ## added to the run's list only, so a relic that acts when granted (more maximum HP) does not.
 func _add_to_run(run: RunManager) -> void:
   var ally_count: int = int(DevArgs.value('--allies', '0'))
@@ -106,7 +100,7 @@ func _add_to_run(run: RunManager) -> void:
         run.potions.append(Consumable.new(potion))
   var square: int = int(DevArgs.value('--square', '0'))
   if square > 1:
-    run.jump_to(RunMap.act_layout(0, run.rng.seed).find(square - 1))
+    run.jump_to((square - 1) * 2 + 1)   # every square has its choice of encounters before it
   var relic_count: int = int(DevArgs.value('--relics', '0'))
   for n in relic_count:
     var relic: RelicDef = RelicCatalog.get_def(DEMO_RELIC_IDS[n % DEMO_RELIC_IDS.size()])

@@ -13,7 +13,9 @@ static var _installed: bool = false
 
 ## Add every fixture definition to its catalog, and put a fixture in place of every authored enemy,
 ## encounter and relic under the authored id. Every act's regular and boss enemy lists are emptied,
-## so filling the authored EnemyPools cannot change which enemies a whole-run test meets. Those three are replaced rather than added because
+## so filling the authored EnemyPools cannot change which enemies a whole-run test meets, and the
+## choice before every fight offers the fixture rest, event and relic encounter, one per position, so
+## filling the authored EncounterPools cannot change it either. Those three are replaced rather than added because
 ## the game names them by id (the map names encounters, encounters name enemies, the relic reward
 ## draws from RelicCatalog.REWARD_POOL); replacing every id keeps this working as content is
 ## authored. Authored items, characters, potions and enchants stay, but no fixture refers to them.
@@ -30,7 +32,8 @@ static func install() -> void:
     EnemyCatalog._defs[def.id] = def
   for id: String in EncounterCatalog._defs.keys():
     EncounterCatalog._defs[id] = FixtureEncounters.standing_in_for(EncounterCatalog._defs[id])
-  for def: EncounterDef in [FixtureEncounters.fight(), FixtureEncounters.rest(), FixtureEncounters.event()]:
+  for def: EncounterDef in [FixtureEncounters.fight(), FixtureEncounters.rest(), FixtureEncounters.event(),
+      FixtureEncounters.relic()]:
     EncounterCatalog._defs[def.id] = def
   for id: String in RelicCatalog._defs.keys():
     RelicCatalog._defs[id] = FixtureKit.shield_relic(id)
@@ -40,6 +43,7 @@ static func install() -> void:
   EnchantCatalog._defs[FixtureKit.ENCHANT_ID] = FixtureKit.enchant()
   EnemyPools._by_act['regular'] = _empty_acts()
   EnemyPools._by_act['boss'] = _empty_acts()
+  EncounterPools._positions = [[FixtureEncounters.REST], [FixtureEncounters.EVENT], [FixtureEncounters.RELIC]]
   _installed = true
 
 
@@ -55,6 +59,7 @@ static func uninstall() -> void:
   ConsumableCatalog._defs.clear()
   EnchantCatalog._defs.clear()
   EnemyPools._by_act.clear()
+  EncounterPools._positions.clear()
   _installed = false
 
 

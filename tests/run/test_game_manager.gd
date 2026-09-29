@@ -80,6 +80,8 @@ func test_win_sets_win_phase_and_clears_save() -> void:
 
 func test_death_sets_death_phase_and_clears_save() -> void:
   Game.start_run(1, FixtureCharacter.ID)
+  Game.run.skip_choice()
+  Game.run.advance()   # on to the first fight
   Game.run.relics.clear()
   Game.run.player.hp = 1
   _play_one_beat(Game.run, 0)

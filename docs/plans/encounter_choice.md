@@ -1,5 +1,11 @@
 # Plan: a choice of three encounters before every fight
 
+**Status: stages 1 and 2 built 2026-09-30.** As-built detail is in
+[`../systems/run_manager.md`](../systems/run_manager.md#the-choice-of-encounters),
+[`../systems/encounter.md`](../systems/encounter.md#offer-rules) and
+[`../systems/run_screen.md`](../systems/run_screen.md#the-choice-of-encounters). Stages 3 to 5 are still
+to build. Differences from the plan are listed at the end.
+
 Before each fight the player is offered three encounters, shown as cards standing in the corridor
 where enemies stand, and picks one or walks past them for a little gold. Each encounter has its own
 choice inside it: an event's options, a reward's pick, or a shop's goods. Encounters have a rarity,
@@ -65,9 +71,12 @@ creates the picked `Encounter`, as the dormant code already does.
 3. **Weight.** Each remaining encounter's weight is its rarity weight (`Balance.ENCOUNTER_WEIGHT_COMMON`,
    `Balance.ENCOUNTER_WEIGHT_RARE`) multiplied by the multiplier of every weight rule whose condition
    holds.
-4. **Draw.** One encounter per position, by weight, on the run random number generator. A position
-   with nothing eligible is left empty; a content check makes sure every list has at least one
-   encounter with no requirements.
+4. **Draw.** One encounter per position, by weight, on the run random number generator, never the same
+   encounter twice in one offer. An encounter the player cannot choose is never offered, so all three
+   cards can always be picked (owner). A position with nothing eligible in its own list takes an
+   eligible encounter from the other lists instead, so the offer is always three while at least three
+   encounters are eligible. A content check makes sure every list has an encounter with no
+   requirements.
 
 **Skipping.** The player can walk past all three, which banks `Balance.ENCOUNTER_SKIP_GOLD` gold
 (owner) and goes straight to the next fight. `RunManager.skip_choice()` sits beside `pick_path`.
@@ -217,6 +226,20 @@ Docs updated in each stage: `run_manager.md`, `encounter.md`, `save.md`, `run_sc
 `autotest.md`, `lexicon.md` (run flag, encounter rarity, and the Square, Event and Relic encounter
 rows), and a decision log entry. The "Encounters and the choice layer" section of
 `design/game_design.md` describes the older choice layer; that section is the owner's to rewrite.
+
+## How stages 1 and 2 differ
+
+- A card wider than its share of the row is scaled down (`EncounterChoice.CARD_FILL`), because three
+  enemies at their arrived depth stand closer together than a card is wide.
+- `--autofight` walks past every choice, so a screenshot run still goes straight to a fight.
+- `test_target_ends_far_above_where_it_starts` now expects the last fight to be worth more than four
+  times the first, not ten, since the run is ten fights instead of 45 beats.
+- `FlagAtLeast`, `FlagBelow` and `TimesPicked` move to stage 3, which adds the run flags and pick
+  counts they read.
+- `FightBetween` counts fights from 1, as the map's squares are numbered for the player.
+- The rarity colour on the card is left for later (owner).
+- The placeholder recruit event requires `CanAddAlly`, so it is not offered once the ally slots are
+  full.
 
 ## Tests
 

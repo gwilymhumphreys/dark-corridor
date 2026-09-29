@@ -176,14 +176,18 @@ func choose_event_option(options: Array) -> int:
   return _rng.randi_range(0, options.size() - 1)
 
 
-## Which choice-layer path to take at a fork (fight / elite / event). A seeded pick so a
-## run explores a deterministic path (different seeds take different routes). Real
-## category-aware policies (prefer elites for reward, avoid risk at low HP) arrive with
-## telegraphs + richer run state.
+## Which of the encounters offered before a fight to take (docs/plans/encounter_choice.md). A seeded
+## pick among the filled positions ('' marks an empty one), so a run explores a deterministic path
+## (different seeds take different routes); -1 when nothing is offered. It never walks past. Real
+## policies (heal at low health, shop when rich) arrive with richer run state.
 func choose_path(candidates: Array) -> int:
-  if candidates.is_empty():
+  var filled: Array[int] = []
+  for i in candidates.size():
+    if candidates[i] != '':
+      filled.append(i)
+  if filled.is_empty():
     return -1
-  return _rng.randi_range(0, candidates.size() - 1)
+  return filled[_rng.randi_range(0, filled.size() - 1)]
 
 
 ## Whether to throw a reserve consumable now. Minimal policy: throw the first available

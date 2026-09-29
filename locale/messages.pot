@@ -275,42 +275,6 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: src/scenes/screens/choice_card.gd
-msgid "Rest"
-msgstr ""
-
-#: src/scenes/screens/choice_card.gd
-msgid "Event"
-msgstr ""
-
-#: src/scenes/screens/choice_card.gd
-msgid "Elite"
-msgstr ""
-
-#: src/scenes/screens/choice_card.gd
-msgid "Boss"
-msgstr ""
-
-#: src/scenes/screens/choice_card.gd
-msgid "Fight"
-msgstr ""
-
-#: src/scenes/screens/choice_card.gd
-msgid "Relic + item"
-msgstr ""
-
-#: src/scenes/screens/choice_card.gd
-msgid "Relic"
-msgstr ""
-
-#: src/scenes/screens/choice_card.gd
-msgid "Item"
-msgstr ""
-
-#: src/scenes/screens/choice_overlay.tscn
-msgid "Choose your path"
-msgstr ""
-
 #: src/scenes/screens/combat_summary.gd
 msgid "{0}  {1} fires"
 msgstr ""
@@ -341,6 +305,10 @@ msgstr ""
 
 #: src/scenes/screens/combat_summary.tscn
 msgid "Your items"
+msgstr ""
+
+#: src/scenes/screens/combat_summary.tscn
+msgid "Item"
 msgstr ""
 
 #: src/scenes/screens/combat_summary.tscn
@@ -375,8 +343,40 @@ msgstr ""
 msgid "+{0} gold"
 msgstr ""
 
+#: src/scenes/screens/draft_overlay.gd
+msgid "+{0} health, +{1} gold"
+msgstr ""
+
 #: src/scenes/screens/draft_overlay.tscn
 msgid "Choose a reward"
+msgstr ""
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Event"
+msgstr ""
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Rest"
+msgstr ""
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Relic"
+msgstr ""
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Fight"
+msgstr ""
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Recover health"
+msgstr ""
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Choose a relic"
+msgstr ""
+
+#: src/scenes/screens/encounter_choice.gd
+msgid "Walk past (+{0} gold)"
 msgstr ""
 
 #: src/scenes/screens/map_strip.gd

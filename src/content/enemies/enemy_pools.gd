@@ -10,14 +10,10 @@ class_name EnemyPools
 ## One Array of EnemyCatalog ids per act. A generated fight (regular or elite) draws from these.
 const REGULAR: Array = [
   [],
-  [],
-  [],
 ]
 
 ## One Array of EnemyCatalog ids per act: that act's boss fight, left to right.
 const BOSS: Array = [
-  [],
-  [],
   [],
 ]
 

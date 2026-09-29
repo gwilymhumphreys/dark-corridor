@@ -53,7 +53,12 @@ something else.
 |---|---|
 | **Act** | One part of a run, ending in a boss. The player is fully healed between acts. |
 | **Beat** | One encounter along an act, in order (`RunManager.position`). |
-| **Square** | A beat shown on the map: a fight, an elite fight, the relic encounter or the boss (`RunMap.SQUARES`). Events are beats but not squares. |
-| **Event** | A beat with prose and a choice of outcomes, and no fight. Events fall between squares. |
+| **Square** | A beat shown on the map: a fight, an elite fight or the boss (`RunMap.SQUARES`). Every square has a choice of encounters before it. |
+| **Choice of encounters** | The beat before every square, where three encounters are offered as cards in the corridor and the player picks one or walks past for a little gold (`RunManager.pending_choice`). |
+| **Event** | An encounter with prose and a choice of outcomes, and no fight. It is offered in the choice of encounters. |
+| **Encounter rarity** | How often an encounter is offered before its weight rules: common or rare (`EncounterDef.rarity`). |
+| **Condition** | A yes-or-no question about the run, such as whether the board holds an item (`RunCondition`). |
+| **Requirement** | A condition an encounter needs to be offered at all (`EncounterDef.requires`). |
+| **Weight rule** | A condition that multiplies how likely an encounter is to be offered while it holds (`EncounterDef.weights`). |
 | **Elite fight** | A harder fight that rewards a relic and a draft. Two per act, at fixed squares. |
-| **Relic encounter** | The beat in the middle of each act where the player picks one of three relics, with no fight. |
+| **Relic encounter** | An encounter offered before a fight where the player picks one of three relics, with no fight. |

@@ -15,7 +15,7 @@
 > ids, kind-grouped `src/content/`, a **character system** + per-character pools, #23/#27).
 > Then 2026-06-10: the **status system refactored to polymorphic `StatusEffect` classes**
 > (string-id, per-application duration, one file per status — #29), the beat model **CHOICE→ROLL**
-> (each act a fixed row of fights, elites, a relic encounter and a boss, with events between; the choice layer dormant), the **Spore Druid's first common
+> (each act a fixed row of fights, elites, a relic encounter and a boss, with events between; since 2026-09-30 one act with a choice of three encounters before every fight — #54), the **Spore Druid's first common
 > weapons** + Wilt Frond, and a **central colour/const palette** (`Colours` / `Consts`).
 > Latest 2026-06-21: the **combat item tooltip** (#31, 2026-06-19) and the **combat log** — a
 > combat-scoped observation sink that is the **single source of truth** for damage / heal / shield
@@ -266,15 +266,17 @@ content unless explicitly asked.** The prototype loop is feature-complete; what'
 for engineering is below, roughly highest-value first. Pick *with the owner*; each is
 test-first + its own green commit, with the headless autotest as the regression backstop.
 
-1. **Run structure — multi-act + HP economy + the act layout — DONE (mechanism;
-   placeholder content).** `RunMap` = 3 acts × 15 beats. Each act is a fixed row of 11 squares
-   (fights, elites at squares 4 and 8, the relic encounter at square 6, the boss last) with 4 events
-   placed between them from the run seed ([act layout](systems/run_manager.md#the-act-layout)). The map
-   strip shows the squares with icons. No player path-pick. The **event** type (`event_overlay`, prose +
-   binary outcome, `pick_event_option`) is built; the run-screen FSM has EVENTING. *(The old choice
-   layer — `has_pending_choice` / `pending_choice` / `pick_path` + `choice_overlay` + the CHOOSING
-   state — is **dormant**, inert behind an always-false `has_pending_choice()`.)* **HP economy:**
-   between-act full heal, max-HP via relics. **Still the owner's:** the real encounter/enemy/event
+1. **Run structure — the map + HP economy + the choice of encounters — stages 1 and 2 DONE (mechanism;
+   placeholder content).** `RunMap` = one act of 10 squares (fights, elites at squares 4 and 7, the
+   boss last), each with a choice of encounters straight before it: 20 beats
+   ([act layout](systems/run_manager.md#the-act-layout)). At a choice beat three encounters (events,
+   the rest, the relic encounter) stand as cards in the corridor; the player picks one or walks past
+   for gold ([choice of encounters](systems/run_manager.md#the-choice-of-encounters)), drawn by rarity
+   and by rules built from the player's state ([offer rules](systems/encounter.md#offer-rules)). The
+   later stages (run flags, reward encounters, shops) are in
+   [`plans/encounter_choice.md`](plans/encounter_choice.md). The map strip shows the squares with
+   icons. **HP economy:** every fight won gives some health and gold; between-act full heal, max-HP
+   via relics. **Still the owner's:** the real encounter/enemy/event
    content + boss **signature mechanics**; pool tuning. PRDs: [run_manager](systems/run_manager.md) ·
    [encounter](systems/encounter.md).
 2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**

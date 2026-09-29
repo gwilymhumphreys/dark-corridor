@@ -107,8 +107,9 @@ func test_run_full_report_has_per_encounter_and_contribution() -> void:
   var r := m.run_full()
   var s: Dictionary = r['summary']
   assert_gt(s['encounters'].size(), 0, 'per-encounter records captured')
-  assert_eq(s['encounters'][0]['type'], 'Fight', 'the first beat is a fight')
-  assert_gt(float(s['encounters'][0]['duration']), 0.0, 'fight duration recorded')
+  var fights: Array = s['encounters'].filter(func(e: Dictionary) -> bool: return e['type'] == 'Fight')
+  assert_false(fights.is_empty(), 'the fights are recorded')
+  assert_gt(float(fights[0]['duration']), 0.0, 'fight duration recorded')
   assert_false(s['fires_by_item'].is_empty(), 'player item fires tallied')
   assert_eq(s['strategy'], 'first-viable', 'the strategy is recorded')
 
@@ -136,11 +137,13 @@ func test_driver_defaults_to_never_skip() -> void:
   assert_false(driver.should_skip_draft([], []), 'the driver never skips by default')
 
 
-func test_default_run_banks_no_gold() -> void:
-  # Consequence of never-skip: a full default descent takes every draft, so no gold is ever
-  # banked — the skip path (which draws the RNG) is never taken.
-  _mode(1).run_full()
-  assert_eq(Game.run.gold, 0, 'a never-skip run banks no gold')
+func test_default_run_banks_only_the_fight_won_gold() -> void:
+  # Consequence of never-skip: a full default descent takes every draft and never walks past a
+  # choice of encounters, so the only gold is what each fight won gives — every fight but the final
+  # one, which ends the run.
+  var r := _mode(1).run_full()
+  var fights: int = r['summary']['encounters'].filter(func(e: Dictionary) -> bool: return e['type'] == 'Fight').size()
+  assert_eq(Game.run.gold, (fights - 1) * Balance.FIGHT_WON_GOLD, 'a never-skip run banks only the fight-won gold')
 
 
 func test_run_full_honors_nosave_writes_nothing() -> void:

@@ -60,7 +60,12 @@ var _current_enemy_ids: Array[String] = []
 ## ids — bosses and authored compositions included — so a tuning run reads one composition rather
 ## than generation noise. Static so the autotest can set it before a run starts. Never set in play.
 static var pinned_enemy_ids: Array[String] = []
-var _pending_choice: Array[String] = []  # kept empty — the choice layer is dormant
+# The choice beat's offer: one EncounterCatalog id per card position, left to right, '' for a
+# position left empty (only when fewer than three encounters can be offered). Empty otherwise.
+var _pending_choice: Array[String] = []
+## What the last fight won gave the player before its reward: { 'health': int, 'gold': int }. The
+## draft panel shows it.
+var last_fight_gain: Dictionary = {}
 var _pending_offer: Array[ItemDef] = []   # the held draft offer (1-of-3)
 var _pending_relic_offer: Array[RelicDef] = []   # the relic encounter's offer (pick one)
 var _ended: bool = false
@@ -127,32 +132,84 @@ func beat_in_act() -> int:
   return RunMap.beat_in_act(position)
 
 
-# --- the choice layer (DORMANT — every beat's encounter is set by the map; see _enter_beat) ----
-# Every beat's encounter is fixed or drawn by the map (RunManager._enter_beat), so no beat produces a pending
-# choice: has_pending_choice() is always false and these three are inert. They're kept so the run
-# screen / autotest choice branch + the choice_overlay component stay wired for a possible future
-# fork-beat (one that genuinely offers the player a pick). Remove them if that's ruled out.
+# --- the choice of encounters before each fight (docs/plans/encounter_choice.md) ----------------
 
-## True only when a beat is waiting on a player pick — never, while the map sets every beat.
+## True while a choice beat is waiting on the player to pick an encounter or walk past.
 func has_pending_choice() -> bool:
   return not _pending_choice.is_empty()
 
 
-## The candidate EncounterDef ids on offer (the UI telegraphs them; the autotest picks one).
+## The offered EncounterDef ids, one per card position left to right; '' marks an empty position.
 func pending_choice() -> Array:
   return _pending_choice
 
 
-## Apply the player's choice-point pick: the chosen candidate becomes the live `Encounter`
-## (created here, then it approaches + resolves). Re-saves so resume re-enters the PICKED
-## encounter, not the choice. No skip — a pick always resolves.
+## Apply the player's pick: the chosen encounter becomes the live `Encounter` (created here, then it
+## resolves). Re-saves so resume re-enters the PICKED encounter, not the choice. An empty position
+## cannot be picked.
 func pick_path(index: int) -> void:
   if _pending_choice.is_empty():
     return
-  _current_def_id = _pending_choice[clampi(index, 0, _pending_choice.size() - 1)]
+  var id: String = _pending_choice[clampi(index, 0, _pending_choice.size() - 1)]
+  if id == '':
+    return
+  _current_def_id = id
   _pending_choice = []
+  _current_enemy_ids = _draw_enemies(EncounterCatalog.get_def(_current_def_id))
   _create_current_encounter()
   _save()
+
+
+## Walk past the three encounters: bank Balance.ENCOUNTER_SKIP_GOLD and leave the beat with no
+## encounter, so the caller advances straight to the fight. Draws no run RNG.
+func skip_choice() -> void:
+  if _pending_choice.is_empty():
+    return
+  gold += Balance.ENCOUNTER_SKIP_GOLD
+  _pending_choice = []
+
+
+# Draw the choice beat's offer: one encounter per position from that position's EncounterPools list,
+# by weight on the run RNG, never the same encounter twice and never one the player cannot choose (its
+# requirements fail). A position whose own list has nothing left to offer takes one from the other
+# lists instead, so the offer is three whenever three encounters can be offered; only then is a
+# position left '' (docs/plans/encounter_choice.md).
+func _draw_choice() -> Array[String]:
+  var offer: Array[String] = []
+  for index: int in EncounterPools.POSITIONS:
+    offer.append(_draw_one(EncounterPools.at(index), offer))
+  for index: int in offer.size():
+    if offer[index] == '':
+      var others: Array[String] = []
+      for list: int in EncounterPools.POSITIONS:
+        others.append_array(EncounterPools.at(list))
+      offer[index] = _draw_one(others, offer)
+  return offer
+
+
+# One id from `ids`, not already in `offer`, drawn by EncounterDef.offer_weight; '' when none can be
+# offered.
+func _draw_one(ids: Array[String], offer: Array[String]) -> String:
+  var eligible: Array[String] = []
+  var weights: Array[float] = []
+  var total: float = 0.0
+  for id: String in ids:
+    if id in offer or id in eligible:
+      continue
+    var weight: float = EncounterCatalog.get_def(id).offer_weight(self)
+    if weight <= 0.0:
+      continue
+    eligible.append(id)
+    weights.append(weight)
+    total += weight
+  if eligible.is_empty():
+    return ''
+  var roll: float = rng.randf() * total
+  for i in eligible.size():
+    roll -= weights[i]
+    if roll < 0.0:
+      return eligible[i]
+  return eligible[-1]   # float rounding left the roll at the very top
 
 
 ## Begin resolving the current beat. For a fight, builds the player's relic items first, so the
@@ -200,7 +257,9 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
     return
   # Before the reward, so a relic won in this fight does not react to winning it. Only a fight
   # resolves WON (a rest or event resolves RESOLVED).
+  last_fight_gain = {}
   if outcome_value == Encounter.Outcome.WON:
+    _apply_fight_won_gain()
     _fire_run_event(RunEvent.FIGHT_WON)
   match reward:
     EncounterDef.Reward.DRAFT:
@@ -214,6 +273,15 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
       _pending_offer = Draft.draw(_draft_pool(), position, rng)   # a draft (reward asymmetry, #2)
     _:
       pass
+
+
+## Every fight won gives some health and gold before its reward (owner, docs/plans/encounter_choice.md).
+## Records what was gained in `last_fight_gain` for the draft panel.
+func _apply_fight_won_gain() -> void:
+  var health_before: int = player.hp
+  _apply_run_effect(RunEffect.heal(Balance.FIGHT_WON_HEAL))
+  _apply_run_effect(RunEffect.gold(Balance.FIGHT_WON_GOLD))
+  last_fight_gain = { 'health': player.hp - health_before, 'gold': Balance.FIGHT_WON_GOLD }
 
 
 ## The draft pool handed to Draft (#27): the chosen character's pool plus the shared
@@ -393,7 +461,7 @@ func throw_potion(index: int) -> bool:
 
 ## Advance to the next beat: tear the resolved one down, apply the between-act full heal
 ## when crossing into a new act (HP-economy, design), step position, enter the next beat
-## (a fixed encounter OR a fresh choice), and auto-save (the encounter-entry resume point).
+## (a fight, or a fresh choice of encounters), and auto-save (the encounter-entry resume point).
 func advance() -> void:
   if _ended:
     return
@@ -406,6 +474,9 @@ func advance() -> void:
   if not _pending_relic_offer.is_empty():
     push_error('RunManager.advance: advancing past an unconsumed relic offer — dropping it')
     _pending_relic_offer = []
+  if not _pending_choice.is_empty():
+    push_error('RunManager.advance: advancing past an unpicked choice of encounters — dropping it')
+    _pending_choice = []
   _teardown_current()
   if RunMap.crosses_act(position):   # the act boss was just cleared → enter the next act full
     _full_heal()
@@ -433,14 +504,21 @@ func outcome() -> int:
 
 # --- map + run-end ----------------------------------------------------------
 
-## Set up the beat at `pos` (RunMap.beat_spec): a FIXED beat (an elite fight, the relic encounter,
-## the boss) names its encounter; a DRAWN beat (a regular fight or an event) draws a def from its
-## pool on the run RNG (deterministic + resume-stable). The encounter is live at once. Clears any
-## prior beat's transient state.
+## Set up the beat at `pos` (RunMap.beat_spec): a CHOICE beat draws its three encounters and waits
+## for pick_path or skip_choice; a FIXED beat (an elite fight, the boss) names its encounter; a DRAWN
+## beat (a regular fight) draws a def from its pool on the run RNG (deterministic + resume-stable),
+## and that encounter is live at once. Clears any prior beat's transient state.
 func _enter_beat(pos: int) -> void:
   _current_def_id = ''
   _current_enemy_ids = []
-  var spec: Dictionary = RunMap.beat_spec(pos, rng.seed)
+  _pending_choice = []
+  var spec: Dictionary = RunMap.beat_spec(pos)
+  if spec['kind'] == RunMap.BeatKind.CHOICE:
+    _pending_choice = _draw_choice()
+    if not _pending_choice.any(func(id: String) -> bool: return id != ''):
+      push_warning('RunManager: no encounter can be offered at beat %d — the choice is skipped' % pos)
+      _pending_choice = []
+    return
   if spec['kind'] == RunMap.BeatKind.FIXED:
     _current_def_id = spec['id']
   else:
@@ -522,8 +600,9 @@ func snapshot() -> Dictionary:
     'potions': potion_ids,
     'position': position,
     'gold': gold,   # banked run-state (decision #33); optional on read (.get) — no migration
-    # The current beat's encounter id (resume re-enters it, never redrawn).
+    # The current beat's encounter id (resume re-enters it, never redrawn); '' at a choice beat.
     'current_def_id': _current_def_id,
+    'pending_choice': _pending_choice,   # the offered encounters — the RNG has already moved past them
     'current_enemy_ids': _current_enemy_ids,   # the drawn set — the RNG has already moved past it
     # RNG full state as strings — a JSON double can't hold a 64-bit value exactly.
     'rng': { 'seed': str(rng.seed), 'state': str(rng.state) },
@@ -572,18 +651,23 @@ func rehydrate(snap: Dictionary) -> bool:
   _ended = false
   _pending_offer = []
   _pending_relic_offer = []
+  # Restore the current beat exactly — the offered encounters or the encounter — never redraw it
+  # (no save-scum).
   _pending_choice = []
-  # Restore the current beat's encounter exactly — never redraw it (no save-scum).
+  for id: Variant in snap.get('pending_choice', []):
+    _pending_choice.append(str(id))
   _current_def_id = str(snap['current_def_id'])
   _current_enemy_ids = []
   for enemy_id: Variant in snap.get('current_enemy_ids', []):
     _current_enemy_ids.append(str(enemy_id))
-  _create_current_encounter()
+  if _pending_choice.is_empty():
+    _create_current_encounter()
   return true
 
 
-## Shape check for a parsed snapshot: every required key present, the RNG pair intact,
-## and a resolved current beat (every save happens after _enter_beat sets one).
+## Shape check for a parsed snapshot: every required key present, the RNG pair intact, and a
+## resolved current beat — an encounter, or at a choice beat the offered encounters (every save
+## happens after _enter_beat sets one).
 func _snapshot_usable(snap: Dictionary) -> bool:
   for key in SNAPSHOT_KEYS:
     if not snap.has(key):
@@ -591,7 +675,7 @@ func _snapshot_usable(snap: Dictionary) -> bool:
   var rng_snap: Variant = snap['rng']
   if not (rng_snap is Dictionary and rng_snap.has('seed') and rng_snap.has('state')):
     return false
-  return str(snap['current_def_id']) != ''
+  return str(snap['current_def_id']) != '' or not (snap.get('pending_choice', []) as Array).is_empty()
 
 
 # --- teardown ---------------------------------------------------------------

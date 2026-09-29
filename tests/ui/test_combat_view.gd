@@ -471,7 +471,7 @@ func test_a_thrown_consumable_starts_from_its_slot() -> void:
 
 func test_the_map_sits_below_the_items_in_the_column() -> void:
   var map: MapStrip = _host(preload('res://src/scenes/screens/map_strip.tscn').instantiate())
-  map.setup(1, 0)
+  map.setup(0)
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   view.map = map
   _host(view)

@@ -46,7 +46,7 @@ static var RELIC_STONE_WARD: Color = Color(0.4, 0.5, 0.6)
 static var RELIC_VITAL_CHARM: Color = Color(0.6, 0.3, 0.35)
 static var RELIC_IRON_IDOL: Color = Color(0.45, 0.45, 0.5)
 
-# ── Beat / encounter categories (choice cards; map_strip shares these once its WIP lands) ────
+# ── Beat / encounter categories (the encounter cards and the map strip) ─────────────────
 static var BEAT_BOSS: Color = Color(0.7, 0.4, 0.9)
 static var BEAT_RELIC: Color = Color(0.85, 0.7, 0.3)
 static var BEAT_REST: Color = Color(0.4, 0.75, 0.45)
@@ -66,7 +66,7 @@ static var COOLDOWN_FILL: Color = Color(0.95, 0.95, 0.95, 0.28) # the recharged 
 static var ALLY_DOWNED: Color = Color(0.45, 0.45, 0.45)     # darken a downed (dead) ally — alpha 1, not transparency
 
 # ── Map strip (1D progress map) ──────────────────────────────────────────────
-# BEAT_BOSS / BEAT_RELIC above are shared with the choice cards; these are map-strip-only.
+# BEAT_BOSS / BEAT_RELIC above are shared with the encounter cards; these are map-strip-only.
 static var MAP_CURRENT_HALO: Color = Color(0.95, 0.92, 0.55)
 
 # ── Tooltip ──────────────────────────────────────────────────────────────────

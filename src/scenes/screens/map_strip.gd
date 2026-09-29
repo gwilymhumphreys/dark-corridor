@@ -2,11 +2,12 @@ class_name MapStrip
 extends VBoxContainer
 ## The 1D progress map (docs/systems/ui_layout.md): the current act's squares (RunMap.SQUARES) under
 ## an "Act N" label, as a row of pencil grid squares with a small cardboard token in each, showing
-## what the square is (a fight, an elite fight, the relic encounter, the boss). The tokens are the
+## what the square is (a fight, an elite fight, the boss). The tokens are the
 ## medium token size, the same as the enemy items (the `medium_token_size` print setting), or smaller
 ## if the row would be wider than the strip. A cleared square's token is flipped over (its blank back), and the current one has the highlight border.
-## Events are not squares: during one, a marker sits on the line before the next square. Reads
-## RunMap and the position and run seed it is handed; writes nothing. The label is laid out like the
+## A choice of encounters is not a square: during one, and during the encounter picked from it, a
+## marker sits on the line before the next square. Reads RunMap and the position it is handed; writes
+## nothing. The label is laid out like the
 ## character sheet's other labels (the `SheetSection` theme variation).
 
 const ITEM_CELL: PackedScene = preload('res://src/scenes/combat/item_cell.tscn')
@@ -14,11 +15,9 @@ const GAP_SHARE: float = 0.35   # the space around a token as a share of its siz
 const ICONS: Dictionary = {
   RunMap.Square.FIGHT: preload('res://assets/icons/map/fight.png'),
   RunMap.Square.ELITE: preload('res://assets/icons/map/elite.png'),
-  RunMap.Square.RELIC: preload('res://assets/icons/map/relic.png'),
   RunMap.Square.BOSS: preload('res://assets/icons/map/boss.png'),
 }
 
-var _run_seed: int = 0
 var _position: int = 0
 var _set_up: bool = false
 var _fitted: Vector4 = -Vector4.ONE   # the token size, tilt, shift and strip width last fitted to
@@ -52,8 +51,7 @@ func _process(_delta: float) -> void:
     _update()
 
 
-func setup(run_seed: int, pos: int) -> void:
-  _run_seed = run_seed
+func setup(pos: int) -> void:
   _position = pos
   _set_up = true
   _update()
@@ -64,13 +62,13 @@ func mark_position(pos: int) -> void:
   _update()
 
 
-## Which square the player is on, and whether they are at the event before it rather than on it.
-## Returns [square index, at_event].
+## Which square the player is on, and whether they are at the choice of encounters before it rather
+## than on it. Returns [square index, at_choice].
 func current_square() -> Array:
-  var square: int = RunMap.square_at(_position, _run_seed)
+  var square: int = RunMap.square_at(_position)
   if square != -1:
     return [square, false]
-  return [RunMap.square_at(_position + 1, _run_seed), true]   # an event always comes before a square
+  return [RunMap.square_at(_position + 1), true]   # a choice always comes straight before a square
 
 
 func _update() -> void:
@@ -93,8 +91,6 @@ func _icon_colour(kind: RunMap.Square) -> Color:
   match kind:
     RunMap.Square.BOSS:
       return Colours.BEAT_BOSS
-    RunMap.Square.RELIC:
-      return Colours.BEAT_RELIC
   return Colours.UI_TEXT_DIM
 
 
@@ -128,7 +124,7 @@ func _fit() -> void:
   _marks.queue_redraw()
 
 
-# During an event, a marker on the grid line before the next square.
+# During a choice of encounters, a marker on the grid line before the next square.
 func _draw_marks() -> void:
   if not _set_up:
     return

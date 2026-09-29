@@ -59,7 +59,7 @@ Two layers the downward rule treats differently:
   - **hover / throw** → timescale intent → the `Combat manager` sets its `Timekeeper`'s dial (slow-mo).
   - **throw potion** → fire-consumable intent → the `Combat manager` activates the consumable.
   - **draft pick** → the `Run manager` / `Draft` adds the chosen Draftable to the board / relics / potion slots.
-  - **choice-point pick** → the `Run manager` instantiates the chosen candidate `Encounter` (dormant: `has_pending_choice()` is always false — [run_manager.md](run_manager.md)).
+  - **encounter pick** → the `Run manager` instantiates the chosen `Encounter` from the three offered before a fight, or banks gold on a walk past ([run_manager.md](run_manager.md#the-choice-of-encounters)).
   - **event-option pick** → the live `Encounter` applies the chosen outcome (via the `Run manager`'s run-state surface).
   - *(Test hook: an **autotest driver** emits these same intents headlessly — the input layer is the seam the harness drives. See [testing/autotest.md](autotest.md).)*
 ---
@@ -242,7 +242,7 @@ main.tscn  (Main, Node)                 main_controller swaps screens off Game.p
    │   │     ├─ VfxDriver        reads the Delivery set + render_time()
    │   │     ├─ Player/EnemyBoardView
    │   │     └─ Portrait · HP · PotionSlots
-   │   └─ OverlayLayer       draft / event / 1D-map (choice overlay dormant)
+   │   └─ OverlayLayer       draft / event / encounter cards / 1D-map
    ├─ combat_summary.tscn    the combat report: per-item report + event timeline (reads the CombatLog)
    └─ outcome_screen.tscn    death + win
 ```

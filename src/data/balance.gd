@@ -78,6 +78,15 @@ const CRIT_MULTIPLIER: float = 2.0            # PLACEHOLDER — owner tunes
 # gold instead of taking an item — a run-state resource (source built, no sink yet). The reward
 # panel's gold button shows it. Placeholder — the owner tunes it.
 const GOLD_SKIP: int = 2
+# Walking past the choice of three encounters before a fight banks this much gold (owner).
+const ENCOUNTER_SKIP_GOLD: int = 2
+# How likely a common and a rare encounter are to be offered, before their weight rules
+# (EncounterDef.offer_weight). Only the ratio matters. Placeholder.
+const ENCOUNTER_WEIGHT_COMMON: float = 1.0
+const ENCOUNTER_WEIGHT_RARE: float = 0.25
+# Every fight won gives the player this much health and gold before its reward (owner). Placeholder.
+const FIGHT_WON_HEAL: int = 5
+const FIGHT_WON_GOLD: int = 3
 
 
 # ── Presentation — the framed combat view (docs/systems/ui_layout.md; docs/history/phase4_plan.md) ───────
@@ -144,10 +153,10 @@ const POINTS_TRIGGERS_PER_COOLDOWN: float = 2.0
 
 # ── Encounter budgets (docs/plans/encounter_points_budget.md) ────────────────
 # The target points a fight is worth is calculated from an ESTIMATE of the player's board at that
-# beat, not from the actual board, so drafting well stays rewarded. RunMap.target_points does the
+# fight, not from the actual board, so drafting well stays rewarded. RunMap.target_points does the
 # arithmetic. Every one of these is an estimate — PLACEHOLDER, the owner tunes in /tune.
 const POINTS_STARTING_ITEMS: float = 3.0        # the intended starting board floor
-const POINTS_DRAFTS_PER_BEAT: float = 0.84      # measured: a full autotest run ends on 41 items
+const POINTS_DRAFTS_PER_FIGHT: float = 1.0      # every fight won but the last gives a draft; retune in /tune
 const POINTS_AVERAGE_ITEM_COOLDOWN: float = 4.0 # the cooldown taken as an average draft
 const POINTS_DAMAGE_FRACTION: float = 0.7       # the share of a board's output that is damage
 const POINTS_FIGHT_SECONDS: float = 20.0        # how long a regular fight should last, early or late

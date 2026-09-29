@@ -18,20 +18,24 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func test_target_rises_every_beat() -> void:
+func test_target_rises_every_fight() -> void:
   var previous: float = 0.0
-  for position: int in range(RunMap.TOTAL_BEATS):
-    var target: float = RunMap.target_points(position)
-    assert_gt(target, previous, 'beat %d target rises' % position)
+  for fight: int in range(RunMap.TOTAL_FIGHTS):
+    var target: float = RunMap.target_points(fight * 2 + 1)   # the fight's square, after its choice
+    assert_gt(target, previous, 'fight %d target rises' % fight)
     previous = target
 
 
+func test_a_choice_beat_takes_the_target_of_the_fight_after_it() -> void:
+  assert_eq(RunMap.target_points(2), RunMap.target_points(3), 'counted in fights, not beats')
+
+
 func test_target_ends_far_above_where_it_starts() -> void:
-  # The board grows uncapped and the synergy factor compounds on top, so the last beat is worth
-  # many times the first. The exact values are tuning; the order of magnitude is the check.
-  var first: float = RunMap.target_points(0)
+  # The board grows uncapped and the synergy factor compounds on top, so the last fight is worth
+  # several times the first. The exact values are tuning; the rough size is the check.
+  var first: float = RunMap.target_points(1)
   var last: float = RunMap.target_points(RunMap.TOTAL_BEATS - 1)
-  assert_gt(last, first * 10.0, 'the last beat is worth more than ten times the first')
+  assert_gt(last, first * 4.0, 'the last fight is worth more than four times the first')
 
 
 func test_an_empty_pool_draws_nothing() -> void:
@@ -71,6 +75,8 @@ func test_the_pin_overrides_the_draw() -> void:
   RunManager.pinned_enemy_ids = [FixtureEnemies.ID, FixtureEnemies.ID]
   var run: RunManager = RunManager.new()
   run.start(99, FixtureCharacter.ID)
+  run.skip_choice()
+  run.advance()   # on to the first fight
   assert_eq(run.current_encounter().enemies.size(), 2, 'the pinned composition is used as given')
   run.teardown()
   run.free()
@@ -80,6 +86,8 @@ func test_the_drawn_set_survives_a_reload() -> void:
   FixtureContent.install()
   var run: RunManager = RunManager.new()
   run.start(7, FixtureCharacter.ID)
+  run.skip_choice()
+  run.advance()   # on to the first fight
   var before: int = run.current_encounter().enemies.size()
   var snap: Dictionary = run.snapshot()
   run.teardown()
@@ -115,6 +123,7 @@ func test_a_boss_fight_keeps_its_authored_enemies_while_the_list_is_empty() -> v
 func _run_at_the_first_boss() -> RunManager:
   var run: RunManager = RunManager.new()
   run.start(3, FixtureCharacter.ID)
+  run.skip_choice()
   run.position = RunMap.BOSS_BEAT - 1
   run.advance()
   assert_eq(run.current_encounter().def.id, 'fight_boss', 'the run is at the boss')

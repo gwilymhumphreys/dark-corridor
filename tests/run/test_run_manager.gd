@@ -53,10 +53,12 @@ func _shield_count(actor: Actor) -> float:
   return 0.0
 
 
-## Resolve one beat (auto-roll: the beat already has a live encounter). Begin it; resolve an
-## event's binary choice; step a fight's CombatManager to a verdict; take the draft if offered;
-## advance. (Mirrors the autotest run loop.) `pick` indexes the draft card + the event option.
+## Resolve one beat. At a choice of encounters, pick the fixture rest; begin the encounter; resolve
+## an event's binary choice; step a fight's CombatManager to a verdict; take the draft if offered;
+## advance. (Mirrors the autotest run loop.) `pick` indexes the draft card.
 func _play_one_beat(run: RunManager, pick: int) -> void:
+  if run.has_pending_choice():
+    run.pick_path(FixtureEncounters.CHOICE_REST)
   run.begin_current()
   var enc: Encounter = run.current_encounter()
   if enc != null and enc.is_event():
@@ -70,6 +72,13 @@ func _play_one_beat(run: RunManager, pick: int) -> void:
     run.apply_draft_pick(pick)
   if run.has_pending_relic_offer():
     run.apply_relic_pick(0)
+  run.advance()
+
+
+## Start a run and walk past the opening choice of encounters, so the run is on its first fight.
+func _start_at_fight(run: RunManager, seed_value: int) -> void:
+  run.start(seed_value, FixtureCharacter.ID)
+  run.skip_choice()
   run.advance()
 
 
@@ -94,18 +103,18 @@ func test_full_run_reaches_won_and_grows_the_board() -> void:
 
 func test_draft_pick_lands_on_the_board() -> void:
   var run := _run()
-  run.start(1, FixtureCharacter.ID)
-  _play_one_beat(run, 0)   # beat 0: fight win → draft → advance
+  _start_at_fight(run, 1)
+  _play_one_beat(run, 0)   # the first fight: win → draft → advance
   assert_eq(run.player.board.size(), 4, 'the drafted item was added to the board')
-  assert_eq(run.position, 1, 'and the run advanced a beat')
+  assert_eq(run.position, 2, 'and the run advanced a beat')
 
 
 func test_starting_relic_grants_fight_start_shield() -> void:
   var run := _run()
-  run.start(1, FixtureCharacter.ID)
+  _start_at_fight(run, 1)
   # Granted here: the fixture character has no starting relic, and this is about the hook.
   run.relics.append(Relic.new(FixtureKit.shield_relic()))
-  # beat 0 auto-rolls to a live (easy) fight — begin it; the relic fires on step two and its shield
+  # the first fight — begin it; the relic fires on step two and its shield
   # lands one delivery flight later.
   run.begin_current()
   assert_eq(run.player.relics.size(), 1, 'the player holds an item for the relic during the fight')
@@ -120,7 +129,7 @@ func test_starting_relic_grants_fight_start_shield() -> void:
 
 func test_each_fight_gets_fresh_relic_items() -> void:
   var run := _run()
-  run.start(1, FixtureCharacter.ID)
+  _start_at_fight(run, 1)
   run.relics.append(Relic.new(FixtureKit.shield_relic()))
   run.begin_current()
   var first: Item = run.player.relics[0]
@@ -129,15 +138,17 @@ func test_each_fight_gets_fresh_relic_items() -> void:
     run.apply_draft_pick(0)
   run.advance()
   assert_true(run.player.relics.is_empty(), 'the relic items leave with the fight when the run moves on')
+  run.skip_choice()
+  run.advance()
   run.begin_current()
-  if run.combat_manager() != null:
-    assert_eq(run.player.relics.size(), 1, 'the next fight builds the relic item again')
-    assert_ne(run.player.relics[0], first, 'as a new item, so its fire count starts at zero')
+  assert_not_null(run.combat_manager(), 'the next beat after the choice is a fight')
+  assert_eq(run.player.relics.size(), 1, 'the next fight builds the relic item again')
+  assert_ne(run.player.relics[0], first, 'as a new item, so its fire count starts at zero')
 
 
 func test_loss_ends_run_died() -> void:
   var run := _run()
-  run.start(1, FixtureCharacter.ID)
+  _start_at_fight(run, 1)
   run.relics.clear()       # drop the protective relic so the glass player actually dies
   run.player.hp = 1
   watch_signals(run)
@@ -150,7 +161,7 @@ func test_loss_ends_run_died() -> void:
 func test_save_and_rehydrate_reproduces_the_continuation() -> void:
   var run_a := _run()
   run_a.start(7, FixtureCharacter.ID)
-  _play_one_beat(run_a, 0)        # clear beat 0; position now 1 (a draft still ahead at beat 1)
+  _play_one_beat(run_a, 0)        # clear beat 0 (the choice, the rest picked); position now 1, the first fight
   var snap: Dictionary = run_a.snapshot()
   _play_to_end(run_a, 0)
   var board_a := _board_ids(run_a.player)
@@ -236,7 +247,7 @@ func test_fight_won_trigger_fires_after_a_won_fight_only() -> void:
   run._on_encounter_resolved(Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE)
   assert_eq(run.gold, 0, 'a rest or event is not a won fight')
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
-  assert_eq(run.gold, 3, 'a won fight adds the gold')
+  assert_eq(run.gold, Balance.FIGHT_WON_GOLD + 3, 'a won fight adds the relic gold to the fight-won gold')
 
 
 func test_relic_won_from_a_fight_does_not_react_to_that_fight() -> void:
@@ -248,7 +259,7 @@ func test_relic_won_from_a_fight_does_not_react_to_that_fight() -> void:
   run.start(1, FixtureCharacter.ID)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
   assert_eq(run.relics[-1].def.run_triggers[0]['event'], RunManager.RunEvent.FIGHT_WON, 'the fight-won relic was granted')
-  assert_eq(run.gold, 0, 'but the fight that granted it does not count')
+  assert_eq(run.gold, Balance.FIGHT_WON_GOLD, 'but the fight that granted it does not count')
 
 
 func test_draft_skipped_trigger_adds_to_the_skip_gold() -> void:
@@ -257,7 +268,7 @@ func test_draft_skipped_trigger_adds_to_the_skip_gold() -> void:
   run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.DRAFT_SKIPPED, [RunEffect.gold(4)])))
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   run.apply_draft_skip()
-  assert_eq(run.gold, Balance.GOLD_SKIP + 4, 'the skip gold and the relic gold')
+  assert_eq(run.gold, Balance.FIGHT_WON_GOLD + Balance.GOLD_SKIP + 4, 'the fight-won gold, the skip gold and the relic gold')
 
 
 func test_run_heal_is_capped_at_maximum_health() -> void:
@@ -267,9 +278,10 @@ func test_run_heal_is_capped_at_maximum_health() -> void:
   run.player.hp = run.player.max_hp - 2
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   assert_eq(run.player.hp, run.player.max_hp, 'healed to full, not past it')
-  run.player.hp = run.player.max_hp - 10
+  run.player.hp = run.player.max_hp - 40
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
-  assert_eq(run.player.hp, run.player.max_hp - 5, 'healed by the amount')
+  assert_eq(run.player.hp, run.player.max_hp - 40 + Balance.FIGHT_WON_HEAL + 5,
+    'healed by the relic amount on top of the fight-won heal')
 
 
 func test_relic_grant_is_deterministic_by_seed() -> void:
@@ -319,9 +331,9 @@ func test_per_fight_seeds_differ_by_beat() -> void:
 
 func test_fight_rng_is_seeded_from_the_beat_seed() -> void:
   var run := _run()
-  run.start(5, FixtureCharacter.ID)
-  run.begin_current()                 # beat 0 auto-rolls to a live, seeded fight
-  assert_eq(run.combat_manager().rng.seed, run._combat_seed_for(0),
+  _start_at_fight(run, 5)
+  run.begin_current()                 # the first fight, live and seeded
+  assert_eq(run.combat_manager().rng.seed, run._combat_seed_for(run.position),
     'the fight RNG is seeded from the derived per-beat seed')
 
 
@@ -361,6 +373,7 @@ func test_between_act_full_heal_revives_allies() -> void:
   run.start(1, FixtureCharacter.ID)
   run.add_ally(FixtureEnemies.ALLY_ID)
   run.allies[0].take_damage(10.0)
+  run.skip_choice()
   run.position = RunMap.BEATS_PER_ACT - 1
   run.advance()                    # cross into the next act
   assert_eq(run.allies[0].hp, run.allies[0].max_hp, 'the between-act restore heals allies too')
@@ -370,18 +383,18 @@ func test_run_scoped_allies_revive_to_full_each_fight() -> void:
   # Allies revive between combats (only the player carries HP attrition) — a downed ally enters
   # the next fight at full HP.
   var run := _run()
-  run.start(5, FixtureCharacter.ID)
+  _start_at_fight(run, 5)
   run.add_ally(FixtureEnemies.ALLY_ID)
   run.allies[0].take_damage(run.allies[0].max_hp)   # down it
   assert_false(run.allies[0].is_alive(), 'the ally is downed')
-  run.begin_current()                               # beat 0 auto-rolls to a fight
+  run.begin_current()                               # the first fight
   assert_eq(run.allies[0].hp, run.allies[0].max_hp, 'the ally enters the fight revived to full')
 
 
 func test_add_ally_mid_fight_joins_the_live_combat() -> void:
   var run := _run()
-  run.start(5, FixtureCharacter.ID)
-  run.begin_current()                     # beat 0 auto-rolls to a fight
+  _start_at_fight(run, 5)
+  run.begin_current()                     # the first fight
   var cm: CombatManager = run.combat_manager()
   assert_not_null(cm, 'a live fight is running')
   run.add_ally(FixtureEnemies.ALLY_ID)
@@ -407,7 +420,7 @@ func test_run_scoped_ally_dissolved_at_run_teardown() -> void:
 ## Drive a freshly-created EVENT beat to a chosen option (deterministic, seed-independent):
 ## set the current def + create the encounter, begin it, pick the option through the RunManager.
 func _resolve_event(run: RunManager, def_id: String, option: int) -> void:
-  run._teardown_current()   # drop the auto-rolled opening fight before swapping in the event
+  run._teardown_current()   # drop any current encounter before swapping in the event
   run._current_def_id = def_id
   run._create_current_encounter()
   run.begin_current()
@@ -446,73 +459,171 @@ func test_add_ally_respects_the_four_slot_cap() -> void:
   assert_eq(run.allies.size(), RunManager.MAX_ALLIES, 'a 5th recruit is a no-op (the cap holds)')
 
 
-# --- multi-act structure + HP economy + the auto-roll map (#1) ---------------
+# --- the map (docs/plans/encounter_choice.md) ---------------------------------
 
-func test_opening_beat_is_a_live_fight() -> void:
-  # The first square of every act is a fight, and no event comes before it.
+func test_a_choice_comes_before_every_square() -> void:
+  assert_eq(RunMap.BEATS_PER_ACT, RunMap.SQUARES.size() * 2, 'a choice beat and a square for every square')
+  assert_eq(RunMap.TOTAL_FIGHTS, RunMap.ACTS * RunMap.SQUARES.size(), 'every square is a fight')
+  assert_eq(RunMap.SQUARES[-1], RunMap.Square.BOSS, 'the act ends on the boss')
+  for position: int in RunMap.TOTAL_BEATS:
+    var beat: int = RunMap.beat_in_act(position)
+    if beat % 2 == 0:
+      assert_eq(int(RunMap.beat_spec(position)['kind']), RunMap.BeatKind.CHOICE, 'an even beat is a choice')
+    else:
+      assert_eq(RunMap.square_at(position), floori(beat / 2.0), 'an odd beat is the square after the choice')
+
+
+func test_fixed_squares_name_their_encounters() -> void:
+  for square: int in RunMap.SQUARES.size():
+    var spec: Dictionary = RunMap.beat_spec(square * 2 + 1)
+    match RunMap.SQUARES[square]:
+      RunMap.Square.ELITE:
+        assert_eq(spec['id'], RunMap.ELITE_ENCOUNTER_ID, 'an elite square names the elite fight')
+      RunMap.Square.BOSS:
+        assert_eq(spec['id'], 'fight_boss', 'the boss square names the boss fight')
+        assert_eq(square * 2 + 1, RunMap.BOSS_BEAT, 'at the act\'s last beat')
+      _:
+        assert_eq(int(spec['kind']), RunMap.BeatKind.DRAWN, 'a regular fight is drawn from a pool')
+  assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
+
+
+func test_fight_number_counts_the_fights() -> void:
+  assert_eq(RunMap.fight_number(0), 0, 'the choice before the first fight counts as that fight')
+  assert_eq(RunMap.fight_number(1), 0, 'the first fight')
+  assert_eq(RunMap.fight_number(3), 1, 'the second fight')
+  assert_eq(RunMap.fight_number(RunMap.BOSS_BEAT), RunMap.SQUARES.size() - 1, 'the boss is the last fight of the act')
+
+
+# --- the choice of encounters before each fight (docs/plans/encounter_choice.md) ----------------
+
+func test_the_run_opens_on_a_choice_of_three() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  assert_false(run.has_pending_choice(), 'no choice — the map sets every beat')
-  assert_not_null(run.current_encounter(), 'the opening beat has a live encounter at once')
-  assert_true(run.current_encounter().is_fight(), 'the opening beat is a fight')
+  assert_true(run.has_pending_choice(), 'a choice of encounters comes before the first fight')
+  assert_null(run.current_encounter(), 'with no encounter until one is picked')
+  var expected: Array[String] = [FixtureEncounters.REST, FixtureEncounters.EVENT, FixtureEncounters.RELIC]
+  assert_eq(run.pending_choice(), expected, 'one from each position list, left to right')
+
+
+func test_picking_an_encounter_makes_it_the_beat() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.pick_path(FixtureEncounters.CHOICE_EVENT)
+  assert_false(run.has_pending_choice(), 'the choice is made')
+  assert_eq(run.current_encounter().def.id, FixtureEncounters.EVENT, 'the picked encounter is the beat')
+  assert_eq(Save.read()['current_def_id'], FixtureEncounters.EVENT, 'and is saved, so a resume re-enters it')
+
+
+func test_walking_past_banks_gold_and_leads_to_the_fight() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.skip_choice()
+  assert_eq(run.gold, Balance.ENCOUNTER_SKIP_GOLD, 'walking past banks the skip gold')
+  assert_false(run.has_pending_choice(), 'the choice is over')
+  assert_null(run.current_encounter(), 'with no encounter')
+  run.advance()
+  assert_true(run.current_encounter().is_fight(), 'the next beat is the fight')
+
+
+func test_an_empty_position_takes_an_encounter_from_the_other_lists() -> void:
+  EncounterPools._positions = [[], [FixtureEncounters.EVENT], [FixtureEncounters.REST, FixtureEncounters.RELIC]]
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var offer: Array = run.pending_choice()
+  assert_eq(offer[1], FixtureEncounters.EVENT, 'a position with its own list draws from it')
+  assert_false('' in offer, 'the empty position is filled from the other lists')
+  assert_ne(offer[0], offer[2], 'and no encounter is offered twice')
+
+
+func test_too_few_encounters_leave_a_position_empty() -> void:
+  EncounterPools._positions = [[], [FixtureEncounters.EVENT], []]
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var expected: Array[String] = ['', FixtureEncounters.EVENT, '']
+  assert_eq(run.pending_choice(), expected, 'only one encounter can be offered')
+  run.pick_path(0)
+  assert_true(run.has_pending_choice(), 'an empty position cannot be picked')
+
+
+func test_with_nothing_to_offer_the_choice_is_skipped() -> void:
+  EncounterPools._positions = [[], [], []]
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  assert_false(run.has_pending_choice(), 'no choice is offered')
+  assert_null(run.current_encounter(), 'and the beat has no encounter, so the caller advances')
+
+
+## Add a fixture rest under `id` to the catalog, for a draw test that needs more encounters.
+func _extra_encounter(id: String) -> EncounterDef:
+  var def := FixtureEncounters.rest(id)
+  EncounterCatalog._defs[id] = def
+  return def
+
+
+func test_an_encounter_the_player_cannot_choose_is_never_offered() -> void:
+  _extra_encounter('test_extra')
+  EncounterCatalog.get_def(FixtureEncounters.EVENT).requires = [GoldAtLeast.new(999)]
+  EncounterPools._positions = [[FixtureEncounters.REST], [FixtureEncounters.EVENT, 'test_extra'], [FixtureEncounters.RELIC]]
+  for run_seed: int in range(20):
+    var run := _run()
+    run.start(run_seed, FixtureCharacter.ID)
+    assert_false(FixtureEncounters.EVENT in run.pending_choice(), 'the event needs gold the player lacks')
+    assert_false('' in run.pending_choice(), 'and the offer is still three')
+
+
+func test_an_encounter_is_offered_once_its_requirements_hold() -> void:
+  EncounterCatalog.get_def(FixtureEncounters.EVENT).requires = [GoldAtLeast.new(5)]
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  assert_false(FixtureEncounters.EVENT in run.pending_choice(), 'not while the player lacks the gold')
+  run.gold = 5
+  run.skip_choice()
+  run.advance()   # the first fight
+  run.advance()   # the choice before the second, drawn with the gold in hand
+  assert_true(FixtureEncounters.EVENT in run.pending_choice(), 'offered once the requirement holds')
+
+
+func test_a_rare_encounter_is_offered_less_often_than_a_common_one() -> void:
+  var common := _extra_encounter('test_common')
+  var rare := _extra_encounter('test_rare')
+  rare.rarity = EncounterDef.Rarity.RARE
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var ids: Array[String] = [common.id, rare.id]
+  var rare_count: int = 0
+  for _i in 400:
+    if run._draw_one(ids, []) == rare.id:
+      rare_count += 1
+  assert_gt(rare_count, 0, 'a rare encounter is still offered')
+  assert_lt(rare_count, 200 - 40, 'but clearly less often than the common one')
+
+
+func test_the_offer_survives_resume() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var offer: Array = run.pending_choice().duplicate()
+  var run_b := _run()
+  assert_true(run_b.rehydrate(run.snapshot()), 'a save at a choice beat is usable')
+  assert_eq(run_b.pending_choice(), offer, 'the offered encounters are restored, not redrawn')
+  assert_null(run_b.current_encounter(), 'and no encounter is created until one is picked')
 
 
 func test_the_drawn_beat_survives_resume() -> void:
   # The current beat's drawn def round-trips the snapshot, so a resumed run re-enters the same
   # encounter (no save-scum).
   var run := _run()
-  run.start(1, FixtureCharacter.ID)
+  _start_at_fight(run, 1)
   var def_id: String = run._current_def_id
   var run_b := _run()
   run_b.rehydrate(run.snapshot())
   assert_eq(run_b._current_def_id, def_id, 'the drawn encounter is restored (not redrawn)')
 
 
-func test_every_act_has_the_squares_and_the_events() -> void:
-  assert_eq(RunMap.SQUARES.size() + RunMap.EVENTS_PER_ACT, RunMap.BEATS_PER_ACT, 'the squares and events fill the act')
-  for run_seed: int in [1, 2, 3, 99, 12345]:
-    for act: int in RunMap.ACTS:
-      var layout: Array[int] = RunMap.act_layout(act, run_seed)
-      assert_eq(layout.size(), RunMap.BEATS_PER_ACT, 'an act is BEATS_PER_ACT beats')
-      assert_eq(layout.count(-1), RunMap.EVENTS_PER_ACT, 'with EVENTS_PER_ACT events')
-      assert_eq(layout.filter(func(beat: int) -> bool: return beat != -1), range(RunMap.SQUARES.size()),
-        'and every square once, in order')
-
-
-func test_events_keep_to_their_gaps() -> void:
-  for run_seed: int in range(40):
-    var layout: Array[int] = RunMap.act_layout(0, run_seed)
-    assert_ne(layout[0], -1, 'an act never opens on an event')
-    for beat: int in layout.size():
-      if layout[beat] != -1:
-        continue
-      var next: int = layout[beat + 1]
-      assert_ne(next, -1, 'never two events in a row')
-      assert_true(next in RunMap.EVENT_GAPS, 'an event comes only before a square in EVENT_GAPS')
-      assert_true(RunMap.SQUARES[next] == RunMap.Square.FIGHT, 'so never before an elite, the relic encounter or the boss')
-
-
-func test_the_layout_is_the_same_for_the_same_seed() -> void:
-  assert_eq(RunMap.act_layout(1, 77), RunMap.act_layout(1, 77), 'the layout comes from the seed alone')
-
-
-func test_fixed_squares_name_their_encounters() -> void:
-  var layout: Array[int] = RunMap.act_layout(0, 1)
-  var elite_beat: int = layout.find(3)
-  var relic_beat: int = layout.find(5)
-  assert_eq(RunMap.beat_spec(elite_beat, 1)['id'], RunMap.ELITE_ENCOUNTER_ID, 'square 4 is an elite fight')
-  assert_eq(RunMap.beat_spec(layout.find(7), 1)['id'], RunMap.ELITE_ENCOUNTER_ID, 'so is square 8')
-  assert_eq(RunMap.beat_spec(relic_beat, 1)['id'], RunMap.RELIC_ENCOUNTER_ID, 'square 6 is the relic encounter')
-  assert_eq(RunMap.beat_spec(RunMap.BOSS_BEAT, 1)['id'], 'fight_boss', 'the act ends on the boss')
-  assert_eq(int(RunMap.beat_spec(layout.find(-1), 1)['kind']), RunMap.BeatKind.DRAWN, 'an event is drawn from a pool')
-  assert_true(RunMap.is_final_beat(RunMap.TOTAL_BEATS - 1), 'the last beat is the finale')
-
-
 func test_the_relic_encounter_offers_a_choice_of_relics() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.jump_to(RunMap.act_layout(0, run.rng.seed).find(5))
-  assert_eq(run._current_def_id, RunMap.RELIC_ENCOUNTER_ID, 'square 6 is the relic encounter')
+  run.pick_path(FixtureEncounters.CHOICE_RELIC)
+  assert_eq(run._current_def_id, FixtureEncounters.RELIC, 'the relic encounter was picked')
   run.begin_current()
   assert_true(run.has_pending_relic_offer(), 'the relic encounter resolves at once with a relic offer')
   var offer: Array = run.pending_relic_offer()
@@ -525,9 +636,43 @@ func test_the_relic_encounter_offers_a_choice_of_relics() -> void:
   assert_false(run.has_pending_relic_offer(), 'and clears the offer')
 
 
+# --- after each fight -------------------------------------------------------
+
+func test_a_won_fight_gives_health_and_gold() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.player.hp = run.player.max_hp - 40
+  var gold_before: int = run.gold
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  assert_eq(run.player.hp, run.player.max_hp - 40 + Balance.FIGHT_WON_HEAL, 'the fight-won heal')
+  assert_eq(run.gold, gold_before + Balance.FIGHT_WON_GOLD, 'and the fight-won gold')
+  assert_eq(run.last_fight_gain, { 'health': Balance.FIGHT_WON_HEAL, 'gold': Balance.FIGHT_WON_GOLD },
+    'recorded for the draft panel')
+
+
+func test_an_encounter_that_is_not_a_fight_gives_no_fight_gain() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run._on_encounter_resolved(Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE)
+  assert_eq(run.gold, 0, 'no gold')
+  assert_true(run.last_fight_gain.is_empty(), 'and nothing to show')
+
+
+func test_the_final_fight_gives_no_fight_gain() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.position = RunMap.TOTAL_BEATS - 1
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
+  assert_true(run.is_ended(), 'beating the final boss ends the run')
+  assert_eq(run.gold, 0, 'with no fight-won gold')
+
+
+# --- HP economy -------------------------------------------------------------
+
 func test_crossing_into_a_new_act_full_heals() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
+  run.skip_choice()
   run.position = RunMap.BEATS_PER_ACT - 1   # the act-0 boss beat
   run.player.hp = 10
   run.advance()                              # cross into act 1
@@ -539,6 +684,7 @@ func test_no_full_heal_within_an_act() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   run.player.hp = 10
+  run.skip_choice()
   run.advance()                              # beat 0 → 1, same act
   assert_eq(run.player.hp, 10, 'HP persists between beats inside an act')
 
@@ -579,9 +725,9 @@ func test_starting_kit_saves_and_rehydrates() -> void:
 
 func test_throw_potion_heals_and_empties_the_slot() -> void:
   var run := _run()
-  run.start(1, FixtureCharacter.ID)
+  _start_at_fight(run, 1)
   _grant_enchant_and_potion(run)
-  run.begin_current()                  # beat 0 auto-rolls to a live fight
+  run.begin_current()                  # the first fight
   run.player.take_damage(40.0)
   var before: int = run.player.hp
   assert_eq(run.potions.size(), 1)
@@ -646,11 +792,11 @@ func test_character_round_trips_through_the_snapshot() -> void:
 
 func test_advance_autosaves_the_entry_point() -> void:
   var run := _run()
-  run.start(3, FixtureCharacter.ID)
-  _play_one_beat(run, 0)          # beat 0 is a fight (draft) → begin, fight, draft, advance (saves at entry)
+  _start_at_fight(run, 3)
+  _play_one_beat(run, 0)          # the first fight (draft) → begin, fight, draft, advance (saves at entry)
   var saved: Dictionary = Save.read()
   assert_false(saved.is_empty(), 'a save exists at the encounter entry')
-  assert_eq(int(saved['position']), 1, 'the save is at the freshly-entered beat')
+  assert_eq(int(saved['position']), 2, 'the save is at the freshly-entered beat')
   assert_eq(saved['board'].size(), 4, 'and reflects the drafted item')
 
 
@@ -668,18 +814,18 @@ func test_advance_past_an_unconsumed_draft_drops_the_offer() -> void:
   # The consume-before-advance invariant: a caller that advances past a pending draft has a flow
   # bug — the offer is dropped (loudly) rather than carried unsaved into the next beat.
   var run := _run()
-  run.start(3, FixtureCharacter.ID)
+  _start_at_fight(run, 3)
   # Measured before the fight: items created mid-fight (the default character makes some) are
   # stripped at teardown, so the board returns to this size unless the draft was added.
   var board_size: int = run.player.board.size()
   run.begin_current()
   var cm: CombatManager = run.combat_manager()
-  cm.run_headless()               # beat 0 is a fight with a draft reward
+  cm.run_headless()               # the first fight, with a draft reward
   assert_true(run.has_pending_draft(), 'a draft is pending after the win')
   run.advance()                   # flow bug: nobody consumed the draft
   assert_false(run.has_pending_draft(), 'the stale offer was dropped, not carried')
   assert_eq(run.player.board.size(), board_size, 'nothing was silently added to the board')
-  assert_eq(run.position, 1, 'the run still advanced')
+  assert_eq(run.position, 2, 'the run still advanced')
 
 
 # --- draft skip → bank gold (docs decision #33) ------------------------------
@@ -688,16 +834,17 @@ func test_skip_banks_gold_and_clears_offer() -> void:
   # Skipping the draft banks a fixed amount of gold (Balance.GOLD_SKIP) instead of taking a card,
   # leaves the board untouched, clears the offer, and lets the run advance.
   var run := _run()
-  run.start(1, FixtureCharacter.ID)
+  _start_at_fight(run, 1)
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
   assert_true(run.has_pending_draft(), 'a fight win offers a draft')
   var board_size: int = run.player.board.size()
+  var gold_before: int = run.gold
   run.apply_draft_skip()
   assert_false(run.has_pending_draft(), 'the offer cleared')
   assert_eq(run.player.board.size(), board_size, 'skipping adds no item to the board')
-  assert_eq(run.gold, Balance.GOLD_SKIP, 'the fixed gold amount is banked')
+  assert_eq(run.gold, gold_before + Balance.GOLD_SKIP, 'the fixed gold amount is banked')
   run.advance()
-  assert_eq(run.position, 1, 'the run advances after a skip (the offer was consumed)')
+  assert_eq(run.position, 2, 'the run advances after a skip (the offer was consumed)')
 
 
 func test_gold_survives_save_and_resume() -> void:

@@ -1,9 +1,9 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://src/scenes/screens/choice_card.gd" id="1"]
+[ext_resource type="Script" path="res://src/scenes/screens/encounter_card.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
 
-[node name="ChoiceCard" type="Button"]
+[node name="EncounterCard" type="Button"]
 mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(280, 380)
 focus_mode = 0
@@ -19,7 +19,7 @@ offset_bottom = 214.0
 mouse_filter = 2
 color = Color(0.5, 0.5, 0.5, 1)
 
-[node name="Category" type="Label" parent="."]
+[node name="Kind" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 0
 offset_left = 18.0
@@ -44,7 +44,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Reward" type="Label" parent="."]
+[node name="Hint" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 0
 offset_left = 10.0

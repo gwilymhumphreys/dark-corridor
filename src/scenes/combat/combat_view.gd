@@ -38,6 +38,17 @@ func set_walk_distance(_sections: float) -> void:
   pass
 
 
+## Empty the corridor of enemies, for a beat with no fight where the encounter cards stand instead.
+func clear_enemies() -> void:
+  pass
+
+
+## The global point where the centre of encounter card `index` of `count` stands: where that many
+## enemies would stand, at the corridor's middle height (docs/plans/encounter_choice.md).
+func encounter_slot(_index: int, _count: int) -> Vector2:
+  return get_global_rect().get_center()
+
+
 ## Show the enemy readouts, hidden until now, fading them up over `duration` seconds. Called near
 ## the end of the approach so they are up by the time the fight starts.
 func show_enemies(_duration: float = 0.0) -> void:

@@ -46,12 +46,35 @@ func test_character_pools_and_kits_resolve() -> void:
 
 func test_map_beat_pools_resolve() -> void:
   for position in RunMap.TOTAL_BEATS:
-    var spec: Dictionary = RunMap.beat_spec(position, 1)
+    var spec: Dictionary = RunMap.beat_spec(position)
     if spec['kind'] == RunMap.BeatKind.FIXED:
       assert_not_null(EncounterCatalog.get_def(spec['id']), 'beat %d: fixed encounter resolves' % position)
-    else:
+    elif spec['kind'] == RunMap.BeatKind.DRAWN:
       for encounter_id in spec['pool']:
         assert_not_null(EncounterCatalog.get_def(encounter_id), 'beat %d: pool encounter %s resolves' % [position, encounter_id])
+
+
+func test_encounter_position_lists_resolve() -> void:
+  # The encounters offered before each fight: every id resolves, each encounter is in one list only,
+  # and there are enough for a full choice of three (docs/plans/encounter_choice.md).
+  var seen: Array[String] = []
+  for index: int in EncounterPools.POSITIONS:
+    for id: String in EncounterPools.at(index):
+      assert_not_null(EncounterCatalog.get_def(id), 'position %d: encounter %s resolves' % [index, id])
+      assert_false(id in seen, 'encounter %s is in one position list only' % id)
+      seen.append(id)
+  assert_gte(seen.size(), EncounterPools.POSITIONS, 'enough encounters for a full choice')
+
+
+func test_every_encounter_position_list_can_always_offer_one() -> void:
+  # An encounter whose requirements fail is never offered, so each list that holds encounters needs
+  # one with no requirements, or its position could come up empty (docs/plans/encounter_choice.md).
+  for index: int in EncounterPools.POSITIONS:
+    var ids: Array[String] = EncounterPools.at(index)
+    if ids.is_empty():
+      continue
+    var unconditional: Array[String] = ids.filter(func(id: String) -> bool: return EncounterCatalog.get_def(id).requires.is_empty())
+    assert_false(unconditional.is_empty(), 'position %d has an encounter with no requirements' % index)
 
 
 func test_encounter_defs_resolve_their_references() -> void:

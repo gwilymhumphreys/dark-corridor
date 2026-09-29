@@ -38,7 +38,9 @@ screen is the one real-time client: each `_physics_process` it calls
 `run_screen.gd` is a **polling FSM** mirroring `AutoTestMode.run_full`:
 
 ```
-IDLE → enter beat (drawn or fixed — a live encounter already) → begin beat
+IDLE → enter beat ─ choice? WALKING → CHOOSING ─(card picked)→ begin beat
+                   │                           └(walked past)→ advance → enter beat
+                   └ fight (a live encounter already) → begin beat
                     begin:  event?  EVENTING (await option pick) → after-beat
                             fight?  APPROACHING → FIGHTING ─(resolved)→ after-beat
                             rest or relic?  resolves on begin → after-beat
@@ -47,12 +49,32 @@ after-beat: pending draft? DRAFTING (await pick OR skip-for-gold)
 run_ended → Game → outcome screen
 ```
 
-Every beat's encounter is set by the map (`RunManager._enter_beat`), so every beat enters with a live
-encounter — there's no player path-pick. An **EVENT** beat raises `event_overlay.tscn` (prose + a
+A fight beat enters with a live encounter. A choice beat has none until the player picks one of
+the encounter cards ([below](#the-choice-of-encounters)). An **EVENT** beat raises `event_overlay.tscn` (prose + a
 binary choice → `RunManager.pick_event_option`, which applies an ally outcome and hands the pick to `Encounter.pick_event_option` to apply the rest + resolve), parking the FSM
-until the pick, like the draft overlay. *(The `CHOOSING` state + `choice_overlay.tscn` are
-**dormant** — kept inert behind `has_pending_choice()` (always false now) for a possible future
-fork-beat.)*
+until the pick, like the draft overlay.
+
+### The choice of encounters
+
+A choice beat ([run_manager.md](run_manager.md#the-choice-of-encounters)) builds the combat view with no
+fight, empties the corridor of enemies (`CombatView.clear_enemies`), and adds `encounter_choice.tscn`
+(`EncounterChoice`) to the corridor area. The player then walks up the corridor as in a fight approach
+(the `WALKING` state), and the choice fades up over the last `Balance.ENEMY_REVEAL_DURATION` of the walk
+(`EncounterChoice.reveal`), as the enemy readouts do. On arrival the state is `CHOOSING`.
+
+- **Cards** — one `EncounterCard` (`encounter_card.tscn`) per offered encounter: a themed button, so
+  it takes the worn panel and the control feedback, with a `UIJuice` node (the card preset). It shows
+  the encounter's kind, name and hint ([encounter.md](encounter.md#telegraph-the-encounter-card)).
+  Each card stands where that many enemies would stand at their arrived depth, at the corridor's
+  middle height (`CombatView.encounter_slot` → `CombatCorridor.slot_point`, which needs no sprite and
+  leaves the head bob out), placed each frame so it follows the layout. A card wider than its share of
+  the row is scaled down (`EncounterChoice.CARD_FILL`), as several enemies are; the corridor's
+  `enemy_spacing` widens the row. An empty position has no card.
+- **Pick** — a card emits `picked(index)` → `RunManager.pick_path`; the cards go and the encounter
+  begins as any beat does.
+- **Walk past** — the button under the cards (`'Walk past (+{0} gold)'`, from
+  `Balance.ENCOUNTER_SKIP_GOLD`) emits `skipped` → `RunManager.skip_choice`, refreshes the gold box and
+  advances to the fight.
 
 It **polls `cm.is_resolved()`** (never reacts inside the `resolved` signal), so the
 fight is torn down + advanced safely — the run fulfils the outcome (reward / run-end)
@@ -275,8 +297,7 @@ that array when there is no fight, so allies stay beside the player during event
 recruited by the event appears at once. When a fight resolves, the run screen calls `view.release()` at once so the last hits'
 numbers and rings don't stay frozen in the corridor under the reward panel. `release()` also clears the item
 cells' cooldown fills (`ItemCell.show_cooldown`) and fades away the fight's temporary things (below).
-A view built without a fight never shows the fills. The choice overlay and the combat report are still
-full-screen.
+A view built without a fight never shows the fills. The combat report is still full-screen.
 
 - **Draft** — `draft_overlay.tscn` shows each reward as a `RewardOption` (`reward_option.tscn`)
   after a fight: a button around the same `ItemCell` the board uses (the same icon and value pills),
@@ -286,10 +307,13 @@ full-screen.
   tooltip, and pressing it emits `picked(index)` → `RunManager.apply_draft_pick`. The **gold button** in the
   panel's bottom right (`'+{0} gold'`, the amount from `Balance.GOLD_SKIP`) emits `skipped` →
   `RunManager.apply_draft_skip` instead, banking gold and
-  refreshing the gold box before advancing (decision #33). Both paths then advance.
+  refreshing the gold box before advancing (decision #33). Both paths then advance. Under the title,
+  the `Gain` line (`DraftOverlay.show_gain`) lists the health and gold the fight won gave
+  (`RunManager.last_fight_gain`); it is hidden for the relic encounter's offer.
 - **Gold** — a "Gold" box beside the potions in the combat view: the amount in a box drawn with the
   potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
-  screen writes it when it builds the view (covering a resumed run's banked gold) and after each skip.
+  screen writes it when it builds the view (covering a resumed run's banked gold), after each beat and
+  after each skip.
 - **Relics** — a "Relics" box beside the gold: the potions' pencil grid, as many squares across as fit
   in the rest of the potion row, with a relic token (an `ItemCell` holding the relic's `Item`) in each
   square. More relics than squares across wrap onto more rows, and the board fits the items to the
@@ -300,15 +324,14 @@ full-screen.
   ends. Hovering a token shows the relic tooltip; relic tokens show no cooldown fill.
 - **Map** — `map_strip.tscn` shows the current act's squares (`RunMap.SQUARES`) under an "Act N"
   label: a row of pencil grid squares (the grid material in box mode), each holding a small cardboard
-  token (an `ItemCell`) with a single-colour icon (`assets/icons/map/`: fight, elite, relic, boss),
+  token (an `ItemCell`) with a single-colour icon (`assets/icons/map/`: fight, elite, boss),
   tinted from the palette (`ItemCell.tint_picture`) and drawn with the item icons' picture effects
   unless the `map_icons_as_pictures` print setting is off ([print_frame.md](print_frame.md)). The tokens are the medium token size, the same
   as the enemy items (`medium_token_size`), or smaller if the row would be wider than the strip, and
   are set askew like the items. A cleared square's token is face down (no
-  icon), and the current one has the selected border (`ItemCell.set_marked`, [control_feedback.md](control_feedback.md)); during an event, a
-  marker sits on the grid line before the next square. It
-  needs the run seed, because the events' places come from it (`setup(run_seed, position)`,
-  `mark_position` on each advance). The label is laid out like the sheet's other labels
+  icon), and the current one has the selected border (`ItemCell.set_marked`, [control_feedback.md](control_feedback.md)); during a choice of
+  encounters and the encounter picked from it, a marker sits on the grid line before the next square
+  (`setup(position)`, `mark_position` on each advance). The label is laid out like the sheet's other labels
   (`SheetSection`, `LabelDim`). With the `map_in_column` print setting on, the combat view places it
   at the bottom of the item column ([ui_layout.md](ui_layout.md#screen-sections)); otherwise it is
   at the top of the information section.
@@ -333,7 +356,7 @@ registered in `project.godot`) — see [localization](localization.md).
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
-map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
+event_overlay · encounter_choice · encounter_card · map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
 `src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell); `src/vfx/vfx_driver.gd`;
 `src/scenes/combat/monster_images.gd`; the corridor is `src/scenes/corridors/corridor_3d.gd`.
 Tests in `tests/ui/` and `tests/corridors/`.

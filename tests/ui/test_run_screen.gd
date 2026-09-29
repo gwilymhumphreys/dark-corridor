@@ -3,7 +3,7 @@ extends GutTest
 ## mirroring AutoTestMode.run_full. Driven here by manual _physics_process(delta) calls
 ## (synchronous — no awaited frames), so each fight ticks ~8 sim-steps per call and the
 ## whole run resolves fast. The autotest remains the broader headless backstop; this
-## confirms the screen's FSM glue (enter beat → fight/rest → draft → advance → win).
+## confirms the screen's FSM glue (enter beat → choice → fight/rest → draft → advance → win).
 
 ## One second of delta per step, enough to walk past `Balance.APPROACH_DURATION` however that
 ## is tuned, so retiming the approach does not break every fight test in this file.
@@ -28,6 +28,8 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
     if screen._event != null:
       screen._on_event_picked(0)    # the event's binary choice
+    elif screen._state == RunScreen.State.CHOOSING:
+      screen._choice.picked.emit(0)   # stand in for the player picking the left encounter card
     elif screen._draft != null:
       screen._draft.picked.emit(0)    # stand in for the player picking the first card or relic
     else:
@@ -64,7 +66,7 @@ func test_a_finished_fight_offers_its_report_on_the_hud() -> void:
 func test_fight_beat_approaches_then_fights() -> void:
   # A fight beat opens with the corridor approach (combat frozen), then begins on
   # arrival. The clock is not ticked until FIGHTING, so the enemy is unharmed while
-  # it walks in. (The opening beat auto-rolls to a fight.)
+  # it walks in.
   var screen := _mount_into_fight(1)
   assert_eq(screen._state, RunScreen.State.APPROACHING, 'a fight beat starts in the approach')
   for _i in APPROACH_STEPS:
@@ -252,24 +254,88 @@ func test_settings_opens_over_the_pause_menu_and_closes_back() -> void:
 # Mount the run screen into a live FIGHT. Beats 0 .. EASY_BEATS_END auto-roll to forced (easy)
 # combat, so the opening beat is always a fight — _ready begins its approach. `seed >= 0` starts
 # a fresh run first.
+# Mount the run screen into the first fight: the run walks past the opening choice of encounters.
 func _mount_into_fight(seed_value: int) -> RunScreen:
   if seed_value >= 0:
     Game.start_run(seed_value, FixtureCharacter.ID)
+  Game.run.skip_choice()
+  Game.run.advance()
   var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
   add_child(screen)
   return screen
 
 
-# Mount the run screen into an EVENT beat. Beats auto-roll (events are positional + rare), so drive
-# the current beat to an event directly — the event overlay is the unit under test here.
+# Mount the run screen into an EVENT beat, set directly rather than picked from the choice of
+# encounters — the event overlay is the unit under test here.
 func _mount_into_event(seed_value: int) -> RunScreen:
   Game.start_run(seed_value, FixtureCharacter.ID)
+  Game.run._pending_choice.clear()
   Game.run._teardown_current()
   Game.run._current_def_id = FixtureEncounters.EVENT
   Game.run._create_current_encounter()
   var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
   add_child(screen)   # _ready → _enter_beat → _begin_beat → _show_event
   return screen
+
+
+# --- the choice of encounters before each fight (docs/plans/encounter_choice.md) --------------
+
+func _mount_into_choice() -> RunScreen:
+  Game.start_run(1, FixtureCharacter.ID)
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  return screen
+
+
+func test_a_choice_beat_walks_up_to_the_encounter_cards() -> void:
+  var screen := _mount_into_choice()
+  assert_eq(screen._state, RunScreen.State.WALKING, 'the choice opens with a walk up the corridor')
+  assert_eq(screen._choice.get_parent(), screen._view.corridor_area(), 'the cards stand in the corridor area')
+  assert_false(screen._choice.is_revealed(), 'hidden while the walk begins')
+  assert_eq(screen._choice.mouse_filter, Control.MOUSE_FILTER_IGNORE, 'the choice does not block the rest of the screen')
+  screen._physics_process(Balance.APPROACH_DURATION - Balance.ENEMY_REVEAL_DURATION + 0.01)
+  assert_true(screen._choice.is_revealed(), 'the cards fade up before the walk ends')
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  assert_eq(screen._state, RunScreen.State.CHOOSING, 'then the player chooses')
+  assert_eq(screen._choice.get_node('Cards').get_child_count(), EncounterPools.POSITIONS, 'a card per encounter')
+  screen.free()
+
+
+func test_the_cards_stand_side_by_side_in_the_corridor() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  screen._choice._place_cards()
+  var area: Rect2 = screen._view.corridor_area().get_global_rect()
+  var previous_x: float = -INF
+  for card: Control in screen._choice.get_node('Cards').get_children():
+    var centre: Vector2 = card.get_global_rect().get_center()
+    assert_gt(centre.x, previous_x, 'left to right')
+    assert_true(area.has_point(centre), 'inside the corridor')
+    previous_x = centre.x
+  screen.free()
+
+
+func test_picking_a_card_begins_its_encounter() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  screen._choice.picked.emit(FixtureEncounters.CHOICE_EVENT)
+  assert_null(screen._choice, 'the cards go')
+  assert_eq(screen._state, RunScreen.State.EVENTING, 'and the picked event raises its panel')
+  screen.free()
+
+
+func test_walking_past_banks_gold_and_approaches_the_fight() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  screen._choice.skipped.emit()
+  assert_eq(Game.run.gold, Balance.ENCOUNTER_SKIP_GOLD, 'walking past banks the skip gold')
+  assert_eq(screen._state, RunScreen.State.APPROACHING, 'and the run walks on to the fight')
+  assert_eq(Game.run.position, 1, 'the next beat')
+  screen.free()
 
 
 func test_event_beat_raises_the_event_overlay_and_resolves_on_pick() -> void:

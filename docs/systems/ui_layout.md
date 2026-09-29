@@ -79,9 +79,9 @@ Hover anything important (own items, enemy items, potions, status icons, enemies
 
 ## The out-of-combat screens
 
-- **Choice layer** — the 2–3 location options at a choice point (two-tier: pick a location, then the within-choice); telegraphs the *category* (first-run legible — design). The pick is a **choice-point intent** → `Run manager`.
+- **Choice of encounters** — the three encounters offered before each fight, as cards standing in the corridor ([run_screen.md](run_screen.md#the-choice-of-encounters)); two-tier: pick an encounter, then the choice inside it; each card telegraphs the *kind* (first-run legible — design). The pick is a **choice-point intent** → `Run manager`.
 - **Draft** — the 1-of-3 reward, shown as a panel in the corridor area with the board and HUD still usable around it (events use the same placement — [run_screen.md](run_screen.md#overlays)); the rewards are the board's own item icons with the same tooltips; the pick is a **draft-pick intent**, and a **gold button** (`+{0} gold`) is a **draft-skip intent** (bank gold instead of taking a card — decision #33). A **gold box** beside the potions displays the banked total (no sink yet). (Enchant-target / potion-drop sub-choices — Draft PRD.)
-- **1D progress map** — the act's squares (fights, elites, the relic encounter, the boss at the end), each with an icon, and the player's position; events are not squares; forward visibility on a linear track, not a route map (design).
+- **1D progress map** — the act's squares (fights, elites, the boss at the end), each with an icon, and the player's position; a choice of encounters is not a square; forward visibility on a linear track, not a route map (design).
 
 ## Localization
 

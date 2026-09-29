@@ -1,6 +1,7 @@
 class_name FixtureEncounters
-## Plain encounter definitions for tests (docs/systems/testing.md). FixtureContent adds the three
-## below under their own ids, and puts a fixture encounter of the same type and reward in place of
+## Plain encounter definitions for tests (docs/systems/testing.md). FixtureContent adds the four
+## below under their own ids, offers the rest, the event and the relic encounter before every fight
+## (one per EncounterPools position, in that order), and puts a fixture encounter of the same type and reward in place of
 ## every authored encounter, under the authored id, because the run map names encounters by id.
 ## Every fixture fight is one fixture enemy.
 ##
@@ -10,6 +11,12 @@ class_name FixtureEncounters
 const FIGHT: String = 'fixture_fight'
 const REST: String = 'fixture_rest'
 const EVENT: String = 'fixture_event'
+const RELIC: String = 'fixture_relic'
+
+# The position of each fixture encounter in the choice before every fight (FixtureContent).
+const CHOICE_REST: int = 0
+const CHOICE_EVENT: int = 1
+const CHOICE_RELIC: int = 2
 
 const REST_HEAL_FRACTION: float = 0.3
 const EVENT_HEAL_FRACTION: float = 0.25
@@ -67,7 +74,7 @@ static func event(id: String = EVENT) -> EncounterDef:
 
 
 ## A relic encounter: no fight, a choice of relics.
-static func relic(id: String) -> EncounterDef:
+static func relic(id: String = RELIC) -> EncounterDef:
   var d := EncounterDef.new()
   d.id = id
   d.type = EncounterDef.Type.RELIC

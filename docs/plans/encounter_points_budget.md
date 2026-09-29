@@ -27,6 +27,11 @@ introduces.
 
 The target is calculated from an estimate of the player's board, not from the actual board.
 
+Since the choice of encounters before every fight ([`encounter_choice.md`](encounter_choice.md)), the run
+is one act of ten fights and half the beats are choices. `n` below is now the fight number
+(`RunMap.fight_number`), `DRAFTS_PER_BEAT` became `Balance.POINTS_DRAFTS_PER_FIGHT`, and the tables
+still show the old 45 beat run until the curve is retuned.
+
 ```
 items(n)     = STARTING_ITEMS + DRAFTS_PER_BEAT × n
 damage(n)    = items(n) × AVERAGE_ITEM_RATE × DAMAGE_FRACTION

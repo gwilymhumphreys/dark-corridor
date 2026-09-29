@@ -7,8 +7,9 @@ extends Control
 ## runs via sim_step (combat_manager.gd).
 ##
 ## A polling state machine that drives the WHOLE descent in real time, mirroring
-## AutoTestMode.run_full — enter beat → approach → (fight: tick to resolution | rest:
-## resolves on begin | event: overlay) → fulfil reward (draft overlay) → advance →
+## AutoTestMode.run_full — enter beat → (choice: walk up to the encounter cards, pick one or walk
+## past) → approach → (fight: tick to resolution | rest: resolves on begin | event: overlay) →
+## fulfil reward (draft overlay) → advance →
 ## repeat, until the run ends (Game then swaps to the win/death screen). The run
 ## processes each beat's outcome via its own signal chain DURING the resolving tick;
 ## this screen reacts by POLLING cm.is_resolved() (never from inside the signal), so
@@ -17,12 +18,12 @@ extends Control
 const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
 const COMBAT_SUMMARY: PackedScene = preload('res://src/scenes/screens/combat_summary.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
-const CHOICE_OVERLAY: PackedScene = preload('res://src/scenes/screens/choice_overlay.tscn')
+const ENCOUNTER_CHOICE: PackedScene = preload('res://src/scenes/screens/encounter_choice.tscn')
 const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 
-enum State { IDLE, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING }
+enum State { IDLE, WALKING, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING }
 
 var _run: RunManager
 var _cm: CombatManager
@@ -30,7 +31,7 @@ var _view: CombatView   # the swappable surface — framed today, full-screen dr
 var _log: CombatLog       # the live fight's observation log
 var _last_log: CombatLog  # the last finished fight's log — what the Report button shows between fights
 var _draft: DraftOverlay
-var _choice: ChoiceOverlay
+var _choice: EncounterChoice
 var _event: EventOverlay
 var _summary: CombatSummary   # the combat report panel while it is open; null while hidden
 var _state: int = State.IDLE
@@ -55,7 +56,7 @@ func _ready() -> void:
   Game.battle_speed_changed.connect(_on_battle_speed_changed)
   DebugPanels.panels_open_changed.connect(_on_debug_panels_open_changed)
   _report_button.pressed.connect(_toggle_report)
-  _map.setup(_run.rng.seed, _run.position)
+  _map.setup(_run.position)
   _enter_beat()
 
 
@@ -73,29 +74,53 @@ func _exit_tree() -> void:
 func _enter_beat() -> void:
   if _run.is_ended():
     return
-  # A CHOICE beat has no encounter until a path is picked: raise the choice overlay and
-  # wait. A FIXED beat (boss / midpoint relic / rest) already has a live encounter.
+  # A CHOICE beat has no encounter until one is picked: walk up to the encounter cards and wait.
+  # A fight beat already has a live encounter.
   if _run.has_pending_choice():
     _show_choice()
     return
   _begin_beat()
 
 
-# The two-tier choice (a choice-point intent): raise the telegraphed 2-3 candidates and
-# wait. The loop is parked in CHOOSING until a card is picked (pick_path creates the beat).
+# The choice of encounters before a fight (docs/plans/encounter_choice.md): the corridor with no
+# enemy, the encounter cards standing where enemies would, and a walk up to them like a fight
+# approach. The cards fade up over the end of the walk; the loop is parked in CHOOSING until a card
+# is picked (pick_path creates the beat) or the player walks past.
 func _show_choice() -> void:
-  _state = State.CHOOSING
-  _choice = CHOICE_OVERLAY.instantiate()
-  add_child(_choice)
+  _ensure_view()
+  _view.clear_enemies()
+  _choice = ENCOUNTER_CHOICE.instantiate()
+  _view.corridor_area().add_child(_choice)
   _choice.picked.connect(_on_choice_picked)
-  _choice.setup(_run.pending_choice())
+  _choice.skipped.connect(_on_choice_skipped)
+  _choice.setup(_run.pending_choice(), _view.encounter_slot)
+  _begin_approach(State.WALKING)
+
+
+func _arrive_at_choice() -> void:
+  _walk(Balance.APPROACH_DEPTH_START)
+  _choice.reveal(0.0)   # a backstop: normally the fade already started during the walk
+  _state = State.CHOOSING
 
 
 func _on_choice_picked(index: int) -> void:
+  if _state != State.CHOOSING and _state != State.WALKING:
+    return
   _choice.queue_free()
   _choice = null
   _run.pick_path(index)
   _begin_beat()
+
+
+# Walk past the encounters: bank the skip gold and go straight on to the fight.
+func _on_choice_skipped() -> void:
+  if _state != State.CHOOSING and _state != State.WALKING:
+    return
+  _choice.queue_free()
+  _choice = null
+  _run.skip_choice()
+  _refresh_gold()
+  _advance()
 
 
 # Begin resolving the (now-chosen or fixed) beat: a fight readies its CombatManager + the
@@ -139,8 +164,8 @@ func _on_event_picked(index: int) -> void:
 # grows to full size and brightens as it comes into the corridor light. The fight clock is NOT
 # ticked yet, so combat is frozen until arrival. Driven off _physics_process (not a Tween) so the headless run-screen test advances it
 # with the same manual ticks that drive the fights.
-func _begin_approach() -> void:
-  _state = State.APPROACHING
+func _begin_approach(state: State = State.APPROACHING) -> void:
+  _state = state
   _approach_elapsed = 0.0
   _walk(0.0)
 
@@ -169,18 +194,24 @@ func _physics_process(delta: float) -> void:
   if _view == null:
     return   # the view was torn down under us (quit to menu, run end) — nothing to drive
   match _state:
-    State.APPROACHING:
+    State.APPROACHING, State.WALKING:
       _approach_elapsed += delta
       var t: float = clampf(_approach_elapsed / Balance.APPROACH_DURATION, 0.0, 1.0)
       # Eased so the walk starts and ends softly rather than snapping into motion.
       var eased: float = lerpf(t, smoothstep(0.0, 1.0, t), Balance.APPROACH_EASE)
       _walk(Balance.APPROACH_DEPTH_START * eased)
-      # The enemy's readouts start fading up before arrival, so they are there by the first tick.
-      # show_enemies only acts the first time, so calling it every frame from here is harmless.
+      # The enemy's readouts (or the encounter cards) start fading up before arrival, so they are
+      # there when the walk ends. Both only act the first time, so calling them every frame is harmless.
       if Balance.APPROACH_DURATION - _approach_elapsed <= Balance.ENEMY_REVEAL_DURATION:
-        _view.show_enemies(Balance.ENEMY_REVEAL_DURATION)
+        if _state == State.WALKING:
+          _choice.reveal(Balance.ENEMY_REVEAL_DURATION)
+        else:
+          _view.show_enemies(Balance.ENEMY_REVEAL_DURATION)
       if t >= 1.0:
-        _arrive()
+        if _state == State.WALKING:
+          _arrive_at_choice()
+        else:
+          _arrive()
     State.FIGHTING:
       if _cm == null:
         return
@@ -403,6 +434,7 @@ func _show_draft() -> void:
   _draft.picked.connect(_on_draft_picked)
   _draft.skipped.connect(_on_draft_skipped)
   _draft.setup(_run.pending_draft())
+  _draft.show_gain(_run.last_fight_gain)
 
 
 # The relic encounter's reward: the same panel as the draft, offering relics, with no skip.
@@ -495,6 +527,7 @@ func _on_potion_thrown(index: int) -> void:
 
 
 func _teardown_combat_view() -> void:
+  _choice = null   # the cards live in the view's corridor area and go with it
   _log = null   # drop the live ref; _last_log keeps the finished fight's numbers for the report
   if _view != null:
     _view.release()      # stop the VFX wall reading the CombatManager we're about to free

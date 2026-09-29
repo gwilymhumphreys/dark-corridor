@@ -1,0 +1,47 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/scenes/screens/encounter_choice.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
+
+[node name="EncounterChoice" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Cards" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SkipButton" type="Button" parent="."]
+mouse_default_cursor_shape = 2
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -104.0
+offset_right = 200.0
+offset_bottom = -36.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+theme_type_variation = &"ButtonMedium"
+auto_translate_mode = 2
+text = ""
+
+[node name="Juice" type="Node" parent="SkipButton"]
+script = ExtResource("2")
+
+[connection signal="pressed" from="SkipButton" to="." method="_on_skip_pressed"]
