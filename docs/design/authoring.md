@@ -135,6 +135,21 @@ for each def's fields and how it resolves.
   Size it to its act's points range in [`encounter_points_budget.md`](../plans/encounter_points_budget.md).
   Make it live by adding its id to an act's `REGULAR` or `BOSS` list in `enemies/enemy_pools.gd`. The
   image steps and the list rules are in [enemy.md](../systems/enemy.md).
+- An **encounter** is an `EncounterDef` (`content/encounters/<id>.gd`): a fight, an event, a rest or
+  the relic encounter. To offer it before fights, add its id to one of the three card position lists
+  in `encounters/encounter_pools.gd` (the left list is for shops). It can set `rarity`
+  (`Rarity.COMMON` or `Rarity.RARE`), `requires` (conditions that must all hold, or it is never
+  offered) and `weights` (rules that make it more or less likely while their condition holds). Each
+  position list needs one encounter with no requirements, so its card can always be filled. The
+  conditions (items held, a combination of items, item types, relics, health, gold, which fight is
+  next, a free ally slot) are listed in [encounter.md → Offer rules](../systems/encounter.md#offer-rules).
+
+  ```gdscript
+  rarity = Rarity.RARE
+  requires = [HasItems.new(['warhammer', 'dagger'])]   # only with both items on the board
+  weights = [{ 'if': HealthBelow.new(0.4), 'multiplier': 3.0 }]
+  ```
+
 - **Enemies are shared by every character** and the **reward-relic pool stays shared** — only *item*
   pools split per character (#27).
 

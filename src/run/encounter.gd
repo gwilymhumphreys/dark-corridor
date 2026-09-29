@@ -2,15 +2,15 @@ class_name Encounter
 extends Node
 ## The per-beat orchestrator (docs/systems/encounter.md) — one resolved beat, instanced by the
 ## Run manager. A FIGHT spawns enemy Actors from their definitions (left-to-right)
-## and, on begin(), creates the per-fight CombatManager; a REST applies a partial
-## heal; a RELIC encounter resolves at once and its reward is a relic choice. It reports its outcome + reward-kind up via `resolved`; the Run manager
-## fulfils the reward and applies HP/relic policy.
+## and, on begin(), creates the per-fight CombatManager; an EVENT waits for its option pick; a REST
+## applies a partial heal; a RELIC encounter resolves at once and its reward is a relic choice. It
+## reports its outcome + reward-kind up via `resolved`; the Run manager fulfils the reward and applies
+## HP/relic policy.
 ##
-## Phase 3 driving model: the Encounter (and its CombatManager) are NOT mounted in
-## the scene tree — the clock is supplied externally (the autotest steps sim_step;
-## the Phase-4 run screen will drive _physics_process). So begin() readies the
-## fight but does not run it; the caller steps combat_manager() to a verdict, and
-## the CM's `resolved` relays through here.
+## The Encounter (and its CombatManager) are NOT mounted in the scene tree — the clock is supplied
+## externally (the autotest steps sim_step; the run screen ticks the fight from its
+## _physics_process). So begin() readies the fight but does not run it; the caller steps
+## combat_manager() to a verdict, and the CM's `resolved` relays through here.
 
 signal resolved(outcome: int, reward: int)
 

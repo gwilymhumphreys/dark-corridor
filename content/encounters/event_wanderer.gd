@@ -1,6 +1,6 @@
 extends EncounterDef
 ## Placeholder recruit event (decision #1): one option adds an ally for the rest of the run, the
-## other declines for a small heal.
+## other declines for a small heal. Offered only while an ally slot is free.
 
 
 func _init() -> void:
@@ -18,3 +18,4 @@ func _init() -> void:
   refuse.effect = EventOptionDef.Effect.HEAL_FRACTION
   refuse.amount = 0.15
   event_options = [welcome, refuse]
+  requires = [CanAddAlly.new()]
