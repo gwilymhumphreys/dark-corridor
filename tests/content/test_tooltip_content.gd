@@ -216,6 +216,23 @@ func test_type_line_names_the_tags_and_empty_for_untagged() -> void:
   assert_eq(TooltipContent.new().build(untagged)['type_line'], '', 'an untagged item has an empty type line')
 
 
+func test_a_relic_passive_reads_as_the_same_item_effect_line_after_the_trigger() -> void:
+  var def := FixtureKit.shield_relic()
+  def.fires_per_fight = 1
+  def.passives = FixtureKit.weapon_bonus_relic().passives
+  var relic := Item.new(def)
+  var lines: Array = TooltipContent.new().build(relic)['lines']
+  assert_eq(lines.size(), 4, 'the trigger, the shield, the limit, then the passive')
+  var item_def := ItemDef.new()
+  item_def.effects = def.passives
+  var as_item: Array = TooltipContent.new().build(Item.new(item_def))['lines']
+  assert_eq(lines[3], as_item[0], 'the passive line is the line an item with that effect shows')
+  assert_false(KeywordCatalog.ITEM_TARGET in TooltipContent.keyword_ids(Item.new(FixtureKit.shield_relic())),
+      'the shield relic alone targets no items')
+  assert_true(KeywordCatalog.ITEM_TARGET in TooltipContent.keyword_ids(relic),
+      'the passive, which covers your items, adds the item-target keyword card')
+
+
 ## The target phrase `_shape_text` produces for a shape + filter, as its text with each icon
 ## written as [id].
 func _phrase(shape: int, filter: TargetFilter) -> String:

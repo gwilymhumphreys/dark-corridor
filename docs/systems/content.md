@@ -20,14 +20,15 @@ What it **is not**: not new combat mechanics (all route through `StatusManager` 
 
 ## Relic
 
-An **item with no timer** (decision #51): a powerful, run-changing ability made of triggers and, later, passives. The run owns the player's relics; during a fight each relic is an `Item` that fires when one of its triggers happens. Plan and later stages: [`plans/relics_as_items.md`](../plans/relics_as_items.md).
+An **item with no timer** (decision #51): a powerful, run-changing ability made of triggers and passives. The run owns the player's relics; during a fight each relic is an `Item` that fires when one of its triggers happens. Plan and later stages: [`plans/relics_as_items.md`](../plans/relics_as_items.md).
 
-**Location:** `src/content/relics/` (`RelicDef`, `Relic`, `RelicCatalog`), `content/relics/` (one file per relic).
+**Location:** `src/content/relics/` (`RelicDef`, `Relic`, `RelicCatalog`), `src/content/relics/passives/` (`RelicPassive`, its subclasses, `PassiveRegistry`), `content/relics/` (one file per relic).
 
 - **Definition** — `RelicDef extends ItemDef`, so a relic has the item fields: `effects`, `trigger_subs`, `mechanics`, `crit_chance`, `rarity` (feel-based for relics, not a power ladder), `icon` (placeholders in `assets/icons/relics/`). A relic trigger is an item trigger without `seconds`. Relic-only fields:
 
 | Field | Meaning |
 |---|---|
+| `passives` | Always-on abilities for the whole fight, written as `ItemEffect`s like `effects` |
 | `fires_per_fight` | 0 = no limit; 1 = "the first time each fight" |
 | `max_hp_bonus` | Maximum health added once, on grant (baked into the snapshot, not re-applied on load) |
 
@@ -36,6 +37,7 @@ An **item with no timer** (decision #51): a powerful, run-changing ability made 
 - **In a fight** — `Actor.relics` is separate from the board, so board-wide effects never pick a relic. A relic's bar is one step long and never fills over time; each trigger fills it completely (its subscription pushes 1.0) and it fires on the next step through the item fire pipeline (targeting, crit, deliveries, combat log). Two events in one step fire it twice. After `fires_per_fight` fires it drops further pushes.
 - **Not an item firing** — a relic's fire publishes no `ITEM_FIRED` and skips the use-status and fire-status drains, so it does not use up an Empowered stack. The events its effects cause when they land (`APPLIED`, `DAMAGE_TAKEN`) publish as usual.
 - **Events** — relics mostly use `FIGHT_START` (published once in the first step, so a start-of-fight relic fires on step two) and `DAMAGE_TAKEN` alongside the item events ([combat_manager.md](combat_manager.md)).
+- **Passives** — each `passives` entry becomes a `RelicPassive` on the relic's `Item` (`Item.passives`), its class chosen by the effect's mechanic in `PassiveRegistry` (attack bonus and attack percent bonus so far; a content check fails for any other). A passive is not a status: it extends `CombatHooks`, the hook base class `StatusEffect` also extends, and the status manager and Combat manager call the passives of an actor's relics before its statuses ([status_manager.md → Behaviour hooks](status_manager.md#behaviour-hooks-the-combathooks-and-statuseffect-interface)). Nothing that removes, counts or consumes statuses reaches it. The attack bonus passives raise the attacks of the owner's board items that the effect's shape (`ALL_OWN_ITEMS`) and target filter pick, checked at fire time, so items created during the fight are covered. A relic with only passives never fires.
 - **Display** — relic tokens in the sheet's Relics box and the enemy's item row (before its items), with the item tooltip ([tooltips.md](tooltips.md)).
 
 ## Enchantment

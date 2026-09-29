@@ -72,7 +72,8 @@ func _effect_lines(item: Item) -> Array:
 
 
 ## A relic's lines (docs/systems/tooltips.md): when it fires, then what it does, then its crit chance
-## and its limit per fight. The wording is placeholder copy for the owner to rewrite.
+## and its limit per fight, then its passives as item effect lines, with no heading (the owner's
+## wording keeps them apart). The trigger wording is placeholder copy for the owner to rewrite.
 func _relic_lines(item: Item) -> Array:
   var lines: Array = []
   for sub: Dictionary in item.def.trigger_subs:
@@ -89,6 +90,8 @@ func _relic_lines(item: Item) -> Array:
     lines.append([{'t': 'text', 's': tr('Once per fight')}])
   elif limit > 1:
     lines.append([{'t': 'text', 's': tr('{0} times per fight').format([limit])}])
+  for effect: ItemEffect in (item.def as RelicDef).passives:
+    lines.append(_effect_line(item, effect))
   return lines
 
 
@@ -334,7 +337,7 @@ static func keyword_ids(item: Item) -> Array[String]:
     _add_keyword(ids, mechanic_id)
   # 2. The derived non-mechanic ids, in effect order: applied statuses, consumed-fuel statuses, statuses
   #    a value is read from, then trigger filters. Dropping this would remove those keyword cards from every status-applier.
-  for effect: ItemEffect in item.def.effects:
+  for effect: ItemEffect in _effects_of(item):
     if effect.kind == Delivery.Kind.APPLY_STATUS:
       _add_keyword(ids, effect.status_id)
     if effect.consume_id != '':
@@ -388,10 +391,18 @@ static func _item_uses_mechanic(item: Item, mech: String) -> bool:
 
 
 static func _any_effect(item: Item, predicate: Callable) -> bool:
-  for effect: ItemEffect in item.def.effects:
+  for effect: ItemEffect in _effects_of(item):
     if predicate.call(effect):
       return true
   return false
+
+
+## The item's effects, and for a relic its passives after them — every effect the tooltip lists.
+static func _effects_of(item: Item) -> Array[ItemEffect]:
+  var effects: Array[ItemEffect] = item.def.effects.duplicate()
+  if item.def is RelicDef:
+    effects.append_array((item.def as RelicDef).passives)
+  return effects
 
 
 static func _add_keyword(ids: Array[String], id: String) -> void:

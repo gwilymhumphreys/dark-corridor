@@ -187,7 +187,7 @@ Unchanged: the snapshot stores relic ids. Nothing a relic does in a fight is sav
    tooltip, inspectable tokens and reward option, the firing flash. Stone Ward and Iron Idol are
    rewritten as `FIGHT_START` relics. Their shield now arrives as a delivery a few steps into the
    fight instead of before the first step, which can change fight results and autotest baselines.
-2. The shared hook base class, `passives` and their registry, the attack bonus passive classes,
+2. Built 2026-09-29. The shared hook base class, `passives` and their registry, the attack bonus passive classes,
    bonuses for every mechanic, passive tooltip lines.
 3. Run events and run effects. Vital Charm is rewritten.
 4. Health thresholds and rule changes, one at a time as relics are authored.

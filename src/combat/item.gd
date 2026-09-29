@@ -13,12 +13,22 @@ var statuses: Array[StatusEffect] = []   # item-targeted instances (silence = ga
                                          # NOTE: value modifiers are NOT read from here — see docs/systems/item.md.
 var enchant: Enchantment = null          # one enchant slot
 var fires: int = 0                       # times fired this fight (items are rebuilt or reset per fight)
+# A relic's always-on abilities, one per RelicDef.passives entry (docs/systems/content.md → Relic).
+# Empty for every other item.
+var passives: Array[RelicPassive] = []
 
 
 func _init(item_def: ItemDef, item_owner: Actor = null) -> void:
   def = item_def
   owner = item_owner
   cooldown = Ticker.from_seconds(def.cooldown)
+  if def is RelicDef:
+    for effect: ItemEffect in (def as RelicDef).passives:
+      var passive: RelicPassive = PassiveRegistry.create(effect)
+      if passive == null:
+        push_error('Relic %s: no passive class for mechanic %s' % [def.id, effect.mechanic])
+        continue
+      passives.append(passive)
 
 
 ## Break THIS item's half of the Actor<->Item reference cycle when it is removed from a board
@@ -82,15 +92,15 @@ func display_value(effect: ItemEffect) -> float:
 
 ## The baseline the changed-value highlight compares against: the authored value scaled by the
 ## enchant only (a PERMANENT modifier — #26), so the highlight reflects combat-scoped status
-## changes (Weak, the attack bonuses), not the enchant. Read-only.
+## changes (Weak, the attack bonuses, relic passives), not the enchant. Read-only.
 func base_value(effect: ItemEffect) -> float:
   return roundi(_scaled_value(effect, false))
 
 
-## The effect's value with the enchant and, when `with_statuses` and the effect is an attack, every
-## status bonus, combined by StatusManager.combine (docs/systems/mechanics.md → Combining bonuses).
-## The enchant counts as a percentage bonus and applies to every effect; statuses only to attacks.
-## Pure.
+## The effect's value with the enchant and, when `with_statuses`, every bonus the owner's and this
+## item's hooks give to the effect's mechanic (statuses and relic passives, StatusManager.
+## outgoing_bonuses), combined by StatusManager.combine (docs/systems/mechanics.md → Combining
+## bonuses). The enchant counts as a percentage bonus and applies to every effect. Pure.
 func _scaled_value(effect: ItemEffect, with_statuses: bool) -> float:
   var base: float = effect.value
   # A value that scales by a status the owner holds reads it first, so bonuses apply on top of it.
@@ -99,8 +109,8 @@ func _scaled_value(effect: ItemEffect, with_statuses: bool) -> float:
   var bonuses: Array[Dictionary] = []
   if enchant != null:
     bonuses.append({'percent': enchant.def.value_mult - 1.0})   # a permanent item modifier
-  if with_statuses and effect.mechanic == AttackMechanic.ID:
-    bonuses.append_array(StatusManager.outgoing_bonuses(owner, self))
+  if with_statuses:
+    bonuses.append_array(StatusManager.outgoing_bonuses(owner, self, effect.mechanic))
   return StatusManager.combine(base, bonuses)
 
 
@@ -108,8 +118,8 @@ func _scaled_value(effect: ItemEffect, with_statuses: bool) -> float:
 ## enchant scaling, the outgoing stat-status seam, self-fuel consume, source identity.
 func _resolve_effect(effect: ItemEffect) -> Payload:
   var p := Payload.from_effect(effect)
-  # The enchant (docs/systems/content.md / #26) and, for an attack, the status bonuses on the owner
-  # and on this item (#6), worked out AT FIRE TIME and locked into the payload, cascade-safe.
+  # The enchant (docs/systems/content.md / #26) and the bonuses from the owner's and this item's
+  # hooks (#6), worked out AT FIRE TIME and locked into the payload, cascade-safe.
   p.value = _scaled_value(effect, true)
   # Status-stack consume (docs/systems/spore_engine.md Cap 1): SELF-fuel resolves now (the
   # owner is known) by spending its stacks + scaling. OPPONENT-fuel (Mass) rides the

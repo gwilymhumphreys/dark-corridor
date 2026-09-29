@@ -1,8 +1,9 @@
 class_name StatusEffect
-extends RefCounted
+extends CombatHooks
 ## A status INSTANCE that owns BOTH its state and its behaviour — the polymorphic model
 ## (docs/systems/status_manager.md), replacing the old StatusDef-data + StatusManager-
-## switch rulebook. One subclass per status; each overrides only the hooks it needs. Lives in its
+## switch rulebook. One subclass per status; each overrides only the hooks it needs (the actor-level
+## hooks are in CombatHooks, shared with relic passives; the item-level and lifecycle ones are here). Lives in its
 ## target's `statuses` list; the StatusManager facade calls these hooks at the right moments.
 ##
 ## Stores NO target reference — every hook receives `(target, ctx)` instead. That preserves the
@@ -72,38 +73,6 @@ func on_holder_fired(item, ctx) -> void:
   pass
 
 
-## Called on an ACTOR-targeted status when one of that actor's items FIRES — the actor-level twin of
-## on_holder_fired (which fires for the one item the status sits ON). Receives the firing `item`, so a
-## status can scope to a weapon attack (the Smith empower uses up a stack here). This is the
-## REAL-fire path (not the tooltip preview), so consuming state belongs here, not in outgoing_bonus.
-## Returns true when the status has expired (the Combat manager removes it + runs on_expire);
-## default no-op.
-func on_owner_item_fired(actor, item, ctx) -> bool:
-  return false
-
-
-## Called on an ACTOR-targeted status when an ATTACK delivery lands on that actor (after its damage
-## resolves — docs/systems/mechanics.md → Bleed). Poison/burn ticks, the status's own damage and
-## outside-set damage never call it, so a status cannot repeat within a step. Returns true when the
-## status has expired (the Combat manager removes it + runs on_expire); default no-op.
-func on_holder_attacked(target, ctx) -> bool:
-  return false
-
-
-# --- modifiers (PULL — the engine queries these at the pipeline stage, in statuses-list order,
-#     so composition stays deterministic (#24) and amplify-before-absorb holds (#6)). ---
-
-## This status's bonus to an outgoing ATTACK at fire time, as `{'flat': float, 'percent': float}`
-## (either key may be left out; `percent` is a signed fraction, +1.0 for double, -0.25 for a quarter
-## less). `target` is the status's holder (the owner actor, or the item it sits on); `item` is the
-## firing item, so a status can scope to a weapon attack. StatusManager.combine applies every
-## bonus by the rule in docs/systems/mechanics.md → Combining bonuses. MUST stay PURE — it also runs
-## on the read-only tooltip-preview path (Item.display_value), so nothing here may mutate status
-## state (using up an Empowered stack lives on on_owner_item_fired).
-func outgoing_bonus(target, item = null) -> Dictionary:
-  return {}
-
-
 ## What fills the `{0}`, `{1}` ... placeholders in `desc_key`, in order: an icon as
 ## `{'t': 'icon', 'id': <keyword id>}`, or a String of text. Empty (the default) means the description
 ## has no placeholders. An item that applies a status with placeholders shows the filled-in
@@ -112,22 +81,7 @@ func desc_args() -> Array:
   return []
 
 
-func modify_incoming(amount: float, target, ctx) -> float:
-  return amount
-
-
-## Absorb from an incoming hit, returning the unabsorbed remainder (Shield overrides; mutates pool).
-## `mechanic_id` names the mechanic that dealt the damage — the shield pool spends its multiplier
-## against it (docs/systems/mechanics.md → Shield).
-func absorb(amount: float, incoming_flags: int, target, ctx, mechanic_id: String = '') -> float:
-  return amount
-
-
 func gates_fire() -> bool:
-  return false
-
-
-func causes_evasion() -> bool:
   return false
 
 

@@ -468,6 +468,10 @@ func _drain_uses(it: Item) -> void:
 func _drain_actor_fire_statuses(actor: Actor, item: Item) -> void:
   if actor == null:
     return
+  # Relic passives first (StatusManager.hooks_of order); a passive is never removed during a fight.
+  for relic: Item in actor.relics:
+    for passive: RelicPassive in relic.passives:
+      passive.on_owner_item_fired(actor, item, _ctx)
   var spent: Array[StatusEffect] = []
   for st in actor.statuses.duplicate():
     var hp_before: float = actor.hp
@@ -486,6 +490,10 @@ func _drain_actor_fire_statuses(actor: Actor, item: Item) -> void:
 ## on_holder_attacked (Bleed bites here), surfacing any health loss on the wall + log, then
 ## removing the ones that expired. Iterate a COPY: a bite can kill / remove statuses mid-pass.
 func _on_holder_attacked(target: Actor) -> void:
+  # Relic passives first (StatusManager.hooks_of order); a passive is never removed during a fight.
+  for relic: Item in target.relics:
+    for passive: RelicPassive in relic.passives:
+      passive.on_holder_attacked(target, _ctx)
   var spent: Array[StatusEffect] = []
   for st in target.statuses.duplicate():
     var hp_before: float = target.hp

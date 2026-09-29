@@ -52,7 +52,9 @@ Reclaim keyword instead.
 A **relic** (`item.def is RelicDef`) has no charge line (`TooltipPanel` hides the empty row) and
 its type line reads "Relic". Its lines are, in order: when it fires ("At the start of each fight:",
 "When [poison] is applied:", "When you take damage:"), then its effect lines, its crit chance, and
-its limit ("Once per fight", "N times per fight") (`TooltipContent._relic_lines`). A relic shows
+its limit ("Once per fight", "N times per fight"), then its passives with no heading, each the same
+line an item with that effect shows (`TooltipContent._relic_lines`). Keyword cards come from the
+effects and the passives. A relic shows
 no Trigger or Reclaim keyword card, because its triggers fire it rather than charge it. The
 wording is placeholder copy for the owner.
 
@@ -134,8 +136,8 @@ label so height is computed at the real width.
 tooltip computes display values with **separate pure methods** on `Item`:
 
 - `display_value(effect)` — the value read from a status the owner holds (`per_owner_stack_id`),
-  the enchant, plus, for an attack, the status bonuses on the owner and
-  on the item (`StatusManager.outgoing_bonuses`, e.g. Weak, the attack bonuses), rounded to the
+  the enchant, plus the bonuses from the owner's relic passives and statuses and
+  from the item's statuses (`StatusManager.outgoing_bonuses`, e.g. Weak, the attack bonuses), rounded to the
   whole number that will land (decision #49). Pure.
 - `base_value(effect)` — the authored value × enchant mult (a permanent modifier), rounded the same way.
 

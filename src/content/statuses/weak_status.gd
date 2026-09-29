@@ -16,5 +16,7 @@ func _init() -> void:
   icon = 'res://assets/icons/statuses/skill_loosen_the_weapon_nb.png'
 
 
-func outgoing_bonus(target, item = null) -> Dictionary:
+func outgoing_bonus(target, item = null, mechanic_id: String = AttackMechanic.ID) -> Dictionary:
+  if mechanic_id != AttackMechanic.ID:
+    return {}
   return {'percent': Balance.STATUS_WEAK_DAMAGE_MULT - 1.0}   # blanket — no item/type scope (unlike the empower)

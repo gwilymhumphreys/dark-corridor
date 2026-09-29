@@ -85,10 +85,11 @@ in `StatusManager.combine`:
 (authored value + flat bonuses) × (1 + positive percentages added together) × (negative percentages multiplied together)
 ```
 
-- Each status reports its share through `StatusEffect.outgoing_bonus(target, item)` as a flat
+- Each status or relic passive reports its share through `CombatHooks.outgoing_bonus(target, item, mechanic_id)` as a flat
   amount and a signed percentage, instead of changing the value itself.
-- `StatusManager.outgoing_bonuses(actor, item)` asks the owner's statuses and the firing item's own
-  statuses. Only attack effects get status bonuses.
+- `StatusManager.outgoing_bonuses(actor, item, mechanic_id)` asks the owner's relic passives and
+  statuses and the firing item's own statuses, for every effect. Each decides which mechanics it
+  raises; every current status and passive raises attacks only.
 - The item's enchant counts as a percentage (`value_mult` − 1) and applies to every effect, not
   only attacks.
 - Crit is outside the rule: it multiplies the combined value last (see [Crit](#crit)).

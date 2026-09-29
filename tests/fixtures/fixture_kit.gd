@@ -11,11 +11,13 @@ const POTION_ID: String = 'fixture_potion'
 const ENCHANT_ID: String = 'fixture_enchant'
 const SHIELD_RELIC_ID: String = 'fixture_shield_relic'
 const MAX_HP_RELIC_ID: String = 'fixture_max_hp_relic'
+const PASSIVE_RELIC_ID: String = 'fixture_passive_relic'
 
 const POTION_HEAL: float = 20.0
 const ENCHANT_MULT: float = 1.5
 const RELIC_SHIELD: float = 5.0
 const RELIC_MAX_HP: float = 10.0
+const RELIC_WEAPON_ATTACK_BONUS: float = 3.0
 
 
 ## A potion that heals its thrower.
@@ -61,4 +63,18 @@ static func max_hp_relic() -> RelicDef:
   d.name_key = 'Fixture Health Relic'
   d.max_hp_bonus = RELIC_MAX_HP
   d.panel_colour_name = 'HEAL'
+  return d
+
+
+## A relic whose passive gives each of its owner's weapon items extra attack for the whole fight.
+static func weapon_bonus_relic() -> RelicDef:
+  var d := RelicDef.new()
+  d.id = PASSIVE_RELIC_ID
+  d.name_key = 'Fixture Weapon Relic'
+  d.mechanics = [AttackBonusMechanic.ID]
+  var bonus := ItemEffect.make(AttackBonusMechanic.ID, RELIC_WEAPON_ATTACK_BONUS, ItemEffect.Shape.ALL_OWN_ITEMS)
+  bonus.target_filter = TargetFilter.new()
+  bonus.target_filter.add_type(ItemType.WEAPON)
+  d.passives = [bonus]
+  d.panel_colour_name = 'ATTACK'
   return d

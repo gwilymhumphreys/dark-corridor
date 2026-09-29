@@ -19,7 +19,7 @@ func _init() -> void:
 
 
 ## Only the item this sits on gains the bonus.
-func outgoing_bonus(target, item = null) -> Dictionary:
-  if item != null and target == item:
+func outgoing_bonus(target, item = null, mechanic_id: String = AttackMechanic.ID) -> Dictionary:
+  if item != null and target == item and mechanic_id == AttackMechanic.ID:
     return {'percent': count / 100.0}
   return {}

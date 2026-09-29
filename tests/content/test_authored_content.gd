@@ -84,6 +84,14 @@ func test_catalog_builds_the_fight_start_relic() -> void:
   assert_eq(d.name_key, 'Stone Ward')
 
 
+func test_every_relic_passive_has_a_passive_class() -> void:
+  for def: RelicDef in ContentFolder.load_defs(RelicCatalog.FOLDER).values():
+    for effect: ItemEffect in def.passives:
+      assert_true(PassiveRegistry.has(effect.mechanic),
+          '%s: a passive of mechanic %s needs a class in PassiveRegistry' % [def.id, effect.mechanic])
+  pass_test('checked every relic')
+
+
 func test_catalog_builds_the_max_hp_relic() -> void:
   var d := RelicCatalog.get_def('vital_charm')
   assert_gt(d.max_hp_bonus, 0.0)

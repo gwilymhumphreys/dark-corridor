@@ -3,7 +3,8 @@ extends Node
 ## The status FACADE (docs/systems/status_manager.md) — autoload registered `StatusManager`. Holds NO
 ## instances (they live on their targets, as StatusEffect subclasses). Behaviour is no longer a
 ## switch here: each call delegates to the status instances, looping a target's `statuses` in
-## insertion order so composition stays deterministic (#24). Statuses are keyed by string id (#23);
+## insertion order so composition stays deterministic (#24). The hook calls also reach the passives
+## of an actor's relics, first (hooks_of). Statuses are keyed by string id (#23);
 ## the StatusRegistry builds the right subclass. Globally reachable precisely because it's stateless.
 
 
@@ -31,16 +32,18 @@ func apply(target, id: String, count: float, duration: float = 0.0, source = nul
 
 
 ## The incoming-damage pipeline: amplifiers (Vulnerable) scale up FIRST, then absorbers (Shield)
-## soak the amplified amount (#6). Two passes over the target's statuses so the order holds;
+## soak the amplified amount (#6). Two passes over the target's hooks (hooks_of: relic passives, then
+## statuses) so the order holds;
 ## emptied pools are removed afterward. `mechanic_id` names the mechanic that dealt the damage
 ## (docs/systems/mechanics.md → Shield) — the shield pool spends its multiplier against it.
 ## Returns net damage to HP.
 func resolve_incoming_damage(target, raw: float, flags: int = 0, ctx = null, mechanic_id: String = '') -> float:
   var net: float = raw
-  for s in target.statuses:
-    net = s.modify_incoming(net, target, ctx)
-  for s in target.statuses:
-    net = s.absorb(net, flags, target, ctx, mechanic_id)
+  var hooks: Array[CombatHooks] = hooks_of(target)
+  for h in hooks:
+    net = h.modify_incoming(net, target, ctx)
+  for h in hooks:
+    net = h.absorb(net, flags, target, ctx, mechanic_id)
   _remove_spent(target)
   return maxf(net, 0.0)
 
@@ -51,18 +54,31 @@ func advance_status(status: StatusEffect, target, ctx = null) -> bool:
   return status.on_step(target, ctx)
 
 
-## Every status bonus to an outgoing attack from `item`: those on its owner `actor` (Weak, Empowered)
-## and those on the item itself (the attack bonuses). Either may be null. Pure — this runs in the
-## tooltip-preview path too.
-func outgoing_bonuses(actor, item = null) -> Array[Dictionary]:
+## Every bonus to an outgoing effect of `mechanic_id` from `item`: those from its owner `actor`'s
+## hooks (relic passives, then statuses such as Weak and Empowered) and those from statuses on the
+## item itself (the attack bonuses). Either may be null. Pure — this runs in the tooltip-preview path
+## too.
+func outgoing_bonuses(actor, item = null, mechanic_id: String = AttackMechanic.ID) -> Array[Dictionary]:
   var bonuses: Array[Dictionary] = []
   if actor != null:
-    for s in actor.statuses:
-      bonuses.append(s.outgoing_bonus(actor, item))
+    for h in hooks_of(actor):
+      bonuses.append(h.outgoing_bonus(actor, item, mechanic_id))
   if item != null:
     for s in item.statuses:
-      bonuses.append(s.outgoing_bonus(item, item))
+      bonuses.append(s.outgoing_bonus(item, item, mechanic_id))
   return bonuses
+
+
+## Every hook holder of `actor`, in the fixed order the engine calls them (#24): the passives of its
+## relics in relic order, then its statuses. A non-Actor target (an item) gives its statuses only.
+## A new list — callers may remove statuses from the actor while walking it.
+func hooks_of(target) -> Array[CombatHooks]:
+  var hooks: Array[CombatHooks] = []
+  if target is Actor:
+    for relic: Item in target.relics:
+      hooks.append_array(relic.passives)
+  hooks.append_array(target.statuses)
+  return hooks
 
 
 ## `value` with `bonuses` applied by the combining rule (docs/systems/mechanics.md → Combining
@@ -85,8 +101,8 @@ static func combine(value: float, bonuses: Array[Dictionary]) -> float:
 ## True if `actor` carries any status that causes evasion (Blind) — the engine asks the instances,
 ## never a status name (#23).
 func has_evasion(actor) -> bool:
-  for s in actor.statuses:
-    if s.causes_evasion():
+  for h in hooks_of(actor):
+    if h.causes_evasion():
       return true
   return false
 
