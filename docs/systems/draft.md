@@ -18,7 +18,7 @@ What it **is not**:
 
 - **Not the pool's *contents*.** `Meta-progression` owns what's unlocked into the pool; `Draft` pulls from it and never reaches into meta internals (architecture). It reads the pool, doesn't define it. The pool handed in is **character-scoped** (decision #27 — per-character item pools); `Draft` stays **pool-agnostic** — it draws from whatever pool the `Run manager` hands it.
 - **Not run-state.** It produces candidates; the **`Run manager` holds the pending offer and applies the pick** to run-state (board / potion slots / enchant target / relics). `Draft` writes nothing.
-- **Not the relic rewards.** Boss and elite relics are granted directly by the `Run manager`, and the relic encounter's pick-one-of-three offer is drawn by the `Run manager` too (`_draw_relic_offer` / `apply_relic_pick`), not through `Draft`; `Draft` is the 1-of-3 item draw.
+- **Not the boss and elite relics.** Those are granted directly by the `Run manager`. `Draft` draws a fight's 1-of-3 items (`draw`) and a reward encounter's goods (`draw_stock`, items, relics and potions from its stock entries — [encounter.md → Reward encounters](encounter.md#reward-encounters)).
 - **Not presentation.** The offer is presented + inspected by `UI` (tooltips on hover — the draft is a paused, between-fights decision, no combat clock).
 
 ---
@@ -35,7 +35,7 @@ The offer is `Draftable`-generic — it draws item / enchant / potion definition
 
 ## Skip for gold, no hidden weighting (two design constraints)
 
-- **Skip → bank gold (decision #33, reverses the original no-skip).** The player may take one of the three **or skip the offer to bank a fixed amount of gold** instead. Originally the draft was no-skip (no cap → taking one is always correct); that *forced* an anti-synergy card on a focused build, so skip is the escape hatch and gold a small consolation (the first **source** of a future gold economy — no sink yet). **The skip is the Run manager's, not `Draft`'s:** `Draft` still just produces candidates; `RunManager.apply_draft_skip()` (a sibling of `apply_draft_pick()`) resolves the pending offer, banking `Balance.GOLD_SKIP` (placeholder). Neither a pick nor a skip draws the run RNG. The reward panel's gold button shows the amount (`'+{0} gold'`). The draft still always **resolves** — by a pick or a skip.
+- **Skip → bank gold (decision #33, reverses the original no-skip).** The player may take one of the three **or skip the offer to bank a fixed amount of gold** instead. Originally the draft was no-skip (no cap → taking one is always correct); that *forced* an anti-synergy card on a focused build, so skip is the escape hatch and gold a small consolation (one **source** of the gold spent in shops). **The skip is the Run manager's, not `Draft`'s:** `Draft` still just produces candidates; `RunManager.apply_draft_skip()` (a sibling of `apply_draft_pick()`) resolves the pending offer, banking `Balance.GOLD_SKIP` (placeholder). Neither a pick nor a skip draws the run RNG. The reward panel's gold button shows the amount (`'+{0} gold'`). The draft still always **resolves** — by a pick or a skip.
 - **No hidden weighting toward the build/archetype.** Weighting is **depth/rarity only** — never the player's current board or a character archetype. Hidden pool-reweighting toward "what you already have" is rejected (design: it collapses the synergy decision, hides mechanics, punishes experimentation). Guided drafting, if ever wanted, is a *visible* milestone choice — never an opaque reweight. *(Note: the **pool itself** being character-scoped — #27 — is the pool's **contents**, not weighting. Per-character pools are the chosen alternative to hidden archetype weighting — focus comes from which pool you draw, not from biasing the draw — so they're consistent with this constraint, not an exception to it.)*
 
 ## The pick & its application
@@ -57,14 +57,14 @@ The player picks one candidate (a `draft pick` intent — architecture); the **`
 - The **pick** routed through the `Run manager` → added to the board; **or a skip** → `RunManager.apply_draft_skip()` banks gold and clears the offer (decision #33).
 - Slot composition + depth-weighting stubbed minimally (mostly items; the enchant/potion roll + rarity odds are tuning).
 
-**Not** in scope: the enchant/potion slot chances, full rarity-by-depth weighting, the enchant-target / potion-drop sub-choices, relic offers.
+**Not** in scope: the enchant/potion slot chances, full rarity-by-depth weighting, the enchant-target / potion-drop sub-choices.
 
 ---
 
 ## Open / deferred
 
 - **Slot chances** (item vs enchant vs potion per slot) + **rarity-by-depth odds** — tuning (design's pool work).
-- **Relic offers** — built outside `Draft`: the relic encounter offers a pick of relics (`RunManager._draw_relic_offer`), and bosses and elites grant one directly. Whether relics ever join the item draw is open.
+- **Relics in a fight's draft** — relics are offered by reward encounters (`draw_stock`), and bosses and elites grant one directly. Whether relics ever join a fight's item draw is open.
 - **Enchant-target / potion-drop sub-choices** — the UI interactions when a picked enchant needs a target or a potion needs a slot — a UI pass (the choices are intents the `Run manager` applies).
 - **Draftable definition format — resolved (#23):** typed GDScript def objects + catalogs, keyed by **string id**. **Pool data:** the live draw pool is the **character's item pool + the shared colorless pool** (#27, built — `RunManager._draft_pool()`); what's *unlocked* into a character's pool is `Meta-progression` / content.
 - **RNG — resolved (#20):** the draw uses the `Run manager`'s run RNG (full state saved for deterministic resume), handed in by the `Run manager`.

@@ -136,8 +136,8 @@ for each def's fields and how it resolves.
   Size it to its act's points range in [`encounter_points_budget.md`](../plans/encounter_points_budget.md).
   Make it live by adding its id to an act's `REGULAR` or `BOSS` list in `enemies/enemy_pools.gd`. The
   image steps and the list rules are in [enemy.md](../systems/enemy.md).
-- An **encounter** is an `EncounterDef` (`content/encounters/<id>.gd`): a fight, an event, a rest or
-  the relic encounter. To offer it before fights, add its id to one of the three card position lists
+- An **encounter** is an `EncounterDef` (`content/encounters/<id>.gd`): a fight, an event, a rest, a
+  reward or a shop. To offer it before fights, add its id to one of the three card position lists
   in `encounters/encounter_pools.gd` (the left list is for shops). It can set `rarity`
   (`Rarity.COMMON` or `Rarity.RARE`), `requires` (conditions that must all hold, or it is never
   offered) and `weights` (rules that make it more or less likely while their condition holds). Each
@@ -164,6 +164,21 @@ for each def's fields and how it resolves.
   take.effects = [RunEffect.gold(-5), RunEffect.gain_relic('vital_charm')]
   take.requires = [FlagAtLeast.new('offering_left'), GoldAtLeast.new(5)]   # an option that costs gold requires it
   ```
+
+  A reward encounter (`type = Type.REWARD`) lists its goods in `stock`: `StockEntry.items(n)` (with
+  optional item type tags), `StockEntry.relics(n)` and `StockEntry.potions(n)`, drawn in that order.
+  The player picks one or skips them for gold. Relics come from `RelicCatalog.REWARD_POOL`, leaving
+  out the relics the player already holds, and potions from
+  `ConsumableCatalog.REWARD_POOL` ([encounter.md → Reward encounters](../systems/encounter.md#reward-encounters)).
+
+  ```gdscript
+  type = Type.REWARD
+  stock = [StockEntry.items(2, [ItemType.WEAPON]), StockEntry.potions(1)]
+  ```
+
+  A shop (`type = Type.SHOP`) lists its goods the same way; its theme is its name and its stock.
+  Prices are `Balance.SHOP_PRICE_*` by kind and rarity
+  ([encounter.md → Shops](../systems/encounter.md#shops)).
 
 - **Enemies are shared by every character** and the **reward-relic pool stays shared** — only *item*
   pools split per character (#27).

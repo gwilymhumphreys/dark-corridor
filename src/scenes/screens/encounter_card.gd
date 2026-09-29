@@ -25,8 +25,10 @@ func _kind_name(def: EncounterDef) -> String:
       return tr('Event')
     EncounterDef.Type.REST:
       return tr('Rest')
-    EncounterDef.Type.RELIC:
-      return tr('Relic')
+    EncounterDef.Type.REWARD:
+      return tr('Reward')
+    EncounterDef.Type.SHOP:
+      return tr('Shop')
   return tr('Fight')
 
 
@@ -34,9 +36,27 @@ func _hint_text(def: EncounterDef) -> String:
   match def.type:
     EncounterDef.Type.REST:
       return tr('Recover health')
-    EncounterDef.Type.RELIC:
-      return tr('Choose a relic')
+    EncounterDef.Type.REWARD:
+      return _reward_hint(def.stock)
+    EncounterDef.Type.SHOP:
+      return tr('Spend your gold')
   return ''
+
+
+# What a reward encounter's card promises: the kind of goods when there is only one kind.
+func _reward_hint(stock: Array[StockEntry]) -> String:
+  var kinds: Array[int] = []
+  for entry: StockEntry in stock:
+    if not entry.kind in kinds:
+      kinds.append(entry.kind)
+  if kinds.size() != 1:
+    return tr('Choose a reward')
+  match kinds[0]:
+    StockEntry.Kind.RELIC:
+      return tr('Choose a relic')
+    StockEntry.Kind.POTION:
+      return tr('Choose a potion')
+  return tr('Choose an item')
 
 
 func _kind_color(def: EncounterDef) -> Color:
@@ -45,6 +65,8 @@ func _kind_color(def: EncounterDef) -> Color:
       return Colours.BEAT_EVENT
     EncounterDef.Type.REST:
       return Colours.BEAT_REST
-    EncounterDef.Type.RELIC:
+    EncounterDef.Type.REWARD:
       return Colours.BEAT_RELIC
+    EncounterDef.Type.SHOP:
+      return Colours.BEAT_SHOP
   return Colours.BEAT_COMBAT

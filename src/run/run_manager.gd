@@ -29,9 +29,6 @@ const COMBAT_SEED_STRIDE: int = 1000003
 # avoid offering a "join me" choice that can't be filled.
 const MAX_ALLIES: int = 4
 
-# How many relics the relic encounter offers to choose from.
-const RELIC_OFFER_COUNT: int = 3
-
 # Run-state (the snapshot persists exactly this). `position` is the global beat index
 # (0 .. RunMap.TOTAL_BEATS-1); the act/beat-within-act are derived (RunMap).
 var player: Actor
@@ -73,8 +70,14 @@ var _pending_choice: Array[String] = []
 ## What the last fight won gave the player before its reward: { 'health': int, 'gold': int }. The
 ## draft panel shows it.
 var last_fight_gain: Dictionary = {}
-var _pending_offer: Array[ItemDef] = []   # the held draft offer (1-of-3)
-var _pending_relic_offer: Array[RelicDef] = []   # the relic encounter's offer (pick one)
+# The held offer the player picks one of: a fight's draft (items) or a reward encounter's goods (a
+# mix of ItemDef, RelicDef and ConsumableDef). Either can be skipped for gold (apply_draft_skip).
+var _pending_offer: Array = []
+# The open shop's goods (ItemDef, RelicDef or ConsumableDef) and which of them are sold, by index.
+# Empty when no shop is open. Not saved: a resume re-enters the shop and draws the same goods, with
+# the gold as it was when the shop was picked.
+var _shop_goods: Array = []
+var _shop_sold: Array[bool] = []
 var _ended: bool = false
 var _outcome: int = Outcome.WON
 var _torn_down: bool = false
@@ -105,7 +108,7 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   position = 0
   _ended = false
   _pending_offer = []
-  _pending_relic_offer = []
+  _close_shop()
   _current_def_id = ''
   _pending_choice = []
   allies = []                  # no starting allies by default (the owner wires acquisition)
@@ -277,8 +280,11 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
       _pending_offer = Draft.draw(_draft_pool(), position, rng)
     EncounterDef.Reward.RELIC:
       _grant_relic()                                          # an act boss
-    EncounterDef.Reward.RELIC_CHOICE:
-      _pending_relic_offer = _draw_relic_offer()              # the relic encounter: pick one
+    EncounterDef.Reward.GOODS:
+      _pending_offer = Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng)   # a reward encounter
+    EncounterDef.Reward.SHOP:
+      _shop_goods = Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng)
+      _shop_sold.assign(_shop_goods.map(func(_good: Variant) -> bool: return false))
     EncounterDef.Reward.ELITE:
       _grant_relic()                                          # an elite is richer: a relic AND
       _pending_offer = Draft.draw(_draft_pool(), position, rng)   # a draft (reward asymmetry, #2)
@@ -295,6 +301,23 @@ func _apply_fight_won_gain() -> void:
   last_fight_gain = { 'health': player.hp - health_before, 'gold': Balance.FIGHT_WON_GOLD }
 
 
+## The reward relics the player does not hold yet: RelicCatalog.REWARD_POOL minus the relics held, in
+## pool order. Every relic reward draws from this, so the player never gets the same relic twice. It
+## is worked out from the relics held, so it needs no saving.
+func relic_pool() -> Array[String]:
+  var held: Array = relics.map(func(relic: Relic) -> String: return relic.def.id)
+  var pool: Array[String] = []
+  for id: String in RelicCatalog.REWARD_POOL:
+    if not id in held:
+      pool.append(id)
+  return pool
+
+
+## Whether a reward encounter with `stock` would offer at least one good now (EncounterDef.offer_weight).
+func can_draw_stock(stock: Array[StockEntry]) -> bool:
+  return Draft.can_draw_stock(stock, _draft_pool(), relic_pool())
+
+
 ## The draft pool handed to Draft (#27): the chosen character's pool plus the shared
 ## colorless items (the exception-that-earns-it). Draft stays pool-agnostic — it draws
 ## from whatever this composes.
@@ -305,43 +328,14 @@ func _draft_pool() -> Array:
 ## Grant a relic reward (#2): draw one from the reward pool on the run RNG (so it's
 ## deterministic + resume-stable), add it to run-state, and apply any one-time direct mod.
 func _grant_relic() -> void:
-  var pool: Array = RelicCatalog.REWARD_POOL
+  var pool: Array[String] = relic_pool()
   if pool.is_empty():
-    push_warning('RunManager: a relic reward fired but RelicCatalog.REWARD_POOL is empty — nothing granted')
+    push_warning('RunManager: a relic reward fired but the player holds every reward relic — nothing granted')
     return
   var id: String = pool[rng.randi_range(0, pool.size() - 1)]
   var relic := Relic.new(RelicCatalog.get_def(id))
   relics.append(relic)
   _apply_relic_grant(relic)
-
-
-## The relic encounter's offer: up to RELIC_OFFER_COUNT different relics from the reward pool,
-## drawn on the run RNG (deterministic + resume-stable, like a draft).
-func _draw_relic_offer() -> Array[RelicDef]:
-  var pool: Array = RelicCatalog.REWARD_POOL.duplicate()
-  var offer: Array[RelicDef] = []
-  while not pool.is_empty() and offer.size() < RELIC_OFFER_COUNT:
-    offer.append(RelicCatalog.get_def(pool.pop_at(rng.randi_range(0, pool.size() - 1))))
-  return offer
-
-
-func has_pending_relic_offer() -> bool:
-  return not _pending_relic_offer.is_empty()
-
-
-func pending_relic_offer() -> Array:
-  return _pending_relic_offer
-
-
-## Apply the player's pick from the relic offer: add the relic to run-state, apply its one-time
-## effect, clear the offer.
-func apply_relic_pick(index: int) -> void:
-  if _pending_relic_offer.is_empty():
-    return
-  var relic := Relic.new(_pending_relic_offer[clampi(index, 0, _pending_relic_offer.size() - 1)])
-  relics.append(relic)
-  _apply_relic_grant(relic)
-  _pending_relic_offer = []
 
 
 ## Fire a newly granted relic's PICKED_UP run triggers, once. Their result is kept in the saved
@@ -401,34 +395,105 @@ func flag(flag_name: String) -> int:
   return int(flags.get(flag_name, 0))
 
 
+## True while an offer waits for the player: a fight's draft or a reward encounter's goods.
 func has_pending_draft() -> bool:
   return not _pending_offer.is_empty()
 
 
+## The offered goods: ItemDef, RelicDef or ConsumableDef.
 func pending_draft() -> Array:
   return _pending_offer
 
 
-## Apply the player's draft pick (a draft-pick intent) — add the chosen item to the
-## board, clear the offer. Skipping instead banks gold — apply_draft_skip.
+## Apply the player's pick from the offer (a draft-pick intent): an item goes on the board, a relic
+## to the relics (its PICKED_UP triggers fire), a potion to the potions. Clears the offer. Skipping
+## instead banks gold — apply_draft_skip.
 func apply_draft_pick(index: int) -> void:
   if _pending_offer.is_empty():
     return
-  var picked: ItemDef = _pending_offer[clampi(index, 0, _pending_offer.size() - 1)]
-  player.board.append(Item.new(picked, player))
+  var picked: Variant = _pending_offer[clampi(index, 0, _pending_offer.size() - 1)]
   _pending_offer = []
+  _gain(picked)
 
 
-## Skip the pending draft (a draft-skip intent, the sibling of apply_draft_pick): bank a fixed
-## amount of gold (Balance.GOLD_SKIP) instead of taking an item, then clear the offer. The escape
-## hatch from an anti-synergy draft (docs decision #33 — reverses #17's no-skip). Draws no run RNG,
-## like a pick.
+# Give the player one of the goods: an item goes on the board, a relic to the relics (its PICKED_UP
+# triggers fire), a potion to the potions. Relics and potions are item definitions too, so they are
+# checked first.
+func _gain(good: Variant) -> void:
+  if good is RelicDef:
+    var relic := Relic.new(good)
+    relics.append(relic)
+    _apply_relic_grant(relic)
+  elif good is ConsumableDef:
+    potions.append(Consumable.new(good))
+  elif good is ItemDef:
+    player.board.append(Item.new(good, player))
+
+
+## Skip the pending offer (a draft-skip intent, the sibling of apply_draft_pick): bank a fixed
+## amount of gold (Balance.GOLD_SKIP) instead of taking one, then clear the offer. The escape hatch
+## from an anti-synergy draft (docs decision #33 — reverses #17's no-skip), and a way to change one's
+## mind after picking a reward encounter. Draws no run RNG, like a pick.
 func apply_draft_skip() -> void:
   if _pending_offer.is_empty():
     return
   gold += Balance.GOLD_SKIP
   _pending_offer = []
   _fire_run_event(RunEvent.DRAFT_SKIPPED)
+
+
+# --- the shop (docs/systems/encounter.md → Shops) ------------------------------
+
+## True while a shop is open: the player buys what they want and then leaves (leave_shop).
+func has_open_shop() -> bool:
+  return not _shop_goods.is_empty()
+
+
+## The open shop's goods, in stock order: ItemDef, RelicDef or ConsumableDef. Sold goods stay in the
+## list (is_sold).
+func shop_goods() -> Array:
+  return _shop_goods
+
+
+func is_sold(index: int) -> bool:
+  return index >= 0 and index < _shop_sold.size() and _shop_sold[index]
+
+
+## What a shop charges for `good`: a Balance value by its kind (item, relic, potion) and rarity.
+static func price_of(good: Variant) -> int:
+  var prices: Array[int] = Balance.SHOP_PRICE_ITEM
+  if good is RelicDef:
+    prices = Balance.SHOP_PRICE_RELIC
+  elif good is ConsumableDef:
+    prices = Balance.SHOP_PRICE_POTION
+  return prices[clampi(good.rarity, 0, prices.size() - 1)]
+
+
+## Whether the player can buy the good at `index` now: it is on sale, not sold, and affordable.
+func can_buy(index: int) -> bool:
+  return index >= 0 and index < _shop_goods.size() and not _shop_sold[index] \
+    and gold >= price_of(_shop_goods[index])
+
+
+## Buy the good at `index`: pay its price and gain it. Returns false, changing nothing, when it
+## cannot be bought (can_buy). Draws no run RNG.
+func buy(index: int) -> bool:
+  if not can_buy(index):
+    return false
+  gold -= price_of(_shop_goods[index])
+  _shop_sold[index] = true
+  _gain(_shop_goods[index])
+  return true
+
+
+## Leave the open shop. The caller then advances.
+func leave_shop() -> void:
+  _close_shop()
+
+
+func _close_shop() -> void:
+  _shop_goods = []
+  _shop_sold = []
 
 
 ## Whether the player side has a free ally slot (cap = MAX_ALLIES). The gating surface for
@@ -519,9 +584,9 @@ func advance() -> void:
     # drop the offer loudly rather than carry it unsaved into the next beat.
     push_error('RunManager.advance: advancing past an unconsumed draft offer — dropping it')
     _pending_offer = []
-  if not _pending_relic_offer.is_empty():
-    push_error('RunManager.advance: advancing past an unconsumed relic offer — dropping it')
-    _pending_relic_offer = []
+  if has_open_shop():
+    push_error('RunManager.advance: advancing without leaving the shop — closing it')
+    _close_shop()
   if not _pending_choice.is_empty():
     push_error('RunManager.advance: advancing past an unpicked choice of encounters — dropping it')
     _pending_choice = []
@@ -709,7 +774,7 @@ func rehydrate(snap: Dictionary) -> bool:
   rng.state = int(snap['rng']['state'])
   _ended = false
   _pending_offer = []
-  _pending_relic_offer = []
+  _close_shop()
   # Restore the current beat exactly — the offered encounters or the encounter — never redraw it
   # (no save-scum).
   _pending_choice = []
@@ -773,4 +838,5 @@ func teardown() -> void:
   flags.clear()
   times_picked.clear()
   _pending_offer.clear()
+  _close_shop()
   _pending_choice.clear()

@@ -70,8 +70,6 @@ func _play_one_beat(run: RunManager, pick: int) -> void:
     return
   if run.has_pending_draft():
     run.apply_draft_pick(pick)
-  if run.has_pending_relic_offer():
-    run.apply_relic_pick(0)
   run.advance()
 
 
@@ -642,7 +640,7 @@ func test_the_run_opens_on_a_choice_of_three() -> void:
   run.start(1, FixtureCharacter.ID)
   assert_true(run.has_pending_choice(), 'a choice of encounters comes before the first fight')
   assert_null(run.current_encounter(), 'with no encounter until one is picked')
-  var expected: Array[String] = [FixtureEncounters.REST, FixtureEncounters.EVENT, FixtureEncounters.RELIC]
+  var expected: Array[String] = [FixtureEncounters.REST, FixtureEncounters.EVENT, FixtureEncounters.REWARD]
   assert_eq(run.pending_choice(), expected, 'one from each position list, left to right')
 
 
@@ -667,7 +665,7 @@ func test_walking_past_banks_gold_and_leads_to_the_fight() -> void:
 
 
 func test_an_empty_position_takes_an_encounter_from_the_other_lists() -> void:
-  EncounterPools._positions = [[], [FixtureEncounters.EVENT], [FixtureEncounters.REST, FixtureEncounters.RELIC]]
+  EncounterPools._positions = [[], [FixtureEncounters.EVENT], [FixtureEncounters.REST, FixtureEncounters.REWARD]]
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   var offer: Array = run.pending_choice()
@@ -704,7 +702,7 @@ func _extra_encounter(id: String) -> EncounterDef:
 func test_an_encounter_the_player_cannot_choose_is_never_offered() -> void:
   _extra_encounter('test_extra')
   EncounterCatalog.get_def(FixtureEncounters.EVENT).requires = [GoldAtLeast.new(999)]
-  EncounterPools._positions = [[FixtureEncounters.REST], [FixtureEncounters.EVENT, 'test_extra'], [FixtureEncounters.RELIC]]
+  EncounterPools._positions = [[FixtureEncounters.REST], [FixtureEncounters.EVENT, 'test_extra'], [FixtureEncounters.REWARD]]
   for run_seed: int in range(20):
     var run := _run()
     run.start(run_seed, FixtureCharacter.ID)
@@ -760,21 +758,200 @@ func test_the_drawn_beat_survives_resume() -> void:
   assert_eq(run_b._current_def_id, def_id, 'the drawn encounter is restored (not redrawn)')
 
 
-func test_the_relic_encounter_offers_a_choice_of_relics() -> void:
+func test_the_reward_encounter_offers_its_stock() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.pick_path(FixtureEncounters.CHOICE_RELIC)
-  assert_eq(run._current_def_id, FixtureEncounters.RELIC, 'the relic encounter was picked')
+  run.pick_path(FixtureEncounters.CHOICE_REWARD)
+  assert_eq(run._current_def_id, FixtureEncounters.REWARD, 'the reward encounter was picked')
   run.begin_current()
-  assert_true(run.has_pending_relic_offer(), 'the relic encounter resolves at once with a relic offer')
-  var offer: Array = run.pending_relic_offer()
-  assert_eq(offer.size(), mini(RunManager.RELIC_OFFER_COUNT, RelicCatalog.REWARD_POOL.size()), 'up to three relics')
+  assert_true(run.has_pending_draft(), 'the reward encounter resolves at once with an offer')
+  var offer: Array = run.pending_draft()
+  assert_eq(offer.size(), mini(FixtureEncounters.REWARD_RELICS, RelicCatalog.REWARD_POOL.size()), 'up to three relics')
   var picked: RelicDef = offer[1]
   var before: int = run.relics.size()
-  run.apply_relic_pick(1)
+  run.apply_draft_pick(1)
   assert_eq(run.relics.size(), before + 1, 'the pick adds one relic')
   assert_eq(run.relics[-1].def, picked, 'the one picked')
-  assert_false(run.has_pending_relic_offer(), 'and clears the offer')
+  assert_false(run.has_pending_draft(), 'and clears the offer')
+
+
+# --- the shop (docs/systems/encounter.md → Shops) -------------------------------
+
+## Start a run whose opening choice has the fixture shop on the left, and walk into the shop.
+func _start_in_shop(run: RunManager, gold: int) -> void:
+  EncounterPools._positions = [[FixtureEncounters.SHOP], [FixtureEncounters.EVENT], [FixtureEncounters.REWARD]]
+  run.start(1, FixtureCharacter.ID)
+  run.gold = gold
+  run.pick_path(0)
+  run.begin_current()
+
+
+func test_a_shop_opens_with_goods_from_its_stock() -> void:
+  var run := _run()
+  _start_in_shop(run, 0)
+  assert_true(run.has_open_shop(), 'the shop opens when it begins')
+  var goods: Array = run.shop_goods()
+  assert_eq(goods.size(), FixtureEncounters.SHOP_ITEMS + 2, 'its items, a relic and a potion')
+  assert_true(goods[-2] is RelicDef, 'the relic')
+  assert_true(goods[-1] is ConsumableDef, 'the potion')
+  assert_false(run.has_pending_draft(), 'a shop is not a draft')
+
+
+func test_buying_pays_the_price_and_gives_the_good() -> void:
+  var run := _run()
+  _start_in_shop(run, 100)
+  var board: int = run.player.board.size()
+  var price: int = RunManager.price_of(run.shop_goods()[0])
+  assert_true(run.buy(0), 'an affordable good is bought')
+  assert_eq(run.gold, 100 - price, 'its price is paid')
+  assert_eq(run.player.board.size(), board + 1, 'the item goes on the board')
+  assert_true(run.is_sold(0), 'and is sold')
+  assert_false(run.buy(0), 'so it cannot be bought again')
+  assert_eq(run.gold, 100 - price, 'and no more gold is taken')
+
+
+func test_a_good_the_player_cannot_afford_is_not_bought() -> void:
+  var run := _run()
+  _start_in_shop(run, 0)
+  var board: int = run.player.board.size()
+  assert_false(run.can_buy(0), 'no gold, no sale')
+  assert_false(run.buy(0), 'the purchase is refused')
+  assert_eq(run.player.board.size(), board, 'nothing was gained')
+  assert_eq(run.gold, 0, 'and nothing paid')
+
+
+func test_buying_relics_and_potions() -> void:
+  var run := _run()
+  _start_in_shop(run, 100)
+  var relic: RelicDef = run.shop_goods()[-2]
+  var potions: int = run.potions.size()
+  run.buy(run.shop_goods().size() - 2)
+  run.buy(run.shop_goods().size() - 1)
+  assert_eq(run.relics[-1].def, relic, 'the relic is held')
+  assert_false(relic.id in run.relic_pool(), 'and leaves the relic pool')
+  assert_eq(run.potions.size(), potions + 1, 'the potion is added')
+
+
+func test_leaving_the_shop_closes_it() -> void:
+  var run := _run()
+  _start_in_shop(run, 0)
+  run.leave_shop()
+  assert_false(run.has_open_shop(), 'the shop is closed')
+  run.advance()
+  assert_false(run.is_ended(), 'and the run goes on to the fight')
+
+
+func test_a_resumed_shop_has_the_same_goods_and_the_gold_unspent() -> void:
+  var run := _run()
+  EncounterPools._positions = [[FixtureEncounters.SHOP], [FixtureEncounters.EVENT], [FixtureEncounters.REWARD]]
+  run.start(1, FixtureCharacter.ID)
+  run.gold = 100
+  run.pick_path(0)   # saves the picked shop
+  var snap: Dictionary = run.snapshot()
+  run.begin_current()
+  run.buy(0)
+  var run_b := _run()
+  run_b.rehydrate(snap)
+  run_b.begin_current()
+  assert_eq(run_b.shop_goods(), run.shop_goods(), 'the same goods')
+  assert_eq(run_b.gold, 100, 'with the gold as it was when the shop was picked')
+  assert_false(run_b.is_sold(0), 'and nothing sold')
+
+
+func test_prices_follow_the_kind_and_rarity_of_the_goods() -> void:
+  var item: ItemDef = FixtureItems.attack()
+  assert_eq(RunManager.price_of(item), Balance.SHOP_PRICE_ITEM[item.rarity], 'an item')
+  item.rarity = ItemDef.Rarity.RARE
+  assert_eq(RunManager.price_of(item), Balance.SHOP_PRICE_ITEM[ItemDef.Rarity.RARE], 'a rare item')
+  var relic: RelicDef = FixtureKit.shield_relic()
+  assert_eq(RunManager.price_of(relic), Balance.SHOP_PRICE_RELIC[relic.rarity], 'a relic')
+  var potion: ConsumableDef = FixtureKit.potion()
+  assert_eq(RunManager.price_of(potion), Balance.SHOP_PRICE_POTION[potion.rarity], 'a potion')
+
+
+func test_the_relic_pool_leaves_out_held_relics() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var held: String = RelicCatalog.REWARD_POOL[0]
+  run._apply_run_effect(RunEffect.gain_relic(held))
+  assert_false(held in run.relic_pool(), 'a held relic is out of the pool')
+  assert_eq(run.relic_pool().size(), RelicCatalog.REWARD_POOL.size() - 1, 'the rest are still in it')
+
+
+func test_relic_grants_never_repeat_a_relic() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  for _i in RelicCatalog.REWARD_POOL.size() + 1:
+    run._grant_relic()
+  var ids: Array = run.relics.map(func(relic: Relic) -> String: return relic.def.id)
+  assert_eq(ids.size(), RelicCatalog.REWARD_POOL.size(), 'one grant per relic in the pool, then nothing')
+  for id: String in ids:
+    assert_eq(ids.count(id), 1, 'each relic once')
+
+
+func test_a_reward_encounter_does_not_offer_a_held_relic() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var held: String = RelicCatalog.REWARD_POOL[0]
+  run._apply_run_effect(RunEffect.gain_relic(held))
+  run.pick_path(FixtureEncounters.CHOICE_REWARD)
+  run.begin_current()
+  for def: RelicDef in run.pending_draft():
+    assert_ne(def.id, held, 'the held relic is not offered')
+
+
+func test_a_reward_encounter_with_nothing_to_offer_is_not_offered() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var def: EncounterDef = EncounterCatalog.get_def(FixtureEncounters.REWARD)
+  assert_gt(def.offer_weight(run), 0.0, 'offered while relics are left')
+  for id: String in RelicCatalog.REWARD_POOL:
+    run._apply_run_effect(RunEffect.gain_relic(id))
+  assert_eq(def.offer_weight(run), 0.0, 'not offered once every reward relic is held')
+
+
+func test_the_reward_offer_is_the_same_after_resume() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.pick_path(FixtureEncounters.CHOICE_REWARD)   # saves the picked encounter
+  var run_b := _run()
+  run_b.rehydrate(run.snapshot())
+  run.begin_current()
+  run_b.begin_current()
+  assert_eq(run_b.pending_draft(), run.pending_draft(), 'the resumed reward draws the same goods')
+
+
+func test_picking_a_relic_fires_its_pickup_trigger() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var before_max: int = run.player.max_hp
+  run._pending_offer = [FixtureKit.max_hp_relic()]
+  run.apply_draft_pick(0)
+  assert_eq(run.player.max_hp, before_max + FixtureKit.RELIC_MAX_HP, 'the relic raised maximum health')
+
+
+func test_picking_a_potion_adds_it_to_the_potions() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var before: int = run.potions.size()
+  var board: int = run.player.board.size()
+  run._pending_offer = [FixtureKit.potion()]
+  run.apply_draft_pick(0)
+  assert_eq(run.potions.size(), before + 1, 'the potion was added')
+  assert_eq(run.potions[-1].def.id, FixtureKit.POTION_ID, 'the one offered')
+  assert_eq(run.player.board.size(), board, 'and nothing went on the board')
+
+
+func test_a_reward_encounter_can_be_skipped_for_gold() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.pick_path(FixtureEncounters.CHOICE_REWARD)
+  run.begin_current()
+  var relic_count: int = run.relics.size()
+  run.apply_draft_skip()
+  assert_eq(run.gold, Balance.GOLD_SKIP, 'the skip banks gold')
+  assert_eq(run.relics.size(), relic_count, 'and takes no relic')
+  assert_false(run.has_pending_draft(), 'and clears the offer')
 
 
 # --- after each fight -------------------------------------------------------

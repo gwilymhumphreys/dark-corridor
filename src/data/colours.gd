@@ -51,6 +51,7 @@ static var BEAT_BOSS: Color = Color(0.7, 0.4, 0.9)
 static var BEAT_RELIC: Color = Color(0.85, 0.7, 0.3)
 static var BEAT_REST: Color = Color(0.4, 0.75, 0.45)
 static var BEAT_EVENT: Color = Color(0.45, 0.55, 0.8)
+static var BEAT_SHOP: Color = Color(0.55, 0.45, 0.3)
 static var BEAT_COMBAT: Color = Color(0.7, 0.35, 0.35)
 
 # ── Combat view (portraits, HP bars, cooldown ring, ally state) ──────────────

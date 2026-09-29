@@ -43,6 +43,8 @@ The `Run manager` instantiates the picked Encounter; it resolves by type, then r
 
 - **Fight** (regular / elite / boss) — spawn the authored enemy `Actor`s from their definitions ([Enemy PRD](enemy.md)), set their **left-to-right ordering** (composition: tank in front, adds before boss — design), and create the `Combat manager` with the player + enemy `Actor`s (+ any run-scoped allies) + ordering. Await win/loss. **Loss** → report **died** (the `Run manager` signals run-ended up to `Game`). **Win** → report the reward.
 - **Event** — present the prose + the options whose conditions hold (a UI intent — the player picks one); the `Run manager` applies the option's run effects ([Event options](#event-options)), then `resolve_event()` resolves the beat. Events are lore + a tradeoff (design); effects change the run directly, not through the combat path. If the effects killed the player the beat resolves **LOST** on the spot — the run ends there, never a dead player walking to the next fight.
+- **Reward** (offered before a fight) — no fight: resolves on `begin()` with the `GOODS` reward, and the `Run manager` offers goods drawn from the def's `stock` ([Reward encounters](#reward-encounters)).
+- **Shop** (offered before a fight, from the left card position) — no fight: resolves on `begin()` with the `SHOP` reward, and the `Run manager` opens the shop with goods drawn from the def's `stock` ([Shops](#shops)).
 - **Rest** (an in-act small rest, offered before a fight) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()`. No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
 
 ## Offer rules
@@ -99,6 +101,43 @@ take.requires = [FlagAtLeast.new('offering_left'), GoldAtLeast.new(5)]
 
 An event with no available option is never offered, so an event always has at least one option to pick.
 
+## Reward encounters
+
+**Location:** `StockEntry` (`src/content/encounters/stock_entry.gd`), `Draft.draw_stock`.
+
+A reward encounter (`Type.REWARD`) lists what it offers in `stock`, one `StockEntry` per line, and the player picks one of the goods drawn from it in the draft panel, or skips them for gold like a fight's draft, so the player can change their mind after picking the encounter.
+
+| `StockEntry` builder | Draws |
+|---|---|
+| `items(n, types = [])` | `n` items from the character's pool plus the colourless items, only those with one of the type tags when `types` is given. They repeat only when too few items match. |
+| `relics(n)` | Up to `n` different relics from the run's relic pool (`RunManager.relic_pool`: the reward relics the player does not hold). |
+| `potions(n)` | Up to `n` different potions from `ConsumableCatalog.REWARD_POOL`. |
+
+A reward encounter whose stock would draw nothing, such as relics once every reward relic is held, is not offered (`RunManager.can_draw_stock`). The goods are drawn in entry order on the run RNG when the encounter resolves. They are not saved: a resume re-enters the encounter and draws the same goods from the saved RNG state. A picked item goes on the board, a relic to the relics (its `PICKED_UP` triggers fire), a potion to the potions.
+
+```gdscript
+type = Type.REWARD
+stock = [StockEntry.items(2, [ItemType.WEAPON]), StockEntry.potions(1)]
+```
+
+## Shops
+
+**Location:** `RunManager` (the shop section), `ShopOverlay`, prices in `Balance.SHOP_PRICE_*`.
+
+A shop (`Type.SHOP`) describes its goods with `stock`, the same stock entries as a reward encounter, so a shop's theme is its name and its stock (a weaponsmith lists only weapons). The goods are drawn when it opens; the player buys any they can afford, as many as they like, then leaves.
+
+- **Price** — `RunManager.price_of(good)`: `Balance.SHOP_PRICE_ITEM`, `SHOP_PRICE_RELIC` or `SHOP_PRICE_POTION`, indexed by the good's rarity. Placeholders.
+- **Buying** — `buy(index)` pays the price and gives the good as a pick would; `can_buy` is false for a sold or unaffordable good. A bought relic leaves the relic pool.
+- **Leaving** — `leave_shop()`, then the caller advances.
+- **Save** — the shop is not saved. A resume re-enters it with the gold it had when it was picked and draws the same goods, so quitting in a shop undoes its purchases.
+
+There are no rerolls and no selling yet.
+
+```gdscript
+type = Type.SHOP
+stock = [StockEntry.items(3, [ItemType.WEAPON]), StockEntry.potions(1)]
+```
+
 ## Composition & ordering (the fight case)
 
 **A fight's enemies can be generated against a points target** instead of coming from the def. The `Run manager` draws from the act's enemy pool until the drawn set's points reach the beat's target (`RunMap.target_points` / `RunMap.draw_enemies`; [`../plans/encounter_points_budget.md`](../plans/encounter_points_budget.md)), and passes the ids to the `Encounter`, which uses them in place of `EncounterDef.enemy_ids`. The def still supplies the location frame, the type and the reward. The draw is random and ignores composition — positioning comes later. **The pools are empty until the owner authors them**, so every fight currently uses its authored `enemy_ids`. A boss is never generated against points: it takes its act's `EnemyPools.BOSS` list when that has entries, otherwise its authored `enemy_ids`.
@@ -108,7 +147,7 @@ A fight Encounter spawns **1–4 enemies** (most 1–2; group fights authored to
 
 ## Telegraph (the encounter card)
 
-Before each fight the player is offered three encounters as `EncounterCard`s standing in the corridor ([run_screen.md](run_screen.md#the-choice-of-encounters)). A card shows the encounter's kind (Event, Rest, Relic), its location frame and a hint at what it gives, derived from the def's type (`EncounterDef` carries no telegraph field). First-run legible: the card telegraphs the kind, not the contents (design). An **elite** is a fixed map square (`RunMap.Square.ELITE`, the `fight_elite` encounter), not an offered encounter.
+Before each fight the player is offered three encounters as `EncounterCard`s standing in the corridor ([run_screen.md](run_screen.md#the-choice-of-encounters)). A card shows the encounter's kind (Event, Rest, Reward, Shop), its location frame and a hint at what it gives, derived from the def's type and, for a reward, the kind of goods in its stock (`EncounterDef` carries no telegraph field). First-run legible: the card telegraphs the kind, not the contents (design). An **elite** is a fixed map square (`RunMap.Square.ELITE`, the `fight_elite` encounter), not an offered encounter.
 
 ## Reward
 
@@ -129,7 +168,8 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 - **Fight** Encounter (regular / elite / boss): spawns its enemy `Actor`s in order, creates the `Combat manager` on begin, awaits win/loss, reports the reward up (DRAFT / RELIC / ELITE = relic+draft).
 - **Event** Encounter: `begin()` **awaits** the option pick; `RunManager.pick_event_option(index)` applies the option's run effects and calls `resolve_event()` (reward NONE — the option is the reward). The **recruit event** adds an ally through `RunEffect.add_ally`. Prose + options are localized.
 - **Rest** Encounter: a partial heal on begin, resolves immediately.
-- **Relic** Encounter (`Type.RELIC`): no fight; resolves on begin with the `RELIC_CHOICE` reward, and the `Run manager` offers a choice of relics.
+- **Shop** Encounter (`Type.SHOP`): no fight; resolves on begin with the `SHOP` reward, and the `Run manager` opens the shop. The placeholder `shop_pedlar` sells three items, a relic and a potion.
+- **Reward** Encounter (`Type.REWARD`): no fight; resolves on begin with the `GOODS` reward, and the `Run manager` offers the goods drawn from its `stock`. The placeholder `relic_cache` offers three relics.
 - Instantiated by the `Run manager` from a FIXED beat (an elite fight, the boss), a regular fight drawn from a pool, or the encounter the player picks before a fight; reports outcome (died / won / resolved) + reward up. The event overlay and the encounter cards are live (run_screen).
 
 **Not** in scope: the real ~30-encounter pool + event prose (the owner's content), boss **signature mechanics**, reward tuning.

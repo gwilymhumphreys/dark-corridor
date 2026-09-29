@@ -4,7 +4,8 @@ extends Node
 ## Run manager. A FIGHT spawns enemy Actors from their definitions (left-to-right)
 ## and, on begin(), creates the per-fight CombatManager; an EVENT waits for the Run manager to apply
 ## the picked option and call resolve_event; a REST
-## applies a partial heal; a RELIC encounter resolves at once and its reward is a relic choice. It
+## applies a partial heal; a REWARD encounter resolves at once and its reward is a pick of goods; a
+## SHOP resolves at once and the Run manager opens it. It
 ## reports its outcome + reward-kind up via `resolved`; the Run manager fulfils the reward and applies
 ## HP/relic policy.
 ##
@@ -74,8 +75,10 @@ func begin() -> void:
     _combat_manager.start()
   elif is_event():
     pass   # await the option pick (RunManager.pick_event_option, which then calls resolve_event)
-  elif def.type == EncounterDef.Type.RELIC:
-    _resolve(Outcome.RESOLVED)   # no fight: the reward (a relic choice) is the whole encounter
+  elif def.type == EncounterDef.Type.REWARD:
+    _resolve(Outcome.RESOLVED, EncounterDef.Reward.GOODS)   # no fight: the pick of goods is the whole encounter
+  elif def.type == EncounterDef.Type.SHOP:
+    _resolve(Outcome.RESOLVED, EncounterDef.Reward.SHOP)    # no fight: the shop is the whole encounter
   else:
     player.heal(def.heal_fraction * player.max_hp)
     _resolve(Outcome.RESOLVED)
@@ -100,11 +103,12 @@ func _on_fight_resolved(player_won: bool) -> void:
   _resolve(Outcome.WON if player_won else Outcome.LOST)
 
 
-func _resolve(outcome: int) -> void:
+# `reward` -1 reports the def's own reward.
+func _resolve(outcome: int, reward: int = -1) -> void:
   if _resolved:
     return
   _resolved = true
-  resolved.emit(outcome, def.reward)
+  resolved.emit(outcome, def.reward if reward < 0 else reward)
 
 
 ## Free the fight's combat resources (the Run manager calls this after reading the

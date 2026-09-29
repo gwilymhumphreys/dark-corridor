@@ -1,8 +1,8 @@
 class_name DevAutoload
 extends Node
 ## The dev tools' start-up arguments for the game (docs/systems/dev_tools.md): skip saving, take a
-## screenshot and quit, skip the title screen, walk past every choice of encounters, and add allies, board items,
-## potions or relics to a new run for screenshots. Does nothing unless one of its arguments is present, and
+## screenshot and quit, skip the title screen, walk past every choice of encounters or take one card,
+## and add allies, board items, potions, relics or gold to a new run for screenshots. Does nothing unless one of its arguments is present, and
 ## the screens hold no code for any of it.
 
 const DEMO_ALLY_ID: String = 'spore_thrall'         # the ally `--allies` recruits
@@ -16,7 +16,7 @@ var _title_handled: bool = false   # the title arguments act on the first title 
 func _ready() -> void:
   if DevArgs.has('--nosave'):
     Save.disabled = true   # never overwrite the player's run save
-  if _wants_title_action() or DevArgs.has('--autofight'):
+  if _wants_title_action() or DevArgs.has('--autofight') or DevArgs.has('--pick'):
     get_tree().node_added.connect(_on_node_added)
   if _wants_run_additions():
     Game.run_started.connect(_add_to_run)
@@ -37,15 +37,15 @@ func _wants_title_action() -> bool:
 
 func _wants_run_additions() -> bool:
   return DevArgs.has('--allies') or DevArgs.has('--board-items') or DevArgs.has('--potions') or DevArgs.has('--relics') \
-    or DevArgs.has('--square')
+    or DevArgs.has('--square') or DevArgs.has('--gold')
 
 
 func _on_node_added(node: Node) -> void:
   if node is TitleScreen and not _title_handled:
     _title_handled = true
     _title_action(node as TitleScreen)
-  elif node is EncounterChoice and DevArgs.has('--autofight'):
-    _walk_past.call_deferred(node)
+  elif node is EncounterChoice and (DevArgs.has('--autofight') or DevArgs.has('--pick')):
+    _choose.call_deferred(node)
 
 
 ## `--autostart` starts a run as the default character or the one named by `--character=ID`;
@@ -67,16 +67,20 @@ func _autostart_character() -> String:
   return id
 
 
-## `--autofight`: walk past every choice of encounters, as a click on its Walk past button would, so
-## the run goes from fight to fight. Deferred, so the run screen has connected to the cards by now.
-func _walk_past(choice: EncounterChoice) -> void:
+## `--pick N`: take card N (1 = left) at every choice of encounters, as a click on it would.
+## `--autofight`: walk past every choice instead, as a click on its Walk past button would, so the run
+## goes from fight to fight. Deferred, so the run screen has connected to the cards by now.
+func _choose(choice: EncounterChoice) -> void:
   if not is_instance_valid(choice) or Game.run == null:
     return
-  choice.skipped.emit()
+  if DevArgs.has('--pick'):
+    choice.picked.emit(int(DevArgs.value('--pick', '1')) - 1)
+  else:
+    choice.skipped.emit()
 
 
-## `--allies N`, `--board-items N`, `--potions N`, `--relics N`: add to a new run before any screen
-## shows it. `--square N` starts the run on square N (1-based) of the first act, such as 4 for the
+## `--allies N`, `--board-items N`, `--potions N`, `--relics N`, `--gold N`: add to a new run before
+## any screen shows it. `--square N` starts the run on square N (1-based) of the first act, such as 4 for the
 ## first elite fight. Board items are copies of the starting items, up to N on the board in total. Relics are
 ## added to the run's list only, so a relic that acts when granted (more maximum HP) does not.
 func _add_to_run(run: RunManager) -> void:
@@ -98,6 +102,7 @@ func _add_to_run(run: RunManager) -> void:
     if potion != null:
       for _n in potion_count:
         run.potions.append(Consumable.new(potion))
+  run.gold += int(DevArgs.value('--gold', '0'))
   var square: int = int(DevArgs.value('--square', '0'))
   if square > 1:
     run.jump_to((square - 1) * 2 + 1)   # every square has its choice of encounters before it

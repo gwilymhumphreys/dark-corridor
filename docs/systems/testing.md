@@ -30,7 +30,7 @@ the fixture files and are never read from `Balance`.
 | `fixture_enemies.gd` | `FixtureEnemies`: a small and a large enemy, and an ally for summons and recruits, each with fixed health and one fixture attack. |
 | `fixture_encounters.gd` | `FixtureEncounters`: a fight against one fixture enemy, a rest, and an event with a heal, a maximum-health and a recruit option (`OPTION_*` give their indexes). |
 | `fixture_kit.gd` | `FixtureKit`: a heal potion, a value-multiplying enchant, a combat-start shield relic, a maximum-health relic (a pickup run trigger) and a relic with a weapon attack bonus passive. |
-| `fixture_content.gd` | `FixtureContent.install()`: adds every fixture to its catalog, puts a fixture in place of every authored enemy, encounter and relic under the authored id, empties every act's `EnemyPools` lists, and sets the `EncounterPools` position lists to the fixture rest, event and relic encounter. |
+| `fixture_content.gd` | `FixtureContent.install()`: adds every fixture to its catalog, puts a fixture in place of every authored enemy, encounter, relic and potion under the authored id, empties every act's `EnemyPools` lists, and sets the `EncounterPools` position lists to the fixture rest, event and reward encounter. |
 
 A test that plays a run, an encounter or an autotest, or that builds fixture content by id
 (`CombatManager.add_item`, a summon, a save and reload), calls `FixtureContent.install()` in

@@ -826,6 +826,9 @@ func inspectable_at(point: Vector2) -> Dictionary:
       var cell: ItemCell = cells[item]
       if cell.get_global_rect().has_point(point):
         return {'item': item, 'rect': cell.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
+  for slot: PotionSlot in _potions.get_children():
+    if slot.item() != null and slot.get_global_rect().has_point(point):
+      return {'item': slot.item(), 'rect': slot.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
   return {}
 
 

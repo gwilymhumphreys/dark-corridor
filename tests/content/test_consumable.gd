@@ -58,3 +58,7 @@ func test_throw_after_resolution_is_a_noop() -> void:
   var potion := Consumable.new(FixtureKit.potion())
   cm.throw_consumable(potion, p)
   assert_eq(p.hp, 60, 'no throw lands once the fight is over')
+
+
+func test_a_potion_def_is_an_item_def() -> void:
+  assert_true(FixtureKit.potion() is ItemDef, 'a potion uses the item definition (docs/plans/potions_as_items.md)')

@@ -270,10 +270,13 @@ test-first + its own green commit, with the headless autotest as the regression 
    placeholder content).** `RunMap` = one act of 10 squares (fights, elites at squares 4 and 7, the
    boss last), each with a choice of encounters straight before it: 20 beats
    ([act layout](systems/run_manager.md#the-act-layout)). At a choice beat three encounters (events,
-   the rest, the relic encounter) stand as cards in the corridor; the player picks one or walks past
+   the rest, reward encounters) stand as cards in the corridor; the player picks one or walks past
    for gold ([choice of encounters](systems/run_manager.md#the-choice-of-encounters)), drawn by rarity
-   and by rules built from the player's state ([offer rules](systems/encounter.md#offer-rules)). The
-   later stages (run flags, reward encounters, shops) are in
+   and by rules built from the player's state ([offer rules](systems/encounter.md#offer-rules)). Event options
+   have their own effects and requirements, and run flags let a later visit offer something new
+   ([event options](systems/encounter.md#event-options)); reward encounters offer a pick of items,
+   relics or potions ([reward encounters](systems/encounter.md#reward-encounters)). Shops sell goods
+   from the same stock entries for gold ([shops](systems/encounter.md#shops)). The plan is
    [`plans/encounter_choice.md`](plans/encounter_choice.md). The map strip shows the squares with
    icons. **HP economy:** every fight won gives some health and gold; between-act full heal, max-HP
    via relics. **Still the owner's:** the real encounter/enemy/event
@@ -281,7 +284,7 @@ test-first + its own green commit, with the headless autotest as the regression 
    [encounter](systems/encounter.md).
 2. **Reward routing — relics + elites — DONE (mechanism; placeholder content).**
    `RunManager._on_encounter_resolved` grants a random relic on the **RELIC** reward (act bosses),
-   offers a choice of relics on **RELIC_CHOICE** (the relic encounter), and a **relic + draft** on
+   offers a reward encounter's goods on **GOODS**, and a **relic + draft** on
    **ELITE** (the reward asymmetry). Relics can raise maximum health through a `PICKED_UP` run trigger
    (applied once on grant, baked into the snapshot). Placeholder reward relics (Vital Charm / Iron Idol) and placeholder
    elite and relic `EncounterDef`s. **Still the owner's:** which relics and elites exist.

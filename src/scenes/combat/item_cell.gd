@@ -126,7 +126,7 @@ func setup(target_item: Item, timekeeper: Timekeeper = null, temporary: bool = f
   _update_cooldown()
 
 
-## Show a picture with no item behind it (a potion, `PotionSlot`): no value pills, no cooldown fill and
+## Show a picture with no item behind it (a map square's token): no value pills, no cooldown fill and
 ## no "Temporary" tag. Call after the cell is in the tree.
 func show_picture(texture: Texture2D) -> void:
   item = null

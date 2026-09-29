@@ -1,10 +1,10 @@
 # Plan: a choice of three encounters before every fight
 
-**Status: stages 1 to 3 built 2026-09-30.** As-built detail is in
+**Status: stages 1 to 5 built 2026-09-30.** As-built detail is in
 [`../systems/run_manager.md`](../systems/run_manager.md#the-choice-of-encounters),
 [`../systems/encounter.md`](../systems/encounter.md#offer-rules) and
-[`../systems/run_screen.md`](../systems/run_screen.md#the-choice-of-encounters). Stages 4 and 5 are still
-to build. Differences from the plan are listed at the end.
+[`../systems/run_screen.md`](../systems/run_screen.md#the-choice-of-encounters). The later steps below
+are still to build. Differences from the plan are listed at the end.
 
 Before each fight the player is offered three encounters, shown as cards standing in the corridor
 where enemies stand, and picks one or walks past them for a little gold. Each encounter has its own
@@ -222,12 +222,22 @@ Each stage leaves a playable run.
    encounter becomes a reward encounter.
 5. **Shops.** The shop kind, prices, and the shop panel, with one placeholder shop in the left list.
 
+### Later steps (owner, 2026-09-30)
+
+- **Potion tooltips (built 2026-09-30).** Potions are item definitions and have the item tooltip
+  everywhere ([`potions_as_items.md`](potions_as_items.md)).
+- **No duplicate relics (built 2026-09-30).** `RunManager.relic_pool()` is the reward pool without
+  the relics held, and every relic reward draws from it. It is worked out from the relics held
+  rather than kept as a list, so it needs no saving.
+- **Skipping rewards for gold (built 2026-09-30).** A reward encounter's goods can be skipped like a
+  fight's draft.
+
 Docs updated in each stage: `run_manager.md`, `encounter.md`, `save.md`, `run_screen.md`,
 `autotest.md`, `lexicon.md` (run flag, encounter rarity, and the Square, Event and Relic encounter
 rows), and a decision log entry. The "Encounters and the choice layer" section of
 `design/game_design.md` describes the older choice layer; that section is the owner's to rewrite.
 
-## How stages 1 to 3 differ
+## How the stages as built differ
 
 - A card wider than its share of the row is scaled down (`EncounterChoice.CARD_FILL`), because three
   enemies at their arrived depth stand closer together than a card is wide.
@@ -248,6 +258,16 @@ rows), and a decision log entry. The "Encounters and the choice layer" section o
 - `Encounter.pick_event_option` is replaced by `resolve_event`; the Run manager applies the effects.
 - The option index the event panel emits is the option's index in the event's authored list, not
   the button's position, because hidden options leave gaps.
+- `EncounterDef.Type` is `FIGHT`, `REST`, `EVENT`, `REWARD`; `SHOP` comes with stage 5. A reward
+  encounter reports the new `Reward.GOODS` itself, so its definition sets only `type` and `stock`.
+- The one pending offer keeps the draft names (`pending_draft`, `apply_draft_pick`). A reward
+  encounter's goods can be skipped for gold like a fight's draft, so the player can change their
+  mind after picking it (owner).
+- Shops: the goods are drawn when the shop encounter resolves, like a reward encounter's. Pressing a
+  good or its buy button buys it. There are no rerolls and no selling. `--pick N` and `--gold N`
+  dev arguments were added for screenshots.
+- The goods are drawn by `Draft.draw_stock`. Items may repeat when too few match an entry's types,
+  as in a fight's draft; relics and potions do not repeat within an entry.
 
 ## Tests
 

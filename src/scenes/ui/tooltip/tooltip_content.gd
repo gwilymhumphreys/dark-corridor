@@ -23,8 +23,8 @@ func build(item: Item) -> Dictionary:
     'title': tr(item.def.name_key),
     'rarity': item.def.rarity,
     'panel_color': item.def.panel_color,
-    'type_line': tr('Relic') if item.def is RelicDef else _type_line(item.def.types),
-    'charge_line': [] if item.def is RelicDef else _charge_line(item),
+    'type_line': _type_line_of(item.def),
+    'charge_line': [] if item.def is RelicDef or item.def is ConsumableDef else _charge_line(item),
     'lines': _effect_lines(item),
     'flavor': tr(item.def.description_key) if item.def.description_key != '' else '',
     'keyword_ids': keyword_ids(item),
@@ -38,6 +38,15 @@ static func _charge_line(item: Item) -> Array:
     {'t': 'icon', 'id': IconSlots.CHARGE_TIME},
     {'t': 'text', 's': fmt(item.def.cooldown) + 's'},
   ]
+
+
+## The type line for `def`: "Relic" for a relic, "Potion" for a potion, otherwise its type tags.
+func _type_line_of(def: ItemDef) -> String:
+  if def is RelicDef:
+    return tr('Relic')
+  if def is ConsumableDef:
+    return tr('Potion')
+  return _type_line(def.types)
 
 
 ## The type line: each of `types` as its singular display name (translated), joined. An item with

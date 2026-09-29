@@ -9,13 +9,14 @@ extends Button
 @onready var cell: ItemCell = $Cell
 
 
-## Bind the offered item or relic. Call after the option is in the tree.
+## Bind the offered item, relic or potion (each offered as the Item built from its definition). Call
+## after the option is in the tree.
 func setup(offered: Item) -> void:
   cell.show_cooldown = false   # a reward is not in a fight, so no cooldown fill covers the icon
   cell.setup(offered)
 
 
-## The live Item this option offers (a relic is offered as the Item built from its def) — the
-## tooltip reads it.
+## The live Item this option offers (a relic or potion is offered as the Item built from its def) —
+## the tooltip reads it.
 func item() -> Item:
   return cell.item

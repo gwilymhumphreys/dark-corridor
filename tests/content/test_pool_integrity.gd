@@ -20,6 +20,7 @@ const ENCOUNTER_IDS: Array = [
   'fight_boss',
   'event_shrine',
   'event_wanderer',
+  'shop_pedlar',
 ]
 
 const ITEM_TYPE_IDS: Array = [
@@ -128,6 +129,19 @@ func test_every_act_enemy_list_resolves() -> void:
 func test_reward_relic_pool_resolves() -> void:
   for relic_id in RelicCatalog.REWARD_POOL:
     assert_not_null(RelicCatalog.get_def(relic_id), 'reward relic %s resolves' % relic_id)
+
+
+func test_reward_potion_pool_resolves() -> void:
+  for potion_id in ConsumableCatalog.REWARD_POOL:
+    assert_not_null(ConsumableCatalog.get_def(potion_id), 'reward potion %s resolves' % potion_id)
+
+
+func test_reward_stock_names_real_item_types() -> void:
+  for encounter_id in ENCOUNTER_IDS:
+    for entry: StockEntry in EncounterCatalog.get_def(encounter_id).stock:
+      assert_gt(entry.count, 0, '%s: a stock entry offers at least one' % encounter_id)
+      for type: String in entry.types:
+        assert_true(type in ITEM_TYPE_IDS, '%s: stock type %s is an item type' % [encounter_id, type])
 
 
 func test_draftable_item_effects_reference_registered_statuses() -> void:

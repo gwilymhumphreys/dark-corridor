@@ -211,7 +211,16 @@ func run_full() -> Dictionary:
       if run.outcome() == RunManager.Outcome.WON:
         beats_cleared += 1   # the finale counts as cleared; a death clears nothing more
       break
-    if run.has_pending_draft():
+    if run.has_open_shop():
+      # The Driver buys nothing yet: it leaves every shop at once.
+      logger.log_event('shop', { 'beat': run.position, 'goods': run.shop_goods().size() })
+      run.leave_shop()
+    if run.has_pending_draft() and run.current_encounter().def.type == EncounterDef.Type.REWARD:
+      # A reward encounter's goods (items, relics, potions): the Driver has no strategy for these
+      # yet, so it takes the first.
+      logger.log_event('reward', { 'beat': run.position, 'picked': run.pending_draft()[0].name_key })
+      run.apply_draft_pick(0)
+    elif run.has_pending_draft():
       var offer: Array = run.pending_draft()
       # Skip is checked first (docs decision #33): the Driver defaults to never-skip, so this
       # branch is inert for existing runs → the run RNG advances identically (byte-identical
@@ -223,10 +232,6 @@ func run_full() -> Dictionary:
         var pick: int = driver.choose_draft(offer, run.player.board)
         logger.log_event('draft', { 'beat': run.position, 'picked': offer[pick].name_key, 'strategy': strategy })
         run.apply_draft_pick(pick)
-    if run.has_pending_relic_offer():
-      # The Driver has no relic strategy yet: it takes the first relic on offer.
-      logger.log_event('relic', { 'beat': run.position, 'picked': run.pending_relic_offer()[0].name_key })
-      run.apply_relic_pick(0)
     beats_cleared += 1
     run.advance()
 
@@ -338,8 +343,10 @@ func _beat_type(enc: Encounter) -> String:
     return 'Fight'
   if enc.is_event():
     return 'Event'
-  if enc.def.type == EncounterDef.Type.RELIC:
-    return 'Relic'
+  if enc.def.type == EncounterDef.Type.REWARD:
+    return 'Reward'
+  if enc.def.type == EncounterDef.Type.SHOP:
+    return 'Shop'
   return 'Rest'
 
 

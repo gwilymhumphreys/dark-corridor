@@ -1,10 +1,10 @@
 extends EncounterDef
-## Placeholder relic encounter: no fight; the player picks one of a few relics. The name is a
+## Placeholder reward encounter: no fight; the player picks one of three relics. The name is a
 ## placeholder for the owner to rename.
 
 
 func _init() -> void:
   id = 'relic_cache'
-  type = Type.RELIC
+  type = Type.REWARD
   name_key = 'A forgotten reliquary'   # placeholder name
-  reward = Reward.RELIC_CHOICE
+  stock = [StockEntry.relics(3)]

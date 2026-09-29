@@ -31,7 +31,7 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
     elif screen._state == RunScreen.State.CHOOSING:
       screen._choice.picked.emit(0)   # stand in for the player picking the left encounter card
     elif screen._draft != null:
-      screen._draft.picked.emit(0)    # stand in for the player picking the first card or relic
+      screen._draft.picked.emit(0)    # stand in for the player picking the first reward
     else:
       screen._physics_process(1.0)   # ~8 sim-steps/call; drives fights + advances beats
     guard += 1
@@ -336,6 +336,26 @@ func test_picking_a_card_begins_its_encounter() -> void:
   screen._choice.picked.emit(FixtureEncounters.CHOICE_EVENT)
   assert_null(screen._choice, 'the cards go')
   assert_eq(screen._state, RunScreen.State.EVENTING, 'and the picked event raises its panel')
+  screen.free()
+
+
+func test_a_shop_raises_its_panel_buys_and_leaves() -> void:
+  EncounterPools._positions = [[FixtureEncounters.SHOP], [FixtureEncounters.EVENT], [FixtureEncounters.REWARD]]
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  Game.run.gold = 100
+  screen._choice.picked.emit(0)
+  assert_eq(screen._state, RunScreen.State.SHOPPING, 'the shop raises its panel')
+  assert_eq(screen._shop.get_parent(), screen._view.corridor_area(), 'in the corridor area')
+  var board: int = Game.run.player.board.size()
+  screen._shop.bought.emit(0)
+  assert_eq(Game.run.player.board.size(), board + 1, 'a purchase lands on the board')
+  assert_lt(Game.run.gold, 100, 'and is paid for')
+  screen._shop.left.emit()
+  assert_null(screen._shop, 'leaving closes the panel')
+  assert_false(Game.run.has_open_shop(), 'and the shop')
+  assert_eq(Game.run.position, 1, 'and the run walks on to the fight')
   screen.free()
 
 

@@ -21,9 +21,9 @@ const RELIC_WEAPON_ATTACK_BONUS: float = 3.0
 
 
 ## A potion that heals its thrower.
-static func potion() -> ConsumableDef:
+static func potion(id: String = POTION_ID) -> ConsumableDef:
   var d := ConsumableDef.new()
-  d.id = POTION_ID
+  d.id = id
   d.name_key = 'Fixture Potion'
   d.icon = 'res://assets/icons/potions/alchemy_31_bigheal_flask.png'
   var heal := ItemEffect.new()

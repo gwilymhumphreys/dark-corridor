@@ -55,6 +55,8 @@ A **`Draftable`** (drafted / inspected / tooltipped like Item / Relic / Consumab
 
 A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing that doesn't accrue-toward-firing).
 
+**`ConsumableDef` is an `ItemDef`** ([`../plans/potions_as_items.md`](../plans/potions_as_items.md)): it uses the item fields it needs (id, name, icon, rarity, effects) and is shown through an `Item` built from it, with the same cell, value pills and tooltip as an item. Its `cooldown` and `trigger_subs` are unused. Code that tells goods apart checks `RelicDef` and `ConsumableDef` before `ItemDef`.
+
 - **Slots** — 3 potion slots (design); found mainly in drafts; consumed on use; a potion taken when slots are full drops one (the potion-drop sub-choice — Draft PRD).
 - **Throw → resolve** — a **throw-potion intent** reaches the `Combat manager`, which activates the consumable: builds its payload(s), resolves the target-shape, spawns its Deliveries (combat_model.md) — the same resolution surface as an item fire, minus the Ticker. Effects are tactical (heal, instant shield, freeze, instant damage, apply-status-to-all — design). A thrown potion's Deliveries fly `Balance.POTION_TRAVEL_STEPS` (one step, decision #48) and land in the step loop like an item's; a lethal throw resolves the fight on that step. A potion thrown while the fight is paused lands on the first step after it resumes. **Thrown payloads are exempt from the thrower's combat modifiers** (decision #30): Weak doesn't scale a potion down and Blind can't whiff a throw — potions are the reserve, not the engine.
 - **Slow-mo-on-hover** to inspect + throw during combat (design — opt-in agency; slows both sides).
@@ -69,7 +71,8 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 > **Not reachable in play right now (2026-09-18).** A starting kit was the only way a run got a
 > potion or an enchant, and the only character that carried them was the deleted Wanderer
 > placeholder. None of the authored characters has a starting relic, potion or enchant, and Stone Ward is
-> not in `RelicCatalog.REWARD_POOL`, so only Vital Charm and Iron Idol can be earned mid-run. The
+> not in `RelicCatalog.REWARD_POOL`, so only Vital Charm and Iron Idol can be earned mid-run, each once
+> (a held relic leaves the run's relic pool, `RunManager.relic_pool`). The
 > code paths are all still exercised by the test suite. Giving a character a starting kit, or
 > adding a potion or enchant reward, is content work for the owner.
 
@@ -90,5 +93,5 @@ A **manually-fired reserve** — no `Ticker` (combat_model.md: the one thing tha
 ## Dependencies
 
 - **Calls down to:** `StatusManager` (enchant status effects), `Combat manager` (a relic's items and triggers; a thrown consumable's Delivery), `Item` (an enchant hooks its host's pipeline). A relic's run triggers are applied by the `Run manager`.
-- **Driven by (above):** the `Run manager` — holds them in run-state, grants relics on reward or from the relic encounter's offer, applies an enchant to a chosen item (`apply_enchant`); `Draft` offers them; `Save` persists them (run-state).
+- **Driven by (above):** the `Run manager` — holds them in run-state, grants relics on reward or from a reward encounter's offer, applies an enchant to a chosen item (`apply_enchant`); `Draft` offers them; `Save` persists them (run-state).
 - **Shares** the **Draftable** base with `Item` (Relic, Enchantment + Consumable; design).

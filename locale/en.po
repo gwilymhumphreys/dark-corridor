@@ -360,8 +360,12 @@ msgid "Rest"
 msgstr "Rest"
 
 #: src/scenes/screens/encounter_card.gd
-msgid "Relic"
-msgstr "Relic"
+msgid "Reward"
+msgstr "Reward"
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Shop"
+msgstr "Shop"
 
 #: src/scenes/screens/encounter_card.gd
 msgid "Fight"
@@ -372,8 +376,20 @@ msgid "Recover health"
 msgstr "Recover health"
 
 #: src/scenes/screens/encounter_card.gd
+msgid "Spend your gold"
+msgstr "Spend your gold"
+
+#: src/scenes/screens/encounter_card.gd
 msgid "Choose a relic"
 msgstr "Choose a relic"
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Choose a potion"
+msgstr "Choose a potion"
+
+#: src/scenes/screens/encounter_card.gd
+msgid "Choose an item"
+msgstr "Choose an item"
 
 #: src/scenes/screens/encounter_choice.gd
 msgid "Walk past (+{0} gold)"
@@ -451,6 +467,22 @@ msgstr "Fullscreen"
 msgid "Mute when unfocused"
 msgstr "Mute when unfocused"
 
+#: src/scenes/screens/shop_entry.gd
+msgid "{0} gold"
+msgstr "{0} gold"
+
+#: src/scenes/screens/shop_entry.gd
+msgid "Sold"
+msgstr "Sold"
+
+#: src/scenes/screens/shop_overlay.gd
+msgid "Your gold: {0}"
+msgstr "Your gold: {0}"
+
+#: src/scenes/screens/shop_overlay.tscn
+msgid "Leave"
+msgstr "Leave"
+
 #: src/scenes/screens/speed_button.tscn
 msgid "1x"
 msgstr "1x"
@@ -466,6 +498,14 @@ msgstr "Start"
 #: src/scenes/ui/tooltip/keyword_card.tscn
 msgid "Keyword"
 msgstr "Keyword"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Relic"
+msgstr "Relic"
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "Potion"
+msgstr "Potion"
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "When picked up:"
@@ -698,6 +738,10 @@ msgstr "A forgotten reliquary"
 #: content/encounters/rest.gd
 msgid "A quiet alcove"
 msgstr "A quiet alcove"
+
+#: content/encounters/shop_pedlar.gd
+msgid "A pedlar's cart"
+msgstr "A pedlar's cart"
 
 #: content/enemies/boss.gd
 msgid "Corridor Warden"

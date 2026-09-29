@@ -352,6 +352,13 @@ func test_a_relic_has_no_charge_line_and_says_relic() -> void:
   assert_eq(content['type_line'], 'Relic', 'its type line reads Relic')
 
 
+func test_a_potion_has_no_charge_line_and_says_potion() -> void:
+  var content: Dictionary = TooltipContent.new().build(Item.new(FixtureKit.potion()))
+  assert_eq(content['charge_line'], [], 'a potion has no charge time')
+  assert_eq(content['type_line'], 'Potion', 'its type line reads Potion')
+  assert_eq(content['lines'].size(), FixtureKit.potion().effects.size(), 'one line per effect, as for an item')
+
+
 func test_a_relic_lists_its_trigger_then_its_effects_then_its_limit() -> void:
   var def := FixtureKit.shield_relic()
   def.fires_per_fight = 1

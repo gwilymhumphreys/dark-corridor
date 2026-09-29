@@ -28,8 +28,6 @@ func _play_one_beat(run: RunManager, pick: int) -> void:
     return
   if run.has_pending_draft():
     run.apply_draft_pick(pick)
-  if run.has_pending_relic_offer():
-    run.apply_relic_pick(0)
   run.advance()
 
 

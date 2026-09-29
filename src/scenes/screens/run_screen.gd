@@ -9,7 +9,7 @@ extends Control
 ## A polling state machine that drives the WHOLE descent in real time, mirroring
 ## AutoTestMode.run_full — enter beat → (choice: walk up to the encounter cards, pick one or walk
 ## past) → approach → (fight: tick to resolution | rest: resolves on begin | event: overlay) →
-## fulfil reward (draft overlay) → advance →
+## fulfil reward (draft overlay, or the shop panel for a shop) → advance →
 ## repeat, until the run ends (Game then swaps to the win/death screen). The run
 ## processes each beat's outcome via its own signal chain DURING the resolving tick;
 ## this screen reacts by POLLING cm.is_resolved() (never from inside the signal), so
@@ -22,8 +22,9 @@ const ENCOUNTER_CHOICE: PackedScene = preload('res://src/scenes/screens/encounte
 const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
+const SHOP_OVERLAY: PackedScene = preload('res://src/scenes/screens/shop_overlay.tscn')
 
-enum State { IDLE, WALKING, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING }
+enum State { IDLE, WALKING, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, SHOPPING }
 
 var _run: RunManager
 var _cm: CombatManager
@@ -33,6 +34,7 @@ var _last_log: CombatLog  # the last finished fight's log — what the Report bu
 var _draft: DraftOverlay
 var _choice: EncounterChoice
 var _event: EventOverlay
+var _shop: ShopOverlay
 var _summary: CombatSummary   # the combat report panel while it is open; null while hidden
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
@@ -262,13 +264,17 @@ func _process(_delta: float) -> void:
     _cm.request_slowmo(_view.mouse_over_inspectable(mouse))
 
 
-# The item the tooltip should describe: a reward icon on the draft panel first, otherwise a board
-# item — but not one hidden behind the draft panel (in the corridor area) or the combat report.
+# The item the tooltip should describe: a reward icon on the draft or shop panel first, otherwise a
+# board item — but not one hidden behind either panel (in the corridor area) or the combat report.
 func _inspection_target(mouse: Vector2) -> Dictionary:
   if _draft != null:
     var reward: Dictionary = _draft.inspectable_at(mouse)
     if not reward.is_empty() or _draft.covers(mouse):
       return reward
+  if _shop != null:
+    var good: Dictionary = _shop.inspectable_at(mouse)
+    if not good.is_empty() or _shop.covers(mouse):
+      return good
   if _summary != null and (_summary.get_node('Panel') as Control).get_global_rect().has_point(mouse):
     return {}
   return _view.inspectable_at(mouse)
@@ -392,10 +398,10 @@ func _after_beat() -> void:
   if _run.is_ended():
     return
   _refresh_gold()   # a relic's fight-won trigger may have added gold
-  if _run.has_pending_draft():
+  if _run.has_open_shop():
+    _show_shop()
+  elif _run.has_pending_draft():
     _show_draft()
-  elif _run.has_pending_relic_offer():
-    _show_relic_offer()
   else:
     _advance()
 
@@ -426,8 +432,8 @@ func _hide_report() -> void:
   _summary = null
 
 
-# The draft is a player choice (a draft-pick intent): raise the 1-of-3 overlay and
-# wait. The loop is paused in DRAFTING until a card is picked.
+# The draft is a player choice (a draft-pick intent): raise the overlay with a fight's draft or a
+# reward encounter's goods and wait. The loop is paused in DRAFTING until a card is picked.
 func _show_draft() -> void:
   _state = State.DRAFTING
   _ensure_view()
@@ -437,23 +443,6 @@ func _show_draft() -> void:
   _draft.skipped.connect(_on_draft_skipped)
   _draft.setup(_run.pending_draft())
   _draft.show_gain(_run.last_fight_gain)
-
-
-# The relic encounter's reward: the same panel as the draft, offering relics, with no skip.
-func _show_relic_offer() -> void:
-  _state = State.DRAFTING
-  _ensure_view()
-  _draft = DRAFT_OVERLAY.instantiate()
-  _view.corridor_area().add_child(_draft)
-  _draft.picked.connect(_on_relic_picked)
-  _draft.setup_relics(_run.pending_relic_offer())
-
-
-func _on_relic_picked(index: int) -> void:
-  _draft.queue_free()
-  _draft = null
-  _run.apply_relic_pick(index)
-  _advance()
 
 
 func _on_draft_picked(index: int) -> void:
@@ -470,6 +459,35 @@ func _on_draft_skipped() -> void:
   _draft = null
   _run.apply_draft_skip()
   _refresh_gold()
+  _advance()
+
+
+# A shop: raise its panel and wait while the player buys. The loop is paused in SHOPPING until Leave.
+func _show_shop() -> void:
+  _state = State.SHOPPING
+  _ensure_view()
+  _shop = SHOP_OVERLAY.instantiate()
+  _view.corridor_area().add_child(_shop)   # in the corridor; the board, potions and HUD stay live
+  _shop.bought.connect(_on_shop_bought)
+  _shop.left.connect(_on_shop_left)
+  _shop.setup(tr(_run.current_encounter().def.name_key), _run)
+
+
+# A purchase: the RunManager takes the gold and gives the good; the panel, the gold box, the potions
+# and the relics show it at once (the board follows the player's items on its own).
+func _on_shop_bought(index: int) -> void:
+  if not _run.buy(index):
+    return
+  _shop.refresh(_run)
+  _refresh_gold()
+  _view.refresh_potions(_run.potions)
+  _view.show_relics(_run.relics)
+
+
+func _on_shop_left() -> void:
+  _shop.queue_free()
+  _shop = null
+  _run.leave_shop()
   _advance()
 
 

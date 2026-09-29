@@ -43,9 +43,9 @@ IDLE → enter beat ─ choice? WALKING → CHOOSING ─(card picked)→ begin b
                    └ fight (a live encounter already) → begin beat
                     begin:  event?  EVENTING (await option pick) → after-beat
                             fight?  APPROACHING → FIGHTING ─(resolved)→ after-beat
-                            rest or relic?  resolves on begin → after-beat
-after-beat: pending draft? DRAFTING (await pick OR skip-for-gold)
-            pending relic offer? DRAFTING (the same panel with relics, no skip) ; else advance → enter beat
+                            rest or reward?  resolves on begin → after-beat
+after-beat: open shop? SHOPPING (buy until Leave) ; pending draft? DRAFTING (await pick OR skip-for-gold) ;
+            else advance → enter beat
 run_ended → Game → outcome screen
 ```
 
@@ -190,9 +190,9 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   the board every frame (`_sync_player_items`), so an item created during the fight gains a cell with a
   "Temporary" tag on its bottom edge, and a decayed or consumed item loses its cell,
   with the **potion slots** above it. A potion slot (`potion_slot.tscn`) is a `ButtonBare` button
-  wrapping the same `ItemCell` as a board item, shown with `ItemCell.show_picture` (the icon, no
-  pills or cooldown fill), so potions look like items and a board item can later be made clickable
-  the same way. The potions sit in a one-row pencil grid of `POTION_SLOTS` squares (more if there are
+  wrapping the same `ItemCell` as a board item, bound to an `Item` built from the potion's definition
+  (the icon and value pills, no cooldown fill), so potions look like items and have the item tooltip
+  (`CombatViewFramed.inspectable_at` looks through the potion slots). The potions sit in a one-row pencil grid of `POTION_SLOTS` squares (more if there are
   more potions; the three-slot limit is not enforced in code).
   **The board always fits its section:** `_fit_board` gives the cells the largest size, up to
   `ItemCell.CELL_SIZE` and down to `MIN_CELL_SIZE`, at which the potion row and every item fit, with
@@ -299,17 +299,25 @@ numbers and rings don't stay frozen in the corridor under the reward panel. `rel
 cells' cooldown fills (`ItemCell.show_cooldown`) and fades away the fight's temporary things (below).
 A view built without a fight never shows the fills. The combat report is still full-screen.
 
+- **Shop** — `shop_overlay.tscn` shows the shop's name, the player's gold, one `ShopEntry`
+  (`shop_entry.tscn`: a `RewardOption` with a buy button showing the price) per good, and a Leave
+  button, in the corridor area like the draft panel. Pressing a good or its button emits
+  `bought(index)` → `RunManager.buy`; the run screen then refreshes the panel, the gold box, the
+  potions and the relics. A sold or unaffordable good is disabled; a sold one reads "Sold". Leave
+  emits `left` → `RunManager.leave_shop`, then the run advances. Hovering a good shows its tooltip.
 - **Draft** — `draft_overlay.tscn` shows each reward as a `RewardOption` (`reward_option.tscn`)
-  after a fight: a button around the same `ItemCell` the board uses (the same icon and value pills),
+  after a fight or in a reward encounter: a button around the same `ItemCell` the board uses (the same
+  icon, value pills and tooltip, for potions and relics too),
   with a `UIJuice` node drawing the highlight on the cell's frame, so a reward hovers, presses and
   sounds like every other control the player picks ([control_feedback.md](control_feedback.md)). The
   button itself draws nothing (the `ButtonBare` theme variation). Hovering one shows the item
   tooltip, and pressing it emits `picked(index)` → `RunManager.apply_draft_pick`. The **gold button** in the
   panel's bottom right (`'+{0} gold'`, the amount from `Balance.GOLD_SKIP`) emits `skipped` →
   `RunManager.apply_draft_skip` instead, banking gold and
-  refreshing the gold box before advancing (decision #33). Both paths then advance. Under the title,
+  refreshing the gold box before advancing (decision #33). A reward encounter's goods can be skipped
+  the same way. Both paths then advance. Under the title,
   the `Gain` line (`DraftOverlay.show_gain`) lists the health and gold the fight won gave
-  (`RunManager.last_fight_gain`); it is hidden for the relic encounter's offer.
+  (`RunManager.last_fight_gain`); it is hidden for a reward encounter.
 - **Gold** — a "Gold" box beside the potions in the combat view: the amount in a box drawn with the
   potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
   screen writes it when it builds the view (covering a resumed run's banked gold), after each beat and

@@ -4,8 +4,9 @@ The combat item tooltip (gen 3, built). Hover a board item → a **cluster** app
 beside it: a main panel plus one card per keyword the item references. Scope: board
 `Item`s (player cells + enemy-HUD cells + ally-slot cells), relics (the sheet's relic tokens and an
 enemy's relic cells, each an `Item` built from its `RelicDef`) and the reward icons on the
-draft overlay, relic choices included. Potions (Consumables, not Items)
-are a follow-on — the builder is `Item`-typed.
+draft overlay and the shop, relic choices included, and potions (the potion row, rewards and the
+shop), each an `Item` built from its `ConsumableDef`. A potion's type line reads "Potion" and it has
+no charge-time line, like a relic; its effect lines are an item's.
 
 A hovered **status icon** on any character panel shows that status's keyword card on its own, with
 no main panel, and takes the same hover border as a board item. It also slows the fight, like

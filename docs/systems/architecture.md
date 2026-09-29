@@ -66,7 +66,7 @@ Two layers the downward rule treats differently:
  
 ## The Draftable contract
 
-`Draftable` is **what a draft can offer** — expressed as **composition, not a parent class** (same instinct as the Ticker: share the engine by composition, keep identities distinct). It is a **definition-level contract**, not a runtime supertype. **Built so far:** only items are drafted (`Draft.draw` returns `ItemDef`s, applied by `RunManager.apply_draft_pick`); relics are granted on rewards or picked from the relic encounter's own offer (`RunManager.apply_relic_pick`); enchants are applied by `RunManager.apply_enchant`. There is no `category` field yet, so the points below are the intended shape for when other kinds are drafted:
+`Draftable` is **what a draft can offer** — expressed as **composition, not a parent class** (same instinct as the Ticker: share the engine by composition, keep identities distinct). It is a **definition-level contract**, not a runtime supertype. **Built so far:** a fight's draft offers items (`Draft.draw`); a reward encounter offers items, relics and potions (`Draft.draw_stock`); both are applied by `RunManager.apply_draft_pick` by the definition's class; relics are also granted on boss and elite rewards; enchants are applied by `RunManager.apply_enchant`. There is no `category` field yet, so the points below are the intended shape for when other kinds are drafted:
 
 - **Shared definition-face.** Every content definition (item / relic / consumable / enchant) carries a common header — `id`, `name`, `icon`, `rarity`, `category`, `tooltip` — by composition (the def *has* it; it doesn't *inherit* it). The `category` set is **open** — a new kind is additive.
 - **`Draft` + inspection are category-blind.** They read only that header to offer, rarity/depth-weight, and tooltip — never branching on category to draw or show.
@@ -172,7 +172,7 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
 ### `Content` (Relic · Enchantment · Consumable) — PRD: [content.md](content.md)
 
 - **Exposes:** three run-level categories, data-defined and thin: a **`Relic`** (an item with no timer: fight triggers, passives, and run triggers outside fights), an **`Enchantment`** (one-per-item modifier hooking the host `Item`'s fire/resolve), a **`Consumable`** (manually-fired reserve — a Delivery on throw, no Ticker).
-- **Inbound:** the `Run manager` holds them in run-state, grants relics on reward or from the relic encounter's offer, and applies an enchant to a chosen item; `Draft` offers them; `Save` persists them; the `Combat manager` activates a thrown consumable (throw-potion intent).
+- **Inbound:** the `Run manager` holds them in run-state, grants relics on reward or from a reward encounter's offer, and applies an enchant to a chosen item; `Draft` offers them; `Save` persists them; the `Combat manager` activates a thrown consumable (throw-potion intent).
 - **Outbound:** `StatusManager.apply` (enchant statuses); the `Combat manager` (a relic's items in `Actor.relics`; a consumable's Delivery); the host `Item`'s pipeline (enchant hooks).
 - **Does not:** introduce new combat mechanics (all route through existing systems); act as a board `Item`; own the draft draw or the reward grant (`Draft` / `Run manager`). Relic, Enchantment + Consumable share the `Draftable` base with `Item` (Enchantment differs only in application — it attaches to a chosen item).
  

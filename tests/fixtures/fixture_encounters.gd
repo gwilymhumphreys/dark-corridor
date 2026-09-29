@@ -1,6 +1,6 @@
 class_name FixtureEncounters
-## Plain encounter definitions for tests (docs/systems/testing.md). FixtureContent adds the four
-## below under their own ids, offers the rest, the event and the relic encounter before every fight
+## Plain encounter definitions for tests (docs/systems/testing.md). FixtureContent adds the five
+## below under their own ids, offers the rest, the event and the reward encounter before every fight
 ## (one per EncounterPools position, in that order), and puts a fixture encounter of the same type and reward in place of
 ## every authored encounter, under the authored id, because the run map names encounters by id.
 ## Every fixture fight is one fixture enemy.
@@ -11,12 +11,17 @@ class_name FixtureEncounters
 const FIGHT: String = 'fixture_fight'
 const REST: String = 'fixture_rest'
 const EVENT: String = 'fixture_event'
-const RELIC: String = 'fixture_relic'
+const REWARD: String = 'fixture_reward'
+const SHOP: String = 'fixture_shop'
 
 # The position of each fixture encounter in the choice before every fight (FixtureContent).
 const CHOICE_REST: int = 0
 const CHOICE_EVENT: int = 1
-const CHOICE_RELIC: int = 2
+const CHOICE_REWARD: int = 2
+# How many relics the fixture reward encounter offers.
+const REWARD_RELICS: int = 3
+# How many items the fixture shop sells, before its relic and potion.
+const SHOP_ITEMS: int = 2
 
 const REST_HEAL_FRACTION: float = 0.3
 const EVENT_HEAL_FRACTION: float = 0.25
@@ -29,13 +34,13 @@ const OPTION_ADD_ALLY: int = 2
 
 
 ## A fight against one fixture enemy.
-static func fight(id: String = FIGHT, reward: int = EncounterDef.Reward.DRAFT) -> EncounterDef:
+static func fight(id: String = FIGHT, fight_reward: int = EncounterDef.Reward.DRAFT) -> EncounterDef:
   var d := EncounterDef.new()
   d.id = id
   d.type = EncounterDef.Type.FIGHT
   d.name_key = 'A fixture corridor'
   d.enemy_ids = [FixtureEnemies.ID]
-  d.reward = reward
+  d.reward = fight_reward
   return d
 
 
@@ -70,13 +75,23 @@ static func event(id: String = EVENT) -> EncounterDef:
   return d
 
 
-## A relic encounter: no fight, a choice of relics.
-static func relic(id: String = RELIC) -> EncounterDef:
+## A reward encounter: no fight, a pick of REWARD_RELICS relics.
+static func reward(id: String = REWARD) -> EncounterDef:
   var d := EncounterDef.new()
   d.id = id
-  d.type = EncounterDef.Type.RELIC
+  d.type = EncounterDef.Type.REWARD
   d.name_key = 'A fixture reliquary'
-  d.reward = EncounterDef.Reward.RELIC_CHOICE
+  d.stock = [StockEntry.relics(REWARD_RELICS)]
+  return d
+
+
+## A shop selling SHOP_ITEMS items, a relic and a potion.
+static func shop(id: String = SHOP) -> EncounterDef:
+  var d := EncounterDef.new()
+  d.id = id
+  d.type = EncounterDef.Type.SHOP
+  d.name_key = 'A fixture shop'
+  d.stock = [StockEntry.items(SHOP_ITEMS), StockEntry.relics(1), StockEntry.potions(1)]
   return d
 
 
@@ -87,6 +102,8 @@ static func standing_in_for(authored: EncounterDef) -> EncounterDef:
       return rest(authored.id)
     EncounterDef.Type.EVENT:
       return event(authored.id)
-    EncounterDef.Type.RELIC:
-      return relic(authored.id)
+    EncounterDef.Type.REWARD:
+      return reward(authored.id)
+    EncounterDef.Type.SHOP:
+      return shop(authored.id)
   return fight(authored.id, authored.reward)

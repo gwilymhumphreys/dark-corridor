@@ -75,8 +75,8 @@ const CRIT_MULTIPLIER: float = 2.0            # PLACEHOLDER — owner tunes
 
 # ── Run loop (HP economy + map; docs/systems/run_manager.md) ─────────────────────────────
 # Draft skip → bank gold (docs decision #33). Skipping the 1-of-3 draft banks this fixed amount of
-# gold instead of taking an item — a run-state resource (source built, no sink yet). The reward
-# panel's gold button shows it. Placeholder — the owner tunes it.
+# gold instead of taking an item — a run-state resource spent in shops. The reward panel's gold
+# button shows it. Placeholder — the owner tunes it.
 const GOLD_SKIP: int = 2
 # Walking past the choice of three encounters before a fight banks this much gold (owner).
 const ENCOUNTER_SKIP_GOLD: int = 2
@@ -87,6 +87,11 @@ const ENCOUNTER_WEIGHT_RARE: float = 0.25
 # Every fight won gives the player this much health and gold before its reward (owner). Placeholder.
 const FIGHT_WON_HEAL: int = 5
 const FIGHT_WON_GOLD: int = 3
+# What a shop charges (RunManager.price_of), by the kind of goods and its rarity: common, uncommon,
+# rare. Placeholders.
+const SHOP_PRICE_ITEM: Array[int] = [6, 9, 12]
+const SHOP_PRICE_RELIC: Array[int] = [15, 20, 25]
+const SHOP_PRICE_POTION: Array[int] = [4, 6, 8]
 
 
 # ── Presentation — the framed combat view (docs/systems/ui_layout.md; docs/history/phase4_plan.md) ───────

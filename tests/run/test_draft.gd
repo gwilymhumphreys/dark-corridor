@@ -65,3 +65,58 @@ func test_draw_advances_the_rng_deterministically() -> void:
   var b2 := _ids(Draft.draw(_pool(), 0, r2))
   assert_eq(a1, b1, 'first draws match')
   assert_eq(a2, b2, 'second draws match (state advanced identically)')
+
+
+# --- reward encounter stock (Draft.draw_stock) ------------------------------------
+
+func test_stock_draws_each_entry_in_order() -> void:
+  var stock: Array[StockEntry] = [StockEntry.items(2), StockEntry.relics(1), StockEntry.potions(1)]
+  var goods: Array = Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(3))
+  assert_eq(goods.size(), 4, 'two items, a relic and a potion')
+  assert_true(goods[0] is ItemDef and not goods[0] is RelicDef, 'items first')
+  assert_true(goods[1] is ItemDef and not goods[1] is RelicDef, 'both of them')
+  assert_true(goods[2] is RelicDef, 'then the relic')
+  assert_true(goods[3] is ConsumableDef, 'then the potion')
+
+
+func test_stock_items_keep_to_the_entry_types() -> void:
+  var stock: Array[StockEntry] = [StockEntry.items(3, [ItemType.ARMOUR] as Array[String])]
+  for seed_value: int in range(10):
+    for def: ItemDef in Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(seed_value)):
+      assert_true(ItemType.ARMOUR in def.types, 'only armour items are offered')
+
+
+func test_stock_with_no_matching_item_offers_none() -> void:
+  var stock: Array[StockEntry] = [StockEntry.items(2, [ItemType.SPELL] as Array[String])]
+  assert_eq(Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(1)).size(), 0, 'the pool has no spell')
+
+
+func test_stock_relics_never_repeat() -> void:
+  var stock: Array[StockEntry] = [StockEntry.relics(RelicCatalog.REWARD_POOL.size() + 2)]
+  var ids := _ids(Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(7)))
+  assert_eq(ids.size(), RelicCatalog.REWARD_POOL.size(), 'no more relics than the pool holds')
+  for id: String in ids:
+    assert_eq(ids.count(id), 1, 'each relic once')
+
+
+func test_stock_draw_is_determined_by_the_rng() -> void:
+  var stock: Array[StockEntry] = [StockEntry.items(2), StockEntry.relics(2)]
+  assert_eq(_ids(Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(11))), _ids(Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(11))),
+    'the same RNG state draws the same goods')
+
+
+func test_stock_relics_come_from_the_relic_pool_handed_in() -> void:
+  var stock: Array[StockEntry] = [StockEntry.relics(3)]
+  var pool: Array = [RelicCatalog.REWARD_POOL[0]]
+  assert_eq(_ids(Draft.draw_stock(stock, _pool(), pool, _rng(2))), pool, 'only the relics in the pool')
+  assert_eq(Draft.draw_stock(stock, _pool(), [], _rng(2)).size(), 0, 'none from an empty pool')
+
+
+func test_can_draw_stock_says_whether_anything_would_be_drawn() -> void:
+  var relics_only: Array[StockEntry] = [StockEntry.relics(1)]
+  assert_true(Draft.can_draw_stock(relics_only, _pool(), RelicCatalog.REWARD_POOL), 'relics are left')
+  assert_false(Draft.can_draw_stock(relics_only, _pool(), []), 'no relics are left')
+  var spells: Array[StockEntry] = [StockEntry.items(1, [ItemType.SPELL] as Array[String])]
+  assert_false(Draft.can_draw_stock(spells, _pool(), []), 'no item matches')
+  spells.append(StockEntry.potions(1))
+  assert_true(Draft.can_draw_stock(spells, _pool(), []), 'but a potion can be drawn')

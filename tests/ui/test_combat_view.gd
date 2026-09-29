@@ -236,8 +236,13 @@ func test_potions_are_drawn_like_board_items() -> void:
   assert_eq((slot.cell.get_node('Frame') as Control).theme_type_variation, &'PanelToken', 'the same frame as an item')
   assert_eq((slot.cell.get_node('Frame/Icon') as CanvasItem).material, InterfaceLook.framed_material, 'the same icon material')
   assert_eq(slot.cell.cell_size, board_cell.cell_size, 'the same size as the board items')
-  for pill: Node in slot.cell.get_node('Pills').get_children():
-    assert_false((pill as Control).visible, 'a potion shows no value pills')
+  assert_eq(slot.item().def.id, FixtureKit.POTION_ID, 'the cell shows an Item built from the potion')
+  var visible_pills: Array = slot.cell.get_node('Pills').get_children().filter(
+    func(pill: Node) -> bool: return (pill as Control).visible)
+  assert_false(visible_pills.is_empty(), 'with its value pills, like an item')
+  await wait_frames(2)   # let the containers lay the row out, so the slot is where it is drawn
+  var target: Dictionary = view.inspectable_at(slot.get_global_rect().get_center())
+  assert_eq(target.get('item'), slot.item(), 'and a tooltip when hovered')
   cm.free()
 
 

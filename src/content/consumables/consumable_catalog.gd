@@ -3,6 +3,9 @@ class_name ConsumableCatalog
 ## content/consumables/. Built on first access.
 
 const FOLDER := 'res://content/consumables'
+# What a potion reward draws from (StockEntry.potions). The owner curates this pool with the real
+# potions.
+const REWARD_POOL: Array = ['healing_draught']
 
 static var _defs: Dictionary = {}
 

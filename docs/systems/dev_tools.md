@@ -18,7 +18,7 @@ exposes a plain seam and the tool uses it:
 |---|---|
 | `Game.run_started(run)` | `Dev`, to add to a new run before any screen reads it |
 | `TitleScreen.open_select()`, `open_settings()`, `DEFAULT_SEED` | `Dev`, for the title arguments |
-| `EncounterChoice.skipped` | `Dev`, for `--autofight` |
+| `EncounterChoice.skipped`, `EncounterChoice.picked` | `Dev`, for `--autofight` and `--pick` |
 | `Save.disabled` | `Dev` (`--nosave`), the autotest |
 | `InterfaceGlow.demo_brightness`, `MonsterImages.forced_path`, `ControlFeedback.set_demo` | the debug panel |
 | `RunManager.pinned_enemy_ids` | the autotest (`--enemies`) |
@@ -48,6 +48,8 @@ Read by `Dev`.
 | `--autostart`, `--character=ID` | Skips the title screen and starts a run as the default character or `ID` |
 | `--select`, `--settings` | Opens character select or the settings screen on the title screen |
 | `--autofight` | Walks past every choice of encounters, so the run goes from fight to fight |
+| `--pick N` | Takes card N (1 = left, the shop) at every choice of encounters |
+| `--gold N` | Adds N gold to a new run, such as for a shop screenshot |
 | `--allies N` | Adds N placeholder allies to a new run (`DEMO_ALLY_ID`) |
 | `--board-items N` | Fills the board up to N items with copies of the starting items |
 | `--potions N` | Gives the player N potions (`DEMO_POTION_ID`) |

@@ -64,4 +64,8 @@ something else.
 | **Requirement** | A condition an encounter needs to be offered at all (`EncounterDef.requires`). |
 | **Weight rule** | A condition that multiplies how likely an encounter is to be offered while it holds (`EncounterDef.weights`). |
 | **Elite fight** | A harder fight that rewards a relic and a draft. Two per act, at fixed squares. |
-| **Relic encounter** | An encounter offered before a fight where the player picks one of three relics, with no fight. |
+| **Reward encounter** | An encounter offered before a fight, with no fight, where the player picks one of the goods drawn from its stock (`EncounterDef.Type.REWARD`). The placeholder reliquary offers three relics. |
+| **Potion** | A thrown, one-use reserve held in the potion row. Its definition is an item definition, so it is shown and tooltipped like an item (`ConsumableDef`). |
+| **Relic pool** | The reward relics the player does not hold yet (`RunManager.relic_pool`). Every relic reward draws from it, so a relic is never had twice. |
+| **Shop** | An encounter offered from the left card before a fight, with no fight, where the player buys goods drawn from its stock with gold, then leaves (`EncounterDef.Type.SHOP`). |
+| **Stock entry** | One line of what a reward encounter or a shop offers: items (optionally only some item types), relics or potions, and how many (`StockEntry`). |
