@@ -133,7 +133,8 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   each column top to bottom, then the next column. The `panel_background` print setting chooses
   which panels draw their background. `medium_token_size` (the medium token size, also used by the map) and `ally_item_size` set the
   largest item cell in enemy and ally panels (a row too long for its width shrinks), and `status_size` sets the status
-  icons on every panel. Every value pill, on an item or a status icon, is the same size whatever the
+  icons on every panel. Hovering a status icon shows its card and the hover border and slows the
+  fight ([tooltips.md](tooltips.md)). Every value pill, on an item or a status icon, is the same size whatever the
   cell or icon size: the `pill_size` print setting scales them all together. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
   change only sizes, colours and which parts show, and the player's `PlayerPanel` is an instance of
   it, so the three cannot drift apart in layout. The portrait stays square and as tall as the column beside it, so it follows the

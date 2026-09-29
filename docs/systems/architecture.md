@@ -83,7 +83,7 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
  
 - **Exposes:**
   - *`sim_time`* (stepped) — logic + event timestamps (fire / impact) read it. *`render_time()`* (continuous) — the VFX/audio wall reads it; smooth between steps.
-  - *Timescale dial* — the one scalar (battle-speed ×1/×2/×3, hover slow-mo ~×0.05, pause ×0, fast-test ×5+). Set via intent, never by UI directly.
+  - *Timescale dial* — the one scalar (battle-speed ×1/×2/×3, hover slow-mo (`Balance.TIMESCALE_SLOWMO`), pause ×0, fast-test ×5+). Set via intent, never by UI directly.
   - *`steps_due(real_delta) → int`* — accumulate `real_delta × dial`, drain whole `STEP`s (cap `MAX_STEPS`, drop backlog) → how many sim-steps to run; *`advance()`* — `sim_time += STEP`.
 - **Inbound (who calls the `Timekeeper`):**
   - `Combat manager` → creates it at combat start; each `tick` calls `steps_due` then `advance` per sim-step; sets the dial (`set_base_scale` / `set_override`, from a UI intent it interprets); tears it down at exit. (The `Run manager` never touches it.)
@@ -192,7 +192,7 @@ No entity has its own `_process`. Fixed steps make the cascade deterministic and
  
 ### Timescale as one dial
  
-A single scalar drives all of: slow-mo-on-hover (~×0.05), pause (×0), fast-test (×5+), and a player-facing battle-speed setting (×1 / ×2 / ×3). They are not separate features — the dial sets *how many fixed sim-steps run per real second* (not a per-step delta).
+A single scalar drives all of: slow-mo-on-hover (`Balance.TIMESCALE_SLOWMO`), pause (×0), fast-test (×5+), and a player-facing battle-speed setting (×1 / ×2 / ×3). They are not separate features — the dial sets *how many fixed sim-steps run per real second* (not a per-step delta).
  
 - There is a **base speed** (player setting) and a **momentary override** (hover slow-mo). Hover overrides the base while active and returns *to the base*, not to ×1. The "what does the scalar return to" logic is a small combat-PRD detail. *(Resolved: the override **replaces** the base — absolute slow-mo — returning to the base on release, not to ×1.)*
 ### Effect resolution — pointer

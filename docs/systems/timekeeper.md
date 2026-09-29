@@ -34,7 +34,7 @@ One dial, set via input-intent (the `Combat manager` sets it from a UI intent �
 | Use | Dial |
 |-----|--------|
 | Pause | ×0 |
-| Hover slow-mo (inspect) | ~×0.05 |
+| Hover slow-mo (inspect) | `Balance.TIMESCALE_SLOWMO` |
 | Player battle-speed | ×1 / ×2 / ×3 |
 | Fast-test / dev | ×5+ |
 
@@ -61,7 +61,7 @@ So the dial becomes a **cadence**: pause → 0 steps; slow-mo → a step every ~
 ## Two reads: `sim_time` (stepped) vs `render_time()` (continuous)
 
 - **`sim_time`** — stepped; logic and event timestamps (fire / impact) read it; deterministic.
-- **`render_time()`** — continuous: `sim_time + acc` (the sub-step accumulator). The VFX/audio wall reads it, so motion is smooth *between* sim-steps (slow-mo glides at 1/20 speed rather than stuttering at 3 fps), and it **freezes the instant the sim stops** (resolved / paused). *(A `physics_interpolation_fraction × STEP × timescale` term was dropped: it keeps cycling while the sim is frozen, oscillating paused projectiles.)* Only discrete events snap to steps.
+- **`render_time()`** — continuous: `sim_time + acc` (the sub-step accumulator). The VFX/audio wall reads it, so motion is smooth *between* sim-steps (slow-mo glides rather than stuttering a few frames a second), and it **freezes the instant the sim stops** (resolved / paused). *(A `physics_interpolation_fraction × STEP × timescale` term was dropped: it keeps cycling while the sim is frozen, oscillating paused projectiles.)* Only discrete events snap to steps.
 
 ## The wall (sync source)
 
