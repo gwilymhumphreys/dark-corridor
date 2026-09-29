@@ -24,12 +24,18 @@ const CRIT_SOUND: String = 'mechanics/' + CritMechanic.ID
 ## subfolders named after an item's `travel_sound`, a type tag or a mechanic override it.
 const TRAVEL_SOUND: String = 'combat/travel'
 
+## TRIAL: whether attacks land with `AttackHitDrawer`'s slash and impact images (true) or the
+## placeholder ring (false). Switched in the debug panel's Feedback tab, or with
+## `--attack-effect=ring` at start-up.
+static var attack_sprites: bool = DevArgs.value('--attack-effect') != 'ring'
+
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
 var _sounded: Dictionary = {}   # Delivery instance id -> true, so each landing sounds once
 var _launched: Dictionary = {}  # Delivery instance id -> true, so each flight sounds once
 var _projectile: EffectDrawer
 var _damage_number: DamageNumberDrawer
+var _attack_hit: AttackHitDrawer
 var _impact_drawers: Dictionary = {}   # mechanic id (or Delivery.Kind.APPLY_STATUS) -> EffectDrawer
 
 
@@ -41,6 +47,7 @@ func setup(cm: CombatManager, layout_source: CombatView) -> void:
 func _ready() -> void:
   _projectile = ProjectileDiscDrawer.new()
   _damage_number = DamageNumberDrawer.new()
+  _attack_hit = AttackHitDrawer.new()
   var ring: ImpactRingDrawer = ImpactRingDrawer.new()
   # Every mechanic id maps to the same ring for now (docs/systems/mechanics.md). A DoT tick's
   # visual-only Delivery carries its status id as the mechanic, so its ring still draws.
@@ -80,7 +87,10 @@ func _draw() -> void:
       continue
     var landing: Vector2 = layout.target_pos(d.target) + EffectDrawer.scatter_offset(d)
     var key: Variant = _impact_key(d)
-    if _impact_drawers.has(key):
+    if attack_sprites and key == AttackMechanic.ID:
+      var src: Vector2 = layout.consumable_pos(d.consumable) if d.consumable != null else layout.item_pos(d.source)
+      _attack_hit.draw_hit(self, d, landing, landing_direction(src, landing), now - d.impact_time)
+    elif _impact_drawers.has(key):
       var drawer: EffectDrawer = _impact_drawers[key]
       drawer.draw_effect(self, d, landing, now - d.impact_time)
     if _shows_number(d):
@@ -93,6 +103,12 @@ func _draw() -> void:
 static func arc_point(src: Vector2, dst: Vector2, t: float) -> Vector2:
   var rise: float = 4.0 * t * (1.0 - t) * ARC_HEIGHT * src.distance_to(dst)
   return src.lerp(dst, t) + Vector2.UP * rise
+
+
+## The direction a projectile is travelling as it lands at the end of its arc from src to dst (the
+## slope of `arc_point` at t = 1): the straight line, bent downward by the arc coming back down.
+static func landing_direction(src: Vector2, dst: Vector2) -> Vector2:
+  return (dst - src) + Vector2.DOWN * 4.0 * ARC_HEIGHT * src.distance_to(dst)
 
 
 ## How big a hit is, from 0 at BIG_HIT_DAMAGE to 1 at BIGGEST_HIT_DAMAGE, or -1 for anything that

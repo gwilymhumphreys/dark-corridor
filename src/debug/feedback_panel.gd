@@ -28,6 +28,11 @@ func rebuild() -> void:
     for setting: String in properties:
       var set_value: Callable = func(new_value: Variant) -> void: ControlFeedback.settings[setting] = new_value
       section.add_row(_make_row(setting.capitalize(), ControlFeedback.setting_value(setting), properties[setting], set_value))
+  # TRIAL: the attack hit effect being tried (docs/systems/vfx_driver.md). Not a control setting,
+  # but it lives here until hit effects have a tab of their own.
+  var hits: LookSection = _add_section('Hit effects')
+  var set_sprites: Callable = func(new_value: Variant) -> void: VfxDriver.attack_sprites = new_value
+  hits.add_row(_make_row('Attack Sprites', VfxDriver.attack_sprites, [], set_sprites))
   # The highlight shares panel wear's material (docs/systems/control_feedback.md); only its own
   # settings are listed here, and panel wear's own groups stay in the Print tab.
   _build_shader_sections(PrintLook.panel_material, ControlFeedback.defaults())

@@ -76,6 +76,7 @@ Read by `DebugPanels` after the default preset loads.
 | `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay, layout or token setting. Repeatable |
 | `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
 | `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
+| `--attack-effect=ring` | Read by `VfxDriver`, not `DebugPanels`. Attacks land with the placeholder ring instead of the trial slash and impact images ([vfx_driver.md](vfx_driver.md)) |
 | `--feedback-demo=<amount>` | Holds every control at that much hover |
 | `--glow-demo=<brightness>` | Every node drawn through a picture material glows ([interface_glow.md](interface_glow.md)) |
 | `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel`, `--tokens-panel` | Opens the panel on that tab |
@@ -90,6 +91,7 @@ Run one directly instead of the game: `<godot> --path . res://src/debug/scenes/<
 | `combat_sandbox` | One real fight between the default character and an enemy (hover to slow down, R restarts) | none |
 | `corridor_testbed` | The corridor with Forward and Back buttons; N places a monster ([corridor_3d.md](corridors/corridor_3d.md)) | `--set=property=value` sets a corridor export (repeatable); `--view=WIDTHxHEIGHT` fixes the view size; with `--shot`, `--still` keeps it from moving and `--monster` places a monster |
 | `tooltip_demo` | The item tooltip held open over one item ([tooltips.md](tooltips.md)) | none |
+| `hit_effects_preview` | The dagger's slash and the warhammer's impact repeating over an enemy image, and a strip of frames through each ([vfx_driver.md](vfx_driver.md)) | none |
 
 ## Screenshot commands
 

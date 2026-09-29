@@ -3,7 +3,7 @@
 How an interactive control answers the pointer: a rough printed border just inside its edge while it
 is hovered or selected, a light wash that lifts a plain button's dark fill, a squash and a small drop
 on press, and one short pulse of extra ink on release. It applies to buttons, character and choice
-cards, potion slots and board item cells.
+cards, potion slots, board item cells and status icons.
 
 **Location:** `src/shaders/control_highlight.gdshaderinc` (the drawing), `ControlFeedback`
 (`src/autoloads/control_feedback.gd`, class `ControlFeedbackAutoload`), `UIJuice`
@@ -39,6 +39,7 @@ Saved as the feedback part of a [look preset](look_presets.md).
 | Control | Driven by |
 |---|---|
 | Buttons, character and choice cards, potion slots, reward options, debug panel rows | `UIJuice` on `mouse_entered` / `mouse_exited` and the `BaseButton` press signals |
+| Status icons | `StatusIcon.hovered`, set the same way as a board item cell's. The border goes on the icon's `Frame`, whose worn panel is the status's colour square |
 | Board item cells | `ItemCell.hovered`, set by `combat_view_framed.gd` from the tooltip hover poll — board items take no mouse events of their own ([tooltips.md](tooltips.md)). Setting it to true also plays the shared hover sound (`SfxManager.play_ui_hover()`) |
 | Selection | The map's current square (`ItemCell.set_marked`, [run_screen.md](run_screen.md#overlays)) |
 

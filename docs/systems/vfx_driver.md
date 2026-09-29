@@ -50,6 +50,18 @@ random amount fixed per delivery, with a slight side-to-side wave, then quickly
 grows and shrinks away. Heals show a '+' in front. The landed delivery is kept for
 `Balance.DELIVERY_VISUAL_HOLD`, which must be at least the number's duration.
 
+**Attack hits (trial).** While `VfxDriver.attack_sprites` is on, an attack landing draws
+`AttackHitDrawer` instead of the ring. A firing item whose `attack_sound` is `blade` gets a slash: a
+crescent that draws across from one end to the other, turned to face the direction the projectile
+was travelling as it landed (`VfxDriver.landing_direction`), with a small random tilt and a random
+mirror fixed per delivery, then fades. Any other attack gets an impact: a sharp flash that grows
+fast, over a spreading ring and a burst of debris, turned by a fixed random angle. The images are
+from Kenney's Particle Pack, stored in `assets/vfx/attack/` as white shapes so they can be tinted:
+each has a base drawn in the delivery's colour and a core (its brightest part) drawn in the
+off-white text colour. The switch is **Attack Sprites** in the debug panel's Feedback tab (F5), and
+`--attack-effect=ring` starts with it off. The `hit_effects_preview` dev scene
+([dev_tools.md](dev_tools.md)) repeats both effects and shows a strip of frames through each.
+
 **Big hits.** A damage landing of at least `VfxDriver.BIG_HIT_DAMAGE` emits `big_hit` with a
 strength from 0 to 1 (`big_hit_strength`), once, alongside its sound. `CombatViewFramed` answers
 with a short pause of the fight (`CombatManager.request_hit_pause`, which calls `Timekeeper.hold`)
