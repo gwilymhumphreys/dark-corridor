@@ -2,7 +2,8 @@ class_name Encounter
 extends Node
 ## The per-beat orchestrator (docs/systems/encounter.md) — one resolved beat, instanced by the
 ## Run manager. A FIGHT spawns enemy Actors from their definitions (left-to-right)
-## and, on begin(), creates the per-fight CombatManager; an EVENT waits for its option pick; a REST
+## and, on begin(), creates the per-fight CombatManager; an EVENT waits for the Run manager to apply
+## the picked option and call resolve_event; a REST
 ## applies a partial heal; a RELIC encounter resolves at once and its reward is a relic choice. It
 ## reports its outcome + reward-kind up via `resolved`; the Run manager fulfils the reward and applies
 ## HP/relic policy.
@@ -72,7 +73,7 @@ func begin() -> void:
     _combat_manager.resolved.connect(_on_fight_resolved)
     _combat_manager.start()
   elif is_event():
-    pass   # await the tier-2 binary choice (pick_event_option) — the event's resolution
+    pass   # await the option pick (RunManager.pick_event_option, which then calls resolve_event)
   elif def.type == EncounterDef.Type.RELIC:
     _resolve(Outcome.RESOLVED)   # no fight: the reward (a relic choice) is the whole encounter
   else:
@@ -80,35 +81,19 @@ func begin() -> void:
     _resolve(Outcome.RESOLVED)
 
 
-## The event's binary choice (a tier-2, within-encounter pick — docs/systems/encounter.md). The
-## options are presented by the UI; this applies the chosen option's direct outcome to the
-## player run-state, then resolves the beat (events report no reward — the outcome is it).
+## The event's options, in authored order. The Run manager decides which are available
+## (RunManager.available_event_options) and applies the picked one.
 func event_options() -> Array:
   return def.event_options
 
 
-func pick_event_option(index: int) -> void:
-  if not is_event() or _resolved or def.event_options.is_empty():
+## Finish the event after the Run manager has applied the picked option's effects. Events report no
+## reward: the option is the reward. A damaging option can be lethal, so the beat resolves LOST at
+## once rather than the dead player walking on to the next fight.
+func resolve_event() -> void:
+  if not is_event() or _resolved:
     return
-  var option: EventOptionDef = def.event_options[clampi(index, 0, def.event_options.size() - 1)]
-  _apply_event_outcome(option)
-  # A damaging option can be lethal — the run must end NOW (LOST), not deferred to the
-  # next fight's win/loss check with the player walking on dead in between.
   _resolve(Outcome.LOST if not player.is_alive() else Outcome.RESOLVED)
-
-
-func _apply_event_outcome(option: EventOptionDef) -> void:
-  match option.effect:
-    EventOptionDef.Effect.HEAL_FRACTION:
-      player.heal(option.amount * player.max_hp)
-    EventOptionDef.Effect.MAX_HP_BONUS:
-      player.max_hp += roundi(option.amount)
-      player.hp += roundi(option.amount)
-    EventOptionDef.Effect.DAMAGE:
-      player.take_damage(option.amount)
-    EventOptionDef.Effect.ADD_ALLY:
-      pass   # an ally grant touches the run roster, not the player Actor — the RunManager
-             # applies it (RunManager.pick_event_option) before delegating the pick here
 
 
 func _on_fight_resolved(player_won: bool) -> void:

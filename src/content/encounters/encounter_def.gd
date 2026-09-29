@@ -25,7 +25,7 @@ var enemy_ids: Array[String] = []        # FIGHT: EnemyCatalog ids, left-to-righ
 var reward: int = Reward.NONE     # what a WIN reports up for the Run manager to fulfil
 var heal_fraction: float = 0.0    # REST: fraction of max HP restored
 var event_prose_key: String = ''  # EVENT: the body prose (localized via tr())
-var event_options: Array[EventOptionDef] = []   # EVENT: the binary choice
+var event_options: Array[EventOptionDef] = []   # EVENT: the options; unavailable ones are hidden
 var rarity: int = Rarity.COMMON
 ## Offered only while every one of these holds (RunCondition subclasses, src/run/conditions/).
 var requires: Array[RunCondition] = []
@@ -35,14 +35,25 @@ var weights: Array[Dictionary] = []
 
 
 ## How likely this encounter is to be offered to `run` now, against the others in its position list:
-## 0 when a requirement fails, otherwise its rarity's weight times the multiplier of every weight rule
-## whose condition holds.
+## 0 when a requirement fails or it is an event with no option available, otherwise its rarity's
+## weight times the multiplier of every weight rule whose condition holds.
 func offer_weight(run: RunManager) -> float:
   for condition: RunCondition in requires:
     if not condition.holds(run):
       return 0.0
+  if type == Type.EVENT and available_options(run).is_empty():
+    return 0.0
   var weight: float = Balance.ENCOUNTER_WEIGHT_RARE if rarity == Rarity.RARE else Balance.ENCOUNTER_WEIGHT_COMMON
   for rule: Dictionary in weights:
     if (rule['if'] as RunCondition).holds(run):
       weight *= float(rule['multiplier'])
   return weight
+
+
+## The indices of the event options whose conditions hold for `run`, in authored order.
+func available_options(run: RunManager) -> Array[int]:
+  var indices: Array[int] = []
+  for index: int in event_options.size():
+    if event_options[index].is_available(run):
+      indices.append(index)
+  return indices

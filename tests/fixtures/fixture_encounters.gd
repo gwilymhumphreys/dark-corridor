@@ -20,7 +20,7 @@ const CHOICE_RELIC: int = 2
 
 const REST_HEAL_FRACTION: float = 0.3
 const EVENT_HEAL_FRACTION: float = 0.25
-const EVENT_MAX_HP: float = 10.0
+const EVENT_MAX_HP: int = 10
 
 # The index of each option in every fixture event.
 const OPTION_HEAL: int = 0
@@ -59,16 +59,13 @@ static func event(id: String = EVENT) -> EncounterDef:
   d.event_prose_key = 'A fixture event.'
   var heal := EventOptionDef.new()
   heal.label_key = 'Heal'
-  heal.effect = EventOptionDef.Effect.HEAL_FRACTION
-  heal.amount = EVENT_HEAL_FRACTION
+  heal.effects = [RunEffect.heal_fraction(EVENT_HEAL_FRACTION)]
   var grow := EventOptionDef.new()
   grow.label_key = 'Grow'
-  grow.effect = EventOptionDef.Effect.MAX_HP_BONUS
-  grow.amount = EVENT_MAX_HP
+  grow.effects = [RunEffect.max_hp(EVENT_MAX_HP)]
   var recruit := EventOptionDef.new()
   recruit.label_key = 'Recruit'
-  recruit.effect = EventOptionDef.Effect.ADD_ALLY
-  recruit.ally_def_id = FixtureEnemies.ALLY_ID
+  recruit.effects = [RunEffect.add_ally(FixtureEnemies.ALLY_ID)]
   d.event_options = [heal, grow, recruit]
   return d
 

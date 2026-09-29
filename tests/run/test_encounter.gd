@@ -86,10 +86,10 @@ func test_event_awaits_its_choice_then_resolves_on_pick() -> void:
   enc.begin()
   assert_eq(player.hp, 40, 'an event does NOT resolve/apply on begin — it awaits the pick')
   assert_signal_not_emitted(enc, 'resolved', 'no resolution until an option is picked')
-  assert_gt(enc.event_options().size(), 1, 'a binary choice is offered')
+  assert_gt(enc.event_options().size(), 1, 'a choice is offered')
 
-  enc.pick_event_option(FixtureEncounters.OPTION_HEAL)
-  assert_gt(player.hp, 40, 'the chosen outcome (heal) was applied')
+  enc.resolve_event()   # the Run manager calls this after applying the picked option
+  assert_eq(player.hp, 40, 'the Encounter does not change the player itself')
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.RESOLVED, EncounterDef.Reward.NONE])
 
 
@@ -107,32 +107,15 @@ func test_fight_seeds_run_scoped_allies_onto_the_player_side() -> void:
   assert_eq(ally.board.size(), 1, 'the ally keeps its board after the fight (run-scoped, not dissolved)')
 
 
-func test_event_max_hp_option_grows_max_hp() -> void:
-  var player := Actor.new(100.0)
-  var enc := _encounter(FixtureEncounters.EVENT, player)
-  enc.begin()
-  enc.pick_event_option(FixtureEncounters.OPTION_MAX_HP)
-  assert_eq(player.max_hp, roundi(100.0 + FixtureEncounters.EVENT_MAX_HP), 'max HP grew')
-  assert_eq(player.hp, roundi(100.0 + FixtureEncounters.EVENT_MAX_HP), 'and current HP too')
-
-
-func test_lethal_event_outcome_resolves_lost() -> void:
+func test_event_resolves_lost_when_its_option_killed_the_player() -> void:
   # A damaging event option that kills the player must end the beat LOST — not
   # RESOLVED with a dead player walking on to the next fight.
-  var def := EncounterDef.new()
-  def.id = 'test_deathtrap'
-  def.type = EncounterDef.Type.EVENT
-  var opt := EventOptionDef.new()
-  opt.label_key = 'Reach into the dark'
-  opt.effect = EventOptionDef.Effect.DAMAGE
-  opt.amount = 999.0
-  def.event_options = [opt]
   var player := Actor.new(50.0)
-  var enc := Encounter.new(def, player)
-  _encs.append(enc)
+  var enc := _encounter(FixtureEncounters.EVENT, player)
   enc.begin()
+  player.take_damage(999.0)   # what a lethal DAMAGE effect does before the event resolves
   watch_signals(enc)
-  enc.pick_event_option(0)
+  enc.resolve_event()
   assert_signal_emitted_with_parameters(enc, 'resolved', [Encounter.Outcome.LOST, EncounterDef.Reward.NONE])
 
 

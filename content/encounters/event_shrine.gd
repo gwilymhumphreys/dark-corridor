@@ -10,10 +10,8 @@ func _init() -> void:
     + 'You could kneel and drink, or pry the shard from its brow.'
   var pray := EventOptionDef.new()
   pray.label_key = 'Kneel and drink'
-  pray.effect = EventOptionDef.Effect.HEAL_FRACTION
-  pray.amount = 0.4
+  pray.effects = [RunEffect.heal_fraction(0.4)]
   var pry := EventOptionDef.new()
   pry.label_key = 'Pry the shard loose'
-  pry.effect = EventOptionDef.Effect.MAX_HP_BONUS
-  pry.amount = 15.0
+  pry.effects = [RunEffect.max_hp(15)]
   event_options = [pray, pry]

@@ -1,9 +1,10 @@
 class_name EventOverlay
 extends Control
 ## The event overlay (docs/systems/encounter.md / docs/systems/ui_layout.md): a non-combat EVENT's prose + its
-## binary choice as option buttons. A pick emits option_picked(index) — the tier-2 event
-## intent the run screen forwards to Encounter.pick_event_option (which applies the chosen
-## outcome + resolves the beat). Reads the live Encounter; writes nothing. Text localized.
+## available options as buttons. A pick emits option_picked(index), the option's index in the
+## event's authored list, which the run screen forwards to RunManager.pick_event_option (which
+## applies the option's effects + resolves the beat). Reads the live Encounter; writes nothing.
+## Text localized.
 
 signal option_picked(index: int)
 
@@ -12,11 +13,13 @@ signal option_picked(index: int)
 @onready var _options: VBoxContainer = $Panel/Options
 
 
-func setup(enc: Encounter) -> void:
+## `available` holds the indices of the options to show (RunManager.available_event_options); an
+## option whose conditions do not hold is not shown.
+func setup(enc: Encounter, available: Array[int]) -> void:
   _title.text = tr(enc.def.name_key)
   _prose.text = tr(enc.def.event_prose_key)
   var options: Array = enc.event_options()
-  for i in options.size():
+  for i: int in available:
     var btn := Button.new()
     btn.text = tr(options[i].label_key)
     btn.custom_minimum_size = Vector2(0, 72)

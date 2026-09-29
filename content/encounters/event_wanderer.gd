@@ -11,11 +11,9 @@ func _init() -> void:
     + 'It rasps an offer: walk together a while, and it will fight at your side.'
   var welcome := EventOptionDef.new()
   welcome.label_key = 'Let it join you'
-  welcome.effect = EventOptionDef.Effect.ADD_ALLY
-  welcome.ally_def_id = 'spore_thrall'
+  welcome.effects = [RunEffect.add_ally('spore_thrall')]
   var refuse := EventOptionDef.new()
   refuse.label_key = 'Walk on alone'
-  refuse.effect = EventOptionDef.Effect.HEAL_FRACTION
-  refuse.amount = 0.15
+  refuse.effects = [RunEffect.heal_fraction(0.15)]
   event_options = [welcome, refuse]
   requires = [CanAddAlly.new()]

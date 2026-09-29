@@ -1,9 +1,9 @@
 # Plan: a choice of three encounters before every fight
 
-**Status: stages 1 and 2 built 2026-09-30.** As-built detail is in
+**Status: stages 1 to 3 built 2026-09-30.** As-built detail is in
 [`../systems/run_manager.md`](../systems/run_manager.md#the-choice-of-encounters),
 [`../systems/encounter.md`](../systems/encounter.md#offer-rules) and
-[`../systems/run_screen.md`](../systems/run_screen.md#the-choice-of-encounters). Stages 3 to 5 are still
+[`../systems/run_screen.md`](../systems/run_screen.md#the-choice-of-encounters). Stages 4 and 5 are still
 to build. Differences from the plan are listed at the end.
 
 Before each fight the player is offered three encounters, shown as cards standing in the corridor
@@ -115,8 +115,8 @@ weights = [{ 'if': HealthBelow.new(0.4), 'multiplier': 3.0 }]
 - **Times picked.** `RunManager.times_picked` counts how often each encounter id was picked, saved in
   the snapshot. It is kept automatically, so "the second visit" needs no flag.
 - **Options with conditions.** Every event option gets `requires`, a list of conditions. An option
-  whose conditions do not hold is shown disabled, with the tooltip "You do not meet the requirements
-  for this" (owner). For example, the first visit to a shrine offers "Leave an offering", which sets a
+  whose conditions do not hold is not shown (owner, decision #55), and an event with no option to
+  pick is not offered. For example, the first visit to a shrine offers "Leave an offering", which sets a
   flag and does nothing else; a later visit offers "Take back the offering, blessed", which requires
   that flag and gives a relic.
 
@@ -152,7 +152,7 @@ count. A shop's theme is its name and its stock entries: a weaponsmith might lis
 
 | Kind | The choice inside it |
 |---|---|
-| Event | Its options, as now, with the unmet ones disabled. |
+| Event | Its options, with the unmet ones hidden. |
 | Reward | Pick one from goods drawn from the stock entries, in the draft panel. The relic encounter is a reward of three relics. |
 | Shop | Goods drawn from the stock entries, each with a price. Buy any the player can afford, then leave. |
 | Rest | A heal on arrival, as now. |
@@ -190,7 +190,7 @@ screen's overlay choice, the encounter card and the autotest driver.
   event and draft panels do now. `ChoiceOverlay` is removed.
 - A new shop panel: the goods as reward options, each with a price, a buy button that is disabled when
   the player cannot afford it, the player's gold, and a leave button.
-- The event panel shows every option, with the unmet ones disabled.
+- The event panel shows only the options whose conditions hold.
 
 ## Save
 
@@ -217,7 +217,7 @@ Each stage leaves a playable run.
 2. **Rarity and conditions.** `rarity`, `requires`, `weights`, the condition classes, the weighted
    draw, and the rarity colour on the card if the owner wants it now.
 3. **Effects and memory.** `effects` on options, the new `RunEffect` kinds, `flags`, `times_picked`,
-   and disabled options. The existing placeholder events are converted.
+   and hidden options. The existing placeholder events are converted.
 4. **Rewards.** Stock entries, the mixed pending offer, the reward kind, and a potion pool. The relic
    encounter becomes a reward encounter.
 5. **Shops.** The shop kind, prices, and the shop panel, with one placeholder shop in the left list.
@@ -227,7 +227,7 @@ Docs updated in each stage: `run_manager.md`, `encounter.md`, `save.md`, `run_sc
 rows), and a decision log entry. The "Encounters and the choice layer" section of
 `design/game_design.md` describes the older choice layer; that section is the owner's to rewrite.
 
-## How stages 1 and 2 differ
+## How stages 1 to 3 differ
 
 - A card wider than its share of the row is scaled down (`EncounterChoice.CARD_FILL`), because three
   enemies at their arrived depth stand closer together than a card is wide.
@@ -240,11 +240,19 @@ rows), and a decision log entry. The "Encounters and the choice layer" section o
 - The rarity colour on the card is left for later (owner).
 - The placeholder recruit event requires `CanAddAlly`, so it is not offered once the ally slots are
   full.
+- An option whose conditions fail is hidden rather than disabled (owner), so there is no requirement
+  message to translate.
+- `TimesPicked(encounter_id, count)` takes the encounter's id and counts picks that have finished
+  (counted when the encounter resolves), so inside an encounter it means "a later visit". "At most"
+  is written with `Not`.
+- `Encounter.pick_event_option` is replaced by `resolve_event`; the Run manager applies the effects.
+- The option index the event panel emits is the option's index in the event's authored list, not
+  the button's position, because hidden options leave gaps.
 
 ## Tests
 
 On fixtures ([`../systems/testing.md`](../systems/testing.md)): the map layout, the draw (one per
 position, requirements, weights, empty lists), skipping, the fight-won gain, every condition, every
-effect, flags and `times_picked` surviving a save and resume, disabled options, the mixed offer, shop
+effect, flags and `times_picked` surviving a save and resume, hidden options, the mixed offer, shop
 purchases and affordability, and the cards' placement. A content check that every id in the position
 lists resolves, and that every list has an encounter with no requirements.
