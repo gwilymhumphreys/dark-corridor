@@ -17,7 +17,7 @@ something else.
 | **Trigger** | An event an item listens for that adds seconds to its own cooldown bar each time it happens (`ItemDef.trigger_subs`). A relic's trigger fires the relic instead. |
 | **Relic** | An item with no cooldown: it fires only when one of its triggers happens, and its passives hold for the whole fight. The run owns the player's relics; in a fight they sit apart from the board (`RelicDef`, `Actor.relics`). |
 | **Passive** | A relic ability that is always on for the whole fight, written like an item effect (`RelicDef.passives`). Not a status. |
-| **Run trigger** | A relic ability outside fights: when a run event happens (the relic is picked up, a fight is won, a draft is skipped), its effects change health or gold (`RelicDef.run_triggers`, `RunEffect`). |
+| **Run trigger** | A relic ability outside fights: when a run event happens (the relic is picked up, a fight is won, a draft is skipped), its run effects change the run (`RelicDef.run_triggers`, `RunEffect`). |
 | **Type tag** | A label on an item (`weapon`, `armour`, `spell`, `skill`, `trinket`). It does nothing by itself; other items and statuses can refer to it. |
 | **Value pill** | The number on the top edge of an item's icon. There is one for each mechanic effect; a status effect has none. |
 
@@ -55,7 +55,10 @@ something else.
 | **Beat** | One encounter along an act, in order (`RunManager.position`). |
 | **Square** | A beat shown on the map: a fight, an elite fight or the boss (`RunMap.SQUARES`). Every square has a choice of encounters before it. |
 | **Choice of encounters** | The beat before every square, where three encounters are offered as cards in the corridor and the player picks one or walks past for a little gold (`RunManager.pending_choice`). |
-| **Event** | An encounter with prose and a choice of outcomes, and no fight. It is offered in the choice of encounters. |
+| **Event** | An encounter with prose and a choice of options, and no fight. It is offered in the choice of encounters. |
+| **Event option** | One choice inside an event: its effects on the run and the conditions it needs. An option whose conditions fail is not shown (`EventOptionDef`). |
+| **Run effect** | A change to the run made outside fights by an event option or a relic's run trigger, such as healing, gold, or gaining an item (`RunEffect`). |
+| **Run flag** | A named whole number the run remembers, set by run effects and read by conditions, so a later encounter can react to an earlier choice. Never shown to the player (`RunManager.flags`). |
 | **Encounter rarity** | How often an encounter is offered before its weight rules: common or rare (`EncounterDef.rarity`). |
 | **Condition** | A yes-or-no question about the run, such as whether the board holds an item (`RunCondition`). |
 | **Requirement** | A condition an encounter needs to be offered at all (`EncounterDef.requires`). |

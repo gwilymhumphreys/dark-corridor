@@ -33,6 +33,7 @@ What it **is not**: not the run-flow (the `Run manager` builds the snapshot, wri
 - **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant. (No statuses — all statuses are combat-scoped, never saved; decision #26.)
 - **Relics & potions** — the player run-state (not Actor-owned).
 - **Gold** — a banked run-state resource (`gold: int`, decision #33). **Optional on read** (`.get('gold', 0)` — absent in a pre-gold snapshot → 0, so old saves still load; deliberately **not** in `SNAPSHOT_KEYS`, per the no-migration rule).
+- **Run flags and pick counts** — `flags` (flag name → whole number) and `times_picked` (encounter id → count). Optional on read like gold; `rehydrate` turns their values back into whole numbers, because JSON reads every number as a float.
 - **Run position** — the global beat `position` (the act and beat are derived from it — `RunMap`), the character id, and the current beat: its encounter (`current_def_id` and the drawn `current_enemy_ids`), or at a choice beat the offered encounters (`pending_choice`, with `current_def_id` empty).
 - **Allies** — each run-scoped ally's def id only; allies are revived to full health each fight, so their health is not saved.
 - **RNG state** — the `Run manager`'s run RNG, captured as its **full state** (not just the seed), so resume is **deterministic**: reloading reproduces the same future draft offers and encounter beats *every time* — not re-rollable by quit-and-resume (no save-scum; consistent with "death is final").

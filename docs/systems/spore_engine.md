@@ -118,7 +118,7 @@ The engine hardcodes **no spore** — it gains verbs, hooks, and one capability;
 > seeds each fight's CombatManager with them, and they are revived to full health at every fight start (their health is not saved).
 > So an ally can be **either scope** — combat-scoped (a summon) or run-scoped (persistent) — the
 > shared combat roster serves both. One acquisition path is built: a recruit event option
-> (`EventOptionDef.Effect.ADD_ALLY`, the placeholder Wanderer event). Other paths (a draftable `ally` category / a
+> (`RunEffect.add_ally` on an event option, the placeholder Wanderer event). Other paths (a draftable `ally` category / a
 > character-start ally) + the token/ally content stay the owner's. (Original deferral note below.)
 
 
