@@ -858,6 +858,102 @@ func test_a_resumed_shop_has_the_same_goods_and_the_gold_unspent() -> void:
   assert_false(run_b.is_sold(0), 'and nothing sold')
 
 
+func test_a_reroll_pays_and_draws_every_good_again() -> void:
+  var run := _run()
+  _start_in_shop(run, 100)
+  run.buy(0)
+  var gold: int = run.gold
+  assert_eq(run.reroll_price(), Balance.SHOP_REROLL_PRICE, 'the first reroll costs the base price')
+  assert_true(run.reroll_shop(), 'the reroll is made')
+  assert_eq(run.gold, gold - Balance.SHOP_REROLL_PRICE, 'and paid for')
+  assert_eq(run.shop_goods().size(), FixtureEncounters.SHOP_ITEMS + 2, 'the stock is drawn again')
+  assert_false(run.is_sold(0), 'the bought good is replaced too')
+  assert_eq(run.reroll_price(), Balance.SHOP_REROLL_PRICE + Balance.SHOP_REROLL_PRICE_STEP,
+    'the next reroll costs one step more')
+
+
+func test_a_reroll_the_player_cannot_afford_changes_nothing() -> void:
+  var run := _run()
+  _start_in_shop(run, 0)
+  var goods: Array = run.shop_goods().duplicate()
+  assert_false(run.can_reroll(), 'no gold, no reroll')
+  assert_false(run.reroll_shop(), 'the reroll is refused')
+  assert_eq(run.shop_goods(), goods, 'the goods stay')
+  assert_eq(run.gold, 0, 'and nothing is paid')
+
+
+func test_a_shop_stays_open_when_a_reroll_draws_nothing() -> void:
+  var run := _run()
+  _start_in_shop(run, 100)
+  run.current_encounter().def.stock = [StockEntry.relics(1)]
+  for id: String in RelicCatalog.REWARD_POOL:
+    run.relics.append(Relic.new(RelicCatalog.get_def(id)))   # every reward relic held: the pool is empty
+  assert_true(run.reroll_shop(), 'the reroll is made')
+  assert_true(run.shop_goods().is_empty(), 'it draws nothing')
+  assert_true(run.has_open_shop(), 'and the shop is still open until the player leaves')
+
+
+func test_leaving_a_shop_resets_its_reroll_price() -> void:
+  var run := _run()
+  _start_in_shop(run, 100)
+  run.reroll_shop()
+  run.leave_shop()
+  assert_false(run.can_reroll(), 'a closed shop cannot be rerolled')
+  assert_eq(run.reroll_price(), Balance.SHOP_REROLL_PRICE, 'and the price is back to the base')
+
+
+# --- selling items (docs/systems/run_manager.md → Selling) ----------------------
+
+func test_an_item_sells_for_its_share_of_the_shop_price() -> void:
+  var def: ItemDef = FixtureItems.attack()
+  for rarity: int in [ItemDef.Rarity.COMMON, ItemDef.Rarity.UNCOMMON, ItemDef.Rarity.RARE]:
+    def.rarity = rarity
+    assert_eq(RunManager.sell_price(Item.new(def)), floori(Balance.SHOP_PRICE_ITEM[rarity] * Balance.SELL_SHARE),
+      'half the shop price, rounded down')
+
+
+func test_selling_an_item_outside_a_fight_pays_and_removes_it() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)   # at the opening choice of encounters
+  var item: Item = run.player.board[0]
+  var board: int = run.player.board.size()
+  var gold: int = run.gold
+  assert_true(run.can_sell(item), 'an item can be sold outside a fight')
+  assert_true(run.sell_item(item), 'the sale is made')
+  assert_eq(run.gold, gold + RunManager.sell_price(item), 'the player is paid')
+  assert_eq(run.player.board.size(), board - 1, 'the item leaves the board')
+  assert_null(item.owner, 'and is dissolved')
+  assert_false(run.sell_item(item), 'so it cannot be sold again')
+
+
+func test_the_last_item_can_be_sold() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  while not run.player.board.is_empty():
+    assert_true(run.sell_item(run.player.board[0]), 'every item sells')
+  assert_true(run.player.board.is_empty(), 'leaving the board empty')
+
+
+func test_items_cannot_be_sold_during_a_fight() -> void:
+  var run := _run()
+  _start_at_fight(run, 1)
+  run.begin_current()
+  var item: Item = run.player.board[0]
+  assert_false(run.can_sell(item), 'not while the fight is under way')
+  assert_false(run.sell_item(item), 'the sale is refused')
+  assert_true(item in run.player.board, 'and the item stays')
+  run.combat_manager().run_headless()
+  assert_true(run.can_sell(item), 'once the fight is over it can be sold')
+
+
+func test_an_item_not_on_the_board_cannot_be_sold() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var gold: int = run.gold
+  assert_false(run.sell_item(Item.new(FixtureItems.attack(), run.player)), 'refused')
+  assert_eq(run.gold, gold, 'and nothing is paid')
+
+
 func test_prices_follow_the_kind_and_rarity_of_the_goods() -> void:
   var item: ItemDef = FixtureItems.attack()
   assert_eq(RunManager.price_of(item), Balance.SHOP_PRICE_ITEM[item.rarity], 'an item')

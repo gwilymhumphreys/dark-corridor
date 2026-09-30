@@ -69,3 +69,5 @@ something else.
 | **Relic pool** | The reward relics the player does not hold yet (`RunManager.relic_pool`). Every relic reward draws from it, so a relic is never had twice. |
 | **Shop** | An encounter offered from the left card before a fight, with no fight, where the player buys goods drawn from its stock with gold, then leaves (`EncounterDef.Type.SHOP`). |
 | **Stock entry** | One line of what a reward encounter or a shop offers: items (optionally only some item types), relics or potions, and how many (`StockEntry`). |
+| **Reroll** | Paying gold in a shop to draw all of its goods again. Each reroll in a visit costs more (`RunManager.reroll_shop`). |
+| **Sell** | Taking an item off the board for part of its shop price in gold, at any time outside a fight (`RunManager.sell_item`). Relics and potions are not sold. |

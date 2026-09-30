@@ -122,16 +122,17 @@ stock = [StockEntry.items(2, [ItemType.WEAPON]), StockEntry.potions(1)]
 
 ## Shops
 
-**Location:** `RunManager` (the shop section), `ShopOverlay`, prices in `Balance.SHOP_PRICE_*`.
+**Location:** `RunManager` (the shop section), `ShopOverlay`, prices in `Balance.SHOP_PRICE_*` and `SHOP_REROLL_PRICE*`.
 
 A shop (`Type.SHOP`) describes its goods with `stock`, the same stock entries as a reward encounter, so a shop's theme is its name and its stock (a weaponsmith lists only weapons). The goods are drawn when it opens; the player buys any they can afford, as many as they like, then leaves.
 
-- **Price** — `RunManager.price_of(good)`: `Balance.SHOP_PRICE_ITEM`, `SHOP_PRICE_RELIC` or `SHOP_PRICE_POTION`, indexed by the good's rarity. Placeholders.
+- **Price** — `RunManager.price_of(good)`: `Balance.SHOP_PRICE_ITEM`, `SHOP_PRICE_RELIC` or `SHOP_PRICE_POTION`, indexed by the good's rarity.
 - **Buying** — `buy(index)` pays the price and gives the good as a pick would; `can_buy` is false for a sold or unaffordable good. A bought relic leaves the relic pool.
+- **Rerolling** — `reroll_shop()` pays `reroll_price()` and draws every good again from the stock, bought ones included. The price starts at `Balance.SHOP_REROLL_PRICE` and rises by `SHOP_REROLL_PRICE_STEP` with each reroll in the visit. A shop stays open (`has_open_shop`) even when a reroll draws nothing.
 - **Leaving** — `leave_shop()`, then the caller advances.
-- **Save** — the shop is not saved. A resume re-enters it with the gold it had when it was picked and draws the same goods, so quitting in a shop undoes its purchases.
+- **Save** — the shop is not saved. A resume re-enters it with the gold it had when it was picked and draws the same goods, so quitting in a shop undoes its purchases and rerolls.
 
-There are no rerolls and no selling yet.
+Items are sold from the board, in a shop or anywhere else outside a fight: [run_manager.md → Selling items](run_manager.md#selling-items).
 
 ```gdscript
 type = Type.SHOP

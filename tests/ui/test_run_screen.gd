@@ -359,6 +359,86 @@ func test_a_shop_raises_its_panel_buys_and_leaves() -> void:
   screen.free()
 
 
+func test_a_shop_reroll_pays_and_shows_the_new_goods() -> void:
+  EncounterPools._positions = [[FixtureEncounters.SHOP], [FixtureEncounters.EVENT], [FixtureEncounters.REWARD]]
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  Game.run.gold = 100
+  screen._choice.picked.emit(0)
+  var price: int = Game.run.reroll_price()
+  screen._shop.rerolled.emit()
+  assert_eq(Game.run.gold, 100 - price, 'the reroll is paid for')
+  assert_eq(screen._shop.get_node('Panel/Cards').get_child_count(), Game.run.shop_goods().size(),
+    'and the panel shows the new goods')
+  screen.free()
+
+
+# --- selling items -------------------------------------------------------------
+
+# A left click at the centre of `item`'s board cell, as the run screen reads it.
+func _click_item(screen: RunScreen, item: Item) -> void:
+  _click_at(screen, screen._view.board_item_rect(item).get_center())
+
+
+func _click_at(screen: RunScreen, point: Vector2) -> void:
+  var click := InputEventMouseButton.new()
+  click.button_index = MOUSE_BUTTON_LEFT
+  click.pressed = true
+  click.position = point
+  screen._input(click)
+
+
+func test_clicking_a_board_item_selects_it_and_sell_sells_it() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  await wait_frames(2)   # let the board lay out, so each cell is where it is drawn
+  var item: Item = Game.run.player.board[0]
+  _click_item(screen, item)
+  assert_eq(screen._selected_item, item, 'the click selects the item')
+  assert_not_null(screen._sell_button, 'and shows its Sell button')
+  assert_eq(screen._sell_button.text, 'Sell for %d gold' % RunManager.sell_price(item), 'with the price')
+  var gold: int = Game.run.gold
+  screen._sell_button.pressed.emit()
+  assert_false(item in Game.run.player.board, 'the item is sold')
+  assert_eq(Game.run.gold, gold + RunManager.sell_price(item), 'for its price')
+  assert_null(screen._selected_item, 'and the selection is cleared')
+  assert_null(screen._sell_button, 'with its button')
+  screen.free()
+
+
+func test_clicking_away_or_escape_clears_the_selection() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  await wait_frames(2)
+  var item: Item = Game.run.player.board[0]
+  _click_item(screen, item)
+  _click_at(screen, Vector2(-10, -10))
+  assert_null(screen._selected_item, 'a click off the board clears it')
+  _click_item(screen, item)
+  var escape := InputEventAction.new()
+  escape.action = 'ui_cancel'
+  escape.pressed = true
+  screen._unhandled_input(escape)
+  assert_null(screen._selected_item, 'Escape clears it')
+  assert_false(screen._paused, 'without pausing')
+  screen.free()
+
+
+func test_a_click_during_a_fight_selects_nothing() -> void:
+  var screen := _mount_into_fight(1)
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  await wait_frames(2)
+  assert_eq(screen._state, RunScreen.State.FIGHTING, 'the fight is under way')
+  _click_item(screen, Game.run.player.board[0])
+  assert_null(screen._selected_item, 'items cannot be sold in a fight')
+  assert_null(screen._sell_button, 'so no Sell button shows')
+  screen.free()
+
+
 func test_walking_past_banks_gold_and_approaches_the_fight() -> void:
   var screen := _mount_into_choice()
   for _i in APPROACH_STEPS:

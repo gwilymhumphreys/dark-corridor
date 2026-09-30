@@ -46,6 +46,7 @@ func test_overlay_hides_unavailable_options_and_emits_the_authored_index() -> vo
   assert_eq(options.get_child_count(), 2, 'only the available options are shown')
   watch_signals(overlay)
   (options.get_child(1) as Button).pressed.emit()
-  assert_signal_emitted_with_parameters(overlay, 'option_picked', [FixtureEncounters.OPTION_ADD_ALLY],
-    'the pick is the option index in the event, not the button index')
+  # The pick is the option's index in the event, not the button's. (GUT's fourth argument here is
+  # the emission index, not a message.)
+  assert_signal_emitted_with_parameters(overlay, 'option_picked', [FixtureEncounters.OPTION_ADD_ALLY])
   overlay.free()

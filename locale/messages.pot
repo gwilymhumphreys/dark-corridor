@@ -439,6 +439,10 @@ msgstr ""
 msgid "Report"
 msgstr ""
 
+#: src/scenes/screens/sell_button.gd
+msgid "Sell for {0} gold"
+msgstr ""
+
 #: src/scenes/screens/settings_screen.tscn
 msgid "Master volume"
 msgstr ""
@@ -477,6 +481,10 @@ msgstr ""
 
 #: src/scenes/screens/shop_overlay.gd
 msgid "Your gold: {0}"
+msgstr ""
+
+#: src/scenes/screens/shop_overlay.gd
+msgid "Reroll ({0} gold)"
 msgstr ""
 
 #: src/scenes/screens/shop_overlay.tscn

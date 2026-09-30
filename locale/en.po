@@ -439,6 +439,10 @@ msgstr "Exit Game"
 msgid "Report"
 msgstr "Report"
 
+#: src/scenes/screens/sell_button.gd
+msgid "Sell for {0} gold"
+msgstr "Sell for {0} gold"
+
 #: src/scenes/screens/settings_screen.tscn
 msgid "Master volume"
 msgstr "Master volume"
@@ -478,6 +482,10 @@ msgstr "Sold"
 #: src/scenes/screens/shop_overlay.gd
 msgid "Your gold: {0}"
 msgstr "Your gold: {0}"
+
+#: src/scenes/screens/shop_overlay.gd
+msgid "Reroll ({0} gold)"
+msgstr "Reroll ({0} gold)"
 
 #: src/scenes/screens/shop_overlay.tscn
 msgid "Leave"

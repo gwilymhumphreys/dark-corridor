@@ -1,6 +1,6 @@
 extends GutTest
 ## The shop panel (docs/systems/run_screen.md): one entry per good with its price, buy buttons that
-## follow what the player can afford, the pick emitted by index, and the Leave button.
+## follow what the player can afford, the pick emitted by index, the Reroll button and the Leave button.
 
 var _nodes: Array = []
 var _runs: Array = []
@@ -82,3 +82,32 @@ func test_leave_emits_left() -> void:
   watch_signals(overlay)
   (overlay.get_node('Panel/LeaveButton') as Button).pressed.emit()
   assert_signal_emitted(overlay, 'left')
+
+
+func test_the_reroll_button_shows_its_price_and_emits_rerolled() -> void:
+  var run := _run_in_shop(100)
+  var overlay := _overlay(run)
+  var reroll: Button = overlay.get_node('Panel/RerollButton')
+  assert_eq(reroll.text, 'Reroll (%d gold)' % run.reroll_price(), 'the price of the next reroll')
+  assert_false(reroll.disabled, 'affordable, so it can be pressed')
+  watch_signals(overlay)
+  reroll.pressed.emit()
+  assert_signal_emitted(overlay, 'rerolled')
+
+
+func test_the_reroll_button_is_disabled_when_the_player_cannot_pay() -> void:
+  var overlay := _overlay(_run_in_shop(0))
+  assert_true((overlay.get_node('Panel/RerollButton') as Button).disabled, 'no gold, no reroll')
+
+
+func test_show_goods_replaces_the_entries_after_a_reroll() -> void:
+  var run := _run_in_shop(100)
+  var overlay := _overlay(run)
+  run.buy(0)
+  run.reroll_shop()
+  overlay.show_goods(run)
+  var cards: Node = overlay.get_node('Panel/Cards')
+  assert_eq(cards.get_child_count(), run.shop_goods().size(), 'one entry per new good, the old ones gone')
+  assert_eq(_buy_button(overlay, 0).text, '%d gold' % RunManager.price_of(run.shop_goods()[0]), 'the first is on sale again')
+  assert_eq((overlay.get_node('Panel/RerollButton') as Button).text, 'Reroll (%d gold)' % run.reroll_price(),
+    'and the reroll shows its new price')

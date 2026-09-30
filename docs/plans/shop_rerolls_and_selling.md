@@ -1,6 +1,6 @@
 # Plan: shop rerolls, selling items, real shop prices
 
-**Status:** planned, not built. Owner's answers of 2026-09-30 are below; open questions at the end.
+**Status:** built (2026-09-30). Owner's answers are below.
 
 ## What the owner decided (2026-09-30)
 
@@ -9,7 +9,7 @@
 - **Selling:** the player can sell an item from the board for half its shop price, rounded down. Selling works at any time outside fights, not only in shops. Only items are sold; relics and potions are not.
 - **Rerolls replace every good**, bought ones included.
 - **The last item can be sold**, leaving an empty board.
-- **Selling interface:** select an item, then act on it, because that also works with a controller and on the Steam Deck. The details of that interface are deferred. The owner's other idea, dragging an item to the lower right section, is not built.
+- **Selling interface:** select an item, then act on it, because that also works with a controller and on the Steam Deck. Built for now as a click that selects and a Sell button beside the item; the rest of that interface is deferred. The owner's other idea, dragging an item to the lower right section, is not built; it could come later as a mouse shortcut.
 
 This changes the design doc: `docs/design/game_design.md` ("Structural note — what no size limit costs") says the game has no card removal or selling. That section is the owner's to rewrite.
 
@@ -45,16 +45,14 @@ The combat view already removes a cell whose item has left the board (`CombatVie
 
 **Which board item is under the pointer:** `CombatViewFramed.board_item_at(point) -> Item` returns the player's board item whose cell contains `point`, or null. `inspectable_at` has the same loop and calls it.
 
-**Input (RunScreen):** the run screen reads mouse input in its `_gui_input`. Its root is a full-screen Control that stops the mouse, so a click on the board reaches it (the board cells ignore the mouse) while clicks on panels and buttons do not; `_unhandled_input` never sees these clicks. It acts only when `can_sell` is true for the item:
+**Input (RunScreen):** the run screen reads mouse clicks in its `_gui_input`. Its root is a full-screen Control that stops the mouse, so a click on the board reaches it (the board cells ignore the mouse) while clicks on panels and buttons do not; `_unhandled_input` never sees these clicks.
 
-- **Press and drag:** a left press on a board item records it. Once the pointer moves past a small distance, the run screen calls `force_drag({'sell_item': item}, preview)`, where the preview is a new `ItemCell` set up with the item at the board cell's size. The board cell is faded while it is dragged.
-- **Click:** a press and release without that movement selects the item: `ItemCell.set_marked(true)` on its cell, and a Sell button appears beside the cell. Clicking another item selects that one; clicking elsewhere, pressing Escape, the item leaving the board, or the run screen leaving a selling state clears the selection.
+- A left click on a board item that `can_sell` selects it: `ItemCell.set_marked(true)` on its cell, and a Sell button appears below the cell.
+- Clicking another item selects that one. Clicking anywhere else, pressing Escape, the item leaving the board, or `can_sell` becoming false (a fight's approach starting) clears the selection.
 
-**SellZone** (`src/scenes/screens/sell_zone.gd/.tscn`, new): a panel covering the `Info` section of the run screen's `ScreenSections` (the lower right, over the map strip and the buttons), stopping the mouse so it can take the drop, hidden until a drag carrying `sell_item` begins (`NOTIFICATION_DRAG_BEGIN` on the run screen) and hidden again when it ends. Its label reads `tr('Sell for {0} gold')` with the dragged item's price. `_can_drop_data` accepts only `sell_item` data; `_drop_data` emits `sell_requested(item)`. It takes the hover highlight from `ControlFeedback` while an item is over it and has a `Juice` node.
+**SellButton** (`src/scenes/screens/sell_button.gd/.tscn`, new): a button with text `tr('Sell for {0} gold')`, placed below the selected cell on the HUD layer and kept inside the screen. Pressing it emits `sell_requested(item)`. It has a `Juice` node.
 
-**SellButton** (`src/scenes/screens/sell_button.gd/.tscn`, new): a button with text `tr('Sell for {0} gold')`, placed beside the selected cell on the HUD layer and kept inside the screen. Pressing it emits `sell_requested(item)`. It has a `Juice` node.
-
-**RunScreen** connects both to `_on_sell_requested(item)`: `_run.sell_item(item)`, clear the selection, `_refresh_gold()`, and `_shop.refresh(_run)` when a shop is open (the gold changed what the player can afford).
+**RunScreen** connects it to `_on_sell_requested(item)`: `_run.sell_item(item)`, clear the selection, `_refresh_gold()`, and `_shop.refresh(_run)` when a shop is open (the gold changed what the player can afford).
 
 **Tooltips:** hovering still shows the item tooltip. A selected item's tooltip is not pinned.
 
@@ -68,7 +66,7 @@ New strings: `Reroll ({0} gold)`, `Sell for {0} gold`. Regenerate the POT with `
 
 - `docs/systems/encounter.md` → Shops: rerolls; remove "no rerolls and no selling"; prices are no longer placeholders.
 - `docs/systems/run_manager.md`: selling and the shop reroll API.
-- `docs/systems/run_screen.md`: the Reroll button, the sell zone, the selected item and the Sell button.
+- `docs/systems/run_screen.md`: the Reroll button, the selected item and the Sell button.
 - `docs/systems/ui_layout.md`: the sell-item and reroll intents in the list of intents.
 - `docs/design/lexicon.md`: **reroll** and **sell**.
 - `docs/decision_log.md`: decision #58, rerolls and selling.
@@ -77,8 +75,4 @@ New strings: `Reroll ({0} gold)`, `Sell for {0} gold`. Regenerate the POT with `
 
 - `tests/run/test_run_manager.gd`: reroll price rises by the step; a reroll replaces sold goods and charges; `can_reroll` false when too poor; a shop whose reroll draws nothing stays open; `sell_price` is half the price rounded down; `sell_item` pays, removes and dissolves; `can_sell` false during an unresolved fight and for an item not on the board.
 - `tests/ui/test_shop_overlay.gd`: the Reroll button shows the price, is disabled when the player cannot pay, and emits `rerolled`.
-- `tests/ui/test_run_screen.gd`: in a shop, rerolling rebuilds the goods; outside a fight, clicking a board item selects it and its Sell button sells it; a drop on the sell zone sells; during a fight neither works.
-
-## Open questions for the owner
-
-1. **Selling interface.** The owner prefers selecting an item and then acting on it, because it also works with a controller and on the Steam Deck; the details of that interface can be settled later. Proposed for now: click selects, a Sell button appears beside the item, and dragging is left out (it could come back later as a mouse shortcut). Waiting for the owner to confirm.
+- `tests/ui/test_run_screen.gd`: in a shop, rerolling rebuilds the goods; outside a fight, clicking a board item selects it and its Sell button sells it; during a fight a click selects nothing.

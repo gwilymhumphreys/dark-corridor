@@ -73,11 +73,14 @@ var last_fight_gain: Dictionary = {}
 # The held offer the player picks one of: a fight's draft (items) or a reward encounter's goods (a
 # mix of ItemDef, RelicDef and ConsumableDef). Either can be skipped for gold (apply_draft_skip).
 var _pending_offer: Array = []
-# The open shop's goods (ItemDef, RelicDef or ConsumableDef) and which of them are sold, by index.
-# Empty when no shop is open. Not saved: a resume re-enters the shop and draws the same goods, with
-# the gold as it was when the shop was picked.
+# The open shop's goods (ItemDef, RelicDef or ConsumableDef), which of them are sold, by index, and
+# how many rerolls this visit has had. Not saved: a resume re-enters the shop and draws the same
+# goods, with the gold as it was when the shop was picked. A shop stays open while its goods are
+# empty, as after a reroll that draws nothing.
+var _shop_open: bool = false
 var _shop_goods: Array = []
 var _shop_sold: Array[bool] = []
+var _shop_rerolls: int = 0
 var _ended: bool = false
 var _outcome: int = Outcome.WON
 var _torn_down: bool = false
@@ -283,8 +286,9 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
     EncounterDef.Reward.GOODS:
       _pending_offer = Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng)   # a reward encounter
     EncounterDef.Reward.SHOP:
-      _shop_goods = Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng)
-      _shop_sold.assign(_shop_goods.map(func(_good: Variant) -> bool: return false))
+      _shop_open = true
+      _shop_rerolls = 0
+      _draw_shop_goods()
     EncounterDef.Reward.ELITE:
       _grant_relic()                                          # an elite is richer: a relic AND
       _pending_offer = Draft.draw(_draft_pool(), position, rng)   # a draft (reward asymmetry, #2)
@@ -446,7 +450,7 @@ func apply_draft_skip() -> void:
 
 ## True while a shop is open: the player buys what they want and then leaves (leave_shop).
 func has_open_shop() -> bool:
-  return not _shop_goods.is_empty()
+  return _shop_open
 
 
 ## The open shop's goods, in stock order: ItemDef, RelicDef or ConsumableDef. Sold goods stay in the
@@ -486,14 +490,71 @@ func buy(index: int) -> bool:
   return true
 
 
+## What the next reroll of the open shop costs: SHOP_REROLL_PRICE, plus SHOP_REROLL_PRICE_STEP for
+## each reroll already made in this visit.
+func reroll_price() -> int:
+  return Balance.SHOP_REROLL_PRICE + Balance.SHOP_REROLL_PRICE_STEP * _shop_rerolls
+
+
+## Whether the player can reroll the open shop now: a shop is open and they can pay.
+func can_reroll() -> bool:
+  return _shop_open and gold >= reroll_price()
+
+
+## Reroll the open shop: pay reroll_price and draw every good again from the shop's stock, bought
+## goods included (owner). A relic bought earlier has left the relic pool, so it is not offered
+## again. Returns false, changing nothing, when the shop cannot be rerolled (can_reroll).
+func reroll_shop() -> bool:
+  if not can_reroll():
+    return false
+  gold -= reroll_price()
+  _shop_rerolls += 1
+  _draw_shop_goods()
+  return true
+
+
 ## Leave the open shop. The caller then advances.
 func leave_shop() -> void:
   _close_shop()
 
 
+func _draw_shop_goods() -> void:
+  _shop_goods = Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng)
+  _shop_sold.assign(_shop_goods.map(func(_good: Variant) -> bool: return false))
+
+
 func _close_shop() -> void:
+  _shop_open = false
   _shop_goods = []
   _shop_sold = []
+  _shop_rerolls = 0
+
+
+# --- selling items (docs/systems/run_manager.md → Selling) --------------------
+
+## What selling `item` gives: SELL_SHARE of its shop price, rounded down. An enchant does not change it.
+static func sell_price(item: Item) -> int:
+  return floori(price_of(item.def) * Balance.SELL_SHARE)
+
+
+## Whether the player can sell `item` now: it is on their board and no fight is under way (the
+## choice of encounters, events, rests, a fight's draft, reward encounters and shops all allow it).
+func can_sell(item: Item) -> bool:
+  if _ended or item == null or not item in player.board:
+    return false
+  var cm: CombatManager = combat_manager()
+  return cm == null or cm.is_resolved()
+
+
+## Sell `item`: take it off the board and add sell_price to gold. Returns false, changing nothing,
+## when it cannot be sold (can_sell). Kept by the next save, like a shop purchase.
+func sell_item(item: Item) -> bool:
+  if not can_sell(item):
+    return false
+  gold += sell_price(item)
+  player.board.erase(item)
+  item.dissolve()   # as CombatManager.remove_item does
+  return true
 
 
 ## Whether the player side has a free ally slot (cap = MAX_ALLIES). The gating surface for

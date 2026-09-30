@@ -88,10 +88,16 @@ const ENCOUNTER_WEIGHT_RARE: float = 0.25
 const FIGHT_WON_HEAL: int = 5
 const FIGHT_WON_GOLD: int = 3
 # What a shop charges (RunManager.price_of), by the kind of goods and its rarity: common, uncommon,
-# rare. Placeholders.
+# rare (owner, 2026-09-30).
 const SHOP_PRICE_ITEM: Array[int] = [6, 9, 12]
 const SHOP_PRICE_RELIC: Array[int] = [15, 20, 25]
 const SHOP_PRICE_POTION: Array[int] = [4, 6, 8]
+# Rerolling a shop's goods (RunManager.reroll_price): the first reroll in a visit costs
+# SHOP_REROLL_PRICE and each later one SHOP_REROLL_PRICE_STEP more (owner).
+const SHOP_REROLL_PRICE: int = 1
+const SHOP_REROLL_PRICE_STEP: int = 1
+# Selling an item gives this share of its shop price, rounded down (RunManager.sell_price, owner).
+const SELL_SHARE: float = 0.5
 
 
 # ── Presentation — the framed combat view (docs/systems/ui_layout.md; docs/history/phase4_plan.md) ───────
