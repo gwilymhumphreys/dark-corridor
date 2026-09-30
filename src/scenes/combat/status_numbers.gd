@@ -2,11 +2,13 @@ class_name StatusNumbers
 extends HBoxContainer
 ## The health-bar status numbers (docs/systems/mechanics.md → Health bar): one entry per mechanic
 ## status (poison, burn, bleed, regen), each the mechanic's icon and its stack count in the
-## mechanic's colour. Shield is shown by HealthBar instead. Reads the actor's statuses each frame;
-## writes nothing.
+## mechanic's colour. Shield is shown by HealthBar instead. An entry pops in when its status appears
+## and bumps when its stacks rise (PopAnimation). Reads the actor's statuses each frame; writes
+## nothing.
 
 
 var actor: Actor = null
+var _counts: Dictionary = {}   # mechanic id -> the stacks shown last frame, 0 when hidden
 
 @onready var _poison: HBoxContainer = $Poison
 @onready var _burn: HBoxContainer = $Burn
@@ -38,15 +40,36 @@ func _set_icon(entry: HBoxContainer, id: String) -> void:
   KeywordIcon.dress(icon, mechanic.icon, mechanic.color())
 
 
-func _refresh(entry: HBoxContainer, id: String) -> void:
+## The entry for the mechanic status `id`, or null for any other id.
+func entry_for(id: String) -> HBoxContainer:
+  match id:
+    PoisonMechanic.ID:
+      return _poison
+    BurnMechanic.ID:
+      return _burn
+    BleedMechanic.ID:
+      return _bleed
+    RegenMechanic.ID:
+      return _regen
+  return null
+
+
+func _refresh(shown: HBoxContainer, id: String) -> void:
   var status: StatusEffect = _find_status(id)
+  var before: int = int(_counts.get(id, 0))
   if status != null and status.count > 0:
-    var value: Label = entry.get_node('Value')
+    var value: Label = shown.get_node('Value')
     value.text = str(status.count)
     value.modulate = MechanicRegistry.get_mechanic(id).color()
-    entry.show()
+    shown.show()
+    if before == 0:
+      PopAnimation.pop_in(shown)
+    elif status.count > before:
+      PopAnimation.bump(shown)
+    _counts[id] = status.count
   else:
-    entry.hide()
+    shown.hide()
+    _counts[id] = 0
 
 
 func _hide_all() -> void:
@@ -64,4 +87,5 @@ func _find_status(id: String) -> StatusEffect:
 
 
 func _exit_tree() -> void:
+  _counts.clear()
   actor = null

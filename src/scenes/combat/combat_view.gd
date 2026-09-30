@@ -147,3 +147,9 @@ func target_pos(_target) -> Vector2:
 ## actor's own point.
 func health_bar_pos(actor) -> Vector2:
   return actor_pos(actor)
+
+
+## Where the status `id` shows for an actor, where a projectile giving it lands. A view with no
+## status readouts uses the health bar.
+func status_pos(actor, _id: String) -> Vector2:
+  return health_bar_pos(actor)

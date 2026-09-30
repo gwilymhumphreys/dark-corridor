@@ -937,6 +937,19 @@ func health_bar_pos(actor) -> Vector2:
   return actor_pos(actor)
 
 
+## Where the status `id` shows for an actor (CharacterPanel.status_centre), where a projectile giving
+## it lands: on the player's panel, an enemy's HUD or an ally's slot. An actor with no panel uses
+## its own point.
+func status_pos(actor, id: String) -> Vector2:
+  if actor == _player:
+    return _player_panel.status_centre(id)
+  if actor != null and _enemy_huds.has(actor):
+    return (_enemy_huds[actor] as EnemyHud).status_centre(id)
+  if actor != null and _ally_slots.has(actor):
+    return (_ally_slots[actor] as AllySlot).status_centre(id)
+  return actor_pos(actor)
+
+
 ## A big hit: a short pause of the fight, then a shake of this view that fades out. Both run on
 ## real time, so the shake plays through the pause.
 func _on_big_hit(strength: float) -> void:

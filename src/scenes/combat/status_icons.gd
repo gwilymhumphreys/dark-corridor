@@ -5,14 +5,15 @@ extends HBoxContainer
 ## The mechanic statuses are shown by the health bar instead. The icons sit in columns `rows` tall
 ## (status_column.tscn), filling each column top to bottom, then the next column to the right. With
 ## one row (the icons under the health bar), the row leaves room below the icons for their pills.
-## Refreshed each frame since statuses accrue / expire during combat. Reads the actor; writes nothing.
+## Refreshed each frame since statuses accrue / expire during combat. A new status's icon pops in and
+## an icon whose stacks rise bumps (PopAnimation). Reads the actor; writes nothing.
 
 const STATUS_ICON: PackedScene = preload('res://src/scenes/combat/status_icon.tscn')
 const STATUS_COLUMN: PackedScene = preload('res://src/scenes/combat/status_column.tscn')
 const ROWS: int = 2
 const PILL_HANG: float = 14.0   # the half of an icon's pill that hangs below it
 const ICON_SIZE: float = 32.0   # status_icon.tscn's minimum size, until set_icon_size
-const COLUMN_SEPARATION: float = 14.0   # the separation in status_column.tscn
+const COLUMN_SEPARATION: float = 14.0   # the separation in status_column.tscn, and between columns in status_icons.tscn
 
 var actor: Actor = null
 ## Icons per column: ROWS beside the health bar, 1 under it (character_panel.tscn `StatusesUnder`).
@@ -26,6 +27,7 @@ var reserve_height: bool = false:
 
 var _icons: Array[StatusIcon] = []
 var _icon_px: float = ICON_SIZE
+var _counts: Dictionary = {}   # status id -> the stacks shown last frame, to spot a new status or new stacks
 
 
 ## Make every icon `px` square (the `status_size` print setting). Rebuilds the icons when it changes.
@@ -49,13 +51,41 @@ func refresh() -> void:
         outside.append(s)
   if outside.size() != _icons.size():
     _rebuild(outside.size())
+  var counts: Dictionary = {}
   for i in outside.size():
-    _icons[i].show_status(outside[i])
+    var shown: StatusEffect = outside[i]
+    _icons[i].show_status(shown)
+    counts[shown.id] = shown.count
+    if not _counts.has(shown.id):
+      PopAnimation.pop_in(_icons[i])
+    elif shown.count > int(_counts[shown.id]):
+      PopAnimation.bump(_icons[i])
+  _counts = counts
 
 
 ## How many status icons are shown.
 func icon_count() -> int:
   return _icons.size()
+
+
+## The centre, in global coordinates, of the icon for the status `id`, or of the slot a new icon for
+## it will take when that status is not shown yet: the next place in the columns, filled top to
+## bottom. A row that sits at the bottom of its space (the grid beside the bar) grows upward as it
+## gains rows, so the slot allows for that.
+func slot_centre(id: String) -> Vector2:
+  for icon in _icons:
+    if icon.status != null and icon.status.id == id:
+      return icon.get_global_rect().get_center()
+  var index: int = _icons.size()
+  var column: int = floori(float(index) / float(rows))
+  var row: int = index % rows
+  var step: float = _icon_px + COLUMN_SEPARATION
+  var shown_rows: int = rows if reserve_height else mini(index + 1, rows)
+  var height: float = shown_rows * _icon_px + (shown_rows - 1) * COLUMN_SEPARATION
+  var top: float = global_position.y
+  if size_flags_vertical & Control.SIZE_SHRINK_END:
+    top = global_position.y + size.y - height
+  return Vector2(global_position.x + column * step + _icon_px * 0.5, top + row * step + _icon_px * 0.5)
 
 
 ## The icon under `point` (global), or null.
@@ -100,4 +130,5 @@ func _fit_height() -> void:
 
 func _exit_tree() -> void:
   _icons.clear()
+  _counts.clear()
   actor = null

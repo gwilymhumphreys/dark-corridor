@@ -90,6 +90,43 @@ func test_character_panel_finds_the_hovered_status_icon() -> void:
   assert_null(hud.status_icon_at(centre + Vector2(10000, 10000)), 'a far point finds no icon')
 
 
+func test_a_new_status_icon_appears_where_its_projectile_was_sent() -> void:
+  # A projectile giving a status lands where the status will show (CharacterPanel.status_centre);
+  # the icon that then appears must be at that spot, both for a second icon and a first one.
+  var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
+  _host(hud)
+  var a := _spawn(100.0, [FixtureItems.attack()])
+  hud.setup(a)
+  var row: StatusIcons = hud.get_node('Row/Readout/Top/Statuses')
+  for id: String in ['weak', 'vulnerable']:
+    await get_tree().process_frame
+    var sent_to: Vector2 = hud.status_centre(id)
+    StatusManager.apply(a, id, 1.0)
+    row.refresh()
+    await get_tree().process_frame   # let the containers lay the new icon out
+    await get_tree().process_frame
+    var icon: StatusIcon = row._icons[row.icon_count() - 1]
+    assert_almost_eq(icon.get_global_rect().get_center(), sent_to, Vector2(1.0, 1.0), 'the %s icon appears where its projectile landed' % id)
+
+
+func test_a_new_health_bar_status_appears_where_its_projectile_was_sent() -> void:
+  # Mechanic statuses show on the centred health-bar readout, so a new one moves the others; the
+  # spot it was sent to must still be where its icon ends up.
+  var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
+  _host(hud)
+  var a := _spawn(100.0, [FixtureItems.attack()])
+  hud.setup(a)
+  var bar: HealthBar = hud.get_node('Row/Readout/Top/NameBar/HealthBar')
+  for id: String in [BurnStatus.ID, ShieldStatus.ID, PoisonStatus.ID]:
+    await get_tree().process_frame
+    var sent_to: Vector2 = hud.status_centre(id)
+    StatusManager.apply(a, id, 3.0)
+    for i in 3:
+      await get_tree().process_frame   # the bar reads the actor, then the readout is laid out
+    var icon: Control = bar.get_node('Bar/Readout/Shield/Icon') if id == ShieldStatus.ID else bar.get_node('Bar/Readout/StatusNumbers/%s/Icon' % id.capitalize())
+    assert_almost_eq(icon.get_global_rect().get_center(), sent_to, Vector2(2.0, 2.0), 'the %s entry appears where its projectile landed' % id)
+
+
 func test_ally_slot_builds_one_cell_per_item() -> void:
   var slot: AllySlot = preload('res://src/scenes/combat/ally_slot.tscn').instantiate()
   _host(slot)

@@ -80,6 +80,7 @@ Read by `DebugPanels` after the default preset loads.
 | `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
 | `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
 | `--attack-effect=ring` | Read by `VfxDriver`, not `DebugPanels`. Attacks land with the placeholder ring instead of the trial slash and impact images ([vfx_driver.md](vfx_driver.md)) |
+| `--projectile=disc` | Read by `VfxDriver`, not `DebugPanels`. Projectiles fly as the placeholder disc instead of the trial comet ([vfx_driver.md](vfx_driver.md)) |
 | `--status-effect=ring` | Read by `VfxDriver`, not `DebugPanels`. Poison, burn and bleed land with the placeholder ring instead of the trial bubbles, flames and blood ([vfx_driver.md](vfx_driver.md)) |
 | `--feedback-demo=<amount>` | Holds every control at that much hover |
 | `--glow-demo=<brightness>` | Every node drawn through a picture material glows ([interface_glow.md](interface_glow.md)) |
@@ -96,7 +97,7 @@ Run one directly instead of the game: `<godot> --path . res://src/debug/scenes/<
 | `corridor_testbed` | The corridor with Forward and Back buttons; N places a monster ([corridor_3d.md](corridors/corridor_3d.md)) | `--set=property=value` sets a corridor export (repeatable); `--view=WIDTHxHEIGHT` fixes the view size; with `--shot`, `--still` keeps it from moving and `--monster` places a monster |
 | `tooltip_demo` | The item tooltip held open over one item ([tooltips.md](tooltips.md)) | none |
 | `paper_burn_preview` | Tokens held partway through a paper burn, and a map token, an item token and a wide panel burning over and over ([paper_burn.md](paper_burn.md)) | none |
-| `hit_effects_preview` | One page each for attack, poison, burn and bleed: the page's two hit effects repeating over an enemy image, and a strip of frames through each ([vfx_driver.md](vfx_driver.md)). Space or Tab turns the page | `--page=attack`, `poison`, `burn` or `bleed` picks the first page |
+| `hit_effects_preview` | One page each for attack, poison, burn and bleed: the page's two hit effects repeating over an enemy image, and a strip of frames through each. A projectile page flies comets in four colours at an enemy and shows each beside the old disc ([vfx_driver.md](vfx_driver.md)). Space or Tab turns the page | `--page=attack`, `poison`, `burn`, `bleed` or `projectile` picks the first page |
 
 ## Screenshot commands
 

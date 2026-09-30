@@ -35,6 +35,10 @@ func rebuild() -> void:
   hits.add_row(_make_row('Attack Sprites', VfxDriver.attack_sprites, [], set_sprites))
   var set_status_sprites: Callable = func(new_value: Variant) -> void: VfxDriver.status_sprites = new_value
   hits.add_row(_make_row('Status Sprites', VfxDriver.status_sprites, [], set_status_sprites))
+  var set_comets: Callable = func(new_value: Variant) -> void: VfxDriver.comet_projectiles = new_value
+  hits.add_row(_make_row('Comet Projectiles', VfxDriver.comet_projectiles, [], set_comets))
+  var set_status_landing: Callable = func(new_value: Variant) -> void: VfxDriver.status_landing_effects = new_value
+  hits.add_row(_make_row('Effects At Status Icons', VfxDriver.status_landing_effects, [], set_status_landing))
   # The highlight shares panel wear's material (docs/systems/control_feedback.md); only its own
   # settings are listed here, and panel wear's own groups stay in the Print tab.
   _build_shader_sections(PrintLook.panel_material, ControlFeedback.defaults())

@@ -94,6 +94,15 @@ func health_bar_centre() -> Vector2:
   return _health_bar.bar_centre()
 
 
+## Where the status `id` shows on this panel, in global coordinates (the VFX wall flies a status's
+## projectile there): a mechanic status on the health bar, any other among the status icons.
+func status_centre(id: String) -> Vector2:
+  if MechanicRegistry.has(id):
+    return _health_bar.status_centre(id)
+  var icons: StatusIcons = _statuses if _status_layout == StatusLayout.BESIDE_BAR else _statuses_under
+  return icons.slot_centre(id)
+
+
 ## The name above the health bar. The player's panel shows its sheet fields instead (show_sheet_fields).
 func show_name(text: String) -> void:
   _name.text = text
