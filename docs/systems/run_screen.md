@@ -184,7 +184,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   panel, `PlayerPanel`). The player's panel keeps one size through the
   fight (`CharacterPanel.fixed_size`): its status icons keep their full height with no statuses, and
   it fills the column's width; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
-  centred row of mechanic-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per mechanic effect; an effect that applies a status gets no pill)
+  centred row of mechanic-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per mechanic effect; an effect that applies a status, or is not a mechanic such as an attack bonus, gets no pill)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
   whose edge is torn like the paper edges of the print look) + fire recoil). The grid is matched to

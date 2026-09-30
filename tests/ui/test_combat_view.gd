@@ -247,6 +247,20 @@ func test_potions_are_drawn_like_board_items() -> void:
   cm.free()
 
 
+func test_an_effect_that_is_not_a_mechanic_gets_no_value_pill() -> void:
+  var def := ItemDef.new()
+  def.effects = [
+    ItemEffect.attack(6.0),
+    ItemEffect.make(AttackBonusMechanic.ID, 5.0, ItemEffect.Shape.ALL_OWN_ITEMS),
+  ]
+  var cell: ItemCell = preload('res://src/scenes/combat/item_cell.tscn').instantiate()
+  _host(cell)
+  cell.setup(Item.new(def))
+  var visible_pills: Array = cell.get_node('Pills').get_children().filter(
+    func(pill: Node) -> bool: return (pill as Control).visible)
+  assert_eq(visible_pills.size(), 1, 'the attack has a pill; the attack bonus is in the tooltip only')
+
+
 func test_the_potion_grid_has_three_squares_and_the_column_still_fits() -> void:
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
@@ -333,7 +347,7 @@ func test_release_clears_the_cooldown_fills() -> void:
   view.release()
   cell._update_cooldown()
   assert_false(cell.get_node('Cooldown').visible, 'the fill is cleared once the fight is over')
-  var ally_slot: AllySlot = view.get_node('Portraits/AllyLeft').get_child(0)
+  var ally_slot: AllySlot = view._ally_left.get_child(0)
   for ally_cell in ally_slot._cells.values():
     assert_false((ally_cell as ItemCell).show_cooldown, 'ally item fills are cleared too')
   cm.free()
@@ -361,7 +375,7 @@ func test_multi_actor_view_renders_every_enemy_and_ally() -> void:
   cm.start()
   view.bind(cm, p, [])
   assert_eq(view.get_node('EnemyArea/EnemyHuds').get_child_count(), 2, 'a HUD per enemy (the elite)')
-  assert_eq(view.get_node('Portraits/AllyLeft').get_child_count(), 1, 'the first ally fills the left slot')
+  assert_eq(view._ally_left.get_child_count(), 1, 'the first ally fills the left slot')
   await wait_physics_frames(2)   # let the containers lay the widgets out so the centres are real
   # each enemy resolves to its own HUD — the second grunt no longer collapses to the player
   assert_ne(view.actor_pos(e2), view.actor_pos(p), 'the second enemy is NOT at the player portrait')

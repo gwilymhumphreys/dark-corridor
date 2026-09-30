@@ -61,7 +61,7 @@ func test_view_stacks_the_portraits_above_the_items() -> void:
 func test_stacked_allies_sit_in_the_allies_box() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
-  var ally_left: Control = view.get_node('Portraits/AllyLeft')
+  var ally_left: Control = view._ally_left
   var group: Control = view.get_node('Portraits/Allies')
   var rows: Control = view.get_node('Portraits/Allies/Box/Rows')
   view.sections._process(0.0)

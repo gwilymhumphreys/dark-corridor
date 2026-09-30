@@ -151,7 +151,8 @@ func set_marked(marked: bool) -> void:
 
 
 ## A pill per mechanic effect (damage, shield, heal ...), tinted by the mechanic's colour. An effect
-## that applies a status (Mighty Blow's Empowered) gets no pill; its amount is in the tooltip. The
+## that applies a status (Mighty Blow's Empowered) or is not a mechanic (an attack bonus, decision #60)
+## gets no pill; its amount is in the tooltip. The
 ## pills sit in a centred row straddling the top edge (vertical centre on the frame's top border).
 ## The pills are placed in item_cell.tscn; unused ones stay hidden.
 func _build_pills() -> void:
@@ -166,8 +167,8 @@ func _build_pills() -> void:
   _pills.add_theme_constant_override('separation', int(round(4.0 * ratio)))
   var index: int = 0
   for effect: ItemEffect in item.def.effects:
-    if effect.kind != Delivery.Kind.MECHANIC:
-      continue
+    if effect.kind != Delivery.Kind.MECHANIC or not MechanicRegistry.is_mechanic(effect.mechanic):
+      continue   # an effect that is not a mechanic (an attack bonus) is written in the tooltip only
     if index >= pills.size():
       push_error('ItemCell: %s has more values than item_cell.tscn has pills' % item.def.id)
       break
