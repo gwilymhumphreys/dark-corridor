@@ -30,17 +30,17 @@ A short, draft-heavy auto-combat dungeon descent: walk forward through a single 
 Walk forward (2-3s)
   → Encounter (~20s combat, OR non-combat event)
   → Draft 1-of-3 (each slot a low chance of an enchant or potion instead of an item, 5-10s)
-  → repeat through 3 acts (~15 encounters each)
+  → repeat through the act (10 fights, each with a choice of encounters before it)
   → die or beat final boss
   → Spend meta progression in skill tree
   → Restart
 ```
 
-Each act is 15 encounters: 11 on the map (basic fights, two elite fights, a relic encounter in the middle where the player picks one of three relics, and the boss last) and 4 events that fall between them, never first, never before an elite, the relic encounter or the boss, and never two in a row (decided 2026-09-28; [run_manager.md](../systems/run_manager.md#the-act-layout)). Full successful run ≈ 45 encounters ≈ 30-45 minutes.
+The run is one act of ten fights: basic fights, two elite fights at fixed squares, and the boss last. Before every fight the player is offered three encounters as cards in the corridor (events, rests, reward encounters such as the relic encounter, and shops), picks one or walks past for a little gold, then makes the choice inside it (decision #54, 2026-09-30; [run_manager.md](../systems/run_manager.md#the-act-layout)). Whether to return to several acts is open. The 2026-09-28 layout of three acts of 15 encounters, with events falling between the squares, is replaced.
 
 ## Structure
 
-- **3 acts, ~15 encounters each.** Starting target, tunable.
+- **One act of ten fights for now** (decision #54). Several acts may return; the earlier target was 3 acts of ~15 encounters.
 - **Single corridor** that evolves visually as you descend (lighting temperature, fog density, wall props, ambient audio, enemy roster) — no biome changes, just a deepening.
 - **No branches, no exploration, auto-advance.**
 - **2 mid-bosses + final boss.** Final boss = credits, real ending. The floor's boss is telegraphed ahead of time.
@@ -139,7 +139,7 @@ Code-sharing decision first (drafting, tooltips, inspection are common); categor
 
 ### Structural note — what "no size limit" costs
 
-This game is closest to Bazaar without the size cap, which also means without card removal/selling. That removes the thing that makes Bazaar's drafts decisions.
+This game is closest to Bazaar without the size cap, which originally also meant without card removal/selling. That removes the thing that makes Bazaar's drafts decisions. Selling has since been added (decision #58): an item can be sold for gold whenever no fight is under way. Nothing forces a sale, so it does not bring back the cap's replacement decision.
 
 - Bazaar's cap = a replacement decision every pick (take this vs. what do I cut). Opportunity cost is free, structural, constant.
 - No cap = an acquisition decision (is this above the usefulness floor). One-sided. "More is more" unless an item is actively bad.
@@ -331,7 +331,7 @@ Reward draft is 1-of-3. Each slot is usually an item; each slot has a low chance
 - Player picks one of the three, **or skips to bank gold** (decision #33). Originally no-skip (no penalty for taking more items, so taking one was always correct); but that *forced* an anti-synergy card on a focused build, so a **Skip** option now banks a small amount of **gold** instead — the escape hatch. The decision is which of the three (judged on synergy) vs. skip-for-gold.
 - A potion taken when potion slots are full means dropping one to make room.
 - An enchant taken is immediately applied to a chosen item (one enchant per item).
-- **Gold is a nascent run-state resource.** Skipping a draft is its first **source**; there is **no sink yet** (shops don't exist). It accumulates and displays for now — the economy (shops, spending) is deferred. See [`character_ideas.md`](character_ideas.md) (the Gold row) for the resource-economy framing.
+- **Gold is a run-state resource.** Its **sources** are skipping a draft or a reward encounter, walking past a choice of encounters, winning a fight, selling an item, and some event options. It is **spent in shops**, on goods and on rerolls (decisions #54, #56 and #58). See [`character_ideas.md`](character_ideas.md) (the Gold row) for the resource-economy framing.
 ### Items vs potions
 
 Risk: potions become "consumable items" in player perception and the distinction collapses. Frame around: items are your engine, potions are your reserve for moments the engine can't handle. Separation has to land in UI (distinct presentation, slow-mo activation), acquisition pacing (rarer than items), and tone (tools you reach for vs. machinery you've built).
@@ -340,7 +340,7 @@ Risk: potions become "consumable items" in player perception and the distinction
 
 ## Encounters and the choice layer
 
-All non-default progression beats in the corridor go through one system. Regular fights, elites, non-combat events — all encounters. The choice layer surfaces 2-3 options as the player approaches, picks one, that encounter resolves.
+All non-default progression beats in the corridor go through one system. Regular fights, elites, non-combat events — all encounters. As built (decision #54), before every fight three encounters stand as cards in the corridor; the player picks one, or walks past all three for a little gold, and that encounter resolves. The fights themselves, elites included, are fixed squares of the act rather than choices.
 
 Why this exists: a single linear corridor structurally can't give Spire's branching routes (Spire's route-planning depth comes from choosing between forking paths, which we deliberately don't have). The corridor stays linear and the floor ahead is visible on the map; what's absent is branch-selection. The substitute for that lost agency: present options at point-of-arrival. Deliberately thinner than Spire — tactical, not strategic. A full routing layer would also fight the design's tone. Don't try to recover all of Spire's depth, it'd be a foreign organ here.
 
@@ -348,15 +348,19 @@ Why this exists: a single linear corridor structurally can't give Spire's branch
 
 - **Two-tier choice (Bazaar-inspired):** pick a location (one-line frame, e.g. "A flooded antechamber"), then a choice within it. Gives agency over an auto-advance path; front-loads anticipation; scales content combinatorially from modest authored content.
 - **Encounter types in the pool:**
-  - Regular fights (the default)
-  - Elites (optional engage/skip with telegraphed demand + higher reward + guaranteed relic)
-  - Non-combat events (lore + binary choice with tradeoff)
-  - **Small rest encounters** — in-act partial-heal beat. One guaranteed per act. No relic (the guaranteed relic is the midpoint drop).
+  - Regular fights (the default) — as built, fixed squares, not offered as cards
+  - Elites (optional engage/skip with telegraphed demand + higher reward + guaranteed relic) — as built, two fixed squares per act (decision #54)
+  - Non-combat events (lore + a choice between options, each with its own effects and requirements; an option the player cannot pick is hidden — decision #55)
+  - **Small rest encounters** — in-act partial-heal beat, offered as a card like the others. No relic.
+  - **Reward encounters** — pick one of a few goods (items, relics or potions) drawn from the encounter's stock, or skip for gold (decision #56). The relic encounter is one of these.
+  - **Shops** — offered from the left card: buy goods for gold, reroll them for a price that rises each time, then leave (decision #58).
 - **Full rest** — automatic post-act-boss beat, not a choice-layer encounter. Full HP restore. Plays unconditionally between acts as the act transition. Brief narrative/visual beat — not a decision moment.
-- Short prose. Location = one line. Options ≈ binary, clear tradeoffs. Not Spire-tier prose.
+- Short prose. Location = one line. A few options, clear tradeoffs. Not Spire-tier prose.
 - Pool target: ~30 designed encounters across all types — will probably change. Doubles as world-building delivery.
-- Frequency of choice points: tunable in prototype. Probably multiple per act.
+- Frequency of choice points: one before every fight (decision #54).
 ### Elites within the encounter system
+
+As built, the two elite fights are fixed squares of the act, not offered by the choice layer (decision #54). The idea below, elites as an optional choice, is kept for reference.
 
 Elites are one encounter type, not a separate system. When the choice layer offers a path leading to an elite:
 
