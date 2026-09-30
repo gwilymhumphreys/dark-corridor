@@ -62,6 +62,30 @@ off-white text colour. The switch is **Attack Sprites** in the debug panel's Fee
 `--attack-effect=ring` starts with it off. The `hit_effects_preview` dev scene
 ([dev_tools.md](dev_tools.md)) repeats both effects and shows a strip of frames through each.
 
+**Poison, burn and bleed (trial).** While `VfxDriver.status_sprites` is on, a poison, burn or bleed
+landing draws `PoisonDrawer`, `BurnDrawer` or `BleedDrawer` instead of the ring. Each has two
+effects: one where the status is applied, and one when it deals damage (the visual-only delivery of
+a poison or burn tick or a bleed trigger, told apart by `Delivery.visual_only`).
+
+- Poison applied: a green puff swells, blobs of goo are thrown outward and sag as they slow, and
+  bubbles rise from around the landing point and pop one after another.
+- Poison damage: a few small bubbles rise from the holder and pop. Bigger ticks raise more bubbles,
+  up to a limit (`PoisonDrawer.tick_bubbles`).
+- Burn applied: a burst of fire flares, flame tongues spring up around the landing point, and
+  embers rise. A tongue shoots up, then dies down while lifting off, and flickers by switching
+  between two flame images and changing width. Each has a paler core at its base.
+- Burn damage: two to four smaller flame tongues lick up from the holder, throwing off embers.
+  Bigger ticks raise more (`BurnDrawer.tick_tongues`).
+- Bleed applied: a splat of round drops bursts where it lands, and drops spray on in the direction
+  the projectile was travelling, falling under gravity.
+- Bleed damage: a smaller splat, and a spurt of drops thrown upward that fall back down.
+
+The images are from Kenney's Particle Pack, in `assets/vfx/status/`: a round blob, a rim-lit
+bubble, a puff, four flame tongues and a fire burst. They are drawn in the delivery's colour, with a
+small off-white glint on blobs, bubbles and drops and a paler core on flames. Each particle's path
+comes from `EffectDrawer.fixed_random`, so it stays the same for as long as the effect shows. The
+switch is **Status Sprites** in the same Feedback tab, and `--status-effect=ring` starts with it off. The preview scene has a page for each.
+
 **Big hits.** A damage landing of at least `VfxDriver.BIG_HIT_DAMAGE` emits `big_hit` with a
 strength from 0 to 1 (`big_hit_strength`), once, alongside its sound. `CombatViewFramed` answers
 with a short pause of the fight (`CombatManager.request_hit_pause`, which calls `Timekeeper.hold`)
@@ -75,10 +99,23 @@ Each shape is its own class under `src/vfx/drawers/`, extending `EffectDrawer`: 
 `progress(age)` and `draw_effect(canvas, delivery, point, age)`. A drawer holds no state, so slow
 motion and pause keep working. The driver keeps a dictionary from a mechanic id (for a `MECHANIC` delivery) or
 `Delivery.Kind.APPLY_STATUS` to the drawer, so a new effect is a new file rather than another branch in
-`_draw()`. Eight [mechanics](mechanics.md) (attack, shield, heal, poison, burn, bleed, regen, crit) and status application currently share one
-`ImpactRingDrawer`; the other mechanics have no ring; `SUMMON` and `CREATE_ITEM` have no entry, so they draw a projectile in flight and nothing on landing. Numbers draw for
+`_draw()`. Five [mechanics](mechanics.md) (attack, poison, burn, bleed, crit) and status application currently share one
+`ImpactRingDrawer`, which attack, poison, burn and bleed replace with their own drawers while the trial switches above are on; the other mechanics have no ring; `SUMMON` and `CREATE_ITEM` have no entry, so they draw a projectile in flight and nothing on landing. Numbers draw for
 attack and heal landings and for every visual-only delivery (a poison tick or bleed carries its status
 id as its mechanic).
+
+**Shield, heal and regen.** Shield, healing or regen given to an actor flies to the centre of
+that actor's health bar (the mechanics in `VfxDriver.BAR_MECHANICS`) through `CombatView.health_bar_pos`, instead of to the actor. These landings are not nudged by the
+scatter below. A view with no health bars, such as the combat sandbox, falls back to the actor's
+point.
+
+- Shield lands with `ShieldDrawer`: the shield mechanic's icon appears small, quickly grows and
+  fades out. Each landing draws its own icon, so a burst of shield shows several at once.
+- Heal lands with `HealDrawer`: a few small heal icons, more for bigger heals, start one after
+  another in separate sections of the bar, float up with a slight wiggle and fade out. The heal
+  number still shows.
+- Regen lands with the same `HealDrawer`, made for the regen mechanic so it floats regen's icon in
+  regen's colour. A regen tick's healing (a visual-only delivery) shows it on the bar too.
 
 A landing point is nudged from the target's centre by `EffectDrawer.scatter_offset`, within
 `EffectDrawer.SCATTER_RADIUS`. It lives on the drawer base class so drawers never refer back to

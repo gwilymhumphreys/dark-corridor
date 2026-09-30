@@ -126,3 +126,9 @@ func actor_pos(_actor) -> Vector2:
 ## A Delivery's landing point — an Actor OR an Item (item-targeting effects).
 func target_pos(_target) -> Vector2:
   return Vector2.ZERO
+
+
+## The centre of an actor's health bar, where shield lands. A view with no health bars uses the
+## actor's own point.
+func health_bar_pos(actor) -> Vector2:
+  return actor_pos(actor)

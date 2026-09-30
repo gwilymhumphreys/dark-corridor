@@ -89,6 +89,11 @@ func set_actor(target: Actor) -> void:
     _portrait.texture = load(target.portrait)
 
 
+## The centre of the health bar in global coordinates, where shield lands (the VFX wall reads it).
+func health_bar_centre() -> Vector2:
+  return _health_bar.bar_centre()
+
+
 ## The name above the health bar. The player's panel shows its sheet fields instead (show_sheet_fields).
 func show_name(text: String) -> void:
   _name.text = text

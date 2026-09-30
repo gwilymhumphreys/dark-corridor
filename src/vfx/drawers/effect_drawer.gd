@@ -18,6 +18,24 @@ static func scatter_offset(delivery: Delivery) -> Vector2:
   return Vector2(cos(angle), sin(angle)) * distance
 
 
+## A number from 0 to 1 fixed for one delivery and `salt`, so each hit keeps the same angle, flip
+## and particle paths for as long as it shows.
+static func fixed_random(delivery: Delivery, salt: int) -> float:
+  return float(hash(delivery.get_instance_id() * 97 + salt) % 1000) / 1000.0
+
+
+## Draw `texture` centred on the canvas's current origin, `size` pixels wide, keeping its shape.
+static func draw_centred(canvas: CanvasItem, texture: Texture2D, size: float, modulate: Color) -> void:
+  if size <= 0.0 or modulate.a <= 0.0:
+    return
+  var height: float = size * float(texture.get_height()) / float(texture.get_width())
+  canvas.draw_texture_rect(texture, Rect2(-size * 0.5, -height * 0.5, size, height), false, modulate)
+
+
+static func faded(colour: Color, alpha: float) -> Color:
+  return Color(colour, colour.a * clampf(alpha, 0.0, 1.0))
+
+
 func duration() -> float:
   return 0.0
 

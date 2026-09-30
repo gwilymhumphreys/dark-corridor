@@ -940,6 +940,18 @@ func target_pos(target) -> Vector2:
   return actor_pos(target)
 
 
+## The centre of an actor's health bar, where shield lands: on the player's panel, an enemy's HUD
+## or an ally's slot. An actor with no panel uses its own point.
+func health_bar_pos(actor) -> Vector2:
+  if actor == _player:
+    return _player_panel.health_bar_centre()
+  if actor != null and _enemy_huds.has(actor):
+    return (_enemy_huds[actor] as EnemyHud).health_bar_centre()
+  if actor != null and _ally_slots.has(actor):
+    return (_ally_slots[actor] as AllySlot).health_bar_centre()
+  return actor_pos(actor)
+
+
 ## A big hit: a short pause of the fight, then a shake of this view that fades out. Both run on
 ## real time, so the shake plays through the pause.
 func _on_big_hit(strength: float) -> void:

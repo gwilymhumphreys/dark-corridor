@@ -23,11 +23,17 @@ const CRIT_SOUND: String = 'mechanics/' + CritMechanic.ID
 ## The travel layer's folder. Its own recordings are the default flight sound for every item;
 ## subfolders named after an item's `travel_sound`, a type tag or a mechanic override it.
 const TRAVEL_SOUND: String = 'combat/travel'
+## The mechanics whose deliveries land on the target's health bar rather than on the target.
+const BAR_MECHANICS: Array[String] = [ShieldMechanic.ID, HealMechanic.ID, RegenMechanic.ID]
 
 ## TRIAL: whether attacks land with `AttackHitDrawer`'s slash and impact images (true) or the
 ## placeholder ring (false). Switched in the debug panel's Feedback tab, or with
 ## `--attack-effect=ring` at start-up.
 static var attack_sprites: bool = DevArgs.value('--attack-effect') != 'ring'
+## TRIAL: whether poison, burn and bleed land with `PoisonDrawer`'s bubbles, `BurnDrawer`'s flames
+## and `BleedDrawer`'s blood (true) or the placeholder ring (false). Switched in the debug panel's Feedback tab, or with
+## `--status-effect=ring` at start-up.
+static var status_sprites: bool = DevArgs.value('--status-effect') != 'ring'
 
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
@@ -36,6 +42,12 @@ var _launched: Dictionary = {}  # Delivery instance id -> true, so each flight s
 var _projectile: EffectDrawer
 var _damage_number: DamageNumberDrawer
 var _attack_hit: AttackHitDrawer
+var _poison: PoisonDrawer
+var _burn: BurnDrawer
+var _bleed: BleedDrawer
+var _shield: ShieldDrawer
+var _heal: HealDrawer
+var _regen: HealDrawer
 var _impact_drawers: Dictionary = {}   # mechanic id (or Delivery.Kind.APPLY_STATUS) -> EffectDrawer
 
 
@@ -48,12 +60,22 @@ func _ready() -> void:
   _projectile = ProjectileDiscDrawer.new()
   _damage_number = DamageNumberDrawer.new()
   _attack_hit = AttackHitDrawer.new()
+  _poison = PoisonDrawer.new()
+  _burn = BurnDrawer.new()
+  _bleed = BleedDrawer.new()
+  _shield = ShieldDrawer.new()
+  _heal = HealDrawer.new()
+  _regen = HealDrawer.new(RegenMechanic.ID)
   var ring: ImpactRingDrawer = ImpactRingDrawer.new()
   # Every mechanic id maps to the same ring for now (docs/systems/mechanics.md). A DoT tick's
   # visual-only Delivery carries its status id as the mechanic, so its ring still draws.
-  for mechanic_id in [AttackMechanic.ID, ShieldMechanic.ID, HealMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID, BleedMechanic.ID, RegenMechanic.ID, CritMechanic.ID]:
+  for mechanic_id in [AttackMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID, BleedMechanic.ID, CritMechanic.ID]:
     _impact_drawers[mechanic_id] = ring
   _impact_drawers[Delivery.Kind.APPLY_STATUS] = ring
+  _impact_drawers[ShieldMechanic.ID] = _shield
+  _impact_drawers[HealMechanic.ID] = _heal
+  # A regen tick's visual-only delivery also carries RegenMechanic.ID, so it draws this too.
+  _impact_drawers[RegenMechanic.ID] = _regen
 
 
 func _process(_delta: float) -> void:
@@ -80,21 +102,37 @@ func _draw() -> void:
     if not d.landed:
       if travel_dur > 0.0:
         var src: Vector2 = layout.consumable_pos(d.consumable) if d.consumable != null else layout.item_pos(d.source)
-        # The same scattered point the ring will use, so the disc does not jump on landing.
-        var dst: Vector2 = layout.target_pos(d.target) + EffectDrawer.scatter_offset(d)   # Actor OR Item target
+        # The same point the landing effect will use, so the disc does not jump on landing.
+        var dst: Vector2 = _landing_point(d)
         var t: float = clampf((now - d.fire_time) / travel_dur, 0.0, 1.0)
         _projectile.draw_effect(self, d, arc_point(src, dst, t), now - d.fire_time)   # PLACEHOLDER shape
       continue
-    var landing: Vector2 = layout.target_pos(d.target) + EffectDrawer.scatter_offset(d)
+    var landing: Vector2 = _landing_point(d)
     var key: Variant = _impact_key(d)
     if attack_sprites and key == AttackMechanic.ID:
-      var src: Vector2 = layout.consumable_pos(d.consumable) if d.consumable != null else layout.item_pos(d.source)
-      _attack_hit.draw_hit(self, d, landing, landing_direction(src, landing), now - d.impact_time)
+      _attack_hit.draw_hit(self, d, landing, _landing_direction_of(d, landing), now - d.impact_time)
+    elif status_sprites and key == PoisonMechanic.ID:
+      _poison.draw_effect(self, d, landing, now - d.impact_time)
+    elif status_sprites and key == BurnMechanic.ID:
+      _burn.draw_effect(self, d, landing, now - d.impact_time)
+    elif status_sprites and key == BleedMechanic.ID:
+      # A bleed tick's drops spurt upward, so it needs no direction (and its source is a status's).
+      var direction: Vector2 = Vector2.UP if d.visual_only else _landing_direction_of(d, landing)
+      _bleed.draw_hit(self, d, landing, direction, now - d.impact_time)
     elif _impact_drawers.has(key):
       var drawer: EffectDrawer = _impact_drawers[key]
       drawer.draw_effect(self, d, landing, now - d.impact_time)
     if _shows_number(d):
       _damage_number.draw_effect(self, d, landing, now - d.impact_time)
+
+
+## Where a delivery lands. Shield, healing and regen given to an actor land on that actor's health
+## bar, where they show (a regen tick too). Anything else lands on its target (an actor or an item), nudged by
+## `EffectDrawer.scatter_offset` so several hits on one target do not stack in one spot.
+func _landing_point(d: Delivery) -> Vector2:
+  if d.kind == Delivery.Kind.MECHANIC and d.mechanic in BAR_MECHANICS and d.target is Actor:
+    return layout.health_bar_pos(d.target)
+  return layout.target_pos(d.target) + EffectDrawer.scatter_offset(d)
 
 
 ## A projectile's point on its path at progress t (0 to 1): a straight line from src to dst,
@@ -109,6 +147,12 @@ static func arc_point(src: Vector2, dst: Vector2, t: float) -> Vector2:
 ## slope of `arc_point` at t = 1): the straight line, bent downward by the arc coming back down.
 static func landing_direction(src: Vector2, dst: Vector2) -> Vector2:
   return (dst - src) + Vector2.DOWN * 4.0 * ARC_HEIGHT * src.distance_to(dst)
+
+
+## The direction a delivery's projectile was travelling as it landed at `landing`.
+func _landing_direction_of(d: Delivery, landing: Vector2) -> Vector2:
+  var src: Vector2 = layout.consumable_pos(d.consumable) if d.consumable != null else layout.item_pos(d.source)
+  return landing_direction(src, landing)
 
 
 ## How big a hit is, from 0 at BIG_HIT_DAMAGE to 1 at BIGGEST_HIT_DAMAGE, or -1 for anything that

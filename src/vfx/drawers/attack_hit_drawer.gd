@@ -56,12 +56,6 @@ static func is_blade(delivery: Delivery) -> bool:
   return delivery.source is Item and delivery.source.def != null and delivery.source.def.attack_sound == 'blade'
 
 
-## A number from 0 to 1 fixed for one delivery and `salt`, so each hit keeps the same angle and flip
-## for as long as it shows.
-static func fixed_random(delivery: Delivery, salt: int) -> float:
-  return float(hash(delivery.get_instance_id() * 97 + salt) % 1000) / 1000.0
-
-
 # The crescent draws across from one end to the other, pushing a little along the direction of
 # travel, then fades. The image's curve bulges towards +x, so +x is turned to face the direction of
 # travel; half the slashes are mirrored so they sweep the other way.
@@ -81,8 +75,8 @@ func _draw_slash(canvas: CanvasItem, delivery: Delivery, point: Vector2, directi
   var width: float = height * float(SLASH.get_width()) / float(SLASH.get_height()) * SLASH_THICKEN
   var shown: Rect2 = Rect2(-width * 0.5, -height * 0.5, width, height * sweep)
   var source: Rect2 = Rect2(0.0, 0.0, SLASH.get_width(), SLASH.get_height() * sweep)
-  canvas.draw_texture_rect_region(SLASH, shown, source, _faded(delivery.color, fade))
-  canvas.draw_texture_rect_region(SLASH_CORE, shown, source, _faded(Colours.UI_TEXT, fade * SLASH_CORE_STRENGTH))
+  canvas.draw_texture_rect_region(SLASH, shown, source, faded(delivery.color, fade))
+  canvas.draw_texture_rect_region(SLASH_CORE, shown, source, faded(Colours.UI_TEXT, fade * SLASH_CORE_STRENGTH))
 
 
 # A ring spreads out behind a burst of debris, and a sharp flash grows fast on top of both, then
@@ -94,10 +88,10 @@ func _draw_impact(canvas: CanvasItem, delivery: Delivery, point: Vector2, age: f
   var spread: float = 1.0 - pow(1.0 - through, 3.0)
   var colour: Color = delivery.color
   canvas.draw_set_transform(point, 0.0, Vector2.ONE)
-  _draw_centred(canvas, RING, lerpf(RING_SIZE_START, RING_SIZE_END, spread), _faded(colour, 0.8 * pow(1.0 - through, 2.0)))
-  _draw_centred(canvas, RING_CORE, lerpf(RING_SIZE_START, RING_SIZE_END, spread), _faded(Colours.UI_TEXT, 0.6 * pow(1.0 - through, 2.0)))
+  draw_centred(canvas, RING, lerpf(RING_SIZE_START, RING_SIZE_END, spread), faded(colour, 0.8 * pow(1.0 - through, 2.0)))
+  draw_centred(canvas, RING_CORE, lerpf(RING_SIZE_START, RING_SIZE_END, spread), faded(Colours.UI_TEXT, 0.6 * pow(1.0 - through, 2.0)))
   canvas.draw_set_transform(point, fixed_random(delivery, 3) * TAU, Vector2.ONE)
-  _draw_centred(canvas, DEBRIS, lerpf(DEBRIS_SIZE_START, DEBRIS_SIZE_END, spread), _faded(colour, 0.7 * pow(1.0 - through, 3.0)))
+  draw_centred(canvas, DEBRIS, lerpf(DEBRIS_SIZE_START, DEBRIS_SIZE_END, spread), faded(colour, 0.7 * pow(1.0 - through, 3.0)))
   var star_size: float
   if through < STAR_GROW:
     star_size = STAR_SIZE * (1.0 - pow(1.0 - through / STAR_GROW, 2.0))
@@ -105,16 +99,5 @@ func _draw_impact(canvas: CanvasItem, delivery: Delivery, point: Vector2, age: f
     star_size = STAR_SIZE * lerpf(1.0, 0.7, (through - STAR_GROW) / (1.0 - STAR_GROW))
   var star_fade: float = clampf(1.0 - (through - STAR_GROW) / (0.6 - STAR_GROW), 0.0, 1.0)
   canvas.draw_set_transform(point, deg_to_rad(lerpf(-20.0, 20.0, fixed_random(delivery, 4))), Vector2.ONE)
-  _draw_centred(canvas, STAR, star_size, _faded(colour, star_fade))
-  _draw_centred(canvas, STAR_CORE, star_size, _faded(Colours.UI_TEXT, star_fade))
-
-
-static func _draw_centred(canvas: CanvasItem, texture: Texture2D, size: float, modulate: Color) -> void:
-  if size <= 0.0 or modulate.a <= 0.0:
-    return
-  var height: float = size * float(texture.get_height()) / float(texture.get_width())
-  canvas.draw_texture_rect(texture, Rect2(-size * 0.5, -height * 0.5, size, height), false, modulate)
-
-
-static func _faded(colour: Color, alpha: float) -> Color:
-  return Color(colour, colour.a * clampf(alpha, 0.0, 1.0))
+  draw_centred(canvas, STAR, star_size, faded(colour, star_fade))
+  draw_centred(canvas, STAR_CORE, star_size, faded(Colours.UI_TEXT, star_fade))
