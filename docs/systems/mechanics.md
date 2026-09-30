@@ -325,6 +325,9 @@ each frame and writes nothing.
   bar eases to the new scale (`SCALE_EASE_SPEED`) instead of jumping.
 - Health fills from the left. Shield fills from the left on top of it, in the shield colour, so it
   hides the health under it.
+- When health or shield changes, its fill moves to the new value over `CHANGE_DURATION`, easing
+  out, instead of jumping. The numbers change at once. A new actor on the bar shows its values
+  without moving.
 - A faint line (`Colours.HP_BAR_LINE`) marks every `LINE_STEP` points. When shield is larger than
   max health, a thicker line marks where max health ends.
 - The numbers and their icons are all on the bar, with a dark outline so they read on any fill

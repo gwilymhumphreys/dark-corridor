@@ -378,6 +378,16 @@ func _close_settings() -> void:
 # then return to Title. The save persists (Game.return_to_title does NOT clear it), so the
 # Title's Resume re-enters this beat. Game swaps the screen; our _exit_tree disconnects.
 func _quit_to_menu() -> void:
+  # The page turn back to the title screen shows this screen on its front, so it is captured while
+  # the combat view is still here and the pause menu is hidden.
+  if PageTurn.can_turn():
+    if _pause_menu != null:
+      _pause_menu.hide()
+    await PageTurn.capture()
+  _leave_run()
+
+
+func _leave_run() -> void:
   _resume()
   _teardown_combat_view()
   Game.return_to_title()
@@ -386,7 +396,7 @@ func _quit_to_menu() -> void:
 # Exit Game: close the application. The save from this beat's entry is kept, so the next
 # launch's Title Resume re-enters this beat, the same as quit-to-menu.
 func _exit_game() -> void:
-  _quit_to_menu()
+  _leave_run()
   get_tree().quit()
 
 

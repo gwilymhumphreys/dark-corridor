@@ -9,6 +9,7 @@ const DEMO_ALLY_ID: String = 'spore_thrall'         # the ally `--allies` recrui
 const DEMO_POTION_ID: String = 'healing_draught'    # the potion `--potions` gives
 const DEMO_RELIC_IDS: Array[String] = ['iron_idol', 'stone_ward', 'vital_charm']   # `--relics` cycles these
 const DEFAULT_SHOT_DELAY: float = 1.5   # seconds; lands during the corridor approach of the first fight
+const PAGE_TURN_START_DELAY: float = 0.5   # seconds the title screen shows before `--page-turn-at` starts a run
 
 var _title_handled: bool = false   # the title arguments act on the first title screen only
 
@@ -32,7 +33,8 @@ func _exit_tree() -> void:
 
 
 func _wants_title_action() -> bool:
-  return DevArgs.has('--autostart') or DevArgs.has('--select') or DevArgs.has('--settings')
+  return DevArgs.has('--autostart') or DevArgs.has('--select') or DevArgs.has('--settings') \
+    or DevArgs.value('--page-turn-at') != ''
 
 
 func _wants_run_additions() -> bool:
@@ -49,9 +51,14 @@ func _on_node_added(node: Node) -> void:
 
 
 ## `--autostart` starts a run as the default character or the one named by `--character=ID`;
-## `--select` opens character select; `--settings` opens the settings screen.
+## `--select` opens character select; `--settings` opens the settings screen. `--page-turn-at=P`
+## starts a run once the title screen has shown, and stops the page turn into it at progress P.
 func _title_action(title: TitleScreen) -> void:
-  if DevArgs.has('--autostart'):
+  if DevArgs.value('--page-turn-at') != '':
+    PageTurn.held_progress = float(DevArgs.value('--page-turn-at', '0.5'))
+    await get_tree().create_timer(PAGE_TURN_START_DELAY).timeout
+    Game.start_run(TitleScreen.DEFAULT_SEED, _autostart_character())
+  elif DevArgs.has('--autostart'):
     Game.start_run.call_deferred(TitleScreen.DEFAULT_SEED, _autostart_character())
   elif DevArgs.has('--select'):
     title.open_select.call_deferred()

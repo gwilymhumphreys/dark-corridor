@@ -23,7 +23,8 @@ per `CharacterCatalog.ids()` — personal name + class + portrait; a pick →
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below).
 
 `MainController` boots with `Game` (already in TITLE — autoloads ready first) and
-**swaps the active screen on `Game.phase_changed`** (TITLE / RUN / DEATH / WIN). It
+**swaps the active screen on `Game.phase_changed`** (TITLE / RUN / DEATH / WIN). Going into a run and
+back to the title screen, the swap happens under a [page turn](page_turn.md). It
 holds no game state. `project.godot`'s `main_scene` is `main.tscn`. The screens hold no dev code; the
 start-up arguments for screenshots and the dev scenes are in [dev_tools.md](dev_tools.md).
 
@@ -132,7 +133,7 @@ pause menu; Close emits `closed` and the opener frees it. See [audio](audio.md) 
 
 `combat_view_framed.tscn` extends the **`CombatView` base class** (`combat_view.gd`) — the
 swappable surface (bind / release / approach controls / hover / the `item_pos` / `actor_pos` /
-`target_pos` lookups the VFX wall reads). The run screen and `VfxDriver` are typed against the
+`target_pos` / `health_bar_pos` lookups the VFX wall reads). The run screen and `VfxDriver` are typed against the
 base, so the framed-vs-fullscreen open is isolated here; a full-screen variant is an additive
 later compare (extend the base, swap one preload). The **corridor-forward** layout (the layout
 mockup). The view places its parts in the run screen's [screen sections](ui_layout.md#screen-sections):

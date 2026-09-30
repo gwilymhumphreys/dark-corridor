@@ -47,6 +47,7 @@ Read by `Dev`.
 | `--notutorial` | Accepted and ignored; there is no tutorial yet |
 | `--autostart`, `--character=ID` | Skips the title screen and starts a run as the default character or `ID` |
 | `--select`, `--settings` | Opens character select or the settings screen on the title screen |
+| `--page-turn-at=P` | Starts a run once the title screen has shown and stops the [page turn](page_turn.md) into it at progress P (0 to 1). Use with `--shot` and a `--shot-delay` of about 3 |
 | `--autofight` | Walks past every choice of encounters, so the run goes from fight to fight |
 | `--pick N` | Takes card N (1 = left, the shop) at every choice of encounters |
 | `--gold N` | Adds N gold to a new run, such as for a shop screenshot |
@@ -79,6 +80,7 @@ Read by `DebugPanels` after the default preset loads.
 | `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
 | `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
 | `--attack-effect=ring` | Read by `VfxDriver`, not `DebugPanels`. Attacks land with the placeholder ring instead of the trial slash and impact images ([vfx_driver.md](vfx_driver.md)) |
+| `--status-effect=ring` | Read by `VfxDriver`, not `DebugPanels`. Poison, burn and bleed land with the placeholder ring instead of the trial bubbles, flames and blood ([vfx_driver.md](vfx_driver.md)) |
 | `--feedback-demo=<amount>` | Holds every control at that much hover |
 | `--glow-demo=<brightness>` | Every node drawn through a picture material glows ([interface_glow.md](interface_glow.md)) |
 | `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel`, `--tokens-panel` | Opens the panel on that tab |
@@ -94,7 +96,7 @@ Run one directly instead of the game: `<godot> --path . res://src/debug/scenes/<
 | `corridor_testbed` | The corridor with Forward and Back buttons; N places a monster ([corridor_3d.md](corridors/corridor_3d.md)) | `--set=property=value` sets a corridor export (repeatable); `--view=WIDTHxHEIGHT` fixes the view size; with `--shot`, `--still` keeps it from moving and `--monster` places a monster |
 | `tooltip_demo` | The item tooltip held open over one item ([tooltips.md](tooltips.md)) | none |
 | `paper_burn_preview` | Tokens held partway through a paper burn, and a map token, an item token and a wide panel burning over and over ([paper_burn.md](paper_burn.md)) | none |
-| `hit_effects_preview` | The dagger's slash and the warhammer's impact repeating over an enemy image, and a strip of frames through each ([vfx_driver.md](vfx_driver.md)) | none |
+| `hit_effects_preview` | One page each for attack, poison, burn and bleed: the page's two hit effects repeating over an enemy image, and a strip of frames through each ([vfx_driver.md](vfx_driver.md)). Space or Tab turns the page | `--page=attack`, `poison`, `burn` or `bleed` picks the first page |
 
 ## Screenshot commands
 

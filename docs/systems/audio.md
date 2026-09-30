@@ -160,6 +160,8 @@ click), `world/footsteps/`, `mechanics/<mechanic id>/`, and `combat/` (`hurt/` f
 reactions, `travel/` for the sounds of deliveries in flight, with a `volume.cfg`). No category has
 a `_default` folder yet, so a folder with no recordings and no recorded parent is silent.
 
+- `assets/sound-effects/ui/page_turn/` — the [page turn](page_turn.md) between screens, one sound
+  taken from the paper pool.
 - `assets/sound-effects/ui/paper/` — a pool of paper candidates that nothing plays. Its `.gdignore`
   keeps Godot from importing it, so it is not in a build. Move a sound into a folder the game
   plays from to use it.
