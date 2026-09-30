@@ -40,6 +40,32 @@ func test_save_then_load_restores_the_panel_section() -> void:
     'panel number restored')
 
 
+func test_a_panel_setting_reaches_every_panel_material() -> void:
+  var before: Control = Control.new()
+  add_child_autofree(before)
+  PrintLook.panel_child(before.get_canvas_item())
+  PrintLook.set_panel_setting('panel_edge_wear_width', 30.0)
+  var after: Control = Control.new()
+  add_child_autofree(after)
+  PrintLook.panel_child(after.get_canvas_item())
+  for control: Control in [before, after]:
+    assert_almost_eq(PrintLook.panel_material_of(control.get_canvas_item()).get_shader_parameter('panel_edge_wear_width'),
+      30.0, 0.001, 'a panel made before or after the change has the setting')
+  var file: ConfigFile = ConfigFile.new()
+  file.set_value('print_panel', 'panel_edge_wear_width', 12.5)
+  PrintLook.read_print_look(file)
+  assert_almost_eq(PrintLook.panel_material_of(before.get_canvas_item()).get_shader_parameter('panel_edge_wear_width'),
+    12.5, 0.001, 'a preset load reaches an existing panel')
+
+
+func test_panel_wear_uses_no_instance_uniforms() -> void:
+  # The compatibility renderer only has room for about 256 canvas items using instance uniforms, and
+  # every worn panel draws through this shader (docs/systems/godot_notes.md).
+  var declaration: RegEx = RegEx.create_from_string('(?m)^\\s*instance\\s+uniform\\b')
+  assert_null(declaration.search(PrintLook.PANEL_SHADER.code), 'panel wear has none')
+  assert_null(declaration.search(ControlFeedback.HIGHLIGHT_INCLUDE.code), 'the control highlight has none')
+
+
 func test_panel_wear_colours_follow_the_interface_palette() -> void:
   var default_dark: Color = PrintLook.panel_material.get_shader_parameter('wear_dark_colour')
   var path: String = 'user://test_print_look_palette.gpl'

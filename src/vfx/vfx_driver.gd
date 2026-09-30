@@ -26,9 +26,6 @@ const CRIT_SOUND: String = 'mechanics/' + CritMechanic.ID
 const TRAVEL_SOUND: String = 'combat/travel'
 ## The mechanics whose deliveries land on the target's health bar rather than on the target.
 const BAR_MECHANICS: Array[String] = [ShieldMechanic.ID, HealMechanic.ID, RegenMechanic.ID]
-## The mechanics that put a status of the same id on their target. A delivery of one of them lands
-## where that status shows (`status_made`).
-const STATUS_MECHANICS: Array[String] = [ShieldMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID, BleedMechanic.ID, RegenMechanic.ID]
 
 ## TRIAL: whether attacks land with `AttackHitDrawer`'s slash and impact images (true) or the
 ## placeholder ring (false). Switched in the debug panel's Feedback tab, or with
@@ -41,9 +38,8 @@ static var status_sprites: bool = DevArgs.value('--status-effect') != 'ring'
 ## TRIAL: whether projectiles fly as `ProjectileCometDrawer`'s comet (true) or the placeholder disc
 ## (false). Switched in the debug panel's Feedback tab, or with `--projectile=disc` at start-up.
 static var comet_projectiles: bool = DevArgs.value('--projectile') != 'disc'
-## Whether a delivery that gives a status draws its landing effect (the ring, or a trial splash) where
-## the status shows. Off: the status's icon popping in is the landing. Switched in the debug panel's
-## Feedback tab.
+## Whether a status application draws the placeholder ring where it lands. Off: on an actor, the
+## status's icon popping in is the landing. Switched in the debug panel's Feedback tab.
 static var status_landing_effects: bool = false
 
 var combat: CombatManager
@@ -53,6 +49,9 @@ var _launched: Dictionary = {}  # Delivery instance id -> true, so each flight s
 var _projectile: EffectDrawer
 var _comet: ProjectileCometDrawer
 var _damage_number: DamageNumberDrawer
+## The damage numbers are drawn on this child, so they can take their own material: the element
+## material, like the value pills, when `effects_damage_numbers` says so (`_numbers_material_update`).
+var _numbers: Node2D
 var _attack_hit: AttackHitDrawer
 var _poison: PoisonDrawer
 var _burn: BurnDrawer
@@ -72,6 +71,11 @@ func _ready() -> void:
   _projectile = ProjectileDiscDrawer.new()
   _comet = ProjectileCometDrawer.new()
   _damage_number = DamageNumberDrawer.new()
+  _numbers = Node2D.new()
+  _numbers.name = 'Numbers'
+  _numbers.use_parent_material = true
+  _numbers.draw.connect(_draw_numbers)
+  add_child(_numbers)
   _attack_hit = AttackHitDrawer.new()
   _poison = PoisonDrawer.new()
   _burn = BurnDrawer.new()
@@ -93,7 +97,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
   _sound_new_impacts()
+  _numbers_material_update()
   queue_redraw()
+  _numbers.queue_redraw()
 
 
 func _exit_tree() -> void:
@@ -126,8 +132,8 @@ func _draw() -> void:
     var landing: Vector2 = _landing_point(d)
     var key: Variant = _impact_key(d)
     var mechanic: String = trial_mechanic(d)
-    if not status_landing_effects and status_made(d) != '':
-      pass   # the status's icon pops in where it lands (PopAnimation), so nothing is drawn over it
+    if not status_landing_effects and d.kind == Delivery.Kind.APPLY_STATUS:
+      pass   # on an actor the status's icon pops in where it lands (PopAnimation), so nothing is drawn over it
     elif attack_sprites and mechanic == AttackMechanic.ID:
       _attack_hit.draw_hit(self, d, landing, _landing_direction_of(d, landing), now - d.impact_time)
     elif status_sprites and mechanic == PoisonMechanic.ID:
@@ -141,19 +147,38 @@ func _draw() -> void:
     elif _impact_drawers.has(key):
       var drawer: EffectDrawer = _impact_drawers[key]
       drawer.draw_effect(self, d, landing, now - d.impact_time)
-    if _shows_number(d):
-      _damage_number.draw_effect(self, d, landing, now - d.impact_time)
 
 
-## Where a delivery lands. A delivery that gives an actor a status lands where that status shows on
-## the actor's panel, or where it will appear if the actor does not have it yet (`layout.status_pos`).
-## Healing and a regen tick land on the actor's health bar. Anything else lands on its target (an
-## actor or an item), nudged by `EffectDrawer.scatter_offset` so several hits on one target do not
-## stack in one spot.
+# The damage numbers, on their own child node and above every other effect.
+func _draw_numbers() -> void:
+  if combat == null or combat.timekeeper == null:
+    return
+  var now: float = combat.timekeeper.render_time()
+  for d in combat.deliveries():
+    if d.fizzled or not d.landed or not _shows_number(d):
+      continue
+    _damage_number.draw_effect(_numbers, d, _landing_point(d), now - d.impact_time)
+
+
+# The numbers share the wall's material, unless the wall takes the interface look and its
+# `effects_damage_numbers` setting asks for them to be drawn like the value pills
+# (docs/systems/interface_look.md).
+func _numbers_material_update() -> void:
+  var effects: ShaderMaterial = InterfaceLook.effects_material
+  var like_pills: bool = material == effects and effects.get_shader_parameter('effects_on') == true \
+    and effects.get_shader_parameter('effects_damage_numbers') == 1
+  _numbers.use_parent_material = not like_pills
+  _numbers.material = InterfaceLook.element_material if like_pills else null
+
+
+## Where a delivery lands. A status application lands where the status has its icon on the actor's
+## panel, or will have it once applied (`layout.status_pos`); on an item, at the centre of the item's
+## cell. Shield, healing and regen given to an actor land on its health bar. Anything else lands on
+## its target (an actor or an item), nudged by `EffectDrawer.scatter_offset` so several hits on one
+## target do not stack in one spot.
 func _landing_point(d: Delivery) -> Vector2:
-  var status_id: String = status_made(d)
-  if status_id != '':
-    return layout.status_pos(d.target, status_id)
+  if d.kind == Delivery.Kind.APPLY_STATUS:
+    return layout.status_pos(d.target, d.status_id) if d.target is Actor else layout.target_pos(d.target)
   if d.kind == Delivery.Kind.MECHANIC and d.mechanic in BAR_MECHANICS and d.target is Actor:
     return layout.health_bar_pos(d.target)
   return layout.target_pos(d.target) + EffectDrawer.scatter_offset(d)
@@ -190,19 +215,6 @@ static func big_hit_strength(delivery: Delivery) -> float:
   if delivery.mechanic != AttackMechanic.ID or delivery.value < BIG_HIT_DAMAGE:
     return -1.0
   return clampf((delivery.value - BIG_HIT_DAMAGE) / (BIGGEST_HIT_DAMAGE - BIG_HIT_DAMAGE), 0.0, 1.0)
-
-
-## The status a delivery gives its target, or the empty string: a status application's status, or
-## the mechanic's own status for a mechanic in STATUS_MECHANICS. A damage tick and a delivery to an
-## item give none here.
-static func status_made(delivery: Delivery) -> String:
-  if delivery.visual_only or not (delivery.target is Actor):
-    return ''
-  if delivery.kind == Delivery.Kind.APPLY_STATUS:
-    return delivery.status_id
-  if delivery.kind == Delivery.Kind.MECHANIC and delivery.mechanic in STATUS_MECHANICS:
-    return delivery.mechanic
-  return ''
 
 
 ## The mechanic id the trial drawers (attack, poison, burn, bleed) are chosen by: the delivery's

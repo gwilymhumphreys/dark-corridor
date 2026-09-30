@@ -2,8 +2,7 @@
 // a rough printed border just inside the control's edge, and, on a button, a light wash that lifts its
 // dark fill as the pointer arrives. Included by panel_wear.gdshader, so the feedback is drawn by the
 // same canvas item as the control's own panel: behind its text and children, and already carrying the
-// panel's rectangle. `ControlFeedback` pushes the four amounts per control as instance uniforms, so
-// one material serves every control.
+// panel's rectangle. `ControlFeedback` sets the amounts on each panel's own copy of the material.
 
 // The noise functions come from print_noise.gdshaderinc, which panel_wear.gdshader already includes
 // through print_wear.gdshaderinc; Godot has no include guards, so this file must not include it again.
@@ -17,16 +16,16 @@ uniform vec3 fill_colour : source_color = vec3(0.78, 0.77, 0.74);
 uniform vec3 bloom_colour : source_color = vec3(0.2, 0.2, 0.2);
 
 // How far the pointer feedback has come in, 0 to 1.
-instance uniform float hover = 0.0;
+uniform float hover = 0.0;
 // Held at 1 while the control is the chosen one, whatever the pointer is doing.
-instance uniform float selected = 0.0;
+uniform float selected = 0.0;
 // How far the press has gone in, 0 to 1.
-instance uniform float press = 0.0;
+uniform float press = 0.0;
 // A short pulse of extra ink on release, 0 to 1.
-instance uniform float bloom = 0.0;
+uniform float bloom = 0.0;
 // 1 on a control whose whole body lights up (a plain button); 0 on one that only takes a border,
 // such as an item cell or a character card, whose body is a picture.
-instance uniform float fill_shown = 0.0;
+uniform float fill_shown = 0.0;
 
 group_uniforms highlight_border;
 uniform bool highlight_border_on = true;

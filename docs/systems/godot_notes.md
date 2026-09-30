@@ -49,6 +49,23 @@ does not say why:
 `Shader.code` is the file's own text, with the `#include` lines unexpanded, so code that
 reads uniform defaults out of shader source has to read each included file as well.
 
+## Instance uniforms
+
+The compatibility renderer, which the web build needs, has room for about 256 canvas items using
+`instance uniform` at the same time. Godot reserves 16 slots of one 4096-slot buffer for each such
+canvas item, however many instance uniforms it uses, and the size comes from the hardware, so
+`rendering/limits/global_shader_variables/buffer_size` cannot raise it. Past the limit Godot logs
+`Too many instances using shader instance variables`, the extra nodes draw wrong or blank, and
+freeing one logs `instance_buffer_pos.has(p_instance)`.
+
+- Use an instance uniform only on something that appears a few times at most (the portraits'
+  `picture_zoom`, the pencil boxes in `board_grid.gdshader`).
+- For anything that can appear many times, such as panels, item cells or effects, give each node its
+  own copy of the material and set ordinary uniforms on it (the worn panels in
+  [panel_wear.md](panel_wear.md), the item cell's cooldown ring), or lay the pattern out from
+  `FRAGCOORD`. Canvas items drawn through a shared material with instance uniforms are already one
+  draw call each, so material copies cost no extra draw calls.
+
 ## Runtime cleanup
 
 Godot reports leaked objects at exit and can free an already-freed node at a scene

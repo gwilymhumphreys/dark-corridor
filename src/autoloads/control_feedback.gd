@@ -99,7 +99,7 @@ func set_bloom(control: Control, amount: float) -> void:
 func set_demo(amount: float) -> void:
   demo_amount = amount
   for parent: RID in _highlighted:
-    RenderingServer.canvas_item_set_instance_shader_parameter(PrintLook.panel_child(parent), 'hover', amount)
+    PrintLook.set_panel_value(parent, 'hover', amount)
 
 
 ## Any feedback setting's current value: one of `SETTING_DEFAULTS`, changed or at its default, or a
@@ -118,9 +118,9 @@ func setting_float(setting_name: String) -> float:
 ## Push `Colours.UI_HIGHLIGHT`, `UI_BUTTON_LIGHT` and `UI_PANEL_WEAR` into the material. Called at
 ## start, and by `DebugPanels` after an interface palette is applied or reset.
 func push_colours() -> void:
-  PrintLook.panel_material.set_shader_parameter('highlight_colour', Colours.UI_HIGHLIGHT)
-  PrintLook.panel_material.set_shader_parameter('fill_colour', Colours.UI_BUTTON_LIGHT)
-  PrintLook.panel_material.set_shader_parameter('bloom_colour', Colours.UI_PANEL_WEAR)
+  PrintLook.set_panel_setting('highlight_colour', Colours.UI_HIGHLIGHT)
+  PrintLook.set_panel_setting('fill_colour', Colours.UI_BUTTON_LIGHT)
+  PrintLook.set_panel_setting('bloom_colour', Colours.UI_PANEL_WEAR)
 
 
 ## Every highlight uniform with a default in its shader code (uniform name -> value), except
@@ -134,7 +134,7 @@ func defaults() -> Dictionary:
 ## Set a highlight uniform or a timing setting by name. Unknown names are ignored.
 func set_setting(setting_name: String, value: Variant) -> void:
   if defaults().has(setting_name):
-    PrintLook.panel_material.set_shader_parameter(setting_name, value)
+    PrintLook.set_panel_setting(setting_name, value)
   elif SETTING_DEFAULTS.has(setting_name):
     settings[setting_name] = value
 
@@ -164,11 +164,11 @@ func read_look(file: ConfigFile) -> void:
       set_setting(setting_name, file.get_value(section, setting_name))
 
 
-# The amounts ride on the canvas item the control's panel is drawn into, so the highlight is already
-# behind the control's own text and children, and already knows the panel's rectangle.
+# The amounts are set on the material of the canvas item the control's panel is drawn into, so the
+# highlight is already behind the control's own text and children, and already knows the panel's
+# rectangle.
 func _set_amount(control: Control, amount_name: String, amount: float) -> void:
-  RenderingServer.canvas_item_set_instance_shader_parameter(
-    PrintLook.panel_child(control.get_canvas_item()), amount_name, amount)
+  PrintLook.set_panel_value(control.get_canvas_item(), amount_name, amount)
 
 
 # `PrintLook` frees the canvas item with the control; this only drops the record of it.
@@ -180,4 +180,4 @@ func _on_node_removed(node: Node) -> void:
 # Every uniform is set explicitly, so a saved preset lists every one of them.
 func _write_defaults() -> void:
   for uniform: String in defaults():
-    PrintLook.panel_material.set_shader_parameter(uniform, defaults()[uniform])
+    PrintLook.set_panel_setting(uniform, defaults()[uniform])

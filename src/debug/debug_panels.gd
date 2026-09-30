@@ -27,6 +27,9 @@ const PORTRAIT_SAME_AS_CORRIDOR: String = 'corridor'
 const PORTRAIT_SAME_AS_INTERFACE: String = 'interface'
 ## The first item id in the portrait palette option that names a palette file.
 const PORTRAIT_FIRST_FILE_ID: int = 3
+## `effects_palette` value that follows the portrait palette. `PORTRAIT_SAME_AS_INTERFACE` follows the
+## interface palette.
+const EFFECTS_SAME_AS_PORTRAIT: String = 'portrait'
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
@@ -76,6 +79,9 @@ var interface_palette: String = ''
 ## What interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR`,
 ## `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path.
 var portrait_palette: String = PORTRAIT_SAME_AS_INTERFACE
+## What the combat effects are clamped to (docs/plans/effects_look.md): '' for off,
+## `PORTRAIT_SAME_AS_INTERFACE`, `EFFECTS_SAME_AS_PORTRAIT`, or a palette file path.
+var effects_palette: String = PORTRAIT_SAME_AS_INTERFACE
 
 var _palette_paths: Array[String] = []   # item id - 1 -> palette path in the world palette option (id 0 = Off)
 var _interface_palette_paths: Array[String] = []   # item id - 1 -> `.gpl` path in the interface palette option
@@ -101,6 +107,7 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
 @onready var _portrait_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/PortraitPaletteRow/Option
+@onready var _effects_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/EffectsPaletteRow/Option
 
 func _ready() -> void:
   _panel_layer.visible = false
@@ -111,13 +118,14 @@ func _ready() -> void:
   _preset_bar.side_switched.connect(_switch_side)
   world_material.shader = LOOK_SHADER
   world_material.set_shader_parameter('dither_noise', BLUE_NOISE)
-  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
-    picture_material.set_shader_parameter('dither_noise', BLUE_NOISE)
+  for clamp_material: ShaderMaterial in InterfaceLook.clamp_materials:
+    clamp_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_palette(world_material, PackedColorArray())
   _world_option.item_selected.connect(_on_world_palette_selected)
   _interface_option.item_selected.connect(_on_interface_palette_selected)
   _portrait_option.item_selected.connect(_on_portrait_palette_selected)
+  _effects_option.item_selected.connect(_on_effects_palette_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _sync_controls()
   LookPresets.load_default()
@@ -129,6 +137,7 @@ func _ready() -> void:
 ## the world clamp, `--perceptual` and `--dither` set the matching and the world clamp's dithering,
 ## `--interface-dither` the interface clamp's, `--ui-palette=<res path>` applies an interface palette,
 ## `--portrait-palette=<res path, corridor or interface>` sets the portrait palette,
+## `--effects-palette=<res path, interface, portrait or off>` the effects palette,
 ## `--corridor-set=property=value` sets a corridor export, `--background-set=uniform=value` a background
 ## wear setting, `--panel-set=uniform=value` a panel wear setting, `--print-set=name=value` a border,
 ## corridor overlay or layout setting, `--interface-set=uniform=value` an interface look setting,
@@ -158,6 +167,9 @@ func _apply_command_line() -> void:
       set_interface_palette(arg.substr(13))
     elif arg.begins_with('--portrait-palette='):
       set_portrait_palette(arg.substr(19))
+    elif arg.begins_with('--effects-palette='):
+      var effects_choice: String = arg.substr(18)
+      set_effects_palette('' if effects_choice == 'off' else effects_choice)
     elif arg.begins_with('--background-set='):
       var setting: PackedStringArray = arg.substr(17).split('=')
       if setting.size() == 2 and PrintLook.background_defaults().has(setting[0]):
@@ -165,7 +177,7 @@ func _apply_command_line() -> void:
     elif arg.begins_with('--panel-set='):
       var panel_setting: PackedStringArray = arg.substr(12).split('=')
       if panel_setting.size() == 2 and PrintLook.panel_defaults().has(panel_setting[0]):
-        PrintLook.panel_material.set_shader_parameter(panel_setting[0], str_to_var(panel_setting[1]))
+        PrintLook.set_panel_setting(panel_setting[0], str_to_var(panel_setting[1]))
     elif arg.begins_with('--print-set='):
       var print_pair: PackedStringArray = arg.substr(12).split('=')
       if print_pair.size() == 2:
@@ -435,11 +447,12 @@ func read_corridor_palette(file: ConfigFile) -> void:
   _look_panel.refresh()
 
 
-## Write the interface's palette choices into a preset's interface part: the interface and portrait
-## palettes and the interface clamp's dithering switch.
+## Write the interface's palette choices into a preset's interface part: the interface, portrait and
+## effects palettes and the interface clamp's dithering switch.
 func write_interface_palettes(file: ConfigFile) -> void:
   file.set_value('interface_palette', 'interface_palette', interface_palette)
   file.set_value('interface_palette', 'portrait_palette', portrait_palette)
+  file.set_value('interface_palette', 'effects_palette', effects_palette)
   file.set_value('interface_palette', 'dithering', _interface_dithering)
 
 
@@ -448,13 +461,14 @@ func write_interface_palettes(file: ConfigFile) -> void:
 func read_interface_palettes(file: ConfigFile) -> void:
   set_interface_palette(file.get_value('interface_palette', 'interface_palette', ''))
   set_portrait_palette(file.get_value('interface_palette', 'portrait_palette', PORTRAIT_SAME_AS_INTERFACE))
+  set_effects_palette(file.get_value('interface_palette', 'effects_palette', PORTRAIT_SAME_AS_INTERFACE))
   _on_interface_dithering_toggled(file.get_value('interface_palette', 'dithering', false))
   _sync_controls()
   _interface_look_panel.refresh()
 
 
-## Palettes back to their defaults: world clamp off, no interface palette, portrait palette same as
-## interface, RGB matching, no dithering in either clamp.
+## Palettes back to their defaults: world clamp off, no interface palette, portrait and effects
+## palettes same as interface, RGB matching, no dithering in either clamp.
 func reset_palettes() -> void:
   read_corridor_palette(ConfigFile.new())
   read_interface_palettes(ConfigFile.new())
@@ -627,6 +641,25 @@ func _apply_portrait_palette() -> void:
   var colours: PackedColorArray = _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
   for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
     _write_palette(picture_material, colours)
+  _apply_effects_palette(colours)
+
+
+## Set what the combat effects are clamped to: '' for off, `PORTRAIT_SAME_AS_INTERFACE` for the
+## interface palette, `EFFECTS_SAME_AS_PORTRAIT` for the portrait palette's colours, or a palette file
+## path. The colours are written into `InterfaceLook.effects_material`.
+func set_effects_palette(choice: String) -> void:
+  effects_palette = choice
+  _apply_portrait_palette()
+
+
+# Writes the effects palette's colours into `InterfaceLook.effects_material`. `portrait_colours` are
+# the colours just written to the pictures, used for `EFFECTS_SAME_AS_PORTRAIT`.
+func _apply_effects_palette(portrait_colours: PackedColorArray) -> void:
+  var colours: PackedColorArray = portrait_colours
+  if effects_palette != EFFECTS_SAME_AS_PORTRAIT:
+    var file: String = interface_palette if effects_palette == PORTRAIT_SAME_AS_INTERFACE else effects_palette
+    colours = _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
+  _write_palette(InterfaceLook.effects_material, colours)
 
 
 # Statuses copy their colour from `Colours` when created, so each one in the current fight takes the
@@ -716,6 +749,7 @@ func _scan_palettes() -> void:
   _world_option.clear()
   _interface_option.clear()
   _portrait_option.clear()
+  _effects_option.clear()
   _palette_paths.clear()
   _interface_palette_paths.clear()
   _world_option.add_item('Off', 0)
@@ -723,16 +757,21 @@ func _scan_palettes() -> void:
   _portrait_option.add_item('Off', 0)
   _portrait_option.add_item('Same as corridor', 1)
   _portrait_option.add_item('Same as interface', 2)
+  _effects_option.add_item('Off', 0)
+  _effects_option.add_item('Same as portraits', 1)
+  _effects_option.add_item('Same as interface', 2)
   var groups: Dictionary = PaletteLoader.find_palettes(PALETTE_ROOT)
   for folder: String in groups:
     if folder != '':
       _world_option.add_separator(folder)
       _portrait_option.add_separator(folder)
+      _effects_option.add_separator(folder)
     for path: String in groups[folder]:
       _palette_paths.append(path)
       var palette_name: String = path.get_file().get_basename()
       _world_option.add_item(palette_name, _palette_paths.size())
       _portrait_option.add_item(palette_name, _palette_paths.size() + PORTRAIT_FIRST_FILE_ID - 1)
+      _effects_option.add_item(palette_name, _palette_paths.size() + PORTRAIT_FIRST_FILE_ID - 1)
       if InterfacePalette.is_interface_palette(path):
         _interface_palette_paths.append(path)
         _interface_option.add_item(folder.path_join(palette_name), _interface_palette_paths.size())
@@ -747,6 +786,7 @@ func _sync_controls() -> void:
     _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))
     var portrait_id: int = _portrait_palette_id()
     _portrait_option.select(maxi(_portrait_option.get_item_index(portrait_id), 0))
+    _effects_option.select(maxi(_effects_option.get_item_index(_effects_palette_id()), 0))
 
 
 # The item id in the portrait palette option for the current `portrait_palette`: 0 for off, 1 for
@@ -760,6 +800,20 @@ func _portrait_palette_id() -> int:
     PORTRAIT_SAME_AS_INTERFACE:
       return 2
   var index: int = _palette_paths.find(portrait_palette)
+  return index + PORTRAIT_FIRST_FILE_ID if index >= 0 else 0
+
+
+# The item id in the effects palette option for the current `effects_palette`: 0 for off, 1 for the
+# portraits, 2 for the interface, or the palette file's id (numbered as in the portrait option).
+func _effects_palette_id() -> int:
+  match effects_palette:
+    '':
+      return 0
+    EFFECTS_SAME_AS_PORTRAIT:
+      return 1
+    PORTRAIT_SAME_AS_INTERFACE:
+      return 2
+  var index: int = _palette_paths.find(effects_palette)
   return index + PORTRAIT_FIRST_FILE_ID if index >= 0 else 0
 
 
@@ -786,11 +840,24 @@ func _on_portrait_palette_selected(index: int) -> void:
       set_portrait_palette(_palette_paths[id - PORTRAIT_FIRST_FILE_ID])
 
 
+func _on_effects_palette_selected(index: int) -> void:
+  var id: int = _effects_option.get_item_id(index)
+  match id:
+    0:
+      set_effects_palette('')
+    1:
+      set_effects_palette(EFFECTS_SAME_AS_PORTRAIT)
+    2:
+      set_effects_palette(PORTRAIT_SAME_AS_INTERFACE)
+    _:
+      set_effects_palette(_palette_paths[id - PORTRAIT_FIRST_FILE_ID])
+
+
 func _on_matching_selected(index: int) -> void:
   _perceptual = index == 1
   world_material.set_shader_parameter('perceptual', _perceptual)
-  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
-    picture_material.set_shader_parameter('perceptual', _perceptual)
+  for clamp_material: ShaderMaterial in InterfaceLook.clamp_materials:
+    clamp_material.set_shader_parameter('perceptual', _perceptual)
 
 
 func _on_dithering_toggled(on: bool) -> void:
@@ -800,5 +867,5 @@ func _on_dithering_toggled(on: bool) -> void:
 
 func _on_interface_dithering_toggled(on: bool) -> void:
   _interface_dithering = on
-  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
-    picture_material.set_shader_parameter('dithering', _interface_dithering)
+  for clamp_material: ShaderMaterial in InterfaceLook.clamp_materials:
+    clamp_material.set_shader_parameter('dithering', _interface_dithering)

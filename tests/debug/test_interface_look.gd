@@ -32,6 +32,8 @@ const ELEMENT_SCENE_NODES: Array[Array] = [
   ['res://src/scenes/combat/health_bar.tscn', 'Bar/HealthFill'],
   ['res://src/scenes/combat/health_bar.tscn', 'Bar/ShieldFill'],
   ['res://src/scenes/combat/health_bar.tscn', 'Bar/Lines'],
+  ['res://src/scenes/combat/item_cell.tscn', 'TemporaryTag'],
+  ['res://src/scenes/combat/item_cell.tscn', 'TemporaryTag/Label'],
 ]
 
 
@@ -239,3 +241,74 @@ func test_the_per_node_zoom_is_not_a_look_setting() -> void:
   for uniform: String in InterfaceLookAutoload.NODE_UNIFORMS:
     assert_false(InterfaceLook.defaults().has(uniform),
       '%s is set per node, so it is not in the panel or a preset' % uniform)
+
+
+func test_the_effects_wall_uses_the_effects_material() -> void:
+  var scene: PackedScene = load('res://src/scenes/combat/combat_view_framed.tscn')
+  var root: Node = scene.instantiate()
+  assert_eq(root.get_node('VfxWall').material, InterfaceLook.effects_material,
+    'the combat effects draw through the effects material')
+  root.free()
+
+
+func test_only_the_effects_shader_lays_patterns_out_on_the_screen() -> void:
+  for look_material: ShaderMaterial in [InterfaceLook.material, InterfaceLook.element_material, InterfaceLook.framed_material, InterfaceLook.portrait_material]:
+    assert_false(look_material.shader.code.contains('#define EFFECTS'), '%s is not the effects shader' % look_material.shader.resource_path)
+  assert_true(InterfaceLook.effects_material.shader.code.contains('#define EFFECTS'), 'the effects shader defines EFFECTS')
+
+
+func test_a_setting_reaches_the_effects_except_the_colour_changing_switches() -> void:
+  InterfaceLook.set_setting('halftone_on', true)
+  assert_eq(InterfaceLook.effects_material.get_shader_parameter('halftone_on'), true, 'a setting reaches the effects')
+  for uniform: String in InterfaceLookAutoload.EFFECTS_OFF_UNIFORMS:
+    InterfaceLook.set_setting(uniform, true)
+    assert_ne(InterfaceLook.effects_material.get_shader_parameter(uniform), true,
+      '%s stays off for the effects' % uniform)
+
+
+func test_the_effects_settings_are_look_settings_and_off_by_default() -> void:
+  var defaults: Dictionary = InterfaceLook.defaults()
+  assert_eq(defaults['effects_on'], false, 'the effects take no look by default')
+  assert_eq(defaults['effects_dither_transparency'], false, 'transparency dithering is off by default')
+  assert_eq(defaults['effects_damage_numbers'], 0, 'the numbers are drawn with the effects by default')
+
+
+func test_the_effects_take_the_effects_palette_not_the_portrait_palette() -> void:
+  DebugPanels.set_interface_palette('')
+  DebugPanels.set_portrait_palette('res://assets/palettes/shortlist/2bit-demichrome.gpl')
+  DebugPanels.set_effects_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE)
+  assert_gt(InterfaceLook.framed_material.get_shader_parameter('colour_count'), 0, 'the pictures are clamped')
+  assert_eq(InterfaceLook.effects_material.get_shader_parameter('colour_count'), 0,
+    'the effects follow the interface palette, which is off')
+  DebugPanels.set_effects_palette(DebugPanelsAutoload.EFFECTS_SAME_AS_PORTRAIT)
+  assert_eq(InterfaceLook.effects_material.get_shader_parameter('colour_count'),
+    InterfaceLook.framed_material.get_shader_parameter('colour_count'), 'the effects can follow the pictures')
+
+
+func test_the_interface_dithering_switch_reaches_the_effects() -> void:
+  DebugPanels.set_interface_dithering(true)
+  assert_eq(InterfaceLook.effects_material.get_shader_parameter('dithering'), true, 'the effects dither')
+
+
+func test_the_effects_palette_is_saved_in_a_preset() -> void:
+  DebugPanels.set_effects_palette(DebugPanelsAutoload.EFFECTS_SAME_AS_PORTRAIT)
+  var file: ConfigFile = ConfigFile.new()
+  DebugPanels.write_interface_palettes(file)
+  DebugPanels.reset_palettes()
+  assert_eq(DebugPanels.effects_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE, 'reset restores the default')
+  DebugPanels.read_interface_palettes(file)
+  assert_eq(DebugPanels.effects_palette, DebugPanelsAutoload.EFFECTS_SAME_AS_PORTRAIT, 'the choice is restored')
+
+
+func test_damage_numbers_can_be_drawn_like_the_value_pills() -> void:
+  var vfx: VfxDriver = VfxDriver.new()
+  vfx.material = InterfaceLook.effects_material
+  add_child_autofree(vfx)
+  var numbers: Node2D = vfx.get_node('Numbers')
+  vfx._numbers_material_update()
+  assert_true(numbers.use_parent_material, 'the numbers share the wall material by default')
+  InterfaceLook.set_setting('effects_on', true)
+  InterfaceLook.set_setting('effects_damage_numbers', 1)
+  vfx._numbers_material_update()
+  assert_false(numbers.use_parent_material, 'drawn like the pills, the numbers have their own material')
+  assert_eq(numbers.material, InterfaceLook.element_material, 'the value pills material')

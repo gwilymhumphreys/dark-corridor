@@ -1,14 +1,15 @@
 # Interface look
 
 A dev tool for trying post-processing effects on interface images (item and potion icons, character
-portraits, HP bars, item value pills) separately from the [corridor look](corridor_look.md). Other text
-and panels, and the corridor, are not affected.
+portraits, HP bars, item value pills) and on the combat effects, separately from the
+[corridor look](corridor_look.md). Other text and panels, and the corridor, are not affected.
 
 **Location:** `src/shaders/interface_look.gdshaderinc` (the shader, included by `interface_look.gdshader`
 and `interface_portrait.gdshader`), `src/shaders/look_effects.gdshaderinc` (the effects
 shared with the corridor look), `src/shaders/interface_look_material.tres`,
-`src/shaders/interface_framed_material.tres`, `src/shaders/interface_portrait_material.tres` and
-`src/shaders/interface_element_material.tres`,
+`src/shaders/interface_framed_material.tres`, `src/shaders/interface_portrait_material.tres`,
+`src/shaders/interface_element_material.tres` and `src/shaders/interface_effects_material.tres` (on
+`interface_effects.gdshader`),
 `InterfaceLook`
 (`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the Interface tab in
 `src/debug/interface_look_panel.*`. Saved in the interface part of a [look preset](look_presets.md).
@@ -57,26 +58,28 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   breathing ([ui_juice.md](ui_juice.md#portrait-breathing)). It is applied to the image lookup after the
   pixelate grid is worked out, and below 1 would read outside the image, so nothing sets it there.
 - Only `interface_portrait.gdshader` has `picture_zoom` (it defines `PICTURE_ZOOM` before including the
-  shader). Godot reserves 16 slots of the instance uniform buffer for every node drawn through a shader
-  with an instance uniform, and the compatibility renderer allows 4096 slots, so an instance uniform
-  on the shared shader ran out of slots at about 21 board items and left the rest drawn blank. Do not
-  add an instance uniform to `interface_look.gdshaderinc` outside `PICTURE_ZOOM`.
+  shader). The compatibility renderer has room for only about 256 nodes using instance uniforms
+  ([godot_notes.md](godot_notes.md#instance-uniforms)), and the shared shader is on every icon, pill
+  and label, so do not add an instance uniform to `interface_look.gdshaderinc` outside `PICTURE_ZOOM`.
 - The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the portrait palette
   ([interface_palette.md](interface_palette.md#images)) and are written to the picture materials only
   (`InterfaceLook.picture_materials`). It runs after the look effects and before picture wear. Its palette, colour matching and on/off dithering switch are set by `DebugPanels` and are not
   look settings; its dither pattern, size and supersample are, and appear in the Dithering section.
   The interface dithering switch is separate from the corridor's, so Backspace and `--dither` do not
   touch it.
-- All four materials are also present in release builds, with every effect off.
+- All five materials are also present in release builds, with every effect off. The fifth, the effects
+  material, is described in [The combat effects](#the-combat-effects).
 
 | Element | Scene and node | Material |
 |---|---|---|
 | Item icons (combat boards, draft rewards) | `item_cell.tscn` `Frame/Icon` | framed pictures |
 | Potion icons | `potion_slot.tscn` `Cell/Frame/Icon` (an item cell) | framed pictures |
-| Status and keyword icons | `status_icon.tscn` `Icon`, `keyword_chip.tscn` `Icon` | images |
-| Character portraits | `character_panel.tscn` `Row/Portrait/Image` (player and allies), `character_card.tscn` `Portrait/Image` | framed pictures |
+| Status and keyword icons | `status_icon.tscn` `Frame/Icon`, `keyword_chip.tscn` `Margin/Row/Icon`, `keyword_card.tscn` `Header/Icon`; an icon slot glyph takes the element material instead (`KeywordIcon.dress`) | images |
+| Character portraits | `character_panel.tscn` `Row/Portrait/Image` (player and enemy panels), `ally_slot.tscn` `Row/Portrait/Image`, `character_card.tscn` `Portrait/Image` | portraits |
 | HP bars | `Bar/Background`, `HealthFill`, `ShieldFill` and `Lines` in `health_bar.tscn`, used by every character panel | elements |
 | Item value pills (the numbers on items) | `value_pill.tscn` root panel and its `Value` label | elements |
+| The Temporary tag on an item cell | `item_cell.tscn` `TemporaryTag` and its `Label` | elements |
+| The level tag on an item cell | `item_cell.tscn` `LevelTag` and its `Label` | elements |
 | The mouse cursor ([cursor.md](cursor.md)) | `mouse_cursor.tscn` `Hand` | images |
 
 On a pill's number the shader runs on each letter as drawn from the font's texture, so dot, line and
@@ -84,8 +87,37 @@ speck patterns are laid out from each letter rather than from the pill's corner.
 
 To add an element, set its node's `material` to `interface_look_material.tres`,
 `interface_framed_material.tres` or `interface_element_material.tres` in the scene and add it to
-`SCENE_NODES`, `FRAMED_SCENE_NODES` or `ELEMENT_SCENE_NODES` in the test. A node with its own material
+`SCENE_NODES`, `FRAMED_SCENE_NODES` or `ELEMENT_SCENE_NODES` in the test. Which material suits which
+element, next to every other shader on screen, is in [shaders_and_palettes.md](shaders_and_palettes.md). A node with its own material
 needs a child node for the image instead.
+
+## The combat effects
+
+`InterfaceLook.effects_material` is the material of `VfxWall` in `combat_view_framed.tscn`, the node that
+draws every projectile, impact and damage number ([vfx_driver.md](vfx_driver.md)), and of the `Effects`
+node in the `hit_effects_preview` dev scene. It takes the same settings, with these differences:
+
+- It runs `interface_effects.gdshader`, which defines `EFFECTS` before including the shader. Effect
+  sprites are scaled and turned every frame, and circles and arcs have no image, so every pattern
+  (halftone, hatching, grain, pixelate) is laid out on the screen instead of from the drawn rectangle's
+  corner. The vignette and picture wear are skipped.
+- Grade, colour ramp and posterize are kept off (`EFFECTS_OFF_UNIFORMS`), as on the element material,
+  because they move a pixel off its mechanic colour.
+- Its palette is the **effects palette** (`DebugPanels.set_effects_palette`), not the portrait palette:
+  off, the portrait palette, the interface palette (the default) or any palette file. The interface
+  palette holds every mechanic colour, so a solid effect colour stays as it is. The Interface tab's
+  dithering switch, matching and dither settings apply to it (`InterfaceLook.clamp_materials`).
+
+The Effects section of the Interface tab holds its own settings (the `effects` uniform group). They are
+written to every material but only the effects shader reads them:
+
+| Setting | Does |
+|---|---|
+| `effects_on` (the section switch) | Off draws the effects as if there were no material. Off by default |
+| `effects_dither_transparency` | Each pixel is drawn at full strength or not at all, by comparing its transparency with the dither pattern's threshold, so glows, tails and fades become dots |
+| `effects_damage_numbers` | With the effects, or like the value pills: `VfxDriver` then draws the numbers on its `Numbers` child through the element material, which keeps their colour |
+
+The comparison of these options is in [`../plans/effects_look.md`](../plans/effects_look.md).
 
 ## Picture wear
 
@@ -132,7 +164,9 @@ In a preset, the interface part has an `interface_shader` section listing every 
 | `InterfaceLook.portrait_material` | The framed material's settings on the breathing portraits, with `picture_zoom` |
 | `InterfaceLook.picture_materials` | The three picture materials, which the palette clamp is written to |
 | `InterfaceLook.element_material` | The material the interface elements that are not pictures are drawn through |
-| `InterfaceLook.set_setting(uniform, value)` | Set one setting on all four materials |
+| `InterfaceLook.effects_material` | The material the combat effects are drawn through ([The combat effects](#the-combat-effects)) |
+| `InterfaceLook.clamp_materials` | The picture materials and the effects material, which the clamp's matching, dithering switch and dither texture are written to |
+| `InterfaceLook.set_setting(uniform, value)` | Set one setting on all five materials, except each material's off list |
 | `picture_zoom` | Per-node instance uniform on `interface_portrait.gdshader` only: zoom on the image, driven by `PortraitBreath` |
 | `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the shader and include code (the shared effects, the palette clamp's dither settings, picture wear) |
 | `InterfaceLook.reset()`, `write_look(file)`, `read_look(file)` | Reset, and the interface part of a preset |

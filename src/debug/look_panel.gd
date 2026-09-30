@@ -168,10 +168,13 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
     if value == null:
       value = defaults[uniform]
     # The interface look has a second material for the interface elements that are not pictures, which
-    # `InterfaceLook.set_setting` keeps in step.
+    # `InterfaceLook.set_setting` keeps in step. Each worn panel draws through its own copy of the panel
+    # wear material, which `PrintLook.set_panel_setting` keeps in step.
     var set_value: Callable = func(new_value: Variant) -> void:
       if look_material == InterfaceLook.material:
         InterfaceLook.set_setting(uniform, new_value)
+      elif look_material == PrintLook.panel_material:
+        PrintLook.set_panel_setting(uniform, new_value)
       else:
         look_material.set_shader_parameter(uniform, new_value)
     if uniform == group + '_on':

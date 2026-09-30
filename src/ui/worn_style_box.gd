@@ -2,7 +2,7 @@ class_name WornStyleBox
 extends StyleBox
 ## Wraps a `StyleBox` with panel wear (docs/systems/panel_wear.md). Instead of drawing `base` normally,
 ## it asks `PrintLook` for a canvas item behind the control (`PrintLook.panel_wear_child`) and draws
-## `base` into that, through `PrintLook.panel_material` (panel_wear.gdshader), so the control's own text
+## `base` into that, through that panel's own copy of `PrintLook.panel_material` (panel_wear.gdshader), so the control's own text
 ## and child nodes stay on top, unworn. Content margins and minimum size follow `base`, so wrapping a
 ## style does not change layout.
 ##
@@ -33,8 +33,7 @@ func _draw(to_canvas_item: RID, rect: Rect2) -> void:
     return
   var look: PrintLookAutoload = _print_look_autoload()
   var child: RID = look.panel_wear_child(to_canvas_item, rect)
-  RenderingServer.canvas_item_set_instance_shader_parameter(
-    child, 'panel_rect', Vector4(rect.position.x, rect.position.y, rect.size.x, rect.size.y))
+  look.set_panel_value(to_canvas_item, 'panel_rect', Vector4(rect.position.x, rect.position.y, rect.size.x, rect.size.y))
   base.draw(child, rect)
 
 

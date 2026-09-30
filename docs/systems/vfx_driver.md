@@ -105,6 +105,12 @@ the view's `offset_transform_position` on real time, so it plays through the pau
 reaction is not the driver's: `item_cell.gd` punches the cell's scale off the same clock. A hit
 enemy also flinches back in the corridor and is lit ([run_screen.md](run_screen.md#enemies-in-the-corridor-the-approach)).
 
+**Look.** `VfxWall` is drawn through the interface look's effects material, so the effects can take
+the pictures' halftone, palette and dithering; it is off by default
+([interface_look.md](interface_look.md#the-combat-effects)). The damage numbers are drawn on a
+`Numbers` child the driver creates, from the same delivery set and clock, so they sit above every
+other effect and can take the element material instead (`_numbers_material_update`).
+
 Each shape is its own class under `src/vfx/drawers/`, extending `EffectDrawer`: `duration()`,
 `progress(age)` and `draw_effect(canvas, delivery, point, age)`. A drawer holds no state, so slow
 motion and pause keep working. The driver keeps a dictionary from a mechanic id (for a `MECHANIC` delivery) or
@@ -113,6 +119,16 @@ motion and pause keep working. The driver keeps a dictionary from a mechanic id 
 `ImpactRingDrawer`, which attack, poison, burn and bleed replace with their own drawers while the trial switches above are on; the other mechanics have no ring; `SUMMON` and `CREATE_ITEM` have no entry, so they draw a projectile in flight and nothing on landing. Numbers draw for
 attack and heal landings and for every visual-only delivery (a poison tick or bleed carries its status
 id as its mechanic).
+
+**Status applications land on their icon.** A status application (`Delivery.Kind.APPLY_STATUS`,
+such as Mighty Blow's Empowered) on an actor flies to that status's icon on the actor's panel,
+through `CombatView.status_pos` and `CharacterPanel.status_centre`. If the actor does not have the
+status yet, it flies to the slot its icon will take (`StatusIcons.slot_centre`). When the status
+appears, its icon pops in, and when its stacks rise the icon bumps (`PopAnimation`, see
+[run_screen.md](run_screen.md)). A status application on an item lands on the centre of the item's
+cell, not nudged; statuses on items are not drawn on the cell yet. No ring is drawn for a status
+application; **Ring At Status Icons** in the Feedback tab turns it back on. The mechanics that are
+statuses (shield, poison, burn, bleed, regen) are not status applications and land as below.
 
 **Shield, heal and regen.** Shield, healing or regen given to an actor flies to the centre of
 that actor's health bar (the mechanics in `VfxDriver.BAR_MECHANICS`) through `CombatView.health_bar_pos`, instead of to the actor. These landings are not nudged by the

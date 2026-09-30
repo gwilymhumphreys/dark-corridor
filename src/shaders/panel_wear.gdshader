@@ -3,9 +3,11 @@ shader_type canvas_item;
 // creases as the screen background (background_wear.gdshader), but panel-local and with no folds
 // (folds are laid out for a whole screen, not a panel). Drawn by `WornStyleBox` into a canvas item
 // behind the control, so the wear covers only the panel's own style, not its text or children.
-// `panel_rect` and `panel_seed` are per-control instance uniforms, set by `PrintLook`, so one material
-// serves every worn panel with a different pattern arrangement each. The control highlight is drawn
-// here too, over the wear, from its own per-control instance uniforms (control_highlight.gdshaderinc).
+// Each worn panel draws through its own copy of the material, so `panel_rect` and `panel_seed` are set
+// per panel by `PrintLook`, giving each a different pattern arrangement. The control highlight is drawn
+// here too, over the wear, from its own per-panel amounts (control_highlight.gdshaderinc). None of
+// these are instance uniforms: the compatibility renderer only has room for about 256 canvas items
+// using them (docs/systems/godot_notes.md).
 
 #include "res://src/shaders/print_wear.gdshaderinc"
 #include "res://src/shaders/control_highlight.gdshaderinc"
@@ -16,9 +18,9 @@ uniform vec3 wear_light_colour : source_color = vec3(0.48, 0.47, 0.47);
 
 // The panel's rectangle in the parent canvas item's local pixels (x, y, width, height), set by
 // `PrintLook` from the rect passed to `StyleBox.draw()`.
-instance uniform vec4 panel_rect = vec4(0.0, 0.0, 64.0, 64.0);
+uniform vec4 panel_rect = vec4(0.0, 0.0, 64.0, 64.0);
 // A different seed gives a different arrangement of marks, so same-size panels do not look identical.
-instance uniform float panel_seed = 0.0;
+uniform float panel_seed = 0.0;
 
 group_uniforms panel_pattern;
 // Pixels per pattern pixel: 1 for full resolution, 4 for the interface pixel grid.

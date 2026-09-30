@@ -66,6 +66,9 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   (`medium_token_size` is the medium token size, which the map tokens also use), and `pill_size`
   scales every value pill (item values and status stacks) together. `CombatViewFramed`
   applies all of these settings.
+- `level_tag_corner` (a dropdown: top left, top right, bottom left, bottom right) and `level_tag_size`
+  place and scale the level tag on an item cell above level 1 ([item.md → Levels](item.md#levels)).
+  `ItemCell` applies them. The tag is a placeholder look.
 - `map_icons_as_pictures` (on by default) draws the map's icons with the item icons' material, so they
   take every picture effect ([interface_look.md](interface_look.md)). Off, they use the interface
   element material like the value pills and keep their exact palette colour, which made them stand

@@ -69,25 +69,42 @@ func test_a_status_application_picks_no_trial_drawer() -> void:
   assert_eq(VfxDriver.trial_mechanic(_landed_delivery()), AttackMechanic.ID, 'an attack still picks the attack drawer')
 
 
-func test_a_delivery_that_gives_a_status_names_it() -> void:
-  var target := _spawn(100.0, [])
+## A view that answers each landing question with its own point, so a test can see which was asked.
+class PointView extends CombatView:
+  func status_pos(_actor, _id: String) -> Vector2:
+    return Vector2(100.0, 0.0)
+
+
+  func target_pos(_target) -> Vector2:
+    return Vector2(200.0, 0.0)
+
+
+  func health_bar_pos(_actor) -> Vector2:
+    return Vector2(300.0, 0.0)
+
+
+func test_a_status_application_lands_on_its_status_icon() -> void:
+  var view := PointView.new()
+  _nodes.append(view)
+  var vfx := VfxDriver.new()
+  _nodes.append(vfx)
+  vfx.layout = view
+  var target := _spawn(100.0, [FixtureItems.attack()])
   var applied: Delivery = _landed_delivery()
   applied.kind = Delivery.Kind.APPLY_STATUS
   applied.status_id = 'weak'
   applied.target = target
-  assert_eq(VfxDriver.status_made(applied), 'weak', 'a status application gives its status')
+  assert_eq(vfx._landing_point(applied), Vector2(100.0, 0.0), 'a status on an actor lands where its icon is')
+  applied.target = target.board[0]
+  assert_eq(vfx._landing_point(applied), Vector2(200.0, 0.0), 'a status on an item lands on the centre of its cell, not nudged')
   var poison: Delivery = _landed_delivery()
   poison.mechanic = PoisonMechanic.ID
   poison.target = target
-  assert_eq(VfxDriver.status_made(poison), PoisonMechanic.ID, 'a poison delivery gives poison')
-  var tick: Delivery = _landed_delivery()
-  tick.mechanic = PoisonMechanic.ID
-  tick.target = target
-  tick.visual_only = true
-  assert_eq(VfxDriver.status_made(tick), '', 'a poison tick gives nothing: it lands on the creature')
-  var hit: Delivery = _landed_delivery()
-  hit.target = target
-  assert_eq(VfxDriver.status_made(hit), '', 'an attack gives no status')
+  assert_eq(vfx._landing_point(poison), Vector2(200.0, 0.0) + EffectDrawer.scatter_offset(poison), 'poison lands on the creature as before')
+  var shield: Delivery = _landed_delivery()
+  shield.mechanic = ShieldMechanic.ID
+  shield.target = target
+  assert_eq(vfx._landing_point(shield), Vector2(300.0, 0.0), 'shield lands on the health bar as before')
 
 
 func test_a_landing_is_scattered_a_little_and_stays_put() -> void:

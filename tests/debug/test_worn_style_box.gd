@@ -49,6 +49,24 @@ func test_panel_wear_child_is_created_once_per_control() -> void:
   assert_eq(first, second, 'the same child is reused for the same control')
 
 
+func test_each_panel_draws_through_its_own_material() -> void:
+  var first: Control = Control.new()
+  var second: Control = Control.new()
+  for control: Control in [first, second]:
+    add_child(control)
+    _nodes.append(control)
+    PrintLook.panel_wear_child(control.get_canvas_item(), Rect2(0, 0, 64, 64))
+  var first_material: ShaderMaterial = PrintLook.panel_material_of(first.get_canvas_item())
+  var second_material: ShaderMaterial = PrintLook.panel_material_of(second.get_canvas_item())
+  assert_ne(first_material, second_material, 'each panel has its own copy')
+  assert_ne(first_material, PrintLook.panel_material, 'not the shared settings material')
+  assert_ne(first_material.get_shader_parameter('panel_seed'), second_material.get_shader_parameter('panel_seed'),
+    'each panel has its own seed')
+  ControlFeedback.set_hover(first, 1.0)
+  assert_eq(first_material.get_shader_parameter('hover'), 1.0, 'a highlight amount goes on its own panel')
+  assert_ne(second_material.get_shader_parameter('hover'), 1.0, 'and not on another')
+
+
 func test_a_new_rect_in_the_same_frame_clears_the_earlier_drawing() -> void:
   var control: Control = Control.new()
   add_child(control)

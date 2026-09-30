@@ -56,6 +56,8 @@ func _build_colour_sections() -> void:
 func _section_title(group: String) -> String:
   if group == 'picture_wear':
     return 'Picture Wear (switches all picture wear: icons, portraits, bars)'
+  if group == 'effects':
+    return 'Effects (projectiles, impacts, damage numbers)'
   if group.begins_with('picture_'):
     return group.capitalize() + ' (icons, portraits, bars)'
   return super(group)

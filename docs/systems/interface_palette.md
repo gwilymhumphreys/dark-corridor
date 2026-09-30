@@ -62,6 +62,9 @@ or any palette file (default: the interface palette). The clamp follows the Corr
 (RGB or OKLab) and dithers when the Interface tab's dithering switch is on (`set_interface_dithering`). With no colours the colour count is 0 and images are unchanged.
 
 Enemy images in the corridor are part of the corridor and use the [world clamp](palette_clamp.md#world-clamp).
+The combat effects have their own choice, the effects palette ([interface_look.md](interface_look.md#the-combat-effects)).
+It defaults to the interface palette, because a portrait palette without the mechanic colours would
+change the effects' colours.
 
 ## Limits
 
@@ -93,5 +96,6 @@ Enemy images in the corridor are part of the corridor and use the [world clamp](
 | `PaletteLoader.save_named_colours(path: String, colours: Dictionary) -> Error` | Write a name -> colour dictionary as a `.gpl` file; the write half of `load_named_colours` |
 | `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets. The `'` and `;` keys step through the palettes, and [presets](look_presets.md) save one with the rest of the look |
 | `DebugPanels.set_portrait_palette(choice)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path. The `.` and `,` keys step through the choices |
+| `DebugPanels.set_effects_palette(choice)`, `effects_palette` | What the combat effects are clamped to: `''` for off, `EFFECTS_SAME_AS_PORTRAIT`, `PORTRAIT_SAME_AS_INTERFACE` (the default), or a palette file path. Saved in a preset's `interface_palette` section |
 
 Tests: `tests/debug/test_interface_palette.gd`.

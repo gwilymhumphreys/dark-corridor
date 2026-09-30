@@ -74,10 +74,11 @@ Read by `DebugPanels` after the default preset loads.
 | `--monster-image=<res path>` | Every enemy uses this image |
 | `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
 | `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
+| `--effects-palette=<res path, interface, portrait or off>` | Sets the palette the combat effects are clamped to ([interface_look.md](interface_look.md#the-combat-effects)) |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
 | `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
 | `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay, layout or token setting. Repeatable |
-| `--interface-set=uniform=value` | Sets one interface look setting. Repeatable |
+| `--interface-set=uniform=value` | Sets one interface look setting. Repeatable. `effects_on=true`, `effects_dither_transparency=true` and `effects_damage_numbers=1` set the [combat effects](interface_look.md#the-combat-effects) options |
 | `--feedback-set=name=value` | Sets one [control feedback](control_feedback.md) setting. Repeatable |
 | `--attack-effect=ring` | Read by `VfxDriver`, not `DebugPanels`. Attacks land with the placeholder ring instead of the trial slash and impact images ([vfx_driver.md](vfx_driver.md)) |
 | `--projectile=disc` | Read by `VfxDriver`, not `DebugPanels`. Projectiles fly as the placeholder disc instead of the trial comet ([vfx_driver.md](vfx_driver.md)) |
@@ -97,7 +98,7 @@ Run one directly instead of the game: `<godot> --path . res://src/debug/scenes/<
 | `corridor_testbed` | The corridor with Forward and Back buttons; N places a monster ([corridor_3d.md](corridors/corridor_3d.md)) | `--set=property=value` sets a corridor export (repeatable); `--view=WIDTHxHEIGHT` fixes the view size; with `--shot`, `--still` keeps it from moving and `--monster` places a monster |
 | `tooltip_demo` | The item tooltip held open over one item ([tooltips.md](tooltips.md)) | none |
 | `paper_burn_preview` | Tokens held partway through a paper burn, and a map token, an item token and a wide panel burning over and over ([paper_burn.md](paper_burn.md)) | none |
-| `hit_effects_preview` | One page each for attack, poison, burn and bleed: the page's two hit effects repeating over an enemy image, and a strip of frames through each. A projectile page flies comets in four colours at an enemy and shows each beside the old disc ([vfx_driver.md](vfx_driver.md)). Space or Tab turns the page | `--page=attack`, `poison`, `burn`, `bleed` or `projectile` picks the first page |
+| `hit_effects_preview` | One page each for attack, poison, burn and bleed: the page's two hit effects repeating over an enemy image, and a strip of frames through each. A projectile page flies comets in four colours at an enemy and shows each beside the old disc ([vfx_driver.md](vfx_driver.md)). The effects draw through the effects material, so the effects options apply. Space or Tab turns the page | `--page=attack`, `poison`, `burn`, `bleed` or `projectile` picks the first page |
 
 ## Screenshot commands
 

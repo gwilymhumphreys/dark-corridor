@@ -8,8 +8,9 @@ extends Node
 ## the Print and Background tabs and the `--print-set=`, `--background-set=`, `--panel-set=` start-up
 ## arguments.
 ##
-## Also hands out and frees the per-control canvas items `WornStyleBox` draws panel wear into, so the
-## registry survives a Print tab rebuild and is freed in one place at exit.
+## Also hands out and frees the per-control canvas items `WornStyleBox` draws panel wear into, each with
+## its own copy of `panel_material`, so the registry survives a Print tab rebuild and is freed in one
+## place at exit.
 
 const BACKGROUND_SHADER: Shader = preload('res://src/shaders/background_wear.gdshader')
 const PANEL_SHADER: Shader = preload('res://src/shaders/panel_wear.gdshader')
@@ -23,7 +24,8 @@ const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
   'wear_dark_colour',
   'wear_light_colour',
 ]
-## Panel wear uniforms set from `Colours` or per control by `PrintLook`, so they are not look settings.
+## Panel wear uniforms set from `Colours`, or per control on each panel's own material, so they are not
+## look settings.
 const PANEL_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_colour', 'panel_rect', 'panel_seed']
 # The control highlight shares the panel wear shader and material, but its settings are its own preset
 # part and its own tab (docs/systems/control_feedback.md). They stay out of `panel_defaults` on their
@@ -50,6 +52,8 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## - `section_gap`, `label_gap`: the character sheet's gaps (`apply_sheet_spacing`).
 ## - `medium_token_size`, `ally_item_size`, `status_size`, `pill_size`: enemy and ally item cells, status
 ##   icons, and every value pill against its base size.
+## - `level_tag_corner`, `level_tag_size`: which corner of an item cell shows the item's level
+##   (top left, top right, bottom left, bottom right) and its size against its base size (`ItemCell`).
 ## - `map_icons_as_pictures`, `map_cleared_look`: the map's icons and its cleared squares (`MapStrip`).
 ## - `paper_burn_*`: the paper burn effect (`PaperBurn`, docs/systems/paper_burn.md).
 ## - `page_turn_*`: the page turn between screens (`PageTurn`, docs/systems/page_turn.md).
@@ -72,6 +76,8 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'ally_item_size': 60.0,
   'status_size': 44.0,
   'pill_size': 1.0,
+  'level_tag_corner': 3,
+  'level_tag_size': 1.0,
   'map_icons_as_pictures': true,
   'map_cleared_look': 1,
   'paper_burn_duration': 1.6,
@@ -107,8 +113,10 @@ const SHEET_GAP_STYLES: Array[String] = ['SheetColumn', 'SheetRow', 'SheetStack'
 
 ## The material every screen background is drawn through (background_wear.gdshader).
 var background_material: ShaderMaterial = ShaderMaterial.new()
-## The material every worn UI panel is drawn through (panel_wear.gdshader). One shared material; each
-## panel gets its own child canvas item with instance uniforms for its rect and seed.
+## The panel wear settings (panel_wear.gdshader). Each worn UI panel is drawn through its own copy,
+## which also holds that panel's rect, seed and highlight amounts; `set_panel_setting` writes a setting
+## here and to every copy. The per-panel values are not instance uniforms, because the compatibility
+## renderer only has room for about 256 canvas items using them (docs/systems/godot_notes.md).
 var panel_material: ShaderMaterial = ShaderMaterial.new()
 ## The border around the combat corridor (print_border.gdshader), drawn by `PrintFrame`.
 var border_material: ShaderMaterial = ShaderMaterial.new()
@@ -122,7 +130,7 @@ var print_settings: Dictionary = {}
 var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
 var _panel_defaults: Dictionary = {}   # panel wear uniform -> default value, read from its code
 var _print_defaults: Dictionary = {}   # border, corridor overlay and board grid uniform -> default value
-var _panel_children: Dictionary = {}   # parent canvas item RID -> [child RID, frame last cleared, rect drawn]
+var _panel_children: Dictionary = {}   # parent canvas item RID -> [child RID, frame last cleared, rect drawn, material]
 var _panel_seed_count: int = 0
 
 
@@ -162,19 +170,38 @@ func panel_wear_child(parent: RID, rect: Rect2) -> RID:
   return child
 
 
-## The same canvas item, without clearing it: for code that only sets instance uniforms on it, such as
-## the control highlight (docs/systems/control_feedback.md). Clearing it there would wipe the panel
-## drawn into it this frame.
+## The same canvas item, without clearing it. Clearing it would wipe the panel drawn into it this frame.
 func panel_child(parent: RID) -> RID:
   if not _panel_children.has(parent):
     var child: RID = RenderingServer.canvas_item_create()
     RenderingServer.canvas_item_set_parent(child, parent)
     RenderingServer.canvas_item_set_draw_behind_parent(child, true)
-    RenderingServer.canvas_item_set_material(child, panel_material.get_rid())
+    var material: ShaderMaterial = panel_material.duplicate() as ShaderMaterial
     _panel_seed_count += 1
-    RenderingServer.canvas_item_set_instance_shader_parameter(child, 'panel_seed', float(_panel_seed_count))
-    _panel_children[parent] = [child, -1, Rect2()]
+    material.set_shader_parameter('panel_seed', float(_panel_seed_count))
+    RenderingServer.canvas_item_set_material(child, material.get_rid())
+    _panel_children[parent] = [child, -1, Rect2(), material]
   return _panel_children[parent][0]
+
+
+## Set a per-panel value (its rect, or a control highlight amount) on the material of the panel drawn
+## behind `parent`, creating its canvas item if there is none yet.
+func set_panel_value(parent: RID, uniform: String, value: Variant) -> void:
+  panel_child(parent)
+  (_panel_children[parent][3] as ShaderMaterial).set_shader_parameter(uniform, value)
+
+
+## The material of the panel drawn behind `parent`, or null if it has none.
+func panel_material_of(parent: RID) -> ShaderMaterial:
+  return _panel_children[parent][3] if _panel_children.has(parent) else null
+
+
+## Set a setting shared by every worn panel, on `panel_material` and on every panel's own copy: a panel
+## wear or control highlight setting, or a colour pushed from `Colours`.
+func set_panel_setting(uniform: String, value: Variant) -> void:
+  panel_material.set_shader_parameter(uniform, value)
+  for entry: Array in _panel_children.values():
+    (entry[3] as ShaderMaterial).set_shader_parameter(uniform, value)
 
 
 # A control's canvas item is freed when it leaves the tree; free its worn-panel child with it.
@@ -191,8 +218,8 @@ func _on_node_removed(node: Node) -> void:
 ## `panel_material`. Called at start, and by `DebugPanels` after an interface palette is applied or
 ## reset.
 func push_wear_colours() -> void:
-  panel_material.set_shader_parameter('wear_dark_colour', Colours.UI_PANEL_WEAR)
-  panel_material.set_shader_parameter('wear_light_colour', Colours.UI_PANEL_WEAR_LIGHT)
+  set_panel_setting('wear_dark_colour', Colours.UI_PANEL_WEAR)
+  set_panel_setting('wear_light_colour', Colours.UI_PANEL_WEAR_LIGHT)
   apply_token_style()
 
 
@@ -269,7 +296,7 @@ func set_print_value(setting: String, value: Variant) -> void:
   if print_defaults().has(setting):
     _print_material(setting).set_shader_parameter(setting, value)
   elif panel_defaults().has(setting):
-    panel_material.set_shader_parameter(setting, value)
+    set_panel_setting(setting, value)
   elif PRINT_SETTING_DEFAULTS.has(setting):
     print_settings[setting] = value
     apply_token_style()
@@ -343,7 +370,7 @@ func read_print_look(file: ConfigFile) -> void:
   var panel: Dictionary = panel_defaults()
   for uniform: String in _section_keys(file, 'print_panel'):
     if panel.has(uniform):
-      panel_material.set_shader_parameter(uniform, file.get_value('print_panel', uniform))
+      set_panel_setting(uniform, file.get_value('print_panel', uniform))
   for setting: String in _section_keys(file, 'print_frame'):
     set_print_value(setting, file.get_value('print_frame', setting))
   for setting: String in _section_keys(file, 'print_layout'):
@@ -364,7 +391,7 @@ func read_background_look(file: ConfigFile) -> void:
 func _write_print_defaults() -> void:
   var panel: Dictionary = panel_defaults()
   for uniform: String in panel:
-    panel_material.set_shader_parameter(uniform, panel[uniform])
+    set_panel_setting(uniform, panel[uniform])
   var frame: Dictionary = print_defaults()
   for uniform: String in frame:
     _print_material(uniform).set_shader_parameter(uniform, frame[uniform])

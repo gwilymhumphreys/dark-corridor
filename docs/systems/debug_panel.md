@@ -64,9 +64,10 @@ Rows at the top of the Corridor and Interface tabs, below "Take this part from".
 | Tab | Control | Effect | Read by |
 |---|---|---|---|
 | Corridor | World palette (corridor) | "Off", then every palette under `assets/palettes/`, grouped by subfolder | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
-| Corridor | Colour matching | RGB or perceptual (OKLab) | World clamp and the portrait palette clamp |
+| Corridor | Colour matching | RGB or perceptual (OKLab) | World clamp, and the portrait and effects palette clamps |
 | Interface | Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`) | [Interface palette](interface_palette.md) |
 | Interface | Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file | [Interface images](interface_palette.md#images) |
+| Interface | Effects palette | "Off", "Same as portraits", "Same as interface" (the default), or any palette file | [The combat effects](interface_look.md#the-combat-effects) |
 
 ## Palette colours
 

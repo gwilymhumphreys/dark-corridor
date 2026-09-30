@@ -16,6 +16,11 @@
 // (docs/systems/interface_palette.md#images). DebugPanels sets its palette, its matching and its
 // dithering switch; with no interface palette its colour count is 0 and colours pass through. Its dot
 // pattern, size and supersample are settings of this look, in the dithering group.
+//
+// interface_effects.gdshader defines EFFECTS, for the combat effects (docs/plans/effects_look.md). Effect
+// sprites are scaled and turned every frame, and circles and arcs have no image, so under EFFECTS every
+// pattern is laid out on the screen rather than from the drawn rectangle's corner, the vignette and
+// picture wear are skipped, and the effects group below applies.
 
 #include "res://src/shaders/look_effects.gdshaderinc"
 #include "res://src/shaders/print_wear.gdshaderinc"
@@ -69,6 +74,16 @@ uniform float picture_creases_count : hint_range(1.0, 4.0, 1.0) = 1.0;
 uniform float picture_creases_width : hint_range(1.0, 30.0, 1.0) = 4.0;
 uniform float picture_creases_amount : hint_range(0.0, 1.0, 0.01) = 0.22;
 uniform float picture_creases_angle : hint_range(0.0, 180.0, 1.0) = 91.0;
+group_uniforms;
+
+// Read by interface_effects.gdshader only. `effects_on` off draws the effects as if there were no
+// material. Transparency dithering draws each pixel at full strength or not at all, by the dither
+// pattern. `effects_damage_numbers` is read by VfxDriver, which draws the numbers on a child node
+// through the element material when it is 1.
+group_uniforms effects;
+uniform bool effects_on = false;
+uniform bool effects_dither_transparency = false;
+uniform int effects_damage_numbers : hint_enum("With the effects", "Like the value pills") = 0;
 group_uniforms;
 
 // A zoom on the picture inside the node, set per node (docs/systems/ui_juice.md, the portrait breathing).
@@ -139,15 +154,27 @@ void fragment() {
   // UV change across one screen pixel, so distances can be given in screen pixels.
   vec2 uv_per_pixel = max(fwidth(UV), vec2(0.000001));
   vec2 uv = UV;
+  float block = 1.0;
+#ifdef EFFECTS
+  // Position in screen pixels from the screen's corner. The pixelate grid is on the screen too: the
+  // image is read at the centre of this pixel's screen block, through the UV change along each screen
+  // axis, which also holds for a turned sprite.
+  vec2 local = FRAGCOORD.xy;
+  if (pixelate_on) {
+    block = max(pixelate_size, 1.0);
+    vec2 to_centre = (floor(local / block) + 0.5) * block - local;
+    uv = UV + dFdx(UV) * to_centre.x + dFdy(UV) * to_centre.y;
+  }
+#else
   // Position in screen pixels from the node's corner.
   vec2 local = UV / uv_per_pixel;
-  float block = 1.0;
 
   if (pixelate_on) {
     block = max(pixelate_size, 1.0);
     vec2 cell = uv_per_pixel * block;
     uv = (floor(uv / cell) + 0.5) * cell;
   }
+#endif
   vec2 pixel = floor(local / block) * block;
 
   // The zoom is applied to the image lookup only, after the pixelate grid has been worked out, so the
@@ -181,11 +208,13 @@ void fragment() {
     colour = apply_hatching(colour, pixel);
   }
 
+#ifndef EFFECTS
   if (vignette_on) {
     float distance_from_centre = length(UV - 0.5);
     float shade = smoothstep(vignette_size + vignette_softness, vignette_size, distance_from_centre);
     colour *= mix(1.0, shade, vignette_amount);
   }
+#endif
 
   if (grain_on) {
     colour = apply_grain(colour, local, TIME);
@@ -201,6 +230,7 @@ void fragment() {
 
   colour = clamp_to_palette(clamp(colour, 0.0, 1.0), FRAGCOORD.xy);
 
+#ifndef EFFECTS
   if (picture_wear_on) {
     // The node's size in its own pixels, and a position measured from its top left corner.
     vec2 node_size = fwidth(node_position) / max(fwidth(UV), vec2(0.000001));
@@ -211,6 +241,21 @@ void fragment() {
     float seed = floor(dot(average, vec3(97.0, 61.0, 29.0)) * 10.0);
     colour = print_panel_wear(colour, _picture_wear_settings(seed), node_local, node_size, picture_wear_dark_colour, picture_wear_light_colour);
   }
+#endif
 
-  COLOR = vec4(clamp(colour, 0.0, 1.0) * glow_brightness, source.a * node_colour.a);
+  float alpha = source.a * node_colour.a;
+#ifdef EFFECTS
+  if (effects_dither_transparency) {
+    // The same pattern cell the palette dithering uses at this pixel.
+    alpha = alpha > dither_threshold(FRAGCOORD.xy / max(dither_size, 1.0)) ? 1.0 : 0.0;
+  }
+#endif
+  COLOR = vec4(clamp(colour, 0.0, 1.0) * glow_brightness, alpha);
+#ifdef EFFECTS
+  // With the effects look off the effects are drawn as if there were no material. A fragment function
+  // cannot return early, so this replaces the result.
+  if (!effects_on) {
+    COLOR = texture(TEXTURE, UV) * node_colour;
+  }
+#endif
 }

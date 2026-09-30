@@ -32,14 +32,21 @@ Images outside a panel frame have their own picture wear in the Interface tab ([
   `PrintLook` frees a control's canvas item when the control leaves the tree, and frees every remaining
   one at its own exit.
 - The same shader and the same canvas item also draw the [control feedback](control_feedback.md):
-  the highlight is applied after the wear, from its own per-control instance uniforms. Its settings
+  the highlight is applied after the wear, from its own per-control amounts. Its settings
   are a separate preset part and a separate tab, and they stay out of `panel_defaults()` because that
-  reads the shader's own code, not the included file's. `PrintLook.panel_child()` hands out the same
-  canvas item without clearing it, for code that only sets instance uniforms on it.
-- Each canvas item gets a `panel_seed` instance uniform, a counter that increases with every panel
-  created, so same-size panels do not look identical. The material also takes the panel's rectangle as
-  an instance uniform, so the wear reads in the panel's own pixels: edge wear rubs the panel's own
-  edges, and the worn area size is the panel's size, not the screen's.
+  reads the shader's own code, not the included file's.
+- Each canvas item draws through its own copy of `PrintLook.panel_material`, made when the canvas
+  item is created. The per-panel values are ordinary uniforms on that copy, set with
+  `PrintLook.set_panel_value()`. They are not instance uniforms, because the compatibility renderer
+  has room for only about 256 canvas items using those ([godot_notes.md](godot_notes.md#instance-uniforms)).
+  - `panel_seed`, a counter that increases with every panel created, so same-size panels do not look
+    identical.
+  - `panel_rect`, the panel's rectangle, so the wear reads in the panel's own pixels: edge wear rubs
+    the panel's own edges, and the worn area size is the panel's size, not the screen's.
+- `panel_material` holds the shared settings, which the Print and Feedback tabs, presets and
+  `--panel-set=` read. Every write of a shared setting goes through `PrintLook.set_panel_setting()`,
+  which sets it on `panel_material` and on every panel's copy. Setting one directly on
+  `panel_material` does not reach the panels already on screen.
 - Panel wear shares its faded areas, specks, edge wear and creases effects with the screen background
   and the corridor overlay (`print_wear.gdshaderinc`): each surface declares its own uniforms and fills
   a `PrintWearSettings` struct to call the same functions. Panel wear has no folds group; folds are laid

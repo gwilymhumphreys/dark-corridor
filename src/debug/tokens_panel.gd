@@ -33,6 +33,10 @@ const SECTIONS: Dictionary = {
     'status_size': [16.0, 96.0, 1.0],
     'pill_size': [0.4, 1.6, 0.05],
   },
+  'Item levels': {
+    'level_tag_corner': ['Top left', 'Top right', 'Bottom left', 'Bottom right'],
+    'level_tag_size': [0.4, 2.0, 0.05],
+  },
   'Map': {
     'map_icons_as_pictures': [],
     'map_cleared_look': ['Face down', 'Burnt away'],

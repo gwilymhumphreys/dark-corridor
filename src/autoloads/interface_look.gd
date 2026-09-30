@@ -27,6 +27,9 @@ const ELEMENT_OFF_UNIFORMS: Array[String] = ['grade_on', 'colour_ramp_on', 'post
 ## Switches left off on `framed_material` and `portrait_material`: a picture inside a panel frame has the frame's panel wear
 ## around it (docs/systems/panel_wear.md), so it takes no picture wear of its own.
 const FRAMED_OFF_UNIFORMS: Array[String] = ['picture_wear_on']
+## Switches left off on `effects_material`: the ones that move a pixel off its mechanic colour, as on
+## `element_material`. The vignette and picture wear are skipped by interface_effects.gdshader itself.
+const EFFECTS_OFF_UNIFORMS: Array[String] = ['grade_on', 'colour_ramp_on', 'posterize_on']
 
 ## The material every interface image is drawn through (interface_look.gdshader). Scenes use the same
 ## resource file, so changing it here changes every image.
@@ -44,6 +47,13 @@ var portrait_material: ShaderMaterial = preload('res://src/shaders/interface_por
 ## The materials pictures are drawn through. The palette clamp and its dithering are written to these
 ## and not to `element_material`, whose colours stay as the interface palette set them.
 var picture_materials: Array[ShaderMaterial] = [material, framed_material, portrait_material]
+## The same shader on the combat effects (`VfxDriver`), through interface_effects.gdshader, which lays
+## every pattern out on the screen (docs/plans/effects_look.md). It takes the same settings except
+## `EFFECTS_OFF_UNIFORMS`, and `DebugPanels` writes the effects palette to it, not the portrait palette.
+var effects_material: ShaderMaterial = preload('res://src/shaders/interface_effects_material.tres')
+## The materials the palette clamp's matching, dithering switch and dither texture are written to: the
+## pictures and the effects.
+var clamp_materials: Array[ShaderMaterial] = [material, framed_material, portrait_material, effects_material]
 
 var _defaults: Dictionary = {}   # interface look uniform -> default value, read from the shader code
 
@@ -62,8 +72,8 @@ func push_wear_colours() -> void:
 
 
 ## Set one interface look setting on every material. The switches in `ELEMENT_OFF_UNIFORMS` are left
-## off on `element_material` and those in `FRAMED_OFF_UNIFORMS` on `framed_material` and
-## `portrait_material`. Everything that changes a setting goes through here: the panel rows, presets,
+## off on `element_material`, those in `FRAMED_OFF_UNIFORMS` on `framed_material` and
+## `portrait_material`, and those in `EFFECTS_OFF_UNIFORMS` on `effects_material`. Everything that changes a setting goes through here: the panel rows, presets,
 ## reset, the copy from the corridor look and `--interface-set=`.
 func set_setting(uniform: String, value: Variant) -> void:
   material.set_shader_parameter(uniform, value)
@@ -72,6 +82,8 @@ func set_setting(uniform: String, value: Variant) -> void:
   if not FRAMED_OFF_UNIFORMS.has(uniform):
     framed_material.set_shader_parameter(uniform, value)
     portrait_material.set_shader_parameter(uniform, value)
+  if not EFFECTS_OFF_UNIFORMS.has(uniform):
+    effects_material.set_shader_parameter(uniform, value)
 
 
 ## Every interface look setting with a default in the shared effects include, the palette clamp include

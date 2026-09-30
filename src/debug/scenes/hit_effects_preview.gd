@@ -8,7 +8,9 @@ extends Control
 ## effect, for screenshots. Space or Tab turns the page. Run it directly:
 ##   <godot> --path . res://src/debug/scenes/hit_effects_preview.tscn -- --page=poison
 ## `--page` is attack (the default), poison, burn, bleed or projectile. The hits travel leftwards and a little up, as
-## they do from the board to an enemy in a fight.
+## they do from the board to an enemy in a fight. The effects are drawn on the `Effects` child through
+## `InterfaceLook.effects_material`, as on the combat wall, so `--interface-set=effects_on=true` and the
+## other effects settings show here; the background, enemy image and captions are drawn without it.
 
 const PAGES: Array[String] = ['attack', 'poison', 'burn', 'bleed', 'projectile']
 const STRIP_FRAMES: int = 8
@@ -38,6 +40,8 @@ var _strip: Array[Delivery] = []          # one fixed hit per effect for the str
 var _time: float = 0.0
 var _enemy: Texture2D
 
+@onready var _effects: Node2D = $Effects
+
 
 func _ready() -> void:
   _page = maxi(PAGES.find(DevArgs.value('--page')), 0)
@@ -45,6 +49,7 @@ func _ready() -> void:
   for id: String in ['dagger', 'warhammer']:
     _attack_items.append(Item.new(ItemCatalog.get_def(id), actor))
   _enemy = MonsterImages.random_texture()
+  _effects.draw.connect(_draw_effects)
   _build_page()
 
 
@@ -66,6 +71,7 @@ func _process(delta: float) -> void:
     for i in _live.size():
       _live[i] = _make_hit(i)
   queue_redraw()
+  _effects.queue_redraw()
 
 
 func _draw() -> void:
@@ -73,16 +79,11 @@ func _draw() -> void:
   var font: Font = ThemeDB.fallback_font
   draw_string(font, Vector2(24.0, 48.0), '%s  (space: next page)' % PAGES[_page], HORIZONTAL_ALIGNMENT_LEFT, -1.0, 32)
   if PAGES[_page] == 'projectile':
-    _draw_projectiles(font)
+    _draw_projectile_page(font)
     return
-  var age: float = fmod(_time, _length() + 0.2)
   for i in _live.size():
     var point: Vector2 = LIVE_POINTS[i]
-    if _enemy != null:
-      var height: float = 560.0
-      var width: float = height * float(_enemy.get_width()) / float(_enemy.get_height())
-      draw_texture_rect(_enemy, Rect2(point - Vector2(width, height) * 0.5, Vector2(width, height)), false, Color(0.45, 0.45, 0.5))
-    _draw_hit(_live[i], point, age)
+    _draw_enemy(point)
     draw_string(font, point + Vector2(-80.0, 320.0), _labels[i], HORIZONTAL_ALIGNMENT_LEFT, -1.0, 28)
   for i in _strip.size():
     var y: float = STRIP_TOP + STRIP_ROW * float(i)
@@ -91,8 +92,31 @@ func _draw() -> void:
     for frame in STRIP_FRAMES:
       var frame_age: float = length * float(frame) / float(STRIP_FRAMES)
       var point: Vector2 = Vector2(STRIP_LEFT + STRIP_STEP * float(frame), y)
-      _draw_hit(_strip[i], point, frame_age)
       draw_string(font, point + Vector2(-40.0, 125.0), '%.2fs' % frame_age, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 22)
+
+
+# The effects themselves, on the `Effects` child, at the same places `_draw` puts their captions.
+func _draw_effects() -> void:
+  if PAGES[_page] == 'projectile':
+    _draw_projectiles()
+    return
+  var age: float = fmod(_time, _length() + 0.2)
+  for i in _live.size():
+    _draw_hit(_live[i], LIVE_POINTS[i], age)
+  for i in _strip.size():
+    var y: float = STRIP_TOP + STRIP_ROW * float(i)
+    var length: float = _effect_length(_strip[i])
+    for frame in STRIP_FRAMES:
+      var frame_age: float = length * float(frame) / float(STRIP_FRAMES)
+      _draw_hit(_strip[i], Vector2(STRIP_LEFT + STRIP_STEP * float(frame), y), frame_age)
+
+
+func _draw_enemy(point: Vector2) -> void:
+  if _enemy == null:
+    return
+  var height: float = 560.0
+  var width: float = height * float(_enemy.get_width()) / float(_enemy.get_height())
+  draw_texture_rect(_enemy, Rect2(point - Vector2(width, height) * 0.5, Vector2(width, height)), false, Color(0.45, 0.45, 0.5))
 
 
 func _build_page() -> void:
@@ -141,14 +165,14 @@ func _make_hit(index: int) -> Delivery:
 func _draw_hit(hit: Delivery, point: Vector2, age: float) -> void:
   match hit.mechanic:
     AttackMechanic.ID:
-      _attack_drawer.draw_hit(self, hit, point, HIT_DIRECTION, age)
+      _attack_drawer.draw_hit(_effects, hit, point, HIT_DIRECTION, age)
     PoisonMechanic.ID:
-      _poison_drawer.draw_effect(self, hit, point, age)
+      _poison_drawer.draw_effect(_effects, hit, point, age)
     BurnMechanic.ID:
-      _burn_drawer.draw_effect(self, hit, point, age)
+      _burn_drawer.draw_effect(_effects, hit, point, age)
     BleedMechanic.ID:
-      _bleed_drawer.draw_hit(self, hit, point, HIT_DIRECTION, age)
-  draw_set_transform_matrix(Transform2D.IDENTITY)
+      _bleed_drawer.draw_hit(_effects, hit, point, HIT_DIRECTION, age)
+  _effects.draw_set_transform_matrix(Transform2D.IDENTITY)
 
 
 func _effect_length(hit: Delivery) -> float:
@@ -172,24 +196,27 @@ func _length() -> float:
   return longest
 
 
+# The projectile page's enemy and captions.
+func _draw_projectile_page(font: Font) -> void:
+  _draw_enemy(FLIGHT_TO)
+  for i in _strip.size():
+    var x: float = STRIP_LEFT + 520.0 * float(i)
+    draw_string(font, Vector2(x - 20.0, STRIP_TOP + 290.0), _labels[i], HORIZONTAL_ALIGNMENT_LEFT, -1.0, 24)
+
+
 # Comets in each colour fly from the board side to the enemy one after another, and a still row
 # underneath shows each comet beside the old disc, so their sizes can be compared.
-func _draw_projectiles(font: Font) -> void:
-  if _enemy != null:
-    var height: float = 560.0
-    var width: float = height * float(_enemy.get_width()) / float(_enemy.get_height())
-    draw_texture_rect(_enemy, Rect2(FLIGHT_TO - Vector2(width, height) * 0.5, Vector2(width, height)), false, Color(0.45, 0.45, 0.5))
+func _draw_projectiles() -> void:
   var cycle: float = FLIGHT + FLIGHT_GAP
   for i in _strip.size():
     var from: Vector2 = FLIGHT_FROM + Vector2(-160.0 * float(i), 60.0 * float(i % 2))
     var age: float = fmod(_time + cycle - float(i) * cycle / float(_strip.size()), cycle)
     if age < FLIGHT:
       var t: float = age / FLIGHT
-      _comet_drawer.draw_flight(self, _strip[i], VfxDriver.arc_point(from, FLIGHT_TO, t), VfxDriver.arc_direction(from, FLIGHT_TO, t), age)
+      _comet_drawer.draw_flight(_effects, _strip[i], VfxDriver.arc_point(from, FLIGHT_TO, t), VfxDriver.arc_direction(from, FLIGHT_TO, t), age)
   for i in _strip.size():
     var x: float = STRIP_LEFT + 520.0 * float(i)
     var y: float = STRIP_TOP + 220.0
-    _disc_drawer.draw_effect(self, _strip[i], Vector2(x, y), 0.0)
-    _comet_drawer.draw_flight(self, _strip[i], Vector2(x + 200.0, y), Vector2(-1.0, -0.25), 1.0)
-    draw_string(font, Vector2(x - 20.0, y + 70.0), _labels[i], HORIZONTAL_ALIGNMENT_LEFT, -1.0, 24)
-  draw_set_transform_matrix(Transform2D.IDENTITY)
+    _disc_drawer.draw_effect(_effects, _strip[i], Vector2(x, y), 0.0)
+    _comet_drawer.draw_flight(_effects, _strip[i], Vector2(x + 200.0, y), Vector2(-1.0, -0.25), 1.0)
+  _effects.draw_set_transform_matrix(Transform2D.IDENTITY)

@@ -17,7 +17,8 @@ Saved as the feedback part of a [look preset](look_presets.md).
   and its per-control canvas item, which is already behind the control's own text and children and
   already carries the control's rectangle. A control takes a highlight only where its own panel draws.
 - Each control's four amounts — `hover`, `selected`, `press` and `bloom` — plus `fill_shown` are
-  instance uniforms on that canvas item, so one material serves every control.
+  ordinary uniforms on that canvas item's own copy of the panel wear material, set through
+  `PrintLook.set_panel_value()` ([panel_wear.md](panel_wear.md)).
 - `fill_shown` decides whether the whole body lights up. It is on for a plain button and off for a
   control whose body is a picture, such as an item cell or a character card, which take the border
   only.
