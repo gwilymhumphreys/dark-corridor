@@ -23,6 +23,7 @@ const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overl
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 const SHOP_OVERLAY: PackedScene = preload('res://src/scenes/screens/shop_overlay.tscn')
+const SELL_BUTTON: PackedScene = preload('res://src/scenes/screens/sell_button.tscn')
 
 enum State { IDLE, WALKING, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, SHOPPING }
 
@@ -35,6 +36,8 @@ var _draft: DraftOverlay
 var _choice: EncounterChoice
 var _event: EventOverlay
 var _shop: ShopOverlay
+var _selected_item: Item          # the board item selected to sell; null when none is
+var _sell_button: SellButton      # shown below the selected item; null when none is
 var _summary: CombatSummary   # the combat report panel while it is open; null while hidden
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
@@ -44,8 +47,8 @@ var _pause_menu: PauseMenu = null
 @onready var _paused_panel: PanelContainer = $HUD/PausedPanel   # shown while paused with Space (no menu)
 var _settings: SettingsScreen = null
 
-@onready var _sections: ScreenSections = $HUD/Sections   # the screen's four sections; the combat view places its parts in them
-@onready var _map: MapStrip = $HUD/Sections/Info/MapStrip
+@onready var _sections: ScreenSections = $HUD/Sections   # the screen's sections; the combat view places its parts in them
+@onready var _map: MapStrip = $HUD/Sections/Items/MapStrip
 @onready var _report_button: Button = $HUD/Sections/Info/ReportButton
 
 
@@ -63,6 +66,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+  _selected_item = null
   _log = null
   _last_log = null   # CLAUDE.md runtime cleanup: the report's data goes with the screen
   if Game.battle_speed_changed.is_connected(_on_battle_speed_changed):
@@ -253,6 +257,7 @@ func _on_battle_speed_changed(speed: float) -> void:
 # inspectable — a board item (either side) or a potion — asks the Combat manager to slow the clock
 # (both sides) to read it.
 func _process(_delta: float) -> void:
+  _update_selection()
   if _view == null:
     return
   if _pause_menu != null:
@@ -286,6 +291,10 @@ func _inspection_target(mouse: Vector2) -> Dictionary:
 # the menu, and Space does nothing while the menu is up. The autotest never mounts this screen, so
 # pause is invisible to the headless path.
 func _unhandled_input(event: InputEvent) -> void:
+  if _selected_item != null and event.is_action_pressed('ui_cancel'):
+    _clear_selection()   # Escape drops the selection before it pauses
+    get_viewport().set_input_as_handled()
+    return
   if not _can_pause():
     return
   if event.is_action_pressed('ui_cancel'):
@@ -479,6 +488,7 @@ func _show_shop() -> void:
   _shop = SHOP_OVERLAY.instantiate()
   _view.corridor_area().add_child(_shop)   # in the corridor; the board, potions and HUD stay live
   _shop.bought.connect(_on_shop_bought)
+  _shop.rerolled.connect(_on_shop_rerolled)
   _shop.left.connect(_on_shop_left)
   _shop.setup(tr(_run.current_encounter().def.name_key), _run)
 
@@ -492,6 +502,13 @@ func _on_shop_bought(index: int) -> void:
   _refresh_gold()
   _view.refresh_potions(_run.potions)
   _view.show_relics(_run.relics)
+
+
+func _on_shop_rerolled() -> void:
+  if not _run.reroll_shop():
+    return
+  _shop.show_goods(_run)
+  _refresh_gold()
 
 
 func _on_shop_left() -> void:
@@ -557,9 +574,88 @@ func _on_potion_thrown(index: int) -> void:
 
 
 func _teardown_combat_view() -> void:
+  _clear_selection()
   _choice = null   # the cards live in the view's corridor area and go with it
   _log = null   # drop the live ref; _last_log keeps the finished fight's numbers for the report
   if _view != null:
     _view.release()      # stop the VFX wall reading the CombatManager we're about to free
     _view.queue_free()   # deferred — the view holds render resources (CLAUDE.md)
     _view = null
+
+
+# --- selling items (docs/systems/run_screen.md → Selling items) ----------------
+
+# A left click on a board item the player can sell selects it; any other click drops the selection.
+# Read in _input, before the GUI, because a board item's cell stops the mouse itself, so the click
+# would never reach this screen's _gui_input. Clicks on the Sell button are left to the button.
+func _input(event: InputEvent) -> void:
+  var click := event as InputEventMouseButton
+  if click == null or not click.pressed or click.button_index != MOUSE_BUTTON_LEFT:
+    return
+  if _sell_button != null and _sell_button.get_global_rect().has_point(click.position):
+    return
+  var item: Item = _sellable_item_at(click.position)
+  if item == null:
+    _clear_selection()
+    return
+  _select(item)
+  get_viewport().set_input_as_handled()
+
+
+# The board item under `point` that can be sold now, or null: none while paused or in the settings,
+# or where the draft, shop or combat report panel covers the point.
+func _sellable_item_at(point: Vector2) -> Item:
+  if _view == null or _paused or _pause_menu != null or _settings != null:
+    return null
+  if (_draft != null and _draft.covers(point)) or (_shop != null and _shop.covers(point)):
+    return null
+  if _summary != null and (_summary.get_node('Panel') as Control).get_global_rect().has_point(point):
+    return null
+  var item: Item = _view.board_item_at(point)
+  return item if item != null and _run.can_sell(item) else null
+
+
+func _select(item: Item) -> void:
+  if item == _selected_item:
+    return
+  _clear_selection()
+  _selected_item = item
+  _view.mark_board_item(item, true)
+  _sell_button = SELL_BUTTON.instantiate()
+  $HUD.add_child(_sell_button)
+  _sell_button.setup(item, RunManager.sell_price(item))
+  _sell_button.sell_requested.connect(_on_sell_requested)
+  _place_sell_button()
+
+
+func _clear_selection() -> void:
+  if _selected_item != null and _view != null:
+    _view.mark_board_item(_selected_item, false)
+  _selected_item = null
+  if _sell_button != null:
+    _sell_button.queue_free()
+    _sell_button = null
+
+
+# Each frame: drop the selection once the item cannot be sold (it left the board, or a fight's
+# approach began), otherwise keep the Sell button under the item's cell as the board reflows.
+func _update_selection() -> void:
+  if _selected_item == null:
+    return
+  if _view == null or not _run.can_sell(_selected_item):
+    _clear_selection()
+    return
+  _place_sell_button()
+
+
+func _place_sell_button() -> void:
+  _sell_button.place_below(_view.board_item_rect(_selected_item), get_viewport_rect())
+
+
+func _on_sell_requested(item: Item) -> void:
+  _clear_selection()
+  if not _run.sell_item(item):
+    return
+  _refresh_gold()
+  if _shop != null:
+    _shop.refresh(_run)   # the gold changed what the player can afford

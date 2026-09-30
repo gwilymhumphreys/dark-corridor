@@ -184,6 +184,9 @@ folder they play from, for the owner to delete the ones not wanted.
 - The fold position is worked out by `ScreenSections.fold_point_on_screen`, not `PrintLook`, which
   would have made the two scripts depend on each other.
 - The sound is `page_34` from the paper pool, copied to `ui/page_turn`.
+- Added after the first build at the owner's request: the page twists as if pulled from its bottom
+  corner (`page_turn_corner`). The top and bottom edges each have a curve and the shader blends them
+  per row, searching again for the row until perspective settles it.
 - Measured on the development machine, the page starts turning about half a second after the click:
   about a quarter of a second to build the run screen under the still image, then one long frame while
   its shaders compile. The engine is blocked for most of it, so the hold before the turn defaults to 0.

@@ -162,23 +162,21 @@ func _read_settings() -> void:
 # Everything the shader needs for the page at `progress`, in window pixels.
 func _show_progress(progress: float) -> void:
   var window: Vector2 = Vector2(get_viewport().get_texture().get_size())
-  var hinge: float = ScreenSections.fold_point_on_screen(get_viewport()).x
-  if hinge <= 0.0:
-    hinge = window.x * 0.5
-  var length: float = window.x - hinge if _direction == Direction.FORWARD else hinge
-  var landing_side: float = hinge if _direction == Direction.FORWARD else window.x - hinge
-  var points: PackedVector2Array = page_curve(progress, length)
+  # The page turns on the fold down the middle of the screen, so each side is one page.
+  var length: float = window.x * 0.5
+  var top: PackedVector2Array = page_curve(progress, length)
+  var bottom: PackedVector2Array = page_curve(progress, length, PrintLook.print_setting('page_turn_corner'))
   var highest: float = 0.0
-  for point: Vector2 in points:
-    highest = maxf(highest, point.y)
+  for i: int in top.size():
+    highest = maxf(highest, maxf(top[i].y, bottom[i].y))
   var distance: float = maxf(float(PrintLook.print_setting('page_turn_camera_distance')) * window.y, length * 1.3)
-  _material.set_shader_parameter('curve', points)
-  _material.set_shader_parameter('hinge', hinge)
+  _material.set_shader_parameter('curve_top', top)
+  _material.set_shader_parameter('curve_bottom', bottom)
+  _material.set_shader_parameter('hinge', length)
   _material.set_shader_parameter('page_length', length)
   _material.set_shader_parameter('camera_distance', distance)
   _material.set_shader_parameter('edge_width', float(PrintLook.print_setting('page_turn_edge_width')) * get_viewport().get_final_transform().get_scale().y)
   _material.set_shader_parameter('lift', clampf(highest / maxf(length * FULL_LIFT, 1.0), 0.0, 1.0))
-  _material.set_shader_parameter('uncovered_fade', smoothstep(0.7, 1.0, progress) if landing_side > length else 0.0)
 
 
 ## The page seen from the side at `progress` (0 flat where it starts, 1 flat on the other side), as
@@ -186,11 +184,13 @@ func _show_progress(progress: float) -> void:
 ## away from the side it lands on, y its height. Built from each piece's angle, so the page keeps its
 ## length however it bends. The free edge leads the hinge in the first half of the turn, as when a hand
 ## lifts the edge, and trails it in the second, as air holds it back; the bend setting decides how
-## that difference spreads along the page.
-func page_curve(progress: float, length: float) -> PackedVector2Array:
+## that difference spreads along the page. `corner` is how far in radians more the edge leads through
+## the whole turn, most at the middle: the bottom edge gets the `page_turn_corner` setting, so the page
+## twists as if pulled from its bottom corner, and the top edge gets none.
+func page_curve(progress: float, length: float, corner: float = 0.0) -> PackedVector2Array:
   var eased: float = _ease(progress, PrintLook.print_setting('page_turn_easing'))
   var hinge_angle: float = PI * eased
-  var lead: float = float(PrintLook.print_setting('page_turn_lead')) * sin(TAU * eased)
+  var lead: float = float(PrintLook.print_setting('page_turn_lead')) * sin(TAU * eased) + corner * sin(PI * eased)
   var bend: float = maxf(PrintLook.print_setting('page_turn_bend'), 0.1)
   var piece: float = length / float(SEGMENTS)
   var point: Vector2 = Vector2.ZERO

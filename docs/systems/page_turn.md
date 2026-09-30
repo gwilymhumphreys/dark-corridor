@@ -46,20 +46,24 @@ moving on the back of the page.
 
 ### The page's shape
 
-The hinge is the fold that runs top to bottom (`ScreenSections.fold_point_on_screen`), which is also
-where the menus' fold is drawn ([background_wear.md](background_wear.md)). The page is the part of the
-screen on the side it starts from.
+The hinge is the fold down the middle of the screen ([background_wear.md](background_wear.md)), so the
+page is the half of the screen it starts on and exactly covers the other half when it lands.
 
-The page bends only across its width, so `page_curve()` describes it seen from the side: points from
-the hinge to the free edge, built piece by piece from each piece's angle so the page never stretches.
-The angle at the hinge goes from flat to flat on the other side, eased at both ends. The free edge's
-angle leads the hinge in the first half, like a hand lifting the edge, and trails it in the second,
-like air holding it back.
+`page_curve()` describes an edge of the page seen from the side: points from the hinge to the free
+edge, built piece by piece from each piece's angle so the page never stretches. The angle at the hinge
+goes from flat to flat on the other side, eased at both ends. The free edge's angle leads the hinge in
+the first half, like a hand lifting the edge, and trails it in the second, like air holding it back.
+
+The page's top and bottom edges each get a curve. The bottom edge leads further through the whole
+turn (`page_turn_corner`), so the page twists as if pulled from its bottom corner: that corner lifts
+first and lands first. Every row between the edges is a blend of the two curves.
 
 ### The shader
 
-For each pixel the shader walks the curve and finds the points of the page whose perspective
-projection lands on that pixel, keeping the one nearest the camera. The camera is above the screen,
+For each pixel the shader guesses which row of the page it shows, walks that row's curve for the
+points whose perspective projection lands on the pixel's column, and keeps the one nearest the camera.
+Perspective moves the row, so it corrects the row from the point found and searches again, up to
+`ROW_PASSES` times, until the row settles. The camera is above the screen,
 offset from the hinge towards the side the page lands on, so the page is not seen edge-on when it
 stands upright.
 
@@ -73,8 +77,7 @@ stands upright.
 The page is shaded by its angle to the light, with a faint highlight on the bend and a light line
 along its free edge. The shadow is the page projected along the light onto the screen, softer where the
 page is higher. The shadow and the edge line fade in and out with how far the page is lifted, so a
-flat page at either end matches the screen exactly. If the fold is off centre and the page is
-narrower than the side it lands on, the part it never covers changes to the new screen near the end.
+flat page at either end matches the screen exactly.
 
 ## Settings
 
@@ -87,6 +90,7 @@ the Tokens tab (F7, [debug_panel.md](debug_panel.md)), saved with the print part
 | Duration, hold | The turn's length, and the pause between the new screen drawing evenly and the page lifting |
 | Easing | How slow the turn is at both ends (1 is even speed) |
 | Lead, bend | How far in radians the free edge leads and trails the hinge, and how that bend spreads along the page |
+| Corner | How much further in radians the bottom edge leads, most at the middle of the turn; negative pulls the top corner instead |
 | Camera distance, camera offset | The camera's height in screen heights (lower is stronger perspective), and its distance from the hinge in page widths |
 | Light across, light down | The light's direction; across is mirrored for a turn back |
 | Shading, highlight | How much the light darkens the side turned away from it, and the highlight on the bend |
@@ -106,7 +110,7 @@ screenshots ([dev_tools.md](dev_tools.md)).
 | `play(direction)` | Turn from the captured image onto the screen drawn under it |
 | `has_capture()`, `can_turn()` | Whether an image is waiting; whether turns can play at all |
 | `replay()` | Capture and turn the current screen onto itself |
-| `page_curve(progress, length)` | The page seen from the side at `progress` |
+| `page_curve(progress, length, corner)` | An edge of the page seen from the side at `progress`, leading further by `corner` |
 | `held_progress` | Stop every turn at this progress (below 0 turns normally) |
 | `finished` | Emitted when a turn ends |
 

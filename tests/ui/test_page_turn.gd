@@ -38,6 +38,15 @@ func test_the_page_keeps_its_length_and_stays_above_the_screen_while_it_turns() 
   assert_gt(PageTurn.page_curve(0.5, LENGTH)[-1].y, LENGTH * 0.5, 'halfway through it stands up')
 
 
+func test_a_corner_pull_leads_the_edge_and_still_lands_flat() -> void:
+  var pulled: PackedVector2Array = PageTurn.page_curve(0.3, LENGTH, 0.5)
+  var even: PackedVector2Array = PageTurn.page_curve(0.3, LENGTH)
+  assert_almost_eq(_curve_length(pulled), LENGTH, 0.01, 'the pulled edge does not stretch')
+  assert_lt(pulled[-1].x, even[-1].x, 'the pulled corner is further over than the other')
+  assert_almost_eq(PageTurn.page_curve(0.0, LENGTH, 0.5)[-1], Vector2(LENGTH, 0.0), Vector2.ONE * 0.01, 'flat at the start')
+  assert_almost_eq(PageTurn.page_curve(1.0, LENGTH, 0.5)[-1], Vector2(-LENGTH, 0.0), Vector2.ONE * 0.01, 'flat at the end')
+
+
 func test_screen_changes_turn_the_page_the_right_way() -> void:
   var phase: Dictionary = GameManagerAutoload.Phase
   assert_eq(MainController._turn_direction(phase.TITLE, phase.RUN), PageTurnAutoload.Direction.FORWARD, 'starting a run')

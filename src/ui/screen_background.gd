@@ -2,17 +2,12 @@ class_name ScreenBackground
 extends NamedColourRect
 ## The colour rectangle behind a whole screen. It draws through `PrintLook.background_material`
 ## (background_wear.gdshader), which can add print wear, and gives that shader its two mark colours
-## from `Colours`, and where the folds sit, from the split point. With every wear effect off it draws
-## the plain colour (docs/systems/background_wear.md).
+## from `Colours`. With every wear effect off it draws the plain colour
+## (docs/systems/background_wear.md).
 
 
 func _ready() -> void:
   material = PrintLook.background_material
-
-
-# Every frame, so the folds follow a window resize and a split point moved from the Print tab.
-func _process(_delta: float) -> void:
-  PrintLook.background_material.set_shader_parameter('fold_point', ScreenSections.fold_point_on_screen(get_viewport()))
 
 
 func _copy_colour() -> void:

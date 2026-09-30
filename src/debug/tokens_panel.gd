@@ -54,6 +54,7 @@ const SECTIONS: Dictionary = {
     'page_turn_easing': [1.0, 5.0, 0.1],
     'page_turn_lead': [-1.5, 1.5, 0.05],
     'page_turn_bend': [0.5, 6.0, 0.1],
+    'page_turn_corner': [-1.5, 1.5, 0.05],
     'page_turn_camera_distance': [1.0, 8.0, 0.1],
     'page_turn_camera_offset': [-1.0, 1.0, 0.05],
     'page_turn_light_across': [-1.5, 1.5, 0.05],
