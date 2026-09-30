@@ -17,12 +17,11 @@ const BORDER_SHADER: Shader = preload('res://src/shaders/print_border.gdshader')
 const OVERLAY_SHADER: Shader = preload('res://src/shaders/corridor_overlay.gdshader')
 const GRID_SHADER: Shader = preload('res://src/shaders/board_grid.gdshader')
 const BACKGROUND_SETTINGS_INCLUDE: ShaderInclude = preload('res://src/shaders/background_wear_settings.gdshaderinc')
-## Background wear uniforms set from `Colours` or the current screen by `ScreenBackground`, or from the
-## layout by `PrintFrame`, so they are not look settings.
+## Background wear uniforms set from `Colours` by `ScreenBackground` and `PrintFrame`, so they are not
+## look settings.
 const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
   'wear_dark_colour',
   'wear_light_colour',
-  'fold_point',
 ]
 ## Panel wear uniforms set from `Colours` or per control by `PrintLook`, so they are not look settings.
 const PANEL_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_colour', 'panel_rect', 'panel_seed']
@@ -39,41 +38,23 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
   'pencil_colour',
   'square_size',
 ]
-## Print frame settings that are not shader uniforms (setting -> default), from the Print tab,
-## presets and `--print-set=`: the screen's split point, where the folds cross and the four
-## screen sections meet (`ScreenSections`, docs/systems/ui_layout.md), the padding inside each
-## section, and which layout the sections use (`ScreenSections.Layout`, as its index). In pixels on the interface canvas. Also how far the player's items sit askew on the board
-## grid, like cardboard tokens put down by hand: the largest tilt in degrees and the largest shift in
-## pixels at full cell size (`CombatViewFramed`). Then the token look (`apply_token_style`): the
-## shadow's blur and offset in pixels and its opacity; the card colour the token fill is blended
-## towards and how far (0 keeps the interface background, 1 is the card colour); and whether the portraits are tokens too
-## (`CombatViewFramed`). Then
-## the character panel layout: where the items and status icons go (`CharacterPanel.ItemLayout`
-## and `StatusLayout`, as their index) and which panels draw their background
-## (`CharacterPanel.PanelBackground`, as its index), and whether the allies sit in a labelled pencil box
-## when the portraits are above the items. Then the gap between the parts of the character sheet and
-## the gap between a label and its box, in pixels (`apply_sheet_spacing`), and whether the run's map
-## sits at the bottom of the item column (`CombatViewFramed`) rather than in the information section. Then the
-## sizes in pixels of the enemy and ally item cells (the largest; a row too long for its width
-## shrinks) and of the status icons on every panel, and the size of every value pill (item values and
-## status stacks) against its base size, the same whatever the cell or icon size. Last, whether the
-## map's icons are drawn like the item icons, with every picture effect (`MapStrip`), rather than
-## keeping their exact palette colour like the value pills, and how a cleared square's token looks
-## (`MapStrip.ClearedLook`, as its index). Then the paper burn effect (`PaperBurn`,
-## docs/systems/paper_burn.md): its length in seconds, how far in pixels the noise pushes its edge and
-## the size of the edge's bumps, the widths in pixels of the ember line, the char and the scorch, how
-## far above white the ember line goes, whether the scorch is dithered, and whether sparks and ash fly.
-## Last, the page turn between screens (`PageTurn`, docs/systems/page_turn.md): the turn's length and
-## the pause before it in seconds, how slow it is at both ends, how far in radians the free edge leads
-## and trails the hinge and how that bend spreads along the page, the camera's height in screen
-## heights and how far it sits from the hinge in page widths, the light's direction across and down the screen, the shading and highlight, how much of
-## the front shows through on the back, the shadow's darkness and softness, and the edge line's width
-## in pixels.
+## Print frame settings that are not shader uniforms (setting -> default), from the Print and Tokens
+## tabs, presets and `--print-set=`. Sizes are in pixels on the interface canvas, angles in degrees
+## unless a setting says radians, and dropdowns hold an enum's index.
+## - `padding`: the space inside every side of each screen section (`ScreenSections`).
+## - `token_*`: the player's items set down askew like cardboard tokens (largest tilt and shift) and the
+##   token look (`apply_token_style`): shadow blur, offset and opacity, how far the fill is blended
+##   towards the card colour, and whether the portraits are tokens too.
+## - `item_layout`, `status_layout`, `panel_background`, `allies_box`: the character panel layout
+##   (`CharacterPanel` enums) and whether the allies sit in a labelled pencil box.
+## - `section_gap`, `label_gap`: the character sheet's gaps (`apply_sheet_spacing`).
+## - `medium_token_size`, `ally_item_size`, `status_size`, `pill_size`: enemy and ally item cells, status
+##   icons, and every value pill against its base size.
+## - `map_icons_as_pictures`, `map_cleared_look`: the map's icons and its cleared squares (`MapStrip`).
+## - `paper_burn_*`: the paper burn effect (`PaperBurn`, docs/systems/paper_burn.md).
+## - `page_turn_*`: the page turn between screens (`PageTurn`, docs/systems/page_turn.md).
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
-  'split_across': 1700.0,
-  'split_down': 1150.0,
-  'screen_layout': 0,
   'token_tilt': 3.0,
   'token_shift': 4.0,
   'token_shadow_size': 6.0,
@@ -87,7 +68,6 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'allies_box': true,
   'section_gap': 32.0,
   'label_gap': 8.0,
-  'map_in_column': true,
   'medium_token_size': 80.0,
   'ally_item_size': 60.0,
   'status_size': 44.0,
@@ -108,6 +88,7 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'page_turn_easing': 2.0,
   'page_turn_lead': 0.9,
   'page_turn_bend': 2.0,
+  'page_turn_corner': 0.5,
   'page_turn_camera_distance': 4.0,
   'page_turn_camera_offset': 0.3,
   'page_turn_light_across': -0.35,

@@ -120,7 +120,6 @@ PrintWearSettings _panel_wear_settings() {
   settings.folds_on = false;
   settings.folds_across = 0.0;
   settings.folds_down = 0.0;
-  settings.folds_follow_layout = false;
   settings.folds_line_width = 0.0;
   settings.folds_wear_width = 0.0;
   settings.folds_wear_amount = 0.0;

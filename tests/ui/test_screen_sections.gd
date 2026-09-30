@@ -1,7 +1,7 @@
 extends GutTest
-## The screen sections (docs/systems/ui_layout.md#screen-sections): the four sections follow the split
-## point and padding, and the combat view places its parts in them and fits the portraits and item
-## columns.
+## The screen sections (docs/systems/ui_layout.md#screen-sections): the halves either side of the fold
+## follow the padding and the information section fits its children, and the combat view places its
+## parts in them and fits the portraits and item columns.
 
 const SECTIONS_SCENE: PackedScene = preload('res://src/ui/screen_sections.tscn')
 const COMBAT_VIEW_SCENE: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
@@ -27,41 +27,35 @@ func _host(node: Node) -> Node:
   return node
 
 
-func test_section_rects_split_the_screen_and_take_off_the_padding() -> void:
-  var rects: Dictionary = ScreenSections.section_rects(Vector2(2560, 1440), Vector2(1700, 1150), 20.0)
-  assert_eq(rects['Corridor'], Rect2(20, 20, 1660, 1110), 'corridor top left')
-  assert_eq(rects['Items'], Rect2(1720, 20, 820, 1110), 'items top right')
-  assert_eq(rects['Portraits'], Rect2(20, 1170, 1660, 250), 'portraits lower left')
-  assert_eq(rects['Info'], Rect2(1720, 1170, 820, 250), 'information lower right')
+func test_section_rects_split_the_screen_at_the_fold_and_take_off_the_padding() -> void:
+  var rects: Dictionary = ScreenSections.section_rects(Vector2(2560, 1440), 20.0, 70.0)
+  assert_eq(rects['Corridor'], Rect2(20, 20, 1240, 1400), 'the corridor takes the left half')
+  assert_eq(rects['Items'], Rect2(1300, 20, 1240, 1290), 'the player column takes the right half above the information')
+  assert_eq(rects['Info'], Rect2(1300, 1350, 1240, 70), 'the information along the bottom, as tall as asked')
 
 
-func test_portraits_above_items_share_the_top_right_section() -> void:
-  var rects: Dictionary = ScreenSections.section_rects(Vector2(2560, 1440), Vector2(1700, 1150), 20.0,
-    ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS)
-  assert_eq(rects['Corridor'], Rect2(20, 20, 1660, 1400), 'the corridor takes the whole left side')
-  assert_eq(rects['Items'], Rect2(1720, 20, 820, 1110), 'items top right')
-  assert_eq(rects['Portraits'], rects['Items'], 'the portraits share the items section')
-  assert_eq(rects['Info'], Rect2(1720, 1170, 820, 250), 'information lower right')
+func test_the_information_section_is_as_tall_as_its_tallest_child() -> void:
+  var sections: ScreenSections = _host(SECTIONS_SCENE.instantiate())
+  var button: Control = Control.new()
+  button.size = Vector2(100, 64)
+  sections.section('Info').add_child(button)
+  sections._process(0.0)
+  assert_eq(sections.section('Info').size.y, 64.0, 'fits the child')
+  assert_eq(sections.section('Items').get_rect().end.y + PrintLook.print_setting('padding') * 2.0,
+    sections.section('Info').position.y, 'the player column ends the padding above it')
 
 
 func test_view_stacks_the_portraits_above_the_items() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
-  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS
   view.sections._process(0.0)
   var portraits: BoxContainer = view.get_node('Portraits')
   var items: Rect2 = view.get_node('Items').get_global_rect()
   var section: Rect2 = view.sections.section('Items').get_global_rect()
-  assert_true(portraits.vertical, 'the portraits are in a column')
   assert_eq(portraits.get_child(0), view.get_node('Portraits/PlayerPanel'), 'the player comes first')
   assert_eq(portraits.get_global_rect().position, section.position, 'the portraits sit at the top of the section')
   assert_gt(items.position.y, portraits.get_global_rect().end.y, 'the items start below the portraits')
   assert_eq(items.end, section.end, 'the items take the rest of the section')
-  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_LOWER_LEFT
-  view.sections._process(0.0)
-  assert_false(portraits.vertical, 'back in one row')
-  assert_eq(portraits.get_child(1), view.get_node('Portraits/PlayerPanel'), 'the player between the ally rows')
-  assert_eq(view.get_node('Items').get_global_rect(), section, 'the items fill the section again')
 
 
 func test_stacked_allies_sit_in_the_allies_box() -> void:
@@ -70,7 +64,6 @@ func test_stacked_allies_sit_in_the_allies_box() -> void:
   var ally_left: Control = view.get_node('Portraits/AllyLeft')
   var group: Control = view.get_node('Portraits/Allies')
   var rows: Control = view.get_node('Portraits/Allies/Box/Rows')
-  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS
   view.sections._process(0.0)
   assert_true(group.visible, 'the allies box shows, even with no allies')
   assert_eq(ally_left.get_parent(), rows, 'the ally rows are in the box')
@@ -78,33 +71,30 @@ func test_stacked_allies_sit_in_the_allies_box() -> void:
   view._place_ally_rows()
   assert_false(group.visible, 'no box with the setting off')
   assert_eq(ally_left.get_parent(), view.get_node('Portraits'), 'the rows are back under the player')
+  assert_eq(view.get_node('Portraits').get_child(0), view.get_node('Portraits/PlayerPanel'), 'the player stays first')
   PrintLook.print_settings['allies_box'] = true
-  PrintLook.print_settings['screen_layout'] = ScreenSections.Layout.PORTRAITS_LOWER_LEFT
-  view.sections._process(0.0)
-  assert_false(group.visible, 'no box with the allies beside the player')
-  assert_eq(view.get_node('Portraits').get_child(1), view.get_node('Portraits/PlayerPanel'), 'the player between the ally rows')
 
 
 func test_sections_follow_the_print_settings() -> void:
   var sections: ScreenSections = _host(SECTIONS_SCENE.instantiate())
   watch_signals(sections)
-  PrintLook.print_settings['split_across'] = 1500.0
   PrintLook.print_settings['padding'] = 10.0
   sections._process(0.0)
   assert_signal_emitted(sections, 'sections_changed')
-  assert_eq(sections.section('Items').position.x, 1510.0, 'the items section moves with the split')
-  assert_eq(sections.section('Corridor').size.x, 1480.0, 'the corridor section shrinks with it')
+  var half: float = sections.size.x * 0.5
+  assert_eq(sections.section('Items').position.x, half + 10.0, 'the player column starts the padding past the fold')
+  assert_eq(sections.section('Corridor').size.x, half - 20.0, 'the corridor loses the padding on both sides')
 
 
 func test_view_places_its_parts_in_the_sections() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
-  PrintLook.print_settings['split_across'] = 1400.0
-  PrintLook.print_settings['split_down'] = 1000.0
+  PrintLook.print_settings['padding'] = 50.0
   view.sections._process(0.0)
+  var column: Rect2 = view.sections.section('Items').get_global_rect()
   assert_eq(view.get_node('Corridor').get_global_rect(), view.sections.section('Corridor').get_global_rect(), 'corridor placed')
-  assert_eq(view.get_node('Items').get_global_rect(), view.sections.section('Items').get_global_rect(), 'items placed')
-  assert_eq(view.get_node('Portraits').get_global_rect(), view.sections.section('Portraits').get_global_rect(), 'portraits placed')
+  assert_eq(view.get_node('Portraits').get_global_rect().position, column.position, 'portraits at the top of the column')
+  assert_eq(view.get_node('Items').get_global_rect().end, column.end, 'items to the bottom of the column')
   assert_eq(view.corridor_area().get_global_rect(), view.sections.section('Corridor').get_global_rect(),
     'reward and event panels go in the corridor section')
 
@@ -115,7 +105,7 @@ func test_view_uses_the_sections_it_is_given() -> void:
   view.sections = sections
   _host(view)
   assert_eq(view.sections, sections, 'no second set of sections is made')
-  assert_eq(view.get_node('Items').get_global_rect(), sections.section('Items').get_global_rect(), 'items placed')
+  assert_eq(view.get_node('Items').get_global_rect().end, sections.section('Items').get_global_rect().end, 'items placed')
 
 
 func test_player_portrait_matches_the_column_beside_it() -> void:
@@ -133,10 +123,10 @@ func test_item_columns_fit_the_items_section_width() -> void:
   var view: CombatViewFramed = COMBAT_VIEW_SCENE.instantiate()
   _host(view)
   var grid: GridContainer = view.get_node('Items/ItemsSection/Board/PlayerItems')
-  PrintLook.print_settings['split_across'] = 1700.0
+  PrintLook.print_settings['padding'] = 20.0
   view.sections._process(0.0)
   var wide: int = grid.columns
-  PrintLook.print_settings['split_across'] = 2100.0
+  PrintLook.print_settings['padding'] = 220.0
   view.sections._process(0.0)
   assert_lt(grid.columns, wide, 'a narrower items section has fewer columns')
   var square: float = ItemCell.CELL_SIZE.x + grid.get_theme_constant('h_separation')
@@ -169,7 +159,7 @@ func test_player_portrait_fits_inside_the_portrait_panel() -> void:
     await get_tree().process_frame
   var panel: PanelContainer = view.get_node('Portraits/PlayerPanel')
   assert_eq(panel.theme_type_variation, &'PanelTokenWide', 'the panel is a token')
-  var height: float = view.sections.section('Portraits').size.y
+  var height: float = view.get_node('Portraits').size.y
   assert_true(panel.size.y <= height, 'the panel fits in %d pixels' % height)
   PrintLook.set_print_value('panel_background', CharacterPanel.PanelBackground.ENEMIES)
   view._process(0.0)

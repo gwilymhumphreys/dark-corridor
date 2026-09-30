@@ -108,15 +108,14 @@ func test_print_and_corridor_looks_are_separate() -> void:
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'resetting the corridor look keeps the print look')
 
 
-func test_corridor_padding_lines_the_folds_up_with_the_split() -> void:
-  # The fold shader puts the last fold at twice the corridor's left edge plus its width, which is the
-  # split point when the corridor has the same padding on both sides.
+func test_the_corridor_sits_evenly_either_side_of_the_left_half() -> void:
+  # The fold is drawn down the middle of the screen, so the corridor has the same margin from the
+  # screen's edge and from the fold.
   PrintLook.print_settings['padding'] = 30.0
   var view: Control = _view()
   var corridor: Rect2 = view.get_node('Corridor/CorridorPanel').get_global_rect()
-  var split: float = PrintLook.print_setting('split_across')
   assert_eq(corridor.position.x, 30.0, 'the corridor starts the padding in from the screen edge')
-  assert_eq(corridor.position.x * 2.0 + corridor.size.x, split, 'the last fold lands on the split')
+  assert_eq(corridor.position.x * 2.0 + corridor.size.x, view.size.x * 0.5, 'and ends the padding short of the fold')
 
 
 func test_frame_shows_the_border_and_overlay_only_when_on() -> void:
@@ -139,12 +138,3 @@ func test_frame_shows_the_border_and_overlay_only_when_on() -> void:
   assert_eq(overlay.get_rect(), corridor.get_rect(), 'the overlay covers the corridor')
 
 
-func test_the_fold_point_is_past_the_corridor_by_its_margin() -> void:
-  var view: Control = _view()
-  await get_tree().process_frame   # the view places the corridor in its section after the frame's first update
-  var corridor: Control = view.get_node('Corridor/CorridorPanel')
-  var rect: Rect2 = corridor.get_global_rect()
-  var expected: Vector2 = get_viewport().get_final_transform() * (rect.position * 2.0 + rect.size)
-  var fold_point: Vector2 = ScreenSections.fold_point_on_screen(get_viewport())
-  assert_almost_eq(fold_point.x, expected.x, 1.0, 'the fold across sits past the corridor by its distance from the left')
-  assert_almost_eq(fold_point.y, expected.y, 1.0, 'the fold down sits past the corridor by its distance from the top')

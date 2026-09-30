@@ -20,8 +20,8 @@ both `src/shaders/background_wear.gdshader` and the corridor overlay
 - The same wear can be drawn over the combat corridor with the same settings
   ([print_frame.md](print_frame.md)).
 - Folds are drawn on every screen, in the same place, so the menus show the fold the
-  [page turn](page_turn.md) turns on. `ScreenBackground` sets `fold_point` each frame from
-  `ScreenSections.fold_point_on_screen`.
+  [page turn](page_turn.md) turns on and the run screen's [sections](ui_layout.md#screen-sections)
+  sit either side of.
 - The pattern is fixed to the screen and does not animate.
 - Each mark takes one of two solid colours, `Colours.UI_BACKGROUND_WEAR` and
   `UI_BACKGROUND_WEAR_LIGHT`, which an [interface palette](interface_palette.md) can set.
@@ -36,7 +36,7 @@ both `src/shaders/background_wear.gdshader` and the corridor overlay
 | Background Specks | Small solid dots, one chance per cell. Clumping gathers them into patches with clear areas between; size variation makes most tiny with a few large; colour is dark, light or mixed (the default) |
 | Background Edge Wear | Patchy rubbed wear along the screen edges, heavier at the corners; light at the heaviest, dark around it |
 | Background Creases | One to four faint bands across the screen at an angle, broken up by noise |
-| Background Folds | Straight folds like a sheet folded and opened out: a count top to bottom and a count side to side, a broken raised line along each, rubbed wear beside it that is heavier where folds cross, and each section between folds a little lighter or darker. With follow layout on, the last fold in each direction sits past the corridor section's right and bottom edges by its distance from the left and top of the screen, which on the default layout is the [split point](ui_layout.md#screen-sections), and the others are spaced evenly before it; this is worked out from the layout settings, so it is the same on every screen. With follow layout off, folds are spaced evenly |
+| Background Folds | Straight folds like a sheet folded and opened out: a count top to bottom and a count side to side, a broken raised line along each, rubbed wear beside it that is heavier where folds cross, and each section between folds a little lighter or darker. Folds are spaced evenly, so the default of one fold top to bottom and none side to side is one fold down the middle, which the run screen's layout and the page turn are built around |
 
 Sizes and distances are in pattern pixels, so raising the pixel size also scales every mark and the edge
 wear width.

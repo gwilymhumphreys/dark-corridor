@@ -2,7 +2,7 @@
 
 A dev tool for making the combat screen look like a printed sheet: a border around the corridor, the
 background wear carried over the corridor, a worn corridor edge, a pencil grid behind the player's
-items, how far those items sit askew, and the split point and padding of the
+items, how far those items sit askew, and the padding of the
 [screen sections](ui_layout.md#screen-sections). Every effect is set from the Print tab of the
 [debug panel](debug_panel.md); the [background wear](background_wear.md) itself has its own tab.
 
@@ -81,7 +81,7 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
 
 | Group | Does |
 |---|---|
-| Layout | Split across and split down: where the screen sections meet. Padding: the space inside every side of each section. Screen layout: where the portraits go ([ui_layout.md](ui_layout.md#screen-sections)). Defaults in `PRINT_SETTING_DEFAULTS`. The token settings are on the Tokens tab (above) |
+| Layout | Padding: the space inside every side of each screen section ([ui_layout.md](ui_layout.md#screen-sections)). Defaults in `PRINT_SETTING_DEFAULTS`. The token settings are on the Tokens tab (above) |
 | Print Border | A solid line around the corridor: width, gap from the corridor, edge roughness, rubbed spots and their size |
 | Corridor Wear | The background wear, with its current settings, drawn over the corridor too |
 | Corridor Worn Edge | The corridor image's edges rubbed away into the background colour, heavier at the corners: width, amount, patch size, corners |
@@ -93,9 +93,8 @@ The owner's chosen settings are in the print part of the default [look preset](l
 
 F3 opens the [debug panel](debug_panel.md) on this tab. `PrintPanel` extends the
 [Corridor tab](corridor_look.md#the-corridor-tab) and builds its sections the same way: Layout, then
-the border and overlay groups, then panel wear. The Layout group holds the split point, the padding,
-the screen layout, the character sheet's section gap and label gap, and whether the map sits in the
-item column (`map_in_column`)
+the border and overlay groups, then panel wear. The Layout group holds the padding and the character
+sheet's section gap and label gap
 ([ui_layout.md](ui_layout.md#screen-sections)). The background wear groups are in the
 [Background tab](background_wear.md#the-background-tab).
 

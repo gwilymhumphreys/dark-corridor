@@ -22,11 +22,6 @@ layout_mode = 1
 anchors_preset = 0
 mouse_filter = 2
 
-[node name="Portraits" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 0
-mouse_filter = 2
-
 [node name="Info" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 0

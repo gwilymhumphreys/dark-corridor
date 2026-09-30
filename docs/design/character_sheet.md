@@ -122,8 +122,7 @@ Each as a setting on the F7 or F2 tab, screenshotted in the same fight on one co
   between a label and its box, set in the theme and tuned on the Print tab
   ([ui_theme.md](../systems/ui_theme.md#spacing-on-the-character-sheet)).
 - **Map in the item column** (2026-09-28): the map sits under the items, one section gap below them,
-  with its "Act N" label in the same style as the other labels (the `map_in_column` setting on the F3
-  Layout group).
+  with its "Act N" label in the same style as the other labels.
 - **Map as tokens** (2026-09-28): the act's squares as a row of pencil grid squares, each with a
   cardboard token showing an icon (fight, elite, relic, boss); cleared tokens face down, the current one
   bordered, and a marker between squares during an event. Three token sizes: large for items, potions

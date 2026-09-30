@@ -2,7 +2,7 @@ class_name PrintPanel
 extends LookPanel
 ## The print tab of the debug panel (docs/systems/print_frame.md, docs/systems/panel_wear.md), opened
 ## with F3 by `DebugPanels`: the printed look around the corridor and on UI panels. Layout first (the
-## padding and split point of the screen sections), then the border and the wear over the corridor,
+## padding of the screen sections and the character sheet's gaps), then the border and the wear over the corridor,
 ## then the panel wear groups. The wear on screen backgrounds is in the Background tab
 ## (`BackgroundPanel`).
 
@@ -11,12 +11,8 @@ extends LookPanel
 ## are print frame settings too, but have their own tab (`TokensPanel`).
 const LAYOUT_PROPERTIES: Dictionary = {
   'padding': [0.0, 160.0, 1.0],
-  'split_across': [800.0, 2400.0, 1.0],
-  'split_down': [600.0, 1400.0, 1.0],
-  'screen_layout': ['Portraits lower left', 'Portraits above items'],
   'section_gap': [0.0, 120.0, 1.0],
   'label_gap': [0.0, 40.0, 1.0],
-  'map_in_column': [],
 }
 
 

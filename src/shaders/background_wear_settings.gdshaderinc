@@ -8,9 +8,6 @@
 // Set from Colours, so they are not look settings.
 uniform vec3 wear_dark_colour : source_color = vec3(0.2, 0.2, 0.2);
 uniform vec3 wear_light_colour : source_color = vec3(0.48, 0.47, 0.47);
-// Where the last fold in each direction sits with follow layout on, in screen pixels
-// (ScreenSections.fold_point_on_screen), set by ScreenBackground and PrintFrame; zero when not set.
-uniform vec2 fold_point = vec2(0.0);
 
 group_uniforms background_pattern;
 // Screen pixels per pattern pixel: 1 for full resolution, 4 for the interface pixel grid.
@@ -76,15 +73,10 @@ group_uniforms;
 
 group_uniforms background_folds;
 uniform bool background_folds_on = true;
-// Folds running top to bottom.
+// Folds running top to bottom and side to side, each spaced evenly. The run screen's layout and the
+// page turn between screens are built around one fold down the middle.
 uniform float background_folds_across : hint_range(0.0, 4.0, 1.0) = 1.0;
-// Folds running side to side.
-uniform float background_folds_down : hint_range(0.0, 3.0, 1.0) = 1.0;
-// The last fold across sits past the corridor section's right edge by its distance from the left of
-// the screen, with the others spaced evenly to its left, and the last fold
-// down sits past its bottom edge by its distance from the top, so the corridor has the same margin on
-// every side. Otherwise folds are spaced evenly over the screen.
-uniform bool background_folds_follow_layout = true;
+uniform float background_folds_down : hint_range(0.0, 3.0, 1.0) = 0.0;
 // Width of the raised line along each fold, in pattern pixels.
 uniform float background_folds_line_width : hint_range(1.0, 8.0, 1.0) = 1.0;
 // How far rubbed wear reaches from a fold, in pattern pixels.
@@ -131,7 +123,6 @@ PrintWearSettings background_wear_settings() {
   settings.folds_on = background_folds_on;
   settings.folds_across = background_folds_across;
   settings.folds_down = background_folds_down;
-  settings.folds_follow_layout = background_folds_follow_layout;
   settings.folds_line_width = background_folds_line_width;
   settings.folds_wear_width = background_folds_wear_width;
   settings.folds_wear_amount = background_folds_wear_amount;

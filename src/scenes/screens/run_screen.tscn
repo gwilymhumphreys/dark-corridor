@@ -31,7 +31,7 @@ colour_name = "UI_BACKGROUND"
 
 [node name="Sections" parent="HUD" instance=ExtResource("6")]
 
-[node name="MapStrip" parent="HUD/Sections/Info" instance=ExtResource("2")]
+[node name="MapStrip" parent="HUD/Sections/Items" instance=ExtResource("2")]
 
 [node name="ReportButton" type="Button" parent="HUD/Sections/Info"]
 mouse_default_cursor_shape = 2

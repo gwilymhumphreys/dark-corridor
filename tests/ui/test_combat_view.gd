@@ -153,7 +153,8 @@ func test_allies_show_outside_a_fight() -> void:
 
 
 func _ally_slot_count(view: CombatViewFramed) -> int:
-  return view.get_node('Portraits/AllyLeft').get_child_count() + view.get_node('Portraits/AllyRight').get_child_count()
+  # The rows are under the player or in the allies box, depending on the `allies_box` setting.
+  return view._ally_left.get_child_count() + view._ally_right.get_child_count()
 
 
 func test_item_pos_handles_a_source_less_delivery() -> void:
@@ -499,11 +500,6 @@ func test_the_map_sits_below_the_items_in_the_column() -> void:
   assert_almost_eq(board.end.y + section_gap, map_rect.position.y, 1.0, 'the section gap separates the items and the map')
   var last_cell: ItemCell = view.get_node('Items/ItemsSection/Board/PlayerItems').get_child(59)
   assert_true(last_cell.get_global_rect().end.y <= board.end.y, '60 items still fit above the map')
-  PrintLook.set_print_value('map_in_column', false)
-  await get_tree().process_frame
-  assert_false(view.get_node('Items/MapSlot').visible, 'with the setting off the column keeps no room for the map')
-  assert_eq(map.position, Vector2.ZERO, 'and the map goes back to the top of its own section')
-  PrintLook.set_print_value('map_in_column', true)
   cm.free()
 
 
@@ -548,7 +544,6 @@ func test_a_relic_token_shows_the_relic_tooltip() -> void:
 
 
 func test_the_allies_box_gives_each_ally_slot_an_equal_cell() -> void:
-  PrintLook.set_print_value('screen_layout', ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS)
   var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
   _host(view)
   var p := _spawn(100.0, [FixtureItems.attack()])
@@ -564,4 +559,3 @@ func test_the_allies_box_gives_each_ally_slot_an_equal_cell() -> void:
   assert_eq(first.size.x, second.size.x, 'the slots are the same width')
   var middle: float = box.get_global_rect().get_center().x
   assert_almost_eq((first.end.x + second.position.x) * 0.5, middle, 1.0, 'the gap between them is at the dividing line')
-  PrintLook.set_print_value('screen_layout', PrintLook.PRINT_SETTING_DEFAULTS['screen_layout'])

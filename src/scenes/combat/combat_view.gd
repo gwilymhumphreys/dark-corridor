@@ -13,8 +13,8 @@ signal potion_thrown(index: int)
 ## The screen sections the view places its parts in (docs/systems/ui_layout.md#screen-sections), set by
 ## the run screen before the view enters the tree. Left null, a variant makes its own.
 var sections: ScreenSections
-## The run's map, set by the run screen with `sections`. A variant may place it among its own parts
-## (the `map_in_column` print setting); left null, the map stays where the run screen put it.
+## The run's map, set by the run screen with `sections`. A variant may place it among its own parts;
+## left null, the map stays where the run screen put it.
 var map: MapStrip
 
 
@@ -69,6 +69,21 @@ func mouse_over_inspectable(_point: Vector2) -> bool:
 ## The board item under `point` for the floating tooltip: {item, rect (global), side} or {} if none.
 func inspectable_at(_point: Vector2) -> Dictionary:
   return {}
+
+
+## The player's board item whose cell contains `point`, or null. The run screen selects it to sell.
+func board_item_at(_point: Vector2) -> Item:
+  return null
+
+
+## The global rectangle of the player's board item's cell, or an empty Rect2 if it has none.
+func board_item_rect(_item: Item) -> Rect2:
+  return Rect2()
+
+
+## Show the player's board item as selected (the marked border), or not.
+func mark_board_item(_item: Item, _marked: bool) -> void:
+  pass
 
 
 ## Driven each frame by the run screen — feeds the cluster the hover target the run screen chose

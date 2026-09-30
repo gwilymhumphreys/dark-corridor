@@ -33,7 +33,7 @@ void fragment() {
   vec3 colour = texture(screen_texture, SCREEN_UV).rgb;
   if (corridor_wear_on) {
     colour = print_wear(colour, background_wear_settings(), FRAGCOORD.xy, 1.0 / SCREEN_PIXEL_SIZE,
-      wear_dark_colour, wear_light_colour, fold_point);
+      wear_dark_colour, wear_light_colour);
   }
   if (corridor_worn_edge_on) {
     vec2 local = UV * rect_size;

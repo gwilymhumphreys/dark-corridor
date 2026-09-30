@@ -179,11 +179,11 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   with them, so the numbers read the same size everywhere. The view **reconciles** its
   widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
   dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
-- **Player portrait + HP in the portrait section** — the portrait on the left, and to its right,
+- **Player portrait + HP at the top of the player's column** — the portrait on the left, and to its right,
   aligned to the top of the section, a "Name:" and a "Class:" field, each written on a pencil line (`PencilLine`) that runs to the panel's right edge, like a character sheet (`CharacterPanel.sheet_fields`; the run screen passes the character's `name_key` and `class_key` through `CombatView.show_character`), over the health bar and the status icons (the player's character
-  panel, `PlayerPanel`) — centred between the ally slots. The player's panel keeps one size through the
+  panel, `PlayerPanel`). The player's panel keeps one size through the
   fight (`CharacterPanel.fixed_size`): its status icons keep their full height with no statuses, and
-  with the portraits above the items it fills the section's width; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
+  it fills the column's width; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
   centred row of mechanic-coloured value pills (`value_pill.tscn` instances placed in the scene, one shown per mechanic effect; an effect that applies a status gets no pill)
   straddling the top edge, a cooldown fill drawn over the icon (`cooldown_fill.gdshader`: a
   semi-transparent fill rising bottom→top as the item recharges, with a solid line along its top
@@ -207,12 +207,11 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   (`CombatManager.is_created_item`) and each token's ally slot is taken out of the lookup maps at
   once — no longer hoverable or a VFX target — and fades and shrinks away over `TEMPORARY_FADE_OUT`
   seconds before freeing. The per-frame sync does not rebuild a widget that is fading.
-- **Allies / summon tokens in the slots flanking the player** — `ally_slot.tscn` (the ally's character
-  panel at a smaller size; its item cells shrink so the row fits the column's width), filling **left-to-right** (2 left of the player, then 2 right —
-  capped per side; past 4 bodies, overflow tokens alternate to the emptier side;
-  `AllyLeft` / `AllyRight`). With the *Portraits above items* screen layout the player and the two
-  ally rows are stacked in a column above the potions instead ([ui_layout.md](ui_layout.md#screen-sections)),
-  and with the `allies_box` print setting the ally rows sit in a pencil box under an "Allies" label,
+- **Allies / summon tokens in the ally rows under the player** — `ally_slot.tscn` (the ally's character
+  panel at a smaller size; its item cells shrink so the row fits the column's width), filling the first row, then the second (2 per row —
+  capped per row; past 4 bodies, overflow tokens alternate to the emptier row;
+  `AllyLeft` / `AllyRight`). The player and the two ally rows are stacked in a column above the
+  potions ([ui_layout.md](ui_layout.md#screen-sections)), and with the `allies_box` print setting the ally rows sit in a pencil box under an "Allies" label,
   shown even with no allies (`_place_ally_rows`; the slots are rebuilt when the rows move). Pencil lines
   divide the box into a cell for each slot, two across and a row for each row of allies, and each slot
   is made as wide as its cell (`_size_allies_box`). A **downed run-scoped ally keeps its slot** (dimmed; it stops
@@ -301,10 +300,12 @@ cells' cooldown fills (`ItemCell.show_cooldown`) and fades away the fight's temp
 A view built without a fight never shows the fills. The combat report is still full-screen.
 
 - **Shop** — `shop_overlay.tscn` shows the shop's name, the player's gold, one `ShopEntry`
-  (`shop_entry.tscn`: a `RewardOption` with a buy button showing the price) per good, and a Leave
-  button, in the corridor area like the draft panel. Pressing a good or its button emits
+  (`shop_entry.tscn`: a `RewardOption` with a buy button showing the price) per good, and Reroll
+  and Leave buttons, in the corridor area like the draft panel. Pressing a good or its button emits
   `bought(index)` → `RunManager.buy`; the run screen then refreshes the panel, the gold box, the
-  potions and the relics. A sold or unaffordable good is disabled; a sold one reads "Sold". Leave
+  potions and the relics. A sold or unaffordable good is disabled; a sold one reads "Sold". Reroll
+  shows its price, is disabled when the player cannot pay, and emits `rerolled` →
+  `RunManager.reroll_shop`; the run screen then rebuilds the goods (`ShopOverlay.show_goods`). Leave
   emits `left` → `RunManager.leave_shop`, then the run advances. Hovering a good shows its tooltip.
 - **Draft** — `draft_overlay.tscn` shows each reward as a `RewardOption` (`reward_option.tscn`)
   after a fight or in a reward encounter: a button around the same `ItemCell` the board uses (the same
@@ -343,9 +344,8 @@ A view built without a fight never shows the fills. The combat report is still f
   is turned face down (no icon) instead. The current one has the selected border (`ItemCell.set_marked`, [control_feedback.md](control_feedback.md)); during a choice of
   encounters and the encounter picked from it, a marker sits on the grid line before the next square
   (`setup(position)`, `mark_position` on each advance). The label is laid out like the sheet's other labels
-  (`SheetSection`, `LabelDim`). With the `map_in_column` print setting on, the combat view places it
-  at the bottom of the item column ([ui_layout.md](ui_layout.md#screen-sections)); otherwise it is
-  at the top of the information section.
+  (`SheetSection`, `LabelDim`). The combat view places it at the bottom of the item column
+  ([ui_layout.md](ui_layout.md#screen-sections)).
 - **Speed button** — `speed_button.tscn` in the information section: an always-visible
   ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
 - **Report button** — beside the speed button in the information section: always visible, a toggle
@@ -354,6 +354,23 @@ A view built without a fight never shows the fills. The combat report is still f
   centered panel (no translucent scrim) + Resume / Settings /
   Quit-to-menu / Exit Game; its full-rect Catcher swallows input so the paused board can't be clicked
   through. Pausing mid-approach also halts the corridor's movement, not just the depth walk.
+
+## Selling items
+
+A left click on a board item the player can sell (`RunManager.can_sell`: no fight under way) selects
+it: its cell takes the marked border (`CombatView.mark_board_item`) and a `SellButton`
+(`sell_button.tscn`, "Sell for {0} gold") appears below it on the HUD layer, following the cell as
+the board reflows. Pressing the button emits `sell_requested(item)` → `RunManager.sell_item`; the run
+screen then refreshes the gold box and, in a shop, the shop panel. The board drops the item's cell
+on its own.
+
+- The click is read in `RunScreen._input`, before the GUI, because a board item's cell stops the
+  mouse. A click is ignored while paused, in the settings, or where the draft, shop or combat report
+  panel covers it. `CombatView.board_item_at` finds the item under the click.
+- A click anywhere else, Escape, the item leaving the board, or a fight's approach starting clears the
+  selection. Escape clears it without pausing.
+- Selecting first and then acting was chosen so selling also works with a controller later
+  ([plan](../plans/shop_rerolls_and_selling.md)); board items cannot take focus yet.
 
 ## Localization
 
@@ -367,7 +384,7 @@ registered in `project.godot`) — see [localization](localization.md).
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
-event_overlay · encounter_choice · encounter_card · map_strip · speed_button · pause_menu · combat_summary); `src/autoloads/prefs.gd`;
+event_overlay · encounter_choice · encounter_card · map_strip · speed_button · pause_menu · combat_summary · shop_overlay · shop_entry · sell_button); `src/autoloads/prefs.gd`;
 `src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell); `src/vfx/vfx_driver.gd`;
 `src/scenes/combat/monster_images.gd`; the corridor is `src/scenes/corridors/corridor_3d.gd`.
 Tests in `tests/ui/` and `tests/corridors/`.

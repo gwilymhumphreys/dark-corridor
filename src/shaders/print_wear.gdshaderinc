@@ -40,7 +40,6 @@ struct PrintWearSettings {
   bool folds_on;
   float folds_across;
   float folds_down;
-  bool folds_follow_layout;
   float folds_line_width;
   float folds_wear_width;
   float folds_wear_amount;
@@ -158,14 +157,13 @@ int creases(PrintWearSettings settings, vec2 p, vec2 grid_size, vec2 seeded) {
 }
 
 
-// For `count` folds along an axis `size` pattern pixels long: the distance from `x` to the nearest
-// fold, and how many folds lie before `x`. With `edge` above 0 the last fold sits at `edge` and the
-// others are spaced evenly before it; otherwise all are spaced evenly over the axis.
-vec2 nearest_fold(float x, float count, float size, float edge) {
+// For `count` folds spaced evenly along an axis `size` pattern pixels long: the distance from `x` to
+// the nearest fold, and how many folds lie before `x`.
+vec2 nearest_fold(float x, float count, float size) {
   float nearest = 1e6;
   float passed = 0.0;
   for (int i = 0; i < int(count); i++) {
-    float position = edge > 0.0 ? edge * float(i + 1) / count : size * float(i + 1) / (count + 1.0);
+    float position = size * float(i + 1) / (count + 1.0);
     nearest = min(nearest, abs(x - position));
     passed += step(position, x);
   }
@@ -209,9 +207,8 @@ int folds(PrintWearSettings settings, vec2 seeded, float distance_across, float 
 
 
 // `base` at screen pixel `frag` (on a screen `screen_size` pixels) with every wear effect that is on
-// drawn over it, including folds. With follow layout the last fold in each direction sits at
-// `fold_point` (zero when not set).
-vec3 print_wear(vec3 base, PrintWearSettings settings, vec2 frag, vec2 screen_size, vec3 dark_colour, vec3 light_colour, vec2 fold_point) {
+// drawn over it, including folds.
+vec3 print_wear(vec3 base, PrintWearSettings settings, vec2 frag, vec2 screen_size, vec3 dark_colour, vec3 light_colour) {
   vec2 p = floor(frag / settings.pattern_pixel_size);
   vec2 grid_size = floor(screen_size / settings.pattern_pixel_size);
   vec2 seeded = p + settings.pattern_seed * vec2(137.1, 71.3);
@@ -221,10 +218,8 @@ vec3 print_wear(vec3 base, PrintWearSettings settings, vec2 frag, vec2 screen_si
     colour = mix(colour, dark_colour, faded_areas(settings, seeded));
   }
   if (settings.folds_on) {
-    vec2 edge = fold_point / settings.pattern_pixel_size;
-    bool follow = settings.folds_follow_layout && edge.x > 0.0;
-    vec2 across = nearest_fold(p.x, settings.folds_across, grid_size.x, follow ? edge.x : -1.0);
-    vec2 down = nearest_fold(p.y, settings.folds_down, grid_size.y, follow ? edge.y : -1.0);
+    vec2 across = nearest_fold(p.x, settings.folds_across, grid_size.x);
+    vec2 down = nearest_fold(p.y, settings.folds_down, grid_size.y);
     float shade = (hash12(vec2(across.y, down.y) + settings.pattern_seed + 0.5) * 2.0 - 1.0) * settings.folds_shading;
     colour = shade > 0.0 ? mix(colour, dark_colour, shade) : colour * (1.0 + shade);
     mark = max(mark, folds(settings, seeded, across.x, down.x));

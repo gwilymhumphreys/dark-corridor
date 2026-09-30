@@ -1,12 +1,11 @@
 class_name CombatViewFramed
 extends CombatView
-## The framed combat view (docs/systems/ui_layout.md) — the corridor-forward layout, placed in the
-## screen sections: the corridor top left with each **enemy floating over it** (`enemy_hud`: name +
-## status + HP + item cells), the potions and the player's board top right, and the **player's
-## portrait + name + HP** lower left with run-scoped allies / combat-scoped summon tokens in the **slots flanking the
-## player** (`ally_slot`). It reads the CombatManager's rosters each frame, so mid-fight summons (a boss
-## add, a player token) appear as they spawn. Hosts the VFX wall; reads logic, writes nothing.
-## The corridor stays as the mood backdrop + the lead occupant for the approach. No alpha.
+## The framed combat view (docs/systems/ui_layout.md), placed in the screen sections: the corridor on
+## the left half with each **enemy floating over it** (`enemy_hud`: name + status + HP + item cells), and
+## the player's column on the right half: the player's portrait, name and HP, then run-scoped allies and
+## combat-scoped summon tokens (`ally_slot`), the potions, gold and relics, the player's board and the
+## map. It reads the CombatManager's rosters each frame, so mid-fight summons (a boss add, a player
+## token) appear as they spawn. Hosts the VFX wall; reads logic, writes nothing.
 ## (The swappable surface — bind/release/positions + potion_thrown — is the CombatView base.)
 
 const POTION_SLOT: PackedScene = preload('res://src/scenes/combat/potion_slot.tscn')
@@ -16,7 +15,7 @@ const ALLY_SLOT: PackedScene = preload('res://src/scenes/combat/ally_slot.tscn')
 const TOOLTIP_CLUSTER: PackedScene = preload('res://src/scenes/ui/tooltip/tooltip_cluster.tscn')
 const SCREEN_SECTIONS: PackedScene = preload('res://src/ui/screen_sections.tscn')
 
-const MAX_SLOTS_PER_SIDE: int = 2   # the 4 flanking slots: 2 left of the player, 2 right
+const MAX_SLOTS_PER_SIDE: int = 2   # 2 ally slots in each of the two ally rows
 const ALLY_SLOT_GAP: int = 24   # between ally slots outside the allies box
 const HUD_WIDTH_MARGIN: float = 0.95   # each enemy HUD's share of the corridor panel width
 const POTION_SLOTS: int = 3   # squares drawn in the potion row's grid (docs/design/game_design.md)
@@ -57,7 +56,7 @@ var _allies: Array = []   # the run's allies, shared by reference; drawn from he
 @onready var _relic_board: Control = $Items/PotionRow/Boxes/RelicColumn/RelicBoard
 @onready var _relic_box: ColorRect = $Items/PotionRow/Boxes/RelicColumn/RelicBoard/Box
 @onready var _relic_tokens: GridContainer = $Items/PotionRow/Boxes/RelicColumn/RelicBoard/Relics
-@onready var _portraits_part: BoxContainer = $Portraits
+@onready var _portraits_part: VBoxContainer = $Portraits
 @onready var _player_panel: CharacterPanel = $Portraits/PlayerPanel
 @onready var _portrait: Control = $Portraits/PlayerPanel/Row/Portrait
 @onready var _ally_left: HBoxContainer = $Portraits/AllyLeft
@@ -86,8 +85,7 @@ var _fitted: Vector4 = -Vector4.ONE   # the board width, height, cell count and 
 var _askew_set: Vector3 = -Vector3.ONE   # the tilt, shift and cell size _set_items_askew last applied
 var _tokens_set: Array = []   # the portrait settings, ally count and enemy count _set_token_styles last applied
 var _allies_boxed: bool = false   # the ally rows are in the allies box (_place_ally_rows)
-var _portraits_height: float = -1.0   # the portraits' height when last placed; a change re-places them when stacked
-var _map_in_column: bool = false   # the map is placed at the bottom of the item column (_place_map)
+var _portraits_height: float = -1.0   # the portraits' height when last placed; a change places the sections again
 var _relics: Array = []   # the run's relics, shared by reference (show_relics)
 var _relic_cells: Dictionary = {}   # Item -> ItemCell (the relics box)
 var _run_relic_items: Array[Item] = []   # an Item per run relic, for the tooltip outside a fight
@@ -110,69 +108,44 @@ func _ready() -> void:
   _place_in_sections()
 
 
-## Put the corridor, the item column and the portrait row in their screen sections. With the
-## portraits above the items (`ScreenSections.Layout`), the portraits are stacked, the player first and
-## then the allies, at the top of the section they share, and the items take the height left below
-## them. The player's items are fitted to the board once the item column is in place.
+## Put the corridor in its screen section, and fill the player's column: the portraits stacked at the
+## top, the player first and then the allies, the items in the height left below them, and the map at
+## the bottom of the items. The player's items are fitted to the board once the column is in place.
 func _place_in_sections() -> void:
   var corridor_rect: Rect2 = sections.section('Corridor').get_global_rect()
-  var items_rect: Rect2 = sections.section('Items').get_global_rect()
-  var portraits_rect: Rect2 = sections.section('Portraits').get_global_rect()
-  var stacked: bool = sections.layout == ScreenSections.Layout.PORTRAITS_ABOVE_ITEMS
-  _stack_portraits(stacked)
+  var column: Rect2 = sections.section('Items').get_global_rect()
   _place_ally_rows()
   _portraits_height = _portraits_part.get_combined_minimum_size().y
-  if stacked:
-    portraits_rect.size.y = _portraits_height
-    var gap: float = _portraits_part.get_theme_constant('separation')   # the section gap, as between the portraits
-    items_rect = items_rect.grow_side(SIDE_TOP, -(_portraits_height + gap))
+  var gap: float = _portraits_part.get_theme_constant('separation')   # the section gap, as between the portraits
+  var items_rect: Rect2 = column.grow_side(SIDE_TOP, -(_portraits_height + gap))
   _place(_corridor_part, corridor_rect)
   _place(_corridor_area, corridor_rect)
+  _place(_portraits_part, Rect2(column.position, Vector2(column.size.x, _portraits_height)))
   _place(_items_part, items_rect)
-  _place(_portraits_part, portraits_rect)
-  if _map_in_column:
+  if map != null:
     var map_height: float = _map_slot.custom_minimum_size.y
     _place(map, Rect2(items_rect.position.x, items_rect.end.y - map_height, items_rect.size.x, map_height))
   _fit_board()
 
 
-## With the `map_in_column` print setting on, the run's map goes at the bottom of the item column, the
-## section gap below the items: the map slot there takes the map's height from the board, and the map
-## is placed over the slot. Otherwise the map goes back to the top of the information section. Places
-## the sections again when the setting or the map's height changed.
+## The run's map goes at the bottom of the item column, the section gap below the items: the map slot
+## there takes the map's height from the board, and the map is placed over the slot. Places the
+## sections again when the map's height changed.
 func _place_map() -> void:
-  var in_column: bool = map != null and PrintLook.print_setting('map_in_column')
-  var map_height: float = map.get_combined_minimum_size().y if in_column else 0.0
-  if in_column == _map_in_column and map_height == _map_slot.custom_minimum_size.y:
+  _map_slot.visible = map != null
+  var map_height: float = map.get_combined_minimum_size().y if map != null else 0.0
+  if map_height == _map_slot.custom_minimum_size.y:
     return
-  _map_in_column = in_column
-  _map_slot.visible = in_column
   _map_slot.custom_minimum_size.y = map_height
-  if map != null and not in_column:
-    map.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
   if is_node_ready():
     _place_in_sections()
 
 
-# Lay the portraits out in a column, the player first and then each side's ally slots as a row, or
-# back in one row with the allies either side of the player. Stacked, the player's panel fills the
-# section's width, so a status added or removed does not change its size.
-func _stack_portraits(stacked: bool) -> void:
-  if _portraits_part.vertical == stacked:
-    return
-  _portraits_part.vertical = stacked
-  _portraits_part.move_child(_player_panel, 0 if stacked else 1)
-  if not stacked:
-    _ally_left.visible = true
-    _ally_right.visible = true
-
-
-## With the portraits stacked and the `allies_box` print setting on, put the two ally rows in the
-## allies box: an "Allies" label over a pencil rectangle, shown even with no allies. Otherwise the rows
-## go back beside or under the player. The ally slots are freed first and rebuilt by the next roster
+## With the `allies_box` print setting on, put the two ally rows in the allies box: an "Allies" label
+## over a pencil rectangle, shown even with no allies. Otherwise the rows go under the player. The ally slots are freed first and rebuilt by the next roster
 ## sync, because an ItemCell that leaves the tree loses its item and icon.
 func _place_ally_rows() -> void:
-  var boxed: bool = _portraits_part.vertical and PrintLook.print_setting('allies_box')
+  var boxed: bool = PrintLook.print_setting('allies_box')
   if boxed == _allies_boxed:
     return
   _allies_boxed = boxed
@@ -190,10 +163,7 @@ func _place_ally_rows() -> void:
     row.add_theme_constant_override('separation', slot_gap)
   _ally_rows.add_theme_constant_override('separation', slot_gap)
   _allies_group.visible = boxed
-  var order: Array = [_player_panel, _allies_group]
-  if not boxed:
-    order = [_ally_left, _player_panel, _ally_right] if not _portraits_part.vertical else [_player_panel, _ally_left, _ally_right]
-    order.append(_allies_group)
+  var order: Array = [_player_panel, _allies_group] if boxed else [_player_panel, _ally_left, _ally_right, _allies_group]
   for index: int in order.size():
     _portraits_part.move_child(order[index], index)
 
@@ -359,12 +329,12 @@ func _potion_label_height() -> float:
 
 
 # The height of the item column's parts that are not grid squares: the section gap between the potion
-# row and the items, and each one's label with the gap under it. With the map in the column, also the
-# map's height and the section gap above it.
+# row and the items, and each one's label with the gap under it. With a map, also the map's height and
+# the section gap above it.
 func _labels_height() -> float:
   var section_gap: float = _items_part.get_theme_constant('separation')
   var items_label: float = _items_label.get_combined_minimum_size().y + _items_section.get_theme_constant('separation')
-  var map_height: float = _map_slot.custom_minimum_size.y + section_gap if _map_in_column else 0.0
+  var map_height: float = _map_slot.custom_minimum_size.y + section_gap if map != null else 0.0
   return section_gap + _potion_label_height() + items_label + map_height
 
 
@@ -382,12 +352,9 @@ static func board_cell_size(width: float, height: float, count: int, gap_ratio: 
   return MIN_CELL_SIZE
 
 
-# With the portraits above the items, place the sections again when the portraits' height changes (an
-# ally joins or leaves, or the text size changes), so the items start below them.
-# An empty ally row is hidden, so it adds no gap to the column.
-func _refit_stacked_portraits() -> void:
-  if not _portraits_part.vertical:
-    return
+# Place the sections again when the portraits' height changes (an ally joins or leaves, or the text size
+# changes), so the items start below them. An empty ally row is hidden, so it adds no gap to the column.
+func _refit_portraits() -> void:
   _ally_left.visible = _ally_left.get_child_count() > 0
   _ally_right.visible = _ally_right.get_child_count() > 0
   if _portraits_part.get_combined_minimum_size().y != _portraits_height:
@@ -479,11 +446,11 @@ func bind(cm: CombatManager, player: Actor, potions: Array, allies: Array = []) 
 
 func _process(_delta: float) -> void:
   _place_ally_rows()      # the allies box setting may have changed; before the sync rebuilds the slots
-  _place_map()            # the map setting or the map's height may have changed
+  _place_map()            # the map's height may have changed
   _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
   _sync_player_items()    # pick up items created or removed during the fight
   _sync_relics()          # a relic granted after a fight
-  _refit_stacked_portraits()
+  _refit_portraits()
   _size_allies_box()      # a slot added or a row shown changes the box's cells
   _fit_board()            # shrink or grow the cells when the count or the section changed
   _set_items_askew()
@@ -830,6 +797,24 @@ func inspectable_at(point: Vector2) -> Dictionary:
     if slot.item() != null and slot.get_global_rect().has_point(point):
       return {'item': slot.item(), 'rect': slot.get_global_rect(), 'side': TooltipCluster.Side.LEFT}
   return {}
+
+
+func board_item_at(point: Vector2) -> Item:
+  for item: Item in _player_cells:
+    if (_player_cells[item] as ItemCell).get_global_rect().has_point(point):
+      return item
+  return null
+
+
+func board_item_rect(item: Item) -> Rect2:
+  if not _player_cells.has(item):
+    return Rect2()
+  return (_player_cells[item] as ItemCell).get_global_rect()
+
+
+func mark_board_item(item: Item, marked: bool) -> void:
+  if _player_cells.has(item):
+    (_player_cells[item] as ItemCell).set_marked(marked)
 
 
 func update_inspection(target: Dictionary) -> void:

@@ -99,16 +99,10 @@ func test_screen_background_draws_through_the_background_material() -> void:
     'the light mark colour comes from Colours')
 
 
-func test_every_screen_background_places_the_folds_at_the_split_point() -> void:
-  var menu: ScreenBackground = ScreenBackground.new()
-  menu.colour_name = 'UI_BACKGROUND'
-  add_child(menu)
-  _nodes.append(menu)
-  menu._process(0.0)
-  var fold_point: Vector2 = PrintLook.background_material.get_shader_parameter('fold_point')
-  assert_eq(fold_point, ScreenSections.fold_point_on_screen(get_viewport()), 'the folds sit at the split point')
-  assert_gt(fold_point.x, 0.0, 'folds follow the layout on a menu too')
-  assert_false(PrintLook.background_defaults().has('fold_point'), 'not a look setting')
+func test_the_folds_default_to_one_down_the_middle() -> void:
+  var defaults: Dictionary = PrintLook.background_defaults()
+  assert_eq(defaults['background_folds_across'], 1.0, 'one fold top to bottom, spaced evenly, so in the middle')
+  assert_eq(defaults['background_folds_down'], 0.0, 'no fold side to side')
 
 
 func test_a_slider_changes_the_shader_setting() -> void:

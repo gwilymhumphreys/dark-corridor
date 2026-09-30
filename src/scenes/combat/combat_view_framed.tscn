@@ -222,16 +222,11 @@ visible = false
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Portraits" type="BoxContainer" parent="."]
+[node name="Portraits" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 0
 mouse_filter = 2
 theme_type_variation = &"SheetStack"
-
-[node name="AllyLeft" type="HBoxContainer" parent="Portraits"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 24
 
 [node name="PlayerPanel" parent="Portraits" instance=ExtResource("character_panel")]
 layout_mode = 2
@@ -248,6 +243,11 @@ size_flags_horizontal = 3
 [node name="Name" parent="Portraits/PlayerPanel/Row/Readout/Top/NameBar/NameRow" index="0"]
 text = "You"
 
+
+[node name="AllyLeft" type="HBoxContainer" parent="Portraits"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
 
 [node name="AllyRight" type="HBoxContainer" parent="Portraits"]
 layout_mode = 2
