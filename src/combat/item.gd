@@ -12,6 +12,7 @@ var cooldown: Ticker
 var statuses: Array[StatusEffect] = []   # item-targeted instances (silence = gate, decay = use-status).
                                          # NOTE: value modifiers are NOT read from here — see docs/systems/item.md.
 var enchant: Enchantment = null          # one enchant slot
+var level: int = 1                       # raised by merging two copies (docs/systems/item.md → Levels)
 var fires: int = 0                       # times fired this fight (items are rebuilt or reset per fight)
 # A relic's always-on abilities, one per RelicDef.passives entry (docs/systems/content.md → Relic).
 # Empty for every other item.
@@ -133,15 +134,23 @@ func base_value(effect: ItemEffect) -> float:
   return roundi(_scaled_value(effect, false))
 
 
-## The effect's value with the enchant and, when `with_statuses`, every bonus the owner's and this
-## item's hooks give to the effect's mechanic (statuses and relic passives, StatusManager.
+## What an item's values are multiplied by at `item_level`: each level is two copies of the level
+## below added together, times Balance.ITEM_LEVEL_MERGE_MULT (decision #61). 1 at level 1.
+static func level_scale(item_level: int) -> float:
+  return pow(2.0 * Balance.ITEM_LEVEL_MERGE_MULT, item_level - 1)
+
+
+## The effect's value with the level, the enchant and, when `with_statuses`, every bonus the owner's
+## and this item's hooks give to the effect's mechanic (statuses and relic passives, StatusManager.
 ## outgoing_bonuses), combined by StatusManager.combine (docs/systems/mechanics.md → Combining
-## bonuses). The enchant counts as a percentage bonus and applies to every effect. Pure.
+## bonuses). The level scales the value before the bonuses; the enchant counts as a percentage bonus
+## and applies to every effect. Pure.
 func _scaled_value(effect: ItemEffect, with_statuses: bool) -> float:
   var base: float = effect.value
   # A value that scales by a status the owner holds reads it first, so bonuses apply on top of it.
   if effect.per_owner_stack_id != '' and owner != null:
     base += StatusManager.stack_count(owner, effect.per_owner_stack_id) * effect.per_owner_stack_scale
+  base *= level_scale(level)
   var bonuses: Array[Dictionary] = []
   if enchant != null:
     bonuses.append({'percent': enchant.def.value_mult - 1.0})   # a permanent item modifier
@@ -157,11 +166,15 @@ func _resolve_effect(effect: ItemEffect) -> Payload:
   # The enchant (docs/systems/content.md / #26) and the bonuses from the owner's and this item's
   # hooks (#6), worked out AT FIRE TIME and locked into the payload, cascade-safe.
   p.value = _scaled_value(effect, true)
+  # The level scales what each consumed stack or item adds too, including the consumes the Combat
+  # manager resolves from the payload.
+  p.consume_scale *= level_scale(level)
+  p.consume_item_scale *= level_scale(level)
   # Status-stack consume (docs/systems/spore_engine.md Cap 1): SELF-fuel resolves now (the
   # owner is known) by spending its stacks + scaling. OPPONENT-fuel (Mass) rides the
   # payload's consume declaration to the Combat manager, which knows the resolved target.
   if effect.consume_id != '' and not effect.consume_from_target and owner != null:
-    p.value += StatusManager.consume(owner, effect.consume_id, effect.consume_amount) * effect.consume_scale
+    p.value += StatusManager.consume(owner, effect.consume_id, effect.consume_amount) * p.consume_scale
   p.source = self
   p.source_actor = owner
   return p

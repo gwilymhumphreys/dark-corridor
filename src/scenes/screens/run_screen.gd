@@ -23,7 +23,7 @@ const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overl
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 const SHOP_OVERLAY: PackedScene = preload('res://src/scenes/screens/shop_overlay.tscn')
-const SELL_BUTTON: PackedScene = preload('res://src/scenes/screens/sell_button.tscn')
+const ITEM_ACTIONS: PackedScene = preload('res://src/scenes/screens/item_actions.tscn')
 
 enum State { IDLE, WALKING, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, SHOPPING }
 
@@ -36,8 +36,8 @@ var _draft: DraftOverlay
 var _choice: EncounterChoice
 var _event: EventOverlay
 var _shop: ShopOverlay
-var _selected_item: Item          # the board item selected to sell; null when none is
-var _sell_button: SellButton      # shown below the selected item; null when none is
+var _selected_item: Item          # the board item selected to sell or merge; null when none is
+var _item_actions: ItemActions    # the Sell and Merge buttons below the selected item; null when none is
 var _summary: CombatSummary   # the combat report panel while it is open; null while hidden
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
@@ -583,16 +583,16 @@ func _teardown_combat_view() -> void:
     _view = null
 
 
-# --- selling items (docs/systems/run_screen.md → Selling items) ----------------
+# --- selling and merging items (docs/systems/run_screen.md → Selling and merging items) --
 
 # A left click on a board item the player can sell selects it; any other click drops the selection.
 # Read in _input, before the GUI, because a board item's cell stops the mouse itself, so the click
-# would never reach this screen's _gui_input. Clicks on the Sell button are left to the button.
+# would never reach this screen's _gui_input. Clicks on the Sell and Merge buttons are left to them.
 func _input(event: InputEvent) -> void:
   var click := event as InputEventMouseButton
   if click == null or not click.pressed or click.button_index != MOUSE_BUTTON_LEFT:
     return
-  if _sell_button != null and _sell_button.get_global_rect().has_point(click.position):
+  if _item_actions != null and _item_actions.get_global_rect().has_point(click.position):
     return
   var item: Item = _sellable_item_at(click.position)
   if item == null:
@@ -621,35 +621,36 @@ func _select(item: Item) -> void:
   _clear_selection()
   _selected_item = item
   _view.mark_board_item(item, true)
-  _sell_button = SELL_BUTTON.instantiate()
-  $HUD.add_child(_sell_button)
-  _sell_button.setup(item, RunManager.sell_price(item))
-  _sell_button.sell_requested.connect(_on_sell_requested)
-  _place_sell_button()
+  _item_actions = ITEM_ACTIONS.instantiate()
+  $HUD.add_child(_item_actions)
+  _item_actions.setup(item, RunManager.sell_price(item), _run.can_merge(item), _run.will_lose_enchantment(item))
+  _item_actions.sell_requested.connect(_on_sell_requested)
+  _item_actions.merge_requested.connect(_on_merge_requested)
+  _place_item_actions()
 
 
 func _clear_selection() -> void:
   if _selected_item != null and _view != null:
     _view.mark_board_item(_selected_item, false)
   _selected_item = null
-  if _sell_button != null:
-    _sell_button.queue_free()
-    _sell_button = null
+  if _item_actions != null:
+    _item_actions.queue_free()
+    _item_actions = null
 
 
 # Each frame: drop the selection once the item cannot be sold (it left the board, or a fight's
-# approach began), otherwise keep the Sell button under the item's cell as the board reflows.
+# approach began), otherwise keep the buttons under the item's cell as the board reflows.
 func _update_selection() -> void:
   if _selected_item == null:
     return
   if _view == null or not _run.can_sell(_selected_item):
     _clear_selection()
     return
-  _place_sell_button()
+  _place_item_actions()
 
 
-func _place_sell_button() -> void:
-  _sell_button.place_below(_view.board_item_rect(_selected_item), get_viewport_rect())
+func _place_item_actions() -> void:
+  _item_actions.place_below(_view.board_item_rect(_selected_item), get_viewport_rect())
 
 
 func _on_sell_requested(item: Item) -> void:
@@ -659,3 +660,11 @@ func _on_sell_requested(item: Item) -> void:
   _refresh_gold()
   if _shop != null:
     _shop.refresh(_run)   # the gold changed what the player can afford
+
+
+# Merge the item and keep it selected, so its buttons show the new sell price and whether it can
+# merge again.
+func _on_merge_requested(item: Item) -> void:
+  _clear_selection()
+  if _run.merge_item(item):
+    _select(item)

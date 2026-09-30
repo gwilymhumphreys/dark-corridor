@@ -102,6 +102,11 @@ const SHOP_REROLL_PRICE: int = 1
 const SHOP_REROLL_PRICE_STEP: int = 1
 # Selling an item gives this share of its shop price, rounded down (RunManager.sell_price, owner).
 const SELL_SHARE: float = 0.5
+# Item levels (decision #61, owner, 2026-09-30). An item goes from level 1 up to ITEM_MAX_LEVEL. Merging
+# two copies at the same level gives one item of the next level whose values are the two copies' values
+# added together times ITEM_LEVEL_MERGE_MULT (Item.level_scale).
+const ITEM_MAX_LEVEL: int = 4
+const ITEM_LEVEL_MERGE_MULT: float = 1.2
 
 
 # ── Presentation — the framed combat view (docs/systems/ui_layout.md; docs/history/phase4_plan.md) ───────

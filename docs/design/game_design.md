@@ -185,7 +185,7 @@ Three tiers. Color-coded (bronze / silver / gold borders). Drop rate weighted by
 - **Rare:** build-anchors. The item that turns "I have poison stuff" into "poison is my strategy." Each rare is a build-completion event.
 The earlier reasoning for flat power, kept as the risk to watch in tuning: if rarity meant bigger numbers, low-rarity items would become deadweight late, players would auto-take any high-rarity item regardless of synergy (rarity > fit), and the late game would collapse into the Vampire Crawlers failure mode. Power-by-complexity preserves the cascade identity — late-game rares amplify the early commons rather than replacing them.
 
-Items that are purely "+X stronger version of common item Y" don't exist as items. Those become enchantments. Numerical scaling lives in the enchant layer, not the rarity layer.
+Items that are purely "+X stronger version of common item Y" don't exist as items. Numerical scaling lives in item levels (see *Item levels*), not in the rarity layer or in enchantments.
 
 ### Synergies
 
@@ -201,10 +201,14 @@ This makes the draft decision "does this connect to what I have" rather than "is
 - **Rarity tiers (common/uncommon/rare)**, same as items. Higher tiers offer more dramatic modifiers.
 - **One enchant per item.** Each item can hold a single enchantment at a time.
 - May use the status system as an implementation tool when the effect is status-shaped; not defined as statuses.
-- Enchants also absorb pure-numerical upgrades (the rarity model rules these out as items). A common item with a "+50% trigger value" enchant is the upgrade path for that item. Spire's card-upgrade system, ported here.
+- Enchants add different or unusual effects to an item. They are not straight number increases; those are item levels (decision #61).
 ### Duplicates
 
 Stack independently. Two of the same item = effect fires twice. Reinforces the cascade / many-small-items identity.
+
+### Item levels
+
+Items have levels (decision #61). The player can choose to merge two copies of the same item at the same level into one item of the next level. The merged item's values are the two copies' values added together plus a bonus, so merging always gives more than keeping both copies. Levels are the upgrade path for an item, closer to Spire's card upgrades than enchantments are. Later shops offer higher-level items. Rules and numbers: [`../plans/item_levels.md`](../plans/item_levels.md).
 
 ### Inventory
 
@@ -228,7 +232,7 @@ The tilt is a consequence of the engine's state, not a rule that early items exp
 Mechanism — how the tilt gets created:
 
 - Encounter design is primary, not item decay. Fights shift what wins — threshold checks (can you spike), then sustained checks (defensive layers, pressure over time), then engine checks (big HP, only die to compounding). Draft priority shifts because what wins fights changed, not because early items rotted.
-- Escalation, not replacement. Early damage items must double as trigger-fuel the later cascade keys off. A "deal 3 on tick" item becomes the heartbeat that enchants later turn into an avalanche. One pool, early items legible/immediate, late items multiplicative on what early items do. Don't design disjoint early/late pools.
+- Escalation, not replacement. Early damage items must double as trigger-fuel the later cascade keys off. A "deal 3 on tick" item becomes the heartbeat that levels and enchants later turn into an avalanche. One pool, early items legible/immediate, late items multiplicative on what early items do. Don't design disjoint early/late pools.
 - Item scaling-profile tags as seasoning, not the primary mechanism.
 - Prototype failure test: late in a run, can you trace an early pickup still meaningfully feeding the cascade? If yes, the arc works. If it's doing nothing, you built replacement (the bad half of Spire without the mechanism that justified it).
 - Shield-specific failure mode: if mid-run fights resolve fast enough that shield never matters, shield items become trap picks and the arc collapses to damage→scaling. Mid-run enemy design has to demand shield, not just permit it. Tuning constraint, not content.

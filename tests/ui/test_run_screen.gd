@@ -397,14 +397,37 @@ func test_clicking_a_board_item_selects_it_and_sell_sells_it() -> void:
   var item: Item = Game.run.player.board[0]
   _click_item(screen, item)
   assert_eq(screen._selected_item, item, 'the click selects the item')
-  assert_not_null(screen._sell_button, 'and shows its Sell button')
-  assert_eq(screen._sell_button.text, 'Sell for %d gold' % RunManager.sell_price(item), 'with the price')
+  assert_not_null(screen._item_actions, 'and shows its Sell button')
+  assert_eq(screen._item_actions.sell_button.text, 'Sell for %d gold' % RunManager.sell_price(item), 'with the price')
   var gold: int = Game.run.gold
-  screen._sell_button.pressed.emit()
+  screen._item_actions.sell_button.pressed.emit()
   assert_false(item in Game.run.player.board, 'the item is sold')
   assert_eq(Game.run.gold, gold + RunManager.sell_price(item), 'for its price')
   assert_null(screen._selected_item, 'and the selection is cleared')
-  assert_null(screen._sell_button, 'with its button')
+  assert_null(screen._item_actions, 'with its buttons')
+  screen.free()
+
+
+func test_merge_merges_the_selected_item_and_keeps_it_selected() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  await wait_frames(2)
+  # The fixture character starts with two copies of the attack item and one shield item.
+  var attacks: Array = Game.run.player.board.filter(func(i: Item) -> bool: return i.def.id == FixtureItems.attack().id)
+  var lone: Item = Game.run.player.board.filter(func(i: Item) -> bool: return i.def.id == FixtureItems.shield().id)[0]
+  _click_item(screen, lone)
+  assert_false(screen._item_actions.merge_button.visible, 'Merge is hidden with no copy to merge with')
+  var item: Item = attacks[0]
+  var copy: Item = attacks[1]
+  _click_item(screen, item)
+  assert_true(screen._item_actions.merge_button.visible, 'Merge shows when a copy is on the board')
+  screen._item_actions.merge_button.pressed.emit()
+  assert_eq(item.level, 2, 'the item is merged')
+  assert_false(copy in Game.run.player.board, 'the copy is used up')
+  assert_eq(screen._selected_item, item, 'the item stays selected')
+  assert_eq(screen._item_actions.sell_button.text, 'Sell for %d gold' % RunManager.sell_price(item),
+    'with its new price')
   screen.free()
 
 
@@ -435,7 +458,7 @@ func test_a_click_during_a_fight_selects_nothing() -> void:
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'the fight is under way')
   _click_item(screen, Game.run.player.board[0])
   assert_null(screen._selected_item, 'items cannot be sold in a fight')
-  assert_null(screen._sell_button, 'so no Sell button shows')
+  assert_null(screen._item_actions, 'so no Sell button shows')
   screen.free()
 
 

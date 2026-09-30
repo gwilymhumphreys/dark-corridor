@@ -30,7 +30,7 @@ What it **is not**: not the run-flow (the `Run manager` builds the snapshot, wri
 
 **Run-persistent state only:**
 
-- **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant. (No statuses — all statuses are combat-scoped, never saved; decision #26.)
+- **Player `Actor`** — current + max HP, and the board: item definitions + each item's enchant and level. (No statuses — all statuses are combat-scoped, never saved; decision #26.)
 - **Relics & potions** — the player run-state (not Actor-owned).
 - **Gold** — a banked run-state resource (`gold: int`, decision #33). **Optional on read** (`.get('gold', 0)` — absent in a pre-gold snapshot → 0, so old saves still load; deliberately **not** in `SNAPSHOT_KEYS`, per the no-migration rule).
 - **Run flags and pick counts** — `flags` (flag name → whole number) and `times_picked` (encounter id → count). Optional on read like gold; `rehydrate` turns their values back into whole numbers, because JSON reads every number as a float.

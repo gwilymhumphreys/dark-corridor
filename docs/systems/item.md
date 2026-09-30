@@ -24,7 +24,7 @@ What it **is not**:
 ## Definition vs. instance
 
 - **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity and power tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `mechanics` (the authored list of mechanic ids the item counts as — see [The mechanics list](#the-mechanics-list)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`, read on each use: the `Colours` variable named by `panel_colour_name`, else the first effect's colour. An effect's colour is likewise read on use (`ItemEffect.color`: its `colour_name`, else its mechanic's colour, else its status's). Each authored item is one file under `content/items/` ([authoring.md](../design/authoring.md)). (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
-- **Item instance** — runtime, on a board: a definition + live `Ticker` state + its one enchant (if any) + its item-targeted statuses. **Duplicates stack independently** — two of the same definition are two instances, each its own Ticker, firing twice (design).
+- **Item instance** — runtime, on a board: a definition + live `Ticker` state + its one enchant (if any) + its item-targeted statuses. **Duplicates stack independently** — two of the same definition are two instances, each its own Ticker, firing twice (design). The player can merge two copies at the same level into one item of the next level ([Levels](#levels)).
 
 ---
 
@@ -46,7 +46,7 @@ When the item's `Ticker` crosses — its accumulator filled step-by-step, plus a
 
 1. **Gate check** — item-targeted gate statuses (e.g. *silence*) can suppress the fire (`StatusManager`). A gated item's cooldown **freezes** (decision #30): the Combat manager skips its accrual while a gate status sits on it, so a lifting gate never releases a banked burst — the first fire lands one full cooldown after the lift. (The in-`fire()` gate check stays as a backstop.)
 2. **Fire** — reset the cooldown; play the fire-emote (recoil / flash — combat_model.md). The fire is an event others can trigger off.
-3. **Resolve payload(s)** — for each of the item's effects, apply the enchant and the outgoing-value bonuses of the **owner's** relic passives and statuses and **the item's own** statuses, asked with the effect's mechanic, combined by one rule ([mechanics.md → Combining bonuses](mechanics.md#combining-bonuses)) → a **payload** `(kind, value)`, plus its target-shape. Travel is not authored ([combat_model.md](combat_model.md)). The bonus stage receives **the firing item itself** (`StatusManager.outgoing_bonuses(owner, self, mechanic)`, #35) so an actor-targeted status can scope to a type of item; Weak and the Smith empower scale any attack. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns. An effect with `per_owner_stack_id` set first adds `per_owner_stack_scale` for each stack of that status on the owner (`StatusManager.stack_count`), without removing any, and the bonuses apply on top; Shield Bash uses it to hit for the owner's shield. Spending stacks instead is the consume seam ([`spore_engine.md`](spore_engine.md)).
+3. **Resolve payload(s)** — for each of the item's effects, apply the [level](#levels), then the enchant and the outgoing-value bonuses of the **owner's** relic passives and statuses and **the item's own** statuses, asked with the effect's mechanic, combined by one rule ([mechanics.md → Combining bonuses](mechanics.md#combining-bonuses)) → a **payload** `(kind, value)`, plus its target-shape. Travel is not authored ([combat_model.md](combat_model.md)). The bonus stage receives **the firing item itself** (`StatusManager.outgoing_bonuses(owner, self, mechanic)`, #35) so an actor-targeted status can scope to a type of item; Weak and the Smith empower scale any attack. This stage stays **pure** (it also runs on the tooltip-preview path, `Item.display_value`); a status that *consumes* on firing does so on the actor-level `on_owner_item_fired` hook, drained by the Combat manager after the payload spawns. An effect with `per_owner_stack_id` set first adds `per_owner_stack_scale` for each stack of that status on the owner (`StatusManager.stack_count`), without removing any, and the bonuses apply on top; Shield Bash uses it to hit for the owner's shield. Spending stacks instead is the consume seam ([`spore_engine.md`](spore_engine.md)).
 4. **Hand them up** — the item returns its payload(s) + shape + travel to the `Combat manager`, which resolves the shape and spawns a `combat_model.md` **Delivery** per target. The item never calls up.
 
 A fire may yield several payloads (a rare combining damage + heal); each becomes its own Delivery (fire-rate and travel are decoupled — combat_model.md).
@@ -81,9 +81,22 @@ Items hold their own statuses (`StatusManager` rules; instances on the item). **
 
 ---
 
+## Levels
+
+**Location:** `Item.level`, `Item.level_scale`; merging is `RunManager`'s ([run_manager.md → Merging items](run_manager.md#merging-items)). Decision #61.
+
+An item has a level from 1 to `Balance.ITEM_MAX_LEVEL`. Merging two copies at the same level gives one item of the next level whose values are the two copies' values added together, times `Balance.ITEM_LEVEL_MERGE_MULT`, so a level multiplies an item's values by `level_scale(level) = (2 * ITEM_LEVEL_MERGE_MULT) ^ (level - 1)`.
+
+- `_scaled_value` multiplies the base value (the authored value plus any per-stack part) by the scale before the bonuses combine, so the enchant and status percentages apply to the levelled value. `display_value` and `base_value` both include it, so value pills and tooltips show levelled numbers and the tooltip does not highlight the level as a change.
+- `_resolve_effect` scales the payload's `consume_scale` and `consume_item_scale`, so each consumed stack or item adds a levelled amount, including the consumes the Combat manager resolves.
+- Not scaled: the cooldown, status durations, how many stacks or items are consumed, and effects with no value. An applied status's stack count is its effect value, so it is scaled.
+- Values stay fractional until they land (decision #49), so a small value can round to the same number at two levels.
+
+---
+
 ## Enchantments (one slot; details → Content PRD)
 
-An item has **one enchant slot**. An enchant hooks the item's fire/resolve: scale a value (+50%), add a secondary effect, change a target-shape, or add an on-resolve trigger ("when this deals damage, apply poison"). Enchants also absorb pure-numerical upgrades — numeric scaling lives in the enchant layer, not in rarity (design). Enchant content is the [Content PRD](content.md)'s.
+An item has **one enchant slot**. An enchant adds a different or unusual effect to its item: a secondary effect, a changed target shape, or an on-resolve trigger ("when this deals damage, apply poison"). Straight number increases are [levels](#levels), not enchantments (decision #61). Today `EnchantDef` holds only `value_mult`, a percentage on every value; effect-adding enchantments are not built yet. Enchant content is the [Content PRD](content.md)'s.
 
 ---
 

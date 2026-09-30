@@ -976,6 +976,128 @@ func test_an_item_not_on_the_board_cannot_be_sold() -> void:
   assert_eq(run.gold, gold, 'and nothing is paid')
 
 
+# --- merging items (decision #61; docs/systems/run_manager.md → Merging items) -------
+
+## Start `run` at the opening choice with an empty board. The fixture character starts with two
+## copies of the fixture attack, which would be merge partners in every test.
+func _start_with_empty_board(run: RunManager) -> void:
+  run.start(1, FixtureCharacter.ID)
+  for item: Item in run.player.board:
+    item.dissolve()
+  run.player.board.clear()
+
+
+## Put a fresh fixture attack at `level` on the run's board and return it.
+func _add_attack(run: RunManager, level: int = 1) -> Item:
+  var item := Item.new(FixtureItems.attack(), run.player)
+  item.level = level
+  run.player.board.append(item)
+  return item
+
+
+func test_two_copies_at_the_same_level_merge_into_the_next_level() -> void:
+  var run := _run()
+  _start_with_empty_board(run)
+  var kept: Item = _add_attack(run)
+  var partner: Item = _add_attack(run)
+  var board: int = run.player.board.size()
+  var index: int = run.player.board.find(kept)
+  assert_true(run.can_merge(kept), 'a copy at the same level is on the board')
+  assert_true(run.merge_item(kept), 'the merge is made')
+  assert_eq(kept.level, 2, 'the selected item goes up a level')
+  assert_eq(run.player.board.find(kept), index, 'and keeps its place')
+  assert_false(partner in run.player.board, 'the copy leaves the board')
+  assert_null(partner.owner, 'and is dissolved')
+  assert_eq(run.player.board.size(), board - 1, 'one item fewer')
+
+
+func test_an_item_cannot_merge_without_a_copy_at_its_level() -> void:
+  var run := _run()
+  _start_with_empty_board(run)
+  var item: Item = _add_attack(run)
+  assert_false(run.can_merge(item), 'no copy')
+  _add_attack(run, 2)
+  assert_false(run.can_merge(item), 'a copy at another level does not count')
+  assert_false(run.merge_item(item), 'the merge is refused')
+  assert_eq(item.level, 1, 'and nothing changes')
+
+
+func test_an_item_at_the_top_level_cannot_merge() -> void:
+  var run := _run()
+  _start_with_empty_board(run)
+  var item: Item = _add_attack(run, Balance.ITEM_MAX_LEVEL)
+  _add_attack(run, Balance.ITEM_MAX_LEVEL)
+  assert_false(run.can_merge(item), 'the top level does not merge')
+
+
+func test_items_cannot_be_merged_during_a_fight() -> void:
+  var run := _run()
+  _start_at_fight(run, 1)
+  var item: Item = _add_attack(run)
+  _add_attack(run)
+  run.begin_current()
+  assert_false(run.can_merge(item), 'not while the fight is under way')
+  run.combat_manager().run_headless()
+  assert_true(run.can_merge(item), 'once the fight is over it can be merged')
+
+
+func test_merging_keeps_the_selected_enchantment_when_both_have_one() -> void:
+  var run := _run()
+  _start_with_empty_board(run)
+  var kept: Item = _add_attack(run)
+  var partner: Item = _add_attack(run)
+  var own := Enchantment.new(FixtureKit.enchant())
+  kept.enchant = own
+  partner.enchant = Enchantment.new(FixtureKit.enchant())
+  assert_true(run.will_lose_enchantment(kept), 'one enchantment will be lost')
+  run.merge_item(kept)
+  assert_eq(kept.enchant, own, 'the selected item keeps its own')
+
+
+func test_merging_keeps_the_only_enchantment_whichever_copy_has_it() -> void:
+  var run := _run()
+  _start_with_empty_board(run)
+  var kept: Item = _add_attack(run)
+  var partner: Item = _add_attack(run)
+  var theirs := Enchantment.new(FixtureKit.enchant())
+  partner.enchant = theirs
+  assert_false(run.will_lose_enchantment(kept), 'nothing is lost')
+  run.merge_item(kept)
+  assert_eq(kept.enchant, theirs, "the selected item takes the copy's enchantment")
+
+
+func test_the_merge_partner_is_a_copy_without_an_enchantment_when_there_is_one() -> void:
+  var run := _run()
+  _start_with_empty_board(run)
+  var kept: Item = _add_attack(run)
+  kept.enchant = Enchantment.new(FixtureKit.enchant())
+  var enchanted: Item = _add_attack(run)
+  enchanted.enchant = Enchantment.new(FixtureKit.enchant())
+  var plain: Item = _add_attack(run)
+  assert_eq(run.merge_partner(kept), plain, 'the plain copy is used')
+  assert_false(run.will_lose_enchantment(kept), 'so no enchantment is lost')
+  run.merge_item(kept)
+  assert_true(enchanted in run.player.board, 'the enchanted copy stays')
+
+
+func test_a_levelled_item_sells_for_the_copies_it_was_made_from() -> void:
+  var item := Item.new(FixtureItems.attack())
+  var one: int = RunManager.item_price(item)
+  item.level = 2
+  assert_eq(RunManager.item_price(item), one * 2, 'a level 2 item is worth two level 1 copies')
+  assert_eq(RunManager.sell_price(item), floori(one * 2 * Balance.SELL_SHARE), 'and sells for its share of that')
+
+
+func test_the_level_survives_save_and_resume() -> void:
+  var run := _run()
+  _start_with_empty_board(run)
+  var item: Item = _add_attack(run, 3)
+  var index: int = run.player.board.find(item)
+  var run_b := _run()
+  run_b.rehydrate(run.snapshot())
+  assert_eq((run_b.player.board[index] as Item).level, 3, 'the resumed item has its level')
+
+
 func test_a_shop_with_too_few_items_to_choose_from_is_not_offered() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)

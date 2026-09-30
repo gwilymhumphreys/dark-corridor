@@ -146,3 +146,51 @@ func test_trigger_item_declares_its_subscription() -> void:
   assert_eq(d.trigger_subs.size(), 1, 'the trigger item declares one trigger')
   assert_eq(d.trigger_subs[0]['event'], EventBus.Event.APPLIED)
   assert_eq(d.trigger_subs[0]['filter'], 'poison', 'on poison applied, not shield')
+
+
+# --- levels (decision #61; docs/systems/item.md → Levels) ------------------------
+
+func test_level_scale_is_two_copies_times_the_merge_multiplier_per_level() -> void:
+  var step: float = 2.0 * Balance.ITEM_LEVEL_MERGE_MULT
+  assert_almost_eq(Item.level_scale(1), 1.0, 0.0001, 'level 1 is the authored value')
+  assert_almost_eq(Item.level_scale(2), step, 0.0001, 'level 2 is two copies times the multiplier')
+  assert_almost_eq(Item.level_scale(3), step * step, 0.0001, 'level 3 is two level 2 copies times it')
+
+
+func test_a_levelled_item_fires_and_shows_its_scaled_value() -> void:
+  var it := _make(FixtureItems.attack())
+  it.level = 2
+  var scaled: float = FixtureItems.ATTACK_DAMAGE * Item.level_scale(2)
+  assert_almost_eq((it.fire()[0] as Payload).value, scaled, 0.0001, 'the payload carries the levelled value')
+  var effect: ItemEffect = it.def.effects[0]
+  assert_eq(it.display_value(effect), float(roundi(scaled)), 'the pill and tooltip show it')
+  assert_eq(it.base_value(effect), float(roundi(scaled)), 'and the level is not shown as a change')
+
+
+func test_the_enchant_bonus_applies_on_top_of_the_level() -> void:
+  var it := _make(FixtureItems.attack())
+  it.level = 2
+  it.enchant = Enchantment.new(FixtureKit.enchant())
+  var expected: float = FixtureItems.ATTACK_DAMAGE * Item.level_scale(2) * FixtureKit.ENCHANT_MULT
+  assert_almost_eq((it.fire()[0] as Payload).value, expected, 0.0001, 'the enchant scales the levelled value')
+
+
+func test_the_level_scales_what_each_consumed_stack_adds() -> void:
+  var owner_actor := Actor.new(100.0)
+  StatusManager.apply(owner_actor, 'poison', 4.0)
+  var def := ItemDef.new()
+  var hit := ItemEffect.new()
+  hit.mechanic = AttackMechanic.ID
+  hit.value = 5.0
+  hit.consume_id = 'poison'
+  hit.consume_amount = 3.0
+  hit.consume_scale = 2.0
+  hit.consume_item_scale = 1.0
+  def.effects = [hit]
+  var it := Item.new(def, owner_actor)
+  it.level = 2
+  var p: Payload = it.fire()[0]
+  var scale: float = Item.level_scale(2)
+  assert_almost_eq(p.value, (5.0 + 3.0 * 2.0) * scale, 0.0001, 'the base and the consumed stacks are both scaled')
+  assert_almost_eq(p.consume_item_scale, 1.0 * scale, 0.0001, 'and the item consume the Combat manager resolves')
+  assert_almost_eq(_status_count(owner_actor, 'poison'), 1.0, 0.0001, 'the number of stacks spent is not scaled')

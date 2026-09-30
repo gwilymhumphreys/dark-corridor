@@ -545,9 +545,15 @@ func _close_shop() -> void:
 
 # --- selling items (docs/systems/run_manager.md → Selling) --------------------
 
-## What selling `item` gives: SELL_SHARE of its shop price, rounded down. An enchant does not change it.
+## What `item` is worth at its level: the shop price of the level 1 copies it was made from
+## (price_of its definition, doubled for each level above 1).
+static func item_price(item: Item) -> int:
+  return price_of(item.def) * (1 << (item.level - 1))
+
+
+## What selling `item` gives: SELL_SHARE of item_price, rounded down. An enchant does not change it.
 static func sell_price(item: Item) -> int:
-  return floori(price_of(item.def) * Balance.SELL_SHARE)
+  return floori(item_price(item) * Balance.SELL_SHARE)
 
 
 ## Whether the player can sell `item` now: it is on their board and no fight is under way (the
@@ -567,6 +573,49 @@ func sell_item(item: Item) -> bool:
   gold += sell_price(item)
   player.board.erase(item)
   item.dissolve()   # as CombatManager.remove_item does
+  return true
+
+
+# --- merging items (docs/systems/run_manager.md → Merging items) -------------
+
+## The copy `item` would merge with: another item on the board with the same definition and level,
+## or null. One with no enchantment is preferred, so no enchantment is lost when one can be kept.
+func merge_partner(item: Item) -> Item:
+  var partner: Item = null
+  for other: Item in player.board:
+    if other == item or other.def.id != item.def.id or other.level != item.level:
+      continue
+    if other.enchant == null:
+      return other
+    if partner == null:
+      partner = other
+  return partner
+
+
+## Whether the player can merge `item` now: it could be sold now (on the board, no fight under way),
+## it is below Balance.ITEM_MAX_LEVEL, and a copy at its level is on the board.
+func can_merge(item: Item) -> bool:
+  return can_sell(item) and item.level < Balance.ITEM_MAX_LEVEL and merge_partner(item) != null
+
+
+## Whether merging `item` loses an enchantment: it and its copy both hold one, and only `item`'s is kept.
+func will_lose_enchantment(item: Item) -> bool:
+  var partner: Item = merge_partner(item)
+  return partner != null and item.enchant != null and partner.enchant != null
+
+
+## Merge `item` with its copy (decision #61): `item` goes up a level and keeps its place on the board,
+## takes the copy's enchantment when it has none, and the copy leaves the board. Returns false,
+## changing nothing, when it cannot be merged (can_merge). Costs nothing and draws no run RNG.
+func merge_item(item: Item) -> bool:
+  if not can_merge(item):
+    return false
+  var partner: Item = merge_partner(item)
+  item.level += 1
+  if item.enchant == null:
+    item.enchant = partner.enchant
+  player.board.erase(partner)
+  partner.dissolve()   # as sell_item does
   return true
 
 
@@ -765,7 +814,7 @@ func snapshot() -> Dictionary:
     var enchant_id: Variant = null
     if item.enchant != null:
       enchant_id = item.enchant.def.id
-    board.append({ 'id': item.def.id, 'enchant': enchant_id })
+    board.append({ 'id': item.def.id, 'enchant': enchant_id, 'level': item.level })
   var relic_ids: Array = []
   for relic in relics:
     relic_ids.append(relic.def.id)
@@ -819,6 +868,7 @@ func rehydrate(snap: Dictionary) -> bool:
   player.board.clear()
   for entry in snap['board']:
     var item := Item.new(ItemCatalog.get_def(str(entry['id'])), player)
+    item.level = int(entry.get('level', 1))
     if entry['enchant'] != null:
       item.enchant = Enchantment.new(EnchantCatalog.get_def(str(entry['enchant'])))
     player.board.append(item)

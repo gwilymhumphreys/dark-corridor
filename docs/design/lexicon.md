@@ -19,6 +19,8 @@ something else.
 | **Passive** | A relic ability that is always on for the whole fight, written like an item effect (`RelicDef.passives`). Not a status. |
 | **Run trigger** | A relic ability outside fights: when a run event happens (the relic is picked up, a fight is won, a draft is skipped), its run effects change the run (`RelicDef.run_triggers`, `RunEffect`). |
 | **Type tag** | A label on an item (`weapon`, `armour`, `spell`, `skill`, `trinket`). It does nothing by itself; other items and statuses can refer to it. |
+| **Level** | How far an item has been upgraded, from 1 up to `Balance.ITEM_MAX_LEVEL` (`Item.level`). Separate from rarity, which the docs also call a tier. |
+| **Merge** | Combining two copies of the same item at the same level into one item of the next level. The player chooses to do it ([plans/item_levels.md](../plans/item_levels.md)). |
 | **Value pill** | The number on the top edge of an item's icon. There is one for each mechanic effect; an effect that applies a status, or is not a mechanic (the attack bonuses), has none. |
 
 ## Mechanics and statuses

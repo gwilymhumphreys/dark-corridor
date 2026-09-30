@@ -156,9 +156,13 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   each column top to bottom, then the next column. The `panel_background` print setting chooses
   which panels draw their background. `medium_token_size` (the medium token size, also used by the map) and `ally_item_size` set the
   largest item cell in enemy and ally panels (a row too long for its width shrinks), and `status_size` sets the status
-  icons on every panel. Hovering a status icon shows its card and the hover border and slows the
+  icons on every panel. A new status's icon pops in (it grows from nothing past full size and
+  settles while it brightens and fades back), and an icon whose stacks rise bumps (`PopAnimation`,
+  `src/ui/pop_animation.gd`). A status application's projectile flies to the icon, or to the slot
+  it will take ([vfx_driver.md](vfx_driver.md)). Hovering a status icon shows its card and the hover border and slows the
   fight ([tooltips.md](tooltips.md)). Every value pill, on an item or a status icon, is the same size whatever the
-  cell or icon size: the `pill_size` print setting scales them all together. `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
+  cell or icon size: the `pill_size` print setting scales them all together. An item above level 1
+  shows its level in a tag in one corner of its cell ([print_frame.md](print_frame.md)). `ally_slot.tscn` and `enemy_hud.tscn` are inherited scenes of it that
   change only sizes, colours and which parts show, and the player's `PlayerPanel` is an instance of
   it, so the three cannot drift apart in layout. The portrait stays square and as tall as the column beside it, so it follows the
   text size and the bar and cell sizes by itself. The enemy hides the portrait (its sprite is right
@@ -355,14 +359,21 @@ A view built without a fight never shows the fills. The combat report is still f
   Quit-to-menu / Exit Game; its full-rect Catcher swallows input so the paused board can't be clicked
   through. Pausing mid-approach also halts the corridor's movement, not just the depth walk.
 
-## Selling items
+## Selling and merging items
 
 A left click on a board item the player can sell (`RunManager.can_sell`: no fight under way) selects
-it: its cell takes the marked border (`CombatView.mark_board_item`) and a `SellButton`
-(`sell_button.tscn`, "Sell for {0} gold") appears below it on the HUD layer, following the cell as
-the board reflows. Pressing the button emits `sell_requested(item)` → `RunManager.sell_item`; the run
-screen then refreshes the gold box and, in a shop, the shop panel. The board drops the item's cell
-on its own.
+it: its cell takes the marked border (`CombatView.mark_board_item`) and an `ItemActions` row
+(`item_actions.tscn`) appears below it on the HUD layer, following the cell as the board reflows.
+The row holds a Sell button ("Sell for {0} gold") and a Merge button, shown only when
+`RunManager.can_merge` is true and reading "Merge (loses an enchantment)" when
+`will_lose_enchantment` is.
+
+- Sell emits `sell_requested(item)` → `RunManager.sell_item`; the run screen then refreshes the gold
+  box and, in a shop, the shop panel. The board drops the item's cell on its own.
+- Merge emits `merge_requested(item)` → `RunManager.merge_item`, and the item is selected again so
+  the row shows its new price and whether it can merge again. The copy's cell leaves with the board
+  sync, and the item's cell rebuilds its value pills and level tag when it sees the new level
+  ([item.md → Levels](item.md#levels)).
 
 - The click is read in `RunScreen._input`, before the GUI, because a board item's cell stops the
   mouse. A click is ignored while paused, in the settings, or where the draft, shop or combat report
@@ -384,7 +395,7 @@ registered in `project.godot`) — see [localization](localization.md).
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
-event_overlay · encounter_choice · encounter_card · map_strip · speed_button · pause_menu · combat_summary · shop_overlay · shop_entry · sell_button); `src/autoloads/prefs.gd`;
+event_overlay · encounter_choice · encounter_card · map_strip · speed_button · pause_menu · combat_summary · shop_overlay · shop_entry · item_actions); `src/autoloads/prefs.gd`;
 `src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell); `src/vfx/vfx_driver.gd`;
 `src/scenes/combat/monster_images.gd`; the corridor is `src/scenes/corridors/corridor_3d.gd`.
 Tests in `tests/ui/` and `tests/corridors/`.

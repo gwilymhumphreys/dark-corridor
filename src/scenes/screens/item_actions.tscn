@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://oeqo80vfq7n2" path="res://src/scenes/screens/item_actions.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
+
+[node name="ItemActions" type="HBoxContainer"]
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="SellButton" type="Button" parent="."]
+layout_mode = 2
+mouse_default_cursor_shape = 2
+focus_mode = 0
+theme_type_variation = &"ButtonMedium"
+auto_translate_mode = 2
+
+[node name="Juice" type="Node" parent="SellButton"]
+script = ExtResource("2")
+
+[node name="MergeButton" type="Button" parent="."]
+visible = false
+layout_mode = 2
+mouse_default_cursor_shape = 2
+focus_mode = 0
+theme_type_variation = &"ButtonMedium"
+auto_translate_mode = 2
+
+[node name="Juice" type="Node" parent="MergeButton"]
+script = ExtResource("2")
+
+[connection signal="pressed" from="SellButton" to="." method="_on_sell_pressed"]
+[connection signal="pressed" from="MergeButton" to="." method="_on_merge_pressed"]

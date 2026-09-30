@@ -68,16 +68,27 @@ Beat placement (the squares, the event rules, the pools) is the map's content; n
 
 **Location:** `RunManager` (the selling section). Plan: [`../plans/shop_rerolls_and_selling.md`](../plans/shop_rerolls_and_selling.md).
 
-The player can sell an item from the board for gold whenever no fight is under way. Relics and potions are not sold. The run screen's selection and Sell button are in [run_screen.md → Selling items](run_screen.md#selling-items).
+The player can sell an item from the board for gold whenever no fight is under way. Relics and potions are not sold. The run screen's selection and Sell button are in [run_screen.md → Selling and merging items](run_screen.md#selling-and-merging-items).
 
-- `sell_price(item)` is `Balance.SELL_SHARE` of the item's shop price (`price_of`), rounded down. An enchant does not change it.
+- `item_price(item)` is the shop price (`price_of`) of the level 1 copies the item was made from: `price_of(item.def)` doubled for each level above 1.
+- `sell_price(item)` is `Balance.SELL_SHARE` of `item_price`, rounded down, so a merged item sells for as much as its copies would. An enchant does not change it.
 - `can_sell(item)` is true when the item is on the player's board and `combat_manager()` is null or resolved: at the choice of encounters, events, rests, a fight's draft, reward encounters and shops, but not during a fight's approach or the fight.
 - `sell_item(item)` adds the price to `gold`, takes the item off the board and dissolves it. The last item can be sold.
 - A sale is kept by the next save (picking a card or advancing), so quitting before then undoes it, as with a shop purchase.
 
+### Merging items
+
+**Location:** `RunManager` (the merging section). Decision #61; plan: [`../plans/item_levels.md`](../plans/item_levels.md). What a level does to an item's values: [item.md → Levels](item.md#levels).
+
+The player can merge two copies of the same item at the same level into one item of the next level, whenever they could sell it. Merging costs nothing and draws no run RNG.
+
+- `merge_partner(item)` is another board item with the same definition id and level, preferring one with no enchantment; null when there is none.
+- `can_merge(item)` is `can_sell(item)`, the item below `Balance.ITEM_MAX_LEVEL`, and a partner on the board.
+- `merge_item(item)` raises the item's level by one, gives it the partner's enchantment if it has none, and takes the partner off the board and dissolves it. The item keeps its place on the board. If both hold an enchantment the item keeps its own, and `will_lose_enchantment(item)` is true beforehand so the interface can warn.
+
 ## Player run-state & RNG
 
-The run-state the snapshot persists is: the player `Actor` (HP + max-HP + board), run-scoped `allies` (def id only), `relics`, `potions`, `position`, `gold` (banked run-state, decision #33 — optional on read, absent → 0, no migration), `flags` and `times_picked` (optional on read), the `character` id, the current beat (`current_def_id` + `current_enemy_ids`, the generated fight's drawn enemies, or at a choice beat `pending_choice`, the offered encounters — the RNG has already moved past either draw, so a resume cannot redraw them), and the run RNG. The `Run manager` **owns the run RNG** — a single seeded PRNG driving all run-level randomness (draft offers, encounter assembly). Its **full state** (not just the seed) goes in the snapshot, so **reloading a save reproduces the same future outcomes every time** — deterministic resume, and no save-scumming a bad draft by quit-reload ([Save PRD](save.md)). Per-fight combat randomness (e.g. random item-targeting — #14) draws from a **derived per-fight stream** (seeded from the run seed + encounter index), so combat doesn't perturb the run stream and a re-entered fight replays identically.
+The run-state the snapshot persists is: the player `Actor` (HP + max-HP + board, each item with its enchant and level), run-scoped `allies` (def id only), `relics`, `potions`, `position`, `gold` (banked run-state, decision #33 — optional on read, absent → 0, no migration), `flags` and `times_picked` (optional on read), the `character` id, the current beat (`current_def_id` + `current_enemy_ids`, the generated fight's drawn enemies, or at a choice beat `pending_choice`, the offered encounters — the RNG has already moved past either draw, so a resume cannot redraw them), and the run RNG. The `Run manager` **owns the run RNG** — a single seeded PRNG driving all run-level randomness (draft offers, encounter assembly). Its **full state** (not just the seed) goes in the snapshot, so **reloading a save reproduces the same future outcomes every time** — deterministic resume, and no save-scumming a bad draft by quit-reload ([Save PRD](save.md)). Per-fight combat randomness (e.g. random item-targeting — #14) draws from a **derived per-fight stream** (seeded from the run seed + encounter index), so combat doesn't perturb the run stream and a re-entered fight replays identically.
 
 ## Save (snapshot, not timing)
 

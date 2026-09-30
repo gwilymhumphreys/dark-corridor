@@ -395,6 +395,18 @@ msgstr ""
 msgid "Walk past (+{0} gold)"
 msgstr ""
 
+#: src/scenes/screens/item_actions.gd
+msgid "Sell for {0} gold"
+msgstr ""
+
+#: src/scenes/screens/item_actions.gd
+msgid "Merge (loses an enchantment)"
+msgstr ""
+
+#: src/scenes/screens/item_actions.gd
+msgid "Merge"
+msgstr ""
+
 #: src/scenes/screens/map_strip.gd
 msgid "Act {0}"
 msgstr ""
@@ -437,10 +449,6 @@ msgstr ""
 
 #: src/scenes/screens/run_screen.tscn
 msgid "Report"
-msgstr ""
-
-#: src/scenes/screens/sell_button.gd
-msgid "Sell for {0} gold"
 msgstr ""
 
 #: src/scenes/screens/settings_screen.tscn
@@ -505,6 +513,10 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/keyword_card.tscn
 msgid "Keyword"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0}, level {1}"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
