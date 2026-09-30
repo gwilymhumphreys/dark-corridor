@@ -8,11 +8,9 @@
 // Set from Colours, so they are not look settings.
 uniform vec3 wear_dark_colour : source_color = vec3(0.2, 0.2, 0.2);
 uniform vec3 wear_light_colour : source_color = vec3(0.48, 0.47, 0.47);
-// The corridor's rectangle on screen in screen pixels (x, y, width, height), set by PrintFrame while a
-// fight is on screen; zero width when there is none. Folds can line up with it.
-uniform vec4 print_corridor_rect = vec4(0.0);
-// False on menu screens, so folds are only drawn during a run. Set by ScreenBackground.
-uniform bool folds_shown = true;
+// Where the last fold in each direction sits with follow layout on, in screen pixels
+// (ScreenSections.fold_point_on_screen), set by ScreenBackground and PrintFrame; zero when not set.
+uniform vec2 fold_point = vec2(0.0);
 
 group_uniforms background_pattern;
 // Screen pixels per pattern pixel: 1 for full resolution, 4 for the interface pixel grid.
@@ -82,8 +80,8 @@ uniform bool background_folds_on = true;
 uniform float background_folds_across : hint_range(0.0, 4.0, 1.0) = 1.0;
 // Folds running side to side.
 uniform float background_folds_down : hint_range(0.0, 3.0, 1.0) = 1.0;
-// On a fight screen, the last fold across sits past the corridor's right edge by the corridor's
-// distance from the left of the screen, with the others spaced evenly to its left, and the last fold
+// The last fold across sits past the corridor section's right edge by its distance from the left of
+// the screen, with the others spaced evenly to its left, and the last fold
 // down sits past its bottom edge by its distance from the top, so the corridor has the same margin on
 // every side. Otherwise folds are spaced evenly over the screen.
 uniform bool background_folds_follow_layout = true;

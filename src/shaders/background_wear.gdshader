@@ -9,6 +9,6 @@ shader_type canvas_item;
 
 void fragment() {
   vec3 colour = print_wear(COLOR.rgb, background_wear_settings(), FRAGCOORD.xy, 1.0 / SCREEN_PIXEL_SIZE,
-    wear_dark_colour, wear_light_colour, print_corridor_rect, folds_shown);
+    wear_dark_colour, wear_light_colour, fold_point);
   COLOR = vec4(colour, COLOR.a);
 }

@@ -99,21 +99,16 @@ func test_screen_background_draws_through_the_background_material() -> void:
     'the light mark colour comes from Colours')
 
 
-func test_folds_are_shown_only_while_a_run_screen_background_is_in_the_tree() -> void:
+func test_every_screen_background_places_the_folds_at_the_split_point() -> void:
   var menu: ScreenBackground = ScreenBackground.new()
   menu.colour_name = 'UI_BACKGROUND'
   add_child(menu)
   _nodes.append(menu)
-  assert_eq(PrintLook.background_material.get_shader_parameter('folds_shown'), false, 'no folds on a menu')
-  var run: ScreenBackground = ScreenBackground.new()
-  run.colour_name = 'UI_BACKGROUND'
-  run.folds_shown = true
-  add_child(run)
-  assert_eq(PrintLook.background_material.get_shader_parameter('folds_shown'), true, 'folds during a run')
-  remove_child(run)
-  run.free()
-  assert_eq(PrintLook.background_material.get_shader_parameter('folds_shown'), false, 'none after the run screen leaves')
-  assert_false(PrintLook.background_defaults().has('folds_shown'), 'not a look setting')
+  menu._process(0.0)
+  var fold_point: Vector2 = PrintLook.background_material.get_shader_parameter('fold_point')
+  assert_eq(fold_point, ScreenSections.fold_point_on_screen(get_viewport()), 'the folds sit at the split point')
+  assert_gt(fold_point.x, 0.0, 'folds follow the layout on a menu too')
+  assert_false(PrintLook.background_defaults().has('fold_point'), 'not a look setting')
 
 
 func test_a_slider_changes_the_shader_setting() -> void:

@@ -20,16 +20,13 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   VFX, so text is never covered.
 - Each frame `PrintFrame` sizes the border and overlay around the corridor and hides either one while
   its effects are off. The corridor itself is placed by the screen sections.
-- It also sets `print_corridor_rect` on `PrintLook.background_material`, the corridor's rectangle in
-  window pixels, so [folds](background_wear.md) can line up with the corridor. It clears it on leaving
-  the tree.
 - The border is printed in the same ink as the wear on the paper: the line is
   `Colours.UI_BACKGROUND_WEAR` and its rubbed spots are `UI_BACKGROUND_WEAR_LIGHT`, the same pair the
   background wear marks use, so an [interface palette](interface_palette.md) sets both. Pixels off the
   line are fully transparent.
 - The overlay reads the corridor from the screen and redraws it. `PrintFrame` copies every background
-  wear setting and colour into `PrintLook.overlay_material`, so marks over the corridor match the
-  background's and line up across the corridor's edge.
+  wear setting and colour, and the fold positions, into `PrintLook.overlay_material`, so marks over the
+  corridor match the background's and line up across the corridor's edge.
 - The board grid is a rectangle behind the player's items in `combat_view_framed.tscn`, drawn through
   `PrintLook.grid_material`: grid paper drawn in pencil, one square per item cell, with each line
   running through the middle of the gap between cells. The potion row has its own grid of three
@@ -75,11 +72,12 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   out against the graded item icons and portraits. `MapStrip` applies it. `map_cleared_look` is a
   dropdown for a cleared map square: its token face down, or burnt away when its fight is won (the
   default).
-- The `paper_burn_*` settings set the [paper burn](paper_burn.md) effect.
+- The `paper_burn_*` settings set the [paper burn](paper_burn.md) effect, and the `page_turn_*`
+  settings the [page turn](page_turn.md) between screens.
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
-  `TokensPanel`), in seven sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings) Map (the map icon switch and the cleared square look) and Paper burn.
+  `TokensPanel`), in eight sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
+  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings) Map (the map icon switch and the cleared square look), Paper burn and Page turn.
 
 | Group | Does |
 |---|---|

@@ -209,9 +209,9 @@ int folds(PrintWearSettings settings, vec2 seeded, float distance_across, float 
 
 
 // `base` at screen pixel `frag` (on a screen `screen_size` pixels) with every wear effect that is on
-// drawn over it, including folds. Folds can line up with `corridor_rect` (zero width when there is
-// none) while `folds_shown`.
-vec3 print_wear(vec3 base, PrintWearSettings settings, vec2 frag, vec2 screen_size, vec3 dark_colour, vec3 light_colour, vec4 corridor_rect, bool folds_shown) {
+// drawn over it, including folds. With follow layout the last fold in each direction sits at
+// `fold_point` (zero when not set).
+vec3 print_wear(vec3 base, PrintWearSettings settings, vec2 frag, vec2 screen_size, vec3 dark_colour, vec3 light_colour, vec2 fold_point) {
   vec2 p = floor(frag / settings.pattern_pixel_size);
   vec2 grid_size = floor(screen_size / settings.pattern_pixel_size);
   vec2 seeded = p + settings.pattern_seed * vec2(137.1, 71.3);
@@ -220,11 +220,11 @@ vec3 print_wear(vec3 base, PrintWearSettings settings, vec2 frag, vec2 screen_si
   if (settings.faded_areas_on) {
     colour = mix(colour, dark_colour, faded_areas(settings, seeded));
   }
-  if (settings.folds_on && folds_shown) {
-    vec4 rect = corridor_rect / settings.pattern_pixel_size;
-    bool follow = settings.folds_follow_layout && rect.z > 0.0;
-    vec2 across = nearest_fold(p.x, settings.folds_across, grid_size.x, follow ? rect.x * 2.0 + rect.z : -1.0);
-    vec2 down = nearest_fold(p.y, settings.folds_down, grid_size.y, follow ? rect.y * 2.0 + rect.w : -1.0);
+  if (settings.folds_on) {
+    vec2 edge = fold_point / settings.pattern_pixel_size;
+    bool follow = settings.folds_follow_layout && edge.x > 0.0;
+    vec2 across = nearest_fold(p.x, settings.folds_across, grid_size.x, follow ? edge.x : -1.0);
+    vec2 down = nearest_fold(p.y, settings.folds_down, grid_size.y, follow ? edge.y : -1.0);
     float shade = (hash12(vec2(across.y, down.y) + settings.pattern_seed + 0.5) * 2.0 - 1.0) * settings.folds_shading;
     colour = shade > 0.0 ? mix(colour, dark_colour, shade) : colour * (1.0 + shade);
     mark = max(mark, folds(settings, seeded, across.x, down.x));

@@ -73,7 +73,7 @@ func test_tokens_panel_has_the_token_sections() -> void:
   var tokens_panel: TokensPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Tokens') as TokensPanel
   tokens_panel.rebuild()
   var titles: Array[String] = _section_titles(tokens_panel)
-  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits', 'Character panels', 'Map', 'Paper burn'] as Array[String], 'one section per part of the token look')
+  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits', 'Character panels', 'Map', 'Paper burn', 'Page turn'] as Array[String], 'one section per part of the token look')
   assert_false(PrintPanel.LAYOUT_PROPERTIES.has('token_tilt'), 'the token settings left the Print tab')
 
 
@@ -139,12 +139,12 @@ func test_frame_shows_the_border_and_overlay_only_when_on() -> void:
   assert_eq(overlay.get_rect(), corridor.get_rect(), 'the overlay covers the corridor')
 
 
-func test_frame_tells_the_background_where_the_corridor_is() -> void:
+func test_the_fold_point_is_past_the_corridor_by_its_margin() -> void:
   var view: Control = _view()
   await get_tree().process_frame   # the view places the corridor in its section after the frame's first update
-  var rect: Vector4 = PrintLook.background_material.get_shader_parameter('print_corridor_rect')
-  assert_gt(rect.z, 0.0, 'the corridor rectangle is set while a fight view is on screen')
-  _nodes.erase(view)
-  view.free()
-  assert_eq(PrintLook.background_material.get_shader_parameter('print_corridor_rect'), Vector4.ZERO,
-    'cleared when the view leaves')
+  var corridor: Control = view.get_node('Corridor/CorridorPanel')
+  var rect: Rect2 = corridor.get_global_rect()
+  var expected: Vector2 = get_viewport().get_final_transform() * (rect.position * 2.0 + rect.size)
+  var fold_point: Vector2 = ScreenSections.fold_point_on_screen(get_viewport())
+  assert_almost_eq(fold_point.x, expected.x, 1.0, 'the fold across sits past the corridor by its distance from the left')
+  assert_almost_eq(fold_point.y, expected.y, 1.0, 'the fold down sits past the corridor by its distance from the top')

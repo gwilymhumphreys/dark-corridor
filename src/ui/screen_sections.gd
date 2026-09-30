@@ -70,3 +70,15 @@ static func section_rects(screen_size: Vector2, split: Vector2, padding: float, 
     inset.size = inset.size.max(Vector2.ZERO)
     rects[section_name] = inset
   return rects
+
+
+## Where the last fold in each direction sits with follow layout on, in window pixels (the space
+## shaders see as FRAGCOORD) of `viewport`: past the corridor section's right and bottom edges by its
+## distance from the left and top of the screen, which on the default layout is the split point
+## (docs/systems/background_wear.md). The same on every screen, so the menus' folds match the run's.
+static func fold_point_on_screen(viewport: Viewport) -> Vector2:
+  var canvas: Vector2 = viewport.get_visible_rect().size
+  var split: Vector2 = Vector2(PrintLook.print_setting('split_across'), PrintLook.print_setting('split_down'))
+  var rects: Dictionary = section_rects(canvas, split, PrintLook.print_setting('padding'), PrintLook.print_setting('screen_layout'))
+  var corridor: Rect2 = rects['Corridor']
+  return viewport.get_final_transform() * (corridor.position * 2.0 + corridor.size)

@@ -22,8 +22,7 @@ const BACKGROUND_SETTINGS_INCLUDE: ShaderInclude = preload('res://src/shaders/ba
 const BACKGROUND_COLOUR_UNIFORMS: Array[String] = [
   'wear_dark_colour',
   'wear_light_colour',
-  'print_corridor_rect',
-  'folds_shown',
+  'fold_point',
 ]
 ## Panel wear uniforms set from `Colours` or per control by `PrintLook`, so they are not look settings.
 const PANEL_COLOUR_UNIFORMS: Array[String] = ['wear_dark_colour', 'wear_light_colour', 'panel_rect', 'panel_seed']
@@ -64,6 +63,12 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## docs/systems/paper_burn.md): its length in seconds, how far in pixels the noise pushes its edge and
 ## the size of the edge's bumps, the widths in pixels of the ember line, the char and the scorch, how
 ## far above white the ember line goes, whether the scorch is dithered, and whether sparks and ash fly.
+## Last, the page turn between screens (`PageTurn`, docs/systems/page_turn.md): the turn's length and
+## the pause before it in seconds, how slow it is at both ends, how far in radians the free edge leads
+## and trails the hinge and how that bend spreads along the page, the camera's height in screen
+## heights and how far it sits from the hinge in page widths, the light's direction across and down the screen, the shading and highlight, how much of
+## the front shows through on the back, the shadow's darkness and softness, and the edge line's width
+## in pixels.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'split_across': 1700.0,
@@ -98,6 +103,21 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'paper_burn_brightness': 2.5,
   'paper_burn_dither': true,
   'paper_burn_particles': true,
+  'page_turn_duration': 1.1,
+  'page_turn_hold': 0.0,
+  'page_turn_easing': 2.0,
+  'page_turn_lead': 0.9,
+  'page_turn_bend': 2.0,
+  'page_turn_camera_distance': 4.0,
+  'page_turn_camera_offset': 0.3,
+  'page_turn_light_across': -0.35,
+  'page_turn_light_down': -0.3,
+  'page_turn_shading': 0.6,
+  'page_turn_highlight': 0.12,
+  'page_turn_show_through': 0.0,
+  'page_turn_shadow_darkness': 0.55,
+  'page_turn_shadow_softness': 0.25,
+  'page_turn_edge_width': 2.0,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']
@@ -117,9 +137,6 @@ var overlay_material: ShaderMaterial = ShaderMaterial.new()
 var grid_material: ShaderMaterial = ShaderMaterial.new()
 ## Print frame settings changed from their defaults (setting -> value); see `print_setting()`.
 var print_settings: Dictionary = {}
-## How many screen backgrounds with `folds_shown` set are in the tree. Kept here rather than in a
-## static variable on `ScreenBackground`, because that static variable made Godot leak scripts at exit.
-var fold_backgrounds: int = 0
 
 var _background_defaults: Dictionary = {}   # background wear uniform -> default value, read from its code
 var _panel_defaults: Dictionary = {}   # panel wear uniform -> default value, read from its code

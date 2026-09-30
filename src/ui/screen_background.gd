@@ -2,23 +2,17 @@ class_name ScreenBackground
 extends NamedColourRect
 ## The colour rectangle behind a whole screen. It draws through `PrintLook.background_material`
 ## (background_wear.gdshader), which can add print wear, and gives that shader its two mark colours
-## from `Colours`. With every wear effect off it draws the plain colour
-## (docs/systems/background_wear.md).
-
-## True on the run screen. Folds are drawn only while a background with this set is in the tree, so
-## menus opened from the title screen have none and the settings screen opened during a run keeps them.
-@export var folds_shown: bool = false
-
-
-func _enter_tree() -> void:
-  super()
-  if folds_shown:
-    PrintLook.fold_backgrounds += 1
-  PrintLook.background_material.set_shader_parameter('folds_shown', PrintLook.fold_backgrounds > 0)
+## from `Colours`, and where the folds sit, from the split point. With every wear effect off it draws
+## the plain colour (docs/systems/background_wear.md).
 
 
 func _ready() -> void:
   material = PrintLook.background_material
+
+
+# Every frame, so the folds follow a window resize and a split point moved from the Print tab.
+func _process(_delta: float) -> void:
+  PrintLook.background_material.set_shader_parameter('fold_point', ScreenSections.fold_point_on_screen(get_viewport()))
 
 
 func _copy_colour() -> void:
@@ -29,7 +23,4 @@ func _copy_colour() -> void:
 
 func _exit_tree() -> void:
   super()
-  if folds_shown:
-    PrintLook.fold_backgrounds -= 1
-  PrintLook.background_material.set_shader_parameter('folds_shown', PrintLook.fold_backgrounds > 0)
   material = null

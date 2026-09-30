@@ -48,6 +48,23 @@ const SECTIONS: Dictionary = {
     'paper_burn_dither': [],
     'paper_burn_particles': [],
   },
+  'Page turn': {
+    'page_turn_duration': [0.2, 4.0, 0.05],
+    'page_turn_hold': [0.0, 1.0, 0.01],
+    'page_turn_easing': [1.0, 5.0, 0.1],
+    'page_turn_lead': [-1.5, 1.5, 0.05],
+    'page_turn_bend': [0.5, 6.0, 0.1],
+    'page_turn_camera_distance': [1.0, 8.0, 0.1],
+    'page_turn_camera_offset': [-1.0, 1.0, 0.05],
+    'page_turn_light_across': [-1.5, 1.5, 0.05],
+    'page_turn_light_down': [-1.5, 1.5, 0.05],
+    'page_turn_shading': [0.0, 1.0, 0.01],
+    'page_turn_highlight': [0.0, 1.0, 0.01],
+    'page_turn_show_through': [0.0, 0.5, 0.01],
+    'page_turn_shadow_darkness': [0.0, 1.0, 0.01],
+    'page_turn_shadow_softness': [0.0, 1.0, 0.01],
+    'page_turn_edge_width': [0.0, 8.0, 0.25],
+  },
 }
 
 
@@ -60,3 +77,8 @@ func rebuild() -> void:
     for setting: String in settings:
       var set_value: Callable = func(new_value: Variant) -> void: PrintLook.set_print_value(setting, new_value)
       section.add_row(_make_row(setting.capitalize(), PrintLook.print_setting(setting), settings[setting], set_value))
+    if title == 'Page turn':
+      var replay: Button = Button.new()
+      replay.text = 'Replay'
+      replay.pressed.connect(PageTurn.replay)
+      section.add_node(replay)
