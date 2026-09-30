@@ -20,7 +20,7 @@ class_name TooltipContent
 ## templates and the type line — is an Object method unavailable from a static context.
 func build(item: Item) -> Dictionary:
   return {
-    'title': tr(item.def.name_key),
+    'title': _title(item),
     'rarity': item.def.rarity,
     'panel_color': item.def.panel_color,
     'type_line': _type_line_of(item.def),
@@ -29,6 +29,13 @@ func build(item: Item) -> Dictionary:
     'flavor': tr(item.def.description_key) if item.def.description_key != '' else '',
     'keyword_ids': keyword_ids(item),
   }
+
+
+## The item's name, with its level above level 1 (decision #61).
+func _title(item: Item) -> String:
+  if item.level <= 1:
+    return tr(item.def.name_key)
+  return tr('{0}, level {1}').format([tr(item.def.name_key), item.level])
 
 
 ## The charge-time line: the charge_time glyph, then the item's cooldown in seconds. No tr() —

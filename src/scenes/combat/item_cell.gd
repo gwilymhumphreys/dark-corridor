@@ -21,6 +21,8 @@ const RECOIL_DURATION: float = 0.18    # combat-clock seconds
 var item: Item
 var cell_size: Vector2 = CELL_SIZE
 var _pill_ratio: float = 1.0   # the `pill_size` print setting the pills were built with
+var _shown_level: int = 1      # the item level the pills and the level tag were built for
+var _tag_settings: Vector2 = Vector2.ZERO   # the level tag's print settings it was placed with
 # False outside a fight: the fill is hidden whatever the item's progress. Applies at once.
 var show_cooldown: bool = true:
   set(value):
@@ -48,6 +50,8 @@ var hovered: bool = false:
 @onready var _icon: TextureRect = $Frame/Icon
 @onready var _cooldown: ColorRect = $Cooldown
 @onready var _temporary_tag: Control = $TemporaryTag
+@onready var _level_tag: Control = $LevelTag
+@onready var _level_label: Label = $LevelTag/Label
 
 var _timekeeper: Timekeeper = null     # the fight's clock; null = no recoil (sandbox/tests)
 var _last_progress: float = 0.0        # a fresh fight starts at 0 — no spurious recoil on bind
@@ -123,6 +127,7 @@ func setup(target_item: Item, timekeeper: Timekeeper = null, temporary: bool = f
   _temporary_tag.visible = temporary
   _icon.texture = load(item.def.icon) as Texture2D if item != null and item.def.icon != '' else null
   _build_pills()
+  _update_level_tag()
   _update_cooldown()
 
 
@@ -134,6 +139,7 @@ func show_picture(texture: Texture2D) -> void:
   _icon.texture = texture
   show_cooldown = false
   _build_pills()
+  _update_level_tag()
 
 
 ## Tint the picture, for a single-colour icon such as a map square's. With `as_picture` the icon keeps
@@ -181,6 +187,31 @@ func _build_pills() -> void:
   _pills.position = Vector2((cell_size.x - pills_size.x) * 0.5, -pills_size.y * 0.5)
 
 
+## The level tag: the item's level in a corner of the cell, hidden at level 1 (decision #61). It is drawn
+## over the cell and takes no layout space. Its corner and size are the `level_tag_corner` and
+## `level_tag_size` print settings (F7). A placeholder look; the owner picks the real one.
+func _update_level_tag() -> void:
+  _shown_level = item.level if item != null else 1
+  _level_tag.visible = _shown_level > 1
+  if not _level_tag.visible:
+    return
+  _level_label.text = str(_shown_level)
+  _level_tag.size = _level_tag.get_combined_minimum_size()
+  _tag_settings = _level_tag_settings()
+  var corner: int = int(_tag_settings.x)   # top left, top right, bottom left, bottom right
+  var ratio: float = _tag_settings.y
+  _level_tag.scale = Vector2(ratio, ratio)
+  var tag_size: Vector2 = _level_tag.size * ratio
+  var right: bool = corner == 1 or corner == 3
+  var bottom: bool = corner >= 2
+  _level_tag.position = Vector2(cell_size.x - tag_size.x if right else 0.0, cell_size.y - tag_size.y if bottom else 0.0)
+
+
+## The level tag's print settings as (corner, size), to notice a change on the F7 tab.
+static func _level_tag_settings() -> Vector2:
+  return Vector2(float(PrintLook.print_setting('level_tag_corner')), float(PrintLook.print_setting('level_tag_size')))
+
+
 ## The pill's tint: the mechanic's colour (a mechanic effect's own colour is unset).
 func _effect_color(effect: ItemEffect) -> Color:
   return MechanicRegistry.get_mechanic(effect.mechanic).color()
@@ -191,6 +222,11 @@ func _process(_delta: float) -> void:
     _build_pills()
   if item == null:
     return
+  if item.level != _shown_level:   # merged: its values and its tag changed
+    _build_pills()
+    _update_level_tag()
+  elif _level_tag.visible and _tag_settings != _level_tag_settings():
+    _update_level_tag()
   var progress: float = item.cooldown.progress()
   # A relic's bar is full for a single step before it fires, which a frame can miss, so a relic
   # recoils on a new fire instead of on its bar emptying.

@@ -1,6 +1,6 @@
 class_name PopAnimation
 extends RefCounted
-## Two short animations for a readout that changes (docs/systems/run_screen.md): `pop_in` when it
+## Two short animations for a status icon (docs/systems/run_screen.md): `pop_in` when it
 ## first appears, growing from nothing past full size and settling back while it brightens and
 ## fades to normal, and `bump` when its value rises, a smaller grow and settle. Both tween the
 ## Control's visual-only offset transform, so they do not disturb container layout. A new animation

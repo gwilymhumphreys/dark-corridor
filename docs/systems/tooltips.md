@@ -18,7 +18,8 @@ holds the design rationale, the ratified decisions, and the prior-art lineage
 
 ## What the player sees
 
-- **Main panel** (nearest the item) — four parts, in this order: the name (rarity-tinted), a type
+- **Main panel** (nearest the item) — four parts, in this order: the name (rarity-tinted, with the item's level after it above level 1,
+  "{0}, level {1}"), a type
   line (the item's type tags, hidden when it has none), the `charge_time` glyph followed by the
   charge time, and the generated effect lines. An optional authored flavor line sits under them.
 - **Keyword column** (cards beside the main panel) — one card per keyword the item

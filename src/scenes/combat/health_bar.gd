@@ -5,9 +5,8 @@ extends VBoxContainer
 ## bar's width stands for max health or shield, whichever is larger, so either can grow past the
 ## other. When health or shield changes, its fill moves to the new value over CHANGE_DURATION rather
 ## than jumping. A faint line marks every LINE_STEP points. On the bar, one centred row: the health, then
-## the shield icon and value, then the other mechanic statuses (StatusNumbers). The shield readout
-## pops in when shield appears and bumps when it rises (PopAnimation). Reads the actor each frame;
-## writes nothing.
+## the shield icon and value, then the other mechanic statuses (StatusNumbers). Reads the actor each
+## frame; writes nothing.
 
 const LINE_STEP: int = 100             # points between the faint lines across the bar
 const SCALE_EASE_SPEED: float = 8.0    # how fast the bar's scale eases to a new size (per second)
@@ -35,7 +34,6 @@ var actor: Actor = null:
 var _shown_scale: float = 1.0   # the points the full bar width stands for, eased towards the target
 var _health: EasedValue = EasedValue.new()   # the health the fill shows
 var _shield_points: EasedValue = EasedValue.new()   # the shield the fill shows
-var _shield_shown: int = 0   # the shield the readout showed last frame, to spot it appearing or rising
 
 @onready var _shield: HBoxContainer = $Bar/Readout/Shield
 @onready var _shield_icon: TextureRect = $Bar/Readout/Shield/Icon
@@ -85,12 +83,6 @@ func _process(delta: float) -> void:
   _label.text = str(actor.hp)
   _shield.visible = shield > 0
   _shield_value.text = str(shield)
-  if shield > _shield_shown:
-    if _shield_shown == 0:
-      PopAnimation.pop_in(_shield)
-    else:
-      PopAnimation.bump(_shield)
-  _shield_shown = shield
 
 
 func _exit_tree() -> void:
@@ -100,33 +92,6 @@ func _exit_tree() -> void:
 ## The centre of the bar in global coordinates, where shield lands (docs/systems/vfx_driver.md).
 func bar_centre() -> Vector2:
   return _bar.global_position + _bar.size * 0.5
-
-
-## Where the mechanic status `id` shows on the bar, in global coordinates: the icon of the shield
-## readout or of its StatusNumbers entry (the VFX wall flies the status's projectile there). An entry
-## not shown yet is placed where it will appear: after the shown entries before it, with the whole
-## readout moved left by half the width it adds, because the readout is centred on the bar.
-func status_centre(id: String) -> Vector2:
-  var shown: Control = _shield if id == ShieldMechanic.ID else _status_numbers.entry_for(id)
-  if shown == null:
-    return bar_centre()
-  var icon: Control = shown.get_node('Icon')
-  if shown.visible:
-    return icon.get_global_rect().get_center()
-  var row: HBoxContainer = shown.get_parent()
-  var separation: float = float(row.get_theme_constant('separation'))
-  var left: float = row.global_position.x
-  var others: bool = false
-  for child: Node in row.get_children():
-    var control: Control = child as Control
-    if control == null or control == shown or not control.visible:
-      continue
-    others = true
-    if control.get_index() < shown.get_index():
-      left = control.global_position.x + control.size.x + separation
-  var added: float = shown.get_combined_minimum_size().x + (separation if others else 0.0)
-  var icon_width: float = maxf(icon.get_combined_minimum_size().x, icon.custom_minimum_size.y)
-  return Vector2(left - added * 0.5 + icon_width * 0.5, bar_centre().y)
 
 
 # Show the actor's health and shield at once, with no easing: a new actor is not a change.

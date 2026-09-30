@@ -91,7 +91,7 @@ func test_character_panel_finds_the_hovered_status_icon() -> void:
 
 
 func test_a_new_status_icon_appears_where_its_projectile_was_sent() -> void:
-  # A projectile giving a status lands where the status will show (CharacterPanel.status_centre);
+  # A status application's projectile lands where the status will show (CharacterPanel.status_centre);
   # the icon that then appears must be at that spot, both for a second icon and a first one.
   var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
   _host(hud)
@@ -107,24 +107,6 @@ func test_a_new_status_icon_appears_where_its_projectile_was_sent() -> void:
     await get_tree().process_frame
     var icon: StatusIcon = row._icons[row.icon_count() - 1]
     assert_almost_eq(icon.get_global_rect().get_center(), sent_to, Vector2(1.0, 1.0), 'the %s icon appears where its projectile landed' % id)
-
-
-func test_a_new_health_bar_status_appears_where_its_projectile_was_sent() -> void:
-  # Mechanic statuses show on the centred health-bar readout, so a new one moves the others; the
-  # spot it was sent to must still be where its icon ends up.
-  var hud: EnemyHud = preload('res://src/scenes/combat/enemy_hud.tscn').instantiate()
-  _host(hud)
-  var a := _spawn(100.0, [FixtureItems.attack()])
-  hud.setup(a)
-  var bar: HealthBar = hud.get_node('Row/Readout/Top/NameBar/HealthBar')
-  for id: String in [BurnStatus.ID, ShieldStatus.ID, PoisonStatus.ID]:
-    await get_tree().process_frame
-    var sent_to: Vector2 = hud.status_centre(id)
-    StatusManager.apply(a, id, 3.0)
-    for i in 3:
-      await get_tree().process_frame   # the bar reads the actor, then the readout is laid out
-    var icon: Control = bar.get_node('Bar/Readout/Shield/Icon') if id == ShieldStatus.ID else bar.get_node('Bar/Readout/StatusNumbers/%s/Icon' % id.capitalize())
-    assert_almost_eq(icon.get_global_rect().get_center(), sent_to, Vector2(2.0, 2.0), 'the %s entry appears where its projectile landed' % id)
 
 
 func test_ally_slot_builds_one_cell_per_item() -> void:
@@ -455,6 +437,7 @@ func test_reaped_enemy_drops_its_hud() -> void:
   assert_eq(view._enemy_huds.size(), 1, 'the reaped enemy\'s HUD is dropped')
   assert_false(e1 in view._enemy_huds, 'and it was the dead one (the living enemy keeps its HUD)')
   cm.free()
+  await wait_process_frames(1)   # the dropped HUD is queue_free'd; let it go before the orphan count
 
 
 func test_an_item_created_during_the_fight_gets_a_cell_marked_temporary() -> void:
@@ -504,6 +487,8 @@ func test_temporary_things_fade_off_the_board_when_the_fight_ends() -> void:
   assert_false(view._player_cells.has(chunk), 'the per-frame sync does not rebuild a faded cell')
   assert_true(view._player_cells.has(p.board[0]), 'the drafted item keeps its cell')
   cm.free()
+  # The faded cell and slot free themselves when their fade ends; let that happen before the orphan count.
+  await wait_seconds(CombatViewFramed.TEMPORARY_FADE_OUT + 0.1)
 
 
 func test_a_thrown_consumable_starts_from_its_slot() -> void:

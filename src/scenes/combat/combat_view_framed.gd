@@ -937,8 +937,8 @@ func health_bar_pos(actor) -> Vector2:
   return actor_pos(actor)
 
 
-## Where the status `id` shows for an actor (CharacterPanel.status_centre), where a projectile giving
-## it lands: on the player's panel, an enemy's HUD or an ally's slot. An actor with no panel uses
+## Where the status `id` has its icon for an actor (CharacterPanel.status_centre), where a status
+## application's projectile lands: on the player's panel, an enemy's HUD or an ally's slot. An actor with no panel uses
 ## its own point.
 func status_pos(actor, id: String) -> Vector2:
   if actor == _player:

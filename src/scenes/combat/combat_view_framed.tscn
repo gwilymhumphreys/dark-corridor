@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/combat/combat_view_framed.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/combat_corridor.tscn" id="2"]
 [ext_resource type="Script" path="res://src/vfx/vfx_driver.gd" id="4"]
 [ext_resource type="Script" path="res://src/ui/print_frame.gd" id="6"]
 [ext_resource type="PackedScene" path="res://src/scenes/combat/character_panel.tscn" id="character_panel"]
+[ext_resource type="Material" path="res://src/shaders/interface_effects_material.tres" id="interface_effects_material"]
 
 [node name="CombatViewFramed" type="Control"]
 layout_mode = 3
@@ -277,4 +278,5 @@ mouse_filter = 2
 theme_override_constants/separation = 24
 
 [node name="VfxWall" type="Node2D" parent="."]
+material = ExtResource("interface_effects_material")
 script = ExtResource("4")
