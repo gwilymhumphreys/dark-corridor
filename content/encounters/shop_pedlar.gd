@@ -1,10 +1,10 @@
 extends EncounterDef
-## Placeholder shop: a few items, a relic and a potion for gold. The name and the stock are
-## placeholders for the owner to replace.
+## The normal shop: any items from the player's pool (owner, 2026-09-30). The name is a placeholder
+## for the owner to replace.
 
 
 func _init() -> void:
   id = 'shop_pedlar'
   type = Type.SHOP
   name_key = 'A pedlar\'s cart'   # placeholder name
-  stock = [StockEntry.items(3), StockEntry.relics(1), StockEntry.potions(1)]
+  stock = [StockEntry.items(Balance.SHOP_ITEM_COUNT)]

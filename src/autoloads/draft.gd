@@ -45,7 +45,7 @@ func draw_stock(entries: Array[StockEntry], item_pool: Array, relic_pool: Array,
   for entry: StockEntry in entries:
     match entry.kind:
       StockEntry.Kind.ITEM:
-        var matching: Array = _matching_items(item_pool, entry.types)
+        var matching: Array = matching_items(entry, item_pool)
         if not matching.is_empty():
           goods.append_array(draw(matching, 0, rng, entry.count))
       StockEntry.Kind.RELIC:
@@ -64,7 +64,7 @@ func can_draw_stock(entries: Array[StockEntry], item_pool: Array, relic_pool: Ar
       continue
     match entry.kind:
       StockEntry.Kind.ITEM:
-        if not _matching_items(item_pool, entry.types).is_empty():
+        if not matching_items(entry, item_pool).is_empty():
           return true
       StockEntry.Kind.RELIC:
         if not relic_pool.is_empty():
@@ -75,9 +75,19 @@ func can_draw_stock(entries: Array[StockEntry], item_pool: Array, relic_pool: Ar
   return false
 
 
-# The ids in `item_pool` with one of `types` (all of them when `types` is empty).
-func _matching_items(item_pool: Array, types: Array[String]) -> Array:
-  return item_pool.filter(func(id: String) -> bool: return _has_any_type(id, types))
+## The ids in `item_pool` that pass every filter `entry` sets: one of its type tags, its mechanic,
+## its rarity. All of them when it sets none.
+func matching_items(entry: StockEntry, item_pool: Array) -> Array:
+  return item_pool.filter(func(id: String) -> bool: return _passes(id, entry))
+
+
+func _passes(id: String, entry: StockEntry) -> bool:
+  var def: ItemDef = ItemCatalog.get_def(id)
+  if entry.mechanic != '' and not entry.mechanic in def.mechanics:
+    return false
+  if entry.rarity >= 0 and def.rarity != entry.rarity:
+    return false
+  return _has_any_type(id, entry.types)
 
 
 # Up to `count` different ids from `pool`, drawn on `rng`.

@@ -324,6 +324,14 @@ func can_draw_stock(stock: Array[StockEntry]) -> bool:
   return Draft.can_draw_stock(stock, _draft_pool(), relic_pool())
 
 
+## Whether every item entry in `stock` has at least `minimum` matching items in the player's pool
+## (the character's pool plus the colourless items). Entries for relics and potions are not counted.
+func has_items_for(stock: Array[StockEntry], minimum: int) -> bool:
+  var pool: Array = _draft_pool()
+  return stock.all(func(entry: StockEntry) -> bool:
+    return entry.kind != StockEntry.Kind.ITEM or Draft.matching_items(entry, pool).size() >= minimum)
+
+
 ## The draft pool handed to Draft (#27): the chosen character's pool plus the shared
 ## colorless items (the exception-that-earns-it). Draft stays pool-agnostic — it draws
 ## from whatever this composes.

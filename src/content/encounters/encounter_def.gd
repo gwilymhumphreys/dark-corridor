@@ -29,6 +29,9 @@ var heal_fraction: float = 0.0    # REST: fraction of max HP restored
 var event_prose_key: String = ''  # EVENT: the body prose (localized via tr())
 var event_options: Array[EventOptionDef] = []   # EVENT: the options; unavailable ones are hidden
 var stock: Array[StockEntry] = []   # REWARD, SHOP: what the goods are drawn from, in the order shown
+## SHOP: offered only while each item entry in `stock` has at least this many matching items in the
+## player's pool (owner: a shop with five or fewer to choose from is left out).
+var min_items: int = Balance.SHOP_MIN_ITEMS
 var rarity: int = Rarity.COMMON
 ## Offered only while every one of these holds (RunCondition subclasses, src/run/conditions/).
 var requires: Array[RunCondition] = []
@@ -38,8 +41,8 @@ var weights: Array[Dictionary] = []
 
 
 ## How likely this encounter is to be offered to `run` now, against the others in its position list:
-## 0 when a requirement fails, for an event with no option available, or for a reward or shop whose
-## stock would draw nothing; otherwise its rarity's weight times the multiplier of every weight rule whose
+## 0 when a requirement fails, for an event with no option available, for a reward or shop whose
+## stock would draw nothing, or for a shop with fewer than `min_items` items to choose from; otherwise its rarity's weight times the multiplier of every weight rule whose
 ## condition holds.
 func offer_weight(run: RunManager) -> float:
   for condition: RunCondition in requires:
@@ -48,6 +51,8 @@ func offer_weight(run: RunManager) -> float:
   if type == Type.EVENT and available_options(run).is_empty():
     return 0.0
   if (type == Type.REWARD or type == Type.SHOP) and not run.can_draw_stock(stock):
+    return 0.0
+  if type == Type.SHOP and not run.has_items_for(stock, min_items):
     return 0.0
   var weight: float = Balance.ENCOUNTER_WEIGHT_RARE if rarity == Rarity.RARE else Balance.ENCOUNTER_WEIGHT_COMMON
   for rule: Dictionary in weights:

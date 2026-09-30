@@ -747,9 +747,61 @@ msgstr "A forgotten reliquary"
 msgid "A quiet alcove"
 msgstr "A quiet alcove"
 
+#: content/encounters/shop_attack.gd
+msgid "Attack shop"
+msgstr "Attack shop"
+
+#: content/encounters/shop_attack_bonus.gd
+msgid "Attack bonus shop"
+msgstr "Attack bonus shop"
+
+#: content/encounters/shop_attack_percent_bonus.gd
+msgid "Attack percent bonus shop"
+msgstr "Attack percent bonus shop"
+
+#: content/encounters/shop_bleed.gd
+msgid "Bleed shop"
+msgstr "Bleed shop"
+
+#: content/encounters/shop_burn.gd
+msgid "Burn shop"
+msgstr "Burn shop"
+
+#: content/encounters/shop_charge.gd
+msgid "Charge shop"
+msgstr "Charge shop"
+
+#: content/encounters/shop_crit.gd
+msgid "Crit shop"
+msgstr "Crit shop"
+
+#: content/encounters/shop_decharge.gd
+msgid "Decharge shop"
+msgstr "Decharge shop"
+
+#: content/encounters/shop_heal.gd
+msgid "Heal shop"
+msgstr "Heal shop"
+
 #: content/encounters/shop_pedlar.gd
 msgid "A pedlar's cart"
 msgstr "A pedlar's cart"
+
+#: content/encounters/shop_poison.gd
+msgid "Poison shop"
+msgstr "Poison shop"
+
+#: content/encounters/shop_rare.gd
+msgid "Rare goods"
+msgstr "Rare goods"
+
+#: content/encounters/shop_regen.gd
+msgid "Regen shop"
+msgstr "Regen shop"
+
+#: content/encounters/shop_shield.gd
+msgid "Shield shop"
+msgstr "Shield shop"
 
 #: content/enemies/boss.gd
 msgid "Corridor Warden"

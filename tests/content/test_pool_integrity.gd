@@ -67,6 +67,11 @@ func test_encounter_position_lists_resolve() -> void:
   assert_gte(seen.size(), EncounterPools.POSITIONS, 'enough encounters for a full choice')
 
 
+func test_the_left_position_list_holds_only_shops() -> void:
+  for id: String in EncounterPools.at(0):
+    assert_eq(EncounterCatalog.get_def(id).type, EncounterDef.Type.SHOP, '%s is a shop' % id)
+
+
 func test_every_encounter_position_list_can_always_offer_one() -> void:
   # An encounter whose requirements fail is never offered, so each list that holds encounters needs
   # one with no requirements, or its position could come up empty (docs/plans/encounter_choice.md).

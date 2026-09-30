@@ -976,6 +976,28 @@ func test_an_item_not_on_the_board_cannot_be_sold() -> void:
   assert_eq(run.gold, gold, 'and nothing is paid')
 
 
+func test_a_shop_with_too_few_items_to_choose_from_is_not_offered() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var shop: EncounterDef = FixtureEncounters.shop('test_shop')
+  var pool_size: int = FixtureCharacter.def().item_pool.size()
+  shop.min_items = pool_size
+  assert_gt(shop.offer_weight(run), 0.0, 'offered when the pool has exactly enough items')
+  shop.min_items = pool_size + 1
+  assert_eq(shop.offer_weight(run), 0.0, 'not offered with one too few')
+  shop.stock = [StockEntry.items_with_mechanic(1, PoisonMechanic.ID)]
+  shop.min_items = 2
+  assert_eq(shop.offer_weight(run), 0.0, 'a filtered shop counts only the items that pass its filters')
+
+
+func test_the_cut_off_applies_to_shops_only() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var reward: EncounterDef = FixtureEncounters.reward('test_reward')
+  reward.min_items = 100
+  assert_gt(reward.offer_weight(run), 0.0, 'a reward encounter is offered however few items match')
+
+
 func test_prices_follow_the_kind_and_rarity_of_the_goods() -> void:
   var item: ItemDef = FixtureItems.attack()
   assert_eq(RunManager.price_of(item), Balance.SHOP_PRICE_ITEM[item.rarity], 'an item')

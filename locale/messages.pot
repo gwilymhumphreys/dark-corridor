@@ -747,8 +747,60 @@ msgstr ""
 msgid "A quiet alcove"
 msgstr ""
 
+#: content/encounters/shop_attack.gd
+msgid "Attack shop"
+msgstr ""
+
+#: content/encounters/shop_attack_bonus.gd
+msgid "Attack bonus shop"
+msgstr ""
+
+#: content/encounters/shop_attack_percent_bonus.gd
+msgid "Attack percent bonus shop"
+msgstr ""
+
+#: content/encounters/shop_bleed.gd
+msgid "Bleed shop"
+msgstr ""
+
+#: content/encounters/shop_burn.gd
+msgid "Burn shop"
+msgstr ""
+
+#: content/encounters/shop_charge.gd
+msgid "Charge shop"
+msgstr ""
+
+#: content/encounters/shop_crit.gd
+msgid "Crit shop"
+msgstr ""
+
+#: content/encounters/shop_decharge.gd
+msgid "Decharge shop"
+msgstr ""
+
+#: content/encounters/shop_heal.gd
+msgid "Heal shop"
+msgstr ""
+
 #: content/encounters/shop_pedlar.gd
 msgid "A pedlar's cart"
+msgstr ""
+
+#: content/encounters/shop_poison.gd
+msgid "Poison shop"
+msgstr ""
+
+#: content/encounters/shop_rare.gd
+msgid "Rare goods"
+msgstr ""
+
+#: content/encounters/shop_regen.gd
+msgid "Regen shop"
+msgstr ""
+
+#: content/encounters/shop_shield.gd
+msgid "Shield shop"
 msgstr ""
 
 #: content/enemies/boss.gd

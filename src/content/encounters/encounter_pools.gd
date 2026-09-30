@@ -10,8 +10,24 @@ class_name EncounterPools
 ## How many encounters a choice offers, one per position.
 const POSITIONS: int = 3
 
-## The shops. When none can be offered, the draw fills the position from the other lists.
-const LEFT: Array = ['shop_pedlar']
+## The shops: the normal shop, the rare shop and one per mechanic. When none can be offered, the draw
+## fills the position from the other lists.
+const LEFT: Array = [
+  'shop_pedlar',
+  'shop_rare',
+  'shop_attack',
+  'shop_shield',
+  'shop_heal',
+  'shop_poison',
+  'shop_burn',
+  'shop_regen',
+  'shop_bleed',
+  'shop_charge',
+  'shop_decharge',
+  'shop_crit',
+  'shop_attack_bonus',
+  'shop_attack_percent_bonus',
+]
 const MIDDLE: Array = ['event_shrine', 'relic_cache']
 const RIGHT: Array = ['event_wanderer', 'rest']
 

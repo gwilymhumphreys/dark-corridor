@@ -92,6 +92,10 @@ const FIGHT_WON_GOLD: int = 3
 const SHOP_PRICE_ITEM: Array[int] = [6, 9, 12]
 const SHOP_PRICE_RELIC: Array[int] = [15, 20, 25]
 const SHOP_PRICE_POTION: Array[int] = [4, 6, 8]
+# How many items a shop puts on sale, and how many items must match a shop's filters before it is
+# offered (EncounterDef.min_items; "more than five", owner, 2026-09-30).
+const SHOP_ITEM_COUNT: int = 4
+const SHOP_MIN_ITEMS: int = 6
 # Rerolling a shop's goods (RunManager.reroll_price): the first reroll in a visit costs
 # SHOP_REROLL_PRICE and each later one SHOP_REROLL_PRICE_STEP more (owner).
 const SHOP_REROLL_PRICE: int = 1

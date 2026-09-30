@@ -166,7 +166,8 @@ for each def's fields and how it resolves.
   ```
 
   A reward encounter (`type = Type.REWARD`) lists its goods in `stock`: `StockEntry.items(n)` (with
-  optional item type tags), `StockEntry.relics(n)` and `StockEntry.potions(n)`, drawn in that order.
+  optional item type tags), `StockEntry.items_with_mechanic(n, mechanic_id)`,
+  `StockEntry.items_of_rarity(n, rarity)`, `StockEntry.relics(n)` and `StockEntry.potions(n)`, drawn in that order.
   The player picks one or skips them for gold. Relics come from `RelicCatalog.REWARD_POOL`, leaving
   out the relics the player already holds, and potions from
   `ConsumableCatalog.REWARD_POOL` ([encounter.md → Reward encounters](../systems/encounter.md#reward-encounters)).
@@ -177,8 +178,15 @@ for each def's fields and how it resolves.
   ```
 
   A shop (`type = Type.SHOP`) lists its goods the same way; its theme is its name and its stock.
-  Prices are `Balance.SHOP_PRICE_*` by kind and rarity
+  A shop sells only items unless you add relics or potions, `Balance.SHOP_ITEM_COUNT` of them. It is
+  offered only when the player's pool has at least `min_items` items matching each item entry
+  (default `Balance.SHOP_MIN_ITEMS`). Prices are `Balance.SHOP_PRICE_*` by kind and rarity
   ([encounter.md → Shops](../systems/encounter.md#shops)).
+
+  ```gdscript
+  type = Type.SHOP
+  stock = [StockEntry.items_with_mechanic(Balance.SHOP_ITEM_COUNT, BurnMechanic.ID)]
+  ```
 
 - **Enemies are shared by every character** and the **reward-relic pool stays shared** — only *item*
   pools split per character (#27).

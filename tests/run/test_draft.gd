@@ -91,6 +91,27 @@ func test_stock_with_no_matching_item_offers_none() -> void:
   assert_eq(Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(1)).size(), 0, 'the pool has no spell')
 
 
+func test_stock_items_keep_to_the_entry_mechanic() -> void:
+  var stock: Array[StockEntry] = [StockEntry.items_with_mechanic(3, PoisonMechanic.ID)]
+  for seed_value in [1, 2, 3]:
+    for def: ItemDef in Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(seed_value)):
+      assert_has(def.mechanics, PoisonMechanic.ID, 'only items that list poison')
+
+
+func test_stock_items_keep_to_the_entry_rarity() -> void:
+  var common: StockEntry = StockEntry.items_of_rarity(1, ItemDef.Rarity.COMMON)
+  assert_eq(Draft.matching_items(common, _pool()).size(), _pool().size(), 'every fixture item is common')
+  var rare: StockEntry = StockEntry.items_of_rarity(1, ItemDef.Rarity.RARE)
+  assert_eq(Draft.matching_items(rare, _pool()), [], 'and none is rare')
+
+
+func test_stock_item_filters_combine() -> void:
+  var entry: StockEntry = StockEntry.items_with_mechanic(1, ShieldMechanic.ID)
+  assert_eq(Draft.matching_items(entry, _pool()), [FixtureItems.shield().id], 'the shield item lists shield')
+  entry.types = [ItemType.WEAPON] as Array[String]
+  assert_eq(Draft.matching_items(entry, _pool()), [], 'and an item must pass every filter set')
+
+
 func test_stock_relics_never_repeat() -> void:
   var stock: Array[StockEntry] = [StockEntry.relics(RelicCatalog.REWARD_POOL.size() + 2)]
   var ids := _ids(Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(7)))

@@ -85,13 +85,15 @@ static func reward(id: String = REWARD) -> EncounterDef:
   return d
 
 
-## A shop selling SHOP_ITEMS items, a relic and a potion.
+## A shop selling SHOP_ITEMS items, a relic and a potion. Offered with a single matching item, since
+## the fixture character's pool is small.
 static func shop(id: String = SHOP) -> EncounterDef:
   var d := EncounterDef.new()
   d.id = id
   d.type = EncounterDef.Type.SHOP
   d.name_key = 'A fixture shop'
   d.stock = [StockEntry.items(SHOP_ITEMS), StockEntry.relics(1), StockEntry.potions(1)]
+  d.min_items = 1
   return d
 
 

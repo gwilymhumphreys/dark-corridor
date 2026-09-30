@@ -110,6 +110,8 @@ A reward encounter (`Type.REWARD`) lists what it offers in `stock`, one `StockEn
 | `StockEntry` builder | Draws |
 |---|---|
 | `items(n, types = [])` | `n` items from the character's pool plus the colourless items, only those with one of the type tags when `types` is given. They repeat only when too few items match. |
+| `items_with_mechanic(n, mechanic_id)` | As `items`, only items that list the mechanic in `ItemDef.mechanics` (the author's list, so an item that charges off poison counts as a poison item). |
+| `items_of_rarity(n, rarity)` | As `items`, only items of that `ItemDef.Rarity`. |
 | `relics(n)` | Up to `n` different relics from the run's relic pool (`RunManager.relic_pool`: the reward relics the player does not hold). |
 | `potions(n)` | Up to `n` different potions from `ConsumableCatalog.REWARD_POOL`. |
 
@@ -124,7 +126,10 @@ stock = [StockEntry.items(2, [ItemType.WEAPON]), StockEntry.potions(1)]
 
 **Location:** `RunManager` (the shop section), `ShopOverlay`, prices in `Balance.SHOP_PRICE_*` and `SHOP_REROLL_PRICE*`.
 
-A shop (`Type.SHOP`) describes its goods with `stock`, the same stock entries as a reward encounter, so a shop's theme is its name and its stock (a weaponsmith lists only weapons). The goods are drawn when it opens; the player buys any they can afford, as many as they like, then leaves.
+A shop (`Type.SHOP`) describes its goods with `stock`, the same stock entries as a reward encounter, so a shop's theme is its name and its stock. A shop sells only items unless its stock says otherwise, `Balance.SHOP_ITEM_COUNT` of them. The goods are drawn when it opens; the player buys any they can afford, as many as they like, then leaves.
+
+- **Kinds** (owner, decision #59) — the normal shop (`shop_pedlar`, any item), the rare shop (`shop_rare`, rare items only) and one shop per mechanic (`shop_<mechanic id>`, items that list that mechanic). All are in the left card's list with the same chance. Names are placeholders.
+- **Too few items** — a shop is offered only while each of its item entries has at least `min_items` matching items in the player's pool (`EncounterDef.min_items`, default `Balance.SHOP_MIN_ITEMS`; `RunManager.has_items_for`). A mechanic or rarity a character has few items for therefore never gets a shop for that character. Reward encounters have no such limit.
 
 - **Price** — `RunManager.price_of(good)`: `Balance.SHOP_PRICE_ITEM`, `SHOP_PRICE_RELIC` or `SHOP_PRICE_POTION`, indexed by the good's rarity.
 - **Buying** — `buy(index)` pays the price and gives the good as a pick would; `can_buy` is false for a sold or unaffordable good. A bought relic leaves the relic pool.
@@ -136,7 +141,7 @@ Items are sold from the board, in a shop or anywhere else outside a fight: [run_
 
 ```gdscript
 type = Type.SHOP
-stock = [StockEntry.items(3, [ItemType.WEAPON]), StockEntry.potions(1)]
+stock = [StockEntry.items_with_mechanic(Balance.SHOP_ITEM_COUNT, PoisonMechanic.ID)]
 ```
 
 ## Composition & ordering (the fight case)
