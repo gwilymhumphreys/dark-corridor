@@ -60,6 +60,36 @@ func test_impact_burst_runs_for_its_duration_then_stops() -> void:
   assert_eq(drawer.progress(ImpactRingDrawer.IMPACT_DURATION), -1.0, 'gone once its duration has passed')
 
 
+func test_a_status_application_picks_no_trial_drawer() -> void:
+  var applied: Delivery = _landed_delivery()
+  applied.kind = Delivery.Kind.APPLY_STATUS
+  applied.status_id = 'empowered'
+  assert_typeof(VfxDriver._impact_key(applied), TYPE_INT, 'its ring key is its kind, a number')
+  assert_eq(VfxDriver.trial_mechanic(applied), '', 'so the trial drawers are chosen by text that matches no mechanic')
+  assert_eq(VfxDriver.trial_mechanic(_landed_delivery()), AttackMechanic.ID, 'an attack still picks the attack drawer')
+
+
+func test_a_delivery_that_gives_a_status_names_it() -> void:
+  var target := _spawn(100.0, [])
+  var applied: Delivery = _landed_delivery()
+  applied.kind = Delivery.Kind.APPLY_STATUS
+  applied.status_id = 'weak'
+  applied.target = target
+  assert_eq(VfxDriver.status_made(applied), 'weak', 'a status application gives its status')
+  var poison: Delivery = _landed_delivery()
+  poison.mechanic = PoisonMechanic.ID
+  poison.target = target
+  assert_eq(VfxDriver.status_made(poison), PoisonMechanic.ID, 'a poison delivery gives poison')
+  var tick: Delivery = _landed_delivery()
+  tick.mechanic = PoisonMechanic.ID
+  tick.target = target
+  tick.visual_only = true
+  assert_eq(VfxDriver.status_made(tick), '', 'a poison tick gives nothing: it lands on the creature')
+  var hit: Delivery = _landed_delivery()
+  hit.target = target
+  assert_eq(VfxDriver.status_made(hit), '', 'an attack gives no status')
+
+
 func test_a_landing_is_scattered_a_little_and_stays_put() -> void:
   var first: Delivery = _landed_delivery()
   var second: Delivery = _landed_delivery()

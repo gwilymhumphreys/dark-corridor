@@ -86,6 +86,16 @@ small off-white glint on blobs, bubbles and drops and a paler core on flames. Ea
 comes from `EffectDrawer.fixed_random`, so it stays the same for as long as the effect shows. The
 switch is **Status Sprites** in the same Feedback tab, and `--status-effect=ring` starts with it off. The preview scene has a page for each.
 
+**Projectiles (trial).** While `VfxDriver.comet_projectiles` is on, a delivery in flight is drawn by
+`ProjectileCometDrawer` instead of the disc: a comet in the delivery's colour, with a solid head half
+the disc's width, a paler middle, a soft glow, and a tail that trails back along the arc
+(`VfxDriver.arc_direction` gives the direction at any point of the flight). The tail grows out from
+the head just after launch, so it never reaches back past the firing item. The tail is Kenney's
+`trace_01` and the glow `star_05`, in `assets/vfx/projectile/`; the head is the round blob from
+`assets/vfx/status/`. The switch is **Comet Projectiles** in the Feedback tab, and
+`--projectile=disc` starts with it off. The preview scene's projectile page flies comets in four
+colours at an enemy and shows each beside the old disc.
+
 **Big hits.** A damage landing of at least `VfxDriver.BIG_HIT_DAMAGE` emits `big_hit` with a
 strength from 0 to 1 (`big_hit_strength`), once, alongside its sound. `CombatViewFramed` answers
 with a short pause of the fight (`CombatManager.request_hit_pause`, which calls `Timekeeper.hold`)
@@ -140,8 +150,9 @@ land on several targets at once.
 
 **The circles are placeholders.** The projectile disc and the impact ring are drawn shapes standing
 in for real VFX animations, there so the timing and the causal link between firing and damage can be
-judged. They are to be replaced once proper animations exist, and their shape is not the intended
-look. The effects style is open (`art_audio.md`). A screen pulse for ordinary hits is not built.
+judged. The trials above (attack hits, poison, burn and bleed, and the comet) replace them where
+they are switched on; the ring is still drawn for every other mechanic. Their shape is not the
+intended look. The effects style is open (`art_audio.md`). A screen pulse for ordinary hits is not built.
 
 ## Reading the Combat manager's Delivery set
 

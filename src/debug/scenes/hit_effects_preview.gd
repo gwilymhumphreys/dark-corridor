@@ -2,14 +2,15 @@ extends Control
 ## Dev scene for judging the hit effects (`AttackHitDrawer`, `PoisonDrawer`, `BurnDrawer`,
 ## `BleedDrawer`, docs/systems/vfx_driver.md) without waiting for the right item to fire in a fight.
 ## It has one page per mechanic: attack (a dagger's slash and a warhammer's impact), then poison,
-## burn and bleed (each applied, then dealing damage). The top half repeats the page's two effects over an enemy image, each hit a
+## burn and bleed (each applied, then dealing damage), and projectile (`ProjectileCometDrawer`: comets
+## in four mechanic colours flying at an enemy, and a still row comparing each with the old disc). The top half repeats the page's two effects over an enemy image, each hit a
 ## new delivery so the angles and paths change. The bottom half is a strip of frames through each
 ## effect, for screenshots. Space or Tab turns the page. Run it directly:
 ##   <godot> --path . res://src/debug/scenes/hit_effects_preview.tscn -- --page=poison
-## `--page` is attack (the default), poison, burn or bleed. The hits travel leftwards and a little up, as
+## `--page` is attack (the default), poison, burn, bleed or projectile. The hits travel leftwards and a little up, as
 ## they do from the board to an enemy in a fight.
 
-const PAGES: Array[String] = ['attack', 'poison', 'burn', 'bleed']
+const PAGES: Array[String] = ['attack', 'poison', 'burn', 'bleed', 'projectile']
 const STRIP_FRAMES: int = 8
 const HIT_DIRECTION: Vector2 = Vector2(-1.0, -0.25)
 const LIVE_POINTS: Array[Vector2] = [Vector2(700.0, 420.0), Vector2(1860.0, 420.0)]
@@ -17,10 +18,17 @@ const STRIP_TOP: float = 900.0
 const STRIP_ROW: float = 260.0
 const STRIP_LEFT: float = 260.0
 const STRIP_STEP: float = 290.0
+const FLIGHT: float = 0.5                 # seconds a projectile on the projectile page takes to arrive
+const FLIGHT_GAP: float = 0.3             # seconds between a projectile arriving and the next launch
+const FLIGHT_FROM: Vector2 = Vector2(2250.0, 950.0)
+const FLIGHT_TO: Vector2 = Vector2(700.0, 420.0)
+const PROJECTILE_MECHANICS: Array[String] = ['attack', 'poison', 'burn', 'heal']
 
 var _attack_drawer: AttackHitDrawer = AttackHitDrawer.new()
 var _poison_drawer: PoisonDrawer = PoisonDrawer.new()
 var _burn_drawer: BurnDrawer = BurnDrawer.new()
+var _comet_drawer: ProjectileCometDrawer = ProjectileCometDrawer.new()
+var _disc_drawer: ProjectileDiscDrawer = ProjectileDiscDrawer.new()
 var _bleed_drawer: BleedDrawer = BleedDrawer.new()
 var _attack_items: Array[Item] = []      # the dagger, then the warhammer
 var _page: int = 0
@@ -64,6 +72,9 @@ func _draw() -> void:
   draw_rect(Rect2(Vector2.ZERO, size), Color(0.13, 0.13, 0.15))
   var font: Font = ThemeDB.fallback_font
   draw_string(font, Vector2(24.0, 48.0), '%s  (space: next page)' % PAGES[_page], HORIZONTAL_ALIGNMENT_LEFT, -1.0, 32)
+  if PAGES[_page] == 'projectile':
+    _draw_projectiles(font)
+    return
   var age: float = fmod(_time, _length() + 0.2)
   for i in _live.size():
     var point: Vector2 = LIVE_POINTS[i]
@@ -97,6 +108,8 @@ func _build_page() -> void:
       _labels.assign(['burn applied', 'burn damage'])
     'bleed':
       _labels.assign(['bleed applied', 'bleed damage'])
+    'projectile':
+      _labels.assign(PROJECTILE_MECHANICS)
   for i in _labels.size():
     _live.append(_make_hit(i))
     _strip.append(_make_hit(i))
@@ -117,7 +130,9 @@ func _make_hit(index: int) -> Delivery:
       hit.mechanic = BurnMechanic.ID
     'bleed':
       hit.mechanic = BleedMechanic.ID
-  hit.visual_only = index == 1 and PAGES[_page] != 'attack'
+    'projectile':
+      hit.mechanic = PROJECTILE_MECHANICS[index]
+  hit.visual_only = index == 1 and PAGES[_page] not in ['attack', 'projectile']
   hit.value = 12.0
   hit.color = MechanicRegistry.get_mechanic(hit.mechanic).color()
   return hit
@@ -149,7 +164,32 @@ func _effect_length(hit: Delivery) -> float:
 
 # The longest effect on the page, so the live half repeats only once every effect has finished.
 func _length() -> float:
+  if PAGES[_page] == 'projectile':
+    return FLIGHT + FLIGHT_GAP
   var longest: float = 0.0
   for hit: Delivery in _strip:
     longest = maxf(longest, _effect_length(hit))
   return longest
+
+
+# Comets in each colour fly from the board side to the enemy one after another, and a still row
+# underneath shows each comet beside the old disc, so their sizes can be compared.
+func _draw_projectiles(font: Font) -> void:
+  if _enemy != null:
+    var height: float = 560.0
+    var width: float = height * float(_enemy.get_width()) / float(_enemy.get_height())
+    draw_texture_rect(_enemy, Rect2(FLIGHT_TO - Vector2(width, height) * 0.5, Vector2(width, height)), false, Color(0.45, 0.45, 0.5))
+  var cycle: float = FLIGHT + FLIGHT_GAP
+  for i in _strip.size():
+    var from: Vector2 = FLIGHT_FROM + Vector2(-160.0 * float(i), 60.0 * float(i % 2))
+    var age: float = fmod(_time + cycle - float(i) * cycle / float(_strip.size()), cycle)
+    if age < FLIGHT:
+      var t: float = age / FLIGHT
+      _comet_drawer.draw_flight(self, _strip[i], VfxDriver.arc_point(from, FLIGHT_TO, t), VfxDriver.arc_direction(from, FLIGHT_TO, t), age)
+  for i in _strip.size():
+    var x: float = STRIP_LEFT + 520.0 * float(i)
+    var y: float = STRIP_TOP + 220.0
+    _disc_drawer.draw_effect(self, _strip[i], Vector2(x, y), 0.0)
+    _comet_drawer.draw_flight(self, _strip[i], Vector2(x + 200.0, y), Vector2(-1.0, -0.25), 1.0)
+    draw_string(font, Vector2(x - 20.0, y + 70.0), _labels[i], HORIZONTAL_ALIGNMENT_LEFT, -1.0, 24)
+  draw_set_transform_matrix(Transform2D.IDENTITY)
