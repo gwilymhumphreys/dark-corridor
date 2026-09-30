@@ -84,7 +84,7 @@ An option has a `label_key`, a list of `effects` (`RunEffect`) and a list of `re
 |---|---|
 | `max_hp(n)` | Raise maximum and current health. |
 | `heal(n)`, `heal_fraction(f)` | Heal a flat amount, or a fraction of maximum health, up to maximum health. |
-| `damage(n)` | Take damage. In an event, lethal damage ends the run as a loss. |
+| `damage(n)` | Take damage. Lethal damage ends the run as a loss: an event checks when it resolves, a relic's run triggers once they have applied (after a won fight, before its reward). |
 | `gold(n)` | Add gold. A negative amount is a cost; gold is not stopped at 0, so the option should require `GoldAtLeast`. |
 | `add_ally(id)` | Add the ally built from an `EnemyCatalog` id, if a slot is free (`MAX_ALLIES`). |
 | `set_flag(flag, n = 1)`, `add_flag(flag, n = 1)` | Set, or add to, a run flag. |

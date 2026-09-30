@@ -248,6 +248,28 @@ func test_fight_won_trigger_fires_after_a_won_fight_only() -> void:
   assert_eq(run.gold, Balance.FIGHT_WON_GOLD + 3, 'a won fight adds the relic gold to the fight-won gold')
 
 
+func test_lethal_fight_won_damage_ends_the_run_before_the_reward() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.FIGHT_WON, [RunEffect.damage(100000)])))
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.DRAFT)
+  assert_true(run.is_ended(), 'the run ends at once')
+  assert_eq(run.outcome(), RunManager.Outcome.DIED, 'as a death')
+  assert_false(run.has_pending_draft(), 'with no draft offered')
+
+
+func test_lethal_draft_skipped_damage_ends_the_run() -> void:
+  var run := _run()
+  _start_at_fight(run, 1)
+  run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.DRAFT_SKIPPED, [RunEffect.damage(100000)])))
+  run.begin_current()
+  run.combat_manager().run_headless()
+  assert_true(run.has_pending_draft(), 'the fight was won and its draft offered')
+  run.apply_draft_skip()
+  assert_true(run.is_ended(), 'skipping the draft kills the player and ends the run')
+  assert_eq(run.outcome(), RunManager.Outcome.DIED, 'as a death')
+
+
 func test_relic_won_from_a_fight_does_not_react_to_that_fight() -> void:
   for id: String in RelicCatalog.REWARD_POOL:
     var d := _run_trigger_relic(RunManager.RunEvent.FIGHT_WON, [RunEffect.gold(3)])

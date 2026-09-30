@@ -278,6 +278,8 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
   if outcome_value == Encounter.Outcome.WON:
     _apply_fight_won_gain()
     _fire_run_event(RunEvent.FIGHT_WON)
+    if _ended:
+      return   # a relic's fight-won damage killed the player
   match reward:
     EncounterDef.Reward.DRAFT:
       _pending_offer = Draft.draw(_draft_pool(), position, rng)
@@ -361,10 +363,13 @@ func _fire_relic_run_triggers(relic: Relic, event: RunEvent) -> void:
       continue
     for effect: RunEffect in entry.get('effects', []):
       _apply_run_effect(effect)
+  if not player.is_alive():
+    _end_run(Outcome.DIED)   # lethal run-trigger damage ends the run at once
 
 
-## Apply one run effect (relic run triggers, event options). Lethal DAMAGE is not handled here: an
-## event checks the player after its effects (Encounter.resolve_event).
+## Apply one run effect (relic run triggers, event options). Lethal DAMAGE is not handled here: a
+## relic's run triggers check the player once they have all applied (_fire_relic_run_triggers), and
+## an event checks the player after its effects (Encounter.resolve_event).
 func _apply_run_effect(effect: RunEffect) -> void:
   match effect.kind:
     RunEffect.Kind.MAX_HP:
