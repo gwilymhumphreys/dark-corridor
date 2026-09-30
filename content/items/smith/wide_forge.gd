@@ -15,7 +15,7 @@ func _init() -> void:
   id = 'wide_forge'
   name_key = 'Wide Forge'            # owner's working name — to be renamed
   types = []                         # no type yet — owner's to decide
-  mechanics = [AttackBonusMechanic.ID, BurnMechanic.ID]
+  mechanics = [BurnMechanic.ID]
   icon = 'res://assets/icons/items/tech_forge.png'   # PLACEHOLDER icon — owner's to swap
   rarity = Rarity.RARE
   cooldown = 10.0

@@ -9,8 +9,15 @@ terms of.
 
 **Location:** `src/content/mechanics/`
 
-All twelve are built: attack, heal, shield, poison, burn, bleed, regen, crit, charge, decharge and
-the two attack bonuses.
+The ten mechanics are attack, heal, shield, poison, burn, bleed, regen, crit, charge and decharge
+(owner, decision #60). They are the main kinds of effect that appear often: each is shown by its
+icon, and its keyword card teaches the player what the icon means. Items list the mechanics they count
+as in `ItemDef.mechanics`.
+
+The registry also holds the two attack bonuses, because they are delivered the same way, but they
+are effects, not mechanics (`MechanicRegistry.NOT_MECHANICS`, `is_mechanic`). An effect that is not
+a mechanic is written out in the tooltip text of its item, relic or potion: it has no keyword card,
+is never listed in an item's `mechanics`, and gets no shop.
 
 ## Sound
 
@@ -98,7 +105,7 @@ in `StatusManager.combine`:
 
 ## Attack bonuses
 
-The two attack bonus mechanics buff other items: an effect aims them at the owner's own items,
+The two attack bonus effects (not mechanics; see the top of this page) buff other items: an effect aims them at the owner's own items,
 usually with a target filter on the attack mechanic, so "attack items" means any item that lists
 attack in its `mechanics`, not only weapons. Each lands by applying its status to the target item
 (the base `Mechanic.land`).
@@ -221,7 +228,7 @@ Naming a specific item definition as the target is still not built.
 
 Landing publishes one event, `EventBus.Event.APPLIED`, when a `MECHANIC` or `APPLY_STATUS` delivery
 lands and applies. It replaced `DAMAGE_DEALT`, `HEALED` and `STATUS_APPLIED`. The data is the
-mechanic id (attack, heal, shield, poison, burn, bleed, regen, charge, decharge, attack_bonus, attack_percent_bonus) or the status id
+registered id of the delivery (a mechanic, or one of the attack bonus effects) or the status id
 for `APPLY_STATUS`;
 the source is the delivery's `source_actor`. Ticks, bleed's own damage, `SUMMON` and `CREATE_ITEM`
 publish nothing. A trigger's `filter` names the id — Spite Ward (`content/items/examples/spite_ward.gd`) subscribes to

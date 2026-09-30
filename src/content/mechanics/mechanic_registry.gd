@@ -4,6 +4,12 @@ class_name MechanicRegistry
 ## file + one line here.
 
 
+## Registered kinds of effect that are not mechanics (owner, 2026-09-30): a mechanic is one of the
+## main kinds, shown by its icon with a keyword card that teaches it; these are written out in the
+## tooltip text of the item, relic or potion instead. They are not listed in an item's `mechanics`,
+## have no keyword card and get no shop.
+const NOT_MECHANICS: Array[String] = ['attack_bonus', 'attack_percent_bonus']
+
 static var _mechanics: Dictionary = {}
 
 
@@ -35,6 +41,11 @@ static func has(id: String) -> bool:
   if _mechanics.is_empty():
     _build()
   return _mechanics.has(id)
+
+
+## Whether `id` is a mechanic: registered and not one of NOT_MECHANICS.
+static func is_mechanic(id: String) -> bool:
+  return has(id) and not id in NOT_MECHANICS
 
 
 ## How much of a shield a hit of this mechanic uses (1.0 = normal). An empty or unknown id

@@ -751,14 +751,6 @@ msgstr ""
 msgid "Attack shop"
 msgstr ""
 
-#: content/encounters/shop_attack_bonus.gd
-msgid "Attack bonus shop"
-msgstr ""
-
-#: content/encounters/shop_attack_percent_bonus.gd
-msgid "Attack percent bonus shop"
-msgstr ""
-
 #: content/encounters/shop_bleed.gd
 msgid "Bleed shop"
 msgstr ""

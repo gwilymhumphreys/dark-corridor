@@ -71,7 +71,7 @@ static func weapon_bonus_relic() -> RelicDef:
   var d := RelicDef.new()
   d.id = PASSIVE_RELIC_ID
   d.name_key = 'Fixture Weapon Relic'
-  d.mechanics = [AttackBonusMechanic.ID]
+  d.mechanics = []   # the attack bonus is an effect, not a mechanic
   var bonus := ItemEffect.make(AttackBonusMechanic.ID, RELIC_WEAPON_ATTACK_BONUS, ItemEffect.Shape.ALL_OWN_ITEMS)
   bonus.target_filter = TargetFilter.new()
   bonus.target_filter.add_type(ItemType.WEAPON)

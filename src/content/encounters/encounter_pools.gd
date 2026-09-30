@@ -25,8 +25,6 @@ const LEFT: Array = [
   'shop_charge',
   'shop_decharge',
   'shop_crit',
-  'shop_attack_bonus',
-  'shop_attack_percent_bonus',
 ]
 const MIDDLE: Array = ['event_shrine', 'relic_cache']
 const RIGHT: Array = ['event_wanderer', 'rest']

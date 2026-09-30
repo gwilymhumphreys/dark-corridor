@@ -6,7 +6,7 @@
 
 - A shop sells only items unless its definition says otherwise.
 - **Normal shop:** any item from the character's pool.
-- **One shop per mechanic:** only items that list that mechanic in `ItemDef.mechanics` (the author's list, so an item that charges off poison counts as a poison item). Every mechanic in `MechanicRegistry` gets one.
+- **One shop per mechanic:** only items that list that mechanic in `ItemDef.mechanics` (the author's list, so an item that charges off poison counts as a poison item). Every mechanic gets one: the ten of decision #60, not the attack bonus effects.
 - **Rare shop:** only rare items.
 - A shop is not offered when fewer than six items in the character's pool (plus the colourless items) pass its filters ("more than five"). With today's pools, Smith gets only the normal shop, the Fleshmancer and the Spore Druid also get the attack shop, and nobody gets the rare shop: Smith's pool has two rare items (Deep Forge, Wide Forge), fewer than six.
 - Every shop puts four items on sale.

@@ -197,20 +197,29 @@ func test_item_mechanics_list_sorted_and_unique() -> void:
 
 ## The floor: every mechanic an effect deals (its `mechanic` field), applies as a status that is
 ## also a registered mechanic (`status_id`), or via `crit_chance > 0` (CritMechanic.ID) must be
-## listed in the item's authored mechanics list. One-way only — an item may list more.
+## listed in the item's authored mechanics list. One-way only — an item may list more. Effects that
+## are not mechanics (MechanicRegistry.NOT_MECHANICS) are not listed.
 func test_item_mechanics_floor_is_covered() -> void:
   for item_id in ItemCatalog.all_ids():
     var def: ItemDef = ItemCatalog.get_def(item_id)
     for effect in def.effects:
-      if effect.mechanic != '':
+      if MechanicRegistry.is_mechanic(effect.mechanic):
         assert_true(def.mechanics.has(effect.mechanic),
             '%s: effect mechanic %s is listed' % [item_id, effect.mechanic])
-      if effect.status_id != '' and MechanicRegistry.has(effect.status_id):
+      if MechanicRegistry.is_mechanic(effect.status_id):
         assert_true(def.mechanics.has(effect.status_id),
             '%s: status-as-mechanic %s is listed' % [item_id, effect.status_id])
     if def.crit_chance > 0.0:
       assert_true(def.mechanics.has(CritMechanic.ID),
           '%s: crit chance set but %s not listed' % [item_id, CritMechanic.ID])
+
+
+## An item lists only mechanics: never an effect that is not one (MechanicRegistry.NOT_MECHANICS), so
+## those get no keyword card and no shop.
+func test_item_mechanics_lists_hold_only_mechanics() -> void:
+  for item_id in ItemCatalog.all_ids():
+    for id: String in ItemCatalog.get_def(item_id).mechanics:
+      assert_true(MechanicRegistry.is_mechanic(id), '%s: %s is a mechanic' % [item_id, id])
 
 
 ## Every target filter condition names an id that resolves: TYPE conditions name an ItemType const,

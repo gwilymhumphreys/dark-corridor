@@ -13,7 +13,7 @@ something else.
 | **Cooldown** | The seconds an item takes to fill its cooldown bar and fire. Always a whole number (see [authoring.md](authoring.md)). |
 | **Cooldown bar** | An item's progress towards firing, shown as the fill over its icon. |
 | **Fire** | An item acting when its cooldown bar is full: every one of its effects happens, then the bar starts again. |
-| **Effect** | One thing an item does when it fires (`ItemEffect`): a mechanic with a value, or a status to apply with an amount, aimed at a target shape. |
+| **Effect** | One thing an item does when it fires (`ItemEffect`): a mechanic with a value, or a status to apply with an amount, aimed at a target shape. An effect that is not a mechanic, such as the attack bonuses, is written out in the tooltip text of its item, relic or potion. |
 | **Trigger** | An event an item listens for that adds seconds to its own cooldown bar each time it happens (`ItemDef.trigger_subs`). A relic's trigger fires the relic instead. |
 | **Relic** | An item with no cooldown: it fires only when one of its triggers happens, and its passives hold for the whole fight. The run owns the player's relics; in a fight they sit apart from the board (`RelicDef`, `Actor.relics`). |
 | **Passive** | A relic ability that is always on for the whole fight, written like an item effect (`RelicDef.passives`). Not a status. |
@@ -25,7 +25,9 @@ something else.
 
 | Term | Meaning |
 |---|---|
-| **Mechanic** | A named kind of effect with its own icon and rules: attack, shield, heal, poison, burn, bleed, charge, decharge and others ([mechanics.md](../systems/mechanics.md)). |
+| **Mechanic** | One of the main kinds of effect, shown by its icon, with a keyword card that teaches it: attack, shield, heal, poison, burn, bleed, regen, charge, decharge and crit ([mechanics.md](../systems/mechanics.md)). Other effects are not mechanics. |
+| **Keyword card** | The small card beside a tooltip that explains a mechanic, a status or a mechanic keyword. |
+| **Mechanic keyword** | A rules term with its own keyword card, worked out from an item's effects: Fuel, Summon, All Enemies, Item Target, Unblockable, Trigger, Reclaim, Enchant (`KeywordCatalog`). |
 | **Attack** | The attack mechanic: dealing damage to a target. |
 | **Weapon attack** | An attack from an item with the `weapon` type tag. |
 | **Charge** | The charge mechanic: adding seconds to an item's cooldown bar so it fires sooner. The word means only this. |

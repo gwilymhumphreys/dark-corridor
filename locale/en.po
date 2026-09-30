@@ -751,14 +751,6 @@ msgstr "A quiet alcove"
 msgid "Attack shop"
 msgstr "Attack shop"
 
-#: content/encounters/shop_attack_bonus.gd
-msgid "Attack bonus shop"
-msgstr "Attack bonus shop"
-
-#: content/encounters/shop_attack_percent_bonus.gd
-msgid "Attack percent bonus shop"
-msgstr "Attack percent bonus shop"
-
 #: content/encounters/shop_bleed.gd
 msgid "Bleed shop"
 msgstr "Bleed shop"
