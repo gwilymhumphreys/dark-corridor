@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Material" path="res://src/shaders/interface_framed_material.tres" id="interface_framed_material"]
+[ext_resource type="Texture2D" path="res://assets/encounters/card_back.jpg" id="card_back"]
+
+[node name="CardBack" type="PanelContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(272, 380)
+offset_right = 272.0
+offset_bottom = 380.0
+mouse_filter = 2
+theme_type_variation = &"PanelToken"
+
+[node name="Image" type="TextureRect" parent="."]
+material = ExtResource("interface_framed_material")
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("card_back")
+expand_mode = 1
+stretch_mode = 6

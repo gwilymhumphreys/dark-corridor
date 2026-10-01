@@ -1,60 +1,109 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/encounter_card.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
+[ext_resource type="Material" path="res://src/shaders/interface_framed_material.tres" id="interface_framed_material"]
+[ext_resource type="PackedScene" path="res://src/scenes/screens/card_back.tscn" id="card_back"]
 
 [node name="EncounterCard" type="Button"]
 mouse_default_cursor_shape = 2
-custom_minimum_size = Vector2(280, 380)
+custom_minimum_size = Vector2(272, 380)
+offset_right = 272.0
+offset_bottom = 380.0
 focus_mode = 0
+theme_type_variation = &"ButtonBare"
 script = ExtResource("1")
 
-[node name="Color" type="ColorRect" parent="."]
+[node name="Lift" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 0
-offset_left = 18.0
-offset_top = 18.0
-offset_right = 262.0
-offset_bottom = 214.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
-color = Color(0.5, 0.5, 0.5, 1)
 
-[node name="Kind" type="Label" parent="."]
+[node name="Card" type="Control" parent="Lift"]
 layout_mode = 1
-anchors_preset = 0
-offset_left = 18.0
-offset_top = 18.0
-offset_right = 262.0
-offset_bottom = 214.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
-theme_type_variation = &"LabelHeading"
-horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="Frame" type="Label" parent="."]
+[node name="Front" type="PanelContainer" parent="Lift/Card"]
+visible = false
 layout_mode = 1
-anchors_preset = 0
-offset_left = 10.0
-offset_top = 232.0
-offset_right = 270.0
-offset_bottom = 300.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"PanelToken"
+
+[node name="Rows" type="VBoxContainer" parent="Lift/Card/Front"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Lift/Card/Front/Rows"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
 theme_type_variation = &"LabelMedium"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="Hint" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 10.0
-offset_top = 308.0
-offset_right = 270.0
-offset_bottom = 360.0
+[node name="Picture" type="PanelContainer" parent="Lift/Card/Front/Rows"]
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 3
 mouse_filter = 2
+theme_type_variation = &"PanelSlot"
+
+[node name="Image" type="TextureRect" parent="Lift/Card/Front/Rows/Picture"]
+material = ExtResource("interface_framed_material")
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="KindBand" type="ColorRect" parent="Lift/Card/Front/Rows"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.5, 0.5, 0.5, 1)
+
+[node name="Kind" type="Label" parent="Lift/Card/Front/Rows/KindBand"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="Lift/Card/Front/Rows"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_type_variation = &"LabelSmall"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Back" parent="Lift/Card" instance=ExtResource("card_back")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Juice" type="Node" parent="."]
 script = ExtResource("2")
 preset = 1
+highlight_target = NodePath("../Lift/Card/Front")
