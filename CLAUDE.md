@@ -2,137 +2,95 @@
 
 Guidance for Claude Code when working with this Godot 4 game.
 
-## Before Starting Tasks
+## Start with the docs
 
-**Always reference the docs before searching the codebase.** Start at
-[`docs/index.md`](docs/index.md) — a catalog of all project documentation with
-one-line descriptions. Find the relevant doc there, read it, and only then
-search the code it points to. Most questions about the rendering, geometry,
-filtering, motion, or scenes are already answered in `docs/`.
+Read [`docs/index.md`](docs/index.md) first. It lists every doc with a one-line description. Read the relevant doc, then search the code it points to.
 
-If you change behaviour a doc describes, update that doc in the same change.
+- `docs/handoff.md`, `docs/decision_log.md` — orientation for a new agent, and the record of decisions
+- `docs/systems/` — one doc per engineering system, including the corridor renderers and dev tooling
+- `docs/design/` — game and content design (the owner's domain) and the content authoring guide
+- `docs/history/` — build log and the original phase plans
 
-Doc structure:
+## External directories you may read
 
-- `docs/index.md` — catalog / lookup index for all docs (read this first)
-- `docs/handoff.md` + `docs/decision_log.md` — fresh-agent orientation + the canonical decision record
-- `docs/systems/` — one doc per engineering system (spec + as-built), incl. the corridor renderers (`systems/corridors/`) and dev tooling (autotest, localization)
-- `docs/design/` — game/content design (the owner's domain) + the content authoring guide
-- `docs/history/` — the chronological build log + the original phase plans
+- `../a-machine` — previous project (juice, VFX, audio, UI, save/load)
+- `../battledraft`, `../dogmage` — sister projects (VFX, debug panels, post-processing)
+- `../dark-corridor-design` — source art packs; see [`docs/design/asset_library.md`](docs/design/asset_library.md)
 
-## Allowed External Directories
-
-When working on this project, you may freely read from:
-
-- `../a-machine` - Previous project, most useful (Juice, VFX, Audio, UI, save/load)
-- `../battledraft` - Sister project with shared systems (VFX, debug panels, post-processing)
-- `../dogmage` - Sister project with shared systems (VFX, debug panels, post-processing)
-- `../dark-corridor-design` - Source art packs for this game (icons, portraits, monsters, palettes, UI sheets). See [`docs/design/asset_library.md`](docs/design/asset_library.md) for what is where and how to find a named file.
-
-## Code Standards (MANDATORY)
+## Code standards (mandatory)
 
 ```gdscript
-# Static typing - ALWAYS
-var name: String = 'value'
-func example(param: int) -> void:
-
-# Single quotes for strings
+# Static typing, single quotes, 2-space indent, 2 blank lines between functions
 var text: String = 'hello'
 
-# 2 spaces indentation, 2 blank lines between functions
-func first() -> void:
+
+func example(param: int) -> void:
   pass
 
-func second() -> void:
-  pass
 
-# Trailing comma in multi-line arrays/dicts
+# Trailing comma in multi-line arrays and dicts
 var data: Dictionary = {
   'key': 'value',
 }
 ```
 
-- **Filenames**: `snake_case` per the Godot 4 style guide (e.g., `corridor_3d.gd`, `combat_corridor.tscn`, `corridor_look.gdshader`). `class_name` and in-scene node names stay PascalCase — so `class_name CombatCorridor` lives in `combat_corridor.gd`.
-- **No preloads for `class_name` classes** — Godot makes them globally available
-- **Autoload class names**: Use `<Name>Autoload` suffix (e.g., `class_name StatusManagerAutoload`) to avoid conflict with the autoload's registered name. Access via the registered name (e.g., `StatusManager.apply(...)`).
-- **Surgical edits only** — Modify least code possible; ask before major refactors
-- **Theme over code** — Style UI via the theme resource (`assets/themes/dark_corridor.tres`, the project default), not `add_theme_*_override()` in code
-- **Never hardcode a font size** — every label and button takes a rung of the text ladder through `theme_type_variation` (`LabelSmall`, `LabelMedium`, `ButtonHeading`, …); a label with no variation gets the body size. A `theme_override_font_sizes/font_size` in a scene does not follow the player's text size setting, so it is always wrong. The rungs and the setting: [`docs/systems/ui_theme.md`](docs/systems/ui_theme.md)
-- **Scenes over code** — Prefer `.tscn` scene files for UI and node trees over building them programmatically in `_ready()`
-- **Juicy animations**: When adding new ui or visual entities, add the ui juice node to it
-- **Animate UI with `offset_transform_*`** (Godot 4.7) — When animating a Control's position/scale/rotation (hover bounces, presses, slides, shakes), set `offset_transform_enabled = true` and tween the `offset_transform_position` / `offset_transform_scale` / `offset_transform_rotation` properties (pivot via `offset_transform_pivot` / `offset_transform_pivot_ratio`) instead of the layout `position` / `scale` / `rotation`. The offset transform is visual-only (`offset_transform_visual_only` defaults true), so it does not fight container layout — use it wherever a container positions the node (the old `position`-tween caveat). Tween the layout properties only when the node is not container-managed and the animation must affect layout.
-- **Full names, not abbreviations**: Refer to game entities by their full names. Applies to code, comments, docs, run reports, tuning logs, and chat replies — abbreviations make grep harder and obscure what's being discussed.
-- **Use the lexicon**: game terms mean what [`docs/design/lexicon.md`](docs/design/lexicon.md) says (for example, "charge" is only the mechanic that fills a cooldown bar; a status's count is "stacks"). Add a new term there in the same change.
-- **Don't add jargon**: No invented terms or vague, high-level, obtuse shorthand. Use plain, concrete language; if a term is genuinely needed, define it where it's introduced, and don't reuse a word that already means something specific in the game. Applies to code, comments, docs, run reports, tuning logs, and chat replies.
+- **Filenames** are `snake_case`; `class_name` and node names are PascalCase (`class_name CombatCorridor` in `combat_corridor.gd`).
+- **No preloads** for `class_name` classes.
+- **Autoload classes** take an `Autoload` suffix (`class_name StatusManagerAutoload`) and are accessed by the registered name (`StatusManager.apply(...)`).
+- **Surgical edits.** Change as little code as possible; ask before major refactors.
+- **Style UI through the theme** (`assets/themes/dark_corridor.tres`), not `add_theme_*_override()`.
+- **Never hardcode a font size.** Use a `theme_type_variation` rung (`LabelSmall`, `ButtonHeading`, …) so text follows the player's size setting. See [`docs/systems/ui_theme.md`](docs/systems/ui_theme.md).
+- **Prefer `.tscn` scenes** over building node trees in code.
+- **Add the UI juice node** to new UI or visual entities.
+- **Animate Controls with `offset_transform_*`** (set `offset_transform_enabled = true`, tween `offset_transform_position`/`_scale`/`_rotation`). It is visual-only, so it does not fight container layout. Tween `position`/`scale`/`rotation` only when the animation must change layout.
+- **Use full names** for game entities, never abbreviations — in code, docs, reports and chat.
+- **Use the lexicon.** Game terms mean what [`docs/design/lexicon.md`](docs/design/lexicon.md) says; add new terms there.
+- **No jargon.** Use plain, concrete words. Define any new term where it first appears and do not reuse a word the game already uses.
 
-## Bugs
+## Bugs and pre-existing issues
 
-- When you encounter a bug or failing test, always fix it or ask the user if you should fix it — don't dismiss anything as pre-existing or unrelated.
+Fix any bug, failing test or pre-existing issue you find, or ask whether to fix it, and tell the user. Never dismiss one as unrelated.
 
 ## Running Godot
 
-Use the wrappers, never a raw Godot command: `tools/gut.sh` (GUT suite),
-`tools/autotest.sh` (headless run), `tools/import.sh` (reimport, required after adding
-a file or a new `class_name`), `tools/lsp_check.sh` (GDScript analyzer warnings, for every
-`.gd` file or the files you name). Each writes the full output to `_temp/` and prints only
-the failures and the summary. A raw Godot command is refused by the `PreToolUse` hook
-in `.claude/settings.json` unless its output is redirected to a file or piped through
-`tail` or `grep`.
+Use the wrappers, never a raw Godot command. Each writes full output to `_temp/` and prints only failures and a summary.
+
+- `tools/gut.sh` — GUT suite
+- `tools/autotest.sh` — headless run
+- `tools/import.sh` — reimport; required after adding a file or a `class_name`
+- `tools/lsp_check.sh` — GDScript analyzer warnings
 
 ## Searching
 
-When a search will span many files or several naming conventions, use the Explore
-subagent instead of running it here. It returns the answer without the file listings.
+For searches across many files or naming conventions, use the Explore subagent.
 
-## Testing
+## Reference docs
 
-Conventions, `TestCleanup`, and signal tests: [`docs/systems/testing.md`](docs/systems/testing.md).
-
-AI-controlled E2E testing: [`docs/systems/autotest.md`](docs/systems/autotest.md) for
-standard commands, defaults, and the full argument reference.
-
-## Godot engine notes
-
-Asset importing, `RichTextLabel` `fit_content` sizing, and runtime cleanup (leaks and
-invalid frees at scene changes and exit):
-[`docs/systems/godot_notes.md`](docs/systems/godot_notes.md).
+- Testing: [`docs/systems/testing.md`](docs/systems/testing.md)
+- Autotest (AI-controlled end-to-end runs): [`docs/systems/autotest.md`](docs/systems/autotest.md)
+- Godot engine notes (importing, `RichTextLabel` sizing, cleanup at exit): [`docs/systems/godot_notes.md`](docs/systems/godot_notes.md)
+- Localization: [`docs/systems/localization.md`](docs/systems/localization.md). All player-facing text must be translatable; static text in `.tscn` translates automatically, dynamic text uses `tr()`. Debug panels stay English.
 
 ## Shell
 
-- This is a Windows machine but Bash runs via Git Bash — do NOT use `cd /d` or Windows-style path arguments in commands. Run commands directly from the working directory (e.g., `git status`, not `cd /d C:\projects\dark-corridor && git status`).
-- Do not prefix commands with `cd /c/projects/dark-corridor &&` — the working directory is already set and persists between commands.
-- When paths are needed in Bash commands, use Unix-style paths in quotes (e.g., `git -C "/c/projects/dark-corridor" status`).
+Bash is Git Bash on Windows. Do not use `cd /d`, Windows-style paths or a `cd` prefix; the working directory is already set. Quote Unix-style paths (`git -C "/c/projects/dark-corridor" status`).
 
 ## Git
 
-- Do not add your own attribution to any git messages
+Do not add your own attribution to git messages.
 
 ## Documentation
 
-**Full conventions: [`docs/documentation.md`](docs/documentation.md).** The essentials:
+Full conventions: [`docs/documentation.md`](docs/documentation.md).
 
-- **Always update the docs in the SAME change as the behaviour they describe.** After any change, review the affected doc(s) and create/update as needed — code and its doc are never left out of sync. This is mandatory, not a follow-up.
-- **Every new doc gets a catalog entry in [`docs/index.md`](docs/index.md)** — an uncatalogued doc is invisible (the index is read first). **Exception: `docs/plans/` plans are temporary and NOT catalogued** — a plan earns an index row only if it ships as a `systems/` doc.
-- Keep all documentation concise with minimal examples so that an agent can quickly reference it to understand the subject
-- **Docs describe systems, mechanics, and design intent — not specific numbers.** Point to source files (`Balance` constants in `src/data/balance.gd`, the content definitions in `content/`) for tunable values. This prevents docs from going stale when values are tuned. If a formula is important for understanding the system, include it but reference the source file for the actual constants.
+- Update docs in the same change as the behaviour they describe.
+- Add every new doc to [`docs/index.md`](docs/index.md), except temporary plans in `docs/plans/`.
+- Keep docs concise, with minimal examples.
+- Describe systems and intent, not tunable numbers. Point to `src/data/balance.gd` or `content/` for values.
 
-## Localization
+## Other rules
 
-All player-facing text must be translatable; dev and debug panels stay English.
-Static UI text goes in the `.tscn` as plain English and auto-translates; dynamic,
-formatted or data-driven text uses `tr()`. Full rules and the POT regeneration step:
-[`docs/systems/localization.md`](docs/systems/localization.md).
-
-## Save files
-
-Do not migrate save files, don't plan for this at all we're still in development
-
-## Pre-existing Issues
-
-If you discover pre-existing issues at any time address them immediately, but inform the user as well
-
-## Never say "load bearing"
-
-## Assumptions
-
-- Never make assumptions about how things work or how the game plays. If you find yourself generalising to other games stop and read the docs.
+- Do not migrate save files or plan for it; the game is still in development.
+- Never say "load bearing".
+- Do not assume how the game works from other games. Read the docs.
+- Plan tool calls ahead and batch them; wait for all results before reading any.
