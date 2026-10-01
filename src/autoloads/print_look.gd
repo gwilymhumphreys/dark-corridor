@@ -57,6 +57,10 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## - `map_icons_as_pictures`, `map_cleared_look`: the map's icons and its cleared squares (`MapStrip`).
 ## - `paper_burn_*`: the paper burn effect (`PaperBurn`, docs/systems/paper_burn.md).
 ## - `page_turn_*`: the page turn between screens (`PageTurn`, docs/systems/page_turn.md).
+## - `card_*`, `deck_peek`: the encounter cards dealt from a deck (`EncounterChoice`): the seconds a card
+##   takes to travel from the deck, between one card leaving and the next, and to turn over; the largest
+##   turn a card lands with; the gap between cards as a share of a card's width; and how much of the
+##   deck shows, as a share of its height.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'token_tilt': 3.0,
@@ -106,6 +110,12 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'page_turn_shadow_darkness': 0.55,
   'page_turn_shadow_softness': 0.25,
   'page_turn_edge_width': 2.0,
+  'card_deal_time': 0.3,
+  'card_deal_gap': 0.15,
+  'card_turn_time': 0.25,
+  'card_tilt': 4.0,
+  'card_spacing': 0.15,
+  'deck_peek': 0.3,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']

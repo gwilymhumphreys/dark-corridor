@@ -41,6 +41,14 @@ const SECTIONS: Dictionary = {
     'map_icons_as_pictures': [],
     'map_cleared_look': ['Face down', 'Burnt away'],
   },
+  'Encounter cards': {
+    'card_deal_time': [0.05, 1.5, 0.05],
+    'card_deal_gap': [0.0, 1.0, 0.05],
+    'card_turn_time': [0.05, 1.0, 0.05],
+    'card_tilt': [0.0, 15.0, 0.5],
+    'card_spacing': [0.0, 1.0, 0.05],
+    'deck_peek': [0.0, 1.0, 0.05],
+  },
   'Paper burn': {
     'paper_burn_duration': [0.2, 6.0, 0.1],
     'paper_burn_raggedness': [0.0, 40.0, 0.5],
