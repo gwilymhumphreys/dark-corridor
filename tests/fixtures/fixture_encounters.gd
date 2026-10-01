@@ -34,7 +34,7 @@ const OPTION_ADD_ALLY: int = 2
 
 
 ## A fight against one fixture enemy.
-static func fight(id: String = FIGHT, fight_reward: int = EncounterDef.Reward.DRAFT) -> EncounterDef:
+static func fight(id: String = FIGHT, fight_reward: int = EncounterDef.Reward.NONE) -> EncounterDef:
   var d := EncounterDef.new()
   d.id = id
   d.type = EncounterDef.Type.FIGHT

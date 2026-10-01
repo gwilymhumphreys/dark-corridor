@@ -54,7 +54,7 @@ func test_fight_win_relays_outcome_and_reward() -> void:
   assert_signal_emitted(enc, 'resolved')
   var params: Array = get_signal_parameters(enc, 'resolved')
   assert_eq(params[0], Encounter.Outcome.WON, 'the 100 HP build beats the grunt')
-  assert_eq(params[1], EncounterDef.Reward.DRAFT, 'a regular fight rewards a draft')
+  assert_eq(params[1], EncounterDef.Reward.NONE, 'a regular fight has no reward beyond the fight-won health and gold')
 
 
 func test_fight_loss_relays_lost() -> void:

@@ -1,5 +1,5 @@
 extends EncounterDef
-## Placeholder tougher regular fight (decision #1): one brute, rewarding a draft.
+## Placeholder tougher regular fight (decision #1): one brute.
 
 
 func _init() -> void:
@@ -7,4 +7,4 @@ func _init() -> void:
   type = Type.FIGHT
   name_key = 'A blocked passage'
   enemy_ids = ['brute']
-  reward = Reward.DRAFT
+  reward = Reward.NONE

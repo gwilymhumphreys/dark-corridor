@@ -1,5 +1,5 @@
 extends EncounterDef
-## A regular fight against one grunt, rewarding a draft.
+## A regular fight against one grunt.
 
 
 func _init() -> void:
@@ -7,4 +7,4 @@ func _init() -> void:
   type = Type.FIGHT
   name_key = 'A dim corridor'
   enemy_ids = ['grunt']
-  reward = Reward.DRAFT
+  reward = Reward.NONE

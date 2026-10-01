@@ -10,13 +10,13 @@ extends RefCounted
 ## never offered) and `weights` (each rule whose condition holds multiplies how likely it is).
 
 enum Type { FIGHT, REST, EVENT, REWARD, SHOP }
-# What a WIN reports up for the RunManager to fulfil. ELITE = a relic AND a draft (the
-# reward asymmetry — an elite is richer than a regular fight; #2). RELIC = a relic only
-# (an act boss). GOODS = the player picks one of the goods drawn from `stock` (a REWARD encounter
-# always reports this). SHOP = the shop opens with goods drawn from `stock` (a SHOP encounter always
-# reports this). DRAFT = a 1-of-3 item offer. NONE = rest / event (the event's option is its own
-# reward).
-enum Reward { NONE, DRAFT, RELIC, ELITE, GOODS, SHOP }
+# What a WIN reports up for the RunManager to fulfil, on top of the fight-won health and gold every
+# won fight gives. ELITE = a relic, and the fight is drawn stronger (Balance.POINTS_ELITE_MULTIPLIER).
+# RELIC = a relic (an act boss). GOODS = the player picks one of the goods drawn from `stock` (a REWARD
+# encounter always reports this). SHOP = the shop opens with goods drawn from `stock` (a SHOP encounter
+# always reports this). NONE = nothing more: a regular fight, a rest or an event (the event's option is
+# its own reward). Items are offered by the reward and shop encounters between fights, not after a fight.
+enum Reward { NONE, RELIC, ELITE, GOODS, SHOP }
 ## How often an encounter is offered before its weight rules apply (Balance.ENCOUNTER_WEIGHT_*).
 enum Rarity { COMMON, RARE }
 

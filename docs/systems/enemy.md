@@ -19,7 +19,7 @@ What it **is not**: not a subclass of `Actor`; not a new combat mechanism; not t
 
 ## Enemy definition (data)
 
-An enemy, an ally and a summon are all authored as an `EnemyDef` (#23). It extends `ActorDef` (`src/content/actor_def.gd`), the base it shares with `CharacterDef`, and adds an **ordered board** of Item ids (`item_ids`) and optional relics (`relic_ids`, RelicCatalog ids built into `Actor.relics` and drawn before its items — [content.md → Relic](content.md#relic)). Relics are not priced by `points()` yet. `EnemyDef.points()` prices it for encounter assembly — its health plus what its items spend, in the units of [`item_heuristics.md`](../design/item_heuristics.md).
+An enemy, an ally and a summon are all authored as an `EnemyDef` (#23). It extends `ActorDef` (`src/content/actor_def.gd`), the base it shares with `CharacterDef`, and adds an **ordered board** of Item ids (`item_ids`) and optional relics (`relic_ids`, RelicCatalog ids built into `Actor.relics` and drawn before its items — [content.md → Relic](content.md#relic)). `item_levels` optionally gives each item in `item_ids` a level, by index; an item with no entry is level 1 ([item.md → Levels](item.md#levels)). Relics are not priced by `points()` yet. `EnemyDef.points()` prices it for encounter assembly — its health plus what its items spend, each times `Item.level_scale` of its level, in the units of [`item_heuristics.md`](../design/item_heuristics.md).
 
 | `ActorDef` field | Meaning |
 |---|---|

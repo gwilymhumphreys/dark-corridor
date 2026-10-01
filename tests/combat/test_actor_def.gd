@@ -33,6 +33,24 @@ func test_an_enemy_actor_copies_its_definition() -> void:
   actor.dissolve()
 
 
+func test_an_enemy_item_is_built_at_its_level() -> void:
+  var def: EnemyDef = FixtureEnemies.enemy()
+  def.item_ids = [FixtureItems.enemy_attack().id, FixtureItems.enemy_attack().id]
+  def.item_levels = [3]
+  var actor: Actor = def.make_actor()
+  assert_eq(actor.board[0].level, 3, 'the first item at its level')
+  assert_eq(actor.board[1].level, 1, 'an item with no level listed at level 1')
+  actor.dissolve()
+
+
+func test_a_levelled_enemy_item_is_worth_more_points() -> void:
+  var def: EnemyDef = FixtureEnemies.enemy()
+  var spend: float = def.points() - def.max_hp
+  def.item_levels = [2]
+  assert_almost_eq(def.points(), def.max_hp + spend * Item.level_scale(2), 0.001,
+    'its points scale with the level, as its values do')
+
+
 func test_the_portrait_falls_back_to_the_image() -> void:
   var def: EnemyDef = FixtureEnemies.enemy()
   def.portrait = ''

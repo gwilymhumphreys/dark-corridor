@@ -1,5 +1,5 @@
 extends EncounterDef
-## Placeholder elite (decision #2): two grunts, rewarding a relic and a draft.
+## Placeholder elite (decision #2): two grunts, rewarding a relic.
 
 
 func _init() -> void:

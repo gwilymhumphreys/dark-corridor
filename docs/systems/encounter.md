@@ -105,7 +105,7 @@ An event with no available option is never offered, so an event always has at le
 
 **Location:** `StockEntry` (`src/content/encounters/stock_entry.gd`), `Draft.draw_stock`.
 
-A reward encounter (`Type.REWARD`) lists what it offers in `stock`, one `StockEntry` per line, and the player picks one of the goods drawn from it in the draft panel, or skips them for gold like a fight's draft, so the player can change their mind after picking the encounter.
+A reward encounter (`Type.REWARD`) lists what it offers in `stock`, one `StockEntry` per line, and the player picks one of the goods drawn from it in the draft panel, or skips them for gold, so the player can change their mind after picking the encounter.
 
 | `StockEntry` builder | Draws |
 |---|---|
@@ -131,8 +131,8 @@ A shop (`Type.SHOP`) describes its goods with `stock`, the same stock entries as
 - **Kinds** (owner, decision #59) — the normal shop (`shop_pedlar`, any item), the rare shop (`shop_rare`, rare items only) and one shop per mechanic (`shop_<mechanic id>`, items that list that mechanic). All are in the left card's list with the same chance. Names are placeholders.
 - **Too few items** — a shop is offered only while each of its item entries has at least `min_items` matching items in the player's pool (`EncounterDef.min_items`, default `Balance.SHOP_MIN_ITEMS`; `RunManager.has_items_for`). A mechanic or rarity a character has few items for therefore never gets a shop for that character. Reward encounters have no such limit.
 
-- **Price** — `RunManager.price_of(good)`: `Balance.SHOP_PRICE_ITEM`, `SHOP_PRICE_RELIC` or `SHOP_PRICE_POTION`, indexed by the good's rarity.
-- **Buying** — `buy(index)` pays the price and gives the good as a pick would; `can_buy` is false for a sold or unaffordable good. A bought relic leaves the relic pool.
+- **Price** — `RunManager.shop_price(index)`: `price_of(good)` (`Balance.SHOP_PRICE_ITEM`, `SHOP_PRICE_RELIC` or `SHOP_PRICE_POTION`, indexed by the good's rarity), doubled for each level above 1. An item good's level is drawn when the goods are ([run_manager.md → Levelled offers](run_manager.md#levelled-offers)).
+- **Buying** — `buy(index)` pays the price and gives the good at its level as a pick would; `can_buy` is false for a sold or unaffordable good. A bought relic leaves the relic pool.
 - **Rerolling** — `reroll_shop()` pays `reroll_price()` and draws every good again from the stock, bought ones included. The price starts at `Balance.SHOP_REROLL_PRICE` and rises by `SHOP_REROLL_PRICE_STEP` with each reroll in the visit. A shop stays open (`has_open_shop`) even when a reroll draws nothing.
 - **Leaving** — `leave_shop()`, then the caller advances.
 - **Save** — the shop is not saved. A resume re-enters it with the gold it had when it was picked and draws the same goods, so quitting in a shop undoes its purchases and rerolls.
