@@ -144,7 +144,8 @@ for each def's fields and how it resolves.
   position list needs one encounter with no requirements, so its card can always be filled. The
   conditions (items held, a combination of items, item types, relics, health, gold, which fight is
   next, a free ally slot, run flags, how often an encounter was picked) are listed in
-  [encounter.md → Offer rules](../systems/encounter.md#offer-rules).
+  [encounter.md → Offer rules](../systems/encounter.md#offer-rules). Its card's picture is `image`, a
+  path to a copy in `assets/encounters/`; with none set, the card uses its kind's default.
 
   ```gdscript
   rarity = Rarity.RARE
