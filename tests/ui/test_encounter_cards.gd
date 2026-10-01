@@ -33,6 +33,7 @@ func test_a_card_is_dealt_face_down_and_cannot_be_picked() -> void:
   add_child_autofree(card)
   card.setup(FixtureEncounters.rest())
   assert_true(card.disabled, 'not pickable while face down')
+  assert_eq(card.mouse_default_cursor_shape, Control.CURSOR_ARROW, 'and the cursor does not offer a click')
   assert_true(card.get_node('Lift/Card/Back').visible, 'the back shows')
   assert_false(card.get_node('Lift/Card/Front').visible, 'the front is hidden')
   card.face_up = 1.0
