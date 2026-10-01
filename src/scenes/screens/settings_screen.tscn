@@ -54,7 +54,7 @@ theme_type_variation = &"LabelHeading"
 text = "Settings"
 horizontal_alignment = 1
 
-[node name="Scroll" type="ScrollContainer" parent="Panel"]
+[node name="Tabs" type="TabContainer" parent="Panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -65,172 +65,251 @@ offset_right = -120.0
 offset_bottom = -130.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"TabContainerLarge"
+current_tab = 0
+tab_focus_mode = 0
+
+[node name="Audio" type="ScrollContainer" parent="Panel/Tabs"]
+layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="Rows" type="VBoxContainer" parent="Panel/Scroll"]
+[node name="Rows" type="VBoxContainer" parent="Panel/Tabs/Audio"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 32
 
-[node name="TopSpace" type="Control" parent="Panel/Scroll/Rows"]
-custom_minimum_size = Vector2(0, 8)
+[node name="TopSpace" type="Control" parent="Panel/Tabs/Audio/Rows"]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="MasterRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
+[node name="Display" type="ScrollContainer" parent="Panel/Tabs"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Tabs/Display"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 32
+
+[node name="TopSpace" type="Control" parent="Panel/Tabs/Display/Rows"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Controls" type="ScrollContainer" parent="Panel/Tabs"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Tabs/Controls"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 32
+
+[node name="TopSpace" type="Control" parent="Panel/Tabs/Controls/Rows"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MasterRow" type="HBoxContainer" parent="Panel/Tabs/Audio/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Scroll/Rows/MasterRow"]
+[node name="Label" type="Label" parent="Panel/Tabs/Audio/Rows/MasterRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_type_variation = &"LabelLarge"
 text = "Master volume"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Panel/Scroll/Rows/MasterRow"]
+[node name="Slider" type="HSlider" parent="Panel/Tabs/Audio/Rows/MasterRow"]
 mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
-[node name="Value" type="Label" parent="Panel/Scroll/Rows/MasterRow/Slider"]
+[node name="Value" type="Label" parent="Panel/Tabs/Audio/Rows/MasterRow/Slider"]
 layout_mode = 0
 theme_type_variation = &"LabelSmall"
 script = ExtResource("slider_value")
 
-[node name="MusicRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
+[node name="MusicRow" type="HBoxContainer" parent="Panel/Tabs/Audio/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Scroll/Rows/MusicRow"]
+[node name="Label" type="Label" parent="Panel/Tabs/Audio/Rows/MusicRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_type_variation = &"LabelLarge"
 text = "Music volume"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Panel/Scroll/Rows/MusicRow"]
+[node name="Slider" type="HSlider" parent="Panel/Tabs/Audio/Rows/MusicRow"]
 mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
-[node name="Value" type="Label" parent="Panel/Scroll/Rows/MusicRow/Slider"]
+[node name="Value" type="Label" parent="Panel/Tabs/Audio/Rows/MusicRow/Slider"]
 layout_mode = 0
 theme_type_variation = &"LabelSmall"
 script = ExtResource("slider_value")
 
-[node name="InterfaceRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
+[node name="InterfaceRow" type="HBoxContainer" parent="Panel/Tabs/Audio/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Scroll/Rows/InterfaceRow"]
+[node name="Label" type="Label" parent="Panel/Tabs/Audio/Rows/InterfaceRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_type_variation = &"LabelLarge"
 text = "Interface volume"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Panel/Scroll/Rows/InterfaceRow"]
+[node name="Slider" type="HSlider" parent="Panel/Tabs/Audio/Rows/InterfaceRow"]
 mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
-[node name="Value" type="Label" parent="Panel/Scroll/Rows/InterfaceRow/Slider"]
+[node name="Value" type="Label" parent="Panel/Tabs/Audio/Rows/InterfaceRow/Slider"]
 layout_mode = 0
 theme_type_variation = &"LabelSmall"
 script = ExtResource("slider_value")
 
-[node name="GameRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
+[node name="GameRow" type="HBoxContainer" parent="Panel/Tabs/Audio/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Scroll/Rows/GameRow"]
+[node name="Label" type="Label" parent="Panel/Tabs/Audio/Rows/GameRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_type_variation = &"LabelLarge"
 text = "Game volume"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Panel/Scroll/Rows/GameRow"]
+[node name="Slider" type="HSlider" parent="Panel/Tabs/Audio/Rows/GameRow"]
 mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
-[node name="Value" type="Label" parent="Panel/Scroll/Rows/GameRow/Slider"]
+[node name="Value" type="Label" parent="Panel/Tabs/Audio/Rows/GameRow/Slider"]
 layout_mode = 0
 theme_type_variation = &"LabelSmall"
 script = ExtResource("slider_value")
 
-[node name="TextSizeRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
+[node name="TextSizeRow" type="HBoxContainer" parent="Panel/Tabs/Display/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Scroll/Rows/TextSizeRow"]
+[node name="Label" type="Label" parent="Panel/Tabs/Display/Rows/TextSizeRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_type_variation = &"LabelLarge"
 text = "Text size"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Panel/Scroll/Rows/TextSizeRow"]
+[node name="Slider" type="HSlider" parent="Panel/Tabs/Display/Rows/TextSizeRow"]
 mouse_default_cursor_shape = 2
 custom_minimum_size = Vector2(640, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 
-[node name="Value" type="Label" parent="Panel/Scroll/Rows/TextSizeRow/Slider"]
+[node name="Value" type="Label" parent="Panel/Tabs/Display/Rows/TextSizeRow/Slider"]
 layout_mode = 0
 theme_type_variation = &"LabelSmall"
 script = ExtResource("slider_value")
 suffix = "%"
 
-[node name="FullscreenRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
+[node name="FullscreenRow" type="HBoxContainer" parent="Panel/Tabs/Display/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Scroll/Rows/FullscreenRow"]
+[node name="Label" type="Label" parent="Panel/Tabs/Display/Rows/FullscreenRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_type_variation = &"LabelLarge"
 text = "Fullscreen"
 vertical_alignment = 1
 
-[node name="Check" type="CheckButton" parent="Panel/Scroll/Rows/FullscreenRow"]
+[node name="Check" type="CheckButton" parent="Panel/Tabs/Display/Rows/FullscreenRow"]
 mouse_default_cursor_shape = 2
 layout_mode = 2
 size_flags_vertical = 1
 focus_mode = 0
 
-[node name="Juice" type="Node" parent="Panel/Scroll/Rows/FullscreenRow/Check"]
+[node name="Juice" type="Node" parent="Panel/Tabs/Display/Rows/FullscreenRow/Check"]
 script = ExtResource("2")
 
-[node name="MuteRow" type="HBoxContainer" parent="Panel/Scroll/Rows"]
+[node name="MuteRow" type="HBoxContainer" parent="Panel/Tabs/Audio/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Label" type="Label" parent="Panel/Scroll/Rows/MuteRow"]
+[node name="Label" type="Label" parent="Panel/Tabs/Audio/Rows/MuteRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_type_variation = &"LabelLarge"
 text = "Mute when unfocused"
 vertical_alignment = 1
 
-[node name="Check" type="CheckButton" parent="Panel/Scroll/Rows/MuteRow"]
+[node name="Check" type="CheckButton" parent="Panel/Tabs/Audio/Rows/MuteRow"]
 mouse_default_cursor_shape = 2
 layout_mode = 2
 size_flags_vertical = 1
 focus_mode = 0
 
-[node name="Juice" type="Node" parent="Panel/Scroll/Rows/MuteRow/Check"]
+[node name="Juice" type="Node" parent="Panel/Tabs/Audio/Rows/MuteRow/Check"]
+script = ExtResource("2")
+
+[node name="Header" type="HBoxContainer" parent="Panel/Tabs/Controls/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="Action" type="Label" parent="Panel/Tabs/Controls/Rows/Header"]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LabelDim"
+text = "Action"
+
+[node name="Main" type="Label" parent="Panel/Tabs/Controls/Rows/Header"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_type_variation = &"LabelDim"
+text = "Main key"
+horizontal_alignment = 1
+
+[node name="Spare" type="Label" parent="Panel/Tabs/Controls/Rows/Header"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_type_variation = &"LabelDim"
+text = "Spare key"
+horizontal_alignment = 1
+
+[node name="Keys" type="VBoxContainer" parent="Panel/Tabs/Controls/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Message" type="Label" parent="Panel/Tabs/Controls/Rows"]
+layout_mode = 2
+theme_type_variation = &"LabelDim"
+horizontal_alignment = 1
+
+[node name="ResetButton" type="Button" parent="Panel/Tabs/Controls/Rows"]
+mouse_default_cursor_shape = 2
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_type_variation = &"ButtonMedium"
+text = "Reset keys"
+
+[node name="Juice" type="Node" parent="Panel/Tabs/Controls/Rows/ResetButton"]
 script = ExtResource("2")
 
 [node name="BackButton" type="Button" parent="Panel"]
