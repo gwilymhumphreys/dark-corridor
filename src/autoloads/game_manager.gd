@@ -22,12 +22,12 @@ enum Phase { BOOT, TITLE, RUN, DEATH, WIN }
 var phase: int = Phase.BOOT
 var run: RunManager = null
 
-# The player battle-speed dial (×1/×2/×3 — Balance.BATTLE_SPEEDS), a session-level
+# The player battle-speed dial (Balance.BATTLE_SPEEDS), a session-level
 # PREFERENCE (not run-state, never saved): it survives across fights and runs within
 # a session. The run screen applies `battle_speed` to each fight's Timekeeper base
 # scale; the hover slow-mo override still *replaces* this base while inspecting
 # (resolved: absolute slow-mo), returning TO it on release — not to ×1.
-var battle_speed_index: int = 0
+var battle_speed_index: int = Balance.BATTLE_SPEED_DEFAULT_INDEX
 var battle_speed: float = Balance.TIMESCALE_BASE
 
 
@@ -79,16 +79,25 @@ func end_run(outcome: int) -> void:
 func reset() -> void:
   _clear_run()
   phase = Phase.TITLE
-  battle_speed_index = 0
+  battle_speed_index = Balance.BATTLE_SPEED_DEFAULT_INDEX
   battle_speed = Balance.TIMESCALE_BASE
 
 
 # --- battle-speed dial (a session preference; docs/systems/ui_layout.md) -----------------
 
-## Advance the dial one notch (×1 → ×2 → ×3 → ×1; Balance.BATTLE_SPEEDS) on the
-## player's intent (the HUD speed button). Emits so a live fight can retime at once.
+## Advance the dial one notch (Balance.BATTLE_SPEEDS, wrapping from the fastest to the
+## slowest) on the player's intent (the HUD speed button). Emits so a live fight can retime at once.
 func cycle_battle_speed() -> void:
-  set_battle_speed_index((battle_speed_index + 1) % Balance.BATTLE_SPEEDS.size())
+  step_battle_speed(1)
+
+
+## Move the dial `direction` notches (1 faster, -1 slower). The speed button wraps at either end;
+## the speed keys pass `wrap_around` false and stop at the slowest and fastest speeds.
+func step_battle_speed(direction: int, wrap_around: bool = true) -> void:
+  var index: int = battle_speed_index + direction
+  if wrap_around:
+    index = posmod(index, Balance.BATTLE_SPEEDS.size())
+  set_battle_speed_index(index)
 
 
 func set_battle_speed_index(index: int) -> void:

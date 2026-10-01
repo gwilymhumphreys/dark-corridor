@@ -5,7 +5,8 @@ extends Control
 ## placed in the corridor area like the draft panel. Pressing a good emits `bought(index)` →
 ## RunManager.buy; the run screen then calls `refresh`. Reroll emits `rerolled` → RunManager.reroll_shop;
 ## the run screen then calls `show_goods`. Leave emits `left` → RunManager.leave_shop. Hovering a good
-## shows its tooltip (the run screen asks inspectable_at each frame). Reads the run; writes nothing.
+## shows its tooltip (the run screen asks inspectable_at each frame). The player's gold moves to a new
+## amount instead of jumping (EasedValue). Reads the run; writes nothing.
 
 signal bought(index: int)
 signal rerolled()
@@ -20,6 +21,13 @@ const SHOP_ENTRY: PackedScene = preload('res://src/scenes/screens/shop_entry.tsc
 @onready var _reroll: Button = $Panel/RerollButton
 
 var _entries: Array[ShopEntry] = []
+var _gold_shown: EasedValue = null   # the gold in the panel; null until the first refresh
+var _gold_target: int = 0
+
+
+func _process(delta: float) -> void:
+  if _gold_shown != null:
+    _write_gold(roundi(_gold_shown.step(float(_gold_target), delta)))
 
 
 func _exit_tree() -> void:
@@ -41,7 +49,7 @@ func show_goods(run: RunManager) -> void:
   for i in goods.size():
     var entry: ShopEntry = SHOP_ENTRY.instantiate()
     _cards.add_child(entry)
-    entry.setup(goods[i], RunManager.price_of(goods[i]))
+    entry.setup(goods[i], run.shop_price(i), run.shop_level(i))
     entry.buy_pressed.connect(_on_buy_pressed.bind(i))
     _entries.append(entry)
   refresh(run)
@@ -49,7 +57,11 @@ func show_goods(run: RunManager) -> void:
 
 ## Show the player's gold, which goods can still be bought and what a reroll costs.
 func refresh(run: RunManager) -> void:
-  _gold.text = tr('Your gold: {0}').format([run.gold])
+  _gold_target = run.gold
+  if _gold_shown == null:   # the panel opens showing the gold the player has
+    _gold_shown = EasedValue.new()
+    _gold_shown.snap(float(run.gold))
+    _write_gold(run.gold)
   _reroll.text = tr('Reroll ({0} gold)').format([run.reroll_price()])
   _reroll.disabled = not run.can_reroll()
   for i in _entries.size():
@@ -68,6 +80,10 @@ func inspectable_at(point: Vector2) -> Dictionary:
 ## True when `point` is over the shop panel (board items hidden behind it must not show tooltips).
 func covers(point: Vector2) -> bool:
   return _panel.get_global_rect().has_point(point)
+
+
+func _write_gold(amount: int) -> void:
+  _gold.text = tr('Your gold: {0}').format([amount])
 
 
 func _on_buy_pressed(index: int) -> void:

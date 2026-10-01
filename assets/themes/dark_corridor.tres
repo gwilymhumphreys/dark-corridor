@@ -129,6 +129,25 @@ base = SubResource("pb_token_wide")
 
 [sub_resource type="StyleBoxEmpty" id="pb_bare"]
 
+[sub_resource type="StyleBoxFlat" id="pb_tab"]
+script = ExtResource("7_palette_style_box")
+colour_name = "UI_BUTTON"
+bg_color = Color(0.07, 0.07, 0.08, 1)
+content_margin_left = 28.0
+content_margin_top = 10.0
+content_margin_right = 28.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBox" id="pb_tab_worn"]
+script = ExtResource("6_worn_style_box")
+base = SubResource("pb_tab")
+
+[sub_resource type="StyleBoxEmpty" id="pb_tab_bare"]
+content_margin_left = 28.0
+content_margin_top = 10.0
+content_margin_right = 28.0
+content_margin_bottom = 10.0
+
 [sub_resource type="StyleBoxFlat" id="pb_pencil_box"]
 bg_color = Color(1, 1, 1, 1)
 content_margin_left = 20.0
@@ -183,6 +202,19 @@ LabelOnBarLarge/colors/font_outline_color = Color(0, 0, 0, 0.9)
 LabelOnBarLarge/constants/outline_size = 11
 LabelTitle/base_type = &"Label"
 LabelTitle/font_sizes/font_size = 64
+TabContainer/colors/font_disabled_color = Color(0.35, 0.35, 0.35, 1)
+TabContainer/colors/font_hovered_color = Color(1, 1, 1, 1)
+TabContainer/colors/font_selected_color = Color(1, 1, 1, 1)
+TabContainer/colors/font_unselected_color = Color(0.6, 0.6, 0.66, 1)
+TabContainer/styles/panel = SubResource("pb_bare")
+TabContainer/styles/tab_disabled = SubResource("pb_tab_bare")
+TabContainer/styles/tab_focus = SubResource("pb_bare")
+TabContainer/styles/tab_hovered = SubResource("pb_tab_bare")
+TabContainer/styles/tab_selected = SubResource("pb_tab_worn")
+TabContainer/styles/tab_unselected = SubResource("pb_tab_bare")
+TabContainer/styles/tabbar_background = SubResource("pb_bare")
+TabContainerLarge/base_type = &"TabContainer"
+TabContainerLarge/font_sizes/font_size = 36
 RichTextLabel/colors/default_color = Color(1, 1, 1, 1)
 Panel/styles/panel = SubResource("pb_flat_worn")
 PanelContainer/styles/panel = SubResource("pb_flat_worn")

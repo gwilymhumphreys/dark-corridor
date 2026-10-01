@@ -113,8 +113,8 @@ written to every material but only the effects shader reads them:
 
 | Setting | Does |
 |---|---|
-| `effects_on` (the section switch) | Off draws the effects as if there were no material. Off by default |
-| `effects_dither_transparency` | Each pixel is drawn at full strength or not at all, by comparing its transparency with the dither pattern's threshold, so glows, tails and fades become dots |
+| `effects_on` (the section switch) | Off draws the effects as if there were no material. Off in the shader; the default preset turns it on |
+| `effects_dither_transparency` | Each pixel is drawn at full strength or not at all, by comparing its transparency with the dither pattern's threshold, so glows, tails and fades become dots. The default preset turns it on |
 | `effects_damage_numbers` | With the effects, or like the value pills: `VfxDriver` then draws the numbers on its `Numbers` child through the element material, which keeps their colour |
 
 The comparison of these options is in [`../plans/effects_look.md`](../plans/effects_look.md).

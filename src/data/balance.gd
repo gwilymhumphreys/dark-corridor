@@ -21,7 +21,9 @@ const TIMESCALE_PAUSE: float = 0.0
 const TIMESCALE_SLOWMO: float = 0.02        # hover-to-inspect
 const TIMESCALE_BASE: float = 1.0           # default battle-speed
 const TIMESCALE_FAST_TEST: float = 5.0      # --speed dev / autotest
-const BATTLE_SPEEDS: Array[float] = [1.0, 2.0, 3.0]  # player setting x1/x2/x3
+# Player setting. The slow and very fast notches are there for testing.
+const BATTLE_SPEEDS: Array[float] = [0.1, 0.5, 1.0, 2.0, 3.0, 10.0]
+const BATTLE_SPEED_DEFAULT_INDEX: int = 2  # x1
 
 
 # ── Actor ────────────────────────────────────────────────────────────────────
@@ -107,6 +109,22 @@ const SELL_SHARE: float = 0.5
 # added together times ITEM_LEVEL_MERGE_MULT (Item.level_scale).
 const ITEM_MAX_LEVEL: int = 4
 const ITEM_LEVEL_MERGE_MULT: float = 1.2
+# The level of an item offered by a draft, a reward encounter or a shop (RunManager.draw_offer_level):
+# one row per fight number, from the first fight; each row holds the weights of level 1, 2, 3, ... A
+# fight past the last row uses the last row. The odds rise over the run (owner, 2026-09-30).
+# PLACEHOLDER values (owner, 2026-10-01: "use marked placeholders") — the owner tunes them.
+const ITEM_OFFER_LEVEL_ODDS: Array[Array] = [
+  [1.0],                # fight 1
+  [1.0],                # fight 2
+  [1.0],                # fight 3
+  [0.8, 0.2],           # fight 4
+  [0.8, 0.2],           # fight 5
+  [0.8, 0.2],           # fight 6
+  [0.6, 0.3, 0.1],      # fight 7
+  [0.6, 0.3, 0.1],      # fight 8
+  [0.45, 0.4, 0.15],    # fight 9
+  [0.45, 0.4, 0.15],    # fight 10
+]
 
 
 # ── Presentation — the framed combat view (docs/systems/ui_layout.md; docs/history/phase4_plan.md) ───────
@@ -127,6 +145,8 @@ const APPROACH_EASE: float = 0.5
 # The enemy's name, health and items fade up over the end of the walk instead of appearing when
 # the fight starts. This is how long that fade takes; it finishes as the player arrives.
 const ENEMY_REVEAL_DURATION: float = 2.0
+# Seconds between the last dead enemy finishing burning away and the run moving on from a won fight.
+const FIGHT_END_PAUSE: float = 0.3
 
 
 # ── Delivery visual hold (presentation lifetime; docs/systems/vfx_driver.md) ─────────────
@@ -176,7 +196,7 @@ const POINTS_TRIGGERS_PER_COOLDOWN: float = 2.0
 # fight, not from the actual board, so drafting well stays rewarded. RunMap.target_points does the
 # arithmetic. Every one of these is an estimate — PLACEHOLDER, the owner tunes in /tune.
 const POINTS_STARTING_ITEMS: float = 3.0        # the intended starting board floor
-const POINTS_DRAFTS_PER_FIGHT: float = 1.0      # every fight won but the last gives a draft; retune in /tune
+const POINTS_DRAFTS_PER_FIGHT: float = 1.0      # items gained per fight, from reward encounters and shops (fights give none since 2026-10-01); retune in /tune
 const POINTS_AVERAGE_ITEM_COOLDOWN: float = 4.0 # the cooldown taken as an average draft
 const POINTS_DAMAGE_FRACTION: float = 0.7       # the share of a board's output that is damage
 const POINTS_FIGHT_SECONDS: float = 20.0        # how long a regular fight should last, early or late

@@ -20,6 +20,7 @@ The corridor has its own dithering switch; the interface pictures and the combat
 | Part | Shader or material | Colours from | Snapped to | Tab | Doc |
 |---|---|---|---|---|---|
 | Corridor walls and enemy images | Corridor look (`DebugPanels.world_material`) on the corridor viewport | The art, lit by the corridor light | World palette | F1 | [corridor_look.md](corridor_look.md) |
+| A dead enemy's sprite burning | `paper_burn_sprite.gdshader` on the sprite, inside the corridor look | The paper burn's colours, lit by the corridor light | World palette | F7 | [paper_burn.md](paper_burn.md#enemy-sprites) |
 | Hit lights in the corridor | Part of the 3D scene, so the corridor look | Mechanic colours | World palette | F1 | [corridor_3d.md](corridors/corridor_3d.md#hit-lights) |
 | Wear and worn edge over the corridor, border behind it | `PrintLook.overlay_material`, `border_material` | Interface palette | No | F3, F4 | [print_frame.md](print_frame.md) |
 | Screen backgrounds | `PrintLook.background_material` | Interface palette | No | F4 | [background_wear.md](background_wear.md) |
@@ -31,9 +32,9 @@ The corridor has its own dithering switch; the interface pictures and the combat
 | HP bars, value pills, the Temporary tag on item cells, icon slot glyphs, map icons when not drawn as pictures | Interface look, `element_material` | Interface palette | No | F2 | [interface_look.md](interface_look.md) |
 | Cooldown fill on item cells | `cooldown_fill.gdshader`, one material per cell | `Colours.COOLDOWN_FILL`, which is translucent, so no palette file sets it | No | none | [run_screen.md](run_screen.md) |
 | Ordinary text | None; the interface palette recolours the theme's font colours | Interface palette | No | F2 | [interface_palette.md](interface_palette.md) |
-| Projectiles, impacts, damage numbers | Interface look, `effects_material`, off by default | Mechanic colours from the interface palette | Effects palette | F2 Effects section; F5 has the switches for each trial effect | [interface_look.md](interface_look.md#the-combat-effects), [vfx_driver.md](vfx_driver.md) |
+| Projectiles, impacts, damage numbers | Interface look, `effects_material`; off in the shader, turned on by the default preset (transparency dithering on, numbers drawn with the effects) | Mechanic colours from the interface palette | Effects palette | F2 Effects section; F5 has the switches for each trial effect | [interface_look.md](interface_look.md#the-combat-effects), [vfx_driver.md](vfx_driver.md) |
 | Glow on a node | Godot's 2D glow, switched on by `InterfaceGlow` | The node's own colour | No | F2 | [interface_glow.md](interface_glow.md) |
-| Page turn and paper burn | `page_turn.gdshader`, `paper_burn.gdshader`, only while they play | The screen underneath | No | F7 | [page_turn.md](page_turn.md), [paper_burn.md](paper_burn.md) |
+| Page turn and paper burn | `page_turn.gdshader`, `paper_burn.gdshader`, only while they play | The screen underneath; the paper burn's bands from the interface palette, set to its Burn colour and its darkest colour | The paper burn's bands take the effects palette when `paper_burn_palette` is on; the page turn is not snapped | F7 | [page_turn.md](page_turn.md), [paper_burn.md](paper_burn.md) |
 
 ## The interface look materials
 

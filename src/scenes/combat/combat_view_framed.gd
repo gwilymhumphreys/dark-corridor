@@ -29,6 +29,12 @@ const SHAKE_DISTANCE_MIN: float = 6.0   # pixels
 const SHAKE_DISTANCE_MAX: float = 24.0
 const SHAKE_DURATION_MIN: float = 0.2   # real seconds
 const SHAKE_DURATION_MAX: float = 0.45
+# The gold box counts to a new amount over GOLD_SECONDS_PER_COIN for each coin of the change, kept
+# between GOLD_COUNT_MIN and GOLD_COUNT_MAX seconds, playing GOLD_SOUND for each coin counted up.
+const GOLD_SECONDS_PER_COIN: float = 0.08
+const GOLD_COUNT_MIN: float = 0.3
+const GOLD_COUNT_MAX: float = 1.5
+const GOLD_SOUND: String = 'run/gold'
 
 var _cm: CombatManager
 var _player: Actor
@@ -78,6 +84,7 @@ var _cluster: TooltipCluster = null   # the floating item tooltip (its own Canva
 var _shake_tween: Tween
 var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()   # not the fight's seeded one
 var _enemies_shown: bool = false   # false through the approach: the enemy HUDs stay hidden
+var _burning_huds: Array = []   # Array[EnemyHud]: dead enemies' HUDs still burning away
 var _fading_out: Dictionary = {}   # Item/Actor -> true while its widget fades away at fight end; not rebuilt
 var _gap_ratio: float = 0.0   # the gap between the player's item cells as a share of the cell size, from the scene
 var _cell_size: float = ItemCell.CELL_SIZE.x   # the player's item cells' current size, set by _fit_board
@@ -87,6 +94,9 @@ var _tokens_set: Array = []   # the portrait settings, ally count and enemy coun
 var _allies_boxed: bool = false   # the ally rows are in the allies box (_place_ally_rows)
 var _portraits_height: float = -1.0   # the portraits' height when last placed; a change places the sections again
 var _relics: Array = []   # the run's relics, shared by reference (show_relics)
+var _gold: EasedValue = EasedValue.new()   # the gold the box counts towards _gold_target
+var _gold_target: int = 0
+var _gold_shown: int = 0   # the whole number in the box now
 var _relic_cells: Dictionary = {}   # Item -> ItemCell (the relics box)
 var _run_relic_items: Array[Item] = []   # an Item per run relic, for the tooltip outside a fight
 
@@ -97,6 +107,7 @@ func _ready() -> void:
     add_child(sections)
     move_child(sections, 0)
   sections.sections_changed.connect(_place_in_sections)
+  _corridor.burns_finished.connect(_check_burns_finished)
   _gap_ratio = _player_items.get_theme_constant('h_separation') / ItemCell.CELL_SIZE.x
   _grid.material = PrintLook.grid_material
   _potion_grid.material = PrintLook.grid_material
@@ -444,7 +455,7 @@ func bind(cm: CombatManager, player: Actor, potions: Array, allies: Array = []) 
   add_child(_cluster)   # a CanvasLayer — renders in screen space regardless of this Control parent
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
   _place_ally_rows()      # the allies box setting may have changed; before the sync rebuilds the slots
   _place_map()            # the map's height may have changed
   _sync_rosters()         # pick up mid-fight summons (a boss add / a player token)
@@ -457,6 +468,7 @@ func _process(_delta: float) -> void:
   _set_token_styles()
   _draw_grid()
   _position_enemy_huds()  # keep each HUD pinned above its enemy's corridor sprite
+  _count_gold(delta)
   if _cm != null and _vfx.combat != null and _cm.timekeeper != null:
     _corridor.show_hits(_cm.deliveries(), _cm.timekeeper.render_time())   # debug hit lights
 
@@ -504,7 +516,7 @@ func _sync_rosters() -> void:
   var player_side: Array = _cm.player_side()
   # Drop widgets whose actor left the roster — reaped dead enemies / summon tokens. A downed
   # run-scoped ally stays in player_side (kept on the roster), so its slot survives (shown dimmed).
-  _drop_missing(_enemy_huds, enemies)
+  _burn_missing_huds(enemies)
   _drop_missing(_ally_slots, player_side)
   # One corridor sprite per enemy, kept with its enemy (the corridor does nothing if the roster is unchanged).
   _corridor.set_enemies(enemies)
@@ -552,6 +564,57 @@ func _drop_missing(widgets: Dictionary, present: Array) -> void:
     if actor not in present:
       (widgets[actor] as Node).queue_free()
       widgets.erase(actor)
+
+
+## Burn away the HUD of each enemy no longer in the roster (a reaped dead enemy) where it stands,
+## each part separately (`CharacterPanel.burn_away`, docs/systems/paper_burn.md). It leaves the
+## lookup map at once, so it is no longer hoverable, pinned or a VFX target, and is freed when the
+## last part has burnt.
+func _burn_missing_huds(present: Array) -> void:
+  for actor in _enemy_huds.keys():
+    if actor in present:
+      continue
+    var hud: EnemyHud = _enemy_huds[actor]
+    _enemy_huds.erase(actor)
+    var burns: Array[PaperBurn] = hud.burn_away() if hud.visible else ([] as Array[PaperBurn])
+    if burns.is_empty():
+      hud.queue_free()
+      continue
+    _burning_huds.append(hud)
+    var left: Array = [burns.size()]   # burns still running, in an array so the callback can change it
+    for burn: PaperBurn in burns:
+      burn.finished.connect(func() -> void:
+        left[0] -= 1
+        if left[0] == 0:
+          _burning_huds.erase(hud)
+          if is_instance_valid(hud):
+            hud.queue_free()
+          _check_burns_finished())
+
+
+## Start burning any enemy reaped since the view last synced its rosters, and return whether a dead
+## enemy's HUD or sprite is still burning. `burns_finished` is emitted when the last one ends.
+func start_burns() -> bool:
+  if _cm != null:
+    _sync_rosters()
+  return burning()
+
+
+func burning() -> bool:
+  return not _burning_huds.is_empty() or _corridor.burning()
+
+
+func finish_burns() -> void:
+  for hud: EnemyHud in _burning_huds.duplicate():
+    for node: Node in hud.find_children('*', '', true, false):
+      if node is PaperBurn:
+        (node as PaperBurn).finish()
+  _corridor.finish_burns()
+
+
+func _check_burns_finished() -> void:
+  if not burning():
+    burns_finished.emit()
 
 
 ## Bring the enemy HUDs up when the fight starts — they stay hidden through the approach so the
@@ -615,9 +678,40 @@ func refresh_potions(potions: Array) -> void:
   _build_potions(potions)
 
 
-## Write the banked gold in the gold box beside the potions, widening the box if the number needs it.
+## Count the gold box beside the potions to `amount`, one coin at a time, with a coin sound for each
+## coin added (docs/systems/ui_layout.md → Changing numbers).
 func show_gold(amount: int) -> void:
-  _gold_amount.text = str(amount)
+  _gold.duration = clampf(absi(amount - _gold_shown) * GOLD_SECONDS_PER_COIN, GOLD_COUNT_MIN, GOLD_COUNT_MAX)
+  _gold_target = amount
+
+
+## Put `amount` in the gold box at once, with no count and no sound: a new view showing the gold the
+## last one showed.
+func snap_gold(amount: int) -> void:
+  _gold.snap(float(amount))
+  _gold_target = amount
+  _gold_shown = amount
+  _write_gold()
+
+
+## The whole number the gold box shows now, which may still be counting towards the banked gold.
+func gold_on_screen() -> int:
+  return _gold_shown
+
+
+func _count_gold(delta: float) -> void:
+  var shown: int = roundi(_gold.step(float(_gold_target), delta))
+  if shown == _gold_shown:
+    return
+  if shown > _gold_shown:
+    SfxManager.play_sound_guarded(GOLD_SOUND, GOLD_SOUND)
+  _gold_shown = shown
+  _write_gold()
+
+
+# Write the gold box's number, widening the box if the number needs it.
+func _write_gold() -> void:
+  _gold_amount.text = str(_gold_shown)
   _fit_gold()
 
 
@@ -649,7 +743,7 @@ func set_walk_distance(corridor_sections: float) -> void:
 
 
 func clear_enemies() -> void:
-  _corridor.set_enemies([])
+  _corridor.clear_enemies()
 
 
 func encounter_slot(index: int, count: int) -> Vector2:
@@ -739,6 +833,7 @@ func _exit_tree() -> void:
   _relic_cells.clear()
   _run_relic_items.clear()
   _enemy_huds.clear()
+  _burning_huds.clear()
   _ally_slots.clear()
   _player_cells.clear()
   _fading_out.clear()

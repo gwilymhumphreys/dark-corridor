@@ -10,10 +10,12 @@ signal buy_pressed()
 @onready var _buy: Button = $Buy
 
 
-## Show `good` (ItemDef, RelicDef or ConsumableDef) and its `price`. Call after the entry is in the
-## tree.
-func setup(good: Variant, price: int) -> void:
-  option.setup(Item.new(good))
+## Show `good` (ItemDef, RelicDef or ConsumableDef) at `level` and its `price`. Call after the entry
+## is in the tree.
+func setup(good: Variant, price: int, level: int = 1) -> void:
+  var item := Item.new(good)
+  item.level = level
+  option.setup(item)
   _buy.text = tr('{0} gold').format([price])
   option.pressed.connect(_on_pressed)
   _buy.pressed.connect(_on_pressed)

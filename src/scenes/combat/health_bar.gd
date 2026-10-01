@@ -3,8 +3,8 @@ extends VBoxContainer
 ## The health bar shared by the player portrait, the enemy panel and the ally slots
 ## (docs/systems/mechanics.md → Health bar). Shield is drawn over health from the left, and the
 ## bar's width stands for max health or shield, whichever is larger, so either can grow past the
-## other. When health or shield changes, its fill moves to the new value over CHANGE_DURATION rather
-## than jumping. A faint line marks every LINE_STEP points. On the bar, one centred row: the health, then
+## other. When health or shield changes, its fill and its number move to the new value over
+## CHANGE_DURATION rather than jumping. A faint line marks every LINE_STEP points. On the bar, one centred row: the health, then
 ## the shield icon and value, then the other mechanic statuses (StatusNumbers). Reads the actor each
 ## frame; writes nothing.
 
@@ -32,8 +32,8 @@ var actor: Actor = null:
       _snap_fills()
 
 var _shown_scale: float = 1.0   # the points the full bar width stands for, eased towards the target
-var _health: EasedValue = EasedValue.new()   # the health the fill shows
-var _shield_points: EasedValue = EasedValue.new()   # the shield the fill shows
+var _health: EasedValue = EasedValue.new(CHANGE_DURATION)   # the health the fill and number show
+var _shield_points: EasedValue = EasedValue.new(CHANGE_DURATION)   # the shield the fill and number show
 
 @onready var _shield: HBoxContainer = $Bar/Readout/Shield
 @onready var _shield_icon: TextureRect = $Bar/Readout/Shield/Icon
@@ -80,9 +80,9 @@ func _process(delta: float) -> void:
   _health_fill.offset_right = 0.0
   _shield_fill.anchor_right = clampf(shown_shield / _shown_scale, 0.0, 1.0)
   _shield_fill.offset_right = 0.0
-  _label.text = str(actor.hp)
-  _shield.visible = shield > 0
-  _shield_value.text = str(shield)
+  _label.text = str(roundi(shown_health))
+  _shield.visible = roundi(shown_shield) > 0
+  _shield_value.text = str(roundi(shown_shield))
 
 
 func _exit_tree() -> void:
@@ -126,31 +126,3 @@ func _draw_lines() -> void:
     var x: float = width * actor.max_hp / _shown_scale
     _lines.draw_line(Vector2(x, 0.0), Vector2(x, height), colour, LINE_WIDTH * 2.0)
 
-
-## A number shown on the bar that moves to each new value over CHANGE_DURATION, easing out. A
-## change that arrives mid-move starts from where the fill is at that moment.
-class EasedValue:
-  var from: float = 0.0
-  var to: float = 0.0
-  var elapsed: float = 0.0
-
-
-  func snap(value: float) -> void:
-    from = value
-    to = value
-    elapsed = CHANGE_DURATION
-
-
-  ## Move on by `delta` seconds towards `target` and return the value to show.
-  func step(target: float, delta: float) -> float:
-    if not is_equal_approx(target, to):
-      from = shown()
-      to = target
-      elapsed = 0.0
-    elapsed = minf(elapsed + delta, CHANGE_DURATION)
-    return shown()
-
-
-  func shown() -> float:
-    var through: float = elapsed / CHANGE_DURATION
-    return lerpf(from, to, 1.0 - pow(1.0 - through, 2.0))

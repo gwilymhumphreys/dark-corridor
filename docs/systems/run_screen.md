@@ -101,8 +101,8 @@ keeps running behind the panel; opening the next beat (`_advance`) puts the repo
 **Battle-speed + pause (the player's clock controls).** Both are presentation-only —
 the headless autotest mounts none of this:
 
-- **Battle-speed dial** — a session preference on `Game` (`battle_speed`, cycled ×1/×2/×3
-  by `Game.cycle_battle_speed`, never saved). The run screen applies it to each fight's
+- **Battle-speed dial** — a session preference on `Game` (`battle_speed`, stepped through `Balance.BATTLE_SPEEDS`
+  by `Game.step_battle_speed`, never saved). The run screen applies it to each fight's
   `Timekeeper` **base scale** on entry and live on `Game.battle_speed_changed`. The hover
   slow-mo override still **replaces** this base absolutely while inspecting, returning to
   it on release (resolved: absolute slow-mo — [timekeeper.md](timekeeper.md)).
@@ -120,12 +120,14 @@ the headless autotest mounts none of this:
   Opening a [debug panel](debug_panel.md) pauses the same way, and closing the last one resumes
   unless the player paused or raised the menu in the meantime.
 
-**Settings** (`settings_screen.tscn`) — audio volume sliders (Master / Music / Interface / Game), a
-text size slider (each slider shows its value as a whole number above its handle, through
-`SliderValueLabel`), a mute-when-unfocused toggle and a fullscreen toggle, all bound to the **`Prefs`**
-autoload, which applies each change (bus level / theme text sizes / window mode / focus-mute) and
-persists it to `user://` (a ConfigFile, **separate** from the run `Save`). The rows sit in a
-`ScrollContainer` so the screen stays usable at the largest text size. Opened from the title and the
+**Settings** (`settings_screen.tscn`) — three tabs. Audio has the volume sliders (Master / Music /
+Interface / Game) and a mute-when-unfocused toggle; Display has a fullscreen toggle and a text size
+slider (each slider shows its value as a whole number above its handle, through `SliderValueLabel`);
+Controls has the key bindings ([keybindings.md](keybindings.md)). The audio and display controls are
+bound to the **`Prefs`** autoload, which applies each change (bus level / theme text sizes / window
+mode / focus-mute) and persists it to `user://` (a ConfigFile, **separate** from the run `Save`). Each
+tab is a `ScrollContainer` so the screen stays usable at the largest text size. Tab titles are set
+with `tr()` in the script, because the text extractor does not read node names. Opened from the title and the
 pause menu; Close emits `closed` and the opener frees it. See [audio](audio.md) and the
 [text ladder](ui_theme.md#the-text-ladder-and-the-text-size-setting).
 
@@ -181,8 +183,10 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   top and side edges. The HUD / ally-slot item cells
   are smaller than the player's board (`ItemCell.set_cell_size`); their value pills do not shrink
   with them, so the numbers read the same size everywhere. The view **reconciles** its
-  widgets to the live roster every frame (`_sync_rosters` / `_drop_missing`), so a **reaped
-  dead enemy** (CombatManager removes it from combat) loses its HUD + sprite at once.
+  widgets to the live roster every frame (`_sync_rosters`), so a **reaped
+  dead enemy** (CombatManager removes it from combat) leaves the lookup maps at once, and its HUD and
+  sprite burn away where they stand with the [paper burn](paper_burn.md), each part of the HUD
+  separately (`_burn_missing_huds`, `CharacterPanel.burn_away`).
 - **Player portrait + HP at the top of the player's column** — the portrait on the left, and to its right,
   aligned to the top of the section, a "Name:" and a "Class:" field, each written on a pencil line (`PencilLine`) that runs to the panel's right edge, like a character sheet (`CharacterPanel.sheet_fields`; the run screen passes the character's `name_key` and `class_key` through `CombatView.show_character`), over the health bar and the status icons (the player's character
   panel, `PlayerPanel`). The player's panel keeps one size through the
@@ -241,11 +245,13 @@ the corridor light, so they come out of the dark on the approach. The container 
 [world clamp](palette_clamp.md#world-clamp).
 
 - **One sprite per enemy:** the view passes the enemy roster to `set_enemies` each frame. An enemy
-  keeps its sprite and image while it stays in the fight; a reaped enemy's sprite is freed and a new
-  enemy (a summon) gets its own. The sprite shown during the approach, before the fight is bound, is
+  keeps its sprite and image while it stays in the fight; a reaped enemy's sprite burns away where it
+  stands (`Corridor3D.burn_enemy`) and a new enemy (a summon) gets its own. `clear_enemies` removes
+  every sprite at once with no burn, for the encounter choice. The sprite shown during the approach, before the fight is bound, is
   taken over by the first enemy.
 - **Placement:** `CombatCorridor` decides the spread (`SPREAD`) and shrink by count
-  (`_count_shrink`). Each sprite is sized to `Balance.ENEMY_PAINTED_HEIGHT` screen pixels at depth 0
+  (`_count_shrink`). Each enemy has a place in the row, kept while it lives: when one dies the others
+  do not move or grow. The row is shared out again between everyone in it only when an enemy joins. Each sprite is sized to `Balance.ENEMY_PAINTED_HEIGHT` screen pixels at depth 0
   and placed at the shared depth, offset sideways by `_offset_x`. Perspective makes deeper sprites
   smaller.
 - **Several enemies** share one depth, each `DEPTH_STEP` metres further than the one before, so
@@ -301,33 +307,40 @@ that array when there is no fight, so allies stay beside the player during event
 recruited by the event appears at once. When a fight resolves, the run screen calls `view.release()` at once so the last hits'
 numbers and rings don't stay frozen in the corridor under the reward panel. `release()` also clears the item
 cells' cooldown fills (`ItemCell.show_cooldown`) and fades away the fight's temporary things (below).
+After a won fight the run screen waits for the last enemies to burn away (`view.start_burns()`, then
+the view's `burns_finished`) and then `Balance.FIGHT_END_PAUSE` before the after-beat (`leaving_fight`
+is true meanwhile), because moving on to the next beat frees the
+view and everything burning in it.
 A view built without a fight never shows the fills. The combat report is still full-screen.
 
 - **Shop** — `shop_overlay.tscn` shows the shop's name, the player's gold, one `ShopEntry`
-  (`shop_entry.tscn`: a `RewardOption` with a buy button showing the price) per good, and Reroll
+  (`shop_entry.tscn`: a `RewardOption` showing the good at its level, with a buy button showing
+  `RunManager.shop_price`) per good, and Reroll
   and Leave buttons, in the corridor area like the draft panel. Pressing a good or its button emits
-  `bought(index)` → `RunManager.buy`; the run screen then refreshes the panel, the gold box, the
-  potions and the relics. A sold or unaffordable good is disabled; a sold one reads "Sold". Reroll
+  `bought(index)` → `RunManager.buy`; the run screen plays `run/purchase`, then refreshes the panel,
+  the gold box, the potions and the relics. A sold or unaffordable good is disabled; a sold one reads "Sold". Reroll
   shows its price, is disabled when the player cannot pay, and emits `rerolled` →
   `RunManager.reroll_shop`; the run screen then rebuilds the goods (`ShopOverlay.show_goods`). Leave
   emits `left` → `RunManager.leave_shop`, then the run advances. Hovering a good shows its tooltip.
 - **Draft** — `draft_overlay.tscn` shows each reward as a `RewardOption` (`reward_option.tscn`)
-  after a fight or in a reward encounter: a button around the same `ItemCell` the board uses (the same
-  icon, value pills and tooltip, for potions and relics too),
+  in a reward encounter: a button around the same `ItemCell` the board uses (the same
+  icon, value pills and tooltip, for potions and relics too), built at the level from
+  `RunManager.pending_draft_levels`,
   with a `UIJuice` node drawing the highlight on the cell's frame, so a reward hovers, presses and
   sounds like every other control the player picks ([control_feedback.md](control_feedback.md)). The
   button itself draws nothing (the `ButtonBare` theme variation). Hovering one shows the item
   tooltip, and pressing it emits `picked(index)` → `RunManager.apply_draft_pick`. The **gold button** in the
   panel's bottom right (`'+{0} gold'`, the amount from `Balance.GOLD_SKIP`) emits `skipped` →
   `RunManager.apply_draft_skip` instead, banking gold and
-  refreshing the gold box before advancing (decision #33). A reward encounter's goods can be skipped
-  the same way. Both paths then advance. Under the title,
-  the `Gain` line (`DraftOverlay.show_gain`) lists the health and gold the fight won gave
-  (`RunManager.last_fight_gain`); it is hidden for a reward encounter.
+  refreshing the gold box before advancing (decision #33). Both paths then advance. A won fight shows
+  no reward panel (decision #62); its gold goes straight into the gold box.
 - **Gold** — a "Gold" box beside the potions in the combat view: the amount in a box drawn with the
   potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
   screen writes it when it builds the view (covering a resumed run's banked gold), after each beat and
-  after each skip.
+  after each skip. The box counts to a new amount and plays `run/gold` for each coin counted up
+  (`GOLD_*` constants in `combat_view_framed.gd`). The view is rebuilt every beat, so the run screen
+  keeps the number the last view showed and starts the new view there (`snap_gold`), which lets the
+  gold won by a fight count up in the next beat's view.
 - **Relics** — a "Relics" box beside the gold: the potions' pencil grid, as many squares across as fit
   in the rest of the potion row, with a relic token (an `ItemCell` holding the relic's `Item`) in each
   square. More relics than squares across wrap onto more rows, and the board fits the items to the
@@ -351,7 +364,8 @@ A view built without a fight never shows the fills. The combat report is still f
   (`SheetSection`, `LabelDim`). The combat view places it at the bottom of the item column
   ([ui_layout.md](ui_layout.md#screen-sections)).
 - **Speed button** — `speed_button.tscn` in the information section: an always-visible
-  ×1/×2/×3 toggle calling `Game.cycle_battle_speed`, label tracking the live setting.
+  battle-speed dial. A left click steps one notch faster and a right click one notch slower
+  (`Game.step_battle_speed`, wrapping at either end of `Balance.BATTLE_SPEEDS`); the label tracks the live setting.
 - **Report button** — beside the speed button in the information section: always visible, a toggle
   that raises and hides the combat report of the current or last fight.
 - **Pause menu** — `pause_menu.tscn`, a CanvasLayer **above** the HUD with an opaque

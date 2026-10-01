@@ -37,6 +37,7 @@ const DEFAULT_RUNG: String = 'Body'
 const VARIATIONS: Dictionary = {
   'Label': ['Small', 'Medium', 'Large', 'Heading', 'Title', 'Display'],
   'Button': ['Medium', 'Large', 'Heading'],
+  'TabContainer': ['Large'],
 }
 
 ## The player's setting is a multiple of the ladder, clamped to this range.

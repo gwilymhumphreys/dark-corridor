@@ -343,10 +343,6 @@ msgstr "Close"
 msgid "+{0} gold"
 msgstr "+{0} gold"
 
-#: src/scenes/screens/draft_overlay.gd
-msgid "+{0} health, +{1} gold"
-msgstr "+{0} health, +{1} gold"
-
 #: src/scenes/screens/draft_overlay.tscn
 msgid "Choose a reward"
 msgstr "Choose a reward"
@@ -407,6 +403,22 @@ msgstr "Merge (loses an enchantment)"
 msgid "Merge"
 msgstr "Merge"
 
+#: src/scenes/screens/keybind_row.gd
+msgid "Press a key"
+msgstr "Press a key"
+
+#: src/scenes/screens/keybind_row.gd
+msgid "Slower battle speed"
+msgstr "Slower battle speed"
+
+#: src/scenes/screens/keybind_row.gd
+msgid "Faster battle speed"
+msgstr "Faster battle speed"
+
+#: src/scenes/screens/keybind_row.gd
+msgid "Pause"
+msgstr "Pause"
+
 #: src/scenes/screens/map_strip.gd
 msgid "Act {0}"
 msgstr "Act {0}"
@@ -451,6 +463,26 @@ msgstr "Exit Game"
 msgid "Report"
 msgstr "Report"
 
+#: src/scenes/screens/settings_screen.gd
+msgid "Audio"
+msgstr "Audio"
+
+#: src/scenes/screens/settings_screen.gd
+msgid "Display"
+msgstr "Display"
+
+#: src/scenes/screens/settings_screen.gd
+msgid "Controls"
+msgstr "Controls"
+
+#: src/scenes/screens/settings_screen.gd
+msgid "Removed from {0}"
+msgstr "Removed from {0}"
+
+#: src/scenes/screens/settings_screen.gd
+msgid "That key is kept for the game"
+msgstr "That key is kept for the game"
+
 #: src/scenes/screens/settings_screen.tscn
 msgid "Master volume"
 msgstr "Master volume"
@@ -479,6 +511,22 @@ msgstr "Fullscreen"
 msgid "Mute when unfocused"
 msgstr "Mute when unfocused"
 
+#: src/scenes/screens/settings_screen.tscn
+msgid "Action"
+msgstr "Action"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Main key"
+msgstr "Main key"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Spare key"
+msgstr "Spare key"
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Reset keys"
+msgstr "Reset keys"
+
 #: src/scenes/screens/shop_entry.gd
 msgid "{0} gold"
 msgstr "{0} gold"
@@ -488,12 +536,12 @@ msgid "Sold"
 msgstr "Sold"
 
 #: src/scenes/screens/shop_overlay.gd
-msgid "Your gold: {0}"
-msgstr "Your gold: {0}"
-
-#: src/scenes/screens/shop_overlay.gd
 msgid "Reroll ({0} gold)"
 msgstr "Reroll ({0} gold)"
+
+#: src/scenes/screens/shop_overlay.gd
+msgid "Your gold: {0}"
+msgstr "Your gold: {0}"
 
 #: src/scenes/screens/shop_overlay.tscn
 msgid "Leave"

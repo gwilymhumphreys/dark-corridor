@@ -92,6 +92,8 @@ An item has a level from 1 to `Balance.ITEM_MAX_LEVEL`. Merging two copies at th
 - Not scaled: the cooldown, status durations, how many stacks or items are consumed, and effects with no value. An applied status's stack count is its effect value, so it is scaled.
 - Values stay fractional until they land (decision #49), so a small value can round to the same number at two levels.
 
+Items offered later in the run can arrive above level 1: [run_manager.md → Levelled offers](run_manager.md#levelled-offers).
+
 ---
 
 ## Enchantments (one slot; details → Content PRD)

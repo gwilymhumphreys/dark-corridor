@@ -9,8 +9,8 @@ extends Node
 ## CombatManager clock is supplied externally (the autotest steps sim_step; the
 ## Phase-4 run screen will drive _physics_process), so the cycle here is: enter a
 ## beat (create the Encounter + auto-save) → begin it → on its `resolved` fulfil
-## the reward (a pending draft offer / relic / none) and check run-end → the caller
-## supplies a draft pick → advance. The Run manager is kept out of the scene tree
+## the reward (a pending offer of goods / a shop / a relic / none) and check run-end → the caller
+## supplies a pick → advance. The Run manager is kept out of the scene tree
 ## in Phase 3 (driven by calls); freeing is manual via teardown().
 
 signal run_ended(outcome: int)
@@ -67,18 +67,18 @@ static var pinned_enemy_ids: Array[String] = []
 # The choice beat's offer: one EncounterCatalog id per card position, left to right, '' for a
 # position left empty (only when fewer than three encounters can be offered). Empty otherwise.
 var _pending_choice: Array[String] = []
-## What the last fight won gave the player before its reward: { 'health': int, 'gold': int }. The
-## draft panel shows it.
-var last_fight_gain: Dictionary = {}
-# The held offer the player picks one of: a fight's draft (items) or a reward encounter's goods (a
-# mix of ItemDef, RelicDef and ConsumableDef). Either can be skipped for gold (apply_draft_skip).
+# The held offer the player picks one of: a reward encounter's goods (a mix of ItemDef, RelicDef
+# and ConsumableDef). It can be skipped for gold (apply_draft_skip).
 var _pending_offer: Array = []
-# The open shop's goods (ItemDef, RelicDef or ConsumableDef), which of them are sold, by index, and
-# how many rerolls this visit has had. Not saved: a resume re-enters the shop and draws the same
-# goods, with the gold as it was when the shop was picked. A shop stays open while its goods are
-# empty, as after a reroll that draws nothing.
+# The level of each good in _pending_offer, by index: drawn for an item, 1 for a relic or a potion.
+var _pending_offer_levels: Array[int] = []
+# The open shop's goods (ItemDef, RelicDef or ConsumableDef), their levels (as _pending_offer_levels),
+# which of them are sold, by index, and how many rerolls this visit has had. Not saved: a resume
+# re-enters the shop and draws the same goods and levels, with the gold as it was when the shop was
+# picked. A shop stays open while its goods are empty, as after a reroll that draws nothing.
 var _shop_open: bool = false
 var _shop_goods: Array = []
+var _shop_levels: Array[int] = []
 var _shop_sold: Array[bool] = []
 var _shop_rerolls: int = 0
 var _ended: bool = false
@@ -110,7 +110,7 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
     apply_enchant(Enchantment.new(EnchantCatalog.get_def(enchant_spec['enchant_id'])), enchant_spec['item_index'])
   position = 0
   _ended = false
-  _pending_offer = []
+  _set_offer([])
   _close_shop()
   _current_def_id = ''
   _pending_choice = []
@@ -274,37 +274,28 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
     return
   # Before the reward, so a relic won in this fight does not react to winning it. Only a fight
   # resolves WON (a rest or event resolves RESOLVED).
-  last_fight_gain = {}
   if outcome_value == Encounter.Outcome.WON:
     _apply_fight_won_gain()
     _fire_run_event(RunEvent.FIGHT_WON)
     if _ended:
       return   # a relic's fight-won damage killed the player
   match reward:
-    EncounterDef.Reward.DRAFT:
-      _pending_offer = Draft.draw(_draft_pool(), position, rng)
-    EncounterDef.Reward.RELIC:
-      _grant_relic()                                          # an act boss
+    EncounterDef.Reward.RELIC, EncounterDef.Reward.ELITE:
+      _grant_relic()                                          # an act boss or an elite
     EncounterDef.Reward.GOODS:
-      _pending_offer = Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng)   # a reward encounter
+      _set_offer(Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng))   # a reward encounter
     EncounterDef.Reward.SHOP:
       _shop_open = true
       _shop_rerolls = 0
       _draw_shop_goods()
-    EncounterDef.Reward.ELITE:
-      _grant_relic()                                          # an elite is richer: a relic AND
-      _pending_offer = Draft.draw(_draft_pool(), position, rng)   # a draft (reward asymmetry, #2)
     _:
       pass
 
 
 ## Every fight won gives some health and gold before its reward (owner, docs/plans/encounter_choice.md).
-## Records what was gained in `last_fight_gain` for the draft panel.
 func _apply_fight_won_gain() -> void:
-  var health_before: int = player.hp
   _apply_run_effect(RunEffect.heal(Balance.FIGHT_WON_HEAL))
   _apply_run_effect(RunEffect.gold(Balance.FIGHT_WON_GOLD))
-  last_fight_gain = { 'health': player.hp - health_before, 'gold': Balance.FIGHT_WON_GOLD }
 
 
 ## The reward relics the player does not hold yet: RelicCatalog.REWARD_POOL minus the relics held, in
@@ -412,7 +403,7 @@ func flag(flag_name: String) -> int:
   return int(flags.get(flag_name, 0))
 
 
-## True while an offer waits for the player: a fight's draft or a reward encounter's goods.
+## True while an offer waits for the player: a reward encounter's goods.
 func has_pending_draft() -> bool:
   return not _pending_offer.is_empty()
 
@@ -422,21 +413,55 @@ func pending_draft() -> Array:
   return _pending_offer
 
 
-## Apply the player's pick from the offer (a draft-pick intent): an item goes on the board, a relic
-## to the relics (its PICKED_UP triggers fire), a potion to the potions. Clears the offer. Skipping
-## instead banks gold — apply_draft_skip.
+## The level of each offered good, in the order of pending_draft (1 for a relic or a potion).
+func pending_draft_levels() -> Array[int]:
+  return _pending_offer_levels
+
+
+## Apply the player's pick from the offer (a draft-pick intent): an item goes on the board at its
+## offered level, a relic to the relics (its PICKED_UP triggers fire), a potion to the potions. Clears
+## the offer. Skipping instead banks gold — apply_draft_skip.
 func apply_draft_pick(index: int) -> void:
   if _pending_offer.is_empty():
     return
-  var picked: Variant = _pending_offer[clampi(index, 0, _pending_offer.size() - 1)]
-  _pending_offer = []
-  _gain(picked)
+  var picked_index: int = clampi(index, 0, _pending_offer.size() - 1)
+  var picked: Variant = _pending_offer[picked_index]
+  var level: int = _pending_offer_levels[picked_index]
+  _set_offer([])
+  _gain(picked, level)
 
 
-# Give the player one of the goods: an item goes on the board, a relic to the relics (its PICKED_UP
-# triggers fire), a potion to the potions. Relics and potions are item definitions too, so they are
-# checked first.
-func _gain(good: Variant) -> void:
+# Hold `goods` as the pending offer, each with a level (_draw_offer_levels). An empty list clears it.
+func _set_offer(goods: Array) -> void:
+  _pending_offer = goods
+  _pending_offer_levels = _draw_offer_levels(goods)
+
+
+## The level of an item offered at fight number `fight` (RunMap.fight_number, from 0): a weighted draw
+## on `rng` from that fight's row of Balance.ITEM_OFFER_LEVEL_ODDS, or the last row past the end. A row
+## with only level 1 draws no RNG.
+static func draw_offer_level(fight: int, rng_value: RandomNumberGenerator) -> int:
+  var rows: Array[Array] = Balance.ITEM_OFFER_LEVEL_ODDS
+  var odds: Array = rows[clampi(fight, 0, rows.size() - 1)]
+  if odds.size() <= 1:
+    return 1
+  return mini(rng_value.rand_weighted(PackedFloat32Array(odds)) + 1, Balance.ITEM_MAX_LEVEL)
+
+
+# The level of each of `goods`: drawn for an item (draw_offer_level at this beat's fight number), 1 for
+# a relic or a potion, which are item definitions too.
+func _draw_offer_levels(goods: Array) -> Array[int]:
+  var levels: Array[int] = []
+  for good: Variant in goods:
+    var is_item: bool = good is ItemDef and not (good is RelicDef or good is ConsumableDef)
+    levels.append(draw_offer_level(RunMap.fight_number(position), rng) if is_item else 1)
+  return levels
+
+
+# Give the player one of the goods: an item goes on the board at `level`, a relic to the relics (its
+# PICKED_UP triggers fire), a potion to the potions. Relics and potions are item definitions too, so
+# they are checked first.
+func _gain(good: Variant, level: int = 1) -> void:
   if good is RelicDef:
     var relic := Relic.new(good)
     relics.append(relic)
@@ -444,7 +469,9 @@ func _gain(good: Variant) -> void:
   elif good is ConsumableDef:
     potions.append(Consumable.new(good))
   elif good is ItemDef:
-    player.board.append(Item.new(good, player))
+    var item := Item.new(good, player)
+    item.level = level
+    player.board.append(item)
 
 
 ## Skip the pending offer (a draft-skip intent, the sibling of apply_draft_pick): bank a fixed
@@ -455,7 +482,7 @@ func apply_draft_skip() -> void:
   if _pending_offer.is_empty():
     return
   gold += Balance.GOLD_SKIP
-  _pending_offer = []
+  _set_offer([])
   _fire_run_event(RunEvent.DRAFT_SKIPPED)
 
 
@@ -476,6 +503,16 @@ func is_sold(index: int) -> bool:
   return index >= 0 and index < _shop_sold.size() and _shop_sold[index]
 
 
+## The level of the shop good at `index` (1 for a relic or a potion).
+func shop_level(index: int) -> int:
+  return _shop_levels[index] if index >= 0 and index < _shop_levels.size() else 1
+
+
+## What the shop charges for the good at `index`: its price at its level (price_at_level).
+func shop_price(index: int) -> int:
+  return price_at_level(_shop_goods[index], shop_level(index))
+
+
 ## What a shop charges for `good`: a Balance value by its kind (item, relic, potion) and rarity.
 static func price_of(good: Variant) -> int:
   var prices: Array[int] = Balance.SHOP_PRICE_ITEM
@@ -486,20 +523,26 @@ static func price_of(good: Variant) -> int:
   return prices[clampi(good.rarity, 0, prices.size() - 1)]
 
 
+## What `good` is worth at `level`: the price of the level 1 copies it would be merged from (price_of,
+## doubled for each level above 1).
+static func price_at_level(good: Variant, level: int) -> int:
+  return price_of(good) * (1 << (level - 1))
+
+
 ## Whether the player can buy the good at `index` now: it is on sale, not sold, and affordable.
 func can_buy(index: int) -> bool:
   return index >= 0 and index < _shop_goods.size() and not _shop_sold[index] \
-    and gold >= price_of(_shop_goods[index])
+    and gold >= shop_price(index)
 
 
-## Buy the good at `index`: pay its price and gain it. Returns false, changing nothing, when it
-## cannot be bought (can_buy). Draws no run RNG.
+## Buy the good at `index`: pay its price and gain it at its level. Returns false, changing nothing,
+## when it cannot be bought (can_buy). Draws no run RNG.
 func buy(index: int) -> bool:
   if not can_buy(index):
     return false
-  gold -= price_of(_shop_goods[index])
+  gold -= shop_price(index)
   _shop_sold[index] = true
-  _gain(_shop_goods[index])
+  _gain(_shop_goods[index], shop_level(index))
   return true
 
 
@@ -533,22 +576,23 @@ func leave_shop() -> void:
 
 func _draw_shop_goods() -> void:
   _shop_goods = Draft.draw_stock(_current.def.stock, _draft_pool(), relic_pool(), rng)
+  _shop_levels = _draw_offer_levels(_shop_goods)
   _shop_sold.assign(_shop_goods.map(func(_good: Variant) -> bool: return false))
 
 
 func _close_shop() -> void:
   _shop_open = false
   _shop_goods = []
+  _shop_levels = []
   _shop_sold = []
   _shop_rerolls = 0
 
 
 # --- selling items (docs/systems/run_manager.md → Selling) --------------------
 
-## What `item` is worth at its level: the shop price of the level 1 copies it was made from
-## (price_of its definition, doubled for each level above 1).
+## What `item` is worth at its level (price_at_level of its definition).
 static func item_price(item: Item) -> int:
-  return price_of(item.def) * (1 << (item.level - 1))
+  return price_at_level(item.def, item.level)
 
 
 ## What selling `item` gives: SELL_SHARE of item_price, rounded down. An enchant does not change it.
@@ -557,7 +601,7 @@ static func sell_price(item: Item) -> int:
 
 
 ## Whether the player can sell `item` now: it is on their board and no fight is under way (the
-## choice of encounters, events, rests, a fight's draft, reward encounters and shops all allow it).
+## choice of encounters, events, rests, reward encounters and shops all allow it).
 func can_sell(item: Item) -> bool:
   if _ended or item == null or not item in player.board:
     return false
@@ -706,7 +750,7 @@ func advance() -> void:
     # (docs decision #33) — before advancing. A caller that advances past one has a flow bug —
     # drop the offer loudly rather than carry it unsaved into the next beat.
     push_error('RunManager.advance: advancing past an unconsumed draft offer — dropping it')
-    _pending_offer = []
+    _set_offer([])
   if has_open_shop():
     push_error('RunManager.advance: advancing without leaving the shop — closing it')
     _close_shop()
@@ -897,7 +941,7 @@ func rehydrate(snap: Dictionary) -> bool:
   rng.seed = int(snap['rng']['seed'])
   rng.state = int(snap['rng']['state'])
   _ended = false
-  _pending_offer = []
+  _set_offer([])
   _close_shop()
   # Restore the current beat exactly — the offered encounters or the encounter — never redraw it
   # (no save-scum).
@@ -961,6 +1005,6 @@ func teardown() -> void:
   potions.clear()
   flags.clear()
   times_picked.clear()
-  _pending_offer.clear()
+  _set_offer([])
   _close_shop()
   _pending_choice.clear()

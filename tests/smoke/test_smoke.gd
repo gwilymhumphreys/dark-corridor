@@ -17,4 +17,5 @@ func test_harness_runs() -> void:
 
 func test_balance_constants_present() -> void:
   assert_gt(Balance.STEP, 0.0, 'STEP is a positive fixed timestep')
-  assert_eq(Balance.BATTLE_SPEEDS.size(), 3, 'three battle-speed settings')
+  assert_almost_eq(Balance.BATTLE_SPEEDS[Balance.BATTLE_SPEED_DEFAULT_INDEX], Balance.TIMESCALE_BASE, 0.00001,
+    'the default battle-speed notch is ×1')

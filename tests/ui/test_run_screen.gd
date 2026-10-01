@@ -32,14 +32,16 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
       screen._choice.picked.emit(0)   # stand in for the player picking the left encounter card
     elif screen._draft != null:
       screen._draft.picked.emit(0)    # stand in for the player picking the first reward
+    elif screen._view != null and screen._view.burning():
+      screen._view.finish_burns()   # no frames pass here, so the dead enemies' burns are ended at once
+    elif screen.leaving_fight:
+      await wait_seconds(Balance.FIGHT_END_PAUSE + 0.05)   # the pause after the burns runs on a timer
     else:
       screen._physics_process(1.0)   # ~8 sim-steps/call; drives fights + advances beats
     guard += 1
 
   assert_eq(Game.phase, GameManagerAutoload.Phase.WIN, 'the run screen drove the descent to a win')
   assert_lt(guard, 12000, 'the run resolved well within the guard')
-  # Fight beats granted drafts (picked via the overlay), so the board grew past 3.
-  assert_gt(Game.run.player.board.size(), 3, 'drafted picks landed on the board')
 
   screen.free()
 
@@ -75,6 +77,24 @@ func test_a_won_fight_burns_its_map_square() -> void:
   screen.free()
 
 
+func test_a_won_fight_waits_for_its_last_enemy_to_burn_away() -> void:
+  var screen := _mount_into_fight(1)
+  var fight_view: CombatView = screen._view
+  var guard: int = 0
+  while screen._last_log == null and Game.phase == GameManagerAutoload.Phase.RUN and guard < 400:
+    screen._physics_process(1.0)
+    guard += 1
+  assert_true(fight_view.burning(), 'the last enemy is burning away')
+  assert_eq(screen._view, fight_view, 'and the run has not moved on yet')
+  assert_null(screen._draft, 'nor raised the reward')
+  fight_view.finish_burns()
+  assert_false(fight_view.burning(), 'the burn is over')
+  assert_eq(screen._view, fight_view, 'the run pauses before moving on')
+  await wait_seconds(Balance.FIGHT_END_PAUSE + 0.05)
+  assert_true(screen._draft != null or screen._view != fight_view, 'then it moves on')
+  screen.free()
+
+
 func test_fight_beat_approaches_then_fights() -> void:
   # A fight beat opens with the corridor approach (combat frozen), then begins on
   # arrival. The clock is not ticked until FIGHTING, so the enemy is unharmed while
@@ -104,12 +124,12 @@ func test_a_fight_opens_at_the_current_battle_speed() -> void:
   # The dial is a Game session preference; a fight beginning after it was set inherits
   # it as the Timekeeper's base scale.
   Game.start_run(1, FixtureCharacter.ID)
-  Game.set_battle_speed_index(2)   # ×3 before the screen mounts
+  Game.set_battle_speed_index(0)   # the slowest notch before the screen mounts
   var screen := _mount_into_fight(-1)   # -1: run already started above
   for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
-  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[2], 0.00001,
+  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[0], 0.00001,
     'the fight inherits the dial set before it began')
   screen.free()
 
@@ -119,11 +139,40 @@ func test_battle_speed_dial_retimes_the_live_fight() -> void:
   for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   assert_eq(screen._state, RunScreen.State.FIGHTING, 'in the fight')
-  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[0], 0.00001,
+  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.TIMESCALE_BASE, 0.00001,
     'opens at ×1 by default')
-  Game.set_battle_speed_index(2)   # ×3 mid-fight
-  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[2], 0.00001,
+  Game.set_battle_speed_index(0)   # the slowest notch mid-fight
+  assert_almost_eq(screen._cm.timekeeper.base_scale, Balance.BATTLE_SPEEDS[0], 0.00001,
     'changing the dial retimes the live fight at once')
+  screen.free()
+
+
+func _action_press(action: String) -> InputEventAction:
+  var event: InputEventAction = InputEventAction.new()
+  event.action = action
+  event.pressed = true
+  return event
+
+
+func test_speed_keys_step_the_dial_and_stop_at_the_ends() -> void:
+  var screen := _mount_into_fight(1)
+  var start: int = Game.battle_speed_index
+  screen._unhandled_input(_action_press('battle_speed_up'))
+  assert_eq(Game.battle_speed_index, start + 1, 'the faster key steps one notch')
+  screen._unhandled_input(_action_press('battle_speed_down'))
+  assert_eq(Game.battle_speed_index, start, 'the slower key steps back')
+  Game.set_battle_speed_index(0)
+  screen._unhandled_input(_action_press('battle_speed_down'))
+  assert_eq(Game.battle_speed_index, 0, 'the slowest does not wrap')
+  screen.free()
+
+
+func test_speed_keys_do_nothing_while_paused() -> void:
+  var screen := _mount_into_fight(1)
+  var start: int = Game.battle_speed_index
+  screen._pause(false)
+  screen._unhandled_input(_action_press('battle_speed_up'))
+  assert_eq(Game.battle_speed_index, start, 'paused, the key is ignored')
   screen.free()
 
 
@@ -501,7 +550,7 @@ func test_draft_rewards_are_inspectable_in_the_corridor() -> void:
   var screen := _mount_into_event(1)
   screen._event.queue_free()
   screen._event = null
-  screen._run._pending_offer.assign([FixtureItems.attack()])
+  screen._run._set_offer([FixtureItems.attack()])
   screen._show_draft()
   await get_tree().process_frame   # let the containers place the reward icon
   assert_eq(screen._draft.get_parent(), screen._view.corridor_area(), 'the reward panel is in the corridor area')

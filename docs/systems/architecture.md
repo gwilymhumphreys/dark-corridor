@@ -66,7 +66,7 @@ Two layers the downward rule treats differently:
  
 ## The Draftable contract
 
-`Draftable` is **what a draft can offer** — expressed as **composition, not a parent class** (same instinct as the Ticker: share the engine by composition, keep identities distinct). It is a **definition-level contract**, not a runtime supertype. **Built so far:** a fight's draft offers items (`Draft.draw`); a reward encounter offers items, relics and potions (`Draft.draw_stock`); both are applied by `RunManager.apply_draft_pick` by the definition's class; relics are also granted on boss and elite rewards; enchants are applied by `RunManager.apply_enchant`. There is no `category` field yet, so the points below are the intended shape for when other kinds are drafted:
+`Draftable` is **what a draft can offer** — expressed as **composition, not a parent class** (same instinct as the Ticker: share the engine by composition, keep identities distinct). It is a **definition-level contract**, not a runtime supertype. **Built so far:** a reward encounter offers items, relics and potions (`Draft.draw_stock`), applied by `RunManager.apply_draft_pick` by the definition's class; relics are also granted on boss and elite rewards; enchants are applied by `RunManager.apply_enchant`. There is no `category` field yet, so the points below are the intended shape for when other kinds are drafted:
 
 - **Shared definition-face.** Every content definition (item / relic / consumable / enchant) carries a common header — `id`, `name`, `icon`, `rarity`, `category`, `tooltip` — by composition (the def *has* it; it doesn't *inherit* it). The `category` set is **open** — a new kind is additive.
 - **`Draft` + inspection are category-blind.** They read only that header to offer, rarity/depth-weight, and tooltip — never branching on category to draw or show.
@@ -83,7 +83,7 @@ The canonical reference for cross-system **edges**. Per-system PRDs link here fo
  
 - **Exposes:**
   - *`sim_time`* (stepped) — logic + event timestamps (fire / impact) read it. *`render_time()`* (continuous) — the VFX/audio wall reads it; smooth between steps.
-  - *Timescale dial* — the one scalar (battle-speed ×1/×2/×3, hover slow-mo (`Balance.TIMESCALE_SLOWMO`), pause ×0, fast-test ×5+). Set via intent, never by UI directly.
+  - *Timescale dial* — the one scalar (battle-speed `Balance.BATTLE_SPEEDS`, hover slow-mo (`Balance.TIMESCALE_SLOWMO`), pause ×0, fast-test ×5+). Set via intent, never by UI directly.
   - *`steps_due(real_delta) → int`* — accumulate `real_delta × dial`, drain whole `STEP`s (cap `MAX_STEPS`, drop backlog) → how many sim-steps to run; *`advance()`* — `sim_time += STEP`.
 - **Inbound (who calls the `Timekeeper`):**
   - `Combat manager` → creates it at combat start; each `tick` calls `steps_due` then `advance` per sim-step; sets the dial (`set_base_scale` / `set_override`, from a UI intent it interprets); tears it down at exit. (The `Run manager` never touches it.)

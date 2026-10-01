@@ -50,6 +50,7 @@ const SECTIONS: Dictionary = {
     'paper_burn_scorch_width': [0.0, 60.0, 0.5],
     'paper_burn_brightness': [1.0, 6.0, 0.05],
     'paper_burn_dither': [],
+    'paper_burn_palette': [],
     'paper_burn_particles': [],
   },
   'Page turn': {

@@ -38,6 +38,17 @@ func test_overlay_lists_the_offer_and_emits_the_pick() -> void:
   assert_signal_emitted_with_parameters(overlay, 'picked', [1])
 
 
+func test_overlay_shows_each_offer_at_its_level() -> void:
+  var overlay: DraftOverlay = preload('res://src/scenes/screens/draft_overlay.tscn').instantiate()
+  add_child(overlay)
+  _nodes.append(overlay)
+  var levels: Array[int] = [1, 3]
+  overlay.setup([FixtureItems.attack(), FixtureItems.shield()], levels)
+  var cards: Node = overlay.get_node('Panel/Cards')
+  assert_eq((cards.get_child(0) as RewardOption).item().level, 1, 'the first at level 1')
+  assert_eq((cards.get_child(1) as RewardOption).item().level, 3, 'the second at its offered level')
+
+
 func test_skip_button_emits_skipped() -> void:
   # The Skip button banks gold instead of taking a card (decision #33) — it emits `skipped`,
   # which the run screen forwards to RunManager.apply_draft_skip.

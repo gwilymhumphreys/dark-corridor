@@ -1,6 +1,6 @@
 # Dark Corridor — Draft PRD
 
-Run-structure PRD. Sits under the [Architecture Map](architecture.md). `Draft` is the **reward draw** — it produces a small offer of [Draftable](../design/game_design.md)s (the 1-of-3 reward), pulled from the draft pool and weighted by depth. It is a **stateless service**: it draws an offer; the pending offer and the pick's application live in the [Run manager](run_manager.md) (which owns run-state). Driven by the `Run manager` when an `Encounter` reward calls for it.
+Run-structure PRD. Sits under the [Architecture Map](architecture.md). `Draft` is the **reward draw** — it produces a small offer of [Draftable](../design/game_design.md)s (the 1-of-3 reward), pulled from the draft pool and weighted by depth. It is a **stateless service**: it draws an offer; the pending offer and the pick's application live in the [Run manager](run_manager.md) (which owns run-state). Driven by the `Run manager` when an `Encounter` reward calls for it. A won fight offers no draft (decision #62): the run calls `Draft.draw_stock` for a reward encounter's goods and a shop's goods. `Draft.draw` (the plain 1-of-3 item draw) is no longer called by the run.
 
 **Engine:** Godot 4.
 **Date:** 2026-06-05. Pre-prototype.
@@ -29,6 +29,7 @@ The `Run manager` calls `Draft` with the pool, the beat depth (unused today) and
 
 - **Slot composition** — each slot is **usually an item**; each has a **low chance** of an **enchant** or a **potion** instead (a per-slot roll). The exact chances are tuning (design).
 - **Depth-weighting** — rarity is a complexity and power tier (common / uncommon / rare — [Item PRD](item.md)), and **drop odds shift with depth** (later drafts → better rarity odds — design). Weighting reads **depth/position only**.
+- **Levels** — `Draft` returns definitions only. The `Run manager` then draws a level for each offered item, with odds that rise by fight number ([run_manager.md → Levelled offers](run_manager.md#levelled-offers)).
 - **Seeded** — the draw derives from the **run RNG** (the `Run manager`'s run stream), so a given run-state yields the **same offer** — not re-rollable by quit-and-resume (no save-scum — [Save PRD](save.md)).
 
 The offer is `Draftable`-generic — it draws item / enchant / potion definitions the same way; the subtype only matters at *application* (below).
@@ -64,7 +65,6 @@ The player picks one candidate (a `draft pick` intent — architecture); the **`
 ## Open / deferred
 
 - **Slot chances** (item vs enchant vs potion per slot) + **rarity-by-depth odds** — tuning (design's pool work).
-- **Relics in a fight's draft** — relics are offered by reward encounters (`draw_stock`), and bosses and elites grant one directly. Whether relics ever join a fight's item draw is open.
 - **Enchant-target / potion-drop sub-choices** — the UI interactions when a picked enchant needs a target or a potion needs a slot — a UI pass (the choices are intents the `Run manager` applies).
 - **Draftable definition format — resolved (#23):** typed GDScript def objects + catalogs, keyed by **string id**. **Pool data:** the live draw pool is the **character's item pool + the shared colorless pool** (#27, built — `RunManager._draft_pool()`); what's *unlocked* into a character's pool is `Meta-progression` / content.
 - **RNG — resolved (#20):** the draw uses the `Run manager`'s run RNG (full state saved for deterministic resume), handed in by the `Run manager`.

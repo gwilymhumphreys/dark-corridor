@@ -155,7 +155,7 @@ the inline icon size**: an icon in a tooltip line is drawn at exactly the body f
 
 A scene takes a rung through `theme_type_variation`, never a number:
 `theme_type_variation = &"LabelMedium"` on a Label, `&"ButtonHeading"` on a Button. The theme
-defines a variation for each rung a scene actually uses — six for Label, three for Button — listed
+defines a variation for each rung a scene actually uses — six for Label, three for Button, one for TabContainer (`TabContainerLarge`, the settings tabs) — listed
 in `TextSize.VARIATIONS`. **Do not write `theme_override_font_sizes/font_size` in a scene**: a
 hardcoded number does not move with the player's text size setting.
 

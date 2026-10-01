@@ -50,6 +50,15 @@ func _buy_button(overlay: ShopOverlay, index: int) -> Button:
   return overlay.get_node('Panel/Cards').get_child(index).get_node('Buy')
 
 
+func test_a_levelled_good_shows_its_level_and_price() -> void:
+  var run := _run_in_shop(100)
+  run._shop_levels[0] = 2
+  var overlay := _overlay(run)
+  var option: RewardOption = overlay.get_node('Panel/Cards').get_child(0).get_node('Option')
+  assert_eq(option.item().level, 2, 'the good is shown at its level')
+  assert_eq(_buy_button(overlay, 0).text, '%d gold' % run.shop_price(0), 'with its levelled price')
+
+
 func test_the_panel_lists_the_goods_with_their_prices() -> void:
   var run := _run_in_shop(100)
   var overlay := _overlay(run)

@@ -54,7 +54,9 @@ func test_enemy_hud_hp_text_tracks_actor() -> void:
   a.take_damage(40.0)
   var bar: HealthBar = hud.get_node('Row/Readout/Top/NameBar/HealthBar')
   bar._process(0.0)   # the per-frame refresh, called directly — deterministic, no _process race
-  assert_eq(bar.get_node('Bar/Readout/Label').text, '60', 'HP text tracks the actor')
+  assert_eq(bar.get_node('Bar/Readout/Label').text, '100', 'the HP text does not jump to the new value')
+  bar._process(HealthBar.CHANGE_DURATION)
+  assert_eq(bar.get_node('Bar/Readout/Label').text, '60', 'it moves there over the change duration')
 
 
 func test_enemy_hud_status_icons_show_outside_set_statuses_only() -> void:
@@ -312,11 +314,25 @@ func test_the_gold_box_shows_the_gold_and_widens_for_a_long_number() -> void:
   await get_tree().process_frame
   var gold_board: Control = view.get_node('Items/PotionRow/Boxes/GoldColumn/GoldBoard')
   var square: float = view.get_node('Items/PotionRow/Boxes/PotionColumn/PotionBoard/Grid').size.y
-  view.show_gold(7)
+  view.snap_gold(7)
   assert_eq(view.get_node('Items/PotionRow/Boxes/GoldColumn/GoldBoard/Amount').text, '7', 'the amount is written in the box')
   assert_eq(gold_board.custom_minimum_size, Vector2(square, square), 'a short number takes one square')
-  view.show_gold(123456789)
+  view.snap_gold(123456789)
   assert_gt(gold_board.custom_minimum_size.x, square, 'a long number widens the box by whole squares')
+
+
+func test_the_gold_box_counts_to_a_new_amount() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  await get_tree().process_frame
+  var amount: Label = view.get_node('Items/PotionRow/Boxes/GoldColumn/GoldBoard/Amount')
+  view.snap_gold(2)
+  view.show_gold(10)
+  assert_eq(amount.text, '2', 'the box does not jump to the new amount')
+  view._count_gold(CombatViewFramed.GOLD_COUNT_MIN * 0.25)
+  assert_between(view.gold_on_screen(), 3, 9, 'part way through, the box shows a number in between')
+  view._count_gold(CombatViewFramed.GOLD_COUNT_MAX)
+  assert_eq(amount.text, '10', 'and it ends on the new amount')
 
 
 func test_the_player_panel_shows_name_and_class_fields() -> void:
@@ -438,6 +454,36 @@ func test_reaped_enemy_drops_its_hud() -> void:
   assert_false(e1 in view._enemy_huds, 'and it was the dead one (the living enemy keeps its HUD)')
   cm.free()
   await wait_process_frames(1)   # the dropped HUD is queue_free'd; let it go before the orphan count
+
+
+func test_a_shown_hud_burns_away_part_by_part() -> void:
+  var view: CombatViewFramed = preload('res://src/scenes/combat/combat_view_framed.tscn').instantiate()
+  _host(view)
+  var p := _spawn(1000.0, [FixtureItems.attack()])
+  var e1 := _spawn(40.0, [FixtureItems.attack()])
+  var e2 := _spawn(1000.0, [FixtureItems.attack()])
+  var cm := CombatManager.new(p, [e1, e2])
+  cm.start()
+  view.bind(cm, p, [])
+  view.show_enemies(0.0)
+  view._process(0.0)
+  var hud: EnemyHud = view._enemy_huds[e1]
+  var global_before: Vector2 = hud.global_position
+  e1.take_damage(50.0)
+  cm.sim_step()
+  view._process(0.0)
+  assert_false(e1 in view._enemy_huds, 'the dead enemy\'s HUD leaves the lookup at once')
+  assert_true(is_instance_valid(hud), 'but it is not freed yet')
+  assert_eq(hud.global_position, global_before, 'it stays where it stood')
+  var burns: Array = hud.find_children('*', '', true, false).filter(func(n: Node) -> bool: return n is PaperBurn)
+  assert_gt(burns.size(), 1, 'each part burns separately')
+  for burn: PaperBurn in burns:
+    assert_ne(burn.target, hud, 'not the see-through panel around them')
+  for burn: PaperBurn in burns:
+    burn.finish()
+  assert_true(hud.is_queued_for_deletion(), 'it is freed when the last part has burnt')
+  cm.free()
+  await wait_process_frames(1)
 
 
 func test_an_item_created_during_the_fight_gets_a_cell_marked_temporary() -> void:

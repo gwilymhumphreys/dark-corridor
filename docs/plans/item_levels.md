@@ -1,6 +1,6 @@
 # Plan: item levels and merging
 
-**Status:** stage 1 built (2026-09-30); stages 2 and 3 planned. Decision #61. The as-built description is in [item.md → Levels](../systems/item.md#levels) and [run_manager.md → Merging items](../systems/run_manager.md#merging-items).
+**Status:** stage 1 built (2026-09-30); stage 2 built with placeholder odds and stage 3 built (2026-10-01). Decision #61. The as-built description is in [item.md → Levels](../systems/item.md#levels) and [run_manager.md → Merging items](../systems/run_manager.md#merging-items).
 
 ## What the owner decided (2026-09-30)
 
@@ -83,9 +83,28 @@ Owner (2026-09-30): shops, fight drafts and reward encounters can all offer item
 
 Offers are definitions today (`Draft.draw_stock`, the draft candidates). An offered item needs a level as well, so each offer keeps a level beside each item good, the entry that shows it sets it on the display item, and `_gain` sets it on the item it adds. The level is drawn from odds that depend on the fight number, a table in `Balance` whose values are the owner's. A shop price is `item_price` of the levelled item.
 
+**Odds:** `Balance.ITEM_OFFER_LEVEL_ODDS`, one row of level weights per fight number (`RunMap.fight_number` of the beat that makes the offer). The owner chose marked placeholder values on 2026-10-01. Offers go up to level 3; level 4 comes only from merging.
+
+**RunManager:**
+
+- `static func draw_offer_level(fight: int, rng) -> int`: a weighted draw (`rng.rand_weighted`) from the row for `fight`, the last row past the end. A row with one level returns 1 and draws no RNG, so the first fights' draws do not change.
+- `_pending_offer_levels` beside `_pending_offer`, and `_shop_levels` beside `_shop_goods`: a drawn level for each item good, 1 for a relic or potion. Both are set and cleared with their offers (`_set_offer`, `_draw_shop_goods`, `_close_shop`).
+- `pending_draft_levels()` and `shop_level(index)` read them. `pending_draft()` and `shop_goods()` still return definitions, so their callers do not change.
+- `static func price_at_level(good, level)` is `price_of(good)` doubled for each level above 1; `item_price` uses it. `shop_price(index)` is the good's price at its level, and `can_buy` and `buy` use it.
+- `_gain(good, level = 1)` sets the level on the item it adds. `apply_draft_pick` and `buy` pass the offered level.
+- Offers are not saved (a resume replays the beat and draws the offer again from the saved RNG state), so saving does not change.
+
+**Interface:** `DraftOverlay.setup(candidates, levels)` and `ShopEntry.setup(good, price, level)` set the level on the display item, so the cell shows the level tag and the tooltip shows the level. `ShopOverlay` passes `shop_price(i)` and `shop_level(i)`.
+
+**Autotest:** the Driver's draft strategies read definitions only and ignore the level. The level draws move the run RNG from fight 4 on, so later draws in a seeded run change.
+
+**Tests (fixture content only):** `draw_offer_level` is 1 at the first fight and stays within 1 to 3 at the last; `price_at_level`; a picked draft item and a bought shop item keep their offered level; a levelled shop good costs `shop_price` and relics and potions are level 1.
+
 ## Stage 3: levelled enemy items
 
 Owner (2026-09-30): enemy items can be levelled. An enemy definition can give a level for each of its items, and `EnemyDef` sets it when it builds the actor's board. Which enemies use it is content.
+
+Built (2026-10-01): `EnemyDef.item_levels`, one level per entry of `item_ids` by index, 1 where missing (`item_level(index)`). `make_actor` sets it on each item. `points()` multiplies each item's spend by `Item.level_scale`, so a fight with levelled enemies draws fewer of them for the same target. No enemy uses it yet.
 
 ## Open questions for the owner
 

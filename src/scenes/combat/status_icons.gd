@@ -63,6 +63,11 @@ func refresh() -> void:
   _counts = counts
 
 
+## The status icons shown.
+func icons() -> Array[StatusIcon]:
+  return _icons
+
+
 ## How many status icons are shown.
 func icon_count() -> int:
   return _icons.size()

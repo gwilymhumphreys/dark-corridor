@@ -131,7 +131,7 @@ nulls its side). See [run_screen.md](run_screen.md).
 - **Combat report** — `combat_summary.tscn`, raised and dismissed by the **Report** button in the
   run screen's information section, which is always visible. It shows the **current fight** (as of
   the moment it is opened), or the **last finished fight** between fights, and is empty before the
-  first fight. It parks nothing: a fight resolves straight on to the reward draft. Shows the player per-item damage report (Item · Fires · Damage · Shield · Healing, from
+  first fight. It parks nothing: a fight resolves straight on to the next beat. Shows the player per-item damage report (Item · Fires · Damage · Shield · Healing, from
   `summary(PLAYER)` — Damage is **direct hits only**), a **Status damage** section (Status ·
   Damage, from `status_damage(PLAYER)`, hidden when no status dealt damage), and the ordered
   event-log timeline (from `events`), with a Close button.

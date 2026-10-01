@@ -24,11 +24,14 @@ const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tsc
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 const SHOP_OVERLAY: PackedScene = preload('res://src/scenes/screens/shop_overlay.tscn')
 const ITEM_ACTIONS: PackedScene = preload('res://src/scenes/screens/item_actions.tscn')
+const PURCHASE_SOUND: String = 'run/purchase'   # a good bought from a shop
 
 enum State { IDLE, WALKING, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, SHOPPING }
 
 var _run: RunManager
 var _cm: CombatManager
+## True while a won fight waits for its last enemies to burn away and the pause after them.
+var leaving_fight: bool = false
 var _view: CombatView   # the swappable surface — framed today, full-screen drops in here
 var _log: CombatLog       # the live fight's observation log
 var _last_log: CombatLog  # the last finished fight's log — what the Report button shows between fights
@@ -39,6 +42,7 @@ var _shop: ShopOverlay
 var _selected_item: Item          # the board item selected to sell or merge; null when none is
 var _item_actions: ItemActions    # the Sell and Merge buttons below the selected item; null when none is
 var _summary: CombatSummary   # the combat report panel while it is open; null while hidden
+var _gold_on_screen: int = -1   # the gold the last torn-down view showed; -1 before the first view
 var _state: int = State.IDLE
 var _approach_elapsed: float = 0.0
 var _paused: bool = false
@@ -233,7 +237,7 @@ func _physics_process(delta: float) -> void:
         _last_log = _log
         if not _run.is_ended():
           _map.burn_current_square()   # the fight was won: its square's token burns away
-        _after_beat()
+        _leave_won_fight()
       else:
         _cm.tick(delta)
 
@@ -289,7 +293,8 @@ func _inspection_target(mouse: Vector2) -> Dictionary:
 # it during a beat, freezing the screen's tick and raising the pause menu. Space (toggle_pause)
 # pauses and resumes without the menu, showing the small Paused panel; Escape during that raises
 # the menu, and Space does nothing while the menu is up. The autotest never mounts this screen, so
-# pause is invisible to the headless path.
+# pause is invisible to the headless path. The battle speed keys step the dial while the run is not
+# paused, stopping at either end; between fights that only changes what the next fight starts at.
 func _unhandled_input(event: InputEvent) -> void:
   if _selected_item != null and event.is_action_pressed('ui_cancel'):
     _clear_selection()   # Escape drops the selection before it pauses
@@ -308,6 +313,12 @@ func _unhandled_input(event: InputEvent) -> void:
       _resume()
     else:
       _pause(false)
+    get_viewport().set_input_as_handled()
+  elif not _paused and event.is_action_pressed('battle_speed_down'):
+    Game.step_battle_speed(-1, false)
+    get_viewport().set_input_as_handled()
+  elif not _paused and event.is_action_pressed('battle_speed_up'):
+    Game.step_battle_speed(1, false)
     get_viewport().set_input_as_handled()
 
 
@@ -409,6 +420,22 @@ func _exit_game() -> void:
   get_tree().quit()
 
 
+# The last enemies burn away, then a short pause, before the run moves on, because moving on to
+# the next beat frees the combat view and everything burning in it (docs/systems/paper_burn.md).
+# The state is IDLE while it waits, so nothing else starts.
+func _leave_won_fight() -> void:
+  var view: CombatView = _view
+  if not _run.is_ended() and view.start_burns():
+    leaving_fight = true
+    await view.burns_finished
+    if view == _view and is_inside_tree():
+      await get_tree().create_timer(Balance.FIGHT_END_PAUSE).timeout
+    leaving_fight = false
+    if view != _view or not is_inside_tree():
+      return
+  _after_beat()
+
+
 # Post-beat: the run already fulfilled the outcome (reward / run-end) via its signal
 # chain during the resolving tick. Here we react from OUTSIDE that emission — a pending
 # draft raises the overlay (the player picks; the loop pauses), otherwise we advance.
@@ -451,8 +478,8 @@ func _hide_report() -> void:
   _summary = null
 
 
-# The draft is a player choice (a draft-pick intent): raise the overlay with a fight's draft or a
-# reward encounter's goods and wait. The loop is paused in DRAFTING until a card is picked.
+# The draft is a player choice (a draft-pick intent): raise the overlay with a reward encounter's
+# goods and wait. The loop is paused in DRAFTING until a card is picked.
 func _show_draft() -> void:
   _state = State.DRAFTING
   _ensure_view()
@@ -460,8 +487,7 @@ func _show_draft() -> void:
   _view.corridor_area().add_child(_draft)   # in the corridor; the board, potions and HUD stay live
   _draft.picked.connect(_on_draft_picked)
   _draft.skipped.connect(_on_draft_skipped)
-  _draft.setup(_run.pending_draft())
-  _draft.show_gain(_run.last_fight_gain)
+  _draft.setup(_run.pending_draft(), _run.pending_draft_levels())
 
 
 func _on_draft_picked(index: int) -> void:
@@ -498,6 +524,7 @@ func _show_shop() -> void:
 func _on_shop_bought(index: int) -> void:
   if not _run.buy(index):
     return
+  SfxManager.play_sound(PURCHASE_SOUND)
   _shop.refresh(_run)
   _refresh_gold()
   _view.refresh_potions(_run.potions)
@@ -559,6 +586,9 @@ func _mount_view(cm: CombatManager) -> void:
   _view.bind(cm, _run.player, _run.potions, _run.allies)   # the rosters come off the CM; with no fight, the run's allies
   var character: CharacterDef = _run.character
   _view.show_character(tr(character.name_key), tr(character.class_key) if character.class_key != '' else '')
+  # The view is rebuilt every beat, so it starts from the gold the last one showed and counts any
+  # change from there (gold won by a fight is banked just before its view is torn down).
+  _view.snap_gold(_gold_on_screen if _gold_on_screen >= 0 else _run.gold)
   _refresh_gold()
   _view.show_relics(_run.relics)
   _view.potion_thrown.connect(_on_potion_thrown)
@@ -578,6 +608,7 @@ func _teardown_combat_view() -> void:
   _choice = null   # the cards live in the view's corridor area and go with it
   _log = null   # drop the live ref; _last_log keeps the finished fight's numbers for the report
   if _view != null:
+    _gold_on_screen = _view.gold_on_screen()
     _view.release()      # stop the VFX wall reading the CombatManager we're about to free
     _view.queue_free()   # deferred — the view holds render resources (CLAUDE.md)
     _view = null

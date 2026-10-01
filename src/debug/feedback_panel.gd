@@ -31,14 +31,12 @@ func rebuild() -> void:
   # TRIAL: the hit effects being tried (docs/systems/vfx_driver.md). Not control settings,
   # but they live here until hit effects have a tab of their own.
   var hits: LookSection = _add_section('Hit effects')
-  var set_sprites: Callable = func(new_value: Variant) -> void: VfxDriver.attack_sprites = new_value
-  hits.add_row(_make_row('Attack Sprites', VfxDriver.attack_sprites, [], set_sprites))
-  var set_status_sprites: Callable = func(new_value: Variant) -> void: VfxDriver.status_sprites = new_value
-  hits.add_row(_make_row('Status Sprites', VfxDriver.status_sprites, [], set_status_sprites))
   var set_comets: Callable = func(new_value: Variant) -> void: VfxDriver.comet_projectiles = new_value
   hits.add_row(_make_row('Comet Projectiles', VfxDriver.comet_projectiles, [], set_comets))
-  var set_status_landing: Callable = func(new_value: Variant) -> void: VfxDriver.status_landing_effects = new_value
-  hits.add_row(_make_row('Ring At Status Icons', VfxDriver.status_landing_effects, [], set_status_landing))
+  var set_pixel: Callable = func(new_value: Variant) -> void: VfxDriver.pixel_projectile = new_value
+  hits.add_row(_make_row('Pixel Projectile', VfxDriver.pixel_projectile, ProjectilePixelDrawer.option_names(), set_pixel))
+  var set_pixel_scale: Callable = func(new_value: Variant) -> void: VfxDriver.pixel_projectile_scale = new_value
+  hits.add_row(_make_row('Pixel Projectile Scale', VfxDriver.pixel_projectile_scale, [1.0, 6.0, 1.0], set_pixel_scale))
   # The highlight shares panel wear's material (docs/systems/control_feedback.md); only its own
   # settings are listed here, and panel wear's own groups stay in the Print tab.
   _build_shader_sections(PrintLook.panel_material, ControlFeedback.defaults())

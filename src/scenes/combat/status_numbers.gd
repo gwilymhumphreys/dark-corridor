@@ -2,11 +2,17 @@ class_name StatusNumbers
 extends HBoxContainer
 ## The health-bar status numbers (docs/systems/mechanics.md → Health bar): one entry per mechanic
 ## status (poison, burn, bleed, regen), each the mechanic's icon and its stack count in the
-## mechanic's colour. Shield is shown by HealthBar instead. Reads the actor's statuses each frame;
+## mechanic's colour. Shield is shown by HealthBar instead. A count that changes moves to its new
+## value over EasedValue.DEFAULT_DURATION instead of jumping. Reads the actor's statuses each frame;
 ## writes nothing.
 
 
-var actor: Actor = null
+var actor: Actor = null:
+  set(value):
+    actor = value
+    _shown.clear()   # a new actor is not a change: its counts show at once
+
+var _shown: Dictionary[String, EasedValue] = {}   # mechanic id -> the count on screen
 
 @onready var _poison: HBoxContainer = $Poison
 @onready var _burn: HBoxContainer = $Burn
@@ -21,14 +27,14 @@ func _ready() -> void:
   _set_icon(_regen, RegenMechanic.ID)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
   if actor == null:
     _hide_all()
     return
-  _refresh(_poison, PoisonMechanic.ID)
-  _refresh(_burn, BurnMechanic.ID)
-  _refresh(_bleed, BleedMechanic.ID)
-  _refresh(_regen, RegenMechanic.ID)
+  _refresh(_poison, PoisonMechanic.ID, delta)
+  _refresh(_burn, BurnMechanic.ID, delta)
+  _refresh(_bleed, BleedMechanic.ID, delta)
+  _refresh(_regen, RegenMechanic.ID, delta)
 
 
 func _set_icon(entry: HBoxContainer, id: String) -> void:
@@ -38,11 +44,17 @@ func _set_icon(entry: HBoxContainer, id: String) -> void:
   KeywordIcon.dress(icon, mechanic.icon, mechanic.color())
 
 
-func _refresh(entry: HBoxContainer, id: String) -> void:
+# The entry stays up while its number counts down to zero, and hides once it shows zero.
+func _refresh(entry: HBoxContainer, id: String, delta: float) -> void:
   var status: StatusEffect = _find_status(id)
-  if status != null and status.count > 0:
+  var count: int = status.count if status != null else 0
+  if not _shown.has(id):
+    _shown[id] = EasedValue.new()
+    _shown[id].snap(float(count))
+  var shown: int = roundi(_shown[id].step(float(count), delta))
+  if shown > 0:
     var value: Label = entry.get_node('Value')
-    value.text = str(status.count)
+    value.text = str(shown)
     value.modulate = MechanicRegistry.get_mechanic(id).color()
     entry.show()
   else:

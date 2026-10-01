@@ -91,11 +91,58 @@ func test_each_enemy_keeps_its_own_sprite() -> void:
   assert_eq(corridor._enemies.size(), 1, 'the dead enemy\'s sprite is removed')
   assert_eq(corridor._enemies[0], right_sprite, 'the surviving enemy keeps its sprite')
   assert_eq(right_sprite.texture, right_texture, 'and its image')
-  assert_null(placeholder.texture, 'the dead enemy\'s sprite released its image')
+  var burn: SpriteBurn = _burn_of(corridor, placeholder)
+  assert_not_null(burn, 'the dead enemy\'s sprite burns away')
+  burn.finish()
+  assert_null(placeholder.texture, 'and releases its image when the burn ends')
   var summon: RefCounted = RefCounted.new()
   corridor.set_enemies([right, summon])
   assert_eq(corridor._enemies[0], right_sprite, 'a summon joining does not change existing sprites')
   assert_ne(corridor._enemies[1], right_sprite, 'the summon gets its own sprite')
+
+
+func _burn_of(corridor: CombatCorridor, sprite: Sprite3D) -> SpriteBurn:
+  for child: Node in corridor.corridor().get_children():
+    if child is SpriteBurn and (child as SpriteBurn)._sprite == sprite:
+      return child
+  return null
+
+
+func test_the_others_keep_their_places_when_an_enemy_dies() -> void:
+  var corridor: CombatCorridor = _host()
+  var left: RefCounted = RefCounted.new()
+  var middle: RefCounted = RefCounted.new()
+  var right: RefCounted = RefCounted.new()
+  corridor.set_enemies([left, middle, right])
+  var left_sprite: Sprite3D = corridor._enemies[0]
+  var middle_sprite: Sprite3D = corridor._enemies[1]
+  var right_sprite: Sprite3D = corridor._enemies[2]
+  var left_at: Vector3 = left_sprite.position
+  var middle_at: Vector3 = middle_sprite.position
+  var right_at: Vector3 = right_sprite.position
+  var right_size: float = right_sprite.pixel_size
+  var right_anchor: Vector2 = corridor.enemy_anchor(2)
+  corridor.set_enemies([left, right])   # the middle enemy died
+  assert_eq(left_sprite.position, left_at, 'the left enemy stays where it was')
+  assert_eq(right_sprite.position, right_at, 'the right enemy stays where it was')
+  assert_eq(right_sprite.pixel_size, right_size, 'and keeps its size')
+  assert_eq(corridor.enemy_anchor(1), right_anchor, 'its HUD anchor does not move')
+  assert_eq(middle_sprite.position, middle_at, 'the dead enemy burns where it stood')
+  corridor.set_enemies([left, right, RefCounted.new()])
+  assert_ne(right_sprite.position, right_at, 'an enemy joining shares the row out again')
+  assert_lt(corridor._enemies[0].position.x, corridor._enemies[2].position.x, 'left to right')
+
+
+func test_clear_enemies_removes_them_without_a_burn() -> void:
+  var corridor: CombatCorridor = _host()
+  corridor.set_enemies([RefCounted.new(), RefCounted.new()])
+  var burning: Sprite3D = corridor._enemies[0]
+  var living: Sprite3D = corridor._enemies[1]
+  corridor.set_enemies([corridor._actors[1]])   # the first dies and starts burning
+  corridor.clear_enemies()
+  assert_eq(corridor._enemies.size(), 0, 'no enemies are left')
+  assert_null(burning.texture, 'the burning sprite is removed at once')
+  assert_null(living.texture, 'and so is the living one')
 
 
 func test_enemies_at_one_depth_have_distinct_distances() -> void:

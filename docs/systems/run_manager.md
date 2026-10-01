@@ -35,7 +35,7 @@ What it **is not**:
 The run is a single linear track of beats. The `Run manager` walks it as a cycle — the **next beat is created right after the current one's reward and approaches from depth** (the walk *is* the next encounter arriving, not dead time):
 
 1. **Resolve** the current beat: at a choice beat, the player picks an encounter (`pick_path`, which creates it and re-saves) or walks past (`skip_choice`, no encounter); then the `Encounter` resolves — a fight (→ `Combat manager`, await win/loss), an event (the player picks an option, whose effects the `Run manager` applies), a rest or the relic encounter.
-2. **Fulfil the reward** it reports — a fight won first gives `Balance.FIGHT_WON_HEAL` health and `Balance.FIGHT_WON_GOLD` gold (recorded in `last_fight_gain` for the draft panel), then its reward: drive a `Draft` (item), grant a relic (elite/boss), offer the goods of a reward encounter, open a shop, or none. A fight's draft and a reward encounter's goods are the same pending offer (`pending_draft`, a mix of item, relic and potion definitions); either can be skipped for gold (`apply_draft_skip`). On a **fight loss** → **run-ended (died)**; on the **final-boss win** → **run-ended (won)** with no fight-won gain (the cycle ends).
+2. **Fulfil the reward** it reports — a fight won first gives `Balance.FIGHT_WON_HEAL` health and `Balance.FIGHT_WON_GOLD` gold, then its reward: grant a relic (elite/boss), offer the goods of a reward encounter, open a shop, or none. A regular fight offers nothing more (decision #62). A reward encounter's goods are the pending offer (`pending_draft`, a mix of item, relic and potion definitions), which can be skipped for gold (`apply_draft_skip`). On a **fight loss** → **run-ended (died)**; on the **final-boss win** → **run-ended (won)** with no fight-won gain (the cycle ends).
 3. **Set up the next beat** (`RunMap.beat_spec`) — a **choice** beat draws its three encounters; a **fixed** beat (an elite fight, the boss) names its encounter; a **drawn** beat (a regular fight) draws a def from its pool on the run RNG. The `Encounter` is the resolved unit ([Encounter PRD](encounter.md)).
 4. **Create** the next `Encounter` (spawn its actors at the vanishing point), or hold the choice's offer, and **auto-save** the run snapshot — encounter entry, the resume point (design).
 5. **Advance** the corridor — the encounter **approaches from depth** into full view (the renderer scales it up — `docs/systems/corridors/`; not self-advancing); on **arrival** (front locked at full scale) go to 1 and resolve it.
@@ -70,9 +70,9 @@ Beat placement (the squares, the event rules, the pools) is the map's content; n
 
 The player can sell an item from the board for gold whenever no fight is under way. Relics and potions are not sold. The run screen's selection and Sell button are in [run_screen.md → Selling and merging items](run_screen.md#selling-and-merging-items).
 
-- `item_price(item)` is the shop price (`price_of`) of the level 1 copies the item was made from: `price_of(item.def)` doubled for each level above 1.
+- `item_price(item)` is the shop price of the level 1 copies the item was made from: `price_at_level(item.def, item.level)`, which is `price_of(item.def)` doubled for each level above 1.
 - `sell_price(item)` is `Balance.SELL_SHARE` of `item_price`, rounded down, so a merged item sells for as much as its copies would. An enchant does not change it.
-- `can_sell(item)` is true when the item is on the player's board and `combat_manager()` is null or resolved: at the choice of encounters, events, rests, a fight's draft, reward encounters and shops, but not during a fight's approach or the fight.
+- `can_sell(item)` is true when the item is on the player's board and `combat_manager()` is null or resolved: at the choice of encounters, events, rests, reward encounters and shops, but not during a fight's approach or the fight.
 - `sell_item(item)` adds the price to `gold`, takes the item off the board and dissolves it. The last item can be sold.
 - A sale is kept by the next save (picking a card or advancing), so quitting before then undoes it, as with a shop purchase.
 
@@ -85,6 +85,17 @@ The player can merge two copies of the same item at the same level into one item
 - `merge_partner(item)` is another board item with the same definition id and level, preferring one with no enchantment; null when there is none.
 - `can_merge(item)` is `can_sell(item)`, the item below `Balance.ITEM_MAX_LEVEL`, and a partner on the board.
 - `merge_item(item)` raises the item's level by one, gives it the partner's enchantment if it has none, and takes the partner off the board and dissolves it. The item keeps its place on the board. If both hold an enchantment the item keeps its own, and `will_lose_enchantment(item)` is true beforehand so the interface can warn.
+
+### Levelled offers
+
+**Location:** `RunManager` (`draw_offer_level`, `_draw_offer_levels`), odds in `Balance.ITEM_OFFER_LEVEL_ODDS`. Plan: [`../plans/item_levels.md`](../plans/item_levels.md) stage 2.
+
+Every item offered by a reward encounter or a shop has a level. Relics and potions are always level 1.
+
+- `draw_offer_level(fight, rng)` draws a level from the row of `ITEM_OFFER_LEVEL_ODDS` for the fight number (`RunMap.fight_number` of the current beat), using the last row past the end. A row with only level 1 draws no RNG.
+- The levels are held beside the offer: `pending_draft_levels()` in the order of `pending_draft()`, and `shop_level(index)` for each shop good. They are drawn with the offer and cleared with it.
+- `apply_draft_pick` and `buy` add the item at its offered level. A shop charges `shop_price(index)`, which is `price_at_level(good, level)`: `price_of(good)` doubled for each level above 1, the same rule as `item_price`.
+- Offers are not saved, so a resume draws the same goods and levels again from the saved RNG state.
 
 ## Player run-state & RNG
 

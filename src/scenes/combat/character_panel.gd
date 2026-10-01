@@ -239,6 +239,63 @@ func item_at(point: Vector2) -> Item:
   return null
 
 
+## Burn each shown part of the panel away separately where it stands, with the paper burn
+## (docs/systems/paper_burn.md): the portrait, the name, the health bar, each status icon and each item
+## cell. The panel itself is see-through, so burning it whole would show a rectangle around the parts.
+## The status rows stop refreshing, so they do not rebuild the icons that are burning. Returns the
+## burns; the caller frees the panel when they have all finished. An empty array means nothing was
+## shown.
+func burn_away() -> Array[PaperBurn]:
+  mouse_filter = Control.MOUSE_FILTER_IGNORE
+  _statuses.set_process(false)
+  _statuses_under.set_process(false)
+  var parts: Array[Control] = [_portrait_frame, _health_bar]
+  parts.append_array(_statuses.icons())
+  parts.append_array(_statuses_under.icons())
+  for cell: ItemCell in _cells.values():
+    parts.append(cell)
+  var burns: Array[PaperBurn] = []
+  for label: Label in [_name, _name_field, _class_field]:
+    if label.is_visible_in_tree() and label.text != '':
+      burns.append(PaperBurn.burn(_hold_in_place(label)))
+  for part: Control in parts:
+    if part.is_visible_in_tree():
+      part.mouse_filter = Control.MOUSE_FILTER_IGNORE
+      burns.append(PaperBurn.burn(part))
+  return burns
+
+
+# Put `label` inside a plain Control that takes its place in its container, since a Label draws
+# itself and the paper burn cannot burn it directly. Returns a Control inside that, covering only
+# the text: a label stretched across its row would otherwise spend most of the burn on empty space.
+func _hold_in_place(label: Label) -> Control:
+  var holder: Control = Control.new()
+  holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  holder.custom_minimum_size = label.size
+  holder.size_flags_horizontal = label.size_flags_horizontal
+  holder.size_flags_vertical = label.size_flags_vertical
+  var parent: Node = label.get_parent()
+  parent.add_child(holder)
+  parent.move_child(holder, label.get_index())
+  var text_width: float = minf(label.get_minimum_size().x, label.size.x)
+  var text_x: float = 0.0
+  match label.horizontal_alignment:
+    HORIZONTAL_ALIGNMENT_CENTER:
+      text_x = (label.size.x - text_width) * 0.5
+    HORIZONTAL_ALIGNMENT_RIGHT:
+      text_x = label.size.x - text_width
+  var text_box: Control = Control.new()
+  text_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  holder.add_child(text_box)
+  text_box.position = Vector2(text_x, 0.0)
+  text_box.size = Vector2(text_width, label.size.y)
+  var label_size: Vector2 = label.size
+  label.reparent(text_box, false)
+  label.position = Vector2(-text_x, 0.0)
+  label.size = label_size
+  return text_box
+
+
 ## `item`'s cell, for the hover highlight the tooltip poll drives (docs/systems/control_feedback.md).
 func cell_at(item: Item) -> ItemCell:
   return _cells.get(item) as ItemCell

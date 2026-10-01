@@ -236,6 +236,10 @@ func _input(event: InputEvent) -> void:
     toggle_tab(TAB_KEYS[key.keycode])
     get_viewport().set_input_as_handled()
     return
+  # The palette keys only work while the panel is open, so they never take a game key such as the
+  # battle speed keys on [ and ].
+  if not is_panel_open():
+    return
   match key.keycode:
     KEY_BRACKETLEFT:
       cycle_palette(-1)

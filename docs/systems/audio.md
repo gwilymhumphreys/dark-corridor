@@ -36,7 +36,8 @@ to its default in `AUDIO_DEFAULTS`. `set_volume(key, value)` clamps, applies,
 and writes through immediately; `disabled` (mirrors `Save.disabled` — the tests / a nosave
 run) skips the disk write. The [settings screen](run_screen.md) binds its sliders here.
 Defaults + bus map are constants at the top of `prefs.gd`. It also stores mute-when-unfocused, the
-display mode and the interface text scale ([run_screen.md](run_screen.md)).
+display mode, the interface text scale ([run_screen.md](run_screen.md)) and the key bindings the
+player changed ([keybindings.md](keybindings.md)).
 
 **Silent runs.** A process launched with `--autotest` or `--shot` plays no sound: `Prefs`
 mutes the Master bus at boot and leaves the stored levels alone, so the player's own
@@ -56,7 +57,7 @@ second list of sound names to keep in step.
 | Folder | The key is | Bus |
 |---|---|---|
 | `ui/` | the interface action (`hover`, `click`) | Interface |
-| `run/` | the run or map event (`victory`, `draft_pick`) | Interface |
+| `run/` | the run or map event (`gold` for each coin the gold box counts up, `purchase` for a shop buy) | Interface |
 | `world/` | the corridor sound (`footsteps/steps`) | World |
 | `mechanics/` | the mechanic id (`attack`, `bleed`) | World |
 | `statuses/` | the status id (`weak`, `vulnerable`) | World |

@@ -31,14 +31,6 @@ func _mode(seed_value: int = 1) -> AutoTestMode:
   return m
 
 
-func _draft_events(logger: AutoTestLogger) -> int:
-  var n: int = 0
-  for ev in logger.events:
-    if ev['type'] == 'draft':
-      n += 1
-  return n
-
-
 # --- tests ------------------------------------------------------------------
 
 func test_run_full_clears_the_map_as_a_win() -> void:
@@ -47,7 +39,6 @@ func test_run_full_clears_the_map_as_a_win() -> void:
   assert_true(r['resolved'])
   assert_eq(r['exit_code'], 0)
   assert_eq(r['beats_cleared'], RunMap.TOTAL_BEATS, 'every beat of the descent cleared')
-  assert_gt(r['board_size'], 3, 'fight drafts grew the board across the run')
   assert_gt(r['summary']['total_damage'], 0.0, 'damage was tallied across the run')
 
 
@@ -59,12 +50,6 @@ func test_run_full_is_deterministic() -> void:
   assert_eq(a['board_size'], b['board_size'])
   assert_eq(a['player_hp'], b['player_hp'], 'same seed ⇒ identical run')
   assert_almost_eq(a['summary']['total_damage'], b['summary']['total_damage'], 0.0001)
-
-
-func test_run_full_takes_and_logs_drafts() -> void:
-  var m := _mode(1)
-  m.run_full()
-  assert_gt(_draft_events(m.logger), 5, 'the run\'s many fight beats each offered a draft, picked')
 
 
 func test_run_full_throws_the_starting_potion() -> void:
@@ -138,7 +123,7 @@ func test_driver_defaults_to_never_skip() -> void:
 
 
 func test_default_run_banks_only_the_fight_won_gold() -> void:
-  # Consequence of never-skip: a full default descent takes every draft and never walks past a
+  # Consequence of never-skip: a full default descent takes every offer and never walks past a
   # choice of encounters, so the only gold is what each fight won gives — every fight but the final
   # one, which ends the run.
   var r := _mode(1).run_full()

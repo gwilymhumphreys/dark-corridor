@@ -8,6 +8,10 @@ extends SubViewportContainer
 ## the enemy stands still while the player walks up to it, and perspective makes the sprite grow as
 ## the gap closes. The corridor's light brightens it as it comes nearer.
 ##
+## Each enemy has a place in the row (`_places`), shared out over `_place_count` places. A dead
+## enemy's sprite burns away where it stands and the others keep their places; the row is shared out
+## again only when an enemy joins.
+##
 ## An enemy's image is its definition's `image` (on the Actor), or a random cut-out painted sample
 ## (`MonsterImages`) when it has none, sized to `Balance.ENEMY_PAINTED_HEIGHT` on screen at depth 0.
 ## A sprite keeps its image for as long as its enemy is in the fight.
@@ -15,6 +19,9 @@ extends SubViewportContainer
 ## The container is drawn through `DebugPanels.world_material`, the corridor look shader (effects
 ## and the world palette clamp), which covers the walls and enemy images only. With every effect off
 ## and no world palette it passes colours through.
+
+## The last dead enemy's sprite has burnt away.
+signal burns_finished
 
 const CORRIDOR_SCENE: PackedScene = preload('res://src/scenes/corridors/corridor_3d.tscn')
 const HUD_GAP: float = 36.0    # gap between a sprite's top and the bottom of its HUD
@@ -31,6 +38,10 @@ var _enemies: Array = []       # Array[Sprite3D], left to right
 ## The enemy each sprite in `_enemies` belongs to, at the same index. null marks the placeholder
 ## sprite shown before a fight's enemies are known; the first enemy takes it over.
 var _actors: Array = []
+## The place in the row of each sprite in `_enemies`, at the same index, out of `_place_count`
+## places. Kept when an enemy is removed, so the others do not move.
+var _places: Array = []   # Array[int]
+var _place_count: int = 1
 var _depth: float = 0.0
 ## The corridor's `player_z` when this host was built; `set_walk_distance` is measured from it.
 var _walk_start: float = 0.0
@@ -49,6 +60,7 @@ func _ready() -> void:
   _corridor.reset_walk()
   _enemies.append(_corridor.add_enemy(MonsterImages.random_texture()))
   _actors.append(null)
+  _places.append(0)
   _arrange()
 
 
@@ -59,6 +71,7 @@ func _exit_tree() -> void:
       sprite.texture = null
   _enemies.clear()
   _actors.clear()
+  _places.clear()
   material = null
 
 
@@ -67,28 +80,34 @@ func corridor() -> Corridor3D:
   return _corridor
 
 
-## Keep one sprite per enemy in `actors`, in that order (empty once the last enemy is reaped; the
-## fight resolves that same step, so the empty corridor is only ever a teardown frame away). An
-## enemy that stays keeps its sprite and image; a removed enemy's sprite is freed; a new enemy takes
-## over a placeholder sprite if there is one, otherwise gets a new sprite. A new enemy with an image
-## of its own shows it, including on a placeholder it takes over.
+## Keep one sprite per enemy in `actors`, in that order (empty once the last enemy is reaped). An
+## enemy that stays keeps its sprite, image and place; a removed enemy (a dead one) burns away where
+## it stands; a new enemy takes over a placeholder sprite if there is one, otherwise gets a new
+## sprite. A new enemy with an image of its own shows it, including on a placeholder it takes over.
+## When an enemy joins, the row is shared out again between everyone in it.
 func set_enemies(actors: Array) -> void:
   if actors == _actors:
     return
-  var kept: Dictionary = {}   # actor -> Sprite3D
+  var kept: Dictionary = {}   # actor -> [Sprite3D, place]
   var spare: Array = []       # placeholder sprites not yet given to an enemy
   for i in _enemies.size():
     if _actors[i] == null:
       spare.append(_enemies[i])
     elif _actors[i] in actors:
-      kept[_actors[i]] = _enemies[i]
+      kept[_actors[i]] = [_enemies[i], _places[i]]
     else:
-      _corridor.remove_enemy(_enemies[i])
+      _corridor.burn_enemy(_enemies[i]).finished.connect(_on_burn_finished)
   _enemies.clear()
   _actors.clear()
+  var places: Array = []
+  var joined: bool = false
   for actor: Object in actors:
-    var sprite: Sprite3D = kept.get(actor)
-    if sprite == null:
+    var sprite: Sprite3D = null
+    if kept.has(actor):
+      sprite = kept[actor][0]
+      places.append(kept[actor][1])
+    else:
+      joined = true
       var texture: Texture2D = _own_texture(actor)
       if not spare.is_empty():
         sprite = spare.pop_front()
@@ -100,7 +119,47 @@ func set_enemies(actors: Array) -> void:
     _actors.append(actor)
   for sprite: Sprite3D in spare:
     _corridor.remove_enemy(sprite)
+  if joined:
+    places.clear()
+    for i in actors.size():
+      places.append(i)
+    _place_count = maxi(actors.size(), 1)
+  _places = places
   _arrange()
+
+
+## Whether a dead enemy's sprite is still burning.
+func burning() -> bool:
+  return not _burns().is_empty()
+
+
+## Jump every sprite burn to its end.
+func finish_burns() -> void:
+  for burn: SpriteBurn in _burns():
+    burn.finish()
+
+
+func _burns() -> Array[SpriteBurn]:
+  var burns: Array[SpriteBurn] = []
+  for child: Node in _corridor.get_children():
+    if child is SpriteBurn and (child as SpriteBurn).progress < 1.0:
+      burns.append(child)
+  return burns
+
+
+func _on_burn_finished() -> void:
+  if not burning():
+    burns_finished.emit()
+
+
+## Remove every enemy sprite at once, with no burn, including any still burning: for a corridor
+## with no fight in it (the encounter choice).
+func clear_enemies() -> void:
+  set_enemies([])
+  for burn: Node in _corridor.get_children():
+    if burn is SpriteBurn:
+      (burn as SpriteBurn).finish()
+      burn.queue_free()
 
 
 ## The image an enemy's definition gives it, or null when it has none (or the debug panel forces
@@ -136,7 +195,7 @@ func enemy_anchor(index: int) -> Vector2:
     return global_position + size * 0.5
   index = clampi(index, 0, n - 1)
   var sprite: Sprite3D = _enemies[index]
-  var top: Vector3 = _enemy_position(index, n, 0.0) + Vector3(0.0, Corridor3D.enemy_half_height(sprite), 0.0)
+  var top: Vector3 = _enemy_position(index, 0.0) + Vector3(0.0, Corridor3D.enemy_half_height(sprite), 0.0)
   return global_position + size * 0.5 + _corridor.unproject(top, true) - Vector2(0.0, HUD_GAP)
 
 
@@ -188,11 +247,10 @@ static func flinch_offset(age: float) -> float:
 # Place every sprite at its arranged position, pushed away from the camera by its flinch. A pure
 # function of the clock, like the rest of the wall, so slow motion slows it and pause holds it.
 func _apply_flinches(newest: Dictionary) -> void:
-  var n: int = _enemies.size()
-  for i in n:
+  for i in _enemies.size():
     var sprite: Sprite3D = _enemies[i]
     var age: float = newest[_actors[i]][0] if newest.has(_actors[i]) else -1.0
-    sprite.position = _enemy_position(i, n, _depth) - Vector3(0.0, 0.0, flinch_offset(age))
+    sprite.position = _enemy_position(i, _depth) - Vector3(0.0, 0.0, flinch_offset(age))
 
 
 # One light per enemy hit within the corridor's `hit_light_duration`, fading out, newest first.
@@ -212,17 +270,17 @@ func _apply_hit_lights(newest: Dictionary) -> void:
 
 
 func _arrange() -> void:
-  var n: int = _enemies.size()
-  for i in n:
+  for i in _enemies.size():
     var sprite: Sprite3D = _enemies[i]
-    _corridor.size_enemy(sprite, Balance.ENEMY_PAINTED_HEIGHT * _count_shrink(n))
-    sprite.position = _enemy_position(i, n, _depth)
+    _corridor.size_enemy(sprite, Balance.ENEMY_PAINTED_HEIGHT * _count_shrink(_place_count))
+    sprite.position = _enemy_position(i, _depth)
 
 
-# Enemy i of n at `depth_cells`, each one DEPTH_STEP further than the one before.
-func _enemy_position(i: int, n: int, depth_cells: float) -> Vector3:
+# Enemy i at its place in the row at `depth_cells`, each place DEPTH_STEP further than the one before.
+func _enemy_position(i: int, depth_cells: float) -> Vector3:
   var half_height: float = Corridor3D.enemy_half_height(_enemies[i])
-  return _corridor.enemy_position(depth_cells, _offset_x(i, n), half_height) - Vector3(0.0, 0.0, DEPTH_STEP * float(i))
+  var place: int = _places[i]
+  return _corridor.enemy_position(depth_cells, _offset_x(place, _place_count), half_height) - Vector3(0.0, 0.0, DEPTH_STEP * float(place))
 
 
 # The fraction of full size each enemy keeps with `n` side by side (1 = a single enemy at full

@@ -3,7 +3,8 @@ extends Node
 ## Session preferences persisted to disk (autoload `Prefs`) — SEPARATE from the run Save
 ## (that stores run-state only, and is cleared on death/win). A thin ConfigFile wrapper at
 ## user://: audio bus volumes (Master / Music / Interface / Game, each a 0..1 linear level) + mute-when-
-## unfocused, the display mode (fullscreen vs windowed), and the interface text scale.
+## unfocused, the display mode (fullscreen vs windowed), the interface text scale, and the key
+## bindings the player changed (`Keybinds` turns them into input map events).
 ## set_*() applies the change AND writes through immediately; load + apply happen at boot.
 ## `disabled` skips the disk write — TestCleanup sets it so tests never touch user://. The owner
 ## extends this with further video / accessibility keys as settings grow.
@@ -12,6 +13,7 @@ const PATH: String = 'user://dark_corridor_prefs.cfg'
 const SECTION_AUDIO: String = 'audio'
 const SECTION_DISPLAY: String = 'display'
 const SECTION_INTERFACE: String = 'interface'
+const SECTION_INPUT: String = 'input'
 
 # The project UI theme (project.godot gui/theme/custom). It names the UI font as its default font
 # and holds the text ladder's sizes (docs/systems/ui_theme.md). Mutating the cached resource
@@ -45,6 +47,7 @@ func _ready() -> void:
   apply_audio()
   apply_display()
   apply_text_scale()
+  Keybinds.apply_all()
   if is_silent_run():
     _set_master_muted(true)
 
@@ -152,6 +155,26 @@ func set_text_scale(value: float) -> void:
 ## reads that resource, so the whole interface resizes at once.
 func apply_text_scale() -> void:
   TextSize.apply(load(THEME_PATH) as Theme, text_scale())
+
+
+## The stored slots for a rebindable action (see `Keybinds`), or null if the player never changed it.
+func keybind_slots(action: String) -> Variant:
+  if not _config.has_section_key(SECTION_INPUT, action):
+    return null   # get_value with a null default reports an error
+  return _config.get_value(SECTION_INPUT, action)
+
+
+## Store an action's slots and persist (unless disabled). `Keybinds` applies them to the input map.
+func set_keybind_slots(action: String, slots: Array) -> void:
+  _config.set_value(SECTION_INPUT, action, slots)
+  save_prefs()
+
+
+## Forget every key binding change, so each action is back on its project default.
+func clear_keybinds() -> void:
+  if _config.has_section(SECTION_INPUT):
+    _config.erase_section(SECTION_INPUT)
+  save_prefs()
 
 
 func load_prefs() -> void:

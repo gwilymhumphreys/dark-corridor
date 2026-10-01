@@ -71,10 +71,11 @@ static var ALLY_DOWNED: Color = Color(0.45, 0.45, 0.45)     # darken a downed (d
 static var MAP_CURRENT_HALO: Color = Color(0.95, 0.92, 0.55)
 
 # ── Paper burn (a token burning away; paper_burn.md) ─────────────────────────
-# A visual effect only, not the Burn mechanic above.
-static var PAPER_BURN_EMBER: Color = Color8(255, 170, 80)    # the glowing line at the hole's edge
-static var PAPER_BURN_CHAR: Color = Color8(12, 8, 5)         # the black band behind it
-static var PAPER_BURN_SCORCH: Color = Color8(90, 50, 20)     # the brown ahead of it
+# A visual effect only, not the Burn mechanic above. Each palette file sets these to colours it already
+# has (the Burn colour and its darkest colour), so the burn adds no colours to the palette.
+static var PAPER_BURN_EMBER: Color = Color(0.95, 0.5, 0.1)   # the glowing line at the hole's edge
+static var PAPER_BURN_CHAR: Color = Color8(0, 0, 0)          # the black band behind it
+static var PAPER_BURN_SCORCH: Color = Color(0.95, 0.5, 0.1)  # tints the card ahead of it (only its hue counts)
 
 # ── Tooltip ──────────────────────────────────────────────────────────────────
 # PLACEHOLDER rarity tint and changed-value accent — the colour treatment is the owner's call (tooltips.md).

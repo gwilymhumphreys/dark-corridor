@@ -9,6 +9,9 @@ extends Control
 ## to RunManager.throw_potion (which activates it through the Combat manager).
 @warning_ignore('unused_signal')   # emitted by the variants that draw potion slots
 signal potion_thrown(index: int)
+## The last dead enemy has burnt away (start_burns).
+@warning_ignore('unused_signal')   # emitted by the variants that show enemies
+signal burns_finished
 
 ## The screen sections the view places its parts in (docs/systems/ui_layout.md#screen-sections), set by
 ## the run screen before the view enters the tree. Left null, a variant makes its own.
@@ -40,6 +43,23 @@ func set_walk_distance(_sections: float) -> void:
 
 ## Empty the corridor of enemies, for a beat with no fight where the encounter cards stand instead.
 func clear_enemies() -> void:
+  pass
+
+
+## Start burning any enemy that died since the view last looked, and return whether a dead enemy is
+## still burning away. The run screen waits for `burns_finished` before leaving a won fight, because
+## moving on frees the view.
+func start_burns() -> bool:
+  return false
+
+
+## Whether a dead enemy is still burning away.
+func burning() -> bool:
+  return false
+
+
+## Jump every burn to its end, so `burns_finished` is emitted now.
+func finish_burns() -> void:
   pass
 
 
@@ -107,9 +127,19 @@ func refresh_potions(_potions: Array) -> void:
   pass
 
 
-## The player's banked gold.
+## The player's banked gold, counted to from the number shown now.
 func show_gold(_amount: int) -> void:
   pass
+
+
+## The player's banked gold, shown at once with no count.
+func snap_gold(_amount: int) -> void:
+  pass
+
+
+## The gold number on screen now, which may still be counting; -1 when the view shows no gold.
+func gold_on_screen() -> int:
+  return -1
 
 
 ## The player's relics (the run's `relics` array, shared by reference so a new relic shows).

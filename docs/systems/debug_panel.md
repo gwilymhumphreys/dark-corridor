@@ -36,10 +36,11 @@ preset saves them with its Print part.
 - Every look tab starts with a "Take this part from" row ([look_presets.md](look_presets.md#the-preset-bar)).
   The Icons tab has none, because it is not a preset part, and neither has the Tokens tab, whose
   settings belong to the Print part; `LookPanel` treats that row as optional.
-- The palette keys below are ignored while a text field (the preset name) has focus.
+- The palette keys below only work while the panel is open, so they never take a game key (the
+  battle speed keys are on `[` and `]`, [keybindings.md](keybindings.md)). They are also ignored while
+  a text field (the preset name) has focus.
 - `]` and `[` select the next and previous entry in the World palette list, `'` and `;` in the
-  Interface palette list and `.` and `,` in the Portrait palette list, with the panel open or closed,
-  skipping folder headings and wrapping round through "Off". Debug builds only.
+  Interface palette list and `.` and `,` in the Portrait palette list, skipping folder headings and wrapping round through "Off". Debug builds only.
 - `\` moves the selected world palette file (and its `.import` file) into
   `assets/palettes/shortlist/`, rewrites the palette's path in any preset or history file that uses it,
   then rescans the list and keeps that palette selected. It does nothing on "Off", for a palette

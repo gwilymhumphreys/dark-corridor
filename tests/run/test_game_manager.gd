@@ -112,28 +112,46 @@ func test_starting_a_run_replaces_the_previous() -> void:
 # --- battle-speed dial (a session preference) --------------------------------
 
 func test_battle_speed_defaults_to_x1() -> void:
-  assert_eq(Game.battle_speed_index, 0, 'the dial starts at the first notch')
-  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[0], 0.00001, 'and at ×1')
+  assert_eq(Game.battle_speed_index, Balance.BATTLE_SPEED_DEFAULT_INDEX, 'the dial starts at the default notch')
+  assert_almost_eq(Game.battle_speed, Balance.TIMESCALE_BASE, 0.00001, 'which is ×1')
 
 
 func test_cycle_battle_speed_walks_the_dial_and_wraps() -> void:
+  var count: int = Balance.BATTLE_SPEEDS.size()
+  Game.set_battle_speed_index(count - 2)
   Game.cycle_battle_speed()
-  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[1], 0.00001, '×1 → ×2')
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[count - 1], 0.00001, 'steps one notch faster')
   Game.cycle_battle_speed()
-  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[2], 0.00001, '×2 → ×3')
-  Game.cycle_battle_speed()
-  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[0], 0.00001, '×3 wraps back to ×1')
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[0], 0.00001, 'the fastest wraps to the slowest')
+
+
+func test_step_battle_speed_down_walks_slower_and_wraps() -> void:
+  Game.set_battle_speed_index(1)
+  Game.step_battle_speed(-1)
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[0], 0.00001, 'steps one notch slower')
+  Game.step_battle_speed(-1)
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[-1], 0.00001, 'the slowest wraps to the fastest')
+
+
+func test_step_battle_speed_without_wrap_stops_at_either_end() -> void:
+  Game.set_battle_speed_index(Balance.BATTLE_SPEEDS.size() - 1)
+  Game.step_battle_speed(1, false)
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[-1], 0.00001, 'stays at the fastest')
+  Game.set_battle_speed_index(0)
+  Game.step_battle_speed(-1, false)
+  assert_almost_eq(Game.battle_speed, Balance.BATTLE_SPEEDS[0], 0.00001, 'stays at the slowest')
 
 
 func test_cycle_battle_speed_emits_the_new_scale() -> void:
   watch_signals(Game)
   Game.cycle_battle_speed()
-  assert_signal_emitted_with_parameters(Game, 'battle_speed_changed', [Balance.BATTLE_SPEEDS[1]])
+  assert_signal_emitted_with_parameters(Game, 'battle_speed_changed',
+    [Balance.BATTLE_SPEEDS[Balance.BATTLE_SPEED_DEFAULT_INDEX + 1]])
 
 
 func test_reset_restores_the_default_battle_speed() -> void:
   Game.cycle_battle_speed()   # leave the dial off the default
-  assert_eq(Game.battle_speed_index, 1, 'dial moved')
+  assert_ne(Game.battle_speed_index, Balance.BATTLE_SPEED_DEFAULT_INDEX, 'dial moved')
   Game.reset()
-  assert_eq(Game.battle_speed_index, 0, 'a session reset drops the dial to ×1')
+  assert_eq(Game.battle_speed_index, Balance.BATTLE_SPEED_DEFAULT_INDEX, 'a session reset drops the dial to ×1')
   assert_almost_eq(Game.battle_speed, Balance.TIMESCALE_BASE, 0.00001, 'and back to base scale')

@@ -343,10 +343,6 @@ msgstr ""
 msgid "+{0} gold"
 msgstr ""
 
-#: src/scenes/screens/draft_overlay.gd
-msgid "+{0} health, +{1} gold"
-msgstr ""
-
 #: src/scenes/screens/draft_overlay.tscn
 msgid "Choose a reward"
 msgstr ""
@@ -407,6 +403,22 @@ msgstr ""
 msgid "Merge"
 msgstr ""
 
+#: src/scenes/screens/keybind_row.gd
+msgid "Press a key"
+msgstr ""
+
+#: src/scenes/screens/keybind_row.gd
+msgid "Slower battle speed"
+msgstr ""
+
+#: src/scenes/screens/keybind_row.gd
+msgid "Faster battle speed"
+msgstr ""
+
+#: src/scenes/screens/keybind_row.gd
+msgid "Pause"
+msgstr ""
+
 #: src/scenes/screens/map_strip.gd
 msgid "Act {0}"
 msgstr ""
@@ -451,6 +463,26 @@ msgstr ""
 msgid "Report"
 msgstr ""
 
+#: src/scenes/screens/settings_screen.gd
+msgid "Audio"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.gd
+msgid "Display"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.gd
+msgid "Controls"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.gd
+msgid "Removed from {0}"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.gd
+msgid "That key is kept for the game"
+msgstr ""
+
 #: src/scenes/screens/settings_screen.tscn
 msgid "Master volume"
 msgstr ""
@@ -479,6 +511,22 @@ msgstr ""
 msgid "Mute when unfocused"
 msgstr ""
 
+#: src/scenes/screens/settings_screen.tscn
+msgid "Action"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Main key"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Spare key"
+msgstr ""
+
+#: src/scenes/screens/settings_screen.tscn
+msgid "Reset keys"
+msgstr ""
+
 #: src/scenes/screens/shop_entry.gd
 msgid "{0} gold"
 msgstr ""
@@ -488,11 +536,11 @@ msgid "Sold"
 msgstr ""
 
 #: src/scenes/screens/shop_overlay.gd
-msgid "Your gold: {0}"
+msgid "Reroll ({0} gold)"
 msgstr ""
 
 #: src/scenes/screens/shop_overlay.gd
-msgid "Reroll ({0} gold)"
+msgid "Your gold: {0}"
 msgstr ""
 
 #: src/scenes/screens/shop_overlay.tscn
