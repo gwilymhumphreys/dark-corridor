@@ -375,7 +375,8 @@ func _refit_portraits() -> void:
 ## Set the player's items and potions down askew on the grid (`ItemCell.set_askew`), by the print
 ## settings `token_tilt` and `token_shift`, the shift scaled to the cells' size. Does nothing unless a
 ## setting or the cell size changed; adding a cell or rebuilding the potions clears `_askew_set`, so
-## every cell is set again.
+## every cell is set again. Each cell's tilt follows its place in its row, so the cells rebuilt at the
+## start and end of a fight sit as they did before.
 func _set_items_askew() -> void:
   var tilt: float = PrintLook.print_setting('token_tilt')
   var shift: float = PrintLook.print_setting('token_shift') * _cell_size / ItemCell.CELL_SIZE.x
@@ -384,11 +385,11 @@ func _set_items_askew() -> void:
     return
   _askew_set = wanted
   for cell: Node in _player_items.get_children():
-    (cell as ItemCell).set_askew(tilt, shift)
+    (cell as ItemCell).set_askew(tilt, shift, cell.get_index())
   for slot: Node in _potions.get_children():
-    (slot as PotionSlot).cell.set_askew(tilt, shift)
+    (slot as PotionSlot).cell.set_askew(tilt, shift, 1000 + slot.get_index())
   for cell: Node in _relic_tokens.get_children():
-    (cell as ItemCell).set_askew(tilt, shift)
+    (cell as ItemCell).set_askew(tilt, shift, 2000 + cell.get_index())
 
 
 ## The pencil grids behind the board and the potions take their colour from the interface palette.

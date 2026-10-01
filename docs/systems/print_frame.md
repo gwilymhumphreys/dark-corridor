@@ -40,7 +40,8 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   Class fields.
 - The player's items and potions are set down askew on the grid, like cardboard tokens placed by hand: each cell
   has its own random tilt and shift, scaled by the token settings `token_tilt` and `token_shift`
-  (`ItemCell.set_askew`, drawn with the visual-only offset transform).
+  (`ItemCell.set_askew`, drawn with the visual-only offset transform). The tilt and shift come from
+  the cell's place in its row, so the cells rebuilt when a fight starts or ends sit as they did before.
 - Item cells use the `PanelToken` theme style ([ui_theme.md](ui_theme.md)): the worn panel with a
   drop shadow onto the paper. `PrintLook.apply_token_style()` writes the shadow and fill settings onto
   `PanelToken` and `PanelTokenWide` whenever a print setting changes, on reset, and when the
