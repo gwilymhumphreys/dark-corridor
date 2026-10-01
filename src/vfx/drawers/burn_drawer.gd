@@ -8,8 +8,7 @@ extends EffectDrawer
 ## (assets/vfx/status/), placed as a pure function of age, with each tongue and ember fixed per
 ## delivery.
 ##
-## TRIAL: one of the looks being tried for burn. `VfxDriver.status_sprites` switches between this
-## and the placeholder ring.
+## TRIAL: one of the looks being tried for burn.
 
 const FLAMES: Array[Texture2D] = [
   preload('res://assets/vfx/status/flame_thin.png'),

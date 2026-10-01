@@ -6,8 +6,7 @@ extends EffectDrawer
 ## holder and pop. Every blob and bubble is a still image from Kenney's Particle Pack
 ## (assets/vfx/status/) placed as a pure function of age, with its path fixed per delivery.
 ##
-## TRIAL: one of the looks being tried for poison. `VfxDriver.status_sprites` switches between this
-## and the placeholder ring.
+## TRIAL: one of the looks being tried for poison.
 
 const BUBBLE: Texture2D = preload('res://assets/vfx/status/bubble.png')
 const BLOB: Texture2D = preload('res://assets/vfx/status/blob.png')

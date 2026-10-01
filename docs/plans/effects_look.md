@@ -3,10 +3,13 @@
 The owner wants projectiles and impacts to take the same post-processing as the interface pictures,
 dithering in particular, so they stop looking out of place next to them.
 
-**Status (2026-09-30):** built, with every option off by default. The system doc is
-[`../systems/interface_look.md`](../systems/interface_look.md#the-combat-effects). The comparison page
-is published for the owner to pick from; the options differ from this plan only in that the switches
-are uniforms of the `effects` group, set with `--interface-set=`, rather than separate arguments.
+**Status (2026-10-01):** built, and the owner has picked a default. The default preset
+(`assets/presets/default.cfg`) turns the effects look on with the interface palette, colour dithering
+and halftone from the interface settings, transparency dithering on, and the damage numbers drawn with
+the effects (option 3 below). The owner will judge the dithering in a fight. The system doc is
+[`../systems/interface_look.md`](../systems/interface_look.md#the-combat-effects). The options differ
+from this plan only in that the switches are uniforms of the `effects` group, set with
+`--interface-set=`, rather than separate arguments.
 
 Read first: [`../systems/shaders_and_palettes.md`](../systems/shaders_and_palettes.md),
 [`../systems/interface_look.md`](../systems/interface_look.md),

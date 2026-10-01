@@ -8,8 +8,7 @@ extends EffectDrawer
 ## same soft round image from Kenney's Particle Pack (assets/vfx/status/blob.png), placed as a pure
 ## function of age, with its path fixed per delivery.
 ##
-## TRIAL: one of the looks being tried for bleed. `VfxDriver.status_sprites` switches between this
-## and the placeholder ring.
+## TRIAL: one of the looks being tried for bleed.
 
 const BLOB: Texture2D = preload('res://assets/vfx/status/blob.png')
 

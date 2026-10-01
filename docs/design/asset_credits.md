@@ -84,6 +84,23 @@ each was converted to 16-bit 48kHz before being added ([godot_notes.md](../syste
 The uploader's other 64 recordings are archived at `../dark-corridor-design/sound/timmy_h123/`
 ([asset_library.md](asset_library.md)), which is where to look for more variants.
 
+### Gold and shop
+
+| Sound | Files in the game | Source |
+| --- | --- | --- |
+| Coin_Wood_Table_Singles_Drop_Spin_Takes_5, Effectsworks - COINAGE (Sonniss GDC 2018) | `assets/sound-effects/run/gold/coin_wood_*` | Sonniss GameAudioGDC bundle |
+| coins throwing from hand to hand, Soundholder - Sack Of Coins (Sonniss GDC 2020) | `run/gold/coin_hand_*` | Sonniss GameAudioGDC bundle |
+| Money,Coins,Hand,Count and Money,Coins,Handle, Hzandbits - Money (Sonniss GDC 2017) | `run/gold/count_hand_*`, `run/gold/handle_*` | Sonniss GameAudioGDC bundle |
+| coins_9, CB Sound Design - Essential Sounds Vol.01 Coins (Sonniss GDC 2023) | `run/gold/clink_*` | Sonniss GameAudioGDC bundle |
+| Clinking Coins 4 and 10, by AleXZavesa, CC BY | `run/gold/clink_bag_*`, `run/purchase/coins_clink_*` | https://freesound.org/s/853709/ and /853705/ |
+| Money,Coins,Drop In Cash Register, Hzandbits - Money (Sonniss GDC 2017) | `run/purchase/register_drawer_*` | Sonniss GameAudioGDC bundle |
+| Antique-Cash-Register_07, SoundBits - Antiques (Sonniss GDC 2019) | `run/purchase/antique_register_*` | Sonniss GameAudioGDC bundle |
+| Coins_Pouch_Leather_Drop_Into and Coins_Wood_Slide_Gather, Effectsworks - COINAGE (Sonniss GDC 2018) | `run/purchase/pouch_drop_*`, `run/purchase/counter_slide_*` | Sonniss GameAudioGDC bundle |
+| Heavy Money Bag - 1, by SpaceJoe, CC0 | `run/purchase/money_bag_*` | https://freesound.org/s/485716/ |
+| Leather money pouch or purse with coins inside, catch in hand 5, by ZapSplat | `run/purchase/pouch_catch_*` | https://www.zapsplat.com/music/leather-money-pouch-or-purse-with-coins-inside-catch-in-hand-5/ |
+
+These are candidates for review. A row comes out when none of its files are left in the game.
+
 ## Art
 
 The art packs in use are listed in

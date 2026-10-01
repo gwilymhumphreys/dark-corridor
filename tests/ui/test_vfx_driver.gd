@@ -52,12 +52,12 @@ func _landed_delivery() -> Delivery:
   return d
 
 
-func test_impact_burst_runs_for_its_duration_then_stops() -> void:
-  var drawer := ImpactRingDrawer.new()
+func test_impact_effect_runs_for_its_duration_then_stops() -> void:
+  var drawer := BleedDrawer.new()
   assert_eq(drawer.progress(-0.01), -1.0, 'nothing before the hit lands')
-  assert_eq(drawer.progress(0.0), 0.0, 'the burst starts at the moment of the hit')
-  assert_almost_eq(drawer.progress(ImpactRingDrawer.IMPACT_DURATION * 0.5), 0.5, 0.001, 'halfway through')
-  assert_eq(drawer.progress(ImpactRingDrawer.IMPACT_DURATION), -1.0, 'gone once its duration has passed')
+  assert_eq(drawer.progress(0.0), 0.0, 'the effect starts at the moment of the hit')
+  assert_almost_eq(drawer.progress(BleedDrawer.DURATION * 0.5), 0.5, 0.001, 'halfway through')
+  assert_eq(drawer.progress(BleedDrawer.DURATION), -1.0, 'gone once its duration has passed')
 
 
 func test_a_status_application_picks_no_trial_drawer() -> void:

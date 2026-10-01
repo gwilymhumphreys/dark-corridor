@@ -40,8 +40,8 @@ Because fire-rate and travel are decoupled (combat_model.md), many Deliveries ca
 ## What is built
 
 `VfxDriver` (`src/vfx/vfx_driver.gd`) draws a solid projectile in flight on a slight upward arc
-(`VfxDriver.arc_point`, height set by `ARC_HEIGHT` as a fraction of the distance), a ring that snaps outward
-where it lands, and a number for damage and healing, each in the delivery's colour. The number
+(`VfxDriver.arc_point`, height set by `ARC_HEIGHT` as a fraction of the distance), an effect where
+it lands (below), and a number for damage and healing, each in the delivery's colour. The number
 (`DamageNumberDrawer`) has a black outline. Its size grows with the amount on a logarithmic curve,
 from a fixed base size to a maximum, so it rises quickly for small amounts and slowly for large
 ones. It floats up while drifting sideways, away from the target's centre on the side its landing
@@ -50,20 +50,18 @@ random amount fixed per delivery, with a slight side-to-side wave, then quickly
 grows and shrinks away. Heals show a '+' in front. The landed delivery is kept for
 `Balance.DELIVERY_VISUAL_HOLD`, which must be at least the number's duration.
 
-**Attack hits (trial).** While `VfxDriver.attack_sprites` is on, an attack landing draws
-`AttackHitDrawer` instead of the ring. A firing item whose `attack_sound` is `blade` gets a slash: a
+**Attack hits (trial).** An attack landing draws `AttackHitDrawer`. A firing item whose `attack_sound` is `blade` gets a slash: a
 crescent that draws across from one end to the other, turned to face the direction the projectile
 was travelling as it landed (`VfxDriver.landing_direction`), with a small random tilt and a random
 mirror fixed per delivery, then fades. Any other attack gets an impact: a sharp flash that grows
 fast, over a spreading ring and a burst of debris, turned by a fixed random angle. The images are
 from Kenney's Particle Pack, stored in `assets/vfx/attack/` as white shapes so they can be tinted:
 each has a base drawn in the delivery's colour and a core (its brightest part) drawn in the
-off-white text colour. The switch is **Attack Sprites** in the debug panel's Feedback tab (F5), and
-`--attack-effect=ring` starts with it off. The `hit_effects_preview` dev scene
+off-white text colour. The `hit_effects_preview` dev scene
 ([dev_tools.md](dev_tools.md)) repeats both effects and shows a strip of frames through each.
 
-**Poison, burn and bleed (trial).** While `VfxDriver.status_sprites` is on, a poison, burn or bleed
-landing draws `PoisonDrawer`, `BurnDrawer` or `BleedDrawer` instead of the ring. Each has two
+**Poison, burn and bleed (trial).** A poison, burn or bleed landing draws `PoisonDrawer`,
+`BurnDrawer` or `BleedDrawer`. Each has two
 effects: one where the status is applied, and one when it deals damage (the visual-only delivery of
 a poison or burn tick or a bleed trigger, told apart by `Delivery.visual_only`).
 
@@ -83,8 +81,7 @@ a poison or burn tick or a bleed trigger, told apart by `Delivery.visual_only`).
 The images are from Kenney's Particle Pack, in `assets/vfx/status/`: a round blob, a rim-lit
 bubble, a puff, four flame tongues and a fire burst. They are drawn in the delivery's colour, with a
 small off-white glint on blobs, bubbles and drops and a paler core on flames. Each particle's path
-comes from `EffectDrawer.fixed_random`, so it stays the same for as long as the effect shows. The
-switch is **Status Sprites** in the same Feedback tab, and `--status-effect=ring` starts with it off. The preview scene has a page for each.
+comes from `EffectDrawer.fixed_random`, so it stays the same for as long as the effect shows. The preview scene has a page for each.
 
 **Projectiles (trial).** While `VfxDriver.comet_projectiles` is on, a delivery in flight is drawn by
 `ProjectileCometDrawer` instead of the disc: a comet in the delivery's colour, with a solid head half
@@ -95,6 +92,19 @@ the head just after launch, so it never reaches back past the firing item. The t
 `assets/vfx/status/`. The switch is **Comet Projectiles** in the Feedback tab, and
 `--projectile=disc` starts with it off. The preview scene's projectile page flies comets in four
 colours at an enemy and shows each beside the old disc.
+
+**Pixel projectiles (trial).** While `VfxDriver.pixel_projectile` picks one, a delivery in flight is
+drawn by `ProjectilePixelDrawer` as a looping pixel-art animation instead of the comet or disc. The
+animations come from the Beat 'em Up Combat Effects packs and the 500 Bullet pack
+([asset_library.md](../design/asset_library.md)). Some turn to face the direction of travel; the
+spinning ones stay upright. `tools/make_pixel_projectiles.py` turns each into a sheet in
+`assets/vfx/projectile/pixel/` with one column per frame and one row per brightness band; each band is
+drawn in a darker or lighter shade of the delivery's colour (`BAND_SHADES`), so the art keeps its
+shading in any colour. The animation is scaled by a whole number, `VfxDriver.pixel_projectile_scale`,
+and drawn on the driver's `PixelProjectiles` child, whose texture filter is nearest, so its pixels stay
+square and sharp. **Pixel Projectile** (Off or an animation) and **Pixel Projectile Scale** are in the
+Feedback tab, and `--pixel-projectile=<name>` (lower case, underscores for spaces) starts with one. The
+preview scene's pixel page flies each animation at an enemy and shows each in four colours.
 
 **Big hits.** A damage landing of at least `VfxDriver.BIG_HIT_DAMAGE` emits `big_hit` with a
 strength from 0 to 1 (`big_hit_strength`), once, alongside its sound. `CombatViewFramed` answers
@@ -115,8 +125,9 @@ Each shape is its own class under `src/vfx/drawers/`, extending `EffectDrawer`: 
 `progress(age)` and `draw_effect(canvas, delivery, point, age)`. A drawer holds no state, so slow
 motion and pause keep working. The driver keeps a dictionary from a mechanic id (for a `MECHANIC` delivery) or
 `Delivery.Kind.APPLY_STATUS` to the drawer, so a new effect is a new file rather than another branch in
-`_draw()`. Five [mechanics](mechanics.md) (attack, poison, burn, bleed, crit) and status application currently share one
-`ImpactRingDrawer`, which attack, poison, burn and bleed replace with their own drawers while the trial switches above are on; the other mechanics have no ring; `SUMMON` and `CREATE_ITEM` have no entry, so they draw a projectile in flight and nothing on landing. Numbers draw for
+`_draw()`. Attack, poison, burn and bleed are drawn by the trial drawers above, and shield, heal and
+regen by their own drawers. The other [mechanics](mechanics.md), status applications, `SUMMON` and
+`CREATE_ITEM` draw a projectile in flight and nothing on landing. Numbers draw for
 attack and heal landings and for every visual-only delivery (a poison tick or bleed carries its status
 id as its mechanic).
 
@@ -126,8 +137,8 @@ through `CombatView.status_pos` and `CharacterPanel.status_centre`. If the actor
 status yet, it flies to the slot its icon will take (`StatusIcons.slot_centre`). When the status
 appears, its icon pops in, and when its stacks rise the icon bumps (`PopAnimation`, see
 [run_screen.md](run_screen.md)). A status application on an item lands on the centre of the item's
-cell, not nudged; statuses on items are not drawn on the cell yet. No ring is drawn for a status
-application; **Ring At Status Icons** in the Feedback tab turns it back on. The mechanics that are
+cell, not nudged; statuses on items are not drawn on the cell yet. Nothing is drawn where a status
+application lands. The mechanics that are
 statuses (shield, poison, burn, bleed, regen) are not status applications and land as below.
 
 **Shield, heal and regen.** Shield, healing or regen given to an actor flies to the centre of
@@ -164,11 +175,10 @@ and decharge draw no ring on the item they move but are still heard. A delivery 
 also plays `mechanics/crit` on top; that layer is cooldown-guarded, because one critting fire can
 land on several targets at once.
 
-**The circles are placeholders.** The projectile disc and the impact ring are drawn shapes standing
-in for real VFX animations, there so the timing and the causal link between firing and damage can be
-judged. The trials above (attack hits, poison, burn and bleed, and the comet) replace them where
-they are switched on; the ring is still drawn for every other mechanic. Their shape is not the
-intended look. The effects style is open (`art_audio.md`). A screen pulse for ordinary hits is not built.
+**The disc is a placeholder.** The projectile disc is a drawn shape standing in for a real VFX
+animation, there so the timing and the causal link between firing and damage can be judged. The
+comet and pixel projectile trials replace it while they are switched on. The effects above are trials,
+not the intended look. The effects style is open (`art_audio.md`). A screen pulse for ordinary hits is not built.
 
 ## Reading the Combat manager's Delivery set
 

@@ -6,8 +6,7 @@ extends EffectDrawer
 ## here as a pure function of age. Each image has a white base, tinted with the delivery's colour,
 ## and a white core holding its brightest part, tinted with the off-white text colour.
 ##
-## TRIAL: one of the looks being tried for attacks. `VfxDriver.attack_sprites` switches between this
-## and the placeholder ring.
+## TRIAL: one of the looks being tried for attacks.
 
 const SLASH: Texture2D = preload('res://assets/vfx/attack/slash_03.png')
 const SLASH_CORE: Texture2D = preload('res://assets/vfx/attack/slash_03_core.png')

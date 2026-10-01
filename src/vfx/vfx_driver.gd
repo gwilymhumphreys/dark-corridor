@@ -6,10 +6,10 @@ extends Node2D
 ## is the one exception — it fires once per landing at wall-clock speed. Writes no game state.
 ## The shapes are drawn by small effect classes in `src/vfx/drawers/`, one per effect.
 ##
-## PLACEHOLDER: the circles drawn here — the projectile disc and the impact ring — are stand-ins so
-## the timing and the causal link can be judged. The trial drawers switched by `attack_sprites`,
-## `status_sprites` and `comet_projectiles` replace some of them. They are meant to be replaced by proper VFX
-## animations once those exist; do not treat their shape as the intended look.
+## PLACEHOLDER: the projectile disc is a stand-in so the timing and the causal link can be judged.
+## The trial drawers switched by `comet_projectiles` and `pixel_projectile` replace it. The effects are
+## meant to be replaced by proper VFX animations once those exist; do not treat their shape as the
+## intended look.
 
 signal big_hit(strength: float)   # a hit of at least BIG_HIT_DAMAGE landed; strength is 0 to 1
 
@@ -27,20 +27,15 @@ const TRAVEL_SOUND: String = 'combat/travel'
 ## The mechanics whose deliveries land on the target's health bar rather than on the target.
 const BAR_MECHANICS: Array[String] = [ShieldMechanic.ID, HealMechanic.ID, RegenMechanic.ID]
 
-## TRIAL: whether attacks land with `AttackHitDrawer`'s slash and impact images (true) or the
-## placeholder ring (false). Switched in the debug panel's Feedback tab, or with
-## `--attack-effect=ring` at start-up.
-static var attack_sprites: bool = DevArgs.value('--attack-effect') != 'ring'
-## TRIAL: whether poison, burn and bleed land with `PoisonDrawer`'s bubbles, `BurnDrawer`'s flames
-## and `BleedDrawer`'s blood (true) or the placeholder ring (false). Switched in the debug panel's Feedback tab, or with
-## `--status-effect=ring` at start-up.
-static var status_sprites: bool = DevArgs.value('--status-effect') != 'ring'
 ## TRIAL: whether projectiles fly as `ProjectileCometDrawer`'s comet (true) or the placeholder disc
 ## (false). Switched in the debug panel's Feedback tab, or with `--projectile=disc` at start-up.
 static var comet_projectiles: bool = DevArgs.value('--projectile') != 'disc'
-## Whether a status application draws the placeholder ring where it lands. Off: on an actor, the
-## status's icon popping in is the landing. Switched in the debug panel's Feedback tab.
-static var status_landing_effects: bool = false
+## TRIAL: which `ProjectilePixelDrawer` animation projectiles fly as, counting from 1, or 0 for none,
+## which leaves the comet or disc. Set in the debug panel's Feedback tab, or with
+## `--pixel-projectile=<name>` at start-up (the animation's name in lower case, spaces as underscores).
+static var pixel_projectile: int = ProjectilePixelDrawer.option_index(DevArgs.value('--pixel-projectile'))
+## TRIAL: how many screen pixels each pixel of a pixel projectile covers. Set in the Feedback tab.
+static var pixel_projectile_scale: float = 3.0
 
 var combat: CombatManager
 var layout: CombatView        # the swappable view surface — item_pos / actor_pos / target_pos
@@ -48,6 +43,9 @@ var _sounded: Dictionary = {}   # Delivery instance id -> true, so each landing 
 var _launched: Dictionary = {}  # Delivery instance id -> true, so each flight sounds once
 var _projectile: EffectDrawer
 var _comet: ProjectileCometDrawer
+var _pixel: ProjectilePixelDrawer
+## Pixel projectiles are drawn on this child, whose texture filter is nearest so their pixels stay sharp.
+var _pixel_layer: Node2D
 var _damage_number: DamageNumberDrawer
 ## The damage numbers are drawn on this child, so they can take their own material: the element
 ## material, like the value pills, when `effects_damage_numbers` says so (`_numbers_material_update`).
@@ -70,6 +68,13 @@ func setup(cm: CombatManager, layout_source: CombatView) -> void:
 func _ready() -> void:
   _projectile = ProjectileDiscDrawer.new()
   _comet = ProjectileCometDrawer.new()
+  _pixel = ProjectilePixelDrawer.new()
+  _pixel_layer = Node2D.new()
+  _pixel_layer.name = 'PixelProjectiles'
+  _pixel_layer.use_parent_material = true
+  _pixel_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+  _pixel_layer.draw.connect(_draw_pixel_projectiles)
+  add_child(_pixel_layer)
   _damage_number = DamageNumberDrawer.new()
   _numbers = Node2D.new()
   _numbers.name = 'Numbers'
@@ -83,12 +88,6 @@ func _ready() -> void:
   _shield = ShieldDrawer.new()
   _heal = HealDrawer.new()
   _regen = HealDrawer.new(RegenMechanic.ID)
-  var ring: ImpactRingDrawer = ImpactRingDrawer.new()
-  # Every mechanic id maps to the same ring for now (docs/systems/mechanics.md). A DoT tick's
-  # visual-only Delivery carries its status id as the mechanic, so its ring still draws.
-  for mechanic_id in [AttackMechanic.ID, PoisonMechanic.ID, BurnMechanic.ID, BleedMechanic.ID, CritMechanic.ID]:
-    _impact_drawers[mechanic_id] = ring
-  _impact_drawers[Delivery.Kind.APPLY_STATUS] = ring
   _impact_drawers[ShieldMechanic.ID] = _shield
   _impact_drawers[HealMechanic.ID] = _heal
   # A regen tick's visual-only delivery also carries RegenMechanic.ID, so it draws this too.
@@ -99,6 +98,7 @@ func _process(_delta: float) -> void:
   _sound_new_impacts()
   _numbers_material_update()
   queue_redraw()
+  _pixel_layer.queue_redraw()
   _numbers.queue_redraw()
 
 
@@ -119,8 +119,8 @@ func _draw() -> void:
       continue
     var travel_dur: float = d.travel.threshold * Timekeeper.STEP
     if not d.landed:
-      if travel_dur > 0.0:
-        var src: Vector2 = layout.consumable_pos(d.consumable) if d.consumable != null else layout.item_pos(d.source)
+      if travel_dur > 0.0 and pixel_projectile <= 0:
+        var src: Vector2 = _source_point(d)
         # The same point the landing effect will use, so the disc does not jump on landing.
         var dst: Vector2 = _landing_point(d)
         var t: float = clampf((now - d.fire_time) / travel_dur, 0.0, 1.0)
@@ -132,21 +132,41 @@ func _draw() -> void:
     var landing: Vector2 = _landing_point(d)
     var key: Variant = _impact_key(d)
     var mechanic: String = trial_mechanic(d)
-    if not status_landing_effects and d.kind == Delivery.Kind.APPLY_STATUS:
+    if d.kind == Delivery.Kind.APPLY_STATUS:
       pass   # on an actor the status's icon pops in where it lands (PopAnimation), so nothing is drawn over it
-    elif attack_sprites and mechanic == AttackMechanic.ID:
+    elif mechanic == AttackMechanic.ID:
       _attack_hit.draw_hit(self, d, landing, _landing_direction_of(d, landing), now - d.impact_time)
-    elif status_sprites and mechanic == PoisonMechanic.ID:
+    elif mechanic == PoisonMechanic.ID:
       _poison.draw_effect(self, d, landing, now - d.impact_time)
-    elif status_sprites and mechanic == BurnMechanic.ID:
+    elif mechanic == BurnMechanic.ID:
       _burn.draw_effect(self, d, landing, now - d.impact_time)
-    elif status_sprites and mechanic == BleedMechanic.ID:
+    elif mechanic == BleedMechanic.ID:
       # A bleed tick's drops spurt upward, so it needs no direction (and its source is a status's).
       var direction: Vector2 = Vector2.UP if d.visual_only else _landing_direction_of(d, landing)
       _bleed.draw_hit(self, d, landing, direction, now - d.impact_time)
     elif _impact_drawers.has(key):
       var drawer: EffectDrawer = _impact_drawers[key]
       drawer.draw_effect(self, d, landing, now - d.impact_time)
+
+
+# Projectiles in flight as pixel animations, on their own child node, when `pixel_projectile` picks one.
+func _draw_pixel_projectiles() -> void:
+  if pixel_projectile <= 0 or combat == null or combat.timekeeper == null:
+    return
+  var now: float = combat.timekeeper.render_time()
+  for d in combat.deliveries():
+    var travel_dur: float = d.travel.threshold * Timekeeper.STEP
+    if d.fizzled or d.landed or travel_dur <= 0.0:
+      continue
+    var src: Vector2 = _source_point(d)
+    var dst: Vector2 = _landing_point(d)
+    var t: float = clampf((now - d.fire_time) / travel_dur, 0.0, 1.0)
+    _pixel.draw_flight(_pixel_layer, d, pixel_projectile - 1, arc_point(src, dst, t), arc_direction(src, dst, t), now - d.fire_time, pixel_projectile_scale)
+
+
+# Where a delivery's projectile starts: the firing item's cell, or the potion slot a thrown consumable came from.
+func _source_point(d: Delivery) -> Vector2:
+  return layout.consumable_pos(d.consumable) if d.consumable != null else layout.item_pos(d.source)
 
 
 # The damage numbers, on their own child node and above every other effect.
@@ -205,8 +225,7 @@ static func landing_direction(src: Vector2, dst: Vector2) -> Vector2:
 
 ## The direction a delivery's projectile was travelling as it landed at `landing`.
 func _landing_direction_of(d: Delivery, landing: Vector2) -> Vector2:
-  var src: Vector2 = layout.consumable_pos(d.consumable) if d.consumable != null else layout.item_pos(d.source)
-  return landing_direction(src, landing)
+  return landing_direction(_source_point(d), landing)
 
 
 ## How big a hit is, from 0 at BIG_HIT_DAMAGE to 1 at BIGGEST_HIT_DAMAGE, or -1 for anything that
