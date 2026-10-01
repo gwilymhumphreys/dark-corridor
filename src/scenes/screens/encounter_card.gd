@@ -50,7 +50,7 @@ var _lift_tween: Tween
 func _ready() -> void:
   _lift.offset_transform_enabled = true
   _card.offset_transform_enabled = true
-  disabled = true
+  set_pickable(false)
   mouse_entered.connect(_on_mouse_entered)
   mouse_exited.connect(_on_mouse_exited)
   set_face_up(face_up)
@@ -93,6 +93,8 @@ func set_lift(value: float) -> void:
 func set_pickable(value: bool) -> void:
   pickable = value
   disabled = not value
+  # The cursor shows the hover hand for the pointing shape even on a disabled button.
+  mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if value else Control.CURSOR_ARROW
   if not value:
     _lift_to(0.0)
   elif is_hovered():

@@ -1,7 +1,8 @@
 extends GutTest
 ## Every item, potion, status and mechanic keyword names an icon file, every character names a
-## portrait file, and every enemy names a portrait or a corridor image, that loads as a texture, so a
-## renamed or missing picture fails here instead of showing an empty cell.
+## portrait file, every enemy names a portrait or a corridor image, and every encounter card has a
+## picture, that loads as a texture, so a renamed or missing picture fails here instead of showing an
+## empty cell.
 
 
 func before_each() -> void:
@@ -51,6 +52,12 @@ func test_every_enemy_has_a_portrait_or_an_image() -> void:
       _assert_icon(def.portrait, 'enemy %s portrait' % id)
     if def.image != '':
       _assert_icon(def.image, 'enemy %s image' % id)
+
+
+func test_every_encounter_card_picture_loads() -> void:
+  EncounterCatalog._build()
+  for id: String in EncounterCatalog._defs:
+    _assert_icon(EncounterCard.image_path(EncounterCatalog._defs[id]), 'encounter %s picture' % id)
 
 
 func _assert_icon(path: String, what: String) -> void:
