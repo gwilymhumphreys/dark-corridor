@@ -7,4 +7,5 @@ func _init() -> void:
   id = 'shop_rare'
   type = Type.SHOP
   name_key = 'Rare goods'   # placeholder name
+  image = 'res://assets/encounters/evil_merchant.jpg'   # placeholder image
   stock = [StockEntry.items_of_rarity(Balance.SHOP_ITEM_COUNT, ItemDef.Rarity.RARE)]

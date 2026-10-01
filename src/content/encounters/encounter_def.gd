@@ -23,6 +23,9 @@ enum Rarity { COMMON, RARE }
 var id: String = ''
 var type: int = Type.FIGHT
 var name_key: String = ''         # the location frame, e.g. 'A flooded antechamber'
+## The picture on the encounter's card (docs/plans/encounter_cards.md), a path in assets/encounters/.
+## Empty uses the default for the encounter's kind (EncounterCard).
+var image: String = ''
 var enemy_ids: Array[String] = []        # FIGHT: EnemyCatalog ids, left-to-right order
 var reward: int = Reward.NONE     # what a WIN reports up for the Run manager to fulfil
 var heal_fraction: float = 0.0    # REST: fraction of max HP restored

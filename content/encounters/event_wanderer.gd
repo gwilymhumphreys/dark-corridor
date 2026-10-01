@@ -7,6 +7,7 @@ func _init() -> void:
   id = 'event_wanderer'
   type = Type.EVENT
   name_key = 'A figure in the dark'
+  image = 'res://assets/encounters/hermit.jpg'   # placeholder image
   event_prose_key = 'A gaunt shape uncurls from a recess, a notched blade across its knees. ' \
     + 'It rasps an offer: walk together a while, and it will fight at your side.'
   var welcome := EventOptionDef.new()

@@ -7,5 +7,6 @@ func _init() -> void:
   id = 'fight_boss'
   type = Type.FIGHT
   name_key = 'The warden\'s gate'
+  image = 'res://assets/encounters/black_knight.jpg'   # placeholder image
   enemy_ids = ['boss']
   reward = Reward.RELIC

@@ -6,5 +6,6 @@ func _init() -> void:
   id = 'fight_tough'
   type = Type.FIGHT
   name_key = 'A blocked passage'
+  image = 'res://assets/encounters/living_statue.jpg'   # placeholder image
   enemy_ids = ['brute']
   reward = Reward.NONE

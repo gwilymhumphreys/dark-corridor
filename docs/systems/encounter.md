@@ -153,7 +153,7 @@ A fight Encounter spawns **1–4 enemies** (most 1–2; group fights authored to
 
 ## Telegraph (the encounter card)
 
-Before each fight the player is offered three encounters as `EncounterCard`s standing in the corridor ([run_screen.md](run_screen.md#the-choice-of-encounters)). A card shows the encounter's kind (Event, Rest, Reward, Shop), its location frame and a hint at what it gives, derived from the def's type and, for a reward, the kind of goods in its stock (`EncounterDef` carries no telegraph field). First-run legible: the card telegraphs the kind, not the contents (design). An **elite** is a fixed map square (`RunMap.Square.ELITE`, the `fight_elite` encounter), not an offered encounter.
+Before each fight the player is offered three encounters as `EncounterCard`s dealt from a deck over the corridor ([run_screen.md](run_screen.md#the-choice-of-encounters)). A card shows the encounter's location frame, its picture, its kind (Fight, Event, Rest, Reward, Shop) and a hint at what it gives, derived from the def's type and, for a reward, the kind of goods in its stock (`EncounterDef` carries no telegraph field). The picture is the def's `image` (a path in `assets/encounters/`), or the default for its kind (`EncounterCard.DEFAULT_IMAGES`) when it has none. Every picture so far is a placeholder from the monster collection. First-run legible: the card telegraphs the kind, not the contents (design). An **elite** is a fixed map square (`RunMap.Square.ELITE`, the `fight_elite` encounter), not an offered encounter.
 
 ## Reward
 
@@ -185,7 +185,7 @@ The reward *content* (draft odds, relic tiers) is design/tuning; the `Draft` mec
 ## Open / deferred
 
 - **Encounter-definition data format — resolved (#23):** typed GDScript `EncounterDef` + catalog. The **~30-encounter pool** (location frames, telegraphs, event prose) — content/impl + design.
-- **Encounter card look** — the rarity colour and the card art come with the later stages of [`../plans/encounter_choice.md`](../plans/encounter_choice.md).
+- **Encounter card look** — the rarity colour comes with the later stages of [`../plans/encounter_choice.md`](../plans/encounter_choice.md). A larger version of the card's picture is planned for the encounter screen.
 - **Reward specifics per tier** — design/tuning + the `Draft` PRD.
 - **Resolved here:** composition/ordering authoring (Enemy PRD's deferral); the `Encounter` → `Combat manager` handoff (player + enemy `Actor`s + ordering); elite/boss reward routing (reported up, fulfilled by the `Run manager`).
 

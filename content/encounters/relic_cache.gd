@@ -7,4 +7,5 @@ func _init() -> void:
   id = 'relic_cache'
   type = Type.REWARD
   name_key = 'A forgotten reliquary'   # placeholder name
+  image = 'res://assets/encounters/treasure_box.jpg'   # placeholder image
   stock = [StockEntry.relics(3)]
