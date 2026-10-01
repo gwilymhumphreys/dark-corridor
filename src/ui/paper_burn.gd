@@ -2,7 +2,8 @@ class_name PaperBurn
 extends Node
 ## Burns a Control away like paper catching fire (docs/systems/paper_burn.md): a ragged hole spreads
 ## from a point on its edge, with a glowing ember line at the hole's edge, a black char behind the
-## line, a dithered scorch ahead of it, and sparks and ash rising. Start one with
+## line, a dithered scorch ahead of it, and sparks and ash rising. The bands can be snapped to the
+## combat effects' palette (`paper_burn_palette`). Start one with
 ## `PaperBurn.burn(target)`; the settings are the `paper_burn_*` print settings, read at the start.
 ##
 ## The target is set to clip its children (`clip_children`) and given the burn material, and a
@@ -25,6 +26,12 @@ const MARGIN: float = 24.0
 const FRONT_POINTS: int = 24
 ## The chance of the fire starting on each side: bottom, left, right, top. Fire mostly starts low.
 const SIDE_WEIGHTS: Array[float] = [0.5, 0.2, 0.2, 0.1]
+## The palette clamp uniforms copied from the combat effects' material when a burn starts, so the
+## bands snap to the same palette as the effects, and the scorch uses the same dot pattern.
+const PALETTE_UNIFORMS: Array[String] = [
+  'palette_rgb', 'palette_lab', 'colour_count', 'perceptual', 'dithering', 'dither_pattern',
+  'dither_size', 'dither_supersample', 'dither_noise',
+]
 
 ## The Control that burns. Set by `burn`, or the parent when this is added some other way.
 var target: Control = null
@@ -62,7 +69,7 @@ func _ready() -> void:
     target = get_parent() as Control
   var rng: RandomNumberGenerator = RandomNumberGenerator.new()
   rng.randomize()
-  _origin = _pick_origin(rng, target.size)
+  _origin = pick_origin(rng, target.size)
   _material.shader = SHADER
   _material.set_shader_parameter('origin', _origin)
   _material.set_shader_parameter('seed', rng.randf() * 100.0)
@@ -119,25 +126,14 @@ func _draw_on_target() -> void:
 func _read_settings() -> void:
   _duration = maxf(PrintLook.print_setting('paper_burn_duration'), 0.05)
   _raggedness = PrintLook.print_setting('paper_burn_raggedness')
-  var ember_width: float = PrintLook.print_setting('paper_burn_ember_width')
-  var char_width: float = PrintLook.print_setting('paper_burn_char_width')
-  var scorch_width: float = PrintLook.print_setting('paper_burn_scorch_width')
   var brightness: float = PrintLook.print_setting('paper_burn_brightness')
-  _bands = ember_width + char_width + scorch_width
-  _material.set_shader_parameter('raggedness', _raggedness)
-  _material.set_shader_parameter('detail', PrintLook.print_setting('paper_burn_detail'))
-  _material.set_shader_parameter('ember_width', ember_width)
-  _material.set_shader_parameter('char_width', char_width)
-  _material.set_shader_parameter('scorch_width', scorch_width)
-  _material.set_shader_parameter('brightness', brightness)
+  _bands = apply_band_settings(_material)
   _material.set_shader_parameter('dither', PrintLook.print_setting('paper_burn_dither'))
-  _material.set_shader_parameter('ember_colour', Colours.PAPER_BURN_EMBER)
-  _material.set_shader_parameter('char_colour', Colours.PAPER_BURN_CHAR)
-  _material.set_shader_parameter('scorch_colour', Colours.PAPER_BURN_SCORCH)
+  for uniform: String in PALETTE_UNIFORMS:
+    _material.set_shader_parameter(uniform, InterfaceLook.effects_material.get_shader_parameter(uniform))
+  _material.set_shader_parameter('snap', PrintLook.print_setting('paper_burn_palette'))
   _particles_on = PrintLook.print_setting('paper_burn_particles')
-  _sparks.color = Colours.PAPER_BURN_EMBER
-  # Grey flakes, light enough to show against the dark sheet.
-  _ash.color = Colours.PAPER_BURN_CHAR.lerp(Colours.UI_TEXT_DIM, 0.5)
+  _colour_particles(_sparks, _ash)
   # The ember line and the sparks are brighter than white, and the screen glow is only on while
   # something asks for it. The sparks ask, which also makes them that bright.
   InterfaceGlow.set_glow(_sparks, maxf(brightness, 1.0))
@@ -148,8 +144,9 @@ func _push_progress() -> void:
   _material.set_shader_parameter('rect_size', target.size)
 
 
-# A point on the target's edge, on a side picked by SIDE_WEIGHTS, away from the corners.
-static func _pick_origin(rng: RandomNumberGenerator, rect_size: Vector2) -> Vector2:
+## A point on the edge of a `rect_size` rectangle, on a side picked by SIDE_WEIGHTS, away from the
+## corners. Also used by the enemy sprite burn (`SpriteBurn`).
+static func pick_origin(rng: RandomNumberGenerator, rect_size: Vector2) -> Vector2:
   var along: float = rng.randf_range(0.15, 0.85)
   var roll: float = rng.randf()
   var side: int = 0
@@ -166,27 +163,73 @@ static func _pick_origin(rng: RandomNumberGenerator, rect_size: Vector2) -> Vect
   return Vector2(along * rect_size.x, 0.0)
 
 
-# The sparks and ash start from the burn front: the circle around the origin at the front's distance
-# (the shader's `front`, without the noise), where it crosses the target.
+# The sparks and ash start from the burn front.
 func _place_particles() -> void:
   if not _particles_on:
     return
-  # The farthest corner from the origin, as in the shader.
-  var reach: float = Vector2(maxf(_origin.x, target.size.x - _origin.x), maxf(_origin.y, target.size.y - _origin.y)).length()
-  var radius: float = lerpf(-_bands - _raggedness, reach + _raggedness, progress)
-  var points: PackedVector2Array = PackedVector2Array()
-  if radius > 0.0:
-    var bounds: Rect2 = Rect2(Vector2.ZERO, target.size)
-    for i in FRONT_POINTS:
-      var angle: float = TAU * (float(i) + 0.5) / float(FRONT_POINTS)
-      var point: Vector2 = _origin + Vector2.from_angle(angle) * radius
-      if bounds.has_point(point):
-        points.append(point)
+  var points: PackedVector2Array = front_points(_origin, target.size, _bands, _raggedness, progress)
   for particles: CPUParticles2D in [_sparks, _ash]:
     particles.global_transform = target.get_global_transform()
     particles.emission_points = points
     # With no point on the target, nothing is emitted (an empty list would emit from the node's origin).
     particles.emitting = not points.is_empty()
+
+
+## Points on the burn front of a `rect_size` rectangle burning from `origin`, where the sparks and
+## ash start: the circle around the origin at the front's distance (the shader's `front`, without the
+## noise), where it crosses the rectangle. `bands` is the three band widths added up.
+static func front_points(origin: Vector2, rect_size: Vector2, bands: float, raggedness: float, at: float) -> PackedVector2Array:
+  # The farthest corner from the origin, as in the shader.
+  var reach: float = Vector2(maxf(origin.x, rect_size.x - origin.x), maxf(origin.y, rect_size.y - origin.y)).length()
+  var radius: float = lerpf(-bands - raggedness, reach + raggedness, at)
+  var points: PackedVector2Array = PackedVector2Array()
+  if radius > 0.0:
+    var bounds: Rect2 = Rect2(Vector2.ZERO, rect_size)
+    for i in FRONT_POINTS:
+      var angle: float = TAU * (float(i) + 0.5) / float(FRONT_POINTS)
+      var point: Vector2 = origin + Vector2.from_angle(angle) * radius
+      if bounds.has_point(point):
+        points.append(point)
+  return points
+
+
+## Set the burn shader's band and noise uniforms on `material` from the `paper_burn_*` print
+## settings, and return the three band widths added up.
+static func apply_band_settings(material: ShaderMaterial) -> float:
+  var ember_width: float = PrintLook.print_setting('paper_burn_ember_width')
+  var char_width: float = PrintLook.print_setting('paper_burn_char_width')
+  var scorch_width: float = PrintLook.print_setting('paper_burn_scorch_width')
+  material.set_shader_parameter('raggedness', PrintLook.print_setting('paper_burn_raggedness'))
+  material.set_shader_parameter('detail', PrintLook.print_setting('paper_burn_detail'))
+  material.set_shader_parameter('ember_width', ember_width)
+  material.set_shader_parameter('char_width', char_width)
+  material.set_shader_parameter('scorch_width', scorch_width)
+  material.set_shader_parameter('brightness', PrintLook.print_setting('paper_burn_brightness'))
+  material.set_shader_parameter('ember_colour', Colours.PAPER_BURN_EMBER)
+  material.set_shader_parameter('char_colour', Colours.PAPER_BURN_CHAR)
+  material.set_shader_parameter('scorch_colour', Colours.PAPER_BURN_SCORCH)
+  return ember_width + char_width + scorch_width
+
+
+## A new pair of the burn's particle emitters, [sparks, ash], set up as in this scene and coloured,
+## for an effect that burns something other than a Control (`SpriteBurn`). They are not in the tree.
+static func new_particles() -> Array[CPUParticles2D]:
+  var scene: Node = (load(SCENE_PATH) as PackedScene).instantiate()
+  var sparks: CPUParticles2D = scene.get_node('Sparks')
+  var ash: CPUParticles2D = scene.get_node('Ash')
+  scene.remove_child(sparks)
+  scene.remove_child(ash)
+  scene.free()
+  _colour_particles(sparks, ash)
+  for particles: CPUParticles2D in [sparks, ash]:
+    particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_POINTS
+  return [sparks, ash]
+
+
+static func _colour_particles(sparks: CPUParticles2D, ash: CPUParticles2D) -> void:
+  sparks.color = Colours.PAPER_BURN_EMBER
+  # Grey flakes, light enough to show against the dark sheet.
+  ash.color = Colours.PAPER_BURN_CHAR.lerp(Colours.UI_TEXT_DIM, 0.5)
 
 
 func _complete() -> void:

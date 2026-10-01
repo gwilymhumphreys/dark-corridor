@@ -178,6 +178,7 @@ they go; the corridor creates, sizes and places them.
 | `pixels_to_metres(pixels)` | A screen distance at depth 0 in metres: `pixels / view_size.y * section_height` |
 | `unproject(point) -> Vector2` | Where a 3D point appears, in the node's local coordinates (origin at the view centre) |
 | `remove_enemy(sprite)` | Clears the texture and frees the sprite |
+| `burn_enemy(sprite) -> SpriteBurn` | Burns the sprite away where it stands with the [paper burn](../paper_burn.md#enemy-sprites), then removes it |
 
 - `shaded` is on, so the light darkens a sprite with distance; there is no separate
   brightness formula.

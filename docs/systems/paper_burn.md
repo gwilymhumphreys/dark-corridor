@@ -3,10 +3,12 @@
 A reusable effect that burns a Control away like paper catching fire. A ragged hole spreads from a
 point on its edge. The edge of the hole has a glowing ember line, a black char band behind it and a
 dithered scorch ahead of it, and sparks and ash rise from it. Nothing is left at the end. The map uses
-it to burn away the token on a square once its fight is won. It is a visual effect only and has
-nothing to do with the Burn mechanic.
+it to burn away the token on a square once its fight is won, and a dead enemy's HUD and corridor
+sprite burn away with it. It is a visual effect only and has nothing to do with the Burn mechanic.
 
 **Location:** `src/ui/paper_burn.gd` + `.tscn` (`PaperBurn`), `src/shaders/paper_burn.gdshader`, the
+hole and bands shared with the sprite burn in `src/shaders/paper_burn.gdshaderinc`, the sprite burn
+(`src/scenes/corridors/sprite_burn.gd`, `src/shaders/paper_burn_sprite.gdshader`), the
 Paper burn section of the F7 tab (`src/debug/tokens_panel.gd`), and the preview scene
 `src/debug/scenes/paper_burn_preview.tscn`.
 
@@ -44,10 +46,20 @@ preview scene does this for its wide panel.
 ## Look
 
 Colours come from the [interface palette](interface_palette.md): `PAPER_BURN_EMBER`,
-`PAPER_BURN_CHAR` and `PAPER_BURN_SCORCH` in `Colours`, named in every palette file. The scorch
+`PAPER_BURN_CHAR` and `PAPER_BURN_SCORCH` in `Colours`, named in every palette file. Each file sets them
+to colours it already has, so the burn adds no colours of its own: the ember and the scorch take the
+Burn mechanic's colour, and the char takes the file's darkest colour. The scorch
 multiplies the pixels under it towards the scorch colour, so a light icon browns while the dark card
-stays dark. It is dithered with a 4 by 4 Bayer pattern unless `paper_burn_dither` is off. Sizes are in
-pixels, so the ember line is the same thickness on every size of token.
+stays dark. It is dithered with the palette clamp's dither pattern unless `paper_burn_dither` is off.
+Sizes are in pixels, so the ember line is the same thickness on every size of token.
+
+With `paper_burn_palette` on, the pixels the bands colour are snapped to the combat effects' palette
+([interface_look.md](interface_look.md#the-combat-effects)), and the hole's edge is solid or empty by the
+dither pattern. `PaperBurn` copies the palette, matching, dithering switch and dither pattern from
+`InterfaceLook.effects_material` when a burn starts. The token's untouched pixels are not snapped again,
+because its pictures are already snapped to their own palette. The ember line is snapped first and then
+multiplied by `paper_burn_brightness`, so above 1 it still glows but its brightest pixels are no longer
+palette colours; at 1 every pixel of the line is a palette colour.
 
 ## Settings
 
@@ -62,12 +74,39 @@ presets ([print_frame.md](print_frame.md)). They are read when a burn starts.
 | `paper_burn_ember_width`, `paper_burn_char_width`, `paper_burn_scorch_width` | The widths of the bands, in pixels |
 | `paper_burn_brightness` | How far above white the ember line and sparks go |
 | `paper_burn_dither` | Dithered or smooth scorch |
+| `paper_burn_palette` | Bands snapped to the combat effects' palette, and a solid hole edge |
 | `paper_burn_particles` | Sparks and ash on or off |
+
+## Enemy sprites
+
+An enemy sprite is a `Sprite3D` in the corridor, not a Control, so it burns through its own shader.
+`Corridor3D.burn_enemy(sprite)` adds a `SpriteBurn` node under the corridor node, which gives the
+sprite `paper_burn_sprite.gdshader` as its material override and removes the sprite through
+`remove_enemy` when nothing is left.
+
+- The hole and the bands come from `paper_burn.gdshaderinc`, the same code as the interface burn.
+  `rect_size` is the sprite's size on screen, and the image's UV is scaled to it, so the bands are as
+  many screen pixels wide as on a token.
+- The sprite stays lit by the corridor light. The part of the ember line above white is also
+  emission, so it shows in the dark.
+- The scorch is smooth and the bands are not snapped by the burn. The corridor look shader runs over
+  the corridor image, so the world palette snaps them with everything else.
+- The sparks and ash are the same emitters as the interface burn's (`PaperBurn.new_particles()`),
+  children of the `SpriteBurn` node, so they are drawn over the corridor image in the corridor
+  node's coordinates. They do not ask `InterfaceGlow` for glow.
+- It reads the same `paper_burn_*` settings, except `paper_burn_dither` and `paper_burn_palette`.
 
 ## Uses
 
 - **The map.** When a fight is won, `RunScreen` calls `MapStrip.burn_current_square()`, which burns
   the current square's token when `map_cleared_look` is Burnt away ([run_screen.md](run_screen.md)).
+- **Dead enemies.** When an enemy is reaped, its HUD and its corridor sprite burn away where they
+  stand ([run_screen.md](run_screen.md#enemies-in-the-corridor-the-approach)). The HUD's panel is
+  see-through, so burning it whole would show a rectangle, and `CharacterPanel.burn_away()` burns each
+  shown part separately instead: the name, the health bar, each status icon and each item cell. A
+  label draws itself, so the name is put in a plain Control the size of its text, and that burns.
+  After the last enemy dies the run screen waits for the view's `burns_finished`, then
+  `Balance.FIGHT_END_PAUSE`, before it moves on, since the next beat frees the view.
 
 ## Preview
 
@@ -85,7 +124,8 @@ the burns restart, so the F7 sliders can be tuned while it runs ([dev_tools.md](
 | `hold(progress)` | Stop at a fixed progress from 0 to 1 |
 | `finish()` | Jump to the end |
 
-Tests: `tests/ui/test_paper_burn.gd`, and the burn cases in `tests/ui/test_map_strip.gd` and
+Tests: `tests/ui/test_paper_burn.gd`, the dead enemy cases in `tests/corridors/test_combat_corridor.gd`
+and `tests/ui/test_combat_view.gd`, and the burn cases in `tests/ui/test_map_strip.gd` and
 `tests/ui/test_run_screen.gd`.
 
 Research the look was built from: [Kyle Halladay's burning paper shader](https://kylehalladay.com/blog/tutorial/2015/11/10/Dissolve-Shader-Redux.html)

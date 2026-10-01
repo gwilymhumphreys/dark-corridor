@@ -3,10 +3,14 @@ extends GutTest
 
 var _parent: Control = null
 var _target: Control = null
+var _saved_duration: float = 0.0
+var _saved_palette: bool = true
 
 
 func before_each() -> void:
   TestCleanup.reset_all_managers()
+  _saved_duration = PrintLook.print_setting('paper_burn_duration')
+  _saved_palette = PrintLook.print_setting('paper_burn_palette')
   _parent = Control.new()
   add_child_autofree(_parent)
   _target = Control.new()
@@ -16,6 +20,8 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+  PrintLook.set_print_value('paper_burn_duration', _saved_duration)
+  PrintLook.set_print_value('paper_burn_palette', _saved_palette)
   TestCleanup.reset_all_managers()
 
 
@@ -65,3 +71,17 @@ func test_removing_the_burn_early_puts_the_target_back() -> void:
   assert_eq(_target.clip_children, CanvasItem.CLIP_CHILDREN_DISABLED, 'the clip is switched off')
   assert_null(_target.material, 'the material is put back')
   assert_eq(_target.modulate.a, 1.0, 'an unfinished burn does not hide the target')
+
+
+func test_the_bands_take_the_effects_palette() -> void:
+  PrintLook.set_print_value('paper_burn_palette', true)
+  PaperBurn.burn(_target)
+  var burn_material: ShaderMaterial = _target.material as ShaderMaterial
+  assert_true(burn_material.get_shader_parameter('snap'), 'the bands are snapped')
+  assert_eq(burn_material.get_shader_parameter('colour_count'), InterfaceLook.effects_material.get_shader_parameter('colour_count'), 'the same palette as the combat effects')
+
+
+func test_the_palette_switch_turns_the_snap_off() -> void:
+  PrintLook.set_print_value('paper_burn_palette', false)
+  PaperBurn.burn(_target)
+  assert_false((_target.material as ShaderMaterial).get_shader_parameter('snap'), 'the bands keep their smooth colours')

@@ -382,6 +382,15 @@ func remove_enemy(sprite: Sprite3D) -> void:
   sprite.queue_free()
 
 
+## Burn `sprite` away like paper where it stands (docs/systems/paper_burn.md), then remove it. The
+## host stops placing it; it keeps its position for the length of the burn.
+func burn_enemy(sprite: Sprite3D) -> SpriteBurn:
+  var burn: SpriteBurn = SpriteBurn.new()
+  burn.setup(self, sprite)
+  add_child(burn)
+  return burn
+
+
 ## Size `sprite` so that at depth 0 it is `height_pixels` tall on screen, times `enemy_scale`.
 func size_enemy(sprite: Sprite3D, height_pixels: float) -> void:
   if sprite.texture == null or sprite.texture.get_height() <= 0:
