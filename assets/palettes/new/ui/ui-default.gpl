@@ -72,6 +72,6 @@ Columns: 8
 140 115  77	beat shop
 179  89  89	beat combat
 242 235 140	map current halo
-255 170  80	paper burn ember
- 12   8   5	paper burn char
- 90  50  20	paper burn scorch
+242 128  26	paper burn ember
+  0   0   0	paper burn char
+242 128  26	paper burn scorch
