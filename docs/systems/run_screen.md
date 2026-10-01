@@ -60,22 +60,30 @@ until the pick, like the draft overlay.
 A choice beat ([run_manager.md](run_manager.md#the-choice-of-encounters)) builds the combat view with no
 fight, empties the corridor of enemies (`CombatView.clear_enemies`), and adds `encounter_choice.tscn`
 (`EncounterChoice`) to the corridor area. The player then walks up the corridor as in a fight approach
-(the `WALKING` state), and the choice fades up over the last `Balance.ENEMY_REVEAL_DURATION` of the walk
-(`EncounterChoice.reveal`), as the enemy readouts do. On arrival the state is `CHOOSING`.
+(the `WALKING` state). Over the last `Balance.ENEMY_REVEAL_DURATION` of the walk the cards are dealt
+(`EncounterChoice.reveal`): a deck slides down from the corridor area's top edge with only its lower
+part showing, the cards leave it face down one after another, land slightly turned in a row, and turn
+face up; then the Walk past button fades up. On arrival the state is `CHOOSING`. The deck is
+decoration only. The choice clips to the corridor area, which hides the part of the deck above it.
 
-- **Cards** — one `EncounterCard` (`encounter_card.tscn`) per offered encounter: a themed button, so
-  it takes the worn panel and the control feedback, with a `UIJuice` node (the card preset). It shows
-  the encounter's kind, name and hint ([encounter.md](encounter.md#telegraph-the-encounter-card)).
-  Each card stands where that many enemies would stand at their arrived depth, at the corridor's
-  middle height (`CombatView.encounter_slot` → `CombatCorridor.slot_point`, which needs no sprite and
-  leaves the head bob out), placed each frame so it follows the layout. A card wider than its share of
-  the row is scaled down (`EncounterChoice.CARD_FILL`), as several enemies are; the corridor's
-  `enemy_spacing` widens the row. An empty position has no card.
-- **Pick** — a card emits `picked(index)` → `RunManager.pick_path`; the cards go and the encounter
-  begins as any beat does.
+- **Cards** — one `EncounterCard` (`encounter_card.tscn`) per offered encounter, the shape of a poker
+  card, with its back shared with the deck (`card_back.tscn`). It shows the encounter's name, picture,
+  kind and hint ([encounter.md](encounter.md#telegraph-the-encounter-card)). It is a bare button with a
+  `UIJuice` node (the card preset) whose highlight is drawn on the card's front. The choice places the
+  cards each frame in a row centred in the corridor area, between the deck and the Walk past button,
+  scaled down only when the row does not fit. A card can be picked only once it is face up; hovering it
+  lifts it and turns it straight. An empty position has no card.
+- **Turning over** — the card's `Card` child is squashed to no width and widened again through its
+  offset transform, so it does not fight `UIJuice`, which animates the button's own.
+- **Pick** — the other cards turn face down and go back to the deck, the picked card grows a little,
+  the deck slides away, and only then `picked(index)` is emitted → `RunManager.pick_path`; the cards
+  go and the encounter begins as any beat does. Clicks while the cards are going back do nothing.
 - **Walk past** — the button under the cards (`'Walk past (+{0} gold)'`, from
-  `Balance.ENCOUNTER_SKIP_GOLD`) emits `skipped` → `RunManager.skip_choice`, refreshes the gold box and
-  advances to the fight.
+  `Balance.ENCOUNTER_SKIP_GOLD`) sends all the cards back to the deck, then emits `skipped` →
+  `RunManager.skip_choice`, which refreshes the gold box and advances to the fight.
+- **Settings** — the deal's timing, the cards' tilt and spacing and how much of the deck shows are
+  print settings in the F7 tab's Encounter cards section (`card_*`, `deck_peek` in
+  `PrintLook.PRINT_SETTING_DEFAULTS`). The sounds are `ui/card_deal` and `ui/card_turn`.
 
 It **polls `cm.is_resolved()`** (never reacts inside the `resolved` signal), so the
 fight is torn down + advanced safely — the run fulfils the outcome (reward / run-end)

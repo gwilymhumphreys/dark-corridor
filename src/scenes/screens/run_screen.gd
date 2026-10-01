@@ -93,9 +93,9 @@ func _enter_beat() -> void:
 
 
 # The choice of encounters before a fight (docs/plans/encounter_choice.md): the corridor with no
-# enemy, the encounter cards standing where enemies would, and a walk up to them like a fight
-# approach. The cards fade up over the end of the walk; the loop is parked in CHOOSING until a card
-# is picked (pick_path creates the beat) or the player walks past.
+# enemy and a walk up it like a fight approach. The encounter cards are dealt over the corridor at the
+# end of the walk (docs/plans/encounter_cards.md); the loop is parked in CHOOSING until a card is
+# picked (pick_path creates the beat) or the player walks past.
 func _show_choice() -> void:
   _ensure_view()
   _view.clear_enemies()
@@ -103,13 +103,13 @@ func _show_choice() -> void:
   _view.corridor_area().add_child(_choice)
   _choice.picked.connect(_on_choice_picked)
   _choice.skipped.connect(_on_choice_skipped)
-  _choice.setup(_run.pending_choice(), _view.encounter_slot)
+  _choice.setup(_run.pending_choice())
   _begin_approach(State.WALKING)
 
 
 func _arrive_at_choice() -> void:
   _walk(Balance.APPROACH_DEPTH_START)
-  _choice.reveal(0.0)   # a backstop: normally the fade already started during the walk
+  _choice.reveal()   # a backstop: normally the deal already started during the walk
   _state = State.CHOOSING
 
 
@@ -210,11 +210,11 @@ func _physics_process(delta: float) -> void:
       # Eased so the walk starts and ends softly rather than snapping into motion.
       var eased: float = lerpf(t, smoothstep(0.0, 1.0, t), Balance.APPROACH_EASE)
       _walk(Balance.APPROACH_DEPTH_START * eased)
-      # The enemy's readouts (or the encounter cards) start fading up before arrival, so they are
+      # The enemy's readouts start fading up (or the encounter cards start being dealt) before arrival, so they are
       # there when the walk ends. Both only act the first time, so calling them every frame is harmless.
       if Balance.APPROACH_DURATION - _approach_elapsed <= Balance.ENEMY_REVEAL_DURATION:
         if _state == State.WALKING:
-          _choice.reveal(Balance.ENEMY_REVEAL_DURATION)
+          _choice.reveal()
         else:
           _view.show_enemies(Balance.ENEMY_REVEAL_DURATION)
       if t >= 1.0:

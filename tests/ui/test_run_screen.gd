@@ -367,11 +367,10 @@ func test_the_cards_stand_side_by_side_in_the_corridor() -> void:
   var screen := _mount_into_choice()
   for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
-  screen._choice._place_cards()
   var area: Rect2 = screen._view.corridor_area().get_global_rect()
   var previous_x: float = -INF
-  for card: Control in screen._choice.get_node('Cards').get_children():
-    var centre: Vector2 = card.get_global_rect().get_center()
+  for i in screen._choice.get_node('Cards').get_child_count():
+    var centre: Vector2 = screen._choice.rest_point(i)   # where it lands; the deal is still under way
     assert_gt(centre.x, previous_x, 'left to right')
     assert_true(area.has_point(centre), 'inside the corridor')
     previous_x = centre.x
