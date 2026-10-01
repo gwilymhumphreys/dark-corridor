@@ -747,10 +747,6 @@ func clear_enemies() -> void:
   _corridor.clear_enemies()
 
 
-func encounter_slot(index: int, count: int) -> Vector2:
-  return _corridor.slot_point(index, count)
-
-
 ## Stop reading the live fight before it is torn down (the run screen calls this right before
 ## freeing the view + advancing). Render resources free with the view.
 func release() -> void:

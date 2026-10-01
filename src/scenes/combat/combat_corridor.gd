@@ -199,16 +199,6 @@ func enemy_anchor(index: int) -> Vector2:
   return global_position + size * 0.5 + _corridor.unproject(top, true) - Vector2(0.0, HUD_GAP)
 
 
-## The global screen point where the centre of an encounter card stands, the `index`-th of `count`
-## side by side (docs/plans/encounter_choice.md): where that many enemies would stand, at their
-## arrived depth and the corridor's middle height. It needs no sprite, and leaves the head bob out so
-## the cards hold still during the walk.
-func slot_point(index: int, count: int) -> Vector2:
-  var point: Vector3 = _corridor.enemy_position(0.0, _offset_x(index, maxi(count, 1)))
-  point.y = 0.0
-  return global_position + size * 0.5 + _corridor.unproject(point, true)
-
-
 ## The global screen point at the centre of enemy `index`'s sprite, where the VFX wall lands its
 ## hits. Unlike `enemy_anchor` this follows the sprite, so it moves with the approach and the flinch.
 func enemy_centre(index: int) -> Vector2:
