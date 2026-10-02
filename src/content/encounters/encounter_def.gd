@@ -29,7 +29,7 @@ var image: String = ''
 var enemy_ids: Array[String] = []        # FIGHT: EnemyCatalog ids, left-to-right order
 var reward: int = Reward.NONE     # what a WIN reports up for the Run manager to fulfil
 var heal_fraction: float = 0.0    # REST: fraction of max HP restored
-var event_prose_key: String = ''  # EVENT: the body prose (localized via tr())
+var prose_key: String = ''        # EVENT, REST: the text on the encounter's panel (localized via tr())
 var event_options: Array[EventOptionDef] = []   # EVENT: the options; unavailable ones are hidden
 var stock: Array[StockEntry] = []   # REWARD, SHOP: what the goods are drawn from, in the order shown
 ## SHOP: offered only while each item entry in `stock` has at least this many matching items in the

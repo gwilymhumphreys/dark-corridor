@@ -23,6 +23,9 @@ var player: Actor
 var enemies: Array[Actor] = []   # spawned enemy Actors (fight), left-to-right (the live
                                  # CombatManager shares this array by reference — reaps show here)
 
+## REST: the health the rest restored, for its panel.
+var healed: int = 0
+
 var _combat_manager: CombatManager = null
 var _resolved: bool = false
 var _combat_seed: int = 0
@@ -80,7 +83,7 @@ func begin() -> void:
   elif def.type == EncounterDef.Type.SHOP:
     _resolve(Outcome.RESOLVED, EncounterDef.Reward.SHOP)    # no fight: the shop is the whole encounter
   else:
-    player.heal(def.heal_fraction * player.max_hp)
+    healed = player.heal(def.heal_fraction * player.max_hp)
     _resolve(Outcome.RESOLVED)
 
 

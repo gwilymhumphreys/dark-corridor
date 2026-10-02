@@ -102,9 +102,9 @@ func _scan_gd(path: String) -> void:
     # …and the dict-entry form `'<field>': '...'` (KeywordCatalog authors mechanic copy as dict entries).
     _match_all(text, "'%s'\\s*:\\s*'(%s)'" % [field, Q1], label, true)
     _match_all(text, "'%s'\\s*:\\s*\"(%s)\"" % [field, Q2], label, true)
-  # event_prose_key (event body) may be split across lines as `'...' \ + '...'`; join the
-  # segments so the msgid matches the concatenated string tr(def.event_prose_key) sees.
-  _scan_joined(text, 'event_prose_key', label)
+  # prose_key (event and rest panel text) may be split across lines as `'...' \ + '...'`; join the
+  # segments so the msgid matches the concatenated string tr(def.prose_key) sees.
+  _scan_joined(text, 'prose_key', label)
 
 
 func _scan_tscn(path: String) -> void:

@@ -50,6 +50,7 @@ static func rest(id: String = REST) -> EncounterDef:
   d.id = id
   d.type = EncounterDef.Type.REST
   d.name_key = 'A fixture alcove'
+  d.prose_key = 'A fixture rest.'
   d.heal_fraction = REST_HEAL_FRACTION
   d.reward = EncounterDef.Reward.NONE
   return d
@@ -61,7 +62,7 @@ static func event(id: String = EVENT) -> EncounterDef:
   d.id = id
   d.type = EncounterDef.Type.EVENT
   d.name_key = 'A fixture event'
-  d.event_prose_key = 'A fixture event.'
+  d.prose_key = 'A fixture event.'
   var heal := EventOptionDef.new()
   heal.label_key = 'Heal'
   heal.effects = [RunEffect.heal_fraction(EVENT_HEAL_FRACTION)]

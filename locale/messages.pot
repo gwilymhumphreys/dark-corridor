@@ -459,6 +459,18 @@ msgstr ""
 msgid "Exit Game"
 msgstr ""
 
+#: src/scenes/screens/rest_overlay.gd
+msgid "You recover {0} health."
+msgstr ""
+
+#: src/scenes/screens/rest_overlay.gd
+msgid "You are already at full health."
+msgstr ""
+
+#: src/scenes/screens/rest_overlay.tscn
+msgid "Continue"
+msgstr ""
+
 #: src/scenes/screens/run_screen.tscn
 msgid "Report"
 msgstr ""
@@ -805,6 +817,10 @@ msgstr ""
 
 #: content/encounters/rest.gd
 msgid "A quiet alcove"
+msgstr ""
+
+#: content/encounters/rest.gd
+msgid "Water drips somewhere in the dark. For a while nothing finds you, and you rest."
 msgstr ""
 
 #: content/encounters/shop_attack.gd

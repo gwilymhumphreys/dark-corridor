@@ -19,14 +19,16 @@ const COMBAT_VIEW: PackedScene = preload('res://src/scenes/combat/combat_view_fr
 const COMBAT_SUMMARY: PackedScene = preload('res://src/scenes/screens/combat_summary.tscn')
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
 const ENCOUNTER_CHOICE: PackedScene = preload('res://src/scenes/screens/encounter_choice.tscn')
+const REST_OVERLAY: PackedScene = preload('res://src/scenes/screens/rest_overlay.tscn')
 const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
 const SHOP_OVERLAY: PackedScene = preload('res://src/scenes/screens/shop_overlay.tscn')
 const ITEM_ACTIONS: PackedScene = preload('res://src/scenes/screens/item_actions.tscn')
 const PURCHASE_SOUND: String = 'run/purchase'   # a good bought from a shop
+const GROUP: StringName = &'run_screen'   # the F7 Restart encounter button finds the screen by this group
 
-enum State { IDLE, WALKING, CHOOSING, EVENTING, APPROACHING, FIGHTING, DRAFTING, SHOPPING }
+enum State { IDLE, WALKING, CHOOSING, EVENTING, RESTING, APPROACHING, FIGHTING, DRAFTING, SHOPPING }
 
 var _run: RunManager
 var _cm: CombatManager
@@ -37,7 +39,14 @@ var _log: CombatLog       # the live fight's observation log
 var _last_log: CombatLog  # the last finished fight's log — what the Report button shows between fights
 var _draft: DraftOverlay
 var _choice: EncounterChoice
+# The choice whose picked card stays at the top of the corridor area while its encounter is shown;
+# the encounter's panel is held under the card. It goes with the view.
+var _kept_choice: EncounterChoice
+# The encounters offered at this beat, kept so the F7 Restart encounter button can deal them again;
+# empty at a beat with no choice.
+var _offered: Array[String] = []
 var _event: EventOverlay
+var _rest: RestOverlay
 var _shop: ShopOverlay
 var _selected_item: Item          # the board item selected to sell or merge; null when none is
 var _item_actions: ItemActions    # the Sell and Merge buttons below the selected item; null when none is
@@ -57,6 +66,7 @@ var _settings: SettingsScreen = null
 
 
 func _ready() -> void:
+  add_to_group(GROUP)
   _run = Game.run
   if _run == null:
     return
@@ -86,7 +96,9 @@ func _enter_beat() -> void:
     return
   # A CHOICE beat has no encounter until one is picked: walk up to the encounter cards and wait.
   # A fight beat already has a live encounter.
+  _offered = []
   if _run.has_pending_choice():
+    _offered.assign(_run.pending_choice())
     _show_choice()
     return
   _begin_beat()
@@ -116,7 +128,7 @@ func _arrive_at_choice() -> void:
 func _on_choice_picked(index: int) -> void:
   if _state != State.CHOOSING and _state != State.WALKING:
     return
-  _choice.queue_free()
+  _kept_choice = _choice   # the picked card stays at the top of the corridor area until the view is torn down
   _choice = null
   _run.pick_path(index)
   _begin_beat()
@@ -141,6 +153,9 @@ func _begin_beat() -> void:
   if enc != null and enc.is_event():
     _show_event(enc)
     return
+  if enc != null and enc.def.type == EncounterDef.Type.REST:
+    _show_rest(enc)
+    return
   _cm = _run.combat_manager()
   if _cm != null and not _cm.is_resolved():
     _apply_battle_speed()   # this fight inherits the current dial setting
@@ -160,6 +175,46 @@ func _show_event(enc: Encounter) -> void:
   _view.corridor_area().add_child(_event)   # in the corridor; the board, potions and HUD stay live
   _event.option_picked.connect(_on_event_picked)
   _event.setup(enc, _run.available_event_options())
+  _hold_below_card(_event)
+
+
+# A REST beat: the heal is applied on begin; its panel says how much and waits for Continue. Every
+# encounter shows a panel, even one whose effect is immediate (docs/systems/encounter.md).
+func _show_rest(enc: Encounter) -> void:
+  _state = State.RESTING
+  _ensure_view()
+  _rest = REST_OVERLAY.instantiate()
+  _view.corridor_area().add_child(_rest)
+  _rest.continued.connect(_on_rest_continued)
+  _rest.setup(enc)
+  _hold_below_card(_rest)
+
+
+func _on_rest_continued() -> void:
+  _rest.queue_free()
+  _rest = null
+  _after_beat()
+
+
+# Debug only (the F7 Restart encounter button): deal this beat's encounter cards again with the
+# current settings, without the walk, so a change to the card settings shows at once. Works from the
+# deal until the picked encounter's panel closes. A fight beat has no cards and is left alone.
+func restart_encounter() -> void:
+  if _offered.is_empty() or _state not in [State.WALKING, State.CHOOSING, State.EVENTING, State.RESTING, State.SHOPPING, State.DRAFTING]:
+    return
+  _event = null   # the panels live in the view's corridor area and go with it
+  _shop = null
+  _draft = null
+  _teardown_combat_view()
+  _run.offer_choice_again(_offered)
+  _show_choice()
+  _arrive_at_choice()
+
+
+# An encounter's panel sits under the card picked for it, when there is one.
+func _hold_below_card(overlay: Control) -> void:
+  if _kept_choice != null:
+    _kept_choice.hold_below(overlay.get_node('Panel') as Control)
 
 
 func _on_event_picked(index: int) -> void:
@@ -488,6 +543,7 @@ func _show_draft() -> void:
   _draft.picked.connect(_on_draft_picked)
   _draft.skipped.connect(_on_draft_skipped)
   _draft.setup(_run.pending_draft(), _run.pending_draft_levels())
+  _hold_below_card(_draft)
 
 
 func _on_draft_picked(index: int) -> void:
@@ -517,6 +573,7 @@ func _show_shop() -> void:
   _shop.rerolled.connect(_on_shop_rerolled)
   _shop.left.connect(_on_shop_left)
   _shop.setup(tr(_run.current_encounter().def.name_key), _run)
+  _hold_below_card(_shop)
 
 
 # A purchase: the RunManager takes the gold and gives the good; the panel, the gold box, the potions
@@ -563,6 +620,9 @@ func _advance() -> void:
 # --- combat view lifetime ----------------------------------------------------
 
 func _build_combat_view() -> void:
+  # A fight picked from the choice of encounters starts on the view the choice was shown on.
+  if _view != null:
+    _teardown_combat_view()
   # Attach a fresh observation log to the fight (docs/systems/combat_log.md). We hold our own
   # ref so the combat report can read it after the CombatManager teardown nulls its side.
   _log = CombatLog.new()
@@ -606,6 +666,8 @@ func _on_potion_thrown(index: int) -> void:
 func _teardown_combat_view() -> void:
   _clear_selection()
   _choice = null   # the cards live in the view's corridor area and go with it
+  _kept_choice = null
+  _rest = null   # the rest panel too
   _log = null   # drop the live ref; _last_log keeps the finished fight's numbers for the report
   if _view != null:
     _gold_on_screen = _view.gold_on_screen()

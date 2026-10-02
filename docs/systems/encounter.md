@@ -30,7 +30,7 @@ What it **is not**:
 
 ## Definition vs. instance
 
-- **Encounter definition** (`EncounterDef`, #23) — content/data in the pool: type/tier, the **location frame** (one line, e.g. "A flooded antechamber" — stored as the `name_key`), the **content** (a fight's enemy composition + ordering; or an event's prose + its options; or a rest's heal), and the **reward** (by type). An encounter offered before a fight also has a **rarity** (`Rarity.COMMON` or `Rarity.RARE`), **`requires`** (conditions that must all hold, or it is never offered) and **`weights`** (rules that multiply how likely it is while their condition holds); `offer_weight(run)` combines them ([Offer rules](#offer-rules)). Player-facing strings (frame, event prose/options) are localizable (`tr()` — `CLAUDE.md`).
+- **Encounter definition** (`EncounterDef`, #23) — content/data in the pool: type/tier, the **location frame** (one line, e.g. "A flooded antechamber" — stored as the `name_key`), the **panel text** of an event or a rest (`prose_key`), the **content** (a fight's enemy composition + ordering; or an event's prose + its options; or a rest's heal), and the **reward** (by type). An encounter offered before a fight also has a **rarity** (`Rarity.COMMON` or `Rarity.RARE`), **`requires`** (conditions that must all hold, or it is never offered) and **`weights`** (rules that multiply how likely it is while their condition holds); `offer_weight(run)` combines them ([Offer rules](#offer-rules)). Player-facing strings (frame, event prose/options) are localizable (`tr()` — `CLAUDE.md`).
 - **Encounter instance** — the live per-beat orchestrator the `Run manager` instantiates from a picked definition, handed its context (the player `Actor`, run-state accessors, the run RNG, position).
 
 ---
@@ -45,7 +45,7 @@ The `Run manager` instantiates the picked Encounter; it resolves by type, then r
 - **Event** — present the prose + the options whose conditions hold (a UI intent — the player picks one); the `Run manager` applies the option's run effects ([Event options](#event-options)), then `resolve_event()` resolves the beat. Events are lore + a tradeoff (design); effects change the run directly, not through the combat path. If the effects killed the player the beat resolves **LOST** on the spot — the run ends there, never a dead player walking to the next fight.
 - **Reward** (offered before a fight) — no fight: resolves on `begin()` with the `GOODS` reward, and the `Run manager` offers goods drawn from the def's `stock` ([Reward encounters](#reward-encounters)).
 - **Shop** (offered before a fight, from the left card position) — no fight: resolves on `begin()` with the `SHOP` reward, and the `Run manager` opens the shop with goods drawn from the def's `stock` ([Shops](#shops)).
-- **Rest** (an in-act small rest, offered before a fight) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()`. No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
+- **Rest** (an in-act small rest, offered before a fight) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()` and records the health restored in `healed`. Its panel shows its `prose_key` text and that amount, with a Continue button ([run_screen.md](run_screen.md)). No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
 
 ## Offer rules
 

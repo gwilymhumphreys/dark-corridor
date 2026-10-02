@@ -17,7 +17,7 @@ signal option_picked(index: int)
 ## option whose conditions do not hold is not shown.
 func setup(enc: Encounter, available: Array[int]) -> void:
   _title.text = tr(enc.def.name_key)
-  _prose.text = tr(enc.def.event_prose_key)
+  _prose.text = tr(enc.def.prose_key)
   var options: Array = enc.event_options()
   for i: int in available:
     var btn := Button.new()

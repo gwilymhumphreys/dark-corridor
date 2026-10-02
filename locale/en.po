@@ -459,6 +459,18 @@ msgstr "Quit to Menu"
 msgid "Exit Game"
 msgstr "Exit Game"
 
+#: src/scenes/screens/rest_overlay.gd
+msgid "You recover {0} health."
+msgstr "You recover {0} health."
+
+#: src/scenes/screens/rest_overlay.gd
+msgid "You are already at full health."
+msgstr "You are already at full health."
+
+#: src/scenes/screens/rest_overlay.tscn
+msgid "Continue"
+msgstr "Continue"
+
 #: src/scenes/screens/run_screen.tscn
 msgid "Report"
 msgstr "Report"
@@ -806,6 +818,10 @@ msgstr "A forgotten reliquary"
 #: content/encounters/rest.gd
 msgid "A quiet alcove"
 msgstr "A quiet alcove"
+
+#: content/encounters/rest.gd
+msgid "Water drips somewhere in the dark. For a while nothing finds you, and you rest."
+msgstr "Water drips somewhere in the dark. For a while nothing finds you, and you rest."
 
 #: content/encounters/shop_attack.gd
 msgid "Attack shop"

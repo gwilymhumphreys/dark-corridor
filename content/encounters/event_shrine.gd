@@ -7,7 +7,7 @@ func _init() -> void:
   type = Type.EVENT
   name_key = 'A dripping shrine'
   image = 'res://assets/encounters/mystery_statue.jpg'   # placeholder image
-  event_prose_key = 'A black idol slumps in an alcove, weeping cold water. ' \
+  prose_key = 'A black idol slumps in an alcove, weeping cold water. ' \
     + 'You could kneel and drink, or pry the shard from its brow.'
   var pray := EventOptionDef.new()
   pray.label_key = 'Kneel and drink'

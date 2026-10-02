@@ -175,6 +175,19 @@ func pick_path(index: int) -> void:
   _save()
 
 
+## Debug only (the F7 Restart encounter button): offer this beat's encounters again, dropping the
+## picked encounter, its open shop and its pending offer. Anything the encounter already gave or
+## took, such as a rest's heal or gold spent in a shop, stays.
+func offer_choice_again(ids: Array[String]) -> void:
+  _teardown_current()
+  _current_def_id = ''
+  _current_enemy_ids = []
+  _close_shop()
+  _set_offer([])
+  _pending_choice = ids.duplicate()
+  _save()
+
+
 ## Walk past the three encounters: bank Balance.ENCOUNTER_SKIP_GOLD and leave the beat with no
 ## encounter, so the caller advances straight to the fight. Draws no run RNG.
 func skip_choice() -> void:

@@ -28,6 +28,8 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
   while Game.phase == GameManagerAutoload.Phase.RUN and guard < 12000:
     if screen._event != null:
       screen._on_event_picked(0)    # the event's first option
+    elif screen._rest != null:
+      screen._on_rest_continued()   # the rest panel's Continue
     elif screen._state == RunScreen.State.CHOOSING:
       screen._choice.picked.emit(0)   # stand in for the player picking the left encounter card
     elif screen._draft != null:
@@ -382,8 +384,42 @@ func test_picking_a_card_begins_its_encounter() -> void:
   for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
   screen._choice.picked.emit(FixtureEncounters.CHOICE_EVENT)
-  assert_null(screen._choice, 'the cards go')
+  assert_null(screen._choice, 'the choice is over')
   assert_eq(screen._state, RunScreen.State.EVENTING, 'and the picked event raises its panel')
+  screen.free()
+
+
+func test_a_rest_shows_its_panel_until_continue() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  Game.run.player.hp = 10
+  screen._choice.picked.emit(FixtureEncounters.CHOICE_REST)
+  assert_eq(screen._state, RunScreen.State.RESTING, 'the rest raises its panel')
+  assert_eq(screen._rest.get_parent(), screen._view.corridor_area(), 'in the corridor area')
+  assert_gt(Game.run.player.hp, 10, 'the heal is already applied')
+  var position: int = Game.run.position
+  screen._on_rest_continued()
+  assert_null(screen._rest, 'Continue closes the panel')
+  assert_gt(Game.run.position, position, 'and the run moves on')
+  screen.free()
+
+
+func test_restart_encounter_deals_the_same_cards_again() -> void:
+  var screen := _mount_into_choice()
+  for _i in APPROACH_STEPS:
+    screen._physics_process(1.0)
+  var offered: Array = Game.run.pending_choice().duplicate()
+  var position: int = Game.run.position
+  screen._choice.picked.emit(FixtureEncounters.CHOICE_REST)
+  screen.restart_encounter()
+  assert_eq(screen._state, RunScreen.State.CHOOSING, 'back to the choice, without the walk')
+  assert_null(screen._rest, 'the rest panel is gone')
+  assert_null(screen._kept_choice, 'and so is the picked card')
+  assert_not_null(screen._choice, 'a new deal is up')
+  assert_eq(Game.run.pending_choice(), offered, 'with the same encounters')
+  assert_null(Game.run.current_encounter(), 'the picked encounter is dropped')
+  assert_eq(Game.run.position, position, 'on the same beat')
   screen.free()
 
 

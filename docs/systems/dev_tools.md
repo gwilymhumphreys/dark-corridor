@@ -18,7 +18,7 @@ exposes a plain seam and the tool uses it:
 |---|---|
 | `Game.run_started(run)` | `Dev`, to add to a new run before any screen reads it |
 | `TitleScreen.open_select()`, `open_settings()`, `DEFAULT_SEED` | `Dev`, for the title arguments |
-| `EncounterChoice.skipped`, `EncounterChoice.picked` | `Dev`, for `--autofight` and `--pick` |
+| `EncounterChoice.skipped`, `EncounterChoice.dealt`, `EncounterChoice.pick()` | `Dev`, for `--autofight` and `--pick` |
 | `Save.disabled` | `Dev` (`--nosave`), the autotest |
 | `InterfaceGlow.demo_brightness`, `MonsterImages.forced_path`, `ControlFeedback.set_demo` | the debug panel |
 | `RunManager.pinned_enemy_ids` | the autotest (`--enemies`) |
@@ -49,7 +49,7 @@ Read by `Dev`.
 | `--select`, `--settings` | Opens character select or the settings screen on the title screen |
 | `--page-turn-at=P` | Starts a run once the title screen has shown and stops the [page turn](page_turn.md) into it at progress P (0 to 1). Use with `--shot` and a `--shot-delay` of about 3 |
 | `--autofight` | Walks past every choice of encounters, so the run goes from fight to fight |
-| `--pick N` | Takes card N (1 = left, the shop) at every choice of encounters |
+| `--pick N` | Takes card N (1 = left, the shop) at every choice of encounters once the cards are dealt, as a click does, so the picked card moves up and stays shown |
 | `--gold N` | Adds N gold to a new run, such as for a shop screenshot |
 | `--allies N` | Adds N placeholder allies to a new run (`DEMO_ALLY_ID`) |
 | `--board-items N` | Fills the board up to N items with copies of the starting items |

@@ -74,14 +74,17 @@ func _autostart_character() -> String:
   return id
 
 
-## `--pick N`: take card N (1 = left) at every choice of encounters, as a click on it would.
-## `--autofight`: walk past every choice instead, as a click on its Walk past button would, so the run
-## goes from fight to fight. Deferred, so the run screen has connected to the cards by now.
+## `--pick N`: take card N (1 = left) at every choice of encounters once the cards are dealt, as a
+## click on it would, so the picked card moves up and stays shown.
+## `--autofight`: walk past every choice at once, without the cards' animation, so the run goes from
+## fight to fight. Deferred, so the run screen has connected to the cards by now.
 func _choose(choice: EncounterChoice) -> void:
   if not is_instance_valid(choice) or Game.run == null:
     return
   if DevArgs.has('--pick'):
-    choice.picked.emit(int(DevArgs.value('--pick', '1')) - 1)
+    await choice.dealt
+    if is_instance_valid(choice):
+      choice.pick(int(DevArgs.value('--pick', '1')) - 1)
   else:
     choice.skipped.emit()
 

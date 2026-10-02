@@ -60,7 +60,7 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## - `card_*`, `deck_peek`: the encounter cards dealt from a deck (`EncounterChoice`): the seconds a card
 ##   takes to travel from the deck, between one card leaving and the next, and to turn over; the largest
 ##   turn a card lands with; the gap between cards as a share of a card's width; and how much of the
-##   deck shows, as a share of its height.
+##   deck shows below the top edge, as a share of its height (1 = all of it).
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'token_tilt': 3.0,
@@ -113,9 +113,9 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'card_deal_time': 0.3,
   'card_deal_gap': 0.15,
   'card_turn_time': 0.25,
-  'card_tilt': 4.0,
+  'card_tilt': 2.5,
   'card_spacing': 0.15,
-  'deck_peek': 0.3,
+  'deck_peek': 1.0,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']

@@ -40,7 +40,7 @@ GDScript — decision #23 — not data files):
 | `.gd` — `name_key = '...'` literals | item / enemy / status / encounter / relic / enchant / consumable names (shown via `tr(def.name_key)`) |
 | `.gd` — `class_key = '...'` literals | a character's class, under its name on the select screen and in the player's Class field (`tr(def.class_key)`) |
 | `.gd` — `label_key`, `desc_key`, `description_key` literals (also as `'desc_key': '...'` dictionary entries) | event option buttons, status keyword card text, item flavour lines |
-| `.gd` — `event_prose_key` (may be split across lines and joined) | event body text |
+| `.gd` — `prose_key` (may be split across lines and joined) | event and rest panel text |
 
 The whole `src/debug/` folder is skipped (`EXCLUDE_DIRS` in `tools/extract_pot.gd`): the
 [debug panel](debug_panel.md), the corridor testbed and the combat sandbox, whose text stays English.

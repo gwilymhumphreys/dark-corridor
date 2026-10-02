@@ -53,7 +53,10 @@ run_ended → Game → outcome screen
 A fight beat enters with a live encounter. A choice beat has none until the player picks one of
 the encounter cards ([below](#the-choice-of-encounters)). An **EVENT** beat raises `event_overlay.tscn` (prose + one
 button per available option, `RunManager.available_event_options` → `RunManager.pick_event_option`, which applies the option's effects and resolves the event), parking the FSM
-until the pick, like the draft overlay.
+until the pick, like the draft overlay. A **REST** beat raises `rest_overlay.tscn` (`RestOverlay`): the
+heal is already applied when the encounter begins, and the panel shows the rest's text and the health
+restored (`Encounter.healed`), with a Continue button that moves on (the `RESTING` state). Every
+encounter shows a panel, even one whose effect is immediate (decision #64).
 
 ### The choice of encounters
 
@@ -61,10 +64,10 @@ A choice beat ([run_manager.md](run_manager.md#the-choice-of-encounters)) builds
 fight, empties the corridor of enemies (`CombatView.clear_enemies`), and adds `encounter_choice.tscn`
 (`EncounterChoice`) to the corridor area. The player then walks up the corridor as in a fight approach
 (the `WALKING` state). Over the last `Balance.ENEMY_REVEAL_DURATION` of the walk the cards are dealt
-(`EncounterChoice.reveal`): a deck slides down from the corridor area's top edge with only its lower
-part showing, the cards leave it face down one after another, land slightly turned in a row, and turn
-face up; then the Walk past button fades up. On arrival the state is `CHOOSING`. The deck is
-decoration only. The choice clips to the corridor area, which hides the part of the deck above it.
+(`EncounterChoice.reveal`): a deck slides down from above the corridor area's top edge until it shows
+in full above the row, the cards leave it face down one after another, land slightly turned in a row,
+and turn face up; then the Walk past button fades up and `dealt` is emitted. On arrival the state is `CHOOSING`. The deck is
+decoration only. The choice clips to the corridor area, which hides the deck while it is above the edge.
 
 - **Cards** — one `EncounterCard` (`encounter_card.tscn`) per offered encounter, the shape of a poker
   card, with its back shared with the deck (`card_back.tscn`). It shows the encounter's name, picture,
@@ -75,15 +78,25 @@ decoration only. The choice clips to the corridor area, which hides the part of 
   lifts it and turns it straight. An empty position has no card.
 - **Turning over** — the card's `Card` child is squashed to no width and widened again through its
   offset transform, so it does not fight `UIJuice`, which animates the button's own.
-- **Pick** — the other cards turn face down and go back to the deck, the picked card grows a little,
-  the deck slides away, and only then `picked(index)` is emitted → `RunManager.pick_path`; the cards
-  go and the encounter begins as any beat does. Clicks while the cards are going back do nothing.
+- **Pick** — the other cards turn face down and go back to the deck, the deck slides away, the picked
+  card moves up to where the deck was, and only then `picked(index)` is emitted →
+  `RunManager.pick_path`, and the encounter begins as any beat does. Clicks meanwhile do nothing. The
+  run screen lets go of the choice but leaves it in the corridor area, so the picked card stays at the
+  top while the encounter's panel is shown, and goes with the view when the run advances. The panel
+  is held under the card (`EncounterChoice.hold_below`), with the same gap between the card and the
+  panel as between the corridor area's top edge and the card. A fight
+  picked from the choice starts on a new view, so its card would not stay.
 - **Walk past** — the button under the cards (`'Walk past (+{0} gold)'`, from
   `Balance.ENCOUNTER_SKIP_GOLD`) sends all the cards back to the deck, then emits `skipped` →
   `RunManager.skip_choice`, which refreshes the gold box and advances to the fight.
 - **Settings** — the deal's timing, the cards' tilt and spacing and how much of the deck shows are
   print settings in the F7 tab's Encounter cards section (`card_*`, `deck_peek` in
   `PrintLook.PRINT_SETTING_DEFAULTS`). The sounds are `ui/card_deal` and `ui/card_turn`.
+- **Restart encounter** — a debug button in the same F7 section. It deals the beat's encounter
+  cards again at once, without the walk, so changed settings show straight away. It works from the
+  deal until the picked encounter's panel closes: `RunScreen.restart_encounter` tears down the view
+  and `RunManager.offer_choice_again` drops the picked encounter, its shop and its offer. Anything
+  the encounter already gave or took, such as a rest's heal, stays.
 
 It **polls `cm.is_resolved()`** (never reacts inside the `resolved` signal), so the
 fight is torn down + advanced safely — the run fulfils the outcome (reward / run-end)
@@ -306,7 +319,7 @@ ticked until arrival**, so combat is frozen during the walk. Constants in `src/d
 ## Overlays
 
 **Reward and event panels sit in the corridor, not over the whole screen.** The run screen adds
-`draft_overlay` and `event_overlay` to the combat view's `CorridorArea` (`CombatView.corridor_area()`,
+`draft_overlay`, `event_overlay`, `rest_overlay` and `shop_overlay` to the combat view's `CorridorArea` (`CombatView.corridor_area()`,
 the corridor's rectangle), and their root Controls ignore the mouse, so the board, potions, portrait,
 HUD and item tooltips keep working around them. An event beat has no fight, so the run screen still
 builds the combat view for it with no `CombatManager` (`bind(null, ...)`: the player's side, no
@@ -417,7 +430,7 @@ registered in `project.godot`) — see [localization](localization.md).
 
 `src/scenes/main.tscn` + `main_controller.gd`; `src/scenes/screens/`
 (title · character_select · character_card · settings_screen · run · outcome · draft_overlay ·
-event_overlay · encounter_choice · encounter_card · map_strip · speed_button · pause_menu · combat_summary · shop_overlay · shop_entry · item_actions); `src/autoloads/prefs.gd`;
+event_overlay · rest_overlay · encounter_choice · encounter_card · map_strip · speed_button · pause_menu · combat_summary · shop_overlay · shop_entry · item_actions); `src/autoloads/prefs.gd`;
 `src/scenes/combat/` (combat_view_framed · combat_corridor · enemy_hud · ally_slot · item_cell); `src/vfx/vfx_driver.gd`;
 `src/scenes/combat/monster_images.gd`; the corridor is `src/scenes/corridors/corridor_3d.gd`.
 Tests in `tests/ui/` and `tests/corridors/`.

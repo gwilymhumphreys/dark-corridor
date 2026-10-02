@@ -9,15 +9,16 @@ Builds on [encounter_choice.md](encounter_choice.md). Code: `src/scenes/screens/
 
 ## What the player sees
 
-1. At the end of the walk up the corridor, the deck slides down a little from the top edge of the
-   corridor area. Only its lower part shows; the rest stays above the edge.
+1. At the end of the walk up the corridor, the deck slides down from above the top edge of the
+   corridor area until all of it shows, above where the cards will land.
 2. Three cards leave the deck one after another, face down, and slide to their places in a row over
    the corridor. Each lands slightly turned, as the item tokens sit askew on the board.
 3. The cards turn face up one after another. Then the Walk past button fades up.
 4. Hovering a card lifts it: it turns straight, rises and grows a little. The shadow does not grow,
    because the token shadow is a shared theme style.
-5. Picking a card: the other two turn face down and slide back to the deck, the picked card moves a
-   little forward, the deck slides back up, and then the encounter begins.
+5. Picking a card: the other two turn face down and slide back to the deck, the deck slides back up,
+   and the picked card slides up to where the deck was. Then the encounter begins, and the picked
+   card stays there while the encounter is shown.
 6. Walk past: all three cards turn face down and slide back to the deck, the deck slides back up,
    and then the run moves on.
 
@@ -111,7 +112,10 @@ A new **Encounter cards** section on the F7 tab, stored as print settings in
 | `card_turn_time` | How long one card takes to turn over. |
 | `card_tilt` | The largest turn a card lands with. |
 | `card_spacing` | The gap between cards, as a share of a card's width. |
-| `deck_peek` | How much of the deck shows below the top edge, as a share of its height. |
+| `deck_peek` | How much of the deck shows below the top edge, as a share of its height (1 = all of it). |
+
+The section also has a **Restart encounter** button that deals the cards again with the current
+settings (see `docs/systems/run_screen.md`).
 
 ## Sounds
 

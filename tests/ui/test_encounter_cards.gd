@@ -51,6 +51,13 @@ func test_a_pick_is_reported_after_the_cards_go_back() -> void:
   await wait_for_signal(choice.picked, 5.0)
   assert_signal_emit_count(choice, 'picked', 1)
   assert_signal_emitted_with_parameters(choice, 'picked', [1])
+  var kept: EncounterCard = choice._card_list[1]
+  choice._place_cards()   # the cards are placed each frame; place them for the state the pick ended in
+  var centre: Vector2 = kept.get_global_transform() * (kept.size * 0.5)
+  assert_almost_eq(centre, choice.deck_point(), Vector2.ONE, 'the picked card is where the deck was')
+  assert_eq(kept.face_up, 1.0, 'face up')
+  assert_eq(kept.mouse_filter, Control.MOUSE_FILTER_IGNORE, 'and does not take the mouse while the encounter is shown')
+  assert_eq((choice._card_list[0] as EncounterCard).travel, 0.0, 'the others went back to the deck')
 
 
 func test_walking_past_is_reported_after_the_cards_go_back() -> void:

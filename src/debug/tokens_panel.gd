@@ -96,3 +96,8 @@ func rebuild() -> void:
       replay.text = 'Replay'
       replay.pressed.connect(PageTurn.replay)
       section.add_node(replay)
+    if title == 'Encounter cards':
+      var restart: Button = Button.new()
+      restart.text = 'Restart encounter'
+      restart.pressed.connect(func() -> void: get_tree().call_group(RunScreen.GROUP, 'restart_encounter'))
+      section.add_node(restart)
