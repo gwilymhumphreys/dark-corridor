@@ -1,26 +1,30 @@
 # Page turn
 
-The change between the menus and a run, drawn as a book page turning over on the fold. Going into a
+The change between the menus and a run, and between the title screen and character select, drawn as a book page turning over on the fold. Going into a
 run, the right side of the screen turns over onto the left; going back to the title screen, the left
 side turns over onto the right. The screen being left is on the front of the page, and the new screen
 is on its back and under it.
 
 **Location:** `src/autoloads/page_turn.gd` (class `PageTurnAutoload`, registered as the `PageTurn`
 autoload from `src/scenes/ui/page_turn.tscn`), `src/shaders/page_turn.gdshader`. Started by
-`MainController` (`src/scenes/main_controller.gd`) and, for Quit to menu, by the run screen. The
+`MainController` (`src/scenes/main_controller.gd`), by the title screen for character select and, for
+Quit to menu, by the run screen. The
 sound is the `ui/page_turn` folder.
 
 ## When it plays
 
 | From | To | Turn |
 |---|---|---|
-| Title screen (Start, Resume) | Run | Forward |
+| Title screen (Start) | Character select | Forward |
+| Character select (Back) | Title screen | Back |
+| Character select (a pick), title screen (Resume) | Run | Forward |
 | Outcome screen (New Run) | Run | Forward |
 | Run (Quit to menu) | Title screen | Back |
 | Outcome screen (Title) | Title screen | Back |
 | Run | Outcome screen | None |
 
-`MainController._turn_direction` holds this table. No turn plays when the game runs headless
+`MainController._turn_direction` holds the turns between phases. Character select is part of the title
+screen's phase, so `TitleScreen.open_select` and `_close_select` play its two turns themselves. No turn plays when the game runs headless
 (`PageTurn.can_turn()`, so the GUT suite and the autotest swap screens at once) or when the screen
 being left was never drawn, as when a start-up argument skips the title screen.
 

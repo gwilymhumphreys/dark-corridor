@@ -58,6 +58,21 @@ func test_the_burn_runs_to_the_end_over_its_duration() -> void:
   assert_signal_emitted(burn, 'finished', 'done at the end of the duration')
 
 
+func test_a_backwards_burn_shows_the_target_and_runs_from_nothing_to_whole() -> void:
+  PrintLook.set_print_value('paper_burn_duration', 0.2)
+  _target.modulate.a = 0.0
+  var burn: PaperBurn = PaperBurn.burn(_target, true)
+  assert_eq(_target.modulate.a, 1.0, 'the target is shown while it appears')
+  assert_eq(burn.progress, 1.0, 'it starts with nothing left')
+  burn._process(0.1)
+  assert_almost_eq(burn.progress, 0.5, 0.001, 'half way back at half the duration')
+  watch_signals(burn)
+  burn._process(0.1)
+  assert_signal_emitted(burn, 'finished', 'done at the end of the duration')
+  assert_eq(_target.modulate.a, 1.0, 'the target stays shown at the end')
+  assert_null(_target.material, 'the target has its own material back')
+
+
 func test_hold_stops_it_at_a_progress() -> void:
   var burn: PaperBurn = PaperBurn.burn(_target)
   burn.hold(0.4)

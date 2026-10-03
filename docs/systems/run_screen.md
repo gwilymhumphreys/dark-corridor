@@ -17,8 +17,12 @@ main.tscn (Main) ── main_controller.gd
    └─ outcome_screen.tscn    Victory / You Died → New Run / Return to Title
 ```
 
-**Title overlays.** Start raises **`character_select.tscn`** (one `character_card`
-per `CharacterCatalog.ids()` — personal name + class + portrait; a pick →
+**Title overlays.** The title screen has its menu on the right page and a large picture on the
+left page, drawn through the portrait material with `PortraitBreath`. Start turns the page forward onto
+**`character_select.tscn`**, a full screen with the cards on its right half (one `character_card` per
+`CharacterCatalog.ids()` — personal name + class + portrait). Hovering a card burns that character's
+`select_image` in on the left page with a backwards [paper burn](paper_burn.md), and leaving the card
+burns it away. Back turns the page back; a pick →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below).
 
@@ -63,10 +67,10 @@ encounter shows a panel, even one whose effect is immediate (decision #64).
 A choice beat ([run_manager.md](run_manager.md#the-choice-of-encounters)) builds the combat view with no
 fight, empties the corridor of enemies (`CombatView.clear_enemies`), and adds `encounter_choice.tscn`
 (`EncounterChoice`) to the corridor area. The player then walks up the corridor as in a fight approach
-(the `WALKING` state). Over the last `Balance.ENEMY_REVEAL_DURATION` of the walk the cards are dealt
+(the `WALKING` state). When the walk ends, the state is `CHOOSING` and the cards are dealt
 (`EncounterChoice.reveal`): a deck slides down from above the corridor area's top edge until it shows
 in full above the row, the cards leave it face down one after another, land slightly turned in a row,
-and turn face up; then the Walk past button fades up and `dealt` is emitted. On arrival the state is `CHOOSING`. The deck is
+and turn face up; then the Walk past button fades up and `dealt` is emitted. The deck is
 decoration only. The choice clips to the corridor area, which hides the deck while it is above the edge.
 
 - **Cards** — one `EncounterCard` (`encounter_card.tscn`) per offered encounter, the shape of a poker

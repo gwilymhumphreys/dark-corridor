@@ -51,7 +51,8 @@ func _on_node_added(node: Node) -> void:
 
 
 ## `--autostart` starts a run as the default character or the one named by `--character=ID`;
-## `--select` opens character select; `--settings` opens the settings screen. `--page-turn-at=P`
+## `--select` opens character select, and `--hover=ID` then shows that character's picture as if its
+## card were hovered; `--settings` opens the settings screen. `--page-turn-at=P`
 ## starts a run once the title screen has shown, and stops the page turn into it at progress P.
 func _title_action(title: TitleScreen) -> void:
   if DevArgs.value('--page-turn-at') != '':
@@ -61,7 +62,12 @@ func _title_action(title: TitleScreen) -> void:
   elif DevArgs.has('--autostart'):
     Game.start_run.call_deferred(TitleScreen.DEFAULT_SEED, _autostart_character())
   elif DevArgs.has('--select'):
-    title.open_select.call_deferred()
+    await get_tree().process_frame
+    await title.open_select()
+    if DevArgs.value('--hover') != '':
+      if PageTurn.can_turn():
+        await PageTurn.finished
+      title.character_select().show_picture(DevArgs.value('--hover'))
   elif DevArgs.has('--settings'):
     title.open_settings.call_deferred()
 

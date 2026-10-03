@@ -7,7 +7,7 @@ extends GutTest
 const CLICKABLE_NODES: Array[Array] = [
   ['res://src/scenes/combat/potion_slot.tscn', '.'],
   ['res://src/scenes/screens/character_card.tscn', '.'],
-  ['res://src/scenes/screens/character_select.tscn', 'Panel/BackButton'],
+  ['res://src/scenes/screens/character_select.tscn', 'Page/BackButton'],
   ['res://src/scenes/screens/encounter_card.tscn', '.'],
   ['res://src/scenes/screens/combat_summary.tscn', 'Panel/Margin/Body/Footer/CloseButton'],
   ['res://src/scenes/screens/draft_overlay.tscn', 'Panel/SkipButton'],

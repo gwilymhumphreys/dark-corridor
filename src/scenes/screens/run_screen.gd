@@ -121,7 +121,7 @@ func _show_choice() -> void:
 
 func _arrive_at_choice() -> void:
   _walk(Balance.APPROACH_DEPTH_START)
-  _choice.reveal()   # a backstop: normally the deal already started during the walk
+  _choice.reveal()   # the cards are dealt once the player has stopped
   _state = State.CHOOSING
 
 
@@ -265,13 +265,11 @@ func _physics_process(delta: float) -> void:
       # Eased so the walk starts and ends softly rather than snapping into motion.
       var eased: float = lerpf(t, smoothstep(0.0, 1.0, t), Balance.APPROACH_EASE)
       _walk(Balance.APPROACH_DEPTH_START * eased)
-      # The enemy's readouts start fading up (or the encounter cards start being dealt) before arrival, so they are
-      # there when the walk ends. Both only act the first time, so calling them every frame is harmless.
-      if Balance.APPROACH_DURATION - _approach_elapsed <= Balance.ENEMY_REVEAL_DURATION:
-        if _state == State.WALKING:
-          _choice.reveal()
-        else:
-          _view.show_enemies(Balance.ENEMY_REVEAL_DURATION)
+      # The enemy's readouts start fading up before arrival, so they are there when the walk ends. It
+      # only acts the first time, so calling it every frame is harmless. The encounter cards wait for
+      # the walk to end and are dealt on arrival.
+      if _state == State.APPROACHING and Balance.APPROACH_DURATION - _approach_elapsed <= Balance.ENEMY_REVEAL_DURATION:
+        _view.show_enemies(Balance.ENEMY_REVEAL_DURATION)
       if t >= 1.0:
         if _state == State.WALKING:
           _arrive_at_choice()

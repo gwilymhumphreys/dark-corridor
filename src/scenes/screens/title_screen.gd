@@ -28,20 +28,32 @@ func _ready() -> void:
   resume_button.disabled = not Save.has_save()
 
 
-# Start → the character-select screen; its pick supplies the character to Game.start_run.
+# Start → the page turns forward onto the character-select screen; its pick supplies the character to
+# Game.start_run, which turns the page again into the run. Back turns the page back to the title.
 func open_select() -> void:
   if _select != null:
     return
   _select = CHARACTER_SELECT.instantiate()
-  add_child(_select)
   _select.picked.connect(_start_run)
   _select.cancelled.connect(_close_select)
+  await PageTurn.capture()
+  add_child(_select)
+  PageTurn.play(PageTurnAutoload.Direction.FORWARD)
+
+
+## The open character-select screen, or null.
+func character_select() -> CharacterSelect:
+  return _select
 
 
 func _close_select() -> void:
-  if _select != null:
-    _select.queue_free()
-    _select = null
+  if _select == null:
+    return
+  await PageTurn.capture()
+  remove_child(_select)
+  _select.queue_free()
+  _select = null
+  PageTurn.play(PageTurnAutoload.Direction.BACK)
 
 
 func _start_run(character_id: String) -> void:

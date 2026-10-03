@@ -356,10 +356,11 @@ func test_a_choice_beat_walks_up_to_the_encounter_cards() -> void:
   assert_eq(screen._choice.get_parent(), screen._view.corridor_area(), 'the cards stand in the corridor area')
   assert_false(screen._choice.is_revealed(), 'hidden while the walk begins')
   assert_eq(screen._choice.mouse_filter, Control.MOUSE_FILTER_IGNORE, 'the choice does not block the rest of the screen')
-  screen._physics_process(Balance.APPROACH_DURATION - Balance.ENEMY_REVEAL_DURATION + 0.01)
-  assert_true(screen._choice.is_revealed(), 'the cards fade up before the walk ends')
+  screen._physics_process(Balance.APPROACH_DURATION - 0.01)
+  assert_false(screen._choice.is_revealed(), 'still hidden just before the walk ends')
   for _i in APPROACH_STEPS:
     screen._physics_process(1.0)
+  assert_true(screen._choice.is_revealed(), 'the cards are dealt once the player stops')
   assert_eq(screen._state, RunScreen.State.CHOOSING, 'then the player chooses')
   assert_eq(screen._choice.get_node('Cards').get_child_count(), EncounterPools.POSITIONS, 'a card per encounter')
   screen.free()
