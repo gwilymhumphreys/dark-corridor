@@ -128,7 +128,8 @@ for each def's fields and how it resolves.
   every run opens differently. Repeating a type asks for two of it, and each slot draws a distinct
   item. `starting_item_ids` still works for a fixed opening and is used when no types are set. Its display is two lines on the select
   screen: `name_key` is the character's personal name, `class_key` the character's class beneath it
-  (`'Rot Shepherd'`), also shown in the Class field of the player's panel in combat. The `id` stays the internal working label (`spore_druid`) and never displays. Adding a character = a file plus its place in
+  (`'Rot Shepherd'`), also shown in the Class field of the player's panel in combat. `select_image` is the large picture
+shown on the select screen's left page while the character's card is hovered. The `id` stays the internal working label (`spore_druid`) and never displays. Adding a character = a file plus its place in
   `CharacterCatalog.ids()`, which sets the select-screen order.
 - An **enemy** (also used for allies and summons) is an `EnemyDef` (`content/enemies/<id>.gd`):
   health, an ordered board of item ids (any item, including one from a player pool — #43), and

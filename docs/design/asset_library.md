@@ -71,6 +71,7 @@ session sit together.
 | Source | Destination in this repository |
 | --- | --- |
 | Character and enemy portraits | `assets/portraits/characters/`, `assets/portraits/enemies/` |
+| Large pictures for the title screen and character select, scaled from `monsters-flat/` | `assets/portraits/large/` |
 | Item, potion, status and keyword icons | `assets/icons/items/`, `assets/icons/potions/`, `assets/icons/statuses/`, `assets/icons/keywords/` |
 | Mechanic and slot glyphs | `assets/icons/mechanics/<slot>/`, one folder of candidates per [icon slot](../systems/mechanics.md#iconslots) |
 | Monster images, cut out of their black backgrounds | `assets/monsters/cut_out/` |

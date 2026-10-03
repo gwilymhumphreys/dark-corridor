@@ -9,6 +9,7 @@ extends ActorDef
 # id, name_key (the character's personal name), max_hp, image, portrait
 # (assets/portraits/characters/) and hurt_sound come from ActorDef.
 var class_key: String = ''           # the character's class, shown under or beside the name (e.g. 'Rot Shepherd'); tr(), '' = none
+var select_image: String = ''        # res:// path of the large picture on character select's left page; '' = none
 var item_pool: Array = []            # this character's draftable item ids (#27); colorless is added at draw
 var starting_item_ids: Array = []    # the run-start board, left-to-right; ignored when starting_item_types is set
 # The run-start board as TYPE constraints instead of fixed ids: one random item of each listed

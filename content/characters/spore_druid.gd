@@ -9,6 +9,7 @@ func _init() -> void:
   name_key = 'Maren'                 # PLACEHOLDER personal name — owner's to rename
   class_key = 'Rot Shepherd'         # the owner's lead class name (spore_druid.md)
   portrait = 'res://assets/portraits/characters/shaman.png'   # PLACEHOLDER portrait — owner's to swap
+  select_image = 'res://assets/portraits/large/greater_hag_a.png'   # PLACEHOLDER picture, owner's to swap
   item_pool = [
     'druid_staff',
     'spore_spitter',

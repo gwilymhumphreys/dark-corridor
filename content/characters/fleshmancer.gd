@@ -10,6 +10,7 @@ func _init() -> void:
   name_key = 'Aldous'                # PLACEHOLDER personal name — owner's to rename
   class_key = 'Disgraced Surgeon'    # the owner's class name (2026-09-18)
   portrait = 'res://assets/portraits/characters/leper_nb.png'
+  select_image = 'res://assets/portraits/large/gemini_a.png'   # PLACEHOLDER picture, owner's to swap
   item_pool = [
     'carving_knife',
     'cleaver',
