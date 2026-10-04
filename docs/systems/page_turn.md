@@ -113,6 +113,7 @@ screenshots ([dev_tools.md](dev_tools.md)).
 | `capture()` | Take the image of the screen for the next turn (a coroutine, one frame) |
 | `play(direction)` | Turn from the captured image onto the screen drawn under it |
 | `has_capture()`, `can_turn()` | Whether an image is waiting; whether turns can play at all |
+| `is_turning()` | Whether a turn is being captured or plays, the time clicks are blocked; code that reads keys checks it |
 | `replay()` | Capture and turn the current screen onto itself |
 | `page_curve(progress, length, corner)` | An edge of the page seen from the side at `progress`, leading further by `corner` |
 | `held_progress` | Stop every turn at this progress (below 0 turns normally) |

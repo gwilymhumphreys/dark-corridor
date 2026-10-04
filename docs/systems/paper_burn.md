@@ -4,8 +4,7 @@ A reusable effect that burns a Control away like paper catching fire. A ragged h
 point on its edge. The edge of the hole has a glowing ember line, a black char band behind it and a
 dithered scorch ahead of it, and sparks and ash rise from it. Nothing is left at the end. The map uses
 it to burn away the token on a square once its fight is won, and a dead enemy's HUD and corridor
-sprite burn away with it. Run backwards, it makes a Control appear out of the fire instead, as the
-pictures on character select do. It is a visual effect only and has nothing to do with the Burn mechanic.
+sprite burn away with it. It is a visual effect only and has nothing to do with the Burn mechanic.
 
 **Location:** `src/ui/paper_burn.gd` + `.tscn` (`PaperBurn`), `src/shaders/paper_burn.gdshader`, the
 hole and bands shared with the sprite burn in `src/shaders/paper_burn.gdshaderinc`, the sprite burn
@@ -37,9 +36,6 @@ Paper burn section of the F7 tab (`src/debug/tokens_panel.gd`), and the preview 
   `modulate` alpha is set to 0, so it keeps its place in a container. The particles move to the
   target's parent and free themselves after their lifetime. If the `PaperBurn` node is freed early,
   it puts the target back and does not hide it.
-
-**Backwards.** `PaperBurn.burn(target, true)` runs the same burn from nothing left to whole. The
-target is shown when it starts and stays shown at the end.
 
 **What to burn.** The target's own drawing is replaced by the burn rectangle, so burn a Control that
 draws nothing itself and holds the visible nodes. An `ItemCell` or a `StatusIcon` qualifies. A panel
@@ -112,10 +108,6 @@ sprite `paper_burn_sprite.gdshader` as its material override and removes the spr
   After the last enemy dies the run screen waits for the view's `burns_finished`, then
   `Balance.FIGHT_END_PAUSE`, before it moves on, since the next beat frees the view.
 
-- **Character select.** Hovering a character's card burns its large picture in backwards on the left
-  page, and leaving the card burns it away. A burn still running on the picture is freed first
-  ([run_screen.md](run_screen.md)).
-
 ## Preview
 
 `paper_burn_preview.tscn` shows map-size and item-size tokens held at points through a burn, and a map
@@ -126,14 +118,13 @@ the burns restart, so the F7 sliders can be tuned while it runs ([dev_tools.md](
 
 | Member | Use |
 |---|---|
-| `PaperBurn.burn(target: Control, backwards := false) -> PaperBurn` | Start a burn with the current settings; backwards makes the target appear |
-| `reverse` | Whether the burn runs backwards |
+| `PaperBurn.burn(target: Control) -> PaperBurn` | Start a burn with the current settings |
 | `finished` | Emitted when nothing is left |
 | `hide_when_done` | Set false to leave the target shown at the end (the preview repeats burns) |
 | `hold(progress)` | Stop at a fixed progress from 0 to 1 |
 | `finish()` | Jump to the end |
 
-Tests: `tests/ui/test_paper_burn.gd`, `tests/ui/test_character_select.gd`, the dead enemy cases in `tests/corridors/test_combat_corridor.gd`
+Tests: `tests/ui/test_paper_burn.gd`, the dead enemy cases in `tests/corridors/test_combat_corridor.gd`
 and `tests/ui/test_combat_view.gd`, and the burn cases in `tests/ui/test_map_strip.gd` and
 `tests/ui/test_run_screen.gd`.
 

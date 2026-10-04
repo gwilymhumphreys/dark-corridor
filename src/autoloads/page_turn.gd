@@ -64,6 +64,12 @@ func can_turn() -> bool:
   return DisplayServer.get_name() != 'headless'
 
 
+## Whether a turn is being captured, is waiting or is playing. Clicks are blocked for that time; code
+## that reads keys checks this.
+func is_turning() -> bool:
+  return _blocker.visible
+
+
 ## Whether a still image is waiting for `play()`.
 func has_capture() -> bool:
   return _snapshot != null

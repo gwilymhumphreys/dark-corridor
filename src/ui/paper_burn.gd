@@ -37,9 +37,6 @@ const PALETTE_UNIFORMS: Array[String] = [
 var target: Control = null
 ## Whether the target is hidden when the burn is done. The preview scene turns it off to repeat burns.
 var hide_when_done: bool = true
-## Whether the burn runs backwards, so the target appears out of the fire instead of burning away. Set by
-## `burn`. The target is shown when it starts and stays shown at the end.
-var reverse: bool = false
 ## 0 before the first mark, 1 when nothing is left.
 var progress: float = 0.0
 
@@ -59,14 +56,10 @@ var _saved_clip: CanvasItem.ClipChildrenMode = CanvasItem.CLIP_CHILDREN_DISABLED
 @onready var _ash: CPUParticles2D = $Ash
 
 
-## Start burning `on` with the current settings. With `backwards`, `on` appears out of the fire instead.
-static func burn(on: Control, backwards: bool = false) -> PaperBurn:
+## Start burning `on` with the current settings.
+static func burn(on: Control) -> PaperBurn:
   var effect: PaperBurn = (load(SCENE_PATH) as PackedScene).instantiate()
   effect.target = on
-  effect.reverse = backwards
-  if backwards:
-    effect.progress = 1.0
-    on.modulate.a = 1.0
   on.add_child(effect)
   return effect
 
@@ -118,11 +111,10 @@ func _process(delta: float) -> void:
   if _done or _held:
     return
   _elapsed += delta
-  var done: float = clampf(_elapsed / _duration, 0.0, 1.0)
-  progress = 1.0 - done if reverse else done
+  progress = clampf(_elapsed / _duration, 0.0, 1.0)
   _push_progress()
   _place_particles()
-  if done >= 1.0:
+  if progress >= 1.0:
     _complete()
 
 
@@ -242,10 +234,10 @@ static func _colour_particles(sparks: CPUParticles2D, ash: CPUParticles2D) -> vo
 
 func _complete() -> void:
   _done = true
-  progress = 0.0 if reverse else 1.0
+  progress = 1.0
   _push_progress()
   _restore_target()
-  if hide_when_done and not reverse:
+  if hide_when_done:
     target.modulate.a = 0.0
   # The last sparks and ash keep flying after the target has gone: they move to its parent, which the
   # target's modulate does not reach, and free themselves when the last one has died.
