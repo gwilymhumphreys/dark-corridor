@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://src/scenes/screens/title_screen.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
 [ext_resource type="Script" path="res://src/ui/screen_background.gd" id="named_colour"]
-[ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
-[ext_resource type="Material" path="res://src/shaders/interface_portrait_material.tres" id="interface_portrait_material"]
+[ext_resource type="PackedScene" path="res://src/scenes/screens/character_photo.tscn" id="photo"]
+[ext_resource type="Script" path="res://src/ui/menu_selection.gd" id="menu_selection"]
 [ext_resource type="Texture2D" path="res://assets/portraits/large/black_knight_2a.png" id="picture"]
 
 [node name="TitleScreen" type="Control"]
@@ -27,27 +27,15 @@ color = Color(0.04, 0.04, 0.05, 1)
 script = ExtResource("named_colour")
 colour_name = "UI_BACKGROUND"
 
-[node name="Picture" type="TextureRect" parent="."]
-material = ExtResource("interface_portrait_material")
+[node name="Picture" parent="." instance=ExtResource("photo")]
 layout_mode = 1
-anchors_preset = -1
 anchor_left = 0.25
-anchor_top = 0.5
 anchor_right = 0.25
-anchor_bottom = 0.5
-offset_left = -550.0
-offset_top = -550.0
-offset_right = 550.0
-offset_bottom = 550.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("picture")
-expand_mode = 1
-stretch_mode = 5
+offset_transform_enabled = true
+offset_transform_rotation = -0.035
 
-[node name="Breath" type="Node" parent="Picture"]
-script = ExtResource("portrait_breath")
+[node name="Image" parent="Picture/Margin" index="0"]
+texture = ExtResource("picture")
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 1
@@ -121,3 +109,6 @@ text = "Exit Game"
 
 [node name="Juice" type="Node" parent="Menu/ExitButton"]
 script = ExtResource("2")
+
+[node name="MenuSelection" type="Node" parent="."]
+script = ExtResource("menu_selection")

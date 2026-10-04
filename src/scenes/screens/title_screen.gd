@@ -3,7 +3,8 @@ extends Control
 ## Title screen (docs/systems/game_manager.md, phase TITLE). Start a fresh seeded run (via the
 ## character-select screen) or resume the saved one — the two run-lifecycle intents.
 ## Static text auto-translates from the .tscn (CLAUDE.md localization); this wires the
-## buttons to the select overlay + Game.
+## buttons to the select overlay + Game. The menu takes keyboard and controller input through
+## `MenuSelection`, switched off while character select or settings covers it.
 
 const CHARACTER_SELECT: PackedScene = preload('res://src/scenes/screens/character_select.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
@@ -14,6 +15,8 @@ const DEFAULT_SEED: int = 1
 
 var _select: CharacterSelect = null
 var _settings: SettingsScreen = null
+
+@onready var _selection: MenuSelection = $MenuSelection
 
 
 func _ready() -> void:
@@ -26,6 +29,8 @@ func _ready() -> void:
   settings_button.pressed.connect(open_settings)
   exit_button.pressed.connect(_exit_game)
   resume_button.disabled = not Save.has_save()
+  var buttons: Array[BaseButton] = [start_button, resume_button, settings_button, exit_button]
+  _selection.setup(buttons)
 
 
 # Start → the page turns forward onto the character-select screen; its pick supplies the character to
@@ -36,6 +41,7 @@ func open_select() -> void:
   _select = CHARACTER_SELECT.instantiate()
   _select.picked.connect(_start_run)
   _select.cancelled.connect(_close_select)
+  _selection.set_process_unhandled_input(false)
   await PageTurn.capture()
   add_child(_select)
   PageTurn.play(PageTurnAutoload.Direction.FORWARD)
@@ -53,6 +59,7 @@ func _close_select() -> void:
   remove_child(_select)
   _select.queue_free()
   _select = null
+  _selection.set_process_unhandled_input(true)
   PageTurn.play(PageTurnAutoload.Direction.BACK)
 
 
@@ -65,6 +72,7 @@ func open_settings() -> void:
   if _settings != null:
     return
   _settings = SETTINGS_SCREEN.instantiate()
+  _selection.set_process_unhandled_input(false)
   add_child(_settings)
   _settings.closed.connect(_close_settings)
 
@@ -73,6 +81,7 @@ func _close_settings() -> void:
   if _settings != null:
     _settings.queue_free()
     _settings = null
+    _selection.set_process_unhandled_input(true)
 
 
 func _on_resume() -> void:

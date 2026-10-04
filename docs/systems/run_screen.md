@@ -17,12 +17,19 @@ main.tscn (Main) ── main_controller.gd
    └─ outcome_screen.tscn    Victory / You Died → New Run / Return to Title
 ```
 
-**Title overlays.** The title screen has its menu on the right page and a large picture on the
-left page, drawn through the portrait material with `PortraitBreath`. Start turns the page forward onto
+**Title overlays.** The title screen has its menu on the right page and a photo on the left page
+(`character_photo.tscn`: a painting in a token-style card with a border, drawn through the portrait
+material with `PortraitBreath`). The menu takes keyboard and
+controller input through `MenuSelection`, starting on Start. Start turns the page forward onto
 **`character_select.tscn`**, a full screen with the cards on its right half (one `character_card` per
-`CharacterCatalog.ids()` — personal name + class + portrait). Hovering a card burns that character's
-`select_image` in on the left page with a backwards [paper burn](paper_burn.md), and leaving the card
-burns it away. Back turns the page back; a pick →
+`CharacterCatalog.ids()` — personal name + class + portrait). One character is always selected,
+starting with the first; hovering a card or left and right on the keyboard or a controller select
+([menu_selection.md](menu_selection.md)). The left page holds a pile of photos, one per
+character's `select_image`, each resting at its own tilt and shift, with the selected one on top.
+Selecting a character slides its photo out of the pile and back in on top; a photo whose character is
+no longer selected by the far point of its slide goes back in where it was. The tilt, shift, slide
+distance and slide time are the `photo_*` print settings on the F7 tab. Back or cancel turns
+the page back; clicking a card or accept picks →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below).
 

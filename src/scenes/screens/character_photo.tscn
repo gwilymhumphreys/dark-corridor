@@ -1,0 +1,38 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/portrait_breath.gd" id="portrait_breath"]
+[ext_resource type="Material" path="res://src/shaders/interface_portrait_material.tres" id="interface_portrait_material"]
+
+[node name="CharacterPhoto" type="PanelContainer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -440.0
+offset_right = 440.0
+offset_bottom = 440.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"PanelToken"
+
+[node name="Margin" type="MarginContainer" parent="."]
+clip_contents = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Image" type="TextureRect" parent="Margin"]
+material = ExtResource("interface_portrait_material")
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Breath" type="Node" parent="Margin/Image"]
+script = ExtResource("portrait_breath")
