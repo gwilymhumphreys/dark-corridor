@@ -233,10 +233,10 @@ look setting, kept until the effects pass decides on hit visuals.
 - Kits whose textures share an atlas cannot tile across a flat rectangle, so they go through
   `KitPieceSource`. Each kit places its model pivots differently; the per-side offsets correct for that.
 - Code-built materials disable back-face culling, so wall winding does not matter, and ignore alpha:
-  transparent pixels in a texture draw as their stored colour, which is why `test_wall.png` (the
-  `CodeBuiltPieceSource` default texture) shows jagged dark edges.
-- The scene's code-built source uses `assets/textures/castle_wall_slates.png` (Poly Haven, Rob Tuytel)
-  on all four sides. Textures used in 3D need mipmaps enabled in their import settings.
+  transparent pixels in a texture draw as their stored colour.
+- The code-built source uses `assets/textures/castle_wall_slates.png` (Poly Haven, Rob Tuytel) on all
+  four sides, both as its default and in the scene. Textures used in 3D need mipmaps enabled in their
+  import settings.
 - Code-built materials filter linear with mipmaps, matching enemy sprites and the project default.
   A chunky, blocky look comes from the screen-space `pixelate_on` setting in
   [corridor_look.md](../corridor_look.md), not from nearest filtering: the shader's blocks stay the
@@ -260,4 +260,4 @@ look setting, kept until the effects pass decides on hit visuals.
   build from that scene.
 - Headless reimport after adding or replacing textures: `tools/import.sh`.
 - The Godot exe path is in [`../../handoff.md`](../../handoff.md).
-- Tests: `tests/corridors/test_corridor_renderers.gd`, `tests/corridors/test_combat_corridor.gd`.
+- Tests: `tests/corridors/test_corridor_3d.gd`, `tests/corridors/test_combat_corridor.gd`.

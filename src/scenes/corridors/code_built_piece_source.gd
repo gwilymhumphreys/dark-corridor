@@ -5,10 +5,10 @@ extends CorridorPieceSource
 ## `uv_repeat` times, so it tiles from section to section. The floor and ceiling repeat more across a
 ## corridor wider than it is tall, so their texture is the same size in metres as the walls'.
 
-@export var tex_left: Texture2D = preload('res://assets/sprites/test_wall.png')
-@export var tex_right: Texture2D = preload('res://assets/sprites/test_wall.png')
-@export var tex_ceiling: Texture2D = preload('res://assets/sprites/test_wall.png')
-@export var tex_floor: Texture2D = preload('res://assets/sprites/test_wall.png')
+@export var tex_left: Texture2D = preload('res://assets/textures/castle_wall_slates.png')
+@export var tex_right: Texture2D = preload('res://assets/textures/castle_wall_slates.png')
+@export var tex_ceiling: Texture2D = preload('res://assets/textures/castle_wall_slates.png')
+@export var tex_floor: Texture2D = preload('res://assets/textures/castle_wall_slates.png')
 ## How many times each texture repeats across one section (along the corridor, across it).
 @export var uv_repeat: Vector2 = Vector2.ONE
 
