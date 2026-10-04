@@ -10,7 +10,7 @@ The keys the player can change, how they are stored, and the Controls tab of the
 - Game keys are read in `_unhandled_input`, so a focused control, an open menu or a key capture on the Controls tab gets the key first.
 - Default keys are set in `project.godot` by key position (`physical_keycode`), not by character, so they sit in the same place on every keyboard layout. The interface shows the character printed on the player's own keyboard.
 - An action the player can change is listed in `Keybinds.ACTIONS`, with a shown name in `KeybindRow.action_name()` (a `tr()` literal, so the text extractor finds it). Actions not listed cannot be changed.
-- Godot's built-in `ui_*` actions are not listed; menus use them to move focus and go back.
+- Godot's built-in `ui_*` actions are not listed; menus read them to move the selection, accept and go back ([menu_selection.md](menu_selection.md)).
 - Escape and F1 to F12 cannot be bound (`Keybinds.is_reserved`). Escape goes back and pauses; the F keys open the [debug panels](debug_panel.md) in dev builds.
 
 ## Actions

@@ -61,6 +61,9 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ##   takes to travel from the deck, between one card leaving and the next, and to turn over; the largest
 ##   turn a card lands with; the gap between cards as a share of a card's width; and how much of the
 ##   deck shows below the top edge, as a share of its height (1 = all of it).
+## - `photo_*`: the pile of character photos on character select (`CharacterSelect`): the largest tilt
+##   and shift a photo rests at, how far a photo slides out of the pile as a share of its width, and
+##   the seconds it takes to slide out and back in on top.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'token_tilt': 3.0,
@@ -116,6 +119,10 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'card_tilt': 2.5,
   'card_spacing': 0.15,
   'deck_peek': 1.0,
+  'photo_tilt': 6.0,
+  'photo_shift': 24.0,
+  'photo_slide_distance': 0.5,
+  'photo_slide_time': 0.45,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']

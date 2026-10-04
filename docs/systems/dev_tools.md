@@ -17,7 +17,7 @@ exposes a plain seam and the tool uses it:
 | Seam | Used by |
 |---|---|
 | `Game.run_started(run)` | `Dev`, to add to a new run before any screen reads it |
-| `TitleScreen.open_select()`, `character_select()`, `open_settings()`, `DEFAULT_SEED`, `CharacterSelect.show_picture()` | `Dev`, for the title arguments |
+| `TitleScreen.open_select()`, `character_select()`, `open_settings()`, `DEFAULT_SEED`, `CharacterSelect.select_character()` | `Dev`, for the title arguments |
 | `EncounterChoice.skipped`, `EncounterChoice.dealt`, `EncounterChoice.pick()` | `Dev`, for `--autofight` and `--pick` |
 | `Save.disabled` | `Dev` (`--nosave`), the autotest |
 | `InterfaceGlow.demo_brightness`, `MonsterImages.forced_path`, `ControlFeedback.set_demo` | the debug panel |
@@ -47,7 +47,7 @@ Read by `Dev`.
 | `--notutorial` | Accepted and ignored; there is no tutorial yet |
 | `--autostart`, `--character=ID` | Skips the title screen and starts a run as the default character or `ID` |
 | `--select`, `--settings` | Opens character select or the settings screen on the title screen |
-| `--hover=ID` | With `--select`, burns in the picture of character ID once the page turn ends, as if its card were hovered |
+| `--select --character=ID` | Opens character select and selects character ID once the page turn ends |
 | `--page-turn-at=P` | Starts a run once the title screen has shown and stops the [page turn](page_turn.md) into it at progress P (0 to 1). Use with `--shot` and a `--shot-delay` of about 3 |
 | `--autofight` | Walks past every choice of encounters, so the run goes from fight to fight |
 | `--pick N` | Takes card N (1 = left, the shop) at every choice of encounters once the cards are dealt, as a click does, so the picked card moves up and stays shown |

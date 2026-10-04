@@ -42,7 +42,7 @@ Saved as the feedback part of a [look preset](look_presets.md).
 | Buttons, character and choice cards, potion slots, reward options, debug panel rows | `UIJuice` on `mouse_entered` / `mouse_exited` and the `BaseButton` press signals |
 | Status icons | `StatusIcon.hovered`, set the same way as a board item cell's. The border goes on the icon's `Frame`, whose worn panel is the status's colour square |
 | Board item cells | `ItemCell.hovered`, set by `combat_view_framed.gd` from the tooltip hover poll — board items take no mouse events of their own ([tooltips.md](tooltips.md)). Setting it to true also plays the shared hover sound (`SfxManager.play_ui_hover()`) |
-| Selection | The map's current square (`ItemCell.set_marked`, [run_screen.md](run_screen.md#overlays)) |
+| Selection | The map's current square (`ItemCell.set_marked`, [run_screen.md](run_screen.md#overlays)); the selected button of a menu that takes keys (`MenuSelection`, [menu_selection.md](menu_selection.md)) |
 
 `UIJuice` picks fill or border from its Preset (BUTTON lights the body, CARD and ICON take the border
 only); its `highlight` export overrides that, and `highlight_target` names a child Control to draw on

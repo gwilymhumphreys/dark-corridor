@@ -49,6 +49,12 @@ const SECTIONS: Dictionary = {
     'card_spacing': [0.0, 1.0, 0.05],
     'deck_peek': [0.0, 1.0, 0.05],
   },
+  'Character photos': {
+    'photo_tilt': [0.0, 20.0, 0.5],
+    'photo_shift': [0.0, 80.0, 1.0],
+    'photo_slide_distance': [0.0, 1.5, 0.05],
+    'photo_slide_time': [0.1, 2.0, 0.05],
+  },
   'Paper burn': {
     'paper_burn_duration': [0.2, 6.0, 0.1],
     'paper_burn_raggedness': [0.0, 40.0, 0.5],

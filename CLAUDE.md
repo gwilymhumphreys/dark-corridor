@@ -7,7 +7,7 @@ Guidance for Claude Code when working with this Godot 4 game.
 Read [`docs/index.md`](docs/index.md) first. It lists every doc with a one-line description. Read the relevant doc, then search the code it points to.
 
 - `docs/handoff.md`, `docs/decision_log.md` — orientation for a new agent, and the record of decisions
-- `docs/systems/` — one doc per engineering system, including the corridor renderers and dev tooling
+- `docs/systems/` — one doc per engineering system, including the corridor and dev tooling
 - `docs/design/` — game and content design (the owner's domain) and the content authoring guide
 - `docs/history/` — build log and the original phase plans
 
