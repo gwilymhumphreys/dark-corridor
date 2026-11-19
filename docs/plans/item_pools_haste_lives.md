@@ -1,10 +1,9 @@
 # Plan: item pools, haste and slow, lives
 
-Three changes the owner decided on 2026-11-20 (decisions #65, #66 and #68). They are independent, so
+Three changes the owner decided on 2026-11-20 (decisions #65, #66, #68, #69 and #70). They are independent, so
 each is its own stage with its own tests, docs and commit. Reviewed against the code on 2026-11-20.
 
-Suggested order: haste and slow first (fully specified), then lives, then item pools (waiting on the
-first open question below).
+Suggested order: haste and slow first, then lives, then tags and item pools.
 
 ## Stage A: haste and slow (decision #66)
 
@@ -25,7 +24,7 @@ time left. While one is on, the actor's item cooldown bars fill faster or more s
 | Piece | What |
 |---|---|
 | `HasteMechanic`, `SlowMechanic` | New mechanics (`'haste'`, `'slow'`) in `src/content/mechanics/`, registered in `MechanicRegistry._build`, each naming its status. |
-| `HasteStatus`, `SlowStatus` | Extend `TimedStatus`. Override a new hook, `cooldown_rate(target) -> float`, returning `Balance.HASTE_RATE` or `Balance.SLOW_RATE`. |
+| `HasteStatus`, `SlowStatus` | Extend `TimedStatus`. Override a new hook, `cooldown_rate(target) -> float`, returning `Balance.HASTE_RATE` or `Balance.SLOW_RATE`, or 1.0 while the actor also has the other one. |
 | `CombatHooks.cooldown_rate` | New hook, default 1.0. A relic passive can use it later ("your items fill 10% faster"). |
 | `StatusManager.cooldown_rate(actor)` | The product of every hook's rate for that actor. |
 | `Ticker.advance(amount)` | Adds `amount` steps; `step()` becomes `advance(1.0)`. |
@@ -35,27 +34,28 @@ time left. While one is on, the actor's item cooldown bars fill faster or more s
   shape: self for haste, an opponent shape for slow. Its value is unused.
 - Only the bar filling over time changes. Trigger pushes, the charge and decharge mechanics, status
   ticks and relics are unchanged.
+- Both on at once: neither has an effect (owner). Each keeps counting down its own time, so when the
+  shorter one ends the other takes effect for what it has left.
 - Determinism holds: the rate is read from statuses in a fixed order each step.
 
 ### Open
 
-1. **Haste and slow on at once.** Multiplying the two rates is simplest. Cancelling each other out
-   (rate 1.0) is the other option.
-2. **Trigger pushes.** The owner said haste and slow affect only how fast bars fill. This plan reads
+1. **Trigger pushes.** The owner said haste and slow affect only how fast bars fill. This plan reads
    that as time only, so a trigger still adds its authored seconds. Confirm.
-3. **Display.** The health bar's `StatusNumbers` shows a stack count per mechanic status. Haste and
+2. **Display.** The health bar's `StatusNumbers` shows a stack count per mechanic status. Haste and
    slow have no stacks, so they need either the seconds left or the icon alone. The value pill on
    an item that applies them has the same question.
-4. **Pricing.** Unpriced at first, like the attack bonuses. The parked note in `item_heuristics.md`
+3. **Pricing.** Unpriced at first, like the attack bonuses. The parked note in `item_heuristics.md`
    on timed debuffs applies.
-5. **Content the owner adds:** items that apply them, the two mechanic shops (`shop_haste`,
+4. **Content the owner adds:** items that apply them, the two mechanic shops (`shop_haste`,
    `shop_slow`), icons in the `IconSlots` folders and the keyword card text.
 
 ### Tests
 
 On fixture items: a hasted actor's item fires sooner and a slowed one's later by the expected steps;
 reapplying adds duration; the status expires and the rate returns to 1.0; trigger pushes and charge
-are unchanged; a gated item still does not fill; both statuses at once follow open question 1.
+are unchanged; a gated item still does not fill; both statuses at once fill at the normal rate, and
+the longer one takes effect when the shorter ends.
 
 ### Docs
 
@@ -64,7 +64,7 @@ are unchanged; a gated item still does not fill; both statuses at once follow op
 used for a long-cooldown item; docs that still say "slow item" change to "long-cooldown item" in the
 same stage. Item file comments are the owner's content and are left alone unless he asks.
 
-## Stage B: full heal after every fight, and lives (decision #68)
+## Stage B: full heal after every fight, and lives (decisions #68 and #69)
 
 ### Current state
 
@@ -83,19 +83,22 @@ same stage. Item file comments are the owner's content and are left alone unless
 - `RunManager.lives: int`, starting at `Balance.STARTING_LIVES`, saved in the snapshot and read with
   a default.
 - After every fight, won or lost, `_full_heal()` restores the player and the allies.
-- A lost fight costs one life. At zero lives the run ends as now. Otherwise the fight resolves with
-  no fight-won gold and no reward, and the run moves on to the next beat.
-- A won fight gives gold and raises maximum health by `Balance.FIGHT_WON_MAX_HP` (a
-  `RunEffect.max_hp`), replacing `FIGHT_WON_HEAL`. This is one way to make maximum health grow; see
-  open question 2.
+- Every fight, won or lost, gives `Balance.FIGHT_WON_GOLD` and raises maximum health by
+  `Balance.FIGHT_MAX_HP` (a `RunEffect.max_hp`), replacing `FIGHT_WON_HEAL`. The gain is applied
+  before the full heal, so the player starts the next fight at the new maximum.
+- A lost fight also costs one life, and gives no relic if it is an elite or an act boss. At zero
+  lives the run ends as now; otherwise the run moves on to the next beat.
+- A lost final boss ends the run (`Outcome.DIED`) whatever lives are left: one attempt (owner).
+- `RunEvent.FIGHT_WON` fires only for a won fight, so a relic that reacts to winning does not react
+  to a loss.
 - `RunEffect.gain_life(n)` (new kind `LIFE`) for event options and relic run triggers.
 - Lives in shops: a `StockEntry.lives(amount)` kind and a `LifeDef` that extends `ItemDef`, the way
   potions do (decision #57), so a life is shown and bought like any good. Its price is
   `Balance.SHOP_PRICE_LIFE`.
 - `rest` leaves `EncounterPools.RIGHT`. The rest encounter type and its panel stay in the code.
-- Run screen: a lost fight with lives left shows a panel ("a life lost", lives remaining, Continue),
-  in the same style as the rest panel (decision #64), and the square does not burn. The lives are
-  shown on the character sheet beside health.
+- Run screen: a lost fight with lives left goes on as a won one does (the square burns), after a
+  panel that says a life was lost and how many are left, with Continue, in the same style as the
+  rest panel (decision #64). The lives are shown on the character sheet beside health.
 - Autotest: the run carries on after a loss; the report records lives lost per fight, and the run
   outcome is DIED only when lives run out. Baselines change.
 - `RunManager.RunEvent.FIGHT_LOST` can now exist, because a relic could react to a lost fight. It is
@@ -103,85 +106,118 @@ same stage. Item file comments are the owner's content and are left alone unless
 
 ### Open
 
-1. **What a lost fight gives.** The plan gives nothing and moves on. Fighting it again would end the
-   same way unless the board changed, because the fight's seed is fixed by its position.
-2. **How maximum health grows.** The plan raises it a little for each won fight. Other options: a
-   larger step after each elite and boss, or only through rewards and shops.
-3. **A lost final boss with lives left.** The run cannot move past it. Options: the run ends anyway;
-   or the player gets a choice of encounters (for a shop) and fights it again.
-4. **Starting lives**, the life price and the health step: the owner's values.
-5. **Enemy damage.** `item_heuristics.md` sets it from what a fight should cost in health, which no
+1. **The lost fight panel.** Whether a lost fight shows its own panel, or the run goes straight on
+   with the lives count changing on the sheet.
+2. **`FIGHT_WON` on a loss.** This plan fires it only for a win. If a lost fight should count as a
+   fight won for relics too, that is one line.
+3. **Starting lives**, the life price and the health step: the owner's values. The step is the same
+   for every fight unless the owner wants a larger one for elites and bosses.
+4. **Enemy damage.** `item_heuristics.md` sets it from what a fight should cost in health, which no
    longer applies. A new rule is the owner's, decided in tuning.
 
 ### Tests
 
-Full heal after a won and a lost fight, allies included; a loss with lives left costs one and moves
-on with no reward; the last life ends the run; lives save and load; `gain_life`; buying a life;
-maximum health rises per won fight; `rest` is not offered; the autotest continues after a loss.
+Full heal after a won and a lost fight, allies included; a loss with lives left costs one, gives the
+gold and health step and moves on; a lost elite gives no relic; the last life ends the run; a lost
+final boss ends the run with lives left; lives save and load; `gain_life`; buying a life; maximum
+health rises after every fight; `rest` is not offered; the autotest continues after a loss.
 
 ### Docs
 
 `run_manager.md` (health economy, lives, snapshot), `encounter.md` (rest, shops, run effects),
 `save.md`, `run_screen.md` (the lost fight panel, the lives display), `autotest.md`, `lexicon.md`.
 
-## Stage C: item pools (decision #65)
+## Stage C: one list of tags, and item pools (decisions #65 and #70)
+
+Two steps, each its own commit: first the tags replace `types` and `mechanics` with no change to
+what the game does, then item pools are built on the tags.
 
 ### Current state
 
+- `ItemDef.types` holds type tags (`ItemType`: weapon, armour, skill, spell, trinket) and
+  `ItemDef.mechanics` holds mechanic ids. About 40 item files under `content/items/` set each, plus
+  the fixture items.
+- Readers of `types`: `TargetFilter` (`Kind.TYPE`), `Draft._has_any_type` (a stock entry's `types`),
+  `CharacterCatalog.starting_board` (`starting_item_types`), the `HasItemType` run condition, the
+  tooltip's type line, and `VfxDriver.travel_folders` (one sound folder per type tag).
+- Readers of `mechanics`: `TargetFilter` (`Kind.MECHANIC`), `Draft._passes` (a stock entry's
+  `mechanic`, used by the ten mechanic shops), and the tooltip's keyword column (`keyword_ids`).
+- `test_pool_integrity` checks each mechanics list resolves, is in alphabetical order with no
+  duplicates, and lists every mechanic an effect deals or applies.
 - `CharacterDef.item_pool` lists item ids. `RunManager._draft_pool()` returns it plus
-  `ColorlessPool.ITEMS` (empty). Rewards, shops and `has_items_for` all draw from `_draft_pool()`,
-  and `CharacterCatalog.starting_board` draws from `item_pool`.
-- `ItemDef.mechanics` is authored per item and already answers "should your poison items pick this
-  one up" (decision #41). The mechanic shops filter by it (decision #59).
+  `ColorlessPool.ITEMS` (empty). Rewards, shops and `has_items_for` draw from `_draft_pool()`, and
+  `starting_board` draws from `item_pool`.
 - An item in no character's list is never drafted. That is how Chunk of Flesh (created in fights),
   the enemy Claw and the example items stay out of drafts.
 
-### Open question 1: filled by hand or from the mechanics list
+### Step 1: tags
 
-**Manual.** A pool is a file listing item ids (`content/pools/<id>.gd`). An item listed in several
-pools needs all of them. Every item is placed by hand.
+`ItemDef.tags: Array[String]` replaces `types` and `mechanics`. A tag is a type tag, a mechanic id,
+or another name content refers to (such as a pool that is not a mechanic). Each reader moves to
+`tags`, with these points:
 
-**From the mechanics list.** A pool is a mechanic id, plus extra named pools for engines that are
-not mechanics (Spores, Chunks of Flesh, summon). An item needs every pool in its `mechanics` list
-and in a new `ItemDef.pools` list. Nothing is placed by hand. This works for most items today, with
-three gaps:
+| Reader | Change |
+|---|---|
+| `TargetFilter` | One condition kind, `TAG`. `add_type` and `add_mechanic` become `add_tag`. |
+| `StockEntry`, `Draft` | `types` and `mechanic` become one `tags` list: an item passes when it holds one of them, and a mechanic shop lists only its mechanic. |
+| Tooltip type line | Shows only the tags that are type tags; it already skips names with no display name. |
+| Tooltip keyword column | Reads `tags`. Type tags have no keyword card, so they drop out as now. |
+| `VfxDriver.travel_folders` | Reads only the type tags, so a mechanic tag does not add a sound folder ahead of the delivery's own mechanic. |
+| `starting_board`, `HasItemType` | Read `tags`. |
+| `test_pool_integrity` | The same checks on `tags`: each tag is a type tag, a mechanic or a listed other tag; alphabetical with no duplicates; every mechanic an effect deals or applies is listed. |
 
-- An item with an empty `mechanics` list, such as Mighty Blow, needs no pool. Either that means it is
-  offered to every character, or every item must name at least one pool.
-- The list sometimes leaves out a pool an item should need. The two forges give attack bonuses but
-  list only burn, because the attack bonus is not a mechanic, so they would reach a character with
-  burn and no attack items. The author adds `attack` to make them need it.
-- Items that must never be drafted need a flag (`ItemDef.draftable = false`) instead of being left
-  out of every list.
+- The item files change their two lines into one, in alphabetical order. This is a rename of a field,
+  not a change to what any item counts as.
+- `ItemType` stays as the list of type tags and their display names. A new `ItemTags.OTHER` lists
+  the tags that are neither, so a misspelt tag fails the integrity test.
+- Nothing in the game changes: the GUT suite and the autotest baselines stay the same.
 
-Type tags (weapon, armour and so on) are not needed to fill pools, because they describe the item's
-fiction, and the mechanics already say what it does. They could later be a character-level filter.
+### Step 2: item pools
 
-### Design (either answer)
-
+- A pool is a tag. `ItemPools.POOL_TAGS` lists which tags are pools: every mechanic id, plus the
+  other pools the owner names (for example spores, flesh and summon).
+- An item needs every one of its tags that is a pool. A character with `item_pools` holding all of
+  them is offered the item; type tags do not limit who is offered it.
 - `CharacterDef.item_pools: Array[String]` replaces `item_pool`.
 - `ItemPools.items_for(pool_ids) -> Array` (new, `src/content/items/item_pools.gd`) returns every
   draftable item whose needed pools are all in `pool_ids`, in catalog order so draws stay
   deterministic.
-- `_draft_pool()` and `starting_board` use it. `ColorlessPool` is removed: an item that needs no pool
-  takes its place, if that is the answer to the first gap.
+- `_draft_pool()` and `starting_board` use it. `ColorlessPool` is removed.
+- `ItemDef.draftable: bool = true`. Chunk of Flesh, the enemy Claw and the example items set it to
+  false, since they can no longer be kept out by leaving them off every list.
 - Each character's `item_pools` is set so it is offered at least the items it has now. This also
   offers it every other character's items that its pools cover; that is the intended effect, but
   which pools each character holds is the owner's.
 
+Gaps in today's lists that step 2 exposes, each for the owner to fix in content:
+
+- An item with no pool tag (Mighty Blow, Hex Bolt and Sundering Bolt list no mechanic) would be
+  offered to every character. Either that is what it means, or every draftable item must have a
+  pool tag, and the integrity test checks it.
+- Some lists leave out a pool an item should need. The two forges give attack bonuses but list only
+  burn, so they would reach a character with burn and no attack items. Adding `attack` to them makes
+  them need it.
+
 ### Open
 
-2. Which pools each character holds (content).
-3. Whether a pool can be held by only one character, or any character can hold any pool.
+1. Whether a type tag can also be a pool (a spell pool, say), or pools are only mechanics and the
+   other named tags.
+2. Whether an item with no pool tag is offered to everyone, or every draftable item needs one.
+3. Which pools each character holds, and the names of the pools that are not mechanics (content).
+4. Whether a pool can be held by only one character, or any character can hold any pool.
 
 ### Tests
 
-`items_for` with fixture items: an item needing two pools appears only when both are held; an
-undraftable item never appears; the order is fixed. The fixture character moves to `item_pools`.
-`test_pool_integrity`, `test_starting_board`, `test_draft` and `test_run_manager` change to read the
-computed pool.
+Step 1: the existing filter, shop, tooltip, sound folder and starting board tests read `tags`; the
+integrity test as above. Step 2: `items_for` with fixture items: an item needing two pools appears
+only when both are held; a type tag does not limit it; an undraftable item never appears; the order
+is fixed. The fixture character moves to `item_pools`. `test_pool_integrity`,
+`test_starting_board`, `test_draft` and `test_run_manager` change to read the computed pool.
 
 ### Docs
 
-`draft.md`, `run_manager.md`, `item.md`, `design/authoring.md` (how to place an item in a pool),
-`content.md` if relics are affected (they are not planned to be).
+Step 1: `item.md` (the tags section replaces the type tags and mechanics list sections, and the
+target filters), `encounter.md` (stock entries),
+`tooltips.md`, `design/authoring.md`, `lexicon.md` (Tag no longer planned; Type tag becomes a kind
+of tag). Step 2: `draft.md`, `run_manager.md`, `design/authoring.md` (how an item gets into a pool),
+`lexicon.md` (Item pool no longer planned).

@@ -12,7 +12,7 @@ Decision #65 keeps the reason below (a run draws from a few directions, so draft
 - A pool held by one character is allowed, for an engine only that character uses (Spores, Chunks of Flesh).
 - Not every character reaches poison, burn and bleed, which replaces the section on them below. Burn and poison may overlap where the overlap is interesting.
 - Shared items cannot carry one character's fiction in their names. This is the cost the rejected hybrid below was turned down for, now accepted.
-- **Open:** whether pools are filled by hand or worked out from each item's `mechanics` list. See [`../plans/item_pools_haste_lives.md`](../plans/item_pools_haste_lives.md).
+- **Filled from tags** (decision #70): an item's one list of tags, which includes its mechanics, says which pools it needs. Being worked out in [`../plans/item_pools_haste_lives.md`](../plans/item_pools_haste_lives.md).
 
 The sections below are the reasoning for decision #27.
 

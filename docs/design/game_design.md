@@ -46,7 +46,7 @@ The run is one act of ten fights: basic fights, two elite fights at fixed square
 - **2 mid-bosses + final boss.** Final boss = credits, real ending. The floor's boss is telegraphed ahead of time.
 - **A 1D linear progress map** shows the floor's beats and the player's progress along it — boss at the end, guaranteed relic at the midpoint. It's forward visibility on a single linear track, not a branching route map.
 - **The player is fully healed after every fight** (decision #68), so there is no rest between acts and no rest encounter.
-- **Lives.** Losing a fight costs a life instead of ending the run; the run ends when the last life is lost (decision #68). No retreat.
+- **Lives.** Losing a fight costs a life instead of ending the run; the run ends when the last life is lost (decision #68). The final boss has one attempt (decision #69). No retreat.
 - **Auto-save on entry to each encounter.** Player can quit mid-run and resume the next encounter cleanly. Important for the mobile/short-session pattern.
 ## Combat
 
@@ -89,8 +89,8 @@ Decision #68 (owner, 2026-11-20):
 - **Full heal after every fight.** Health does not carry between fights, so each fight is its own test of the build.
 - **Lives.** The player starts with a few lives (the owner suggested two or three). Losing a fight costs one, and losing the last ends the run. More can be bought in shops or gained from encounters.
 - **No healing encounters.** Rests and the health gained for a won fight go. Heal items, regen and healing potions still matter inside a fight.
-- **Max HP grows through the run**, because enemy damage grows with the player's board (decision #43). How it grows is open; relics and events can also raise it. Permanent max-HP boosts via meta-progression are deprioritized (see Meta-progression — flat-power unlocks bad).
-- **Open:** what a lost fight gives (its reward, nothing, or only the next beat).
+- **A lost fight** goes the same way as a won one except that it costs a life: full heal, the fight's gold and the maximum health step. A lost elite or act boss gives no relic. Losing the final boss ends the run whatever lives are left (decision #69).
+- **Max HP rises after every fight**, won or lost, because enemy damage grows with the player's board (decisions #43 and #69). Relics and events can also raise it. Permanent max-HP boosts via meta-progression are deprioritized (see Meta-progression — flat-power unlocks bad).
 ## Visual / Tech — mechanical constraints only
 
 *Full art direction, palette, tone, VFX, and audio live in the **Art Direction & Audio** doc. This section captures only what the mechanics depend on. Keep it short; depth goes in the other doc.*

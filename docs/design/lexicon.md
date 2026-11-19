@@ -19,6 +19,7 @@ something else.
 | **Passive** | A relic ability that is always on for the whole fight, written like an item effect (`RelicDef.passives`). Not a status. |
 | **Run trigger** | A relic ability outside fights: when a run event happens (the relic is picked up, a fight is won, a draft is skipped), its run effects change the run (`RelicDef.run_triggers`, `RunEffect`). |
 | **Type tag** | A label on an item (`weapon`, `armour`, `spell`, `skill`, `trinket`). It does nothing by itself; other items and statuses can refer to it. |
+| **Tag** | Planned: one name in an item's single list of tags, which holds its type tags, every mechanic it counts as and other names content refers to, such as a pool (decision #70). |
 | **Level** | How far an item has been upgraded, from 1 up to `Balance.ITEM_MAX_LEVEL` (`Item.level`). Separate from rarity, which the docs also call a tier. |
 | **Merge** | Combining two copies of the same item at the same level into one item of the next level. The player chooses to do it ([plans/item_levels.md](../plans/item_levels.md)). |
 | **Item pool** | A named group of items, mostly one per mechanic. A character holds several and is offered their items; an item that needs several pools is offered only to a character holding all of them (decision #65). Planned. |
