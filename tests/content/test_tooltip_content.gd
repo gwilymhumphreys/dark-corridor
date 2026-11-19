@@ -31,8 +31,7 @@ func _actor(hp: float) -> Actor:
 func _attack_def(types: Array[String], mechanics: Array[String]) -> ItemDef:
   var def := ItemDef.new()
   def.id = 'test_tooltip_attack'
-  def.types = types
-  def.mechanics = mechanics
+  def.tags.assign(types + mechanics)
   def.name_key = 'Test Attack'
   def.icon = 'res://assets/icons/items/old_sword.png'
   def.cooldown = 1.0
@@ -67,7 +66,7 @@ func _status_def(status_id: String) -> ItemDef:
 func _heal_def() -> ItemDef:
   var def := ItemDef.new()
   def.id = 'test_tooltip_heal'
-  def.types = [ItemType.ARMOUR]
+  def.tags = [ItemType.ARMOUR]
   def.name_key = 'Test Heal'
   def.icon = 'res://assets/icons/items/old_sword.png'
   def.cooldown = 2.0

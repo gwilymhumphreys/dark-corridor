@@ -8,8 +8,7 @@ extends ItemDef
 func _init() -> void:
   id = 'dagger'
   name_key = 'Dagger'
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID, BleedMechanic.ID]
+  tags = [AttackMechanic.ID, BleedMechanic.ID, ItemType.WEAPON]
   icon = 'res://assets/icons/items/dagger_06.png'   # PLACEHOLDER icon — owner's to swap
   attack_sound = 'blade'
   cooldown = 2.0

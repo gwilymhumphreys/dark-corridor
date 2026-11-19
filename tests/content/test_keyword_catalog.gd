@@ -55,7 +55,7 @@ func test_crit_item_has_the_crit_keyword_and_a_crit_line() -> void:
   def.crit_chance = 0.25
   # Crit is an authored mechanic now, not derived from crit_chance. Attack is listed too:
   # the floor is that every mechanic an effect deals appears in the list.
-  def.mechanics = [AttackMechanic.ID, CritMechanic.ID]
+  def.tags = [AttackMechanic.ID, CritMechanic.ID]
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
   hit.value = 10.0

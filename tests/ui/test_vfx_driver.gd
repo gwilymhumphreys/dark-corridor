@@ -238,7 +238,7 @@ func test_travel_folders_run_from_the_item_override_to_the_shared_default() -> v
   var holder := Actor.new(100.0)
   _actors.append(holder)
   var def := ItemDef.new()
-  def.types = [ItemType.SPELL, ItemType.TRINKET]
+  def.tags = [ItemType.SPELL, ItemType.TRINKET]
   def.travel_sound = 'wand'
   var d := _flying_delivery(Item.new(def, holder))
   var expected: Array[String] = [

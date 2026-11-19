@@ -41,7 +41,7 @@ func _give(actor: Actor, def: RelicDef) -> Item:
 ## FixtureItems.attack with no type tags, so a weapon filter does not pick it.
 func _untagged_attack() -> ItemDef:
   var d := FixtureItems.attack()
-  d.types = []
+  d.tags = []
   return d
 
 
@@ -91,7 +91,7 @@ func test_it_skips_other_types_other_actors_and_other_mechanics() -> void:
   var theirs := _board_item(e, FixtureItems.attack())
   assert_eq(theirs.display_value(theirs.def.effects[0]), FixtureItems.ATTACK_DAMAGE, 'not the enemy weapon')
   var shield := _board_item(p, FixtureItems.shield())
-  shield.def.types = [ItemType.WEAPON]
+  shield.def.tags = [ItemType.WEAPON]
   assert_eq(shield.display_value(shield.def.effects[0]), FixtureItems.SHIELD_VALUE, 'not a shield')
 
 
@@ -99,7 +99,7 @@ func test_a_relic_attack_is_not_raised() -> void:
   var p := _actor()
   _give(p, FixtureKit.weapon_bonus_relic())
   var attack_relic := RelicDef.new()
-  attack_relic.types = [ItemType.WEAPON]
+  attack_relic.tags = [ItemType.WEAPON]
   attack_relic.effects = FixtureItems.attack().effects
   var relic := _give(p, attack_relic)
   assert_eq(relic.display_value(attack_relic.effects[0]), FixtureItems.ATTACK_DAMAGE, 'a relic is not on the board')

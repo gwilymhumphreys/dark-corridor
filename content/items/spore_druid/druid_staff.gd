@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'druid_staff'
   name_key = 'Druid Staff'
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.SPORES, ItemType.WEAPON]
   icon = 'res://assets/icons/items/staff_v2_02.png'
   cooldown = 3.0
   effects = [

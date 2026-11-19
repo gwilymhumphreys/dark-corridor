@@ -8,8 +8,7 @@ extends ItemDef
 func _init() -> void:
   id = 'mighty_blow'
   name_key = 'Mighty Blow'           # PLACEHOLDER name — owner's to rename
-  types = [ItemType.SKILL]
-  mechanics = []
+  tags = [AttackMechanic.ID, ItemType.SKILL]
   icon = 'res://assets/icons/items/skill_strong_attack_nb.png'
   cooldown = 5.0
   effects = [ItemEffect.apply_status('empowered', 1.0, ItemEffect.Shape.SELF)]

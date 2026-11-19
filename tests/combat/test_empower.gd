@@ -20,7 +20,7 @@ func after_each() -> void:
 
 func _damage_def(dmg: float, type_tag: String) -> ItemDef:
   var d := ItemDef.new()
-  d.types = [type_tag]
+  d.tags = [type_tag]
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
   hit.value = dmg

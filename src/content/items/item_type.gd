@@ -23,6 +23,11 @@ const DISPLAY_NAMES: Dictionary = {
 }
 
 
+## Whether `tag` is one of the five type tags.
+static func is_type(tag: String) -> bool:
+  return DISPLAY_NAMES.has(tag)
+
+
 ## The singular display name for an item-type id (its source English — the caller translates), or
 ## '' for an id that is not one of the five tags. No tr() here: this is a static method and tr() is
 ## an Object method, so it returns the source English straight.

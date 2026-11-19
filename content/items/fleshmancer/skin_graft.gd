@@ -8,8 +8,7 @@ extends ItemDef
 func _init() -> void:
   id = 'skin_graft'
   name_key = 'Skin Graft'            # PLACEHOLDER name — owner's to rename
-  types = [ItemType.SKILL]
-  mechanics = [HealMechanic.ID]
+  tags = [ItemTags.FLESH, HealMechanic.ID, ItemType.SKILL]
   icon = 'res://assets/icons/items/loot_99_needle.png'
   cooldown = 4.0
   var graft := ItemEffect.heal(0.0)

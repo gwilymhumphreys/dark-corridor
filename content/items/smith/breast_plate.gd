@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'breast_plate'
   name_key = 'Breast Plate'
-  types = [ItemType.ARMOUR]
-  mechanics = [ShieldMechanic.ID]
+  tags = [ItemType.ARMOUR, ShieldMechanic.ID]
   icon = 'res://assets/icons/items/leather_chest_1.png'
   cooldown = 6.0
   effects = [ItemEffect.shield(48.0)]

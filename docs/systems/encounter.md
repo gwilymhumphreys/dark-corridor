@@ -110,7 +110,7 @@ A reward encounter (`Type.REWARD`) lists what it offers in `stock`, one `StockEn
 | `StockEntry` builder | Draws |
 |---|---|
 | `items(n, types = [])` | `n` items from the character's pool plus the colourless items, only those with one of the type tags when `types` is given. They repeat only when too few items match. |
-| `items_with_mechanic(n, mechanic_id)` | As `items`, only items that list the mechanic in `ItemDef.mechanics` (the author's list, so an item that charges off poison counts as a poison item). |
+| `items_with_mechanic(n, mechanic_id)` | As `items`, only items that have the mechanic in `ItemDef.tags` (the author's list, so an item that charges off poison counts as a poison item). |
 | `items_of_rarity(n, rarity)` | As `items`, only items of that `ItemDef.Rarity`. |
 | `relics(n)` | Up to `n` different relics from the run's relic pool (`RunManager.relic_pool`: the reward relics the player does not hold). |
 | `potions(n)` | Up to `n` different potions from `ConsumableCatalog.REWARD_POOL`. |

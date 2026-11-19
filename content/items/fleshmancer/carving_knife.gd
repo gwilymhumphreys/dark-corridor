@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'carving_knife'
   name_key = 'Carving Knife'
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.FLESH, ItemType.WEAPON]
   icon = 'res://assets/icons/items/dagger_01.png'
   cooldown = 3.0
 

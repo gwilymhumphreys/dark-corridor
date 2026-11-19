@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'hex_bolt'
   name_key = 'Hex Bolt'
-  types = [ItemType.SPELL]
-  mechanics = []
+  tags = [ItemType.SPELL]
   icon = 'res://assets/icons/items/skill_shadow_curse_nb.png'
   cooldown = 3.0
   panel_colour_name = 'ARCANE'

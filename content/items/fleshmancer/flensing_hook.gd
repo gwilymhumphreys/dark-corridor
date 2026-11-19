@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'flensing_hook'
   name_key = 'Flensing Hook'         # PLACEHOLDER name — owner's to rename
-  types = [ItemType.SKILL]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.FLESH, ItemType.SKILL]
   icon = 'res://assets/icons/items/hook.png'
   cooldown = 4.0
   panel_colour_name = 'STATUS_DECAY'   # it is a flesh producer, not an attack

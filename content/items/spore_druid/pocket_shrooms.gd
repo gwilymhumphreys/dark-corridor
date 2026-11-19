@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'pocket_shrooms'
   name_key = 'Pocket Shrooms'
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemType.WEAPON]
   icon = 'res://assets/icons/items/herbalism_24_stinkymushroom.png'
   rarity = Rarity.RARE
   cooldown = 3.0

@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'bone_saw'
   name_key = 'Bone Saw'             # PLACEHOLDER name — owner's to rename
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.FLESH, ItemType.WEAPON]
   icon = 'res://assets/icons/items/loot_12_saw.png'
   cooldown = 6.0
 

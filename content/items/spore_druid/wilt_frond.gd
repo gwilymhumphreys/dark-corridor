@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'wilt_frond'
   name_key = 'Wilt Frond'             # PLACEHOLDER name — owner's to rename
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemType.WEAPON]
   icon = 'res://assets/icons/items/herbalism_20_sickflower.png'
   cooldown = 4.0
   effects = [

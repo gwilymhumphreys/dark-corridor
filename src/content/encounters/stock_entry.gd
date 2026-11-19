@@ -26,7 +26,7 @@ static func items(amount: int, item_types: Array[String] = []) -> StockEntry:
 
 
 ## `amount` items from the character's pool and the colourless items that list `mechanic_id` in their
-## `mechanics` (ItemDef.mechanics, the author's list).
+## tags (ItemDef.tags, the author's list).
 static func items_with_mechanic(amount: int, mechanic_id: String) -> StockEntry:
   var entry := _make(Kind.ITEM, amount)
   entry.mechanic = mechanic_id

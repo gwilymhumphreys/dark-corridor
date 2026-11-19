@@ -41,8 +41,7 @@ takes. Two definitions with the same id is an error. **Statuses are the exceptio
    func _init() -> void:
      id = 'warhammer'
      name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
-     types = [ItemType.WEAPON]
-     mechanics = [AttackMechanic.ID, DechargeMechanic.ID]
+     tags = [AttackMechanic.ID, DechargeMechanic.ID, ItemType.WEAPON]
      icon = 'res://assets/icons/items/war_hammer.png'
      cooldown = 6.0
      effects = [
@@ -57,8 +56,10 @@ takes. Two definitions with the same id is an error. **Statuses are the exceptio
      mechanic on any shape) and `apply_status`. Travel is not authored: every delivery flies
      `Balance.TRAVEL_STEPS`. Effects that spend statuses, summon or create items set their fields
      on an `ItemEffect.new()` ([item.md](../systems/item.md)).
-   - `types` are inert synergy labels (`weapon` / `armour` / `skill` / `spell` / `trinket`).
-     `mechanics` is the keyword list, written by hand in alphabetical order.
+   - `tags` is one list, written by hand in alphabetical order of the ids: the type tag
+     (`weapon` / `armour` / `skill` / `spell` / `trinket`), every mechanic the item counts as, and
+     `ItemTags.SPORES` or `ItemTags.FLESH` when it makes or spends spores or Chunks of Flesh
+     ([item.md](../systems/item.md#tags)).
    - Write `name_key = '...'` out in full; the translation extractor finds names by that literal.
    - `icon` is a `res://` path under `assets/icons/items/`; `tests/content/test_icons.gd` fails if it
      is missing.
@@ -88,7 +89,7 @@ pattern in their own `content/` folder — see the matching PRD ([item](../syste
 for each def's fields and how it resolves.
 
 - A **relic** is a `RelicDef` (`content/relics/<id>.gd`), which extends `ItemDef`: write `effects`,
-  `mechanics` and `trigger_subs` as for an item, but a trigger has no `'seconds'` (it fires the
+  `tags` and `trigger_subs` as for an item, but a trigger has no `'seconds'` (it fires the
   relic) and there is no `cooldown` to set. `fires_per_fight = 1` makes it "the first time each
   fight". For several triggers that do different things, give each trigger entry its own
   `'effects'` (and `'fires_per_fight'` if it is limited):
@@ -108,7 +109,7 @@ for each def's fields and how it resolves.
   func _init() -> void:
     id = 'iron_idol'
     name_key = 'Iron Idol'
-    mechanics = [ShieldMechanic.ID]
+    tags = [ShieldMechanic.ID]
     effects = [ItemEffect.shield(6.0)]
     trigger_subs = [{'event': EventBus.Event.FIGHT_START}]
   ```

@@ -8,8 +8,7 @@ extends ItemDef
 func _init() -> void:
   id = 'flesh_explosion'
   name_key = 'Flesh Explosion'       # owner's name
-  types = [ItemType.SPELL]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.FLESH, ItemType.SPELL]
   icon = 'res://assets/icons/items/skill_blood_boiling_nb.png'
   rarity = Rarity.UNCOMMON
   cooldown = 20.0

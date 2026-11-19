@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'broadaxe'
   name_key = 'Broadaxe'              # PLACEHOLDER name — owner's to rename
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemType.WEAPON]
   icon = 'res://assets/icons/items/axe_hard_2.png'
   cooldown = 5.0
   effects = [ItemEffect.attack(44.0)]

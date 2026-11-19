@@ -52,7 +52,7 @@ static func starting_board(def: CharacterDef, rng: RandomNumberGenerator) -> Arr
     var candidates: Array = []
     for item_id: String in def.item_pool:
       var item_def: ItemDef = ItemCatalog.get_def(item_id)
-      if item_def != null and item_def.types.has(type) and not board_ids.has(item_id):
+      if item_def != null and item_def.tags.has(type) and not board_ids.has(item_id):
         candidates.append(item_id)
     if candidates.is_empty():
       push_warning('CharacterCatalog: %s has no unused "%s" item for its starting board' % [def.id, type])

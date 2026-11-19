@@ -215,22 +215,22 @@ pool. The names are placeholders; the numbers are on the budget curve.
   decharges one random enemy item (owner, 2026-09-23), so it slows the enemy as well as hitting.
   The Dagger is a fast one-handed weapon that deals damage and applies bleed, the first of the
   daggers-lean-towards-bleed guide (owner, 2026-09-23).
-- **Iron Maiden** (`iron_maiden`, uncommon, no type yet) — a slow item that only applies bleed,
-  spending its whole budget on it (owner, 2026-09-23). It is not clearly a weapon, and the
-  existing types do not fit it; which type it gets is open.
-- **Smithing tools** (`tongs`, `poker`, no type yet) — burn-only items, following the
+- **Iron Maiden** (`iron_maiden`, uncommon, trinket) — a long-cooldown item that only applies bleed,
+  spending its whole budget on it (owner, 2026-09-23). It is not clearly a weapon; the trinket tag
+  is an agent's pick for the owner to check (2026-11-20).
+- **Smithing tools** (`tongs`, `poker`, weapons; agent's pick, 2026-11-20) — burn-only items, following the
   smithing-tools-lean-towards-burn guide (owner, 2026-09-23). The Tongs are fast and the Poker
   slower, both on the leftmost enemy.
-- **The two forges** (`deep_forge`, `wide_forge`, rare, no type yet; working names) — slow items
+- **The two forges** (`deep_forge`, `wide_forge`, rare, trinkets (agent's pick, 2026-11-20); working names) — long-cooldown items
   that burn every enemy and buff the Smith's attack items for the rest of the fight (owner,
   2026-09-23). The Deep Forge gives one random attack item +50% attack, which goes tall; the Wide
   Forge gives every attack item a flat attack bonus, which goes wide. The flat bonus favours fast
   attack items on purpose: the Wide Forge is meant to be a strong rare payoff for a go-wide board
   (owner, 2026-09-23). "Attack item" means any item with the attack mechanic, not only weapons.
   The bonuses are unpriced.
-- **Acid** (`jar_of_acid`, `acid_bath`, no type yet) — poison-only items (owner, 2026-09-23). The
+- **Acid** (`jar_of_acid`, `acid_bath`, trinkets; agent's pick, 2026-11-20) — poison-only items (owner, 2026-09-23). The
   Jar of Acid is fast and the Acid Bath slow, both on the leftmost enemy.
-- **Bloodletting** (`bloodletting`, no type yet) — applies bleed, and charges itself 1 second
+- **Bloodletting** (`bloodletting`, skill; agent's pick, 2026-11-20) — applies bleed, and charges itself 1 second
   whenever the Smith applies poison (owner, 2026-09-23), so it links the acid items to bleed. Its
   own bleed does not charge it. The trigger is priced by the trigger row in
   [`item_heuristics.md`](item_heuristics.md#spending-the-budget).

@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'vambraces'
   name_key = 'Vambraces'
-  types = [ItemType.ARMOUR]
-  mechanics = [ShieldMechanic.ID]
+  tags = [ItemType.ARMOUR, ShieldMechanic.ID]
   icon = 'res://assets/icons/items/gloves_01.png'
   cooldown = 3.0
   effects = [ItemEffect.shield(15.0)]

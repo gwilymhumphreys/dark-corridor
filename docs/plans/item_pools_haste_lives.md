@@ -148,7 +148,13 @@ what the game does, then item pools are built on the tags.
 - An item in no character's list is never drafted. That is how Chunk of Flesh (created in fights),
   the enemy Claw and the example items stay out of drafts.
 
-### Step 1: tags
+### Step 1: tags (built 2026-11-20)
+
+Built with two differences from the table below: `TargetFilter` keeps its `TYPE` and `MECHANIC`
+conditions and `StockEntry` keeps `types` and `mechanic`, both now read against `tags`, because
+merging them changed no behaviour. The owner asked for the items to be tagged in the same change:
+Mighty Blow gained `attack`, the spore items `spores`, the flesh items `flesh`, and the Smith's
+untyped items a type tag.
 
 `ItemDef.tags: Array[String]` replaces `types` and `mechanics`. A tag is a type tag, a mechanic id,
 or another name content refers to (such as a pool that is not a mechanic). Each reader moves to

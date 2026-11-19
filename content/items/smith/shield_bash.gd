@@ -8,8 +8,7 @@ extends ItemDef
 func _init() -> void:
   id = 'shield_bash'
   name_key = 'Shield Bash'
-  types = [ItemType.SKILL]
-  mechanics = [AttackMechanic.ID, ShieldMechanic.ID]
+  tags = [AttackMechanic.ID, ShieldMechanic.ID, ItemType.SKILL]
   icon = 'res://assets/icons/items/shield_attack.png'   # PLACEHOLDER icon — owner's to swap
   rarity = Rarity.UNCOMMON
   cooldown = 8.0                     # starting point — tune here

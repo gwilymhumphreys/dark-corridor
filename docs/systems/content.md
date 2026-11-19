@@ -24,7 +24,7 @@ An **item with no timer** (decision #51): a powerful, run-changing ability made 
 
 **Location:** `src/content/relics/` (`RelicDef`, `Relic`, `RelicCatalog`), `src/content/relics/passives/` (`RelicPassive`, its subclasses, `PassiveRegistry`), `content/relics/` (one file per relic).
 
-- **Definition** — `RelicDef extends ItemDef`, so a relic has the item fields: `effects`, `trigger_subs`, `mechanics`, `crit_chance`, `rarity` (feel-based for relics, not a power ladder), `icon` (placeholders in `assets/icons/relics/`). A relic trigger is an item trigger without `seconds`. A trigger entry may carry its own `'effects'` and `'fires_per_fight'`, so one relic can have several triggers that do different things; an entry without them fires the relic's `effects` and shares the relic's `fires_per_fight`. Relic-only fields:
+- **Definition** — `RelicDef extends ItemDef`, so a relic has the item fields: `effects`, `trigger_subs`, `tags`, `crit_chance`, `rarity` (feel-based for relics, not a power ladder), `icon` (placeholders in `assets/icons/relics/`). A relic trigger is an item trigger without `seconds`. A trigger entry may carry its own `'effects'` and `'fires_per_fight'`, so one relic can have several triggers that do different things; an entry without them fires the relic's `effects` and shares the relic's `fires_per_fight`. Relic-only fields:
 
 | Field | Meaning |
 |---|---|

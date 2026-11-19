@@ -1,7 +1,7 @@
 class_name RelicDef
 extends ItemDef
 ## A relic definition (docs/systems/content.md → Relic) — an item with no timer, authored in
-## GDScript and collected in RelicCatalog. It uses the item fields (effects, trigger_subs, mechanics,
+## GDScript and collected in RelicCatalog. It uses the item fields (effects, trigger_subs, tags,
 ## crit_chance, the tooltip), adds always-on `passives`, and builds an Item for each fight (Actor.relics), but its bar never
 ## fills over time: each trigger fills it completely, and it fires on the next step.
 ## A relic trigger entry is an item trigger without 'seconds', optionally with its own effects and

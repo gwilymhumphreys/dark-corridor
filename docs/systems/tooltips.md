@@ -163,8 +163,8 @@ because a static consume number would mislead.
 in `KeywordCatalog` (an absent id yields no card — that absence is how the owner gates a mechanic
 keyword):
 
-- **The authored `mechanics` list** (`ItemDef.mechanics`, alphabetical) — the mechanic ids the item
-  counts as, including crit (an item with a crit chance lists `crit` like any other mechanic; the
+- **The authored tags** (`ItemDef.tags`, alphabetical) — the mechanic ids the item counts as, and
+  `spores`; type tags and `flesh` have no card and drop out. Crit is included (an item with a crit chance lists `crit` like any other mechanic; the
   floor check in `test_pool_integrity.gd` enforces it).
 - **The derived non-mechanic ids**, in effect order: an `APPLY_STATUS` effect's `status_id`
   (weak, vulnerable, …); each effect's `consume_id`, then its `per_owner_stack_id`; and each `trigger_subs` entry's `filter`

@@ -1,15 +1,15 @@
 extends ItemDef
-## Deep Forge — the Smith's fire, a slow rare item that burns every enemy and gives one random attack
+## Deep Forge — the Smith's fire, a long-cooldown rare item that burns every enemy and gives one random attack
 ## item +50% attack for the rest of the fight (owner, 2026-09-23). The burn spends the rare budget
 ## at the all-opponents price (docs/design/item_heuristics.md); the attack bonus is unpriced. Goes
-## tall; the Wide Forge is its go-wide twin. No type yet.
+## tall; the Wide Forge is its go-wide twin. Tagged trinket (2026-11-20, agent's pick for the owner
+## to check).
 
 
 func _init() -> void:
   id = 'deep_forge'
   name_key = 'Deep Forge'            # owner's working name — to be renamed
-  types = []                         # no type yet — owner's to decide
-  mechanics = [AttackMechanic.ID, BurnMechanic.ID]
+  tags = [AttackMechanic.ID, BurnMechanic.ID, ItemType.TRINKET]
   icon = 'res://assets/icons/items/forge.png'   # PLACEHOLDER icon — owner's to swap
   rarity = Rarity.RARE
   cooldown = 10.0

@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'chunk_of_flesh'
   name_key = 'Chunk of Flesh'        # owner's term — rename if desired
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.FLESH, ItemType.WEAPON]
   icon = 'res://assets/icons/items/res_149_meet.png'
   cooldown = 2.0
   starting_uses = 2                  # destroyed after this many fires (the Decay status)

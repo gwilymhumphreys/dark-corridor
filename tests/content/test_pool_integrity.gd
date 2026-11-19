@@ -167,59 +167,51 @@ func test_draftable_item_effects_reference_registered_statuses() -> void:
         assert_true(StatusRegistry.has(effect.consume_id), '%s: consume target %s is registered' % [item_id, effect.consume_id])
 
 
-## Every mechanic id in an item's authored mechanics list resolves in the MechanicRegistry.
-## A typo'd id would silently never match a target filter, so it fails here instead.
-func test_item_mechanics_list_resolves() -> void:
+## Every tag on an item is known: a type tag, a mechanic or one of ItemTags.OTHER (decision #70).
+## A typo'd tag would silently never match a filter, shop or pool, so it fails here instead. Effects
+## that are not mechanics (MechanicRegistry.NOT_MECHANICS) are not tags, so they get no keyword card
+## and no shop.
+func test_item_tags_are_known() -> void:
   for item_id in ItemCatalog.all_ids():
-    var def: ItemDef = ItemCatalog.get_def(item_id)
-    for mechanic_id in def.mechanics:
-      assert_true(MechanicRegistry.has(mechanic_id), '%s: mechanic id %s resolves' % [item_id, mechanic_id])
+    for tag: String in ItemCatalog.get_def(item_id).tags:
+      assert_true(ItemTags.is_known(tag), '%s: tag %s is a type tag, a mechanic or an ItemTags tag' % [item_id, tag])
 
 
-## Every authored mechanics list is sorted alphabetically by id string and holds no duplicates.
+## Every authored tags list is sorted alphabetically by id string and holds no duplicates.
 ## The failure message prints the correctly sorted list so fixing it is a copy and paste.
-func test_item_mechanics_list_sorted_and_unique() -> void:
+func test_item_tags_sorted_and_unique() -> void:
   for item_id in ItemCatalog.all_ids():
     var def: ItemDef = ItemCatalog.get_def(item_id)
     var sorted: Array[String] = []
-    for id: String in def.mechanics:
+    for id: String in def.tags:
       sorted.append(id)
     sorted.sort()
     var deduped: Array[String] = []
-    for id: String in def.mechanics:
+    for id: String in def.tags:
       if not deduped.has(id):
         deduped.append(id)
-    assert_eq(deduped.size(), def.mechanics.size(),
-        '%s: mechanics list holds no duplicates' % item_id)
-    assert_true(def.mechanics == sorted,
-        '%s: mechanics list is sorted; correct value: %s' % [item_id, sorted])
+    assert_eq(deduped.size(), def.tags.size(),
+        '%s: tags hold no duplicates' % item_id)
+    assert_true(def.tags == sorted,
+        '%s: tags are sorted; correct value: %s' % [item_id, sorted])
 
 
 ## The floor: every mechanic an effect deals (its `mechanic` field), applies as a status that is
 ## also a registered mechanic (`status_id`), or via `crit_chance > 0` (CritMechanic.ID) must be
-## listed in the item's authored mechanics list. One-way only — an item may list more. Effects that
-## are not mechanics (MechanicRegistry.NOT_MECHANICS) are not listed.
+## in the item's tags. One-way only — an item may list more.
 func test_item_mechanics_floor_is_covered() -> void:
   for item_id in ItemCatalog.all_ids():
     var def: ItemDef = ItemCatalog.get_def(item_id)
     for effect in def.effects:
       if MechanicRegistry.is_mechanic(effect.mechanic):
-        assert_true(def.mechanics.has(effect.mechanic),
+        assert_true(def.tags.has(effect.mechanic),
             '%s: effect mechanic %s is listed' % [item_id, effect.mechanic])
       if MechanicRegistry.is_mechanic(effect.status_id):
-        assert_true(def.mechanics.has(effect.status_id),
+        assert_true(def.tags.has(effect.status_id),
             '%s: status-as-mechanic %s is listed' % [item_id, effect.status_id])
     if def.crit_chance > 0.0:
-      assert_true(def.mechanics.has(CritMechanic.ID),
+      assert_true(def.tags.has(CritMechanic.ID),
           '%s: crit chance set but %s not listed' % [item_id, CritMechanic.ID])
-
-
-## An item lists only mechanics: never an effect that is not one (MechanicRegistry.NOT_MECHANICS), so
-## those get no keyword card and no shop.
-func test_item_mechanics_lists_hold_only_mechanics() -> void:
-  for item_id in ItemCatalog.all_ids():
-    for id: String in ItemCatalog.get_def(item_id).mechanics:
-      assert_true(MechanicRegistry.is_mechanic(id), '%s: %s is a mechanic' % [item_id, id])
 
 
 ## Every target filter condition names an id that resolves: TYPE conditions name an ItemType const,

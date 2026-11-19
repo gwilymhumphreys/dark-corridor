@@ -340,8 +340,9 @@ static func travel_folders(d: Delivery) -> Array[String]:
     var def: ItemDef = d.source.def
     if def.travel_sound != '':
       folders.append(TRAVEL_SOUND + '/' + def.travel_sound)
-    for tag: String in def.types:
-      folders.append(TRAVEL_SOUND + '/' + tag)
+    for tag: String in def.tags:
+      if ItemType.is_type(tag):   # a mechanic tag must not come before the delivery's own mechanic
+        folders.append(TRAVEL_SOUND + '/' + tag)
   if d.kind == Delivery.Kind.MECHANIC and d.mechanic != '':
     folders.append(TRAVEL_SOUND + '/' + d.mechanic)
   folders.append(TRAVEL_SOUND)

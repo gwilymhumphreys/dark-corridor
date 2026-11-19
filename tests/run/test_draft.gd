@@ -83,7 +83,7 @@ func test_stock_items_keep_to_the_entry_types() -> void:
   var stock: Array[StockEntry] = [StockEntry.items(3, [ItemType.ARMOUR] as Array[String])]
   for seed_value: int in range(10):
     for def: ItemDef in Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(seed_value)):
-      assert_true(ItemType.ARMOUR in def.types, 'only armour items are offered')
+      assert_true(ItemType.ARMOUR in def.tags, 'only armour items are offered')
 
 
 func test_stock_with_no_matching_item_offers_none() -> void:
@@ -95,7 +95,7 @@ func test_stock_items_keep_to_the_entry_mechanic() -> void:
   var stock: Array[StockEntry] = [StockEntry.items_with_mechanic(3, PoisonMechanic.ID)]
   for seed_value in [1, 2, 3]:
     for def: ItemDef in Draft.draw_stock(stock, _pool(), RelicCatalog.REWARD_POOL, _rng(seed_value)):
-      assert_has(def.mechanics, PoisonMechanic.ID, 'only items that list poison')
+      assert_has(def.tags, PoisonMechanic.ID, 'only items that list poison')
 
 
 func test_stock_items_keep_to_the_entry_rarity() -> void:

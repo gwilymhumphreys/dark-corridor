@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'rib'
   name_key = 'Rib'                   # owner's name
-  types = [ItemType.ARMOUR]
-  mechanics = [ShieldMechanic.ID]
+  tags = [ItemType.ARMOUR, ShieldMechanic.ID]
   icon = 'res://assets/icons/items/loot_22_remains.png'
   cooldown = 1.0
   effects = [ItemEffect.shield(3.0)]

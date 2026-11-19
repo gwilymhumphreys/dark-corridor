@@ -9,15 +9,15 @@ terms of.
 
 **Location:** `src/content/mechanics/`
 
-The ten mechanics are attack, heal, shield, poison, burn, bleed, regen, crit, charge and decharge
-(owner, decision #60). They are the main kinds of effect that appear often: each is shown by its
+The twelve mechanics are attack, heal, shield, poison, burn, bleed, regen, crit, charge, decharge,
+haste and slow (owner, decisions #60 and #66). They are the main kinds of effect that appear often: each is shown by its
 icon, and its keyword card teaches the player what the icon means. Items list the mechanics they count
-as in `ItemDef.mechanics`.
+as among their tags (`ItemDef.tags`).
 
 The registry also holds the two attack bonuses, because they are delivered the same way, but they
 are effects, not mechanics (`MechanicRegistry.NOT_MECHANICS`, `is_mechanic`). An effect that is not
 a mechanic is written out in the tooltip text of its item, relic or potion: it has no keyword card,
-is never listed in an item's `mechanics`, and gets no shop.
+is never one of an item's tags, and gets no shop.
 
 ## Sound
 
@@ -50,13 +50,13 @@ back to its parent, which means a variant can be added or removed without touchi
 - **Damage** is health or shield lost from any source. Poison, burn and bleed deal damage but are
   not attacks.
 - **Stacks** is a status's `count`.
-- **The set** means the twelve mechanics below. **Outside the set** means every other status and
+- **The set** means the fourteen ids below. **Outside the set** means every other status and
   delivery kind (weak, vulnerable, blind, silence, spores, decay, empowered, summon, item creation),
   all unchanged by this system.
 
 Every number these rules use is a constant in `src/data/balance.gd`.
 
-## The twelve
+## The fourteen
 
 | Mechanic | Id | What it is | What it does |
 |---|---|---|---|
@@ -70,6 +70,8 @@ Every number these rules use is a constant in `src/data/balance.gd`.
 | **Crit** | `'crit'` | A chance on an item | When the item fires, rolls its crit chance. On a crit, that fire's mechanic values are multiplied. |
 | **Charge** | `'charge'` | Direct, on an item | Adds seconds of progress to the target item's cooldown bar, so it fires sooner. |
 | **Decharge** | `'decharge'` | Direct, on an item | Takes seconds of progress off the target item's cooldown bar, so it fires later. |
+| **Haste** | `'haste'` | Status on an actor, timed | For its seconds, the holder's item cooldown bars fill faster. No stacks. |
+| **Slow** | `'slow'` | Status on an actor, timed | For its seconds, the holder's item cooldown bars fill more slowly. No stacks. |
 | **Attack Bonus** (placeholder name) | `'attack_bonus'` | Status on an item | Adds its stacks as flat damage to each attack the item fires, for the rest of the fight. |
 | **Attack Percent Bonus** (placeholder name) | `'attack_percent_bonus'` | Status on an item | Raises each attack the item fires by its stacks as a percentage, for the rest of the fight. |
 
@@ -107,7 +109,7 @@ in `StatusManager.combine`:
 
 The two attack bonus effects (not mechanics; see the top of this page) buff other items: an effect aims them at the owner's own items,
 usually with a target filter on the attack mechanic, so "attack items" means any item that lists
-attack in its `mechanics`, not only weapons. Each lands by applying its status to the target item
+attack in its tags, not only weapons. Each lands by applying its status to the target item
 (the base `Mechanic.land`).
 
 - `AttackBonusStatus` gives `{'flat': count}` and `AttackPercentBonusStatus` gives
@@ -224,6 +226,26 @@ at the enemy's poison items rather than at any item on the board. It lives with 
 not with the mechanics — see [item.md](item.md#targeting-declare-a-shape-dont-resolve-a-target).
 Naming a specific item definition as the target is still not built.
 
+## Haste and slow
+
+Haste and slow (decision #66) change how fast an **actor's** item cooldown bars fill over time.
+Each is an on-or-off status on the actor (`HasteStatus`, `SlowStatus`, both `TimedStatus`), with no
+stacks.
+
+- An effect's value is the seconds it lasts, like charge, so the value pill shows the seconds and
+  an item's level raises them. `Mechanic.status_count` and `status_duration` turn the value into
+  one stack and that duration. Build effects with `ItemEffect.haste(seconds)` and
+  `ItemEffect.slow(seconds, shape)`.
+- A new application adds its seconds to the time left and adds no stack.
+- While one is on, the holder's bars fill at `Balance.HASTE_RATE` or `Balance.SLOW_RATE` times the
+  normal rate. Both on at once have no effect; each keeps counting down its own time, so when the
+  shorter ends the other takes effect for what it has left.
+- The rate comes from the `cooldown_rate` hook on `CombatHooks`, multiplied over the actor's hooks by
+  `StatusManager.cooldown_rate(actor)`, so a relic passive can change it too.
+  `CombatManager.sim_step` fills each item's bar with `Ticker.advance(rate)`.
+- Only the fill over time changes. Trigger pushes, charge and decharge add their full seconds,
+  status ticks are unchanged, and a gated item still does not fill.
+
 ## The APPLIED event
 
 Landing publishes one event, `EventBus.Event.APPLIED`, when a `MECHANIC` or `APPLY_STATUS` delivery
@@ -262,9 +284,10 @@ only `mechanic` (plus value, shape, flags), not `status_id` or `color`:
 | `status_id` | The status the mechanic applies (`'shield'`), or empty for mechanics that act directly (attack, heal). |
 | `color() -> Color` | Returns the mechanic's `Colours` variable. It is a function so a palette applied at runtime is read each time. |
 | `shield_multiplier() -> float` | How much shield a hit of this mechanic uses. 1.0 by default. |
+| `status_count(delivery)`, `status_duration(delivery)` | The stacks and duration a landing delivery gives `status_id`: the delivery's value and duration by default. Haste and slow give one stack and the value as the duration. |
 | `land(delivery, combat)` | What happens when a delivery lands. The base applies the mechanic's `status_id` (shield); `AttackMechanic` and `HealMechanic` override it for their direct effects. Each `land` publishes the `APPLIED` event and writes the combat log entry for its mechanic. Only `CombatManager._land` calls it. |
 
-`ShieldStatus`, `PoisonStatus`, `BurnStatus`, `BleedStatus`, `RegenStatus`, `AttackBonusStatus` and `AttackPercentBonusStatus` each copy their
+`ShieldStatus`, `PoisonStatus`, `BurnStatus`, `BleedStatus`, `RegenStatus`, `HasteStatus`, `SlowStatus`, `AttackBonusStatus` and `AttackPercentBonusStatus` each copy their
 `name_key`, `desc_key` and `icon` from their mechanic. The statuses keep these fields because the
 combat log, status icons and combat summary read them.
 
@@ -295,7 +318,7 @@ missing file is not an error, so every slot falls back to its default.
 | `set_icon(slot, path)` | Records the chosen icon and saves `chosen.cfg`. |
 | `reset()` | Drops in-memory choices so the next read re-reads `chosen.cfg`. |
 
-The seven statuses that copy a mechanic's icon in `_init` need no special handling: a status built
+The nine statuses that copy a mechanic's icon in `_init` need no special handling: a status built
 after a change already has the new icon.
 
 ## Colours
@@ -315,6 +338,7 @@ on 2026-09-18:
 | Crit | Placeholder pale yellow, not yet chosen |
 | Charge | White |
 | Decharge | Grey |
+| Haste, Slow | The charge white and the decharge grey (`Colours.CHARGE`, `Colours.DECHARGE`), no variables of their own |
 | Attack Bonus, Attack Percent Bonus | The attack red (`Colours.ATTACK`), no variable of their own |
 
 Interface palette files name them in lower case (`attack`, `poison`); see
@@ -343,7 +367,8 @@ each frame and writes nothing.
   (the small size), so health reads first. The numbers sit in one row centred on the bar: current
   health first, then the shield icon and value, then `StatusNumbers`. The shield icon and value are
   in the shield colour, and are hidden when shield is 0. `StatusNumbers` (`status_numbers.tscn`) has one entry per mechanic status (poison, burn,
-  bleed, regen): the mechanic's icon and its stack count, both in the mechanic's colour. The numbers are not translated.
+  bleed, regen): the mechanic's icon and its stack count, both in the mechanic's colour. Haste and
+  slow have no stacks, so each shows its icon alone while it is on. The numbers are not translated.
 - Nothing is drawn above the bar, so the name sits directly on it.
 
 The status icons (`status_icons.tscn`, one `StatusIcon` per status) in every character panel
@@ -352,14 +377,14 @@ show only the OUTSIDE-set statuses; the health bar shows the mechanic statuses.
 ## Tooltip keyword cards
 
 `KeywordCatalog.has` / `get_entry` resolve a **mechanic** id from its `Mechanic` class (name /
-desc / colour / icon), so all twelve mechanics have cards
+desc / colour / icon), so all fourteen registered ids have cards
 ([tooltips.md](tooltips.md)). `TooltipContent.keyword_ids` shows the cards of the item's authored
-`mechanics` list, so an item with a crit chance lists `crit` there; such an item also gets an extra
+tags, so an item with a crit chance lists `crit` there; such an item also gets an extra
 effect line reading its chance as a percentage beside the crit glyph.
 
 ## Content
 
-No items use regen, crit or charge yet — they are covered by items built inside the tests.
+No items use regen, crit, charge, haste or slow yet — they are covered by items built inside the tests.
 The Smith's Warhammer is the first item to use decharge. Writing items for them is the owner's
 work. Bleed items cash out on attacks received rather than on the
 holder's own fires, and were not re-tuned for the change.

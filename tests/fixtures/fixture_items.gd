@@ -42,8 +42,7 @@ const EMPOWER_STACKS: float = 1.0
 static func attack() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_attack'
-  d.types = [ItemType.WEAPON]
-  d.mechanics = [AttackMechanic.ID]
+  d.tags = [AttackMechanic.ID, ItemType.WEAPON]
   d.name_key = 'Fixture Blade'
   d.icon = 'res://assets/icons/items/old_sword.png'
   d.cooldown = ATTACK_COOLDOWN
@@ -70,8 +69,7 @@ static func enemy_attack() -> ItemDef:
 static func shield() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_shield'
-  d.types = [ItemType.ARMOUR]
-  d.mechanics = [ShieldMechanic.ID]
+  d.tags = [ItemType.ARMOUR, ShieldMechanic.ID]
   d.name_key = 'Fixture Guard'
   d.icon = 'res://assets/icons/items/metal_shield_1.png'
   d.cooldown = SHIELD_COOLDOWN
@@ -88,8 +86,7 @@ static func shield() -> ItemDef:
 static func poison() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_poison'
-  d.types = [ItemType.WEAPON]
-  d.mechanics = [PoisonMechanic.ID]
+  d.tags = [PoisonMechanic.ID, ItemType.WEAPON]
   d.name_key = 'Fixture Fang'
   d.icon = 'res://assets/icons/items/loot_26_spiderteeth.png'
   d.cooldown = POISON_COOLDOWN
@@ -108,8 +105,7 @@ static func poison() -> ItemDef:
 static func charge_your_weapons() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_charge_your_weapons'
-  d.types = [ItemType.SKILL]
-  d.mechanics = [ChargeMechanic.ID]
+  d.tags = [ChargeMechanic.ID, ItemType.SKILL]
   d.name_key = 'Fixture Whetstone'
   d.cooldown = CHARGE_COOLDOWN
   var f := TargetFilter.new()
@@ -130,8 +126,7 @@ static func charge_your_weapons() -> ItemDef:
 static func silence_enemy_poison_item() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_silence_enemy_poison_item'
-  d.types = [ItemType.SPELL]
-  d.mechanics = []
+  d.tags = [ItemType.SPELL]
   d.name_key = 'Fixture Muzzle'
   d.cooldown = SILENCE_COOLDOWN
   var f := TargetFilter.new()
@@ -152,8 +147,7 @@ static func silence_enemy_poison_item() -> ItemDef:
 static func poison_trigger() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_poison_trigger'
-  d.types = [ItemType.ARMOUR]
-  d.mechanics = [PoisonMechanic.ID, ShieldMechanic.ID]
+  d.tags = [ItemType.ARMOUR, PoisonMechanic.ID, ShieldMechanic.ID]
   d.name_key = 'Fixture Ward'
   d.icon = 'res://assets/icons/items/skull_shield.png'
   d.cooldown = TRIGGER_COOLDOWN
@@ -175,8 +169,7 @@ static func poison_trigger() -> ItemDef:
 static func vulnerable() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_vulnerable'
-  d.types = [ItemType.SKILL]
-  d.mechanics = []
+  d.tags = [ItemType.SKILL]
   d.name_key = 'Fixture Sunder'
   d.cooldown = VULNERABLE_COOLDOWN
   var hit := ItemEffect.new()
@@ -194,8 +187,7 @@ static func vulnerable() -> ItemDef:
 static func silence_random_enemy_item() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_silence_random_enemy_item'
-  d.types = [ItemType.SPELL]
-  d.mechanics = []
+  d.tags = [ItemType.SPELL]
   d.name_key = 'Fixture Hex'
   d.cooldown = HEX_COOLDOWN
   var hex := ItemEffect.new()
@@ -212,8 +204,7 @@ static func silence_random_enemy_item() -> ItemDef:
 static func empower() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_empower'
-  d.types = [ItemType.SKILL]
-  d.mechanics = []
+  d.tags = [ItemType.SKILL]
   d.name_key = 'Fixture Rally'
   d.cooldown = EMPOWER_COOLDOWN
   var buff := ItemEffect.new()

@@ -45,7 +45,7 @@ func _spawn(max_hp: float, item_defs: Array) -> Actor:
 func _attack_item(owner_actor: Actor, value: float, shape: int = ItemEffect.Shape.OPPONENT_LEFTMOST, weapon: bool = false) -> Item:
   var def := ItemDef.new()
   if weapon:
-    def.types = [ItemType.WEAPON]
+    def.tags = [ItemType.WEAPON]
   var hit := ItemEffect.new()
   hit.mechanic = AttackMechanic.ID
   hit.value = value

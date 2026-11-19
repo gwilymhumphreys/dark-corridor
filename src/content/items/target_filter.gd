@@ -50,7 +50,7 @@ func matches(item: Item) -> bool:
 func _passes(condition: Dictionary, item: Item) -> bool:
   match condition.get('kind', Kind.TYPE):
     Kind.TYPE:
-      return item.def.types.has(condition.get('id', ''))
+      return item.def.tags.has(condition.get('id', ''))
     Kind.MECHANIC:
-      return item.def.mechanics.has(condition.get('id', ''))
+      return item.def.tags.has(condition.get('id', ''))
   return false

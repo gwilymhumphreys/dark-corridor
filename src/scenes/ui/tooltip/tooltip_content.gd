@@ -53,11 +53,11 @@ func _type_line_of(def: ItemDef) -> String:
     return tr('Relic')
   if def is ConsumableDef:
     return tr('Potion')
-  return _type_line(def.types)
+  return _type_line(def.tags)
 
 
-## The type line: each of `types` as its singular display name (translated), joined. An item with
-## no tags gives '' (the panel then hides the line).
+## The type line: each type tag in `types` as its singular display name (translated), joined; other
+## tags are skipped. An item with no type tag gives '' (the panel then hides the line).
 func _type_line(types: Array[String]) -> String:
   var names: Array[String] = []
   for tag: String in types:
@@ -187,6 +187,13 @@ func _effect_line(item: Item, effect: ItemEffect) -> Array:
       # items and the seconds, not a stack count. They always target items, never an actor.
       if effect.mechanic == ChargeMechanic.ID or effect.mechanic == DechargeMechanic.ID:
         return interpolate(tr('{0} {1} by {2}s'),
+            [icon_seg, _shape_text(effect.shape, effect.target_filter), value_seg])
+      # Haste and slow last for seconds and have no stacks, so their line names the seconds.
+      # PLACEHOLDER wording — the owner's.
+      if effect.mechanic == HasteMechanic.ID or effect.mechanic == SlowMechanic.ID:
+        if _is_basic_apply(effect):
+          return interpolate(tr('{0} for {1}s'), [icon_seg, value_seg])
+        return interpolate(tr('{0} {1} for {2}s'),
             [icon_seg, _shape_text(effect.shape, effect.target_filter), value_seg])
       # The attack bonuses add to other items' attacks, so their line reads as "[attack] +10 to ..." /
       # "[attack] +50% to ...", with the attack icon in place of the bonus mechanic's own.
@@ -384,7 +391,7 @@ func _summon_text(effect: ItemEffect) -> Dictionary:
 ## The keyword ids referenced by `item`, deduped (docs/systems/tooltips.md), built in three parts in
 ## this order, keeping only those present in KeywordCatalog (an absent id is silently dropped — that
 ## is how a mechanic keyword is gated off):
-##   1. the authored `mechanics` list, in its own (alphabetical) order;
+##   1. the authored `tags` list, in its own (alphabetical) order (type tags have no card and drop out);
 ##   2. the derived non-mechanic ids, in effect order — an `APPLY_STATUS` effect's `status_id`, then
 ##      its `consume_id`, then its `per_owner_stack_id`, then each trigger subscription's `filter` when it is a String (statuses such
 ##      as weak, vulnerable, blind and spores);
@@ -392,9 +399,9 @@ func _summon_text(effect: ItemEffect) -> Dictionary:
 ## `_add_keyword` dedupes and gates every addition, so an id appearing in more than one part is added once.
 static func keyword_ids(item: Item) -> Array[String]:
   var ids: Array[String] = []
-  # 1. The authored mechanics list, in its own order (authored alphabetically; not re-sorted here).
-  for mechanic_id: String in item.def.mechanics:
-    _add_keyword(ids, mechanic_id)
+  # 1. The authored tags, in their own order (authored alphabetically; not re-sorted here).
+  for tag: String in item.def.tags:
+    _add_keyword(ids, tag)
   # 2. The derived non-mechanic ids, in effect order: applied statuses, consumed-fuel statuses, statuses
   #    a value is read from, then trigger filters. Dropping this would remove those keyword cards from every status-applier.
   for effect: ItemEffect in _effects_of(item):

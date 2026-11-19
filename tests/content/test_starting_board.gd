@@ -14,7 +14,7 @@ func _rng(seed_value: int) -> RandomNumberGenerator:
 func _types_of(ids: Array) -> Array:
   var types: Array = []
   for id: String in ids:
-    types.append_array(ItemCatalog.get_def(id).types)
+    types.append_array(ItemCatalog.get_def(id).tags)
   return types
 
 

@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'spite_ward'
   name_key = 'Spite Ward'
-  types = [ItemType.ARMOUR]
-  mechanics = [PoisonMechanic.ID, ShieldMechanic.ID]   # poison: it charges off it (owner, 2026-09-20)
+  tags = [ItemType.ARMOUR, PoisonMechanic.ID, ShieldMechanic.ID]   # poison: it charges off it (owner, 2026-09-20)
   icon = 'res://assets/icons/items/skull_shield.png'
   cooldown = 2.0
   effects = [ItemEffect.shield(8.0)]

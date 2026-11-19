@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'claw'
   name_key = 'Claw'
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemType.WEAPON]
   icon = 'res://assets/icons/items/loot_183_claw.png'
   cooldown = 4.0
   effects = [ItemEffect.attack(2.0)]

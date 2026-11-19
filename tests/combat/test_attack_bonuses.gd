@@ -39,7 +39,7 @@ func _fire_and_land(cm: CombatManager, it: Item) -> Array:
 func _bonus_item(owner_actor: Actor, mechanic_id: String, value: float, shape: int) -> Item:
   var def := ItemDef.new()
   def.id = 'test_bonus_item'
-  def.mechanics = [mechanic_id]
+  def.tags = [mechanic_id]
   var filter := TargetFilter.new()
   filter.add_mechanic(AttackMechanic.ID)
   var bonus := ItemEffect.make(mechanic_id, value, shape)

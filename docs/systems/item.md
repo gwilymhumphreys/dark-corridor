@@ -23,7 +23,7 @@ What it **is not**:
 
 ## Definition vs. instance
 
-- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity and power tier), `types` (the synergy tags — see [Item type tags](#item-type-tags)), `mechanics` (the authored list of mechanic ids the item counts as — see [The mechanics list](#the-mechanics-list)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`, read on each use: the `Colours` variable named by `panel_colour_name`, else the first effect's colour. An effect's colour is likewise read on use (`ItemEffect.color`: its `colour_name`, else its mechanic's colour, else its status's). Each authored item is one file under `content/items/` ([authoring.md](../design/authoring.md)). (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
+- **Item definition** (`ItemDef`, #23) — content/data: `id` / `name_key` / optional `description_key` (flavor), `rarity` (a complexity and power tier), `tags` (its type tags, the mechanics it counts as and other names content refers to — see [Tags](#tags)), `cooldown`, one-or-more `ItemEffect`s (each a payload kind, or a `mechanic` id for a [mechanic](mechanics.md), + value + target *shape* — single-target / AOE), `trigger_subs` (event subscriptions), `starting_uses` (the decay seed — [item_creation_and_decay.md](item_creation_and_decay.md)), and `panel_color`, read on each use: the `Colours` variable named by `panel_colour_name`, else the first effect's colour. An effect's colour is likewise read on use (`ItemEffect.color`: its `colour_name`, else its mechanic's colour, else its status's). Each authored item is one file under `content/items/` ([authoring.md](../design/authoring.md)). (`size` is a design lever, not yet a field; the enchant lives on the *instance*, below; the panel's value is computed at runtime, not stored.)
 - **Item instance** — runtime, on a board: a definition + live `Ticker` state + its one enchant (if any) + its item-targeted statuses. **Duplicates stack independently** — two of the same definition are two instances, each its own Ticker, firing twice (design). The player can merge two copies at the same level into one item of the next level ([Levels](#levels)).
 
 ---
@@ -121,35 +121,40 @@ Synergy is the core decision mechanism (design). The item side:
 
 ---
 
-## The mechanics list
+## Tags
 
-`ItemDef.mechanics` is an **array of mechanic string ids** ([mechanics.md](mechanics.md)) naming what
-the item counts as: its identity, not a summary of its effects. A target filter matches against it
-("a random enemy poison item"), and the tooltip's keyword column is seeded from it.
+`ItemDef.tags` is one authored **array of tag string ids** (decision #70). A tag is one of three
+kinds, and `ItemTags.is_known` accepts only these:
+
+| Kind | Ids | Source |
+|---|---|---|
+| Type tag | `weapon`, `armour`, `skill`, `spell`, `trinket` | `ItemType` |
+| Mechanic | Every mechanic id, such as `attack` or `poison` | `MechanicRegistry.is_mechanic` |
+| Other | `spores`, `flesh` | `ItemTags.OTHER` |
+
+Readers: a target filter (`TargetFilter`, both its `TYPE` and `MECHANIC` conditions), the shops
+(`StockEntry.types` and `mechanic`, [encounter.md](encounter.md#shops)), the starting board, the
+`HasItemType` run condition, the tooltip (the type line shows the type tags; the keyword column
+starts from the tags, where type tags and `flesh` have no card), and the travel sound folders (type
+tags only). Item pools will read them too (decision #65).
 
 - **Authored, not derived.** The list is written by hand rather than computed from the effects,
   because the awkward cases are judgment calls rather than facts about the data. An item that
   charges when poison is applied **is** a poison item; an item that creates a bleeding dagger is
-  **not** a bleed item. No rule produces both, and a rule set covering fuel, summons, creation and
-  enchants would grow without ever matching how the cards play. The question the author answers is
-  "should *your poison items* pick this one up".
+  **not** a bleed item. The question the author answers is "should *your poison items* pick this
+  one up".
 - **One checked floor.** `tests/content/test_pool_integrity.gd` requires that every mechanic an
   effect deals or applies — an effect's `mechanic`, a `status_id` that is also a mechanic id, and
-  `crit` when `crit_chance` is set — appears in the list. The check is one-way: an item may list
-  more than that, which is the point of authoring it, but never less. Nothing above the floor is
-  checked, so `consume_id`, trigger filters and created items are the author's call.
-- **Alphabetical.** The list is written sorted by id, and the sweep enforces it, because it seeds
-  the tooltip keyword column and an arbitrary-but-fixed order keeps a mechanic in the same relative
-  place on every item.
-
-## Item type tags
-
-`ItemDef.types` is an **array of type-tag string ids** (a Bazaar-style tag set) drawn from **five tags** — `weapon` · `armour` · `skill` · `spell` · `trinket` (the `ItemType` consts). The axis is the **source / vessel of the effect** (weapon = an attack; armour = self-shield; skill = an active ability; spell = a cast effect; trinket = a passive / utility bearer).
-
-- **Read in three places.** The fire pipeline itself never branches on `types`, so a tag still has no *inherent* effect, but three things read tag membership: a status can (the firing item is threaded into the outgoing-damage / actor-fire hooks, #35); a **target filter** can, which is how "all your weapons" is targeted; and the tooltip shows an item's tags as a type line. Tags are the synergy hook they were designed as ("your next *weapon* attack", "*spells* deal +2").
-- **Display names.** `ItemType.display_name` / `display_name_plural` give each tag its word, singular and plural. Placeholder copy — the owner's to write.
-- **An array, not a single field** — most items carry exactly one tag; the array just lets a rare carry more later. A synergy checks `types.has('weapon')`.
-- **Board items only.** Tags live on `ItemDef`; relics (a `RelicDef` is an `ItemDef`, #51) carry none, and **Enchantment / Consumable are separate `Draftable` categories** (#21) and stay untagged.
+  `crit` when `crit_chance` is set — is a tag. An item may list more, never less.
+- **Alphabetical by id**, enforced by the same test, because the tags seed the tooltip keyword column
+  and a fixed order keeps a mechanic in the same relative place on every item.
+- **Effects that are not mechanics** (the attack bonuses) are never tags, so they get no keyword
+  card and no shop.
+- **Type tags** have no *inherent* effect: the fire pipeline never branches on them. The axis is the
+  source or vessel of the effect (weapon = an attack; armour = self-shield; skill = an active
+  ability; spell = a cast effect; trinket = a passive or utility bearer). `ItemType.display_name` and
+  `display_name_plural` give each its word (placeholder copy, the owner's to write). Relics carry
+  mechanic tags only; enchantments and potions stay untagged.
 
 Decision + rationale: [decision_log.md #34](../decision_log.md).
 
@@ -161,7 +166,7 @@ Decision + rationale: [decision_log.md #34](../decision_log.md).
 recordings this item's attacks play — `blade` and `blunt` to start with, and any other name
 works by making the folder. Empty means the plain attack folder.
 
-It is deliberately separate from `types`. A type tag is part of the synergy vocabulary that
+It is deliberately separate from `tags`. A tag is part of the synergy vocabulary that
 content reads, so adding `blade` there would make it something an item could key off. Nothing
 but the sound layer and the attack hit effect read `attack_sound` (`blade` draws a slash, anything
 else an impact — [vfx_driver.md](vfx_driver.md)). If a blade synergy is ever wanted, it becomes a

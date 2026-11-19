@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'bloomhammer'
   name_key = 'Bloomhammer'           # PLACEHOLDER name — owner's to rename
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.SPORES, ItemType.WEAPON]
   icon = 'res://assets/icons/items/wooden_hammer.png'
   cooldown = 5.0
   effects = [

@@ -13,16 +13,13 @@ var icon: String = ''             # res:// path of the item's picture (assets/ic
 # mechanical lines in the tooltip; tr()'d. Empty = generated lines only.
 var description_key: String = ''
 var rarity: int = Rarity.COMMON
-# Item-type tags (docs/systems/item.md) — synergy labels only, NO inherent gameplay effect: a future
-# synergy reads tag membership (e.g. "your next weapon attack"), nothing keys off them today. An array
-# (Bazaar-style tag set); most items carry exactly one. Values are ItemType consts. Items only —
-# relics / consumables / enchants are separate Draftable categories and stay untagged.
-var types: Array[String] = []
-# The mechanic ids (MechanicRegistry) this item counts as (docs/systems/item.md) — used by targeting
-# filters and by the tooltip keyword column. Authored, not derived from the effects (the author's
-# judgment about what the item is). Written in alphabetical order; tests/content/test_pool_integrity.gd
-# checks both the order and the floor (every mechanic an effect deals or applies is listed).
-var mechanics: Array[String] = []
+# The item's tags (decision #70, docs/systems/item.md → Tags): its type tags (ItemType), every
+# mechanic it counts as (MechanicRegistry ids) and other names content refers to (ItemTags). Target
+# filters, shops, the tooltip, sounds and later item pools read this one list. Authored, not derived
+# from the effects (the author's judgment about what the item is). Written in alphabetical order of
+# the ids; tests/content/test_pool_integrity.gd checks the order, that every tag is known, and that
+# every mechanic an effect deals or applies is listed.
+var tags: Array[String] = []
 # The folder under mechanics/attack/ whose recordings this item's attacks play
 # (docs/systems/audio.md) — 'blade' and 'blunt' to start with, and any other name works by
 # making the folder. Presentation only: the sound layer reads it, and AttackHitDrawer draws a slash

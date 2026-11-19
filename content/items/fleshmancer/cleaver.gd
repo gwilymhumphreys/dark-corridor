@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'cleaver'
   name_key = 'Cleaver'               # PLACEHOLDER name — owner's to rename
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.FLESH, ItemType.WEAPON]
   icon = 'res://assets/icons/items/dagger_38.png'
   cooldown = 4.0
 

@@ -8,8 +8,7 @@ extends ItemDef
 func _init() -> void:
   id = 'warhammer'
   name_key = 'Warhammer'            # PLACEHOLDER name — owner's to rename
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID, DechargeMechanic.ID]
+  tags = [AttackMechanic.ID, DechargeMechanic.ID, ItemType.WEAPON]
   icon = 'res://assets/icons/items/war_hammer.png'
   attack_sound = 'blunt'
   cooldown = 4.0

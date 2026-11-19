@@ -6,8 +6,7 @@ extends ItemDef
 func _init() -> void:
   id = 'sundering_bolt'
   name_key = 'Sundering Bolt'
-  types = [ItemType.SKILL]
-  mechanics = []
+  tags = [ItemType.SKILL]
   icon = 'res://assets/icons/items/skill_break_medium_armor_nb.png'
   cooldown = 3.0
   effects = [

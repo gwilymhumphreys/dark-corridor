@@ -48,14 +48,14 @@ func test_mighty_blow_applies_empowered_to_self() -> void:
 
 func test_mighty_blow_is_a_skill_on_a_cooldown() -> void:
   var d := ItemCatalog.get_def('mighty_blow')
-  assert_true(d.types.has(ItemType.SKILL), 'Mighty Blow is a skill')
+  assert_true(d.tags.has(ItemType.SKILL), 'Mighty Blow is a skill')
   assert_true(d.trigger_subs.is_empty(), 'a plain cooldown, with no trigger')
 
 
 func test_the_three_big_weapons_are_authored_correctly() -> void:
   for id: String in ['broadaxe', 'warhammer', 'greatsword']:
     var d: ItemDef = ItemCatalog.get_def(id)
-    assert_true(d.types.has(ItemType.WEAPON), '%s is a weapon' % id)
+    assert_true(d.tags.has(ItemType.WEAPON), '%s is a weapon' % id)
     assert_eq(d.effects[0].mechanic, AttackMechanic.ID, '%s deals damage' % id)
     assert_gt(d.effects[0].value, 0.0, '%s damage' % id)
     assert_eq(d.effects[0].shape, ItemEffect.Shape.OPPONENT_LEFTMOST, '%s is single-target' % id)

@@ -83,7 +83,7 @@ func matching_items(entry: StockEntry, item_pool: Array) -> Array:
 
 func _passes(id: String, entry: StockEntry) -> bool:
   var def: ItemDef = ItemCatalog.get_def(id)
-  if entry.mechanic != '' and not entry.mechanic in def.mechanics:
+  if entry.mechanic != '' and not entry.mechanic in def.tags:
     return false
   if entry.rarity >= 0 and def.rarity != entry.rarity:
     return false
@@ -103,5 +103,5 @@ func _draw_distinct(pool: Array, count: int, rng: RandomNumberGenerator) -> Arra
 func _has_any_type(id: String, types: Array[String]) -> bool:
   if types.is_empty():
     return true
-  var item_types: Array[String] = ItemCatalog.get_def(id).types
+  var item_types: Array[String] = ItemCatalog.get_def(id).tags
   return types.any(func(type: String) -> bool: return type in item_types)

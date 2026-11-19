@@ -7,8 +7,7 @@ extends ItemDef
 func _init() -> void:
   id = 'spore_spitter'
   name_key = 'Spore Spitter'         # PLACEHOLDER name — owner's to rename
-  types = [ItemType.WEAPON]
-  mechanics = [AttackMechanic.ID]
+  tags = [AttackMechanic.ID, ItemTags.SPORES, ItemType.WEAPON]
   icon = 'res://assets/icons/items/herbalism_28_stinkymushroom.png'
   cooldown = 1.0
   effects = [
