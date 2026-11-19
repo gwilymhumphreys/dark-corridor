@@ -175,7 +175,7 @@ or another name content refers to (such as a pool that is not a mechanic). Each 
 ### Step 2: item pools
 
 - A pool is a tag (owner): the tags decide what is in each pool. `ItemPools.POOL_TAGS` lists which
-  tags are pools: every mechanic id, plus spores and flesh (owner) and any others he names, such as
+  tags are pools: every mechanic id, plus spores and flesh (owner) and any others the owner names, such as
   summon. An item that makes or spends spores or Chunks of Flesh carries that tag, so it is offered
   only to a character holding that pool.
 - An item needs every one of its tags that is a pool. A character with `item_pools` holding all of
