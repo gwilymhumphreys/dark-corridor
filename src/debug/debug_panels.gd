@@ -30,6 +30,11 @@ const PORTRAIT_FIRST_FILE_ID: int = 3
 ## `effects_palette` value that follows the portrait palette. `PORTRAIT_SAME_AS_INTERFACE` follows the
 ## interface palette.
 const EFFECTS_SAME_AS_PORTRAIT: String = 'portrait'
+## `interface_clamp` value that clamps the interface palette's colours to its own greys.
+const CLAMP_OWN_GREYS: String = 'own'
+## The first item id in the interface clamp option that names a palette file (0 is off, 1 the
+## corridor, 2 the palette's own greys).
+const CLAMP_FIRST_FILE_ID: int = 3
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
@@ -76,6 +81,9 @@ var world_palette: String = ''
 var world_material: ShaderMaterial = ShaderMaterial.new()
 ## The interface palette file applied to `Colours` and the theme, or '' when none is.
 var interface_palette: String = ''
+## What the interface palette's colours are clamped to (docs/systems/interface_palette.md#clamp): '' for
+## off, `PORTRAIT_SAME_AS_CORRIDOR` for the world palette, `CLAMP_OWN_GREYS`, or a palette file path.
+var interface_clamp: String = ''
 ## What interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR`,
 ## `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path.
 var portrait_palette: String = PORTRAIT_SAME_AS_INTERFACE
@@ -106,6 +114,7 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
+@onready var _clamp_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/ClampRow/Option
 @onready var _portrait_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/PortraitPaletteRow/Option
 @onready var _effects_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/EffectsPaletteRow/Option
 
@@ -124,6 +133,7 @@ func _ready() -> void:
   _write_palette(world_material, PackedColorArray())
   _world_option.item_selected.connect(_on_world_palette_selected)
   _interface_option.item_selected.connect(_on_interface_palette_selected)
+  _clamp_option.item_selected.connect(_on_clamp_selected)
   _portrait_option.item_selected.connect(_on_portrait_palette_selected)
   _effects_option.item_selected.connect(_on_effects_palette_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
@@ -165,6 +175,8 @@ func _apply_command_line() -> void:
       MonsterImages.forced_path = arg.substr(16)
     elif arg.begins_with('--ui-palette='):
       set_interface_palette(arg.substr(13))
+    elif arg.begins_with('--ui-clamp='):
+      set_interface_clamp(arg.substr(11))
     elif arg.begins_with('--portrait-palette='):
       set_portrait_palette(arg.substr(19))
     elif arg.begins_with('--effects-palette='):
@@ -455,6 +467,7 @@ func read_corridor_palette(file: ConfigFile) -> void:
 ## effects palettes and the interface clamp's dithering switch.
 func write_interface_palettes(file: ConfigFile) -> void:
   file.set_value('interface_palette', 'interface_palette', interface_palette)
+  file.set_value('interface_palette', 'interface_clamp', interface_clamp)
   file.set_value('interface_palette', 'portrait_palette', portrait_palette)
   file.set_value('interface_palette', 'effects_palette', effects_palette)
   file.set_value('interface_palette', 'dithering', _interface_dithering)
@@ -463,6 +476,7 @@ func write_interface_palettes(file: ConfigFile) -> void:
 ## Set the interface's palette choices from a preset file written by `write_interface_palettes`.
 ## Choices the file leaves out go back to their defaults.
 func read_interface_palettes(file: ConfigFile) -> void:
+  interface_clamp = file.get_value('interface_palette', 'interface_clamp', '')
   set_interface_palette(file.get_value('interface_palette', 'interface_palette', ''))
   set_portrait_palette(file.get_value('interface_palette', 'portrait_palette', PORTRAIT_SAME_AS_INTERFACE))
   set_effects_palette(file.get_value('interface_palette', 'effects_palette', PORTRAIT_SAME_AS_INTERFACE))
@@ -471,7 +485,7 @@ func read_interface_palettes(file: ConfigFile) -> void:
   _interface_look_panel.refresh()
 
 
-## Palettes back to their defaults: world clamp off, no interface palette, portrait and effects
+## Palettes back to their defaults: world clamp off, no interface palette or interface clamp, portrait and effects
 ## palettes same as interface, RGB matching, no dithering in either clamp.
 func reset_palettes() -> void:
   read_corridor_palette(ConfigFile.new())
@@ -606,16 +620,17 @@ func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
 
 
 ## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
-## colours with ''. Interface images are clamped to the portrait palette's colours through
+## colours with '', then clamp them to `interface_clamp`. Interface images are clamped to the portrait palette's colours through
 ## `InterfaceLook.picture_materials`. Statuses in the current fight are recoloured, the mouse
 ## cursor is rebuilt on the new colours, and `interface_palette_changed` tells nodes that copied
 ## colours when built.
 func set_interface_palette(path: String) -> void:
   interface_palette = path
-  if path == '':
+  var clamp_colours: PackedColorArray = _interface_clamp_colours()
+  if path == '' and interface_clamp == '':
     InterfacePalette.reset()
   else:
-    InterfacePalette.apply(path)
+    InterfacePalette.apply(path, clamp_colours, _perceptual, interface_clamp == CLAMP_OWN_GREYS)
   _apply_portrait_palette()
   _recolour_fight_statuses()
   PrintLook.push_wear_colours()
@@ -623,6 +638,32 @@ func set_interface_palette(path: String) -> void:
   ControlFeedback.push_colours()
   Cursor.apply()
   interface_palette_changed.emit()
+
+
+## Set what the interface palette's colours are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR`
+## for the world palette, `CLAMP_OWN_GREYS` for the palette's own greys, or a palette file path.
+## Applies the interface palette again.
+func set_interface_clamp(choice: String) -> void:
+  interface_clamp = choice
+  set_interface_palette(interface_palette)
+
+
+# The colours of the interface clamp's palette file, or none when it is off or clamps to the
+# palette's own greys (which `InterfacePalette` works out after applying the file).
+func _interface_clamp_colours() -> PackedColorArray:
+  if interface_clamp == CLAMP_OWN_GREYS:
+    return PackedColorArray()
+  var file: String = world_palette if interface_clamp == PORTRAIT_SAME_AS_CORRIDOR else interface_clamp
+  return _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
+
+
+# The colours "Same as interface" means for the portrait and effects palettes: the clamp's when the
+# interface is clamped, else the interface palette file's.
+func _interface_colours() -> PackedColorArray:
+  var clamp_colours: PackedColorArray = InterfacePalette.clamp_palette()
+  if not clamp_colours.is_empty():
+    return clamp_colours
+  return _distinct_colours(PaletteLoader.load_palette(interface_palette)) if interface_palette != '' else PackedColorArray()
 
 
 ## Set what interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR` for the world
@@ -637,12 +678,12 @@ func set_portrait_palette(choice: String) -> void:
 # for `PORTRAIT_SAME_AS_CORRIDOR`, the interface palette's for `PORTRAIT_SAME_AS_INTERFACE`, the
 # named file's otherwise, and none for ''.
 func _apply_portrait_palette() -> void:
-  var file: String = portrait_palette
-  if file == PORTRAIT_SAME_AS_CORRIDOR:
-    file = world_palette
-  elif file == PORTRAIT_SAME_AS_INTERFACE:
-    file = interface_palette
-  var colours: PackedColorArray = _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
+  var colours: PackedColorArray = PackedColorArray()
+  if portrait_palette == PORTRAIT_SAME_AS_INTERFACE:
+    colours = _interface_colours()
+  else:
+    var file: String = world_palette if portrait_palette == PORTRAIT_SAME_AS_CORRIDOR else portrait_palette
+    colours = _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
   for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
     _write_palette(picture_material, colours)
   _apply_effects_palette(colours)
@@ -660,9 +701,10 @@ func set_effects_palette(choice: String) -> void:
 # the colours just written to the pictures, used for `EFFECTS_SAME_AS_PORTRAIT`.
 func _apply_effects_palette(portrait_colours: PackedColorArray) -> void:
   var colours: PackedColorArray = portrait_colours
-  if effects_palette != EFFECTS_SAME_AS_PORTRAIT:
-    var file: String = interface_palette if effects_palette == PORTRAIT_SAME_AS_INTERFACE else effects_palette
-    colours = _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
+  if effects_palette == PORTRAIT_SAME_AS_INTERFACE:
+    colours = _interface_colours()
+  elif effects_palette != EFFECTS_SAME_AS_PORTRAIT:
+    colours = _distinct_colours(PaletteLoader.load_palette(effects_palette)) if effects_palette != '' else PackedColorArray()
   _write_palette(InterfaceLook.effects_material, colours)
 
 
@@ -722,7 +764,10 @@ func set_world_palette(path: String) -> void:
   world_palette = path
   var colours: PackedColorArray = PaletteLoader.load_palette(path) if path != '' else PackedColorArray()
   _write_palette(world_material, colours)
-  _apply_portrait_palette()
+  if interface_clamp == PORTRAIT_SAME_AS_CORRIDOR:
+    set_interface_palette(interface_palette)   # also writes the portrait palette
+  else:
+    _apply_portrait_palette()
 
 
 # Writes `colours` into a clamp material's palette textures. Returns false (and sets no colours)
@@ -752,12 +797,16 @@ func _scan_palettes() -> void:
   _palettes_scanned = true
   _world_option.clear()
   _interface_option.clear()
+  _clamp_option.clear()
   _portrait_option.clear()
   _effects_option.clear()
   _palette_paths.clear()
   _interface_palette_paths.clear()
   _world_option.add_item('Off', 0)
   _interface_option.add_item('Off', 0)
+  _clamp_option.add_item('Off', 0)
+  _clamp_option.add_item('Same as corridor', 1)
+  _clamp_option.add_item('Own greys', 2)
   _portrait_option.add_item('Off', 0)
   _portrait_option.add_item('Same as corridor', 1)
   _portrait_option.add_item('Same as interface', 2)
@@ -768,12 +817,14 @@ func _scan_palettes() -> void:
   for folder: String in groups:
     if folder != '':
       _world_option.add_separator(folder)
+      _clamp_option.add_separator(folder)
       _portrait_option.add_separator(folder)
       _effects_option.add_separator(folder)
     for path: String in groups[folder]:
       _palette_paths.append(path)
       var palette_name: String = path.get_file().get_basename()
       _world_option.add_item(palette_name, _palette_paths.size())
+      _clamp_option.add_item(palette_name, _palette_paths.size() + CLAMP_FIRST_FILE_ID - 1)
       _portrait_option.add_item(palette_name, _palette_paths.size() + PORTRAIT_FIRST_FILE_ID - 1)
       _effects_option.add_item(palette_name, _palette_paths.size() + PORTRAIT_FIRST_FILE_ID - 1)
       if InterfacePalette.is_interface_palette(path):
@@ -788,9 +839,24 @@ func _sync_controls() -> void:
   if _palettes_scanned:
     _world_option.select(maxi(_world_option.get_item_index(_palette_paths.find(world_palette) + 1), 0))
     _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))
+    _clamp_option.select(maxi(_clamp_option.get_item_index(_clamp_id()), 0))
     var portrait_id: int = _portrait_palette_id()
     _portrait_option.select(maxi(_portrait_option.get_item_index(portrait_id), 0))
     _effects_option.select(maxi(_effects_option.get_item_index(_effects_palette_id()), 0))
+
+
+# The item id in the interface clamp option for the current `interface_clamp`: 0 for off, 1 for the
+# corridor, 2 for the palette's own greys, or the palette file's id.
+func _clamp_id() -> int:
+  match interface_clamp:
+    '':
+      return 0
+    PORTRAIT_SAME_AS_CORRIDOR:
+      return 1
+    CLAMP_OWN_GREYS:
+      return 2
+  var index: int = _palette_paths.find(interface_clamp)
+  return index + CLAMP_FIRST_FILE_ID if index >= 0 else 0
 
 
 # The item id in the portrait palette option for the current `portrait_palette`: 0 for off, 1 for
@@ -831,6 +897,19 @@ func _on_interface_palette_selected(index: int) -> void:
   set_interface_palette('' if id <= 0 else _interface_palette_paths[id - 1])
 
 
+func _on_clamp_selected(index: int) -> void:
+  var id: int = _clamp_option.get_item_id(index)
+  match id:
+    0:
+      set_interface_clamp('')
+    1:
+      set_interface_clamp(PORTRAIT_SAME_AS_CORRIDOR)
+    2:
+      set_interface_clamp(CLAMP_OWN_GREYS)
+    _:
+      set_interface_clamp(_palette_paths[id - CLAMP_FIRST_FILE_ID])
+
+
 func _on_portrait_palette_selected(index: int) -> void:
   var id: int = _portrait_option.get_item_id(index)
   match id:
@@ -862,6 +941,8 @@ func _on_matching_selected(index: int) -> void:
   world_material.set_shader_parameter('perceptual', _perceptual)
   for clamp_material: ShaderMaterial in InterfaceLook.clamp_materials:
     clamp_material.set_shader_parameter('perceptual', _perceptual)
+  if interface_clamp != '':
+    set_interface_palette(interface_palette)   # the clamp matches the same way
 
 
 func _on_dithering_toggled(on: bool) -> void:

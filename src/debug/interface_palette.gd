@@ -17,6 +17,9 @@ const DEFAULT_PATH: String = 'res://assets/palettes/new/ui/ui-default.gpl'
 ## Theme colours are mapped onto these `Colours` variables, dark to light.
 const PANEL_COLOURS: Array[String] = ['UI_PANEL_SHADOW', 'UI_PANEL', 'UI_PANEL_EDGE', 'UI_PANEL_LIGHT']
 const TEXT_COLOURS: Array[String] = ['UI_TEXT_DISABLED', 'UI_TEXT_PRESSED', 'UI_TEXT_DIM', 'UI_TEXT_BUTTON', 'UI_TEXT']
+## With the clamp to the palette's own greys, these and every `UI_*` colour are the greys the other
+## colours are snapped to.
+const OWN_GREYS: Array[String] = ['HP_BAR_BG', 'COOLDOWN_RING', 'ALLY_DOWNED']
 
 static var _applied: bool = false
 static var _defaults: Dictionary = {}              # Colours variable name -> its colour before the palette
@@ -25,6 +28,10 @@ static var _original_icons: Array[Array] = []      # [theme type, icon name, tex
 static var _original_textures: Dictionary = {}     # StyleBoxTexture -> its texture
 static var _original_flat_colours: Dictionary = {} # StyleBoxFlat -> [bg_color, border_color]
 static var _original_palette_colours: Dictionary = {} # PaletteStyleBox -> its bg_color
+static var _clamp: PackedColorArray = PackedColorArray()   # the colours the interface is clamped to, or none
+static var _clamp_perceptual: bool = false   # match the clamp in OKLab rather than RGB
+static var _clamp_own: bool = false          # the clamp is the palette's own greys, so the theme is left alone
+static var _unclamped: Dictionary = {}       # Colours variable name -> its colour before the clamp
 
 
 ## The `Colours` variable a palette colour name refers to: 'hp bar fill' -> 'HP_BAR_FILL'.
@@ -39,7 +46,7 @@ static func write_custom(variable: String, colour: Color) -> void:
   var named: Dictionary = {}
   var colours_script: Script = Colours
   for name: String in PaletteLoader.load_named_colours(DEFAULT_PATH):
-    var value: Variant = colours_script.get(variable_name(name))
+    var value: Variant = unclamped(variable_name(name))
     if value is Color:
       named[name] = value
   if not (colours_script.get(variable) is Color):
@@ -71,11 +78,24 @@ static func is_interface_palette(path: String) -> bool:
   return false
 
 
-## Apply the palette file at `path`, starting from the default colours. Returns how many of its
-## colours matched a `Colours` variable; names that match none are reported with a warning.
-static func apply(path: String) -> int:
+## The value of the `Colours` variable called `variable` before the clamp, which is the live value
+## when no clamp is set. Null for a name that is not a colour.
+static func unclamped(variable: String) -> Variant:
+  if _unclamped.has(variable):
+    return _unclamped[variable]
+  return (Colours as Script).get(variable)
+
+
+## Apply the palette file at `path` (none for ''), starting from the default colours. Then, when
+## `clamp_colours` has any, every colour `ui-default.gpl` names is replaced by the nearest of them (in
+## OKLab when `perceptual`, else RGB), and the theme colours are snapped to them too. With `own_greys`
+## the clamp colours are instead the palette's own greys (every `UI_*` colour and `OWN_GREYS`), so only
+## the other colours change and the theme is left as the palette made it. Returns how many of the
+## file's colours matched a `Colours` variable; names that match none are reported with a warning.
+static func apply(path: String, clamp_colours: PackedColorArray = PackedColorArray(), perceptual: bool = false,
+    own_greys: bool = false) -> int:
   reset()
-  var named: Dictionary = PaletteLoader.load_named_colours(path)
+  var named: Dictionary = PaletteLoader.load_named_colours(path) if path != '' else {}
   var colours_script: Script = Colours
   for ramp_name: String in PANEL_COLOURS + TEXT_COLOURS:
     _defaults[ramp_name] = colours_script.get(ramp_name)
@@ -90,6 +110,11 @@ static func apply(path: String) -> int:
       _defaults[variable] = current
     colours_script.set(variable, named[colour_name])
     matched += 1
+  _clamp = _own_greys() if own_greys else clamp_colours
+  _clamp_perceptual = perceptual
+  _clamp_own = own_greys
+  if not _clamp.is_empty():
+    _clamp_colours()
   _applied = true
   _recolour_theme(load(Prefs.THEME_PATH) as Theme)
   _refresh_catalogs()
@@ -121,8 +146,60 @@ static func reset() -> void:
   _original_textures.clear()
   _original_flat_colours.clear()
   _original_palette_colours.clear()
+  _clamp = PackedColorArray()
+  _clamp_own = false
+  _unclamped.clear()
   _applied = false
   _refresh_catalogs()
+
+
+## The colours the interface is clamped to, or none when there is no clamp.
+static func clamp_palette() -> PackedColorArray:
+  return _clamp
+
+
+# The live values of every `UI_*` colour and `OWN_GREYS`, without repeats.
+static func _own_greys() -> PackedColorArray:
+  var colours_script: Script = Colours
+  var greys: PackedColorArray = PackedColorArray()
+  for colour_name: String in PaletteLoader.load_named_colours(DEFAULT_PATH):
+    var variable: String = variable_name(colour_name)
+    var value: Variant = colours_script.get(variable)
+    if value is Color and (variable.begins_with('UI_') or variable in OWN_GREYS) and not greys.has(value):
+      greys.append(value)
+  return greys
+
+
+# Replaces every colour `ui-default.gpl` names with the nearest clamp colour, keeping each one's
+# value from before in `_unclamped` for `write_custom` and the F2 colour pickers.
+static func _clamp_colours() -> void:
+  var colours_script: Script = Colours
+  for colour_name: String in PaletteLoader.load_named_colours(DEFAULT_PATH):
+    var variable: String = variable_name(colour_name)
+    var current: Variant = colours_script.get(variable)
+    if not current is Color:
+      continue
+    if not _defaults.has(variable):
+      _defaults[variable] = current
+    _unclamped[variable] = current
+    colours_script.set(variable, _nearest(current))
+
+
+# The clamp colour nearest `colour`, keeping its alpha; `colour` itself when no clamp is set.
+static func _nearest(colour: Color) -> Color:
+  if _clamp.is_empty():
+    return colour
+  var target: Vector3 = PaletteLoader.to_oklab(colour) if _clamp_perceptual else Vector3(colour.r, colour.g, colour.b)
+  var best: Color = _clamp[0]
+  var best_distance: float = INF
+  for candidate: Color in _clamp:
+    var point: Vector3 = PaletteLoader.to_oklab(candidate) if _clamp_perceptual else Vector3(candidate.r, candidate.g, candidate.b)
+    var distance: float = target.distance_squared_to(point)
+    if distance < best_distance:
+      best_distance = distance
+      best = candidate
+  best.a = colour.a
+  return best
 
 
 # Keyword cards copy `Colours` when built; recolour the cached ones. Item, relic and potion
@@ -198,7 +275,9 @@ static func _mapped(colour: Color, ramp: Array[Array]) -> Color:
         result = (ramp[i - 1][1] as Color).lerp(ramp[i][1], weight)
         break
   result.a = colour.a
-  return result
+  # A blend between two steps can fall between clamp colours, so it is snapped again; the palette's own
+  # greys are left as they are.
+  return result if _clamp_own else _nearest(result)
 
 
 static func _recoloured_texture(texture: Texture2D, ramp: Array[Array], cache: Dictionary) -> Texture2D:

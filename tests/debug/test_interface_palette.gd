@@ -171,6 +171,46 @@ func test_write_custom_writes_a_full_palette_with_the_new_colour() -> void:
   assert_eq(Colours.ATTACK, Color8(10, 20, 30), 'the live value takes the new colour')
 
 
+func test_clamp_snaps_every_colour_to_the_nearest_clamp_colour_until_reset() -> void:
+  var default_text: Color = Colours.UI_TEXT
+  var default_hp_fill: Color = Colours.HP_BAR_FILL
+  var black_and_white: PackedColorArray = PackedColorArray([Color.BLACK, Color.WHITE])
+  InterfacePalette.apply('', black_and_white)
+  assert_eq(Colours.UI_TEXT, Color.WHITE, 'white text stays white')
+  assert_eq(Colours.UI_BACKGROUND, Color.BLACK, 'the near-black background becomes black')
+  assert_eq(Colours.HP_BAR_FILL, Color.WHITE, 'the light green health fill becomes white')
+  assert_eq(InterfacePalette.unclamped('HP_BAR_FILL'), default_hp_fill, 'the value before the clamp is kept')
+  var label_text: Color = _theme().get_color('font_color', 'Label')
+  assert_true(label_text == Color.BLACK or label_text == Color.WHITE, 'theme font colours are snapped too')
+  InterfacePalette.reset()
+  assert_eq(Colours.UI_TEXT, default_text, 'reset restores the text colour')
+  assert_eq(Colours.HP_BAR_FILL, default_hp_fill, 'reset restores the health fill')
+  assert_eq(InterfacePalette.unclamped('HP_BAR_FILL'), default_hp_fill, 'with no clamp the live value is returned')
+
+
+func test_clamp_to_own_greys_changes_only_the_other_colours() -> void:
+  var default_text: Color = Colours.UI_TEXT
+  var default_token: Color = Colours.UI_TOKEN_CARD
+  var label_text: Color = _theme().get_color('font_color', 'Label')
+  InterfacePalette.apply('', PackedColorArray(), false, true)
+  var greys: PackedColorArray = InterfacePalette.clamp_palette()
+  assert_true(greys.has(default_text) and greys.has(default_token), 'the clamp colours are the palette greys')
+  assert_eq(Colours.UI_TEXT, default_text, 'a grey is unchanged')
+  assert_eq(Colours.UI_TOKEN_CARD, default_token, 'the token card is unchanged')
+  assert_true(greys.has(Colours.ATTACK), 'attack becomes one of the greys')
+  assert_true(greys.has(Colours.HP_BAR_FILL), 'the health fill becomes one of the greys')
+  assert_eq(_theme().get_color('font_color', 'Label'), label_text, 'the theme is left alone')
+
+
+func test_write_custom_while_clamped_keeps_the_unclamped_colours() -> void:
+  var default_hp_fill: Color = Colours.HP_BAR_FILL
+  InterfacePalette.apply('', PackedColorArray([Color.BLACK, Color.WHITE]))
+  InterfacePalette.write_custom('ATTACK', Color8(10, 20, 30))
+  var named: Dictionary = PaletteLoader.load_named_colours(InterfacePalette.CUSTOM_PATH)
+  var expected: Color = Color8(roundi(default_hp_fill.r * 255.0), roundi(default_hp_fill.g * 255.0), roundi(default_hp_fill.b * 255.0))
+  assert_eq(named['hp bar fill'], expected, 'the health fill is written as it was before the clamp')
+
+
 func test_theme_is_unchanged_when_the_palette_sets_no_panel_or_text_colours() -> void:
   _add_test_art()
   var pixel: Color = _art_centre_pixel()

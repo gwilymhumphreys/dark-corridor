@@ -1,0 +1,21 @@
+GIMP Palette
+Name: greys-16
+Columns: 16
+# Plain greys, black to white in 16 even steps, for clamping the interface palette
+# (docs/systems/interface_palette.md#clamp).
+  0   0   0	grey 0
+ 17  17  17	grey 1
+ 34  34  34	grey 2
+ 51  51  51	grey 3
+ 68  68  68	grey 4
+ 85  85  85	grey 5
+102 102 102	grey 6
+119 119 119	grey 7
+136 136 136	grey 8
+153 153 153	grey 9
+170 170 170	grey 10
+187 187 187	grey 11
+204 204 204	grey 12
+221 221 221	grey 13
+238 238 238	grey 14
+255 255 255	grey 15

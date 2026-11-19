@@ -8,7 +8,7 @@ the detail; this page only says which one to read.
 
 | Palette | What it does | Set in |
 |---|---|---|
-| **Interface palette** | Sets the colours things are filled with: panels, text, HP bars, and the mechanic colours that effects, value pills and status swatches use. Nothing is snapped to it. | F2 ([interface_palette.md](interface_palette.md)) |
+| **Interface palette** | Sets the colours things are filled with: panels, text, HP bars, and the mechanic colours that effects, value pills and status swatches use. Nothing is snapped to it. Its colours can themselves be clamped to a smaller palette ([Clamp](interface_palette.md#clamp)). | F2 ([interface_palette.md](interface_palette.md)) |
 | **Portrait palette** | The colours interface pictures are snapped to, with optional dithering: off, the interface palette, the world palette, or a palette file. With no preset it is the interface palette; the default preset sets it to the world palette. | F2 ([interface_palette.md](interface_palette.md#images)) |
 | **Effects palette** | The colours the combat effects are snapped to when they take the interface look: off, the portrait palette, the interface palette (default), or a palette file. | F2 ([interface_look.md](interface_look.md#the-combat-effects)) |
 | **World palette** | The colours the corridor image is snapped to, with optional dithering. Off with no preset; the default preset sets `2bit-demichrome`. | F1 ([palette_clamp.md](palette_clamp.md)) |

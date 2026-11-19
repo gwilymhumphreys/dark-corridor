@@ -51,6 +51,27 @@ and the corridor's [hit lights](corridors/corridor_3d.md#hit-lights), so an inte
 all of them. Effects have no palette of their own (owner, 2026-09-15): interface colours keep them
 coherent with the interface and stand out against the desaturated corridor.
 
+## Clamp
+
+The interface clamp snaps the interface palette's colours to a smaller palette, to try the interface
+with fewer colours without editing a palette file. It changes no pixels and leaves the corridor alone.
+
+- After the palette file is applied, every colour `ui-default.gpl` names is replaced by the nearest
+  colour in the clamp palette, using the Corridor tab's colour matching (RGB or OKLab). Alpha is kept.
+- Theme font colours are placed on the clamped text colours and then snapped again, because a blend
+  between two steps can fall between clamp colours.
+- The clamp palette is the world palette ("Same as corridor"), the interface palette's own greys, or
+  any palette file. Grey ramps for it are in `assets/palettes/new/clamp/`.
+- **Own greys** clamps to the palette's own grey colours: every `UI_*` colour and
+  `InterfacePalette.OWN_GREYS` (the health bar background, the cooldown line and the downed-ally grey).
+  Those keep their values, and only the other colours (mechanics, statuses, relics, beats, rarity, the
+  paper burn and the health fills) move to the nearest of them. The theme is not snapped in this mode.
+- The value each colour had before the clamp is kept (`InterfacePalette.unclamped`). `write_custom` and
+  the F2 colour pickers use it, so editing a colour while clamped does not save the clamped colours
+  into the custom palette.
+- While a clamp is set, "Same as interface" for the portrait and effects palettes means the clamp
+  palette's colours, so effects and the paper burn snap to the same set.
+
 ## Images
 
 Interface images are drawn through the picture materials, `InterfaceLook.picture_materials`
@@ -86,7 +107,9 @@ change the effects' colours.
 
 | Member | Use |
 |---|---|
-| `InterfacePalette.apply(path) -> int` | Reset, then apply a palette file; returns how many names matched |
+| `InterfacePalette.apply(path, clamp_colours = [], perceptual = false, own_greys = false) -> int` | Reset, then apply a palette file (none for `''`) and clamp to `clamp_colours` when given, or to the palette's own greys with `own_greys`; returns how many names matched |
+| `InterfacePalette.clamp_palette() -> PackedColorArray` | The colours the interface is clamped to, or none |
+| `InterfacePalette.unclamped(variable) -> Variant` | A `Colours` variable's value before the clamp; the live value when there is no clamp |
 | `InterfacePalette.reset()` | Back to the default colours and theme |
 | `InterfacePalette.is_interface_palette(path) -> bool` | A `.gpl` file with at least one colour named after a `Colours` variable; only these are listed in the debug panel |
 | `InterfacePalette.variable_name(colour_name) -> String` | `'hp bar fill'` -> `'HP_BAR_FILL'` |
@@ -95,6 +118,7 @@ change the effects' colours.
 | `PaletteLoader.load_named_colours(path) -> Dictionary` | Name -> colour for a `.gpl` file |
 | `PaletteLoader.save_named_colours(path: String, colours: Dictionary) -> Error` | Write a name -> colour dictionary as a `.gpl` file; the write half of `load_named_colours` |
 | `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets. The `'` and `;` keys step through the palettes, and [presets](look_presets.md) save one with the rest of the look |
+| `DebugPanels.set_interface_clamp(choice)`, `interface_clamp` | What the interface palette's colours are clamped to ([Clamp](#clamp)): `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `CLAMP_OWN_GREYS`, or a palette file path. Saved in a preset's `interface_palette` section |
 | `DebugPanels.set_portrait_palette(choice)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path. The `.` and `,` keys step through the choices |
 | `DebugPanels.set_effects_palette(choice)`, `effects_palette` | What the combat effects are clamped to: `''` for off, `EFFECTS_SAME_AS_PORTRAIT`, `PORTRAIT_SAME_AS_INTERFACE` (the default), or a palette file path. Saved in a preset's `interface_palette` section |
 

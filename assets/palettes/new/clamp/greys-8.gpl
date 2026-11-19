@@ -1,0 +1,13 @@
+GIMP Palette
+Name: greys-8
+Columns: 8
+# Plain greys, black to white in 8 even steps, for clamping the interface palette
+# (docs/systems/interface_palette.md#clamp).
+  0   0   0	grey 0
+ 36  36  36	grey 1
+ 73  73  73	grey 2
+109 109 109	grey 3
+146 146 146	grey 4
+182 182 182	grey 5
+219 219 219	grey 6
+255 255 255	grey 7

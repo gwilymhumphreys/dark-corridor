@@ -67,6 +67,7 @@ Rows at the top of the Corridor and Interface tabs, below "Take this part from".
 | Corridor | World palette (corridor) | "Off", then every palette under `assets/palettes/`, grouped by subfolder | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
 | Corridor | Colour matching | RGB or perceptual (OKLab) | World clamp, and the portrait and effects palette clamps |
 | Interface | Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`) | [Interface palette](interface_palette.md) |
+| Interface | Interface clamped to | "Off", "Same as corridor" (the world palette), "Own greys" (the interface palette's greys), or any palette file | [Clamp](interface_palette.md#clamp) |
 | Interface | Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file | [Interface images](interface_palette.md#images) |
 | Interface | Effects palette | "Off", "Same as portraits", "Same as interface" (the default), or any palette file | [The combat effects](interface_look.md#the-combat-effects) |
 
@@ -76,7 +77,8 @@ Above the look effect sections on the Interface tab, one section per group headi
 `src/data/colours.gd` (Mechanics, Statuses, Combat payloads, Relic panels, Beat categories, Combat
 view, Map strip, Tooltip, Interface, Control feedback). Each row is a colour picker for one
 `Colours` variable; changing one writes it to the [custom palette](interface_palette.md) and makes
-that palette active. The grouping is `InterfaceLookPanel.COLOUR_SECTIONS`, not read from
+that palette active. While the interface is [clamped](interface_palette.md#clamp), the pickers show
+each colour as it was before the clamp. The grouping is `InterfaceLookPanel.COLOUR_SECTIONS`, not read from
 `colours.gd`, so the panel owns its own layout.
 
 `COOLDOWN_FILL` has no row. It is translucent and a `.gpl` carries no alpha, so it cannot be set

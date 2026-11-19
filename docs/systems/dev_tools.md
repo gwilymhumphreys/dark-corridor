@@ -74,6 +74,7 @@ Read by `DebugPanels` after the default preset loads.
 | `--corridor-set=property=value` | Sets any `Corridor3D` export (`corridor_settings`). Repeatable |
 | `--monster-image=<res path>` | Every enemy uses this image |
 | `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
+| `--ui-clamp=<res path, corridor or own>` | Clamps the interface palette's colours to a palette file, the world palette or its own greys ([Clamp](interface_palette.md#clamp)) |
 | `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
 | `--effects-palette=<res path, interface, portrait or off>` | Sets the palette the combat effects are clamped to ([interface_look.md](interface_look.md#the-combat-effects)) |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |

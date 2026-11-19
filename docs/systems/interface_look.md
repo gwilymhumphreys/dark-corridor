@@ -105,7 +105,8 @@ node in the `hit_effects_preview` dev scene. It takes the same settings, with th
   because they move a pixel off its mechanic colour.
 - Its palette is the **effects palette** (`DebugPanels.set_effects_palette`), not the portrait palette:
   off, the portrait palette, the interface palette (the default) or any palette file. The interface
-  palette holds every mechanic colour, so a solid effect colour stays as it is. The Interface tab's
+  palette holds every mechanic colour, so a solid effect colour stays as it is; while the interface
+  is [clamped](interface_palette.md#clamp), it means the clamp palette instead. The Interface tab's
   dithering switch, matching and dither settings apply to it (`InterfaceLook.clamp_materials`).
 
 The Effects section of the Interface tab holds its own settings (the `effects` uniform group). They are

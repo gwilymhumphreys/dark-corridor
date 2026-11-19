@@ -46,7 +46,7 @@ func _build_colour_sections() -> void:
     var section: LookSection = _add_section(section_title)
     for variable: String in COLOUR_SECTIONS[section_title]:
       var label: String = (variable.to_lower().replace('_', ' ')).capitalize()
-      var colour: Color = (Colours as Script).get(variable)
+      var colour: Color = InterfacePalette.unclamped(variable)   # the palette's own colour, not the clamped one
       section.add_row(_make_row(label, colour, [], func(new_value: Color) -> void:
         InterfacePalette.write_custom(variable, new_value)))
 
