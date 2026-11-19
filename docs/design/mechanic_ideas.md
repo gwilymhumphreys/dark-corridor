@@ -86,6 +86,16 @@
 
 ---
 
+## Item fusion relic — *parked (source: Diablo 2's Horadric Cube, 2026-11-19)*
+
+- **Idea (owner):** a relic that fuses two items into one new item that has the effects of both.
+- **Open (owner, to be decided):** which cooldown the fused item uses (the longer of the two was
+  suggested), what rarity it has, and other details not yet discussed.
+- **Open (not yet raised):** when fusing happens and how often (once, every fight, at a rest), how
+  the player chooses the two items, and whether the relic is used up.
+
+---
+
 ## To add
 
 - Mechanics from other games as they're sampled — record the source, the rule as seen, and the read.

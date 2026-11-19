@@ -2,6 +2,20 @@
 
 > Departs from the original single-shared-pool plan (design.md: “one shared item pool across all characters”). Test it like everything else.
 
+## Item pools (owner, 2026-11-20)
+
+Decision #65 keeps the reason below (a run draws from a few directions, so drafts connect) but changes how a character's pool is made. Items are grouped into small **item pools**, mostly one per mechanic: attack, shield, heal, poison, burn, bleed, haste, slow, charge, decharge, summon and others. A character lists the pools it holds and is offered their items, so most items are shared.
+
+- A new character needs a choice of pools, a starting relic and a portrait, not a pool of new items.
+- Two characters can hold the same pools and differ by their relics.
+- An item can need several pools, and is offered only to a character holding all of them. A bleed item that charges when you apply poison needs both.
+- A pool held by one character is allowed, for an engine only that character uses (Spores, Chunks of Flesh).
+- Not every character reaches poison, burn and bleed, which replaces the section on them below. Burn and poison may overlap where the overlap is interesting.
+- Shared items cannot carry one character's fiction in their names. This is the cost the rejected hybrid below was turned down for, now accepted.
+- **Open:** whether pools are filled by hand or worked out from each item's `mechanics` list. See [`../plans/item_pools_haste_lives.md`](../plans/item_pools_haste_lives.md).
+
+The sections below are the reasoning for decision #27.
+
 ## The problem with one shared pool
 
 A 1-of-3 draft with no hidden weighting can only reliably feed a build if the pool has **few synergy directions** — too many and each draft is unlikely to offer something that connects, so the pool goes thin. But few directions caps the whole game’s range. The shared pool forces a choice:
@@ -32,7 +46,7 @@ A shared neutral pool of workhorse commons (StS colorless model) + per-character
 
 **None to systems.** `Draft` already pulls from “the pool” and is category-blind (architecture: Draftable contract). Scoping the pool to a character is a content-organisation change, not a systems change.
 
-## Poison, bleed and burn reach every character (owner, 2026-09-21)
+## Poison, bleed and burn reach every character (owner, 2026-09-21; replaced by #65)
 
 Every character should have some access to poison, bleed and burn, so those three are always an
 option for a build rather than one character's property, and so they carry synergies that cut

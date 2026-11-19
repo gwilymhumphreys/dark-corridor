@@ -45,8 +45,8 @@ The run is one act of ten fights: basic fights, two elite fights at fixed square
 - **No branches, no exploration, auto-advance.**
 - **2 mid-bosses + final boss.** Final boss = credits, real ending. The floor's boss is telegraphed ahead of time.
 - **A 1D linear progress map** shows the floor's beats and the player's progress along it — boss at the end, guaranteed relic at the midpoint. It's forward visibility on a single linear track, not a branching route map.
-- **Act transitions** happen via a full rest after each act boss (automatic, full HP restore). Within each act, one guaranteed small rest encounter sits as a partial-heal beat.
-- **Death is final per run.** No retreat, no escape valve.
+- **The player is fully healed after every fight** (decision #68), so there is no rest between acts and no rest encounter.
+- **Lives.** Losing a fight costs a life instead of ending the run; the run ends when the last life is lost (decision #68). No retreat.
 - **Auto-save on entry to each encounter.** Player can quit mid-run and resume the next encounter cleanly. Important for the mobile/short-session pattern.
 ## Combat
 
@@ -84,13 +84,13 @@ Enemies have visible item loadouts — player can see what they're about to do. 
 - **Item model:** each enemy has its own attack item, with its own value and icon, distinct from player items and not drawn from a shared attack pool. On top of that, an enemy may carry a defensive or utility item from a small shared enemy pool. Icons can visually overlap with player items to start with — they just shouldn't be mechanically identical to the player's. This keeps enemy threats distinct enough that players won't confuse "their" items with enemy ones.
 ### Healing and HP economy
 
-- **HP persists between encounters.** No automatic between-fight reset. Damage taken carries forward.
-- **Sources of healing within an act:**
-  - Heal items (active subtype) — sustained recovery during fights.
-  - Heal potions — burst recovery tactical use.
-  - Small rest encounters — partial heal (see Encounters).
-- **Full heal between acts.** Automatic full HP restore after every act boss. Players enter each new act at full HP regardless of how they finished the previous one.
-- **Max HP can increase within a run.** Via relics, certain lore events, possibly rare items. Permanent max-HP boosts via meta-progression are deprioritized (see Meta-progression — flat-power unlocks bad).
+Decision #68 (owner, 2026-11-20):
+
+- **Full heal after every fight.** Health does not carry between fights, so each fight is its own test of the build.
+- **Lives.** The player starts with a few lives (the owner suggested two or three). Losing a fight costs one, and losing the last ends the run. More can be bought in shops or gained from encounters.
+- **No healing encounters.** Rests and the health gained for a won fight go. Heal items, regen and healing potions still matter inside a fight.
+- **Max HP grows through the run**, because enemy damage grows with the player's board (decision #43). How it grows is open; relics and events can also raise it. Permanent max-HP boosts via meta-progression are deprioritized (see Meta-progression — flat-power unlocks bad).
+- **Open:** what a lost fight gives (its reward, nothing, or only the next beat).
 ## Visual / Tech — mechanical constraints only
 
 *Full art direction, palette, tone, VFX, and audio live in the **Art Direction & Audio** doc. This section captures only what the mechanics depend on. Keep it short; depth goes in the other doc.*
@@ -218,7 +218,7 @@ Items have levels (decision #61). The player can choose to merge two copies of t
 - Item power philosophy: many small > few big. Individual items modest, the cascade is the power.
 ### Item count targets
 
-- Launch pool goal: ~100 items was the *single-shared-pool* figure; under **per-character item pools** (decision #27) the target is a small, coherent pool **per character** — smaller individually, with the total across the roster as the content multiplier to watch. Refine via prototype.
+- Launch pool goal: under **item pools** (decision #65) most items are shared between characters, so the count to watch is the items in each pool and how many pools a character holds. Refine via prototype.
 - Run end-state: ~20-25 items in inventory by final boss. (Capped by draft count — you take at most one item per draft, fewer if you skip some for gold (decision #33), and not every encounter is a draft.)
 ### Progression arc — damage, shield, scaling
 
@@ -250,6 +250,10 @@ case, sit on the item. Two rules cut across the set: how much shield a hit of ea
 a heal removing some poison, burn and bleed. The engineering side is
 [`systems/mechanics.md`](../systems/mechanics.md); the numbers are placeholders in
 `src/data/balance.gd`.
+
+**Mechanics and triggers first** (decision #67, owner, 2026-11-20). Most items, relics and enemies are written from the mechanics and the trigger events, with few effects specific to one item.
+
+**Haste and slow** are planned mechanics on an actor (decision #66). Each is on or off, an application adds its duration to the time left, and while one is on the actor's item cooldown bars fill faster or more slowly. They change nothing else.
 
 **Open — the player-facing text.** Every mechanic's description is still a placeholder. These are the
 words the tooltip keyword cards show, so they are how the player learns each rule. Writing them is
@@ -316,7 +320,6 @@ Persistent equipped effects, distinct from inventory items in presentation. A su
   - One guaranteed relic per act, at the act midpoint.
   - One relic per elite engaged (1-5 elites offered per act; player chooses which to engage).
   - One relic from each defeated boss (3 per run — 2 mid-bosses + final).
-  - Full rests between acts don't grant relics — they're the heal beat.
   - Total: roughly 8-18 relics per successful run depending on elite engagement, including the starting relic.
 - Distinct UI presentation from items — background power, not foreground play.
 - Some relic effects use the status system; others are direct attribute changes or rule modifiers.
@@ -355,10 +358,8 @@ Why this exists: a single linear corridor structurally can't give Spire's branch
   - Regular fights (the default) — as built, fixed squares, not offered as cards
   - Elites (optional engage/skip with telegraphed demand + higher reward + guaranteed relic) — as built, two fixed squares per act (decision #54)
   - Non-combat events (lore + a choice between options, each with its own effects and requirements; an option the player cannot pick is hidden — decision #55)
-  - **Small rest encounters** — in-act partial-heal beat, offered as a card like the others. No relic.
   - **Reward encounters** — pick one of a few goods (items, relics or potions) drawn from the encounter's stock, or skip for gold (decision #56). The relic encounter is one of these.
   - **Shops** — offered from the left card: buy goods for gold, reroll them for a price that rises each time, then leave (decision #58).
-- **Full rest** — automatic post-act-boss beat, not a choice-layer encounter. Full HP restore. Plays unconditionally between acts as the act transition. Brief narrative/visual beat — not a decision moment.
 - Short prose. Location = one line. A few options, clear tradeoffs. Not Spire-tier prose.
 - Pool target: ~30 designed encounters across all types — will probably change. Doubles as world-building delivery.
 - Frequency of choice points: one before every fight (decision #54).
@@ -380,7 +381,7 @@ The entire viability of the choice layer.
 
 - **First-run legible.** Not "learnable over runs." If it takes 3 runs to learn what an icon means, those first runs it's noise. Match Spire's immediate iconographic clarity (fire=rest, monster=fight, ?=known gamble).
 - **Telegraph the category, not the contents.** "Combat-heavy, item reward" vs "safe, healing/economy" vs "risk, high reward." Uncertainty lives in the specifics within a category, never in what category this even is. (Same principle as Bazaar's "you roughly know what you're getting.")
-- **Options must trade against run state.** A heal is worthless at full HP and vital when low; a gamble is right when behind, wrong when ahead. Author options so their value depends on the player's current HP/build/resources.
+- **Options trade against the build.** The choice of encounters is about what the character's build needs (owner, 2026-11-20). Author options so their value depends on the player's build, gold and lives; health no longer carries between fights (decision #68).
 ### Keep it cosmetic-with-teeth
 
 The corridor stays single and linear. What the choice changes is the reward/encounter type of the next beat, not the corridor's structure. The choice layer doesn't smuggle branching-corridor scope back in.
@@ -391,13 +392,13 @@ The corridor stays single and linear. What the choice changes is the reward/enco
 
 Minimum viable character system: portrait + signature starting relic + small starting item set. Optional passive trait only as a property of the starting relic; no separate system.
 
-- **Per-character item pools** (decision #27 — [per_character_pools](per_character_pools.md)). Each character draws from its **own** item pool, *not* one shared pool. (Departs from the original single-shared-pool plan: a no-hidden-weighting 1-of-3 draft can't be both wide *and* connective from one pool, so focus lives per-run and range per-game.) Each pool is small and coherent (a few directions); the character's identity goes deep. A character is a meaningfully different run, not just flavor of start.
-- Starting items: 2-3 items from the **character's own pool**, chosen to anchor an archetype (e.g. the Spore Druid starts pointed at spores) — teaching its build from turn 1.
-- **Hold the line on what gets split (the Battledraft scope trap, refined):** per-character *item pools* — yes; **enemies stay a shared pool** and the **reward-relic pool stays shared**; per-character *everything* (relic/enemy pools, bespoke commons) is the trap to avoid. The unique build-defining starting relic per character is unchanged — that's one bespoke relic, not a split pool.
+- **Item pools** (decision #65 — [per_character_pools](per_character_pools.md)). Items are grouped into small pools, mostly one per mechanic, and a character holds a set of them; its drafts come from the items in its pools. Most items are shared between characters, so a run still draws from a few directions while the game holds them all. A character is told apart by its pools, its relics and its starting items; two characters can hold the same pools and differ by their relics.
+- Starting items: 2-3 items from the **character's pools**, chosen to anchor an archetype (e.g. the Spore Druid starts pointed at spores) — teaching its build from turn 1.
+- **What stays shared:** enemies and the reward-relic pool. The unique build-defining starting relic per character is unchanged.
 - Default character has the least-twisted starting relic + most generic starting items — teaches the loop.
 - Unlockables get progressively weirder starting relics + more archetype-specific starting items.
 - Starting relics should be the most build-defining relics in the game. Take more time on these than regular relics.
-- **No hidden draft weighting toward character archetypes.** Character bias is expressed visibly through its **item pool** (#27), starting items, and relic. Hidden weighting on future drafts is rejected: it collapses the synergy decision (drafts pre-filter to your archetype = no real choice), punishes early experimentation, hides mechanics, reduces variance. If guided drafts are wanted later, do it via explicit milestone commitment moments (player picks an archetype at an act break), never hidden bias.
+- **No hidden draft weighting toward character archetypes.** Character bias is expressed visibly through its **item pools** (#65), starting items, and relic. Hidden weighting on future drafts is rejected: it collapses the synergy decision (drafts pre-filter to your archetype = no real choice), punishes early experimentation, hides mechanics, reduces variance. If guided drafts are wanted later, do it via explicit milestone commitment moments (player picks an archetype at an act break), never hidden bias.
 - Asset reality check: verify candidate monster pack includes matching front-facing portraits, or budget for a separate portrait pack.
 -----
 
@@ -427,7 +428,7 @@ Meta-tree pacing must match the death curve — early runs end fast and unlock o
 1. **Setting / theme — resolved.** Dark fantasy or classic dungeon. Dungeon synth soundtrack, super dark and moody, desaturated palette but juicy mechanics. Asset pack survey now scoped to medieval/gothic/horror packs that match the aesthetic.
 1. **Walk pacing.** Walk can't be dead time. Footsteps, atmosphere noises, environmental cues, occasional telegraph. Design once setting is locked. (Open: whether to keep camera bob — coherent now that movement is a walk rather than a glide.)
 1. **Terminal-failure stance — resolved (Spire stance).** Drafts and play matter for survival; a bad draft chain can kill a run. The game is *beatable from run 1* on a fresh save with skill and luck. Meta-progression makes the game easier and adds variety/replayability but is not required for completion. Difficulty tunes to "achievable but punishing on a clean save." Death feels like "I drafted/played that wrong," not "I haven't unlocked enough yet."
-1. **Item pool composition — pool structure resolved (#27): per-character item pools.** Still open *within* that: **directions-per-character** (a starting peg, not a number — too few forces drafts, too many re-dilutes inside one character) and pool size per character. ~100 was the old shared-pool figure. First prototype test: does a character's small, coherent pool make the last draft of a run feel like a decision, not a treadmill?
+1. **Item pool composition — pool structure resolved (#65): characters hold item pools.** Still open: **how many pools a character holds** (too few forces drafts, too many dilutes them) and the size of each pool. First prototype test: does a character's set of pools make the last draft of a run feel like a decision, not a treadmill?
 1. **Onboarding.** With status engine, enchants, potions, relics, characters, elites, choice layer, AOE/single-target distinction, color vocabulary, slow-mo, cooldowns — a player parachuted into draft 1 is overwhelmed. Tutorial? Drip-feed unlocks? Genre literacy assumed? Real design question, currently absent.
 1. **Relics as items.** Open whether to collapse mechanically. Probably same underlying type with different presentation. Resolve in prototype.
 1. **Starting state — TODO.** What does the player start a run with beyond character (portrait + starting relic + 2-3 starting items)? Starting HP value? Starting potions (probably 0)? Other resources? Not yet specified.

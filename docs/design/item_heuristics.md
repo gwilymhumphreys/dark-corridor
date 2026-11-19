@@ -100,6 +100,10 @@ starting board takes roughly the target time to kill a regular enemy.
 
 ### Setting damage from what a fight should cost
 
+Decision #68 (a full heal after every fight, and lives) replaces the rule below, because health no
+longer carries between fights; the new rule is open. It also lowers the value of healing and of
+self-damage, whose rates below assume health carries over.
+
 An enemy's damage is set by how much health a fight should take from the player, not by the item
 budget. An early regular fight costs a player with no armour up to 10% of starting health (owner,
 2026-09-22), so the enemy's damage per second is that amount divided by the target fight length.

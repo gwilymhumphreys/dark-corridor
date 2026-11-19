@@ -90,15 +90,12 @@ the Smith for now, and other characters may or may not follow it.
 Keep the non-signature threads simple. This is the low-load character, so they should be the kind
 a player can reason about at a glance.
 
-### Poison, bleed and burn are available to everyone (owner, 2026-09-21)
+### Item pools (owner, 2026-11-20)
 
-This is a **roster-wide** intent recorded here because it came up with the Smith, not a Smith
-feature: every character should have some access to poison, bleed and burn, so those three are
-always an option for a build, and they carry cross-cutting synergies of their own. The Smith's
-share of it fits the fiction — a smith heats, sharpens and poisons what it makes — but the rule
-belongs to the whole roster. Where it is implemented, in the colorless pool or as a handful in
-each character's own pool or both, is still open; see
-[`per_character_pools.md`](per_character_pools.md).
+Characters now hold item pools, mostly one per mechanic, instead of a pool of their own items
+(decision #65, [`per_character_pools.md`](per_character_pools.md)). This replaces the 2026-09-21
+intent that every character reaches poison, bleed and burn. The Smith's current pool has items for
+all three, so it is the first pool to be reworked into a set of item pools.
 
 ## Engine seams — what each direction costs
 
@@ -165,6 +162,16 @@ inert labels `weapon / armour / spell / skill / trinket`, an array per item. The
 as well as the actor, so a status can tell a weapon attack from a spell attack. `outgoing_bonus`
 also runs the read-only tooltip preview (`Item.display_value`), so it stays pure; using up a
 stack belongs on `on_owner_item_fired`, which only runs on a real fire.
+
+## Ideas not yet built
+
+Noted by the owner; wording to be decided.
+
+- **Plate mail (owner, 2026-10-24).** An armour item that gives a lot of armour and charges
+  slowly, but decharges your own weapons.
+- **Invert polarity (owner, 2026-10-24).** Your weapons decharge instead of charging, and fire
+  when their bar is empty. Pairs with plate mail: its decharge would then push your weapons
+  towards firing.
 
 ## Watch / open
 

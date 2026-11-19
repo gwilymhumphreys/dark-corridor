@@ -10,10 +10,10 @@
 > fuse two recognisable things from different domains so both stay recognisable, and let the
 > fused premise *be* the signature mechanic — not a fantasy-trope class with a paint job.
 >
-> **Promotion has a real cost.** Each character carries its **own item pool** (decision
-> #27, [`per_character_pools.md`](per_character_pools.md)) — a full breadth target
-> ([`card_pool_targets.md`](card_pool_targets.md)) of ~18–22 authored items. So the bar
-> isn't "is it cool," it's "does it earn a whole pool — a distinct way to play no other has."
+> **Promotion is cheaper now (owner, 2026-11-20).** A character holds a set of shared item pools
+> (decision #65, [`per_character_pools.md`](per_character_pools.md)) instead of ~18–22 items of
+> its own, so a new character is a choice of pools, a starting relic and a portrait, plus a pool
+> of its own only if it has an engine nobody else uses.
 >
 > Sounding-board notes (**Fusion / hook**, **Risk / open**) are *options to react to*,
 > not proposals — pitched, not chosen.

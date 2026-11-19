@@ -21,6 +21,7 @@ something else.
 | **Type tag** | A label on an item (`weapon`, `armour`, `spell`, `skill`, `trinket`). It does nothing by itself; other items and statuses can refer to it. |
 | **Level** | How far an item has been upgraded, from 1 up to `Balance.ITEM_MAX_LEVEL` (`Item.level`). Separate from rarity, which the docs also call a tier. |
 | **Merge** | Combining two copies of the same item at the same level into one item of the next level. The player chooses to do it ([plans/item_levels.md](../plans/item_levels.md)). |
+| **Item pool** | A named group of items, mostly one per mechanic. A character holds several and is offered their items; an item that needs several pools is offered only to a character holding all of them (decision #65). Planned. |
 | **Value pill** | The number on the top edge of an item's icon. There is one for each mechanic effect; an effect that applies a status, or is not a mechanic (the attack bonuses), has none. |
 
 ## Mechanics and statuses
@@ -34,6 +35,8 @@ something else.
 | **Weapon attack** | An attack from an item with the `weapon` type tag. |
 | **Charge** | The charge mechanic: adding seconds to an item's cooldown bar so it fires sooner. The word means only this. |
 | **Decharge** | The decharge mechanic: taking seconds off an item's cooldown bar. |
+| **Haste** | A planned mechanic: an on-or-off state on an actor, for a duration, while which its item cooldown bars fill faster (decision #66). |
+| **Slow** | A planned mechanic, the opposite of haste: the actor's item cooldown bars fill more slowly. An item with a long cooldown is a long-cooldown item, not a slow item, so the word has one meaning. |
 | **Status** | Something that sits on an actor or an item for the rest of a fight, or until it runs out, and changes what happens (`StatusEffect`). Poison, shield and Empowered are statuses. |
 | **Stack** | One unit of a status's count (`StatusEffect.count`). Applying a status adds stacks; a status can lose or use up stacks. Mighty Blow adds one stack of Empowered, and each attack uses one up. |
 
@@ -55,7 +58,8 @@ something else.
 
 | Term | Meaning |
 |---|---|
-| **Act** | One part of a run, ending in a boss. The player is fully healed between acts. |
+| **Act** | One part of a run, ending in a boss. |
+| **Life** | One of the player's few chances to lose a fight. Losing a fight uses one, and the run ends when the last is used (decision #68). Planned. |
 | **Beat** | One encounter along an act, in order (`RunManager.position`). |
 | **Square** | A beat shown on the map: a fight, an elite fight or the boss (`RunMap.SQUARES`). Every square has a choice of encounters before it. |
 | **Choice of encounters** | The beat before every square, where three encounters are offered as cards in the corridor and the player picks one or walks past for a little gold (`RunManager.pending_choice`). |
