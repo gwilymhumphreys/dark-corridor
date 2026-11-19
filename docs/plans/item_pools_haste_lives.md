@@ -174,8 +174,10 @@ or another name content refers to (such as a pool that is not a mechanic). Each 
 
 ### Step 2: item pools
 
-- A pool is a tag. `ItemPools.POOL_TAGS` lists which tags are pools: every mechanic id, plus the
-  other pools the owner names (for example spores, flesh and summon).
+- A pool is a tag (owner): the tags decide what is in each pool. `ItemPools.POOL_TAGS` lists which
+  tags are pools: every mechanic id, plus spores and flesh (owner) and any others he names, such as
+  summon. An item that makes or spends spores or Chunks of Flesh carries that tag, so it is offered
+  only to a character holding that pool.
 - An item needs every one of its tags that is a pool. A character with `item_pools` holding all of
   them is offered the item; type tags do not limit who is offered it.
 - `CharacterDef.item_pools: Array[String]` replaces `item_pool`.
@@ -203,7 +205,7 @@ Gaps in today's lists that step 2 exposes, each for the owner to fix in content:
 1. Whether a type tag can also be a pool (a spell pool, say), or pools are only mechanics and the
    other named tags.
 2. Whether an item with no pool tag is offered to everyone, or every draftable item needs one.
-3. Which pools each character holds, and the names of the pools that are not mechanics (content).
+3. Which pools each character holds, and whether summon or other engines are pools too (content).
 4. Whether a pool can be held by only one character, or any character can hold any pool.
 
 ### Tests
