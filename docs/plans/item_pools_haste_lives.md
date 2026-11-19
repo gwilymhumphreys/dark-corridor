@@ -32,22 +32,19 @@ time left. While one is on, the actor's item cooldown bars fill faster or more s
 
 - An effect applying haste or slow carries only a duration (`ItemEffect.duration`) and a target
   shape: self for haste, an opponent shape for slow. Its value is unused.
-- Only the bar filling over time changes. Trigger pushes, the charge and decharge mechanics, status
-  ticks and relics are unchanged.
+- Only the bar filling over time changes. Trigger pushes (the full authored seconds, owner), the
+  charge and decharge mechanics, status ticks and relics are unchanged.
+- Display (owner): the health bar shows the icon alone, with no number. An item that applies haste
+  or slow has no value pill, like every status-applying effect.
 - Both on at once: neither has an effect (owner). Each keeps counting down its own time, so when the
   shorter one ends the other takes effect for what it has left.
 - Determinism holds: the rate is read from statuses in a fixed order each step.
 
 ### Open
 
-1. **Trigger pushes.** The owner said haste and slow affect only how fast bars fill. This plan reads
-   that as time only, so a trigger still adds its authored seconds. Confirm.
-2. **Display.** The health bar's `StatusNumbers` shows a stack count per mechanic status. Haste and
-   slow have no stacks, so they need either the seconds left or the icon alone. The value pill on
-   an item that applies them has the same question.
-3. **Pricing.** Unpriced at first, like the attack bonuses. The parked note in `item_heuristics.md`
+1. **Pricing.** Unpriced at first, like the attack bonuses. The parked note in `item_heuristics.md`
    on timed debuffs applies.
-4. **Content the owner adds:** items that apply them, the two mechanic shops (`shop_haste`,
+2. **Content the owner adds:** items that apply them, the two mechanic shops (`shop_haste`,
    `shop_slow`), icons in the `IconSlots` folders and the keyword card text.
 
 ### Tests
@@ -110,8 +107,9 @@ same stage. Item file comments are the owner's content and are left alone unless
    with the lives count changing on the sheet.
 2. **`FIGHT_WON` on a loss.** This plan fires it only for a win. If a lost fight should count as a
    fight won for relics too, that is one line.
-3. **Starting lives**, the life price and the health step: the owner's values. The step is the same
-   for every fight unless the owner wants a larger one for elites and bosses.
+3. **The health step:** the owner's value, the same for every fight unless the owner wants a larger
+   one for elites and bosses. Starting lives are 3 and a life costs 100 gold (owner); both go in
+   `balance.gd`.
 4. **Enemy damage.** `item_heuristics.md` sets it from what a fight should cost in health, which no
    longer applies. A new rule is the owner's, decided in tuning.
 
@@ -174,9 +172,11 @@ or another name content refers to (such as a pool that is not a mechanic). Each 
 
 ### Step 2: item pools
 
-- A pool is a tag (owner): the tags decide what is in each pool. `ItemPools.POOL_TAGS` lists which
-  tags are pools: every mechanic id, plus spores and flesh (owner) and any others the owner names, such as
-  summon. An item that makes or spends spores or Chunks of Flesh carries that tag, so it is offered
+- A pool is a tag (owner): the tags decide what is in each pool. Any tag can be made a pool,
+  including a type tag (owner). `ItemPools.POOL_TAGS` lists which tags are pools: every mechanic id,
+  plus spores and flesh (owner). A type tag is added there only when a character should need it,
+  because an item needs every one of its pool tags and a character holding only attack would
+  otherwise never be offered a weapon. An item that makes or spends spores or Chunks of Flesh carries that tag, so it is offered
   only to a character holding that pool.
 - An item needs every one of its tags that is a pool. A character with `item_pools` holding all of
   them is offered the item; type tags do not limit who is offered it.
@@ -191,22 +191,18 @@ or another name content refers to (such as a pool that is not a mechanic). Each 
   offers it every other character's items that its pools cover; that is the intended effect, but
   which pools each character holds is the owner's.
 
-Gaps in today's lists that step 2 exposes, each for the owner to fix in content:
-
-- An item with no pool tag (Mighty Blow, Hex Bolt and Sundering Bolt list no mechanic) would be
-  offered to every character. Either that is what it means, or every draftable item must have a
-  pool tag, and the integrity test checks it.
-- Some lists leave out a pool an item should need. The two forges give attack bonuses but list only
-  burn, so they would reach a character with burn and no attack items. Adding `attack` to them makes
-  them need it.
+- Starting pools (owner, until characters are revisited): every character holds attack, shield and
+  heal. The Spore Druid adds poison and spores, and the Fleshmancer adds flesh and bleed. The Smith
+  holds only the three, so the Smith's burn, charge, decharge and crit items are not offered to
+  anyone until a character holds those pools.
+- Items with no pool tag (Mighty Blow, Hex Bolt and Sundering Bolt) are being reworked by the owner.
+  Until then an item with no pool tag is offered to every character.
+- The two forges now list `attack` as well as burn (owner, 2026-11-20).
 
 ### Open
 
-1. Whether a type tag can also be a pool (a spell pool, say), or pools are only mechanics and the
-   other named tags.
-2. Whether an item with no pool tag is offered to everyone, or every draftable item needs one.
-3. Which pools each character holds, and whether summon or other engines are pools too (content).
-4. Whether a pool can be held by only one character, or any character can hold any pool.
+1. Whether summon or other engines become pools (content).
+2. The characters' real pools, when characters are revisited.
 
 ### Tests
 
