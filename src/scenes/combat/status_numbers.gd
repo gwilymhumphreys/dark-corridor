@@ -2,7 +2,8 @@ class_name StatusNumbers
 extends HBoxContainer
 ## The health-bar status numbers (docs/systems/mechanics.md → Health bar): one entry per mechanic
 ## status (poison, burn, bleed, regen), each the mechanic's icon and its stack count in the
-## mechanic's colour. Shield is shown by HealthBar instead. A count that changes moves to its new
+## mechanic's colour. Haste and slow have no stacks, so each shows its icon alone while it is on
+## (owner, 2026-11-20). Shield is shown by HealthBar instead. A count that changes moves to its new
 ## value over EasedValue.DEFAULT_DURATION instead of jumping. Reads the actor's statuses each frame;
 ## writes nothing.
 
@@ -18,6 +19,8 @@ var _shown: Dictionary[String, EasedValue] = {}   # mechanic id -> the count on 
 @onready var _burn: HBoxContainer = $Burn
 @onready var _bleed: HBoxContainer = $Bleed
 @onready var _regen: HBoxContainer = $Regen
+@onready var _haste: HBoxContainer = $Haste
+@onready var _slow: HBoxContainer = $Slow
 
 
 func _ready() -> void:
@@ -25,6 +28,8 @@ func _ready() -> void:
   _set_icon(_burn, BurnMechanic.ID)
   _set_icon(_bleed, BleedMechanic.ID)
   _set_icon(_regen, RegenMechanic.ID)
+  _set_icon(_haste, HasteMechanic.ID)
+  _set_icon(_slow, SlowMechanic.ID)
 
 
 func _process(delta: float) -> void:
@@ -35,6 +40,8 @@ func _process(delta: float) -> void:
   _refresh(_burn, BurnMechanic.ID, delta)
   _refresh(_bleed, BleedMechanic.ID, delta)
   _refresh(_regen, RegenMechanic.ID, delta)
+  _haste.visible = _find_status(HasteMechanic.ID) != null
+  _slow.visible = _find_status(SlowMechanic.ID) != null
 
 
 func _set_icon(entry: HBoxContainer, id: String) -> void:
@@ -66,6 +73,8 @@ func _hide_all() -> void:
   _burn.hide()
   _bleed.hide()
   _regen.hide()
+  _haste.hide()
+  _slow.hide()
 
 
 func _find_status(id: String) -> StatusEffect:

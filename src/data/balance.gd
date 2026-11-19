@@ -53,6 +53,10 @@ const STATUS_WEAK_DAMAGE_MULT: float = 0.75       # Weak: holder deals 25% less 
 const STATUS_WEAK_DURATION: float = 2.0           # global to all Weak appliers (duration lives on the status, not the item)
 const STATUS_VULNERABLE_DAMAGE_MULT: float = 1.5  # Vulnerable: holder takes 50% more
 const STATUS_VULNERABLE_DURATION: float = 5.0
+# Haste and slow (decision #66): while one is on, the holder's item cooldown bars fill at this
+# multiple of the normal rate. Both on at once cancel out. PLACEHOLDER values — owner tunes.
+const HASTE_RATE: float = 1.5
+const SLOW_RATE: float = 0.5
 # Empowered (docs/design/smith.md → The empower engine) — the Smith's Mighty Blow buff scales an
 # attack's damage by this for each stack used up. 1.5 = "your next attack gets +50% damage". One stack
 # per attack (the consume rate is in EmpoweredStatus, not tunable here).

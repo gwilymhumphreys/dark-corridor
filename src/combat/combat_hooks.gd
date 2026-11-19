@@ -53,3 +53,10 @@ func absorb(amount: float, _incoming_flags: int, _target, _ctx, _mechanic_id: St
 
 func causes_evasion() -> bool:
   return false
+
+
+## How fast the holder actor's item cooldown bars fill over time, as a multiple of the normal rate
+## (haste and slow, docs/systems/mechanics.md). StatusManager.cooldown_rate multiplies every hook's
+## rate. Trigger pushes and charge are not scaled. Default 1.0.
+func cooldown_rate(_target) -> float:
+  return 1.0

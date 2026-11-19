@@ -107,6 +107,17 @@ func has_evasion(actor) -> bool:
   return false
 
 
+## How fast `actor`'s item cooldown bars fill over time: the product of every hook's
+## `cooldown_rate` (haste and slow), 1.0 when none changes it. Read once per item per step.
+func cooldown_rate(actor) -> float:
+  if actor == null:
+    return 1.0
+  var rate: float = 1.0
+  for h in hooks_of(actor):
+    rate *= h.cooldown_rate(actor)
+  return rate
+
+
 ## Whether `target` currently holds any of status `id`. A read, so callers can branch on it
 ## without touching the status list.
 func has_status(target, id: String) -> bool:

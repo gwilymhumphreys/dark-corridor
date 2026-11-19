@@ -80,6 +80,16 @@ static func heal(amount: float) -> ItemEffect:
   return make(HealMechanic.ID, amount, Shape.SELF)
 
 
+## Haste on the holder for `seconds` (decision #66).
+static func haste(seconds: float) -> ItemEffect:
+  return make(HasteMechanic.ID, seconds, Shape.SELF)
+
+
+## Slow on `target_shape` for `seconds` (decision #66).
+static func slow(seconds: float, target_shape: int = Shape.OPPONENT_LEFTMOST) -> ItemEffect:
+  return make(SlowMechanic.ID, seconds, target_shape)
+
+
 ## Any mechanic (`MechanicRegistry` id) for `amount` on `target_shape`.
 static func make(mechanic_id: String, amount: float, target_shape: int) -> ItemEffect:
   var effect := ItemEffect.new()

@@ -48,11 +48,11 @@ straight line with no cap (owner, 2026-09-23): each extra second of cooldown add
 to the rate. Because the budget is the rate multiplied by the cooldown, the budget grows faster
 than the cooldown.
 
-The rate rises because a slow item loses value to **overkill** (damage past 0 HP is wasted, while
+The rate rises because a long-cooldown item loses value to **overkill** (damage past 0 HP is wasted, while
 fast small hits spend almost exactly to the kill), to **trigger density** (anything per-hit fires
 per swing, not per damage), and to **commitment** (a fast item contributes immediately and can be
 redirected). The owner replaced an earlier curve that levelled off at the top with the straight
-line because it is simpler and gives slow items a smaller bonus in the usual cooldown range.
+line because it is simpler and gives long-cooldown items a smaller bonus in the usual cooldown range.
 
 **Rarity raises the budget** (owner, 2026-09-23). An uncommon or rare item's budget is the common
 budget multiplied by `Balance.POINTS_UNCOMMON_MULTIPLIER` or `Balance.POINTS_RARE_MULTIPLIER`. Rarer
@@ -60,7 +60,7 @@ items are meant to be stronger, not only more involved: power is not flat across
 extra also pays for the conditions and interactions those items carry. `ItemPoints.budget(cooldown, rarity)` applies it. Enemy fight
 budgets do not model rarity.
 
-**Long cooldowns need large enemy health pools.** A slow item spends a large budget in one hit, so
+**Long cooldowns need large enemy health pools.** A long-cooldown item spends a large budget in one hit, so
 an enemy with too little health turns most of it into overkill. The next section sets enemy health to match.
 
 ## Pricing an enemy
@@ -199,7 +199,7 @@ There is a catch the curve does not capture: an item is worth nothing if the fig
 first cooldown. At the old placeholder enemy health an act 1 fight lasted about 5.6 seconds, so
 the Warhammer and Mighty Blow never fired and the Smith played as a Broadaxe and nothing else. With
 enemy health on the curve, the Smith's regular fights last about 10 to 16 seconds and both fire.
-Slow items need fights long enough to reach them, and that is set by enemy health, not by the item
+Long-cooldown items need fights long enough to reach them, and that is set by enemy health, not by the item
 budget.
 
 Stacks add up with no cap, and any attack uses one up, so what a stack is worth depends on the
@@ -222,7 +222,7 @@ Bolt) are left alone.
 One thing is worth keeping for when they come back. A timed debuff cannot be priced as a flat cost,
 because its value is the fraction of the fight it is active for: a 2 second Weak from a 2 second item
 is always on, and the same Weak from an 8 second item is on a quarter of the time. It needs a cost
-in points per second of cooldown, so that a slow item does not buy the same debuff cheaply.
+in points per second of cooldown, so that a long-cooldown item does not buy the same debuff cheaply.
 
 ## Status durations are per-application
 

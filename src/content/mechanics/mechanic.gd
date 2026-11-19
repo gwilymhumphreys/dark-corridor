@@ -32,14 +32,25 @@ func shield_multiplier() -> float:
   return 1.0
 
 
+## The stacks of `status_id` a landing delivery applies: its value. Haste and slow apply one.
+func status_count(delivery: Delivery) -> float:
+  return delivery.value
+
+
+## The duration a landing delivery gives `status_id`. Haste and slow read it from the value, so it
+## shows on the value pill and grows with the item's level.
+func status_duration(delivery: Delivery) -> float:
+  return delivery.duration
+
+
 ## What happens when a delivery of this mechanic lands. The base applies the mechanic's
 ## `status_id` to the target (the shield mechanic's behaviour) and logs it; `AttackMechanic`
 ## and `HealMechanic` override it for their direct effects. Only `CombatManager._land` calls it.
 func land(delivery: Delivery, combat: CombatManager) -> void:
   if status_id == '':
     return
-  var applied: StatusEffect = StatusManager.apply(delivery.target, status_id, delivery.value,
-      delivery.duration, delivery.source, delivery.flags)
+  var applied: StatusEffect = StatusManager.apply(delivery.target, status_id, status_count(delivery),
+      status_duration(delivery), delivery.source, delivery.flags)
   if applied != null:   # an unknown id applies nothing — publish no event for it
     combat.bus.publish(EventBus.Event.APPLIED, id, delivery.source_actor,
         combat._source_item_of(delivery))

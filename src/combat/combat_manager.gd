@@ -270,7 +270,7 @@ func sim_step() -> void:
     # cooldown after the gate lifts. (Item.fire() keeps its own gate check as backstop.)
     if it.is_gated():
       continue
-    if it.cooldown.step():
+    if it.cooldown.advance(StatusManager.cooldown_rate(it.owner)):   # haste and slow
       fired_items.append(it)
   # Relics are never stepped by time; each trigger entry whose ticker an event filled fires after the
   # items, in relic order then entry order. An entry that used its fires for this fight drops the push.

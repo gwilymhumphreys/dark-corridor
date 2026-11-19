@@ -22,7 +22,13 @@ static func from_seconds(seconds: float) -> Ticker:
 
 ## Advance one sim-step of time-accrual; returns true if it crossed this step.
 func step() -> bool:
-  accum += 1.0
+  return advance(1.0)
+
+
+## Advance `amount` sim-steps of time-accrual (haste and slow fill an item's bar faster or more
+## slowly); returns true if it crossed this step.
+func advance(amount: float) -> bool:
+  accum += amount
   return crossed()
 
 

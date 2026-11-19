@@ -130,6 +130,56 @@ layout_mode = 2
 auto_translate_mode = 2
 theme_type_variation = &"LabelOnBar"
 
+[node name="Haste" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="Haste"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 3
+stretch_mode = 5
+
+[node name="Outline" type="Control" parent="Haste/Icon"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("icon_outline")
+
+[node name="Slow" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="Slow"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 3
+stretch_mode = 5
+
+[node name="Outline" type="Control" parent="Slow/Icon"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("icon_outline")
+
 [node name="Juice" type="Node" parent="."]
 script = ExtResource("2")
 preset = 2
