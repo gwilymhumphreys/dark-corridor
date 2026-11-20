@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/draft_overlay.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
+[ext_resource type="Script" path="res://src/scenes/screens/reward_spin.gd" id="3"]
 
 [node name="DraftOverlay" type="Control"]
 layout_mode = 3
@@ -75,5 +76,9 @@ text = ""
 
 [node name="Juice" type="Node" parent="Panel/SkipButton"]
 script = ExtResource("2")
+
+[node name="Spin" type="Node" parent="." node_paths=PackedStringArray("panel")]
+script = ExtResource("3")
+panel = NodePath("../Panel")
 
 [connection signal="pressed" from="Panel/SkipButton" to="." method="_on_skip_pressed"]

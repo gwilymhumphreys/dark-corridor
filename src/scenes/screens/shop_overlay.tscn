@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/scenes/screens/shop_overlay.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/ui_juice.gd" id="2"]
+[ext_resource type="Script" path="res://src/scenes/screens/reward_spin.gd" id="3"]
 
 [node name="ShopOverlay" type="Control"]
 layout_mode = 3
@@ -106,6 +107,10 @@ auto_translate_mode = 2
 
 [node name="Juice" type="Node" parent="Panel/RerollButton"]
 script = ExtResource("2")
+
+[node name="Spin" type="Node" parent="." node_paths=PackedStringArray("panel")]
+script = ExtResource("3")
+panel = NodePath("../Panel")
 
 [connection signal="pressed" from="Panel/LeaveButton" to="." method="_on_leave_pressed"]
 [connection signal="pressed" from="Panel/RerollButton" to="." method="_on_reroll_pressed"]

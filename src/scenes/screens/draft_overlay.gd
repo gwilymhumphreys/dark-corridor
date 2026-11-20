@@ -7,7 +7,8 @@ extends Control
 ## option's own border; clicking it emits
 ## `picked(index)` — a draft-pick intent the run screen forwards to RunManager.apply_draft_pick. The
 ## gold button emits `skipped` instead (bank gold; docs decision #33) → RunManager.apply_draft_skip.
-## Reads the candidate defs; writes nothing.
+## `spin_in` reveals the options like a slot machine (`RewardSpin`); neither a pick nor the gold
+## button does anything until every option has landed. Reads the candidate defs; writes nothing.
 
 signal picked(index: int)
 signal skipped()
@@ -17,6 +18,7 @@ const REWARD_OPTION: PackedScene = preload('res://src/scenes/screens/reward_opti
 @onready var _panel: Control = $Panel
 @onready var _cards: HBoxContainer = $Panel/Cards
 @onready var _skip_button: Button = $Panel/SkipButton
+@onready var _spin: RewardSpin = $Spin
 
 var _options: Array[RewardOption] = []
 
@@ -44,6 +46,23 @@ func setup(candidates: Array, levels: Array[int] = []) -> void:
     _options.append(option)
 
 
+## Spin the options in, left to right, before they land on their rewards (`RewardSpin.start`).
+## Does nothing when the `reward_spin` print setting is off. `faces` are the icons to flick through;
+## empty uses the item catalog's.
+func spin_in(faces: Array[Texture2D] = []) -> void:
+  _spin.start(_options, faces)
+
+
+## True until every option has landed; picks are ignored meanwhile.
+func is_spinning() -> bool:
+  return _spin.is_spinning()
+
+
+## Land every option at once.
+func skip_spin() -> void:
+  _spin.skip()
+
+
 ## The reward icon under `point` as {item, rect (global), side} for the tooltip cluster, or {}.
 func inspectable_at(point: Vector2) -> Dictionary:
   for option: RewardOption in _options:
@@ -58,8 +77,10 @@ func covers(point: Vector2) -> bool:
 
 
 func _on_option_pressed(index: int) -> void:
-  picked.emit(index)
+  if not _spin.is_spinning():
+    picked.emit(index)
 
 
 func _on_skip_pressed() -> void:
-  skipped.emit()
+  if not _spin.is_spinning():
+    skipped.emit()

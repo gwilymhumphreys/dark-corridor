@@ -211,6 +211,15 @@ func restart_encounter() -> void:
   _arrive_at_choice()
 
 
+# Debug only (the F7 Spin again button): spin the open draft or shop goods in again with the
+# current settings, so a change to the reward spin settings shows at once.
+func spin_rewards_again() -> void:
+  if _draft != null:
+    _draft.spin_in()
+  if _shop != null:
+    _shop.spin_in()
+
+
 # An encounter's panel sits under the card picked for it, when there is one.
 func _hold_below_card(overlay: Control) -> void:
   if _kept_choice != null:
@@ -541,6 +550,7 @@ func _show_draft() -> void:
   _draft.picked.connect(_on_draft_picked)
   _draft.skipped.connect(_on_draft_skipped)
   _draft.setup(_run.pending_draft(), _run.pending_draft_levels())
+  _draft.spin_in()   # the rewards land one at a time before they can be picked
   _hold_below_card(_draft)
 
 
@@ -571,6 +581,7 @@ func _show_shop() -> void:
   _shop.rerolled.connect(_on_shop_rerolled)
   _shop.left.connect(_on_shop_left)
   _shop.setup(tr(_run.current_encounter().def.name_key), _run)
+  _shop.spin_in()   # the goods land one at a time before they can be bought
   _hold_below_card(_shop)
 
 
@@ -590,6 +601,7 @@ func _on_shop_rerolled() -> void:
   if not _run.reroll_shop():
     return
   _shop.show_goods(_run)
+  _shop.spin_in()
   _refresh_gold()
 
 

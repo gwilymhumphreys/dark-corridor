@@ -451,11 +451,14 @@ func test_a_shop_reroll_pays_and_shows_the_new_goods() -> void:
     screen._physics_process(1.0)
   Game.run.gold = 100
   screen._choice.picked.emit(0)
+  assert_true(screen._shop.is_spinning(), 'the goods spin in when the shop opens')
+  screen._shop.skip_spin()
   var price: int = Game.run.reroll_price()
   screen._shop.rerolled.emit()
   assert_eq(Game.run.gold, 100 - price, 'the reroll is paid for')
   assert_eq(screen._shop.get_node('Panel/Cards').get_child_count(), Game.run.shop_goods().size(),
     'and the panel shows the new goods')
+  assert_true(screen._shop.is_spinning(), 'spinning them in again')
   screen.free()
 
 
@@ -588,9 +591,12 @@ func test_draft_rewards_are_inspectable_in_the_corridor() -> void:
   screen._event = null
   screen._run._set_offer([FixtureItems.attack()])
   screen._show_draft()
+  assert_true(screen._draft.is_spinning(), 'the rewards spin in when the panel opens')
+  screen._draft.skip_spin()   # a spinning reward shows no item, so land it first
   await get_tree().process_frame   # let the containers place the reward icon
   assert_eq(screen._draft.get_parent(), screen._view.corridor_area(), 'the reward panel is in the corridor area')
   var option: RewardOption = screen._draft.get_node('Panel/Cards').get_child(0)
+  assert_not_null(option.item(), 'the landed reward shows its item')
   var target: Dictionary = screen._inspection_target(option.get_global_rect().get_center())
   assert_eq(target.get('item'), option.item(), 'hovering a reward targets its item for the tooltip')
   screen.free()

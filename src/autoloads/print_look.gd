@@ -64,6 +64,9 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## - `photo_*`: the pile of character photos on character select (`CharacterSelect`): the largest tilt
 ##   and shift a photo rests at, how far a photo slides out of the pile as a share of its width, and
 ##   the seconds it takes to slide out and back in on top.
+## - `reward_spin*`: the slot-machine reveal of the draft and shop goods (`RewardSpin`): whether it
+##   plays, the seconds until the first good lands, the seconds between one good landing and the next,
+##   the seconds each icon stays up at full speed, and how much a good grows as it lands.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'token_tilt': 3.0,
@@ -123,6 +126,11 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'photo_shift': 24.0,
   'photo_slide_distance': 0.5,
   'photo_slide_time': 0.45,
+  'reward_spin': true,
+  'reward_spin_time': 0.45,
+  'reward_spin_gap': 0.25,
+  'reward_spin_face_time': 0.05,
+  'reward_spin_bump': 1.15,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']

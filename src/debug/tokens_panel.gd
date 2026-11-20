@@ -55,6 +55,13 @@ const SECTIONS: Dictionary = {
     'photo_slide_distance': [0.0, 1.5, 0.05],
     'photo_slide_time': [0.1, 2.0, 0.05],
   },
+  'Reward spin': {
+    'reward_spin': [],
+    'reward_spin_time': [0.05, 3.0, 0.05],
+    'reward_spin_gap': [0.0, 1.0, 0.05],
+    'reward_spin_face_time': [0.01, 0.3, 0.01],
+    'reward_spin_bump': [1.0, 1.6, 0.01],
+  },
   'Paper burn': {
     'paper_burn_duration': [0.2, 6.0, 0.1],
     'paper_burn_raggedness': [0.0, 40.0, 0.5],
@@ -107,3 +114,8 @@ func rebuild() -> void:
       restart.text = 'Restart encounter'
       restart.pressed.connect(func() -> void: get_tree().call_group(RunScreen.GROUP, 'restart_encounter'))
       section.add_node(restart)
+    if title == 'Reward spin':
+      var respin: Button = Button.new()
+      respin.text = 'Spin again'
+      respin.pressed.connect(func() -> void: get_tree().call_group(RunScreen.GROUP, 'spin_rewards_again'))
+      section.add_node(respin)

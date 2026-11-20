@@ -6,7 +6,9 @@ extends Control
 ## RunManager.buy; the run screen then calls `refresh`. Reroll emits `rerolled` → RunManager.reroll_shop;
 ## the run screen then calls `show_goods`. Leave emits `left` → RunManager.leave_shop. Hovering a good
 ## shows its tooltip (the run screen asks inspectable_at each frame). The player's gold moves to a new
-## amount instead of jumping (EasedValue). Reads the run; writes nothing.
+## amount instead of jumping (EasedValue). `spin_in` reveals the goods like a slot machine
+## (`RewardSpin`); no button on the panel does anything until every good has landed. Reads the run;
+## writes nothing.
 
 signal bought(index: int)
 signal rerolled()
@@ -19,6 +21,7 @@ const SHOP_ENTRY: PackedScene = preload('res://src/scenes/screens/shop_entry.tsc
 @onready var _gold: Label = $Panel/Gold
 @onready var _cards: HBoxContainer = $Panel/Cards
 @onready var _reroll: Button = $Panel/RerollButton
+@onready var _spin: RewardSpin = $Spin
 
 var _entries: Array[ShopEntry] = []
 var _gold_shown: EasedValue = null   # the gold in the panel; null until the first refresh
@@ -68,6 +71,26 @@ func refresh(run: RunManager) -> void:
     _entries[i].show_state(run.can_buy(i), run.is_sold(i))
 
 
+## Spin the goods in, left to right, before they land (`RewardSpin.start`); call after `setup` and
+## after each `show_goods`. Does nothing when the `reward_spin` print setting is off. `faces` are the
+## icons to flick through; empty uses the item catalog's.
+func spin_in(faces: Array[Texture2D] = []) -> void:
+  var options: Array[RewardOption] = []
+  for entry: ShopEntry in _entries:
+    options.append(entry.option)
+  _spin.start(options, faces)
+
+
+## True until every good has landed; the panel's buttons are ignored meanwhile.
+func is_spinning() -> bool:
+  return _spin.is_spinning()
+
+
+## Land every good at once.
+func skip_spin() -> void:
+  _spin.skip()
+
+
 ## The good's icon under `point` as {item, rect (global), side} for the tooltip cluster, or {}.
 func inspectable_at(point: Vector2) -> Dictionary:
   for entry: ShopEntry in _entries:
@@ -87,12 +110,15 @@ func _write_gold(amount: int) -> void:
 
 
 func _on_buy_pressed(index: int) -> void:
-  bought.emit(index)
+  if not _spin.is_spinning():
+    bought.emit(index)
 
 
 func _on_reroll_pressed() -> void:
-  rerolled.emit()
+  if not _spin.is_spinning():
+    rerolled.emit()
 
 
 func _on_leave_pressed() -> void:
-  left.emit()
+  if not _spin.is_spinning():
+    left.emit()

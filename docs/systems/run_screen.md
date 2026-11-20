@@ -354,6 +354,7 @@ A view built without a fight never shows the fills. The combat report is still f
   shows its price, is disabled when the player cannot pay, and emits `rerolled` →
   `RunManager.reroll_shop`; the run screen then rebuilds the goods (`ShopOverlay.show_goods`). Leave
   emits `left` → `RunManager.leave_shop`, then the run advances. Hovering a good shows its tooltip.
+  The goods spin in when the panel opens and after each reroll (the reward spin, below).
 - **Draft** — `draft_overlay.tscn` shows each reward as a `RewardOption` (`reward_option.tscn`)
   in a reward encounter: a button around the same `ItemCell` the board uses (the same
   icon, value pills and tooltip, for potions and relics too), built at the level from
@@ -366,6 +367,17 @@ A view built without a fight never shows the fills. The combat report is still f
   `RunManager.apply_draft_skip` instead, banking gold and
   refreshing the gold box before advancing (decision #33). Both paths then advance. A won fight shows
   no reward panel (decision #62); its gold goes straight into the gold box.
+- **Reward spin** — the draft and shop panels each hold a `RewardSpin` node (`reward_spin.gd`). When
+  the run screen calls the panel's `spin_in`, each option flicks through item icons from the item
+  catalog, slows down and lands on its good with a small bump, one at a time from left to right
+  (`RewardOption.start_spin`, `show_face`, `land`). A spinning option shows no good, so it has no
+  tooltip. The panel ignores every one of its buttons until all options have landed
+  (`is_spinning`). A mouse click or key press during the spin lands them all at once
+  (`skip_spin`); a click on the panel is used up by this, so it does not also pick. The timings,
+  the bump and an on/off switch are the `reward_spin*` print settings in the F7 tab's Reward spin
+  section, whose Spin again button (`RunScreen.spin_rewards_again`) spins the open panel again.
+  Only the run screen starts a spin, so the autotest, which has no panels, is not slowed. There is
+  no sound yet.
 - **Gold** — a "Gold" box beside the potions in the combat view: the amount in a box drawn with the
   potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
   screen writes it when it builds the view (covering a resumed run's banked gold), after each beat and
