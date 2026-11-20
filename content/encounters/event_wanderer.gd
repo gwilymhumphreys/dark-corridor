@@ -1,6 +1,6 @@
 extends EncounterDef
 ## Placeholder recruit event (decision #1): one option adds an ally for the rest of the run, the
-## other declines for a small heal. Offered only while an ally slot is free.
+## other declines for a little maximum health. Offered only while an ally slot is free.
 
 
 func _init() -> void:
@@ -15,6 +15,6 @@ func _init() -> void:
   welcome.effects = [RunEffect.add_ally('spore_thrall')]
   var refuse := EventOptionDef.new()
   refuse.label_key = 'Walk on alone'
-  refuse.effects = [RunEffect.heal_fraction(0.15)]
+  refuse.effects = [RunEffect.max_hp(5)]   # placeholder amount
   event_options = [welcome, refuse]
   requires = [CanAddAlly.new()]

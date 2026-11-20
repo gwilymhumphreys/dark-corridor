@@ -26,8 +26,8 @@ const LEFT: Array = [
   'shop_decharge',
   'shop_crit',
 ]
-const MIDDLE: Array = ['event_shrine', 'relic_cache']
-const RIGHT: Array = ['event_wanderer', 'rest']
+const MIDDLE: Array = ['relic_cache']
+const RIGHT: Array = ['event_wanderer', 'event_shrine']
 
 static var _positions: Array = []   # one Array of ids per position, left to right
 

@@ -13,7 +13,6 @@ const CHARACTER_IDS: Array = [
 
 const ENCOUNTER_IDS: Array = [
   'fight_grunt',
-  'rest',
   'fight_elite',
   'relic_cache',
   'fight_tough',
