@@ -64,9 +64,14 @@ const PRINT_FRAME_UNIFORMS: Array[String] = [
 ## - `photo_*`: the pile of character photos on character select (`CharacterSelect`): the largest tilt
 ##   and shift a photo rests at, how far a photo slides out of the pile as a share of its width, and
 ##   the seconds it takes to slide out and back in on top.
-## - `reward_spin*`: the slot-machine reveal of the draft and shop goods (`RewardSpin`): whether it
-##   plays, the seconds until the first good lands, the seconds between one good landing and the next,
-##   the seconds each icon stays up at full speed, and how much a good grows as it lands.
+## - `reward_spin*`: the slot-machine reveal of the draft and shop goods (`RewardSpin`), on the debug
+##   panel's Reward spin tab: whether it plays, its style (`RewardSpin.Style`: a reel or a flicker in
+##   place), the seconds until the first good lands, the seconds between one good landing and the
+##   next, the seconds each icon takes to pass at full speed, and how much a good grows as it lands.
+##   For the reel (`RewardReel`): the window's height as a multiple of the cell's icon, how strongly
+##   the drum curves (0 flat, 1 the window's edges at the drum's top and bottom), how much darker the
+##   icons are at the window's edge, and whether the reel overshoots its good and by how much of an
+##   icon.
 const PRINT_SETTING_DEFAULTS: Dictionary = {
   'padding': 20.0,
   'token_tilt': 3.0,
@@ -131,6 +136,12 @@ const PRINT_SETTING_DEFAULTS: Dictionary = {
   'reward_spin_gap': 0.25,
   'reward_spin_face_time': 0.05,
   'reward_spin_bump': 1.15,
+  'reward_spin_style': 0,
+  'reward_spin_window': 1.5,
+  'reward_spin_curve': 0.8,
+  'reward_spin_darkening': 0.7,
+  'reward_spin_bounce': true,
+  'reward_spin_bounce_size': 0.2,
 }
 ## The theme styles the token look is written to (docs/systems/ui_theme.md).
 const TOKEN_STYLES: Array[String] = ['PanelToken', 'PanelTokenWide']

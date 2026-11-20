@@ -208,7 +208,7 @@ resolution.
 | What | Doc |
 |---|---|
 | `Corridor3D`: real 3D corridor, one steady light at the camera, painted enemies as lit `Sprite3D` cut-outs, hit lights in the effect colour | [corridor_3d.md](systems/corridors/corridor_3d.md) |
-| Debug panel (F1 to F7 open its tabs): world palette (Corridor tab), interface palette and font choice (Interface tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
+| Debug panel (F1 to F8 open its tabs): world palette (Corridor tab), interface palette and font choice (Interface tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
 | Look presets: the whole look in one file, the default preset loaded at start-up, the history of past defaults; `assets/presets/` | [look_presets.md](systems/look_presets.md) |
 | F1 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog | [corridor_look.md](systems/corridor_look.md) |
 | F2 interface look: the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look | [interface_look.md](systems/interface_look.md) |

@@ -73,8 +73,18 @@ func test_tokens_panel_has_the_token_sections() -> void:
   var tokens_panel: TokensPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Tokens') as TokensPanel
   tokens_panel.rebuild()
   var titles: Array[String] = _section_titles(tokens_panel)
-  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits', 'Character panels', 'Item levels', 'Map', 'Encounter cards', 'Character photos', 'Reward spin', 'Paper burn', 'Page turn'] as Array[String], 'one section per part of the token look')
+  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits', 'Character panels', 'Item levels', 'Map', 'Encounter cards', 'Character photos', 'Paper burn', 'Page turn'] as Array[String], 'one section per part of the token look')
   assert_false(PrintPanel.LAYOUT_PROPERTIES.has('token_tilt'), 'the token settings left the Print tab')
+
+
+func test_reward_spin_panel_has_the_reward_spin_sections() -> void:
+  var reward_spin_panel: RewardSpinPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/RewardSpin') as RewardSpinPanel
+  reward_spin_panel.rebuild()
+  assert_eq(_section_titles(reward_spin_panel), ['Spin', 'Reel'] as Array[String], 'the spin and the reel')
+  assert_false(TokensPanel.SECTIONS.has('Reward spin'), 'the reward spin left the Tokens tab')
+  for title: String in RewardSpinPanel.SECTIONS:
+    for setting: String in RewardSpinPanel.SECTIONS[title]:
+      assert_true(PrintLookAutoload.PRINT_SETTING_DEFAULTS.has(setting), '%s is a print setting, so presets save it' % setting)
 
 
 func test_save_then_load_restores_the_print_look() -> void:

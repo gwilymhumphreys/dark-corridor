@@ -5,9 +5,9 @@ extends Node
 ## that the corridor is drawn through: the corridor look shader, with its world palette clamp
 ## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
 ##
-## One panel with a preset bar and seven tabs: corridor look with its palette (F1), interface look with
+## One panel with a preset bar and eight tabs: corridor look with its palette (F1), interface look with
 ## its palettes and the palette colours (F2), print look (F3), background wear (F4), control feedback
-## (F5), the icon slots (F6) and the cardboard token look (F7); each key opens its tab, in debug builds only. Choices last for the session only, unless saved as a look preset
+## (F5), the icon slots (F6), the cardboard token look (F7) and the reward spin (F8); each key opens its tab, in debug builds only. Choices last for the session only, unless saved as a look preset
 ## (docs/systems/look_presets.md). The default preset loads at start-up.
 ## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
 
@@ -46,7 +46,7 @@ const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'ditherin
 ## The panel's tabs, in the order they sit in `debug_panels.tscn`. A tab is not the same thing as a
 ## `LookPresets.Part`: the five look tabs happen to line up with the parts, but a tab that saves its
 ## own files instead of being part of a preset has no `Part`.
-enum Tab { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, ICONS, TOKENS }
+enum Tab { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, ICONS, TOKENS, REWARD_SPIN }
 ## Tab titles, by tab.
 const TAB_TITLES: Dictionary = {
   Tab.CORRIDOR: 'Corridor (F1)',
@@ -56,6 +56,7 @@ const TAB_TITLES: Dictionary = {
   Tab.FEEDBACK: 'Feedback (F5)',
   Tab.ICONS: 'Icons (F6)',
   Tab.TOKENS: 'Tokens (F7)',
+  Tab.REWARD_SPIN: 'Reward spin (F8)',
 }
 ## The tab each key opens.
 const TAB_KEYS: Dictionary = {
@@ -66,6 +67,7 @@ const TAB_KEYS: Dictionary = {
   KEY_F5: Tab.FEEDBACK,
   KEY_F6: Tab.ICONS,
   KEY_F7: Tab.TOKENS,
+  KEY_F8: Tab.REWARD_SPIN,
 }
 
 ## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the corridor
@@ -111,6 +113,7 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _feedback_panel: FeedbackPanel = $PanelLayer/Panel/Rows/Tabs/Feedback
 @onready var _icon_panel: IconPanel = $PanelLayer/Panel/Rows/Tabs/Icons
 @onready var _tokens_panel: TokensPanel = $PanelLayer/Panel/Rows/Tabs/Tokens
+@onready var _reward_spin_panel: RewardSpinPanel = $PanelLayer/Panel/Rows/Tabs/RewardSpin
 @onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
 @onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
@@ -154,8 +157,8 @@ func _ready() -> void:
 ## `--feedback-set=name=value` a control feedback setting, `--feedback-demo=<amount>` holds every
 ## control at that much hover for a screenshot, `--glow-demo=<brightness>` makes every node drawn
 ## through a picture material glow. `--look-panel`, `--interface-panel`,
-## `--print-panel`, `--background-panel`, `--feedback-panel` and `--icon-panel` open the panel on
-## that tab.
+## `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel`, `--tokens-panel` and
+## `--reward-spin-panel` open the panel on that tab.
 func _apply_command_line() -> void:
   var args: PackedStringArray = DevArgs.all()
   for arg: String in args:
@@ -226,6 +229,8 @@ func _apply_command_line() -> void:
     toggle_tab(Tab.ICONS)
   elif '--tokens-panel' in args:
     toggle_tab(Tab.TOKENS)
+  elif '--reward-spin-panel' in args:
+    toggle_tab(Tab.REWARD_SPIN)
   _sync_controls()
 
 
@@ -318,6 +323,8 @@ func _open_tab(tab: int) -> void:
       _icon_panel.open()
     Tab.TOKENS:
       _tokens_panel.open()
+    Tab.REWARD_SPIN:
+      _reward_spin_panel.open()
 
 
 func _on_tab_changed(tab: int) -> void:
@@ -344,6 +351,7 @@ func refresh_panels() -> void:
   _background_panel.refresh()
   _feedback_panel.refresh()
   _tokens_panel.refresh()
+  _reward_spin_panel.refresh()
 
 
 ## Rebuild the Corridor tab's controls after corridor look settings change elsewhere (the Interface

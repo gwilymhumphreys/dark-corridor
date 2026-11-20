@@ -3,7 +3,8 @@ extends LookPanel
 ## The tokens tab of the debug panel (docs/systems/print_frame.md), opened with F7 by `DebugPanels`:
 ## how items, potions and, when switched on, portraits look as cardboard tokens on the board grid.
 ## These are print frame settings (`PrintLook.PRINT_SETTING_DEFAULTS`), so a look preset saves them
-## with its Print part; the tab has no preset row of its own.
+## with its Print part; the tab has no preset row of its own. The reward spin settings are print frame
+## settings too, but have their own tab (`RewardSpinPanel`).
 
 ## The token settings by section: section title -> {setting -> [min, max, step]} ([] for a switch or
 ## a colour, the option names for a dropdown, in the order of the enum they index).
@@ -54,13 +55,6 @@ const SECTIONS: Dictionary = {
     'photo_shift': [0.0, 80.0, 1.0],
     'photo_slide_distance': [0.0, 1.5, 0.05],
     'photo_slide_time': [0.1, 2.0, 0.05],
-  },
-  'Reward spin': {
-    'reward_spin': [],
-    'reward_spin_time': [0.05, 3.0, 0.05],
-    'reward_spin_gap': [0.0, 1.0, 0.05],
-    'reward_spin_face_time': [0.01, 0.3, 0.01],
-    'reward_spin_bump': [1.0, 1.6, 0.01],
   },
   'Paper burn': {
     'paper_burn_duration': [0.2, 6.0, 0.1],
@@ -114,8 +108,3 @@ func rebuild() -> void:
       restart.text = 'Restart encounter'
       restart.pressed.connect(func() -> void: get_tree().call_group(RunScreen.GROUP, 'restart_encounter'))
       section.add_node(restart)
-    if title == 'Reward spin':
-      var respin: Button = Button.new()
-      respin.text = 'Spin again'
-      respin.pressed.connect(func() -> void: get_tree().call_group(RunScreen.GROUP, 'spin_rewards_again'))
-      section.add_node(respin)

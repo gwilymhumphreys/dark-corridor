@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/debug/debug_panels.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/debug/look_panel.tscn" id="4"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://src/debug/feedback_panel.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://src/debug/icon_panel.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://src/debug/tokens_panel.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://src/debug/reward_spin_panel.tscn" id="12"]
 
 [node name="DebugPanels" type="Node"]
 process_mode = 3
@@ -75,3 +76,8 @@ metadata/_tab_index = 5
 visible = false
 layout_mode = 2
 metadata/_tab_index = 6
+
+[node name="RewardSpin" parent="PanelLayer/Panel/Rows/Tabs" instance=ExtResource("12")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 7

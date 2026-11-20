@@ -1,8 +1,10 @@
 extends GutTest
 ## The slot-machine reveal of the draft and shop goods (RewardSpin, docs/systems/run_screen.md →
-## Overlays): the options flick through icons and land left to right, nothing can be picked until
-## every option has landed, a click or key press lands them all, and the `reward_spin` print
-## setting off shows the goods at once. Time is moved on by hand with `advance`.
+## Overlays): the options spin and land left to right, nothing can be picked until every option has
+## landed, a click or key press lands them all, and the `reward_spin` print setting off shows the
+## goods at once. In the reel style a reel ends on the good; the flicker style changes the icon in
+## place. The drum's sums (RewardReel) and the reel's motion are checked on their own. Time is moved
+## on by hand with `advance`.
 
 var _nodes: Array = []
 var _runs: Array = []
@@ -85,10 +87,66 @@ func test_the_options_land_left_to_right_then_can_be_picked() -> void:
 func test_skip_lands_every_option_at_once() -> void:
   var overlay := _draft()
   overlay.spin_in(_faces())
+  assert_true(_option(overlay, 2).reel().visible, 'the reels show')
   overlay.skip_spin()
   assert_false(overlay.is_spinning(), 'nothing spins')
   for i in 3:
     assert_not_null(_option(overlay, i).item(), 'option %d shows its good' % i)
+    assert_false(_option(overlay, i).reel().visible, 'with its reel put away')
+
+
+func test_each_reel_ends_on_its_good() -> void:
+  var overlay := _draft()
+  overlay.spin_in(_faces())
+  var spin: RewardSpin = _spin(overlay)
+  var reel: RewardReel = _option(overlay, 0).reel()
+  assert_true(reel.visible, 'the reel shows')
+  spin.advance(PrintLook.print_setting('reward_spin_time') - 0.01)
+  assert_true(reel.visible, 'still turning just before it lands')
+  assert_eq(reel.face_at_centre(), load(FixtureItems.attack().icon) as Texture2D, 'with the good at the centre')
+  spin.advance(0.02)
+  assert_false(reel.visible, 'landed, the reel is put away')
+  assert_eq(_option(overlay, 0).item().def.id, FixtureItems.attack().id, 'and the cell shows the good')
+
+
+func test_the_flicker_style_changes_the_icon_in_place() -> void:
+  PrintLook.set_print_value('reward_spin_style', RewardSpin.Style.FLICKER)
+  var overlay := _draft()
+  overlay.spin_in(_faces())
+  var option: RewardOption = _option(overlay, 0)
+  assert_false(option.reel().visible, 'no reel')
+  assert_true(_faces().has((option.cell.get_node('Frame/Icon') as TextureRect).texture), 'the cell shows a flicked icon')
+  assert_null(option.item(), 'and no good')
+  _spin(overlay).advance(PrintLook.print_setting('reward_spin_time') + PrintLook.print_setting('reward_spin_gap') * 3.0)
+  assert_false(overlay.is_spinning(), 'every option lands')
+  assert_eq(option.item().def.id, FixtureItems.attack().id, 'on its good')
+
+
+func test_the_drum_shows_the_centre_face_whole_and_the_others_flatter_and_darker() -> void:
+  var half_window: float = 60.0
+  var radius: float = RewardReel.drum_radius(half_window, 0.8)
+  var length: float = RewardReel.face_arc(80.0, radius)
+  var centre: Vector3 = RewardReel.drum_place(0.0, length, half_window, radius, 0.7)
+  assert_almost_eq(centre.x, -40.0, 0.01, 'the centre face is its full height')
+  assert_almost_eq(centre.y, 40.0, 0.01, 'about the centre')
+  assert_almost_eq(centre.z, 1.0, 0.001, 'at full brightness')
+  var below: Vector3 = RewardReel.drum_place(length, length, half_window, radius, 0.7)
+  assert_lt(below.y - below.x, 80.0, 'the face below is flatter')
+  assert_almost_eq(below.x, centre.y, 0.01, 'and meets the centre face, so the faces bunch up without overlapping')
+  assert_lt(below.z, 1.0, 'and darker')
+  var behind: Vector3 = RewardReel.drum_place(radius * PI, length, half_window, radius, 0.7)
+  assert_almost_eq(behind.y - behind.x, 0.0, 0.001, 'a face round the back of the drum does not show')
+  var flat: Vector3 = RewardReel.drum_place(100.0, 80.0, half_window, RewardReel.drum_radius(half_window, 0.0), 0.5)
+  assert_eq(flat, Vector3(60.0, 140.0, 0.5), 'with no curve the strip is flat, darkest at the window edge')
+
+
+func test_a_reel_slows_overshoots_and_settles_on_its_good() -> void:
+  assert_eq(RewardSpin.reel_turns(1.0, 0.15, 0.05, 0.2), 8, 'about one icon per face time at the start, slowing evenly')
+  assert_almost_eq(RewardSpin.reel_position(0.0, 1.0, 8, 0.2, 0.15), 0.0, 0.001, 'it starts at the first icon')
+  assert_lt(RewardSpin.reel_position(0.4, 1.0, 8, 0.2, 0.15), RewardSpin.reel_position(0.6, 1.0, 8, 0.2, 0.15), 'it turns on')
+  assert_almost_eq(RewardSpin.reel_position(0.85, 1.0, 8, 0.2, 0.15), 8.2, 0.001, 'overshoots its good')
+  assert_almost_eq(RewardSpin.reel_position(1.0, 1.0, 8, 0.2, 0.15), 8.0, 0.001, 'and settles back on it')
+  assert_almost_eq(RewardSpin.reel_position(1.0, 1.0, 8, 0.0, 0.0), 8.0, 0.001, 'with no overshoot it stops on it')
 
 
 func test_a_click_or_a_key_lands_every_option() -> void:

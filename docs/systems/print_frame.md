@@ -80,8 +80,9 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   settings the [page turn](page_turn.md) between screens.
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
-  `TokensPanel`), in twelve sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings), Item levels, Map (the map icon switch and the cleared square look), Encounter cards, Character photos, Reward spin ([run_screen.md](run_screen.md#overlays)), Paper burn and Page turn.
+  `TokensPanel`), in eleven sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
+  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings), Item levels, Map (the map icon switch and the cleared square look), Encounter cards, Character photos, Paper burn and Page turn. The `reward_spin*` settings are print
+  frame settings too, on their own tab, Reward spin (F8, `RewardSpinPanel`, [run_screen.md](run_screen.md#overlays)).
 
 | Group | Does |
 |---|---|

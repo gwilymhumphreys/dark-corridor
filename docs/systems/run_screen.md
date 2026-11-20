@@ -55,6 +55,7 @@ IDLE → enter beat ─ choice? WALKING → CHOOSING ─(card picked)→ begin b
                    └ fight (a live encounter already) → begin beat
                     begin:  event?  EVENTING (await option pick) → after-beat
                             fight?  APPROACHING → FIGHTING ─(resolved)→ after-beat
+                                    lost with lives left: LIFE_LOST (await Continue) → after-beat
                             rest or reward?  resolves on begin → after-beat
 after-beat: open shop? SHOPPING (buy until Leave) ; pending draft? DRAFTING (await pick OR skip-for-gold) ;
             else advance → enter beat
@@ -68,6 +69,11 @@ until the pick, like the draft overlay. A **REST** beat raises `rest_overlay.tsc
 heal is already applied when the encounter begins, and the panel shows the rest's text and the health
 restored (`Encounter.healed`), with a Continue button that moves on (the `RESTING` state). Every
 encounter shows a panel, even one whose effect is immediate (decision #64).
+
+A fight lost with lives left ([run_manager.md → Lives](run_manager.md#lives)) raises
+`life_lost_overlay.tscn` (`LifeLostOverlay`, the `LIFE_LOST` state), which says a life was lost and how
+many are left, with Continue. The run has already taken the life and healed the player; Continue burns
+the fight's map square and moves on as after a won fight.
 
 ### The choice of encounters
 
@@ -220,7 +226,7 @@ mockup). The view places its parts in the run screen's [screen sections](ui_layo
   sprite burn away where they stand with the [paper burn](paper_burn.md), each part of the HUD
   separately (`_burn_missing_huds`, `CharacterPanel.burn_away`).
 - **Player portrait + HP at the top of the player's column** — the portrait on the left, and to its right,
-  aligned to the top of the section, a "Name:" and a "Class:" field, each written on a pencil line (`PencilLine`) that runs to the panel's right edge, like a character sheet (`CharacterPanel.sheet_fields`; the run screen passes the character's `name_key` and `class_key` through `CombatView.show_character`), over the health bar and the status icons (the player's character
+  aligned to the top of the section, a "Name:", a "Class:" and a "Lives:" field, each written on a pencil line (`PencilLine`) that runs to the panel's right edge, like a character sheet (`CharacterPanel.sheet_fields`; the run screen passes the character's `name_key` and `class_key` through `CombatView.show_character`, and the lives through `CombatView.show_lives` when the view is built, after a lost fight and after a purchase), over the health bar and the status icons (the player's character
   panel, `PlayerPanel`). The player's panel keeps one size through the
   fight (`CharacterPanel.fixed_size`): its status icons keep their full height with no statuses, and
   it fills the column's width; the **player's board in the items section** (a grid of `item_cell.tscn`: a themed `PanelToken` frame holding the item's icon (`ItemDef.icon`), a
@@ -368,16 +374,28 @@ A view built without a fight never shows the fills. The combat report is still f
   refreshing the gold box before advancing (decision #33). Both paths then advance. A won fight shows
   no reward panel (decision #62); its gold goes straight into the gold box.
 - **Reward spin** — the draft and shop panels each hold a `RewardSpin` node (`reward_spin.gd`). When
-  the run screen calls the panel's `spin_in`, each option flicks through item icons from the item
-  catalog, slows down and lands on its good with a small bump, one at a time from left to right
-  (`RewardOption.start_spin`, `show_face`, `land`). A spinning option shows no good, so it has no
-  tooltip. The panel ignores every one of its buttons until all options have landed
+  the run screen calls the panel's `spin_in`, each option spins, slows down and lands on its good with
+  a small bump, one at a time from left to right (`RewardOption.start_spin`, `land`). There are two
+  styles:
+  - **Reel** (the default): a strip of random item icons from the item catalog, ending on the good,
+    scrolls down through the cell's frame and slows evenly to a stop with the good centred, with an
+    optional overshoot and settle back (`RewardOption.show_reel`, `RewardReel`). The strip is drawn
+    as if printed round a drum: the face at the centre is full height, and faces towards the top and
+    bottom get flatter, bunch together and darken until they pass over the edge. Each option has two
+    reels showing the same strip: one inside the frame, and one behind the cell, taller than it, for
+    the faces above and below. The frame covers the reel behind it, so its border stays on top. The
+    level tag and value pills are hidden while an option spins.
+  - **Flicker**: the cell's icon changes in place to random item icons, more slowly towards the end
+    (`RewardOption.show_face`).
+
+  A spinning option shows no good, so it has no tooltip. The panel ignores every one of its buttons until all options have landed
   (`is_spinning`). A mouse click or key press during the spin lands them all at once
-  (`skip_spin`); a click on the panel is used up by this, so it does not also pick. The timings,
-  the bump and an on/off switch are the `reward_spin*` print settings in the F7 tab's Reward spin
-  section, whose Spin again button (`RunScreen.spin_rewards_again`) spins the open panel again.
-  Only the run screen starts a spin, so the autotest, which has no panels, is not slowed. There is
-  no sound yet.
+  (`skip_spin`); a click on the panel is used up by this, so it does not also pick. The style, the
+  timings, the bump, the reel's window height, drum curve, edge darkening and overshoot, and an
+  on/off switch are the `reward_spin*` print settings on the debug panel's Reward spin tab (F8),
+  whose Spin again button (`RunScreen.spin_rewards_again`) spins the open panel again. The spin
+  draws its own random numbers, never the run's, so seeded runs are unchanged. Only the run screen
+  starts a spin, so the autotest, which has no panels, is not slowed. There is no sound yet.
 - **Gold** — a "Gold" box beside the potions in the combat view: the amount in a box drawn with the
   potions' pencil grid, as many squares wide as the number needs (`CombatViewFramed.show_gold`). The run
   screen writes it when it builds the view (covering a resumed run's banked gold), after each beat and
@@ -444,7 +462,7 @@ The row holds a Sell button ("Sell for {0} gold") and a Merge button, shown only
 ## Localization
 
 Player-facing text is localizable: **static UI text lives in the `.tscn`s**
-(auto-translated — titles, buttons, "Choose a reward", the "Name:", "Class:" and "Gold" labels); **dynamic
+(auto-translated — titles, buttons, "Choose a reward", the "Name:", "Class:", "Lives:" and "Gold" labels); **dynamic
 text uses `tr()`** (item names/rarity/tooltips, the map labels, the outcome title).
 The POT pipeline is built (`tools/extract_pot.gd` → `locale/messages.pot` + `en.po`,
 registered in `project.godot`) — see [localization](localization.md).

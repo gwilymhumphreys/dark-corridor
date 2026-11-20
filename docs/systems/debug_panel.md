@@ -5,7 +5,7 @@ one tab per part of the look. It is on every screen, including the [dev scenes](
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
 as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`,
-`background_panel.*`, `feedback_panel.*`, `icon_panel.*` and `tokens_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
+`background_panel.*`, `feedback_panel.*`, `icon_panel.*`, `tokens_panel.*` and `reward_spin_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
 
 ## Tabs
 
@@ -17,12 +17,13 @@ as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_pane
 | Background | F4 | [Background wear](background_wear.md) on every screen |
 | Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
 | Icons | F6 | Which icon and colour each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice; a mechanic's colour is written to the [custom palette](interface_palette.md) |
-| Tokens | F7 | The [cardboard token look](print_frame.md) of items, potions and portraits: placement, shadow, fill, the portrait switches, the character panel layout, the map, the encounter cards dealt before a fight ([run_screen.md](run_screen.md#the-choice-of-encounters)), the pile of character photos on character select, the reward spin of the draft and shop goods ([run_screen.md](run_screen.md#overlays)), the paper burn effect and the [page turn](page_turn.md), with a Replay button |
+| Tokens | F7 | The [cardboard token look](print_frame.md) of items, potions and portraits: placement, shadow, fill, the portrait switches, the character panel layout, the map, the encounter cards dealt before a fight ([run_screen.md](run_screen.md#the-choice-of-encounters)), the pile of character photos on character select, the paper burn effect and the [page turn](page_turn.md), with a Replay button |
+| Reward spin | F8 | The reward spin of the draft and shop goods ([run_screen.md](run_screen.md#overlays)): the switch, style and timings, the reel's look and overshoot, with a Spin again button |
 
 The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The first five line up
 with the parts, but a tab that saves its own files rather than being part of a
-preset has no `Part`. The Tokens tab's settings are print frame settings, so a
-preset saves them with its Print part.
+preset has no `Part`. The Tokens and Reward spin tabs' settings are print frame
+settings, so a preset saves them with its Print part.
 
 ## Behaviour
 
@@ -34,8 +35,8 @@ preset saves them with its Print part.
   with Space or Escape. A panel opened by a start-up argument does not pause, so screenshot runs keep
   playing.
 - Every look tab starts with a "Take this part from" row ([look_presets.md](look_presets.md#the-preset-bar)).
-  The Icons tab has none, because it is not a preset part, and neither has the Tokens tab, whose
-  settings belong to the Print part; `LookPanel` treats that row as optional.
+  The Icons tab has none, because it is not a preset part, and neither have the Tokens and Reward
+  spin tabs, whose settings belong to the Print part; `LookPanel` treats that row as optional.
 - The palette keys below only work while the panel is open, so they never take a game key (the
   battle speed keys are on `[` and `]`, [keybindings.md](keybindings.md)). They are also ignored while
   a text field (the preset name) has focus.
@@ -53,7 +54,8 @@ preset saves them with its Print part.
   and autotest runs do no extra work.
 - Every section starts closed, whether or not its effect is on; clicking a section's title shows its
   rows. `LookSection.set_open` overrides that; the Icons tab opens both of its sections (Choose and
-  Samples), so its rows are usable without a click.
+  Samples), and the Reward spin tab both of its (Spin and Reel), so their rows are usable without a
+  click.
 - Built as `.tscn` scenes, styled by the project theme, with a `UIJuice` node on each control.
 - English only. `tools/extract_pot.gd` skips `src/debug/`, so panel labels stay out of the translation
   files.
