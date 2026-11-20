@@ -1,6 +1,6 @@
 extends Node
 ## Builds the item browser page (docs/systems/item_browser.md): every item in the catalog, with
-## the tooltip text the game generates for it, its icons, its types and which characters' pools
+## the tooltip text the game generates for it, its icons, its tags and which characters' pools
 ## and enemy boards it is on. Run through the wrapper:
 ##
 ##   tools/item_browser.sh
@@ -24,6 +24,7 @@ const RARITY_NAMES: Dictionary = {
 
 var _icons: Dictionary = {}      # res:// path -> data URI
 var _keywords: Dictionary = {}   # keyword or icon slot id -> {name, desc, icon, color, glyph}
+var _tag_names: Dictionary = {}  # tag that is not a type tag -> its name on the page
 
 
 func _ready() -> void:
@@ -90,6 +91,9 @@ func _build_data() -> Dictionary:
       _register_line_icons(line)
     for keyword_id: String in content['keyword_ids']:
       _register_keyword(keyword_id)
+    var tags: Array[String] = def.tags.filter(func(tag: String) -> bool: return not ItemType.is_type(tag))
+    for tag: String in tags:
+      _register_tag(tag)
     items.append({
       'id': item_id,
       'name': content['title'],
@@ -103,7 +107,7 @@ func _build_data() -> Dictionary:
       'lines': content['lines'],
       'flavor': content['flavor'],
       'keyword_ids': content['keyword_ids'],
-      'mechanics': def.tags.filter(func(tag: String) -> bool: return MechanicRegistry.is_mechanic(tag)),
+      'tags': tags,
       'crit_chance': def.crit_chance,
       'starting_uses': def.starting_uses,
       'points': ItemPoints.spend(def),
@@ -123,6 +127,7 @@ func _build_data() -> Dictionary:
     'characters': characters,
     'types': type_names,
     'keywords': _keywords,
+    'tag_names': _tag_names,
     'icons': _icons,
     'items': items,
   }
@@ -140,6 +145,18 @@ func _register_line_icons(line: Array) -> void:
   for segment: Dictionary in line:
     if segment.get('t', '') == 'icon':
       _register_keyword(segment['id'])
+
+
+## Records the page name of a tag that is not a type tag: its keyword name when it has a keyword
+## card (registering the card's icon too), otherwise the id capitalised (flesh has no card).
+func _register_tag(tag: String) -> void:
+  if _tag_names.has(tag):
+    return
+  if KeywordCatalog.get_entry(tag).is_empty():
+    _tag_names[tag] = tag.capitalize()
+    return
+  _register_keyword(tag)
+  _tag_names[tag] = _keywords[tag]['name']
 
 
 ## Records a keyword's name, description and icon once. An id with no keyword entry is an icon

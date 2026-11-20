@@ -31,7 +31,7 @@ Icons are shrunk to `ICON_SIZE` in `item_browser.gd` before embedding to keep th
 ## The page
 
 - Character buttons at the top pick one character's pool. Three more buttons show all items, items in no pool, and items on enemy boards. The starting selection is `CharacterCatalog.DEFAULT`.
-- Type, rarity and keyword chips filter the list. Within one row, an item matches if it has any of the selected values. The keyword row lists only keywords on the selected character's items. Clicking a keyword on a card toggles that keyword's filter.
+- Type, rarity and tag chips filter the list. Within one row, an item matches if it has any of the selected values. The tag row holds the item tags other than type tags (`ItemDef.tags`: mechanics, `spores`, `flesh`), and lists only tags on the selected character's items. Clicking a keyword on a card toggles that tag's filter when the keyword is one of the item's tags.
 - The search box matches item names, ids, and the text of effect lines, flavour lines and keywords.
 - Each card shows the item's points, its budget and the points as a share of the budget.
 - Items sort by name, rarity, charge time, points, points as a share of budget, or first type, and can be grouped by first type or rarity.
