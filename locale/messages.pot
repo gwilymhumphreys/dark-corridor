@@ -7,6 +7,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: src/content/items/life_def.gd
+msgid "Life"
+msgstr ""
+
+#: src/content/items/life_def.gd
+msgid "One more fight you can lose."
+msgstr ""
+
 #: src/content/keywords/keyword_catalog.gd
 msgid "Fuel"
 msgstr ""
@@ -135,6 +143,14 @@ msgstr ""
 msgid "Empties that many seconds of an item's cooldown bar."
 msgstr ""
 
+#: src/content/mechanics/haste_mechanic.gd
+msgid "Haste"
+msgstr ""
+
+#: src/content/mechanics/haste_mechanic.gd
+msgid "Your items charge faster for a time."
+msgstr ""
+
 #: src/content/mechanics/heal_mechanic.gd
 msgid "Heal"
 msgstr ""
@@ -161,6 +177,14 @@ msgstr ""
 
 #: src/content/mechanics/shield_mechanic.gd
 msgid "Absorbs incoming damage, then wears off."
+msgstr ""
+
+#: src/content/mechanics/slow_mechanic.gd
+msgid "Slow"
+msgstr ""
+
+#: src/content/mechanics/slow_mechanic.gd
+msgid "Items charge more slowly for a time."
 msgstr ""
 
 #: src/content/statuses/blind_status.gd
@@ -233,6 +257,10 @@ msgstr ""
 
 #: src/scenes/combat/character_panel.tscn
 msgid "Class:"
+msgstr ""
+
+#: src/scenes/combat/character_panel.tscn
+msgid "Lives:"
 msgstr ""
 
 #: src/scenes/combat/combat_view_framed.tscn
@@ -419,6 +447,18 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
+#: src/scenes/screens/life_lost_overlay.gd
+msgid "You lose a life. Lives left: {0}"
+msgstr ""
+
+#: src/scenes/screens/life_lost_overlay.tscn
+msgid "Defeated"
+msgstr ""
+
+#: src/scenes/screens/life_lost_overlay.tscn
+msgid "Continue"
+msgstr ""
+
 #: src/scenes/screens/map_strip.gd
 msgid "Act {0}"
 msgstr ""
@@ -465,10 +505,6 @@ msgstr ""
 
 #: src/scenes/screens/rest_overlay.gd
 msgid "You are already at full health."
-msgstr ""
-
-#: src/scenes/screens/rest_overlay.tscn
-msgid "Continue"
 msgstr ""
 
 #: src/scenes/screens/run_screen.tscn
@@ -604,6 +640,10 @@ msgid "+{0} maximum health"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "+{0} lives"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "Once per fight"
 msgstr ""
 
@@ -641,6 +681,14 @@ msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
 msgid "{0} {1} by {2}s"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} for {1}s"
+msgstr ""
+
+#: src/scenes/ui/tooltip/tooltip_content.gd
+msgid "{0} {1} for {2}s"
 msgstr ""
 
 #: src/scenes/ui/tooltip/tooltip_content.gd
@@ -813,14 +861,6 @@ msgstr ""
 
 #: content/encounters/relic_cache.gd
 msgid "A forgotten reliquary"
-msgstr ""
-
-#: content/encounters/rest.gd
-msgid "A quiet alcove"
-msgstr ""
-
-#: content/encounters/rest.gd
-msgid "Water drips somewhere in the dark. For a while nothing finds you, and you rest."
 msgstr ""
 
 #: content/encounters/shop_attack.gd

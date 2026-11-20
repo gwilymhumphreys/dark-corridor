@@ -5,7 +5,7 @@ extends RefCounted
 ## mechanic, a rarity) that an item must all pass. The goods are drawn by Draft.draw_stock on the run
 ## RNG.
 
-enum Kind { ITEM, RELIC, POTION }
+enum Kind { ITEM, RELIC, POTION, LIFE }
 
 var kind: Kind = Kind.ITEM
 var count: int = 1
@@ -48,6 +48,11 @@ static func relics(amount: int) -> StockEntry:
 ## `amount` different potions from ConsumableCatalog.REWARD_POOL.
 static func potions(amount: int) -> StockEntry:
   return _make(Kind.POTION, amount)
+
+
+## `amount` lives (LifeDef), each bought or picked on its own.
+static func lives(amount: int) -> StockEntry:
+  return _make(Kind.LIFE, amount)
 
 
 static func _make(entry_kind: Kind, amount: int) -> StockEntry:

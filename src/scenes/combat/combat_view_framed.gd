@@ -728,6 +728,11 @@ func show_character(character_name: String, character_class: String) -> void:
   _player_panel.show_sheet_fields(character_name, character_class)
 
 
+## Write the lives left in the Lives field on the player's panel.
+func show_lives(lives: int) -> void:
+  _player_panel.show_lives(lives)
+
+
 ## Approach controls (docs/history/phase4_plan.md Step 7) — the run screen walks the player up to the
 ## waiting enemies, bringing them from a speck into full view (the mood; the per-actor widgets are
 ## the combat).

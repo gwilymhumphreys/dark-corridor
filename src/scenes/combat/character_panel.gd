@@ -29,8 +29,8 @@ var actor: Actor
 ## statuses, so a status added or removed does not resize the panel. The player's panel turns it on;
 ## its width is set by the combat view (CombatViewFramed._stack_portraits).
 @export var fixed_size: bool = false
-## Whether the name line is replaced by "Name:" and "Class:" fields written on underlines, like a
-## character sheet (show_sheet_fields). The player's panel turns it on.
+## Whether the name line is replaced by "Name:", "Class:" and "Lives:" fields written on underlines,
+## like a character sheet (show_sheet_fields, show_lives). The player's panel turns it on.
 @export var sheet_fields: bool = false
 
 @onready var _portrait_frame: PanelContainer = $Row/Portrait
@@ -41,6 +41,7 @@ var actor: Actor
 @onready var _fields: GridContainer = $Row/Readout/Fields
 @onready var _name_field: Label = $Row/Readout/Fields/NameField/Text
 @onready var _class_field: Label = $Row/Readout/Fields/ClassField/Text
+@onready var _lives_field: Label = $Row/Readout/Fields/LivesField/Text
 @onready var _items_by_name: HBoxContainer = $Row/Readout/Top/NameBar/NameRow/ItemsByName
 @onready var _health_bar: HealthBar = $Row/Readout/Top/NameBar/HealthBar
 @onready var _statuses: StatusIcons = $Row/Readout/Top/Statuses
@@ -110,6 +111,11 @@ func show_name(text: String) -> void:
 func show_sheet_fields(character_name: String, character_class: String) -> void:
   _name_field.text = character_name
   _class_field.text = character_class
+
+
+## Write the lives left in the sheet's Lives field (shown with `sheet_fields`).
+func show_lives(lives: int) -> void:
+  _lives_field.text = str(lives)
 
 
 ## A cell per relic and board item (relics first), each `cell_px` square. `timekeeper` drives the cells' fire recoil on the

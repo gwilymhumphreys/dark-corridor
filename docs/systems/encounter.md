@@ -45,7 +45,7 @@ The `Run manager` instantiates the picked Encounter; it resolves by type, then r
 - **Event** — present the prose + the options whose conditions hold (a UI intent — the player picks one); the `Run manager` applies the option's run effects ([Event options](#event-options)), then `resolve_event()` resolves the beat. Events are lore + a tradeoff (design); effects change the run directly, not through the combat path. If the effects killed the player the beat resolves **LOST** on the spot — the run ends there, never a dead player walking to the next fight.
 - **Reward** (offered before a fight) — no fight: resolves on `begin()` with the `GOODS` reward, and the `Run manager` offers goods drawn from the def's `stock` ([Reward encounters](#reward-encounters)).
 - **Shop** (offered before a fight, from the left card position) — no fight: resolves on `begin()` with the `SHOP` reward, and the `Run manager` opens the shop with goods drawn from the def's `stock` ([Shops](#shops)).
-- **Rest** (an in-act small rest, offered before a fight) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()` and records the health restored in `healed`. Its panel shows its `prose_key` text and that amount, with a Continue button ([run_screen.md](run_screen.md)). No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
+- **Rest** (a small heal; no rest encounter is authored, because the player is fully healed after every fight, decision #68) — the `Encounter` heals the player `Actor` directly (`heal_fraction` of max-HP) in `begin()` and records the health restored in `healed`. Its panel shows its `prose_key` text and that amount, with a Continue button ([run_screen.md](run_screen.md)). No draft / relic. *(The between-act **full** rest is **not** an Encounter — it's the `Run manager`'s automatic act-transition.)*
 
 ## Offer rules
 
@@ -89,6 +89,7 @@ An option has a `label_key`, a list of `effects` (`RunEffect`) and a list of `re
 | `add_ally(id)` | Add the ally built from an `EnemyCatalog` id, if a slot is free (`MAX_ALLIES`). |
 | `set_flag(flag, n = 1)`, `add_flag(flag, n = 1)` | Set, or add to, a run flag. |
 | `gain_item(id)`, `gain_relic(id)`, `gain_potion(id)` | Add a named item to the board, a relic (its `PICKED_UP` triggers fire), or a potion. |
+| `gain_life(n = 1)` | Add lives ([run_manager.md → Lives](run_manager.md#lives)). |
 
 **Run flags** (`RunManager.flags`, flag name to a whole number) and **pick counts** (`RunManager.times_picked`, encounter id to a count) are saved with the run, so an encounter can remember what the player did. For example, one option "Leave an offering" requires `FlagBelow.new('offering_left')` and sets the flag; another, "Take back the offering", requires `FlagAtLeast.new('offering_left')` and gives a relic. Nothing shows flags to the player.
 
@@ -114,8 +115,9 @@ A reward encounter (`Type.REWARD`) lists what it offers in `stock`, one `StockEn
 | `items_of_rarity(n, rarity)` | As `items`, only items of that `ItemDef.Rarity`. |
 | `relics(n)` | Up to `n` different relics from the run's relic pool (`RunManager.relic_pool`: the reward relics the player does not hold). |
 | `potions(n)` | Up to `n` different potions from `ConsumableCatalog.REWARD_POOL`. |
+| `lives(n)` | `n` lives (`LifeDef`). Draws no RNG and can always be offered. |
 
-A reward encounter whose stock would draw nothing, such as relics once every reward relic is held, is not offered (`RunManager.can_draw_stock`). The goods are drawn in entry order on the run RNG when the encounter resolves. They are not saved: a resume re-enters the encounter and draws the same goods from the saved RNG state. A picked item goes on the board, a relic to the relics (its `PICKED_UP` triggers fire), a potion to the potions.
+A reward encounter whose stock would draw nothing, such as relics once every reward relic is held, is not offered (`RunManager.can_draw_stock`). The goods are drawn in entry order on the run RNG when the encounter resolves. They are not saved: a resume re-enters the encounter and draws the same goods from the saved RNG state. A picked item goes on the board, a relic to the relics (its `PICKED_UP` triggers fire), a potion to the potions, a life to the lives.
 
 ```gdscript
 type = Type.REWARD

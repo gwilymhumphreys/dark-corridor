@@ -41,6 +41,12 @@ var position: int = 0
 # (apply_draft_skip), walking past a choice, winning a fight, and run effects (RunEffect.GOLD, which
 # an event option can also use as a cost). Persists in the snapshot.
 var gold: int = 0
+## The lives left (decisions #68 and #69): losing a fight costs one, and the run ends when the last is
+## lost. Gained from shops (LifeDef) and run effects (RunEffect.gain_life). Persists in the snapshot.
+var lives: int = Balance.STARTING_LIVES
+## The player's health when the last fight ended, before the full heal. The autotest reports it. Not
+## saved.
+var fight_end_hp: int = 0
 ## Run flags (docs/plans/encounter_choice.md): a flag name to a whole number, set by run effects
 ## (SET_FLAG, ADD_FLAG) and read by conditions (FlagAtLeast, FlagBelow), so an encounter can remember
 ## what the player did. Never shown to the player. Persists in the snapshot.
@@ -97,6 +103,7 @@ func start(seed_value: int, character_id: String = CharacterCatalog.DEFAULT) -> 
   # the board, and its starting potions — the run opens in the character's identity.
   relics = []
   gold = 0
+  lives = Balance.STARTING_LIVES
   flags = {}
   times_picked = {}
   if character.starting_relic_id != '':
@@ -279,16 +286,26 @@ func _build_relic_items() -> void:
 func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
   if RunMap.is_choice_beat(position):   # the encounter was picked from the choice of encounters
     times_picked[_current_def_id] = int(times_picked.get(_current_def_id, 0)) + 1
+  var fight: bool = _current != null and _current.is_fight()
+  if fight:
+    fight_end_hp = player.hp
   if outcome_value == Encounter.Outcome.LOST:
-    _end_run(Outcome.DIED)
-    return
+    # A lost fight costs a life (decision #69). The final boss has one attempt, and a loss that is
+    # not a fight (an event's lethal damage) ends the run too.
+    if fight:
+      lives -= 1
+    if not fight or lives <= 0 or RunMap.is_final_beat(position):
+      _end_run(Outcome.DIED)
+      return
+    _apply_fight_gain()
+    return   # no relic for a lost elite or act boss, and the relics that react to a win do not
   if RunMap.is_final_beat(position):   # the final act's boss — beating it ends the descent
     _end_run(Outcome.WON)
     return
   # Before the reward, so a relic won in this fight does not react to winning it. Only a fight
   # resolves WON (a rest or event resolves RESOLVED).
   if outcome_value == Encounter.Outcome.WON:
-    _apply_fight_won_gain()
+    _apply_fight_gain()
     _fire_run_event(RunEvent.FIGHT_WON)
     if _ended:
       return   # a relic's fight-won damage killed the player
@@ -305,10 +322,13 @@ func _on_encounter_resolved(outcome_value: int, reward: int) -> void:
       pass
 
 
-## Every fight won gives some health and gold before its reward (owner, docs/plans/encounter_choice.md).
-func _apply_fight_won_gain() -> void:
-  _apply_run_effect(RunEffect.heal(Balance.FIGHT_WON_HEAL))
+## Every fight, won or lost, gives some gold and raises maximum health, then restores the player and
+## the allies to full health (decisions #68 and #69). For a won fight this comes before its reward
+## and before the relics that react to a win.
+func _apply_fight_gain() -> void:
   _apply_run_effect(RunEffect.gold(Balance.FIGHT_WON_GOLD))
+  _apply_run_effect(RunEffect.max_hp(Balance.FIGHT_MAX_HP))
+  _full_heal()
 
 
 ## The reward relics the player does not hold yet: RelicCatalog.REWARD_POOL minus the relics held, in
@@ -409,6 +429,8 @@ func _apply_run_effect(effect: RunEffect) -> void:
       _apply_relic_grant(relic)
     RunEffect.Kind.GAIN_POTION:
       potions.append(Consumable.new(ConsumableCatalog.get_def(effect.id)))
+    RunEffect.Kind.LIFE:
+      lives += effect.amount
 
 
 ## The value of the run flag `flag_name`; 0 when it was never set.
@@ -462,20 +484,22 @@ static func draw_offer_level(fight: int, rng_value: RandomNumberGenerator) -> in
 
 
 # The level of each of `goods`: drawn for an item (draw_offer_level at this beat's fight number), 1 for
-# a relic or a potion, which are item definitions too.
+# a relic, a potion or a life, which are item definitions too.
 func _draw_offer_levels(goods: Array) -> Array[int]:
   var levels: Array[int] = []
   for good: Variant in goods:
-    var is_item: bool = good is ItemDef and not (good is RelicDef or good is ConsumableDef)
+    var is_item: bool = good is ItemDef and not (good is RelicDef or good is ConsumableDef or good is LifeDef)
     levels.append(draw_offer_level(RunMap.fight_number(position), rng) if is_item else 1)
   return levels
 
 
 # Give the player one of the goods: an item goes on the board at `level`, a relic to the relics (its
-# PICKED_UP triggers fire), a potion to the potions. Relics and potions are item definitions too, so
-# they are checked first.
+# PICKED_UP triggers fire), a potion to the potions, a life to the lives. Relics, potions and lives
+# are item definitions too, so they are checked first.
 func _gain(good: Variant, level: int = 1) -> void:
-  if good is RelicDef:
+  if good is LifeDef:
+    lives += 1
+  elif good is RelicDef:
     var relic := Relic.new(good)
     relics.append(relic)
     _apply_relic_grant(relic)
@@ -526,8 +550,11 @@ func shop_price(index: int) -> int:
   return price_at_level(_shop_goods[index], shop_level(index))
 
 
-## What a shop charges for `good`: a Balance value by its kind (item, relic, potion) and rarity.
+## What a shop charges for `good`: a Balance value by its kind (item, relic, potion) and rarity, or
+## Balance.SHOP_PRICE_LIFE for a life.
 static func price_of(good: Variant) -> int:
+  if good is LifeDef:
+    return Balance.SHOP_PRICE_LIFE
   var prices: Array[int] = Balance.SHOP_PRICE_ITEM
   if good is RelicDef:
     prices = Balance.SHOP_PRICE_RELIC
@@ -753,7 +780,7 @@ func throw_potion(index: int) -> bool:
 
 
 ## Advance to the next beat: tear the resolved one down, apply the between-act full heal
-## when crossing into a new act (HP-economy, design), step position, enter the next beat
+## when crossing into a new act (HP-economy, decision #68), step position, enter the next beat
 ## (a fight, or a fresh choice of encounters), and auto-save (the encounter-entry resume point).
 func advance() -> void:
   if _ended:
@@ -778,8 +805,8 @@ func advance() -> void:
   _save()
 
 
-## HP-economy: the automatic between-act full restore (design — players enter each act at
-## full HP). The in-act partial rest is the REST encounter; max-HP growth comes from relics.
+## HP-economy: the full restore after every fight, won or lost, and between acts (decision #68).
+## Max-HP grows after every fight (_apply_fight_gain) and from relics and event options.
 func _full_heal() -> void:
   if player != null:
     player.hp = player.max_hp
@@ -893,6 +920,7 @@ func snapshot() -> Dictionary:
     'potions': potion_ids,
     'position': position,
     'gold': gold,   # banked run-state (decision #33); optional on read (.get) — no migration
+    'lives': lives,
     'flags': flags,
     'times_picked': times_picked,
     # The current beat's encounter id (resume re-enters it, never redrawn); '' at a choice beat.
@@ -941,6 +969,7 @@ func rehydrate(snap: Dictionary) -> bool:
     potions.append(Consumable.new(ConsumableCatalog.get_def(str(potion_id))))
   position = int(snap['position'])
   gold = int(snap.get('gold', 0))   # absent in pre-gold snapshots → 0 (forward-compatible, no migration)
+  lives = int(snap.get('lives', Balance.STARTING_LIVES))
   # JSON reads every number back as a float, so the counts are made whole again.
   flags = {}
   var saved_flags: Dictionary = snap.get('flags', {})

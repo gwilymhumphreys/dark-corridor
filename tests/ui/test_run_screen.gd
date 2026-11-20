@@ -30,6 +30,8 @@ func test_run_screen_drives_a_full_run_to_a_win() -> void:
       screen._on_event_picked(0)    # the event's first option
     elif screen._rest != null:
       screen._on_rest_continued()   # the rest panel's Continue
+    elif screen._life_lost != null:
+      screen._on_life_lost_continued()   # the lost fight panel's Continue
     elif screen._state == RunScreen.State.CHOOSING:
       screen._choice.picked.emit(0)   # stand in for the player picking the left encounter card
     elif screen._draft != null:
@@ -94,6 +96,29 @@ func test_a_won_fight_waits_for_its_last_enemy_to_burn_away() -> void:
   assert_eq(screen._view, fight_view, 'the run pauses before moving on')
   await wait_seconds(Balance.FIGHT_END_PAUSE + 0.05)
   assert_true(screen._draft != null or screen._view != fight_view, 'then it moves on')
+  screen.free()
+
+
+func test_a_lost_fight_with_lives_left_shows_its_panel_then_goes_on() -> void:
+  Game.start_run(1, FixtureCharacter.ID)
+  Game.run.skip_choice()
+  Game.run.advance()
+  Game.run.relics.clear()
+  Game.run.player.hp = 1   # the fixture enemy wins against a 1 HP player
+  var screen: RunScreen = preload('res://src/scenes/screens/run_screen.tscn').instantiate()
+  add_child(screen)
+  var square: int = screen._map.current_square()[0]
+  var guard: int = 0
+  while screen._life_lost == null and Game.phase == GameManagerAutoload.Phase.RUN and guard < 400:
+    screen._physics_process(1.0)
+    guard += 1
+  assert_eq(Game.phase, GameManagerAutoload.Phase.RUN, 'the loss did not end the run')
+  assert_not_null(screen._life_lost, 'the lost fight raises its panel')
+  assert_eq(screen._state, RunScreen.State.LIFE_LOST, 'and waits on it')
+  assert_eq((screen._view as CombatViewFramed)._player_panel._lives_field.text, str(Balance.STARTING_LIVES - 1), 'the sheet shows the life lost')
+  screen._on_life_lost_continued()
+  assert_null(screen._life_lost, 'Continue closes the panel')
+  assert_true(screen._map.is_burning(square), 'and the fight square burns as after a win')
   screen.free()
 
 

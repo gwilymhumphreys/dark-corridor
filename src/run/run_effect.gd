@@ -17,6 +17,7 @@ enum Kind {
   GAIN_ITEM,
   GAIN_RELIC,
   GAIN_POTION,
+  LIFE,
 }
 
 var kind: Kind = Kind.MAX_HP
@@ -88,3 +89,8 @@ static func _make(effect_kind: Kind, value: int, effect_id: String = '') -> RunE
   effect.amount = value
   effect.id = effect_id
   return effect
+
+
+## Give the player `value` more lives (RunManager.lives).
+static func gain_life(value: int = 1) -> RunEffect:
+  return _make(Kind.LIFE, value)

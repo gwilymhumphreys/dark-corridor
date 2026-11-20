@@ -94,6 +94,29 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("pencil_line")
 
+[node name="LivesFieldLabel" type="Label" parent="Row/Readout/Fields"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"LabelDim"
+text = "Lives:"
+
+[node name="LivesField" type="VBoxContainer" parent="Row/Readout/Fields"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Text" type="Label" parent="Row/Readout/Fields/LivesField"]
+layout_mode = 2
+theme_type_variation = &"LabelMedium"
+
+[node name="Line" type="ColorRect" parent="Row/Readout/Fields/LivesField"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("pencil_line")
+
 [node name="Top" type="HBoxContainer" parent="Row/Readout"]
 layout_mode = 2
 mouse_filter = 2

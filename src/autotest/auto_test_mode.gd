@@ -199,10 +199,12 @@ func run_full() -> Dictionary:
     var beat_outcome: String = fail
     if beat_outcome == '':
       beat_outcome = ('WON' if cm.player_won() else 'LOST') if cm != null else _beat_type(enc).to_lower()
+    # A fight's health is read where the fight ended, before the full heal that follows it.
     logger.record_encounter({
       'beat': run.position, 'type': _beat_type(enc), 'name': beat_name,
-      'duration': fight_steps * Balance.STEP, 'hp_before': hp_before, 'hp_after': run.player.hp,
-      'outcome': beat_outcome,
+      'duration': fight_steps * Balance.STEP, 'hp_before': hp_before,
+      'hp_after': run.fight_end_hp if cm != null else run.player.hp,
+      'outcome': beat_outcome, 'lives': run.lives,
     })
     if fail != '':
       outcome = fail
@@ -249,6 +251,7 @@ func run_full() -> Dictionary:
     'wall_ms': Time.get_ticks_msec() - wall_start,
     'player_hp': run.player.hp,
     'player_max_hp': run.player.max_hp,
+    'lives': run.lives,
     'beats_cleared': beats_cleared,
     'board_size': run.player.board.size(),
     'enemies': [],

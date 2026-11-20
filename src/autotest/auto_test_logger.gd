@@ -100,6 +100,7 @@ func summarize(result: Dictionary) -> Dictionary:
     'wall_ms': result.get('wall_ms', 0),
     'player_hp': result.get('player_hp', 0.0),
     'player_max_hp': result.get('player_max_hp', 0.0),
+    'lives': result.get('lives', 0),                   # run mode only
     'enemies': result.get('enemies', []),
     'beats_cleared': result.get('beats_cleared', 0),   # run mode only
     'board_size': result.get('board_size', 0),         # run mode only
@@ -179,6 +180,8 @@ func write_report(path: String, summary: Dictionary) -> void:
   lines.append('## Final HP')
   lines.append('')
   lines.append('- Player: %d / %d' % [summary['player_hp'], summary['player_max_hp']])
+  if not summary['encounters'].is_empty():   # run mode: a single fight has no lives
+    lines.append('- Lives left: %d' % summary['lives'])
   for e in summary['enemies']:
     lines.append('- %s: %d / %d' % [e['name'], e['hp'], e['max_hp']])
   lines.append('')
@@ -228,13 +231,13 @@ func write_report(path: String, summary: Dictionary) -> void:
     lines.append('')
     lines.append('## Encounters')
     lines.append('')
-    lines.append('| Beat | Type | Name | Duration | HP before → after | Outcome |')
-    lines.append('|------|------|------|----------|-------------------|---------|')
+    lines.append('| Beat | Type | Name | Duration | HP before → after | Outcome | Lives |')
+    lines.append('|------|------|------|----------|-------------------|---------|-------|')
     for enc in summary['encounters']:
-      lines.append('| %d | %s | %s | %.1fs | %.0f → %.0f | %s |' % [
+      lines.append('| %d | %s | %s | %.1fs | %.0f → %.0f | %s | %d |' % [
         int(enc.get('beat', 0)), enc.get('type', '?'), enc.get('name', ''),
         float(enc.get('duration', 0.0)), float(enc.get('hp_before', 0.0)),
-        float(enc.get('hp_after', 0.0)), enc.get('outcome', ''),
+        float(enc.get('hp_after', 0.0)), enc.get('outcome', ''), int(enc.get('lives', 0)),
       ])
 
   # Per-item contribution (run mode) — fires + damage + shield + healing; a never-fired

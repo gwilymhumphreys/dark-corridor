@@ -90,14 +90,21 @@ const ENCOUNTER_SKIP_GOLD: int = 2
 # (EncounterDef.offer_weight). Only the ratio matters. Placeholder.
 const ENCOUNTER_WEIGHT_COMMON: float = 1.0
 const ENCOUNTER_WEIGHT_RARE: float = 0.25
-# Every fight won gives the player this much health and gold before its reward (owner). Placeholder.
-const FIGHT_WON_HEAL: int = 5
+# Every fight, won or lost, gives the player this much gold before its reward (owner). Placeholder.
 const FIGHT_WON_GOLD: int = 3
+# Every fight, won or lost, raises the player's maximum health by this much, before the full heal
+# (decision #69). Placeholder for the owner to set.
+const FIGHT_MAX_HP: int = 5
+# The lives a run starts with; losing a fight costs one, and the run ends when the last is lost
+# (decisions #68 and #69, owner).
+const STARTING_LIVES: int = 3
 # What a shop charges (RunManager.price_of), by the kind of goods and its rarity: common, uncommon,
 # rare (owner, 2026-09-30).
 const SHOP_PRICE_ITEM: Array[int] = [6, 9, 12]
 const SHOP_PRICE_RELIC: Array[int] = [15, 20, 25]
 const SHOP_PRICE_POTION: Array[int] = [4, 6, 8]
+# What a shop charges for a life (decision #69, owner).
+const SHOP_PRICE_LIFE: int = 100
 # How many items a shop puts on sale, and how many items must match a shop's filters before it is
 # offered (EncounterDef.min_items; "more than five", owner, 2026-09-30).
 const SHOP_ITEM_COUNT: int = 4

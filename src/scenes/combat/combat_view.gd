@@ -146,6 +146,11 @@ func show_character(_character_name: String, _character_class: String) -> void:
   pass
 
 
+## The lives the player has left.
+func show_lives(_lives: int) -> void:
+  pass
+
+
 # --- layout lookups the VFX wall reads (global / screen space) ---------------
 
 ## Where a thrown consumable's effects start: the slot it was thrown from.

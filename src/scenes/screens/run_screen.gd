@@ -8,7 +8,8 @@ extends Control
 ##
 ## A polling state machine that drives the WHOLE descent in real time, mirroring
 ## AutoTestMode.run_full — enter beat → (choice: walk up to the encounter cards, pick one or walk
-## past) → approach → (fight: tick to resolution | rest: resolves on begin | event: overlay) →
+## past) → approach → (fight: tick to resolution, then after a loss with lives left the life lost
+## panel | rest: resolves on begin | event: overlay) →
 ## fulfil reward (draft overlay, or the shop panel for a shop) → advance →
 ## repeat, until the run ends (Game then swaps to the win/death screen). The run
 ## processes each beat's outcome via its own signal chain DURING the resolving tick;
@@ -20,6 +21,7 @@ const COMBAT_SUMMARY: PackedScene = preload('res://src/scenes/screens/combat_sum
 const DRAFT_OVERLAY: PackedScene = preload('res://src/scenes/screens/draft_overlay.tscn')
 const ENCOUNTER_CHOICE: PackedScene = preload('res://src/scenes/screens/encounter_choice.tscn')
 const REST_OVERLAY: PackedScene = preload('res://src/scenes/screens/rest_overlay.tscn')
+const LIFE_LOST_OVERLAY: PackedScene = preload('res://src/scenes/screens/life_lost_overlay.tscn')
 const EVENT_OVERLAY: PackedScene = preload('res://src/scenes/screens/event_overlay.tscn')
 const PAUSE_MENU: PackedScene = preload('res://src/scenes/screens/pause_menu.tscn')
 const SETTINGS_SCREEN: PackedScene = preload('res://src/scenes/screens/settings_screen.tscn')
@@ -28,7 +30,7 @@ const ITEM_ACTIONS: PackedScene = preload('res://src/scenes/screens/item_actions
 const PURCHASE_SOUND: String = 'run/purchase'   # a good bought from a shop
 const GROUP: StringName = &'run_screen'   # the F7 Restart encounter button finds the screen by this group
 
-enum State { IDLE, WALKING, CHOOSING, EVENTING, RESTING, APPROACHING, FIGHTING, DRAFTING, SHOPPING }
+enum State { IDLE, WALKING, CHOOSING, EVENTING, RESTING, APPROACHING, FIGHTING, LIFE_LOST, DRAFTING, SHOPPING }
 
 var _run: RunManager
 var _cm: CombatManager
@@ -47,6 +49,7 @@ var _kept_choice: EncounterChoice
 var _offered: Array[String] = []
 var _event: EventOverlay
 var _rest: RestOverlay
+var _life_lost: LifeLostOverlay   # the panel after a lost fight with lives left; null otherwise
 var _shop: ShopOverlay
 var _selected_item: Item          # the board item selected to sell or merge; null when none is
 var _item_actions: ItemActions    # the Sell and Merge buttons below the selected item; null when none is
@@ -297,11 +300,33 @@ func _physics_process(delta: float) -> void:
         # Nothing parks here: the run goes straight on to the reward draft, and the player
         # reads the report when they want to (docs/systems/combat_log.md).
         _last_log = _log
+        if not _run.is_ended() and not _cm.player_won():
+          _show_life_lost()   # a lost fight with lives left: say so, then go on as after a win
+          return
         if not _run.is_ended():
-          _map.burn_current_square()   # the fight was won: its square's token burns away
+          _map.burn_current_square()   # the fight is over: its square's token burns away
         _leave_won_fight()
       else:
         _cm.tick(delta)
+
+
+# A lost fight with lives left (decision #69): the run has taken the life and healed the player. The
+# panel says so and waits for Continue; then the run goes on as after a won fight.
+func _show_life_lost() -> void:
+  _state = State.LIFE_LOST
+  _view.show_lives(_run.lives)
+  _life_lost = LIFE_LOST_OVERLAY.instantiate()
+  _view.corridor_area().add_child(_life_lost)
+  _life_lost.continued.connect(_on_life_lost_continued)
+  _life_lost.setup(_run.lives)
+
+
+func _on_life_lost_continued() -> void:
+  _life_lost.queue_free()
+  _life_lost = null
+  _state = State.IDLE
+  _map.burn_current_square()
+  _leave_won_fight()
 
 
 # Battle-speed (a Game session preference) sets the fight clock's BASE scale; the
@@ -593,6 +618,7 @@ func _on_shop_bought(index: int) -> void:
   SfxManager.play_sound(PURCHASE_SOUND)
   _shop.refresh(_run)
   _refresh_gold()
+  _view.show_lives(_run.lives)
   _view.refresh_potions(_run.potions)
   _view.show_relics(_run.relics)
 
@@ -660,6 +686,7 @@ func _mount_view(cm: CombatManager) -> void:
   # change from there (gold won by a fight is banked just before its view is torn down).
   _view.snap_gold(_gold_on_screen if _gold_on_screen >= 0 else _run.gold)
   _refresh_gold()
+  _view.show_lives(_run.lives)
   _view.show_relics(_run.relics)
   _view.potion_thrown.connect(_on_potion_thrown)
 
@@ -678,6 +705,7 @@ func _teardown_combat_view() -> void:
   _choice = null   # the cards live in the view's corridor area and go with it
   _kept_choice = null
   _rest = null   # the rest panel too
+  _life_lost = null
   _log = null   # drop the live ref; _last_log keeps the finished fight's numbers for the report
   if _view != null:
     _gold_on_screen = _view.gold_on_screen()

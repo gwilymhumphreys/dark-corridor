@@ -81,6 +81,7 @@ func test_death_sets_death_phase_and_clears_save() -> void:
   Game.run.skip_choice()
   Game.run.advance()   # on to the first fight
   Game.run.relics.clear()
+  Game.run.lives = 1   # the last life, so the loss ends the run
   Game.run.player.hp = 1
   _play_one_beat(Game.run, 0)
   assert_eq(Game.phase, GameManagerAutoload.Phase.DEATH)

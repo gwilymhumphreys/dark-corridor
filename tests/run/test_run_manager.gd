@@ -1,6 +1,6 @@
 extends GutTest
 ## Step 5 — the descent. A full short run reaches WON, drafts land on the board, a
-## starting relic grants combat-start shield, a loss ends the run DIED, and a
+## starting relic grants combat-start shield, losing the last life ends the run DIED, and a
 ## save-mid-run + rehydrate reproduces the exact continuation (deterministic
 ## resume — the no-save-scum property end to end).
 
@@ -148,10 +148,11 @@ func test_each_fight_gets_fresh_relic_items() -> void:
   assert_ne(run.player.relics[0], first, 'as a new item, so its fire count starts at zero')
 
 
-func test_loss_ends_run_died() -> void:
+func test_losing_the_last_life_ends_run_died() -> void:
   var run := _run()
   _start_at_fight(run, 1)
   run.relics.clear()       # drop the protective relic so the glass player actually dies
+  run.lives = 1
   run.player.hp = 1
   watch_signals(run)
   _play_one_beat(run, 0)
@@ -303,14 +304,12 @@ func test_draft_skipped_trigger_adds_to_the_skip_gold() -> void:
 func test_run_heal_is_capped_at_maximum_health() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.FIGHT_WON, [RunEffect.heal(5)])))
   run.player.hp = run.player.max_hp - 2
-  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.NONE)
+  run._apply_run_effect(RunEffect.heal(5))
   assert_eq(run.player.hp, run.player.max_hp, 'healed to full, not past it')
   run.player.hp = run.player.max_hp - 40
-  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.NONE)
-  assert_eq(run.player.hp, run.player.max_hp - 40 + Balance.FIGHT_WON_HEAL + 5,
-    'healed by the relic amount on top of the fight-won heal')
+  run._apply_run_effect(RunEffect.heal(5))
+  assert_eq(run.player.hp, run.player.max_hp - 35, 'healed by the amount')
 
 
 func test_relic_grant_is_deterministic_by_seed() -> void:
@@ -1292,13 +1291,13 @@ func test_a_reward_encounter_can_be_skipped_for_gold() -> void:
 
 # --- after each fight -------------------------------------------------------
 
-func test_a_won_fight_gives_health_and_gold() -> void:
+func test_a_won_fight_gives_a_full_heal_and_gold() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   run.player.hp = run.player.max_hp - 40
   var gold_before: int = run.gold
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.NONE)
-  assert_eq(run.player.hp, run.player.max_hp - 40 + Balance.FIGHT_WON_HEAL, 'the fight-won heal')
+  assert_eq(run.player.hp, run.player.max_hp, 'the player is fully healed')
   assert_eq(run.gold, gold_before + Balance.FIGHT_WON_GOLD, 'and the fight-won gold')
 
 
@@ -1316,6 +1315,136 @@ func test_the_final_fight_gives_no_fight_gain() -> void:
   run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.RELIC)
   assert_true(run.is_ended(), 'beating the final boss ends the run')
   assert_eq(run.gold, 0, 'with no fight-won gold')
+
+
+func test_a_won_fight_raises_maximum_health() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  var max_before: int = run.player.max_hp
+  run._on_encounter_resolved(Encounter.Outcome.WON, EncounterDef.Reward.NONE)
+  assert_eq(run.player.max_hp, max_before + Balance.FIGHT_MAX_HP, 'maximum health rises by the step')
+  assert_eq(run.player.hp, run.player.max_hp, 'and the player is healed to the new maximum')
+
+
+# --- lives (decisions #68 and #69) ------------------------------------------
+
+## Start a run on its first fight with the player at 0 health, as a lost fight leaves them.
+func _start_losing(run: RunManager) -> void:
+  _start_at_fight(run, 1)
+  run.player.hp = 0
+
+
+func test_a_run_starts_with_the_starting_lives() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  assert_eq(run.lives, Balance.STARTING_LIVES)
+
+
+func test_a_lost_fight_with_lives_left_costs_one_and_goes_on() -> void:
+  var run := _run()
+  _start_losing(run)
+  var max_before: int = run.player.max_hp
+  var gold_before: int = run.gold
+  watch_signals(run)
+  run._on_encounter_resolved(Encounter.Outcome.LOST, EncounterDef.Reward.NONE)
+  assert_false(run.is_ended(), 'the run goes on')
+  assert_signal_not_emitted(run, 'run_ended')
+  assert_eq(run.lives, Balance.STARTING_LIVES - 1, 'a life is lost')
+  assert_eq(run.gold, gold_before + Balance.FIGHT_WON_GOLD, 'the fight gold is given')
+  assert_eq(run.player.max_hp, max_before + Balance.FIGHT_MAX_HP, 'maximum health rises')
+  assert_eq(run.player.hp, run.player.max_hp, 'and the player is fully healed')
+  assert_eq(run.fight_end_hp, 0, 'the health at the end of the fight is kept for the autotest')
+
+
+func test_a_lost_fight_heals_the_allies() -> void:
+  var run := _run()
+  _start_losing(run)
+  run.add_ally(FixtureEnemies.ALLY_ID)
+  run.allies[0].hp = 1
+  run._on_encounter_resolved(Encounter.Outcome.LOST, EncounterDef.Reward.NONE)
+  assert_eq(run.allies[0].hp, run.allies[0].max_hp, 'the ally is healed too')
+
+
+func test_a_lost_elite_gives_no_relic() -> void:
+  var run := _run()
+  _start_losing(run)
+  var before: int = run.relics.size()
+  run._on_encounter_resolved(Encounter.Outcome.LOST, EncounterDef.Reward.ELITE)
+  assert_eq(run.relics.size(), before, 'no relic for a lost elite')
+
+
+func test_a_lost_fight_does_not_fire_the_fight_won_relics() -> void:
+  var run := _run()
+  _start_losing(run)
+  run.relics.append(Relic.new(_run_trigger_relic(RunManager.RunEvent.FIGHT_WON, [RunEffect.gold(3)])))
+  var gold_before: int = run.gold
+  run._on_encounter_resolved(Encounter.Outcome.LOST, EncounterDef.Reward.NONE)
+  assert_eq(run.gold, gold_before + Balance.FIGHT_WON_GOLD, 'only the fight gold, not the relic gold')
+
+
+func test_a_lost_final_boss_ends_the_run_with_lives_left() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.jump_to(RunMap.TOTAL_BEATS - 1)
+  run.player.hp = 0
+  run._on_encounter_resolved(Encounter.Outcome.LOST, EncounterDef.Reward.RELIC)
+  assert_true(run.is_ended(), 'the final boss has one attempt')
+  assert_eq(run.outcome(), RunManager.Outcome.DIED)
+
+
+func test_a_run_goes_on_after_a_lost_fight() -> void:
+  var run := _run()
+  _start_at_fight(run, 1)
+  run.relics.clear()
+  run.player.hp = 1
+  _play_one_beat(run, 0)
+  assert_false(run.is_ended(), 'the loss cost a life, not the run')
+  assert_eq(run.lives, Balance.STARTING_LIVES - 1)
+  assert_eq(run.position, 2, 'and the run moved on to the next beat')
+
+
+func test_lives_survive_save_and_resume() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run.lives = 1
+  var run_b := _run()
+  run_b.rehydrate(run.snapshot())
+  assert_eq(run_b.lives, 1, 'the lives are restored')
+  var snap: Dictionary = run.snapshot()
+  snap.erase('lives')
+  var run_c := _run()
+  run_c.rehydrate(snap)
+  assert_eq(run_c.lives, Balance.STARTING_LIVES, 'a save without lives starts with the starting lives')
+
+
+func test_gain_life_adds_lives() -> void:
+  var run := _run()
+  run.start(1, FixtureCharacter.ID)
+  run._apply_run_effect(RunEffect.gain_life(2))
+  assert_eq(run.lives, Balance.STARTING_LIVES + 2)
+
+
+func test_a_life_is_drawn_from_its_stock_entry() -> void:
+  var stock: Array[StockEntry] = [StockEntry.lives(1)]
+  var goods: Array = Draft.draw_stock(stock, [], [], RandomNumberGenerator.new())
+  assert_eq(goods.size(), 1, 'one life')
+  assert_true(goods[0] is LifeDef, 'as a life')
+  assert_true(Draft.can_draw_stock(stock, [], []), 'a life can always be offered')
+
+
+func test_buying_a_life() -> void:
+  var run := _run()
+  _start_in_shop(run, Balance.SHOP_PRICE_LIFE)
+  run._shop_goods = [LifeDef.new()]
+  run._shop_levels = run._draw_offer_levels(run._shop_goods)
+  run._shop_sold = [false]
+  assert_eq(run.shop_level(0), 1, 'a life has no level')
+  assert_eq(run.shop_price(0), Balance.SHOP_PRICE_LIFE, 'it costs the life price')
+  var board: int = run.player.board.size()
+  assert_true(run.buy(0), 'it is bought')
+  assert_eq(run.lives, Balance.STARTING_LIVES + 1, 'and adds a life')
+  assert_eq(run.gold, 0, 'for its price')
+  assert_eq(run.player.board.size(), board, 'and nothing goes on the board')
 
 
 # --- HP economy -------------------------------------------------------------

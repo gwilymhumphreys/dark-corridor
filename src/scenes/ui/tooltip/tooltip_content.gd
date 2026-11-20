@@ -24,7 +24,7 @@ func build(item: Item) -> Dictionary:
     'rarity': item.def.rarity,
     'panel_color': item.def.panel_color,
     'type_line': _type_line_of(item.def),
-    'charge_line': [] if item.def is RelicDef or item.def is ConsumableDef else _charge_line(item),
+    'charge_line': [] if item.def is RelicDef or item.def is ConsumableDef or item.def is LifeDef else _charge_line(item),
     'lines': _effect_lines(item),
     'flavor': tr(item.def.description_key) if item.def.description_key != '' else '',
     'keyword_ids': keyword_ids(item),
@@ -143,6 +143,8 @@ func _run_effect_line(effect: RunEffect) -> Array:
       return [{'t': 'icon', 'id': HealMechanic.ID}, {'t': 'text', 's': str(effect.amount)}]
     RunEffect.Kind.GOLD:
       return [{'t': 'text', 's': tr('+{0} gold').format([effect.amount])}]
+    RunEffect.Kind.LIFE:
+      return [{'t': 'text', 's': tr('+{0} lives').format([effect.amount])}]
   return []
 
 

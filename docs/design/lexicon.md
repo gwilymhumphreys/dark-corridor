@@ -60,7 +60,7 @@ something else.
 | Term | Meaning |
 |---|---|
 | **Act** | One part of a run, ending in a boss. |
-| **Life** | One of the player's few chances to lose a fight. Losing a fight uses one, and the run ends when the last is used (decision #68). Planned. |
+| **Life** | One of the player's few chances to lose a fight (`RunManager.lives`). Losing a fight uses one, and the run ends when the last is used; losing the final boss ends the run whatever is left (decisions #68 and #69). A shop can sell one (`LifeDef`). |
 | **Beat** | One encounter along an act, in order (`RunManager.position`). |
 | **Square** | A beat shown on the map: a fight, an elite fight or the boss (`RunMap.SQUARES`). Every square has a choice of encounters before it. |
 | **Choice of encounters** | The beat before every square, where three encounters are offered as cards in the corridor and the player picks one or walks past for a little gold (`RunManager.pending_choice`). |

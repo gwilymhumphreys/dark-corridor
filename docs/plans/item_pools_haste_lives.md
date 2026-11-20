@@ -63,6 +63,10 @@ same stage. Item file comments are the owner's content and are left alone unless
 
 ## Stage B: full heal after every fight, and lives (decisions #68 and #69)
 
+**Built 2026-11-21.** Open points 1 and 2 went with this plan: a lost fight shows its own panel, and
+`FIGHT_WON` fires only for a win. `Balance.FIGHT_MAX_HP` is a placeholder (point 3); point 4 is left to
+tuning. A death in an event or from a relic run trigger still ends the run.
+
 ### Current state
 
 - `RunManager._on_encounter_resolved` ends the run on a lost fight (`_end_run(Outcome.DIED)`). A won
@@ -93,6 +97,7 @@ same stage. Item file comments are the owner's content and are left alone unless
   potions do (decision #57), so a life is shown and bought like any good. Its price is
   `Balance.SHOP_PRICE_LIFE`.
 - `rest` leaves `EncounterPools.RIGHT`. The rest encounter type and its panel stay in the code.
+  **Done:** `content/encounters/rest.gd` is deleted and out of the pools.
 - Run screen: a lost fight with lives left goes on as a won one does (the square burns), after a
   panel that says a life was lost and how many are left, with Continue, in the same style as the
   rest panel (decision #64). The lives are shown on the character sheet beside health.
