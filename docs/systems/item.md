@@ -136,7 +136,8 @@ Readers: a target filter (`TargetFilter`, both its `TYPE` and `MECHANIC` conditi
 (`StockEntry.types` and `mechanic`, [encounter.md](encounter.md#shops)), the starting board, the
 `HasItemType` run condition, the tooltip (the type line shows the type tags; the keyword column
 starts from the tags, where type tags and `flesh` have no card), and the travel sound folders (type
-tags only). Item pools will read them too (decision #65).
+tags only), and the item pools: which characters are offered an item comes from its tags and
+`ItemDef.draftable` ([draft.md → Item pools](draft.md#item-pools), decision #65).
 
 - **Authored, not derived.** The list is written by hand rather than computed from the effects,
   because the awkward cases are judgment calls rather than facts about the data. An item that

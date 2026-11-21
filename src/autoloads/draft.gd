@@ -35,11 +35,12 @@ func draw(pool: Array, _depth: int, rng: RandomNumberGenerator, count: int = DEF
 
 ## Draw the goods a reward encounter offers (docs/systems/encounter.md → Reward encounters): each
 ## StockEntry in order, on `rng`. Returns a mix of ItemDef, RelicDef, ConsumableDef and LifeDef. Items come
-## from `item_pool` (the character's pool plus the colourless items), kept to the entry's type tags
-## if it has any, and may repeat only when too few items match (as in `draw`). Relics come from
-## `relic_pool` (RunManager.relic_pool, the reward relics not held) and potions from their reward
-## pool; neither repeats within an entry, so an entry gives fewer when its pool is small. A life entry
-## gives `count` lives and draws no RNG. An entry whose pool is empty gives nothing.
+## from `item_pool` (RunManager._draft_pool, the items the character's pools cover), kept to the
+## entry's type tags if it has any, and may repeat only when too few items match (as in `draw`).
+## Relics come from `relic_pool` (RunManager.relic_pool, the reward relics not held) and potions
+## from their reward pool; neither repeats within an entry, so an entry gives fewer when its pool
+## is small. A life entry gives `count` lives and draws no RNG. An entry whose pool is empty gives
+## nothing.
 func draw_stock(entries: Array[StockEntry], item_pool: Array, relic_pool: Array, rng: RandomNumberGenerator) -> Array:
   var goods: Array = []
   for entry: StockEntry in entries:

@@ -7,6 +7,7 @@ func _init() -> void:
   id = 'sundering_bolt'
   name_key = 'Sundering Bolt'
   tags = [ItemType.SKILL]
+  draftable = false   # an example, never offered to a character
   icon = 'res://assets/icons/items/skill_break_medium_armor_nb.png'
   cooldown = 3.0
   effects = [

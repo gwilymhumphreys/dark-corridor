@@ -68,17 +68,20 @@ takes. Two definitions with the same id is an error. **Statuses are the exceptio
      nearest whole number rather than authoring the fraction.
    - The panel colour follows the first effect's mechanic or status. Set `panel_colour_name` to a
      `Colours` variable name (`'STATUS_DECAY'`) only when that is the wrong colour.
-2. **Make it live.** Add the id to the character's `item_pool` in
-   `content/characters/<character>.gd`, or to `src/content/items/colorless_pool.gd` if it genuinely
-   belongs to every character (the exception that earns it, never a default tier — decision #27).
+2. **Its tags put it in pools.** A new item is offered to every character whose `item_pools` (in
+   `content/characters/<character>.gd`) hold all of its tags that are pools: every mechanic, plus
+   `spores` and `flesh` (`ItemPools.POOL_TAGS`). Type tags do not limit who is offered it, and an
+   item with no pool tag is offered to every character
+   ([draft.md → Item pools](../systems/draft.md#item-pools), decision #65).
 3. **Reimport** (`tools/import.sh`) so Godot sees the new file.
 
 To see a character's items side by side with their tooltip text, run `tools/item_browser.sh` and open
 `_temp/item_browser.html` ([item_browser.md](../systems/item_browser.md)).
 
-**Active / disabled = pool membership.** A def that exists but is in no pool is "disabled" — it's
-authored and inspectable but never drafted. That is the toggle: add/remove the id from a pool. Not
-a flag on the def. (`content/items/examples/` holds the unpooled working examples.)
+**Keeping an item out of drafts.** Set `draftable = false` on an item that no character should be
+offered, such as one made only during a fight, an enemy's item, or the working examples in
+`content/items/examples/`. The item browser's "In no pool" view lists both these and draftable items
+whose pools no character holds.
 
 ## Other kinds
 
@@ -122,10 +125,10 @@ for each def's fields and how it resolves.
   creator`). An applier (item/relic) references it by string id (`status_id = 'weak'`) and, for a
   timed status, sets `duration` (per-application). See [status PRD](../systems/status_manager.md).
 
-- A **character** is a `CharacterDef` (`content/characters/<id>.gd`): its own `item_pool`,
-  starting board, starting relic, starting potions/enchants. The starting board is normally written
+- A **character** is a `CharacterDef` (`content/characters/<id>.gd`): its own `item_pools` (the
+  pools it is offered items from), starting board, starting relic, starting potions/enchants. The starting board is normally written
   as **type constraints** (`starting_item_types`, e.g. `[WEAPON, SKILL, ARMOUR]`) rather than fixed
-  ids: one random item of each listed type is drawn from the character's own pool at run start, so
+  ids: one random item of each listed type is drawn from the items its pools cover at run start, so
   every run opens differently. Repeating a type asks for two of it, and each slot draws a distinct
   item. `starting_item_ids` still works for a fixed opening and is used when no types are set. Its display is two lines on the select
   screen: `name_key` is the character's personal name, `class_key` the character's class beneath it
@@ -192,7 +195,7 @@ photo in the pile on the select screen's left page. The `id` stays the internal 
   ```
 
 - **Enemies are shared by every character** and the **reward-relic pool stays shared** — only *item*
-  pools split per character (#27).
+  pools differ per character (#27, #65).
 
 ## Tests do not use authored content
 

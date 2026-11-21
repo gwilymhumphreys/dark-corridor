@@ -63,10 +63,7 @@ func _build_data() -> Dictionary:
       'name': tr(character.name_key),
       'character_class': tr(character.class_key) if character.class_key != '' else '',
     })
-    for item_id: String in character.item_pool:
-      _append_to(pools, item_id, character_id)
-  for item_id: String in ColorlessPool.ITEMS:
-    for character_id: String in CharacterCatalog.ids():
+    for item_id: String in ItemPools.items_for(character.item_pools):
       _append_to(pools, item_id, character_id)
 
   var enemy_boards: Dictionary = {}   # item id -> Array of enemy names
@@ -114,6 +111,7 @@ func _build_data() -> Dictionary:
       'budget': ItemPoints.budget(def.cooldown, def.rarity),
       'unpriced': _has_unpriced_effect(def),
       'pools': pools.get(item_id, []),
+      'draftable': def.draftable,
       'enemies': enemy_boards.get(item_id, []),
     })
 

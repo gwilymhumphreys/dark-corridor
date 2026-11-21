@@ -1,8 +1,12 @@
 extends GutTest
 ## The run-start board drawn from a character's type constraints
 ## (CharacterCatalog.starting_board). A character lists the ItemTypes it opens with instead of
-## fixed ids, and one random item of each is drawn from its own pool on the run RNG, so every run
+## fixed ids, and one random item of each is drawn from its pools on the run RNG, so every run
 ## opens differently but a seed always opens the same way.
+
+
+func after_each() -> void:
+  TestCleanup.reset_all_managers()
 
 
 func _rng(seed_value: int) -> RandomNumberGenerator:
@@ -32,7 +36,7 @@ func test_every_drawn_item_comes_from_the_characters_own_pool() -> void:
   for character_id: String in ['smith', 'spore_druid', 'fleshmancer']:
     var def: CharacterDef = CharacterCatalog.get_def(character_id)
     for id: String in CharacterCatalog.starting_board(def, _rng(3)):
-      assert_true(def.item_pool.has(id), '%s drew %s from its own pool' % [character_id, id])
+      assert_true(ItemPools.items_for(def.item_pools).has(id), '%s drew %s from its own pools' % [character_id, id])
 
 
 func test_the_same_seed_draws_the_same_board() -> void:
@@ -42,8 +46,8 @@ func test_the_same_seed_draws_the_same_board() -> void:
 
 
 func test_a_repeated_type_draws_distinct_items() -> void:
-  # The Spore Druid's pool is all weapons, so it asks for three of them. Asking twice for a type
-  # must not hand back the same item twice.
+  # The Spore Druid asks for three weapons. Asking twice for a type must not hand back the same
+  # item twice.
   var druid: CharacterDef = CharacterCatalog.get_def('spore_druid')
   for seed_value: int in [1, 2, 3, 4, 5]:
     var ids: Array = CharacterCatalog.starting_board(druid, _rng(seed_value))
@@ -74,10 +78,12 @@ func test_a_character_with_fixed_ids_keeps_them() -> void:
 
 
 func test_a_type_with_nothing_in_the_pool_is_skipped() -> void:
-  # A half-authored character still starts rather than crashing — it just opens short-handed.
+  # A half-authored character still starts rather than crashing — it just opens short-handed. On
+  # fixture content, the attack pool offers only the fixture attack, a weapon.
+  FixtureContent.install()
   var def := CharacterDef.new()
   def.id = 'test_missing_type'
-  def.item_pool = ['capped_cudgel']
+  def.item_pools = [AttackMechanic.ID]
   def.starting_item_types = [ItemType.WEAPON, ItemType.ARMOUR]
-  assert_eq(CharacterCatalog.starting_board(def, _rng(1)), ['capped_cudgel'],
+  assert_eq(CharacterCatalog.starting_board(def, _rng(1)), [FixtureItems.attack().id],
     'the weapon is drawn and the missing armour is skipped')

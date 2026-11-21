@@ -370,7 +370,7 @@ function card(item) {
   }
 
   const foot = el('div', { class: 'foot' }, [el('code', { text: item.id })]);
-  if (unpooled) foot.append(el('span', { class: 'tag-warn', text: 'In no pool' }));
+  if (unpooled) foot.append(el('span', { class: 'tag-warn', text: item.draftable ? 'In no pool' : 'Not drafted' }));
   const others = item.pools.filter((id) => id !== state.character);
   if (others.length && state.character !== 'all') {
     foot.append(el('span', { text: 'Also: ' + others.map(characterName).join(', ') }));

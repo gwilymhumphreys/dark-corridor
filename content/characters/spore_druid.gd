@@ -10,13 +10,14 @@ func _init() -> void:
   class_key = 'Rot Shepherd'         # the owner's lead class name (spore_druid.md)
   portrait = 'res://assets/portraits/characters/shaman.png'   # PLACEHOLDER portrait — owner's to swap
   select_image = 'res://assets/portraits/large/greater_hag_a.png'   # PLACEHOLDER picture, owner's to swap
-  item_pool = [
-    'druid_staff',
-    'spore_spitter',
-    'capped_cudgel',
-    'bloomhammer',
-    'wilt_frond',
-    'pocket_shrooms',
+  # The owner's interim pools until the characters are revisited (2026-11-20): every character
+  # holds attack, shield and heal; the Spore Druid adds poison and spores.
+  item_pools = [
+    AttackMechanic.ID,
+    ShieldMechanic.ID,
+    HealMechanic.ID,
+    PoisonMechanic.ID,
+    ItemTags.SPORES,
   ]
   # Three weapons, because every Spore Druid item is a weapon so far. Revisit once its skills and
   # armour exist.

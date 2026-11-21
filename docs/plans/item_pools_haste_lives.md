@@ -183,6 +183,14 @@ or another name content refers to (such as a pool that is not a mechanic). Each 
 
 ### Step 2: item pools
 
+**Built 2026-11-21**, with the owner's starting pools below rather than pools that keep every item a
+character had: the Smith loses its bleed, poison, burn and decharge items (Acid Bath, Bloodletting,
+Dagger, Deep Forge, Iron Maiden, Jar of Acid, Poker, Tongs, Warhammer, Wide Forge). Bloodletting,
+Deep Forge, Poker, Tongs, Warhammer and Wide Forge now reach no character. No draftable item lacks
+a pool tag: Mighty Blow carries `attack` since step 1, and Hex Bolt and Sundering Bolt are examples,
+so they are not draftable. `FixtureContent.install` makes every authored item undraftable, so the
+fixture character, holding attack, shield and poison, is offered the three draftable fixture items.
+
 - A pool is a tag (owner): the tags decide what is in each pool. Any tag can be made a pool,
   including a type tag (owner). `ItemPools.POOL_TAGS` lists which tags are pools: every mechanic id,
   plus spores and flesh (owner). A type tag is added there only when a character should need it,

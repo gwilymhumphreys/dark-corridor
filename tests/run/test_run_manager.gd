@@ -1175,7 +1175,7 @@ func test_a_shop_with_too_few_items_to_choose_from_is_not_offered() -> void:
   var run := _run()
   run.start(1, FixtureCharacter.ID)
   var shop: EncounterDef = FixtureEncounters.shop('test_shop')
-  var pool_size: int = FixtureCharacter.def().item_pool.size()
+  var pool_size: int = run._draft_pool().size()
   shop.min_items = pool_size
   assert_gt(shop.offer_weight(run), 0.0, 'offered when the pool has exactly enough items')
   shop.min_items = pool_size + 1
@@ -1533,19 +1533,17 @@ func test_drafts_draw_from_the_characters_pool() -> void:
   _offer_items(run)
   assert_true(run.has_pending_draft(), 'an offer is held')
   for d in run.pending_draft():
-    assert_true(run._draft_pool().has(d.id), 'every offered item is from the character pool + colorless (#27)')
+    assert_true(run._draft_pool().has(d.id), 'every offered item is from the character pools (#27)')
 
 
-func test_draft_pool_is_character_plus_colorless() -> void:
-  # The shared colorless pool is appended to the character's own pool at draft time (#27).
+func test_draft_pool_is_the_items_the_characters_pools_cover() -> void:
+  # The draft pool is worked out from the character's item pools (#65). Authored items are not
+  # draftable while the fixtures are installed, so the fixture character gets its three items.
   var run := _run()
   run.start(1, FixtureCharacter.ID)
-  var pool: Array = run._draft_pool()
-  for id in run.character.item_pool:
-    assert_true(pool.has(id), 'the draft pool includes the character pool')
-  for id in ColorlessPool.ITEMS:
-    assert_true(pool.has(id), 'and the shared colorless items')
-  assert_eq(pool.size(), run.character.item_pool.size() + ColorlessPool.ITEMS.size(), 'pool = character + colorless')
+  assert_eq(run._draft_pool(), ItemPools.items_for(run.character.item_pools), 'the items its pools cover')
+  assert_eq(run._draft_pool(), [FixtureItems.attack().id, FixtureItems.shield().id, FixtureItems.poison().id],
+    'the fixture attack, shield and poison items')
 
 
 func test_start_with_a_chosen_character_uses_its_kit() -> void:

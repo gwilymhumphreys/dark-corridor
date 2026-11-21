@@ -7,6 +7,7 @@ func _init() -> void:
   id = 'hex_bolt'
   name_key = 'Hex Bolt'
   tags = [ItemType.SPELL]
+  draftable = false   # an example, never offered to a character
   icon = 'res://assets/icons/items/skill_shadow_curse_nb.png'
   cooldown = 3.0
   panel_colour_name = 'ARCANE'

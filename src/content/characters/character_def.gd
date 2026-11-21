@@ -10,10 +10,12 @@ extends ActorDef
 # (assets/portraits/characters/) and hurt_sound come from ActorDef.
 var class_key: String = ''           # the character's class, shown under or beside the name (e.g. 'Rot Shepherd'); tr(), '' = none
 var select_image: String = ''        # res:// path of the large picture on character select's left page; '' = none
-var item_pool: Array = []            # this character's draftable item ids (#27); colorless is added at draw
+# The pools this character is offered items from (decision #65, ItemPools): it is offered every
+# draftable item whose pool tags are all in this list.
+var item_pools: Array[String] = []
 var starting_item_ids: Array = []    # the run-start board, left-to-right; ignored when starting_item_types is set
 # The run-start board as TYPE constraints instead of fixed ids: one random item of each listed
-# ItemType, drawn from item_pool on the run RNG, so every run opens differently. Repeating a type
+# ItemType, drawn from the character's pools on the run RNG, so every run opens differently. Repeating a type
 # asks for two of it, and each slot draws a DISTINCT item. Empty = use starting_item_ids.
 var starting_item_types: Array = []
 var starting_relic_id: String = ''   # the signature starting relic (the most build-defining — design)

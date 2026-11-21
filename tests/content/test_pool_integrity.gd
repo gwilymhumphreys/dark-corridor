@@ -34,7 +34,9 @@ const ITEM_TYPE_IDS: Array = [
 func test_character_pools_and_kits_resolve() -> void:
   for character_id in CHARACTER_IDS:
     var def: CharacterDef = CharacterCatalog.get_def(character_id)
-    for item_id in def.item_pool + def.starting_item_ids:
+    for pool_id: String in def.item_pools:
+      assert_true(pool_id in ItemPools.POOL_TAGS, '%s: item pool %s is in ItemPools.POOL_TAGS' % [character_id, pool_id])
+    for item_id in def.starting_item_ids:
       assert_not_null(ItemCatalog.get_def(item_id), '%s: item id %s resolves' % [character_id, item_id])
     if def.starting_relic_id != '':
       assert_not_null(RelicCatalog.get_def(def.starting_relic_id), '%s: starting relic resolves' % character_id)
@@ -153,10 +155,8 @@ func test_draftable_item_effects_reference_registered_statuses() -> void:
   var item_ids: Dictionary = {}
   for character_id in CHARACTER_IDS:
     var character: CharacterDef = CharacterCatalog.get_def(character_id)
-    for item_id in character.item_pool + character.starting_item_ids:
+    for item_id in ItemPools.items_for(character.item_pools) + character.starting_item_ids:
       item_ids[item_id] = true
-  for item_id in ColorlessPool.ITEMS:
-    item_ids[item_id] = true
   for item_id in item_ids.keys():
     var def: ItemDef = ItemCatalog.get_def(item_id)
     for effect in def.effects:
@@ -174,6 +174,22 @@ func test_item_tags_are_known() -> void:
   for item_id in ItemCatalog.all_ids():
     for tag: String in ItemCatalog.get_def(item_id).tags:
       assert_true(ItemTags.is_known(tag), '%s: tag %s is a type tag, a mechanic or an ItemTags tag' % [item_id, tag])
+
+
+## Every pool is a known tag, so a misspelt pool fails here instead of keeping its items from every
+## character (decision #65).
+func test_every_pool_tag_is_a_known_tag() -> void:
+  for tag: String in ItemPools.POOL_TAGS:
+    assert_true(ItemTags.is_known(tag), 'pool %s is a type tag, a mechanic or an ItemTags tag' % tag)
+
+
+## Every mechanic is a pool (owner, 2026-11-20), so a new mechanic's items are not offered to every
+## character by mistake. If the owner decides a mechanic is not a pool, this check changes with it.
+func test_every_mechanic_is_a_pool() -> void:
+  MechanicRegistry.has(AttackMechanic.ID)   # builds the registry
+  for id: String in MechanicRegistry._mechanics:
+    if MechanicRegistry.is_mechanic(id):
+      assert_true(id in ItemPools.POOL_TAGS, 'mechanic %s is in ItemPools.POOL_TAGS' % id)
 
 
 ## Every authored tags list is sorted alphabetically by id string and holds no duplicates.

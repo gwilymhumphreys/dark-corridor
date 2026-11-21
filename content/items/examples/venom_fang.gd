@@ -6,6 +6,7 @@ func _init() -> void:
   id = 'venom_fang'
   name_key = 'Venom Fang'
   tags = [PoisonMechanic.ID, ItemType.WEAPON]
+  draftable = false   # an example, never offered to a character
   icon = 'res://assets/icons/items/loot_26_spiderteeth.png'
   cooldown = 2.0
   effects = [ItemEffect.make(PoisonMechanic.ID, 3.0, ItemEffect.Shape.OPPONENT_LEFTMOST)]

@@ -10,6 +10,9 @@ class_name FixtureItems
 ##
 ## Use a real catalog item instead when a test is about the catalog itself (its caching, its icons)
 ## or about a specific card's behaviour.
+##
+## Only the attack, shield and poison items are draftable, so the fixture character's pools offer
+## those three and no more. A test of the item pools that needs another one draftable sets it.
 
 const ATTACK_COOLDOWN: float = 1.2
 const ATTACK_DAMAGE: float = 6.0
@@ -60,6 +63,7 @@ static func attack() -> ItemDef:
 static func enemy_attack() -> ItemDef:
   var d := attack()
   d.id = 'fixture_enemy_attack'
+  d.draftable = false
   d.name_key = 'Fixture Claw'
   d.icon = 'res://assets/icons/items/loot_183_claw.png'
   return d
@@ -105,6 +109,7 @@ static func poison() -> ItemDef:
 static func charge_your_weapons() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_charge_your_weapons'
+  d.draftable = false
   d.tags = [ChargeMechanic.ID, ItemType.SKILL]
   d.name_key = 'Fixture Whetstone'
   d.cooldown = CHARGE_COOLDOWN
@@ -126,6 +131,7 @@ static func charge_your_weapons() -> ItemDef:
 static func silence_enemy_poison_item() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_silence_enemy_poison_item'
+  d.draftable = false
   d.tags = [ItemType.SPELL]
   d.name_key = 'Fixture Muzzle'
   d.cooldown = SILENCE_COOLDOWN
@@ -147,6 +153,7 @@ static func silence_enemy_poison_item() -> ItemDef:
 static func poison_trigger() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_poison_trigger'
+  d.draftable = false
   d.tags = [ItemType.ARMOUR, PoisonMechanic.ID, ShieldMechanic.ID]
   d.name_key = 'Fixture Ward'
   d.icon = 'res://assets/icons/items/skull_shield.png'
@@ -169,6 +176,7 @@ static func poison_trigger() -> ItemDef:
 static func vulnerable() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_vulnerable'
+  d.draftable = false
   d.tags = [ItemType.SKILL]
   d.name_key = 'Fixture Sunder'
   d.cooldown = VULNERABLE_COOLDOWN
@@ -187,6 +195,7 @@ static func vulnerable() -> ItemDef:
 static func silence_random_enemy_item() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_silence_random_enemy_item'
+  d.draftable = false
   d.tags = [ItemType.SPELL]
   d.name_key = 'Fixture Hex'
   d.cooldown = HEX_COOLDOWN
@@ -204,6 +213,7 @@ static func silence_random_enemy_item() -> ItemDef:
 static func empower() -> ItemDef:
   var d := ItemDef.new()
   d.id = 'fixture_empower'
+  d.draftable = false
   d.tags = [ItemType.SKILL]
   d.name_key = 'Fixture Rally'
   d.cooldown = EMPOWER_COOLDOWN

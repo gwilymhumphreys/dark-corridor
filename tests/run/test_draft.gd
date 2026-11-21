@@ -20,9 +20,9 @@ func _ids(offer: Array) -> Array:
   return out
 
 
-## The fixture character's pool, which has the three items a distinct offer needs.
+## The items the fixture character's pools cover: the three a distinct offer needs.
 func _pool() -> Array:
-  return FixtureCharacter.def().item_pool
+  return ItemPools.items_for(FixtureCharacter.def().item_pools)
 
 
 func _rng(seed_value: int) -> RandomNumberGenerator:

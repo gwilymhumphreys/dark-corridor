@@ -1,8 +1,8 @@
 class_name ItemCatalog
 ## The item definitions (decision #23), keyed by string id. Each item is one file under
 ## content/items/ (docs/design/authoring.md); the subfolders group them by character and mean
-## nothing to the catalog. A definition in no pool is authored but never drafted — pool membership
-## is the switch (#27). Built on first access.
+## nothing to the catalog. Which characters are offered an item comes from its tags and
+## `draftable` (ItemPools, #65). Built on first access.
 
 const FOLDER := 'res://content/items'
 

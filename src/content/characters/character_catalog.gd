@@ -1,6 +1,6 @@
 class_name CharacterCatalog
 ## The character definitions (#23), keyed by string id: one file each under content/characters/.
-## Each character has its own item pool (#27). Built on first access.
+## Each character has its own item pools (#27, #65). Built on first access.
 
 const FOLDER := 'res://content/characters'
 
@@ -39,7 +39,7 @@ static func ids() -> Array:
 
 
 ## The run-start board for a character: its fixed `starting_item_ids`, or — when it lists
-## `starting_item_types` — one random item of each type, drawn from its own pool on `rng`. Each
+## `starting_item_types` — one random item of each type, drawn from its pools on `rng`. Each
 ## slot draws a DISTINCT item, so a repeated type asks for two different items of it. A type with
 ## nothing left in the pool is skipped with a warning rather than crashing, which keeps a
 ## half-authored character startable. Both the run and the autotest sandbox build boards through
@@ -50,7 +50,7 @@ static func starting_board(def: CharacterDef, rng: RandomNumberGenerator) -> Arr
   var board_ids: Array = []
   for type: String in def.starting_item_types:
     var candidates: Array = []
-    for item_id: String in def.item_pool:
+    for item_id: String in ItemPools.items_for(def.item_pools):
       var item_def: ItemDef = ItemCatalog.get_def(item_id)
       if item_def != null and item_def.tags.has(type) and not board_ids.has(item_id):
         candidates.append(item_id)

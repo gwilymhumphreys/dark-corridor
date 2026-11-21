@@ -146,7 +146,7 @@ On-mechanism standouts: thallid counter, decompose-for-fuel, board-linking, spaw
 |------|------|-------|-----------|--------|-------|
 | Pocket Shrooms | A | ST | x | 10 dmg, 3s; apply 1 blinding spore (2s blind) | The blinding enabler. ~3.3 DPS attack + a timed control rider; **rare for the access to blinding, not for bigger numbers** (rarity = complexity, not power). |
 
-> **Authored in code** as `content/items/spore_druid/pocket_shrooms.gd` (the first multi-effect rare + first Spore Druid card). Now in the **Spore Druid's `item_pool`** (#27) alongside Druid Staff; reachable in drafts once the Spore Druid is flipped into `CharacterCatalog.ids()` (selectable).
+> **Authored in code** as `content/items/spore_druid/pocket_shrooms.gd` (the first multi-effect rare + first Spore Druid card). Offered to the Spore Druid through its item pools (#27, #65), alongside Druid Staff.
 
 ---
 

@@ -18,11 +18,11 @@ something else.
 | **Relic** | An item with no cooldown: it fires only when one of its triggers happens, and its passives hold for the whole fight. The run owns the player's relics; in a fight they sit apart from the board (`RelicDef`, `Actor.relics`). |
 | **Passive** | A relic ability that is always on for the whole fight, written like an item effect (`RelicDef.passives`). Not a status. |
 | **Run trigger** | A relic ability outside fights: when a run event happens (the relic is picked up, a fight is won, a draft is skipped), its run effects change the run (`RelicDef.run_triggers`, `RunEffect`). |
-| **Tag** | One name in an item's list of tags (`ItemDef.tags`): a type tag, a mechanic the item counts as, or another name content refers to, such as `spores` or `flesh` (decision #70). Item pools will be tags. |
+| **Tag** | One name in an item's list of tags (`ItemDef.tags`): a type tag, a mechanic the item counts as, or another name content refers to, such as `spores` or `flesh` (decision #70). Some tags are item pools. |
 | **Type tag** | A tag naming what an item is (`weapon`, `armour`, `spell`, `skill`, `trinket`). It does nothing by itself; other items and statuses can refer to it. |
 | **Level** | How far an item has been upgraded, from 1 up to `Balance.ITEM_MAX_LEVEL` (`Item.level`). Separate from rarity, which the docs also call a tier. |
 | **Merge** | Combining two copies of the same item at the same level into one item of the next level. The player chooses to do it ([plans/item_levels.md](../plans/item_levels.md)). |
-| **Item pool** | A named group of items, mostly one per mechanic. A character holds several and is offered their items; an item that needs several pools is offered only to a character holding all of them (decision #65). Planned. |
+| **Item pool** | A tag that decides who is offered an item: every mechanic, plus `spores` and `flesh` (`ItemPools.POOL_TAGS`). A character holds several (`CharacterDef.item_pools`) and is offered every draftable item whose pool tags it holds; an item that needs several pools is offered only to a character holding all of them (decision #65). |
 | **Value pill** | The number on the top edge of an item's icon. There is one for each mechanic effect; an effect that applies a status, or is not a mechanic (the attack bonuses), has none. |
 
 ## Mechanics and statuses

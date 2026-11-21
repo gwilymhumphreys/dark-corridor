@@ -248,7 +248,7 @@ circles for projectiles and impacts are placeholders waiting on real VFX animati
   fresh run.
 - **Content = GDScript definitions, one file each under `content/<kind>/`** (decisions #23, #44),
   keyed by a **string id** and loaded by the catalogs in `src/content/<kind>/`; numbers are written
-  on the definition; localized via `tr(def.name_key)`. Drafts pull from the **character's pool + colorless** (#27).
+  on the definition; localized via `tr(def.name_key)`. Drafts pull from the items the **character's item pools** cover (#27, #65 — [draft.md → Item pools](systems/draft.md#item-pools)).
 - **Exit codes** (autotest): `0` = the sim reached a clean conclusion (win OR die OR
   cap), `1` = it didn't (stuck / timeout) — not who wins (that's `tune`'s job later).
 - **"N resources still in use at exit" means a leaked Actor<->Item cycle** (the Actor, Item,

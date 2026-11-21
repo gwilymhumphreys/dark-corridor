@@ -7,6 +7,7 @@ func _init() -> void:
   id = 'spite_ward'
   name_key = 'Spite Ward'
   tags = [ItemType.ARMOUR, PoisonMechanic.ID, ShieldMechanic.ID]   # poison: it charges off it (owner, 2026-09-20)
+  draftable = false   # an example, never offered to a character
   icon = 'res://assets/icons/items/skull_shield.png'
   cooldown = 2.0
   effects = [ItemEffect.shield(8.0)]

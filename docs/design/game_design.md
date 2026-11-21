@@ -149,7 +149,7 @@ This game is closest to Bazaar without the size cap, which originally also meant
 
 The engineering term "item" is the umbrella type for anything on the combat board — the same
 way Magic's "card" covers creatures and sorceries. **It stays engineering-side** (`Item`,
-`ItemCatalog`, `item_pool` in code + docs); renaming it gains nothing.
+`ItemCatalog`, `item_pools` in code + docs); renaming it gains nothing.
 
 **Player-facing labels go category-specific**, not to a new umbrella word. Items don't need to
 be physical objects — the Spore Druid has fungal weapons/tools and the Elementalist has spells.

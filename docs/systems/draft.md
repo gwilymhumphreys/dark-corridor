@@ -16,7 +16,7 @@ Boundaries live in the hub: [architecture.md → Interface contracts → `Draft`
 
 What it **is not**:
 
-- **Not the pool's *contents*.** `Meta-progression` owns what's unlocked into the pool; `Draft` pulls from it and never reaches into meta internals (architecture). It reads the pool, doesn't define it. The pool handed in is **character-scoped** (decision #27 — per-character item pools); `Draft` stays **pool-agnostic** — it draws from whatever pool the `Run manager` hands it.
+- **Not the pool's *contents*.** `Meta-progression` owns what's unlocked into the pool; `Draft` pulls from it and never reaches into meta internals (architecture). It reads the pool, doesn't define it. The pool handed in is **character-scoped** (decision #27, built as [item pools](#item-pools), decision #65); `Draft` stays **pool-agnostic** — it draws from whatever pool the `Run manager` hands it.
 - **Not run-state.** It produces candidates; the **`Run manager` holds the pending offer and applies the pick** to run-state (board / potion slots / enchant target / relics). `Draft` writes nothing.
 - **Not the boss and elite relics.** Those are granted directly by the `Run manager`. `Draft` draws a fight's 1-of-3 items (`draw`) and a reward encounter's goods (`draw_stock`, items, relics and potions from its stock entries — [encounter.md → Reward encounters](encounter.md#reward-encounters)).
 - **Not presentation.** The offer is presented + inspected by `UI` (tooltips on hover — the draft is a paused, between-fights decision, no combat clock).
@@ -33,6 +33,19 @@ The `Run manager` calls `Draft` with the pool, the beat depth (unused today) and
 - **Seeded** — the draw derives from the **run RNG** (the `Run manager`'s run stream), so a given run-state yields the **same offer** — not re-rollable by quit-and-resume (no save-scum — [Save PRD](save.md)).
 
 The offer is `Draftable`-generic — it draws item / enchant / potion definitions the same way; the subtype only matters at *application* (below).
+
+## Item pools
+
+Which items a character is offered (decision #65).
+
+**Location:** `src/content/items/item_pools.gd` (`ItemPools`), `CharacterDef.item_pools`, `ItemDef.draftable`.
+
+- A pool is a tag ([item.md → Tags](item.md#tags)). `ItemPools.POOL_TAGS` lists the tags that are pools: every mechanic, plus `spores` and `flesh` (owner). Type tags are not pools.
+- An item needs every one of its tags that is a pool (`ItemPools.needed_pools`). A character is offered it when its `item_pools` hold all of them, so an item that needs several pools reaches only a character holding all of them. An item with no pool tag is offered to every character.
+- A type tag could be made a pool by adding it to `POOL_TAGS`, but then every item carrying it needs it, so a character that does not hold it is offered none of them.
+- `ItemPools.items_for(pool_ids)` returns the ids of every draftable item those pools cover, in catalog order (sorted file paths), so a draw on the same seed sees the same list. `RunManager._draft_pool()` and `CharacterCatalog.starting_board` both use it.
+- `ItemDef.draftable = false` keeps an item from every character: Chunk of Flesh (made during a fight), the enemy Claw and the items in `content/items/examples/`.
+- The characters' pools are the owner's interim choice until the characters are revisited; they are set in `content/characters/`.
 
 ## Skip for gold, no hidden weighting (two design constraints)
 
@@ -66,7 +79,7 @@ The player picks one candidate (a `draft pick` intent — architecture); the **`
 
 - **Slot chances** (item vs enchant vs potion per slot) + **rarity-by-depth odds** — tuning (design's pool work).
 - **Enchant-target / potion-drop sub-choices** — the UI interactions when a picked enchant needs a target or a potion needs a slot — a UI pass (the choices are intents the `Run manager` applies).
-- **Draftable definition format — resolved (#23):** typed GDScript def objects + catalogs, keyed by **string id**. **Pool data:** the live draw pool is the **character's item pool + the shared colorless pool** (#27, built — `RunManager._draft_pool()`); what's *unlocked* into a character's pool is `Meta-progression` / content.
+- **Draftable definition format — resolved (#23):** typed GDScript def objects + catalogs, keyed by **string id**. **Pool data:** the live draw pool is every draftable item the character's [item pools](#item-pools) cover (#27, #65, built — `RunManager._draft_pool()`); what's *unlocked* into a character's pool is `Meta-progression` / content.
 - **RNG — resolved (#20):** the draw uses the `Run manager`'s run RNG (full state saved for deterministic resume), handed in by the `Run manager`.
 - **Autoload vs. plain helper** — `Draft` is stateless either way; autoloaded here for consistency with `StatusManager` / `Save`.
 

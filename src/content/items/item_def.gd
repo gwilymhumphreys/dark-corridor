@@ -15,16 +15,20 @@ var description_key: String = ''
 var rarity: int = Rarity.COMMON
 # The item's tags (decision #70, docs/systems/item.md → Tags): its type tags (ItemType), every
 # mechanic it counts as (MechanicRegistry ids) and other names content refers to (ItemTags). Target
-# filters, shops, the tooltip, sounds and later item pools read this one list. Authored, not derived
+# filters, shops, the tooltip, sounds and the item pools (ItemPools) read this one list. Authored, not derived
 # from the effects (the author's judgment about what the item is). Written in alphabetical order of
 # the ids; tests/content/test_pool_integrity.gd checks the order, that every tag is known, and that
 # every mechanic an effect deals or applies is listed.
 var tags: Array[String] = []
+# Whether drafts, shops and starting boards can offer the item to a character whose pools cover it
+# (ItemPools). False keeps it out of every character's pool: an item made only during a fight, an
+# enemy's item, an example.
+var draftable: bool = true
 # The folder under mechanics/attack/ whose recordings this item's attacks play
 # (docs/systems/audio.md) — 'blade' and 'blunt' to start with, and any other name works by
 # making the folder. Presentation only: the sound layer reads it, and AttackHitDrawer draws a slash
-# for 'blade' and an impact otherwise. That is what separates it from `types` above, whose values
-# are synergy labels content may key off. Empty = the plain mechanics/attack folder.
+# for 'blade' and an impact otherwise. That is what separates it from `tags` above, whose values
+# are labels content may key off. Empty = the plain mechanics/attack folder.
 var attack_sound: String = ''
 # The folder under combat/travel/ this item's projectiles play in flight (docs/systems/audio.md),
 # ahead of the folders for its type tags and mechanic. Sound only, like attack_sound. Empty = the

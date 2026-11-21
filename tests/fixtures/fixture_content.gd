@@ -12,7 +12,8 @@ static var _installed: bool = false
 
 
 ## Add every fixture definition to its catalog, and put a fixture in place of every authored enemy,
-## encounter, relic and potion under the authored id. Every act's regular and boss enemy lists are emptied,
+## encounter, relic and potion under the authored id. Every authored item is made undraftable first,
+## so the fixture character is offered fixture items only, whatever pools the authored items are in. Every act's regular and boss enemy lists are emptied,
 ## so filling the authored EnemyPools cannot change which enemies a whole-run test meets, and the
 ## choice before every fight offers the fixture rest, event and reward encounter, one per position, so
 ## filling the authored EncounterPools cannot change it either. Those three are replaced rather than added because
@@ -20,9 +21,9 @@ static var _installed: bool = false
 ## rewards draw from RelicCatalog.REWARD_POOL and ConsumableCatalog.REWARD_POOL); replacing every id keeps this working as content is
 ## authored. Authored items, characters, potions and enchants stay, but no fixture refers to them.
 static func install() -> void:
-  assert(ColorlessPool.ITEMS.is_empty(),
-    'FixtureContent: the colorless pool is not empty, so fixture runs would draft authored items')
   _build_all()
+  for id: String in ItemCatalog._defs:
+    (ItemCatalog._defs[id] as ItemDef).draftable = false
   for def: ItemDef in FixtureItems.all():
     ItemCatalog._defs[def.id] = def
   CharacterCatalog._defs[FixtureCharacter.ID] = FixtureCharacter.def()

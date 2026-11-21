@@ -25,12 +25,12 @@ the fixture files and are never read from `Balance`.
 
 | File | What it gives |
 |---|---|
-| `fixture_items.gd` | `FixtureItems`: an attack, an enemy attack, a shield, a poison applier, two filtered-target items, a poison-charged trigger item, a Vulnerable applier, a random-item silence and an empower applier, as fresh `ItemDef`s. |
-| `fixture_character.gd` | `FixtureCharacter`: a character with a fixed starting board and a pool of fixture items only. |
+| `fixture_items.gd` | `FixtureItems`: an attack, an enemy attack, a shield, a poison applier, two filtered-target items, a poison-charged trigger item, a Vulnerable applier, a random-item silence and an empower applier, as fresh `ItemDef`s. Only the attack, shield and poison applier are draftable. |
+| `fixture_character.gd` | `FixtureCharacter`: a character with a fixed starting board, holding the attack, shield and poison item pools. |
 | `fixture_enemies.gd` | `FixtureEnemies`: a small and a large enemy, and an ally for summons and recruits, each with fixed health and one fixture attack. |
 | `fixture_encounters.gd` | `FixtureEncounters`: a fight against one fixture enemy, a rest, and an event with a heal, a maximum-health and a recruit option (`OPTION_*` give their indexes). |
 | `fixture_kit.gd` | `FixtureKit`: a heal potion, a value-multiplying enchant, a combat-start shield relic, a maximum-health relic (a pickup run trigger) and a relic with a weapon attack bonus passive. |
-| `fixture_content.gd` | `FixtureContent.install()`: adds every fixture to its catalog, puts a fixture in place of every authored enemy, encounter, relic and potion under the authored id, empties every act's `EnemyPools` lists, and sets the `EncounterPools` position lists to the fixture rest, event and reward encounter. |
+| `fixture_content.gd` | `FixtureContent.install()`: makes every authored item undraftable, adds every fixture to its catalog, puts a fixture in place of every authored enemy, encounter, relic and potion under the authored id, empties every act's `EnemyPools` lists, and sets the `EncounterPools` position lists to the fixture rest, event and reward encounter. |
 
 A test that plays a run, an encounter or an autotest, or that builds fixture content by id
 (`CombatManager.add_item`, a summon, a save and reload), calls `FixtureContent.install()` in
@@ -40,8 +40,9 @@ encounters, encounters name enemies and the relic reward draws from `RelicCatalo
 Emptying the `EnemyPools` lists keeps every whole-run fight on its encounter's enemies, and the fixture `EncounterPools` lists keep every choice of encounters the same, so filling the authored lists cannot change a whole-run test; the fight generator is tested on its own in `tests/run/test_encounter_budget.gd`. The map's beat layout in `RunMap` stays real. The fixture character beats the fixture enemies by a
 wide margin; keep that margin if you change either.
 
-`install()` fails an assert if `ColorlessPool.ITEMS` is not empty, because the draft adds the
-colorless pool to every character's pool, so a fixture run would draft authored items.
+`install()` makes every authored item undraftable because the draft pool is worked out from the
+whole item catalog ([draft.md → Item pools](draft.md#item-pools)), so a fixture run would otherwise
+draft authored items. The fixture character is offered the three draftable fixture items only.
 
 ### Tests that read real content
 

@@ -7,6 +7,7 @@ func _init() -> void:
   id = 'claw'
   name_key = 'Claw'
   tags = [AttackMechanic.ID, ItemType.WEAPON]
+  draftable = false   # an enemy item, never offered to a character
   icon = 'res://assets/icons/items/loot_183_claw.png'
   cooldown = 4.0
   effects = [ItemEffect.attack(2.0)]

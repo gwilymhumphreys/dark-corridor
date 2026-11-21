@@ -11,17 +11,14 @@ func _init() -> void:
   class_key = 'Disgraced Surgeon'    # the owner's class name (2026-09-18)
   portrait = 'res://assets/portraits/characters/leper_nb.png'
   select_image = 'res://assets/portraits/large/gemini_a.png'   # PLACEHOLDER picture, owner's to swap
-  item_pool = [
-    'carving_knife',
-    'cleaver',
-    'bone_saw',
-    'flesh_explosion',
-    'flensing_hook',
-    'skin_graft',
-    'bone_spear',
-    'rib',
-    'femur',
-    'skull',
+  # The owner's interim pools until the characters are revisited (2026-11-20): every character
+  # holds attack, shield and heal; the Fleshmancer adds flesh and bleed.
+  item_pools = [
+    AttackMechanic.ID,
+    ShieldMechanic.ID,
+    HealMechanic.ID,
+    ItemTags.FLESH,
+    BleedMechanic.ID,
   ]
   # Two chunk producers and a shield, drawn per run. PLACEHOLDER mix: swap a weapon for
   # ItemType.SKILL or ItemType.SPELL if the opening should carry one.

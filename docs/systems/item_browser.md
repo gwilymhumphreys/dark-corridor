@@ -21,7 +21,7 @@ The export runs as a scene, not with `--script`, because the tooltip code it reu
 | `ItemCatalog.all_ids()` | Every item, including items in no pool |
 | `TooltipContent.build()` | The name, type line, charge line, effect lines, flavour line and keyword list, as the in-game tooltip shows them |
 | `KeywordCatalog.get_entry()`, `IconSlots.icon_for()` | Keyword names, descriptions, icons and colours. Icons under `assets/icons/mechanics/` are white shapes tinted with the keyword colour, the same rule as `KeywordIcon` |
-| `CharacterCatalog.ids()` + each `item_pool`, `ColorlessPool.ITEMS` | Which characters can draft the item |
+| `CharacterCatalog.ids()` + `ItemPools.items_for()` on each `item_pools` | Which characters can draft the item |
 | `EnemyCatalog.all_ids()` + each `item_ids` | Which enemies carry the item |
 | `ItemPoints.spend()`, `ItemPoints.budget()` | The points the item spends per fire and the budget for its charge time and rarity ([item_heuristics.md](../design/item_heuristics.md)). An effect `ItemPoints.is_priced()` rejects marks the card as having unpriced effects |
 | `Colours.RARITY_*` | The rarity colour of the name and icon border |
@@ -35,7 +35,7 @@ Icons are shrunk to `ICON_SIZE` in `item_browser.gd` before embedding to keep th
 - The search box matches item names, ids, and the text of effect lines, flavour lines and keywords.
 - Each card shows the item's points, its budget and the points as a share of the budget.
 - Items sort by name, rarity, charge time, points, points as a share of budget, or first type, and can be grouped by first type or rarity.
-- Each card's footer shows the item id, other characters whose pool has the item, enemies that carry it, and `starting_uses` when it is set. A card for an item in no pool has a dashed border.
+- Each card's footer shows the item id, other characters whose pool has the item, enemies that carry it, and `starting_uses` when it is set. A card for an item in no pool has a dashed border and says "In no pool", or "Not drafted" when the item is not draftable (`ItemDef.draftable`).
 - The selected character, filters, sort and grouping are kept in the browser's local storage.
 
 The page is dev tooling and stays English.

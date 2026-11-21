@@ -11,7 +11,7 @@ Author game content for Dark Corridor — items, enemies, relics, potions, encha
 - [`docs/design/spore_druid.md`](../../docs/design/spore_druid.md) — the first character: the spore engine (Mass / Self ways to play, summon pillar).
 - [`docs/design/character_ideas.md`](../../docs/design/character_ideas.md) — **parking lot** of uncommitted character concepts (Spore Druid promoted; Blade Mage, Wizard, Black Hole, Mechanic parked) + the **resource toolkit** for designing new characters: reusable resources (mana, heat, ammo, gold, HP, allies, items) placed on axes, and the `resource + theme` screen ("don't put a resource on its obvious home"). Where new character ideas land before they graduate to a working file.
 - [`docs/design/card_pool_targets.md`](../../docs/design/card_pool_targets.md) — per-character breadth *signals* (held loosely, never quotas).
-- [`docs/design/per_character_pools.md`](../../docs/design/per_character_pools.md) — decision #27: each character draws from its **own** item pool (+ a small shared colorless pool); enemies & the reward-relic pool stay shared.
+- [`docs/design/per_character_pools.md`](../../docs/design/per_character_pools.md) — decision #27: each character draws from its **own** items; enemies & the reward-relic pool stay shared. Built as item pools (decision #65).
 - [`docs/design/game_design.md`](../../docs/design/game_design.md) — the whole-game snapshot (core loop, rarity = complexity not power, the damage/block/scaling triad, encounters, characters).
 
 **The mechanics — HOW it works (read the one for what you're authoring):**
@@ -21,7 +21,7 @@ Author game content for Dark Corridor — items, enemies, relics, potions, encha
 
 ## The authoring how-to
 
-The file mechanics — where each def goes, the string-id + catalog pattern, the other kinds, and how a draftable goes **live** — are in the **[Content Authoring Guide](../../docs/design/authoring.md)**. Read it before authoring. The one rule to internalize: **active / disabled = pool membership** — a def in no pool is authored-but-not-drafted; add/remove its id from a character's `item_pool` (or `colorless_pool`), not a flag, not a folder.
+The file mechanics — where each def goes, the string-id + catalog pattern, the other kinds, and how a draftable goes **live** — are in the **[Content Authoring Guide](../../docs/design/authoring.md)**. Read it before authoring. The one rule to internalize: **an item's tags decide who is offered it** — a character is offered every draftable item whose pool tags (every mechanic, plus `spores` and `flesh`) its `item_pools` hold; `draftable = false` keeps an item out of every draft.
 
 ## What's buildable now
 
