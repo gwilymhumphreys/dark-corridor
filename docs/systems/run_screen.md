@@ -388,7 +388,8 @@ A view built without a fight never shows the fills. The combat report is still f
   - **Flicker**: the cell's icon changes in place to random item icons, more slowly towards the end
     (`RewardOption.show_face`).
 
-  A spinning option shows no good, so it has no tooltip. The panel ignores every one of its buttons until all options have landed
+  A spinning option shows no good, so it has no tooltip, and in the shop its buy button is blank
+  until it lands, so the price gives no hint (`RewardOption.spin_started`, `landed`). The panel ignores every one of its buttons until all options have landed
   (`is_spinning`). A mouse click or key press during the spin lands them all at once
   (`skip_spin`); a click on the panel is used up by this, so it does not also pick. The style, the
   timings, the bump, the reel's window height, drum curve, edge darkening and overshoot, and an

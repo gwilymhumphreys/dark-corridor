@@ -10,6 +10,10 @@ extends Button
 ## and below it), in the flicker style the icon changes in place. Reads the Item it is handed; writes
 ## nothing.
 
+## Emitted when a spin starts hiding the good, and when the good lands and shows again.
+signal spin_started()
+signal landed()
+
 @onready var cell: ItemCell = $Cell
 @onready var _reel: RewardReel = $Cell/Frame/Reel
 @onready var _reel_behind: RewardReel = $ReelBehind
@@ -48,6 +52,7 @@ func start_spin() -> void:
     _bump_tween.kill()
   cell.offset_transform_scale = Vector2.ONE
   cell.show_picture(null)
+  spin_started.emit()
 
 
 ## The icon of the offered good, which a spin lands on, or null when it has none.
@@ -101,3 +106,4 @@ func land(bump: float, bump_time: float) -> void:
   cell.offset_transform_scale = Vector2.ONE * bump
   _bump_tween = create_tween()
   _bump_tween.tween_property(cell, 'offset_transform_scale', Vector2.ONE, bump_time).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+  landed.emit()
