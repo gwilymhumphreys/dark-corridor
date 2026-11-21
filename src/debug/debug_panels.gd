@@ -2,18 +2,20 @@ class_name DebugPanelsAutoload
 extends Node
 ## Dev-only debug panel (docs/systems/debug_panel.md). Registered as the `DebugPanels` autoload so the
 ## panel covers every screen, the corridor testbed and the combat sandbox. It owns the world material
-## that the corridor is drawn through: the corridor look shader, with its world palette clamp
-## (docs/systems/corridor_look.md, docs/systems/palette_clamp.md).
+## that the corridor is drawn through (the corridor look shader with its palette clamp) and the two
+## palettes: the main palette, which the corridor, the pictures and the interface colours take, and the
+## mechanic palette (docs/systems/interface_palette.md, docs/systems/palette_clamp.md).
 ##
-## One panel with a preset bar and eight tabs: corridor look with its palette (F1), interface look with
-## its palettes and the palette colours (F2), print look (F3), background wear (F4), control feedback
-## (F5), the icon slots (F6), the cardboard token look (F7) and the reward spin (F8); each key opens its tab, in debug builds only. Choices last for the session only, unless saved as a look preset
-## (docs/systems/look_presets.md). The default preset loads at start-up.
+## One panel with a preset bar and nine tabs: the palettes (F1), corridor look (F2), interface look
+## (F3), print look (F4), background wear (F5), control feedback (F6), the icon slots (F7), the
+## cardboard token look (F8) and the reward spin (F9); each key opens its tab, in debug builds only.
+## Choices last for the session only, unless saved as a look preset (docs/systems/look_presets.md).
+## The default preset loads at start-up.
 ## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
 
-## Emitted after an interface palette is applied or reset, so nodes that copied `Colours` when built
-## can copy them again.
-signal interface_palette_changed
+## Emitted after the palettes are applied, so nodes that copied `Colours` when built can copy them
+## again.
+signal colours_changed
 ## Emitted after an icon slot's icon changes, so nodes that copied one when built can take the new
 ## one.
 signal icons_changed
@@ -22,52 +24,53 @@ signal panels_open_changed(open: bool)
 
 const PALETTE_ROOT: String = 'res://assets/palettes'
 const SHORTLIST_DIR: String = 'res://assets/palettes/shortlist'
-## `portrait_palette` values that follow another palette instead of naming a file.
-const PORTRAIT_SAME_AS_CORRIDOR: String = 'corridor'
-const PORTRAIT_SAME_AS_INTERFACE: String = 'interface'
-## The first item id in the portrait palette option that names a palette file.
-const PORTRAIT_FIRST_FILE_ID: int = 3
-## `effects_palette` value that follows the portrait palette. `PORTRAIT_SAME_AS_INTERFACE` follows the
-## interface palette.
-const EFFECTS_SAME_AS_PORTRAIT: String = 'portrait'
-## `interface_clamp` value that clamps the interface palette's colours to its own greys.
-const CLAMP_OWN_GREYS: String = 'own'
-## The first item id in the interface clamp option that names a palette file (0 is off, 1 the
-## corridor, 2 the palette's own greys).
-const CLAMP_FIRST_FILE_ID: int = 3
+## The darkest colour setting's colour until one is picked.
+const DEFAULT_DARKEST_COLOUR: Color = Color(0.04, 0.04, 0.04)
 const MAX_COLOURS: int = 64   # must match MAX_COLOURS in palette_clamp.gdshaderinc
 const LOOK_SHADER: Shader = preload('res://src/shaders/corridor_look.gdshader')
 const PALETTE_INCLUDE: ShaderInclude = preload('res://src/shaders/palette_clamp.gdshaderinc')
 const LOOK_EFFECTS_INCLUDE: ShaderInclude = preload('res://src/shaders/look_effects.gdshaderinc')
 const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
-## Palette clamp uniforms set from the palette rows and the palette sections of a preset, so they are
-## not corridor look settings.
+## Palette clamp uniforms set from the palette settings, so they are not corridor look settings.
 const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'dithering']
 ## The panel's tabs, in the order they sit in `debug_panels.tscn`. A tab is not the same thing as a
-## `LookPresets.Part`: the five look tabs happen to line up with the parts, but a tab that saves its
-## own files instead of being part of a preset has no `Part`.
-enum Tab { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, ICONS, TOKENS, REWARD_SPIN }
+## `LookPresets.Part`: a tab that saves its own files instead of being part of a preset has no `Part`.
+enum Tab { COLOURS, CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, ICONS, TOKENS, REWARD_SPIN }
 ## Tab titles, by tab.
 const TAB_TITLES: Dictionary = {
-  Tab.CORRIDOR: 'Corridor (F1)',
-  Tab.INTERFACE: 'Interface (F2)',
-  Tab.PRINT: 'Print (F3)',
-  Tab.BACKGROUND: 'Background (F4)',
-  Tab.FEEDBACK: 'Feedback (F5)',
-  Tab.ICONS: 'Icons (F6)',
-  Tab.TOKENS: 'Tokens (F7)',
-  Tab.REWARD_SPIN: 'Reward spin (F8)',
+  Tab.COLOURS: 'Colours (F1)',
+  Tab.CORRIDOR: 'Corridor (F2)',
+  Tab.INTERFACE: 'Interface (F3)',
+  Tab.PRINT: 'Print (F4)',
+  Tab.BACKGROUND: 'Background (F5)',
+  Tab.FEEDBACK: 'Feedback (F6)',
+  Tab.ICONS: 'Icons (F7)',
+  Tab.TOKENS: 'Tokens (F8)',
+  Tab.REWARD_SPIN: 'Reward spin (F9)',
 }
 ## The tab each key opens.
 const TAB_KEYS: Dictionary = {
-  KEY_F1: Tab.CORRIDOR,
-  KEY_F2: Tab.INTERFACE,
-  KEY_F3: Tab.PRINT,
-  KEY_F4: Tab.BACKGROUND,
-  KEY_F5: Tab.FEEDBACK,
-  KEY_F6: Tab.ICONS,
-  KEY_F7: Tab.TOKENS,
-  KEY_F8: Tab.REWARD_SPIN,
+  KEY_F1: Tab.COLOURS,
+  KEY_F2: Tab.CORRIDOR,
+  KEY_F3: Tab.INTERFACE,
+  KEY_F4: Tab.PRINT,
+  KEY_F5: Tab.BACKGROUND,
+  KEY_F6: Tab.FEEDBACK,
+  KEY_F7: Tab.ICONS,
+  KEY_F8: Tab.TOKENS,
+  KEY_F9: Tab.REWARD_SPIN,
+}
+## The start-up argument that opens each tab.
+const TAB_ARGUMENTS: Dictionary = {
+  '--colours-panel': Tab.COLOURS,
+  '--look-panel': Tab.CORRIDOR,
+  '--interface-panel': Tab.INTERFACE,
+  '--print-panel': Tab.PRINT,
+  '--background-panel': Tab.BACKGROUND,
+  '--feedback-panel': Tab.FEEDBACK,
+  '--icon-panel': Tab.ICONS,
+  '--tokens-panel': Tab.TOKENS,
+  '--reward-spin-panel': Tab.REWARD_SPIN,
 }
 
 ## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the corridor
@@ -76,29 +79,29 @@ var corridor_settings: Dictionary = {}
 ## Properties of the corridor camera's Environment (property -> value), from the corridor tab and
 ## presets. Corridors apply them when built.
 var environment_settings: Dictionary = {}
-## The palette file the world clamp on the combat corridor uses, or '' when it is off.
-var world_palette: String = ''
-## The material every corridor is drawn through (corridor_look.gdshader). Its palette follows
-## `world_palette`.
+## The main palette file, or '' when there is none.
+var main_palette: String = ''
+## What the darkest colour setting does with `darkest_colour`: a `MainPalette.Darkest` value.
+var darkest: int = MainPalette.Darkest.OFF
+## The colour the darkest colour setting adds or swaps in.
+var darkest_colour: Color = DEFAULT_DARKEST_COLOUR
+## The mechanic palette file, or '' for the default mechanic colours.
+var mechanic_palette: String = ''
+## Whether the corridor, the pictures and the combat effects are snapped to the main palette.
+var snap_corridor: bool = true
+var snap_pictures: bool = true
+var snap_effects: bool = true
+## The material every corridor is drawn through (corridor_look.gdshader). Its palette is the main
+## palette while `snap_corridor` is on.
 var world_material: ShaderMaterial = ShaderMaterial.new()
-## The interface palette file applied to `Colours` and the theme, or '' when none is.
-var interface_palette: String = ''
-## What the interface palette's colours are clamped to (docs/systems/interface_palette.md#clamp): '' for
-## off, `PORTRAIT_SAME_AS_CORRIDOR` for the world palette, `CLAMP_OWN_GREYS`, or a palette file path.
-var interface_clamp: String = ''
-## What interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR`,
-## `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path.
-var portrait_palette: String = PORTRAIT_SAME_AS_INTERFACE
-## What the combat effects are clamped to (docs/plans/effects_look.md): '' for off,
-## `PORTRAIT_SAME_AS_INTERFACE`, `EFFECTS_SAME_AS_PORTRAIT`, or a palette file path.
-var effects_palette: String = PORTRAIT_SAME_AS_INTERFACE
 
-var _palette_paths: Array[String] = []   # item id - 1 -> palette path in the world palette option (id 0 = Off)
-var _interface_palette_paths: Array[String] = []   # item id - 1 -> `.gpl` path in the interface palette option
+var _main_file_colours: PackedColorArray = PackedColorArray()   # the main palette file's colours, without repeats
+var _palette_paths: Array[String] = []   # item id - 1 -> palette path in the main palette option (id 0 = Off)
+var _mechanic_palette_paths: Array[String] = []   # item id - 1 -> path in the mechanic palette option
 var _palettes_scanned: bool = false
 var _perceptual: bool = false
 var _dithering: bool = false
-var _interface_dithering: bool = false   # the interface clamp's dithering switch
+var _interface_dithering: bool = false   # the pictures' and effects' dithering switch
 var _look_defaults: Dictionary = {}   # look shader uniform -> default value, read from its code
 var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Environment values, read once
 
@@ -106,6 +109,7 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _panel: PanelContainer = $PanelLayer/Panel
 @onready var _preset_bar: PresetBar = $PanelLayer/Panel/Rows/PresetBar
 @onready var _tabs: TabContainer = $PanelLayer/Panel/Rows/Tabs
+@onready var _colours_panel: ColoursPanel = $PanelLayer/Panel/Rows/Tabs/Colours
 @onready var _look_panel: LookPanel = $PanelLayer/Panel/Rows/Tabs/Corridor
 @onready var _interface_look_panel: InterfaceLookPanel = $PanelLayer/Panel/Rows/Tabs/Interface
 @onready var _print_panel: PrintPanel = $PanelLayer/Panel/Rows/Tabs/Print
@@ -114,12 +118,9 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _icon_panel: IconPanel = $PanelLayer/Panel/Rows/Tabs/Icons
 @onready var _tokens_panel: TokensPanel = $PanelLayer/Panel/Rows/Tabs/Tokens
 @onready var _reward_spin_panel: RewardSpinPanel = $PanelLayer/Panel/Rows/Tabs/RewardSpin
-@onready var _world_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option
-@onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/MatchingRow/Option
-@onready var _interface_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/InterfacePaletteRow/Option
-@onready var _clamp_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/ClampRow/Option
-@onready var _portrait_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/PortraitPaletteRow/Option
-@onready var _effects_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Interface/PaletteRows/EffectsPaletteRow/Option
+@onready var _main_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Colours/PaletteRows/MainPaletteRow/Option
+@onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Colours/PaletteRows/MatchingRow/Option
+@onready var _mechanic_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Colours/PaletteRows/MechanicPaletteRow/Option
 
 func _ready() -> void:
   _panel_layer.visible = false
@@ -134,11 +135,8 @@ func _ready() -> void:
     clamp_material.set_shader_parameter('dither_noise', BLUE_NOISE)
   _write_look_defaults()
   _write_palette(world_material, PackedColorArray())
-  _world_option.item_selected.connect(_on_world_palette_selected)
-  _interface_option.item_selected.connect(_on_interface_palette_selected)
-  _clamp_option.item_selected.connect(_on_clamp_selected)
-  _portrait_option.item_selected.connect(_on_portrait_palette_selected)
-  _effects_option.item_selected.connect(_on_effects_palette_selected)
+  _main_option.item_selected.connect(_on_main_palette_selected)
+  _mechanic_option.item_selected.connect(_on_mechanic_palette_selected)
   _matching_option.item_selected.connect(_on_matching_selected)
   _sync_controls()
   LookPresets.load_default()
@@ -146,19 +144,17 @@ func _ready() -> void:
 
 
 ## Dev hooks for screenshots, applied after the default preset: `--preset=<name or res path>` loads a
-## preset (applied first, so the other arguments can override it), `--world-palette=<res path>` sets
-## the world clamp, `--perceptual` and `--dither` set the matching and the world clamp's dithering,
-## `--interface-dither` the interface clamp's, `--ui-palette=<res path>` applies an interface palette,
-## `--portrait-palette=<res path, corridor or interface>` sets the portrait palette,
-## `--effects-palette=<res path, interface, portrait or off>` the effects palette,
-## `--corridor-set=property=value` sets a corridor export, `--background-set=uniform=value` a background
-## wear setting, `--panel-set=uniform=value` a panel wear setting, `--print-set=name=value` a border,
-## corridor overlay or layout setting, `--interface-set=uniform=value` an interface look setting,
-## `--feedback-set=name=value` a control feedback setting, `--feedback-demo=<amount>` holds every
-## control at that much hover for a screenshot, `--glow-demo=<brightness>` makes every node drawn
-## through a picture material glow. `--look-panel`, `--interface-panel`,
-## `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel`, `--tokens-panel` and
-## `--reward-spin-panel` open the panel on that tab.
+## preset (applied first, so the other arguments can override it), `--main-palette=<res path>` sets
+## the main palette, `--mechanic-palette=<res path>` the mechanic palette, `--palette-set=name=value`
+## any other palette setting or an interface colour's brightness (`set_palette_setting`),
+## `--perceptual` and `--dither` set the matching and the corridor's dithering, `--interface-dither` the
+## pictures' and effects', `--corridor-set=property=value` sets a corridor export,
+## `--background-set=uniform=value` a background wear setting, `--panel-set=uniform=value` a panel wear
+## setting, `--print-set=name=value` a border, corridor overlay or layout setting,
+## `--interface-set=uniform=value` an interface look setting, `--feedback-set=name=value` a control
+## feedback setting, `--feedback-demo=<amount>` holds every control at that much hover for a
+## screenshot, `--glow-demo=<brightness>` makes every node drawn through a picture material glow. The
+## arguments in `TAB_ARGUMENTS` open the panel on that tab.
 func _apply_command_line() -> void:
   var args: PackedStringArray = DevArgs.all()
   for arg: String in args:
@@ -168,23 +164,21 @@ func _apply_command_line() -> void:
       if LookPresets.load_preset(preset_path):
         _preset_bar.remember_loaded(preset_path)
   for arg: String in args:
-    if arg.begins_with('--world-palette='):
-      set_world_palette(arg.substr(16))
+    if arg.begins_with('--main-palette='):
+      set_main_palette(arg.substr(15))
+    elif arg.begins_with('--mechanic-palette='):
+      set_mechanic_palette(arg.substr(19))
+    elif arg.begins_with('--palette-set='):
+      var palette_pair: PackedStringArray = arg.substr(14).split('=')
+      if palette_pair.size() == 2:
+        var parsed: Variant = str_to_var(palette_pair[1])
+        set_palette_setting(palette_pair[0], parsed if parsed != null else palette_pair[1])
     elif arg.begins_with('--corridor-set='):
       var pair: PackedStringArray = arg.substr(15).split('=')
       if pair.size() == 2:
         corridor_settings[pair[0]] = str_to_var(pair[1])
     elif arg.begins_with('--monster-image='):
       MonsterImages.forced_path = arg.substr(16)
-    elif arg.begins_with('--ui-palette='):
-      set_interface_palette(arg.substr(13))
-    elif arg.begins_with('--ui-clamp='):
-      set_interface_clamp(arg.substr(11))
-    elif arg.begins_with('--portrait-palette='):
-      set_portrait_palette(arg.substr(19))
-    elif arg.begins_with('--effects-palette='):
-      var effects_choice: String = arg.substr(18)
-      set_effects_palette('' if effects_choice == 'off' else effects_choice)
     elif arg.begins_with('--background-set='):
       var setting: PackedStringArray = arg.substr(17).split('=')
       if setting.size() == 2 and PrintLook.background_defaults().has(setting[0]):
@@ -211,33 +205,23 @@ func _apply_command_line() -> void:
         ControlFeedback.set_setting(feedback_pair[0], str_to_var(feedback_pair[1]))
   if '--perceptual' in args:
     _on_matching_selected(1)
+    apply_palettes()
   if '--dither' in args:
     _on_dithering_toggled(true)
   if '--interface-dither' in args:
     _on_interface_dithering_toggled(true)
-  if '--look-panel' in args:
-    toggle_tab(Tab.CORRIDOR)
-  elif '--interface-panel' in args:
-    toggle_tab(Tab.INTERFACE)
-  elif '--print-panel' in args:
-    toggle_tab(Tab.PRINT)
-  elif '--background-panel' in args:
-    toggle_tab(Tab.BACKGROUND)
-  elif '--feedback-panel' in args:
-    toggle_tab(Tab.FEEDBACK)
-  elif '--icon-panel' in args:
-    toggle_tab(Tab.ICONS)
-  elif '--tokens-panel' in args:
-    toggle_tab(Tab.TOKENS)
-  elif '--reward-spin-panel' in args:
-    toggle_tab(Tab.REWARD_SPIN)
+  for argument: String in TAB_ARGUMENTS:
+    if argument in args:
+      toggle_tab(TAB_ARGUMENTS[argument])
+      break
   _sync_controls()
 
 
 func _exit_tree() -> void:
   _palette_paths.clear()
-  _interface_palette_paths.clear()
-  InterfacePalette.reset()
+  _mechanic_palette_paths.clear()
+  MainPalette.reset()
+  MechanicPalette.reset()
 
 
 func _input(event: InputEvent) -> void:
@@ -263,13 +247,9 @@ func _input(event: InputEvent) -> void:
     KEY_BRACKETRIGHT:
       cycle_palette(1)
     KEY_SEMICOLON:
-      cycle_interface_palette(-1)
+      cycle_mechanic_palette(-1)
     KEY_APOSTROPHE:
-      cycle_interface_palette(1)
-    KEY_PERIOD:
-      cycle_portrait_palette(1)
-    KEY_COMMA:
-      cycle_portrait_palette(-1)
+      cycle_mechanic_palette(1)
     KEY_BACKSLASH:
       shortlist_palette()
     KEY_BACKSPACE:
@@ -305,13 +285,13 @@ func is_panel_open() -> bool:
 # Fill a tab when it shows: its controls, and the palette lists the first time.
 func _open_tab(tab: int) -> void:
   match tab:
-    Tab.CORRIDOR:
+    Tab.COLOURS:
       if not _palettes_scanned:
         _scan_palettes()
+      _colours_panel.open()
+    Tab.CORRIDOR:
       _look_panel.open()
     Tab.INTERFACE:
-      if not _palettes_scanned:
-        _scan_palettes()
       _interface_look_panel.open()
     Tab.PRINT:
       _print_panel.open()
@@ -345,6 +325,7 @@ func _switch_side() -> void:
 ## Show the current settings in every tab, after a preset or part of one is loaded.
 func refresh_panels() -> void:
   _sync_controls()
+  _colours_panel.refresh()
   _look_panel.refresh()
   _interface_look_panel.refresh()
   _print_panel.refresh()
@@ -360,21 +341,15 @@ func refresh_look_panel() -> void:
   _look_panel.refresh()
 
 
-## Select the next (`step` 1) or previous (`step` -1) entry in the world palette list. Bound to ] and [.
+## Select the next (`step` 1) or previous (`step` -1) entry in the main palette list. Bound to ] and [.
 func cycle_palette(step: int) -> void:
-  _on_world_palette_selected(_step_option(_world_option, step))
+  _on_main_palette_selected(_step_option(_main_option, step))
 
 
-## Select the next (`step` 1) or previous (`step` -1) entry in the interface palette list. Bound to '
+## Select the next (`step` 1) or previous (`step` -1) entry in the mechanic palette list. Bound to '
 ## and ;.
-func cycle_interface_palette(step: int) -> void:
-  _on_interface_palette_selected(_step_option(_interface_option, step))
-
-
-## Select the next (`step` 1) or previous (`step` -1) entry in the portrait palette list. Bound to .
-## and ,.
-func cycle_portrait_palette(step: int) -> void:
-  _on_portrait_palette_selected(_step_option(_portrait_option, step))
+func cycle_mechanic_palette(step: int) -> void:
+  _on_mechanic_palette_selected(_step_option(_mechanic_option, step))
 
 
 # Selects the next or previous entry in a palette option, skipping folder headings and wrapping
@@ -392,12 +367,12 @@ func _step_option(option: OptionButton, step: int) -> int:
   return index
 
 
-## Move the selected world palette into `SHORTLIST_DIR`, then rescan and keep it selected at its new
+## Move the selected main palette into `SHORTLIST_DIR`, then rescan and keep it selected at its new
 ## path. Does nothing when "Off" is selected or the palette is already there. Bound to \.
 func shortlist_palette() -> void:
   if not _palettes_scanned:
     return
-  var id: int = _world_option.get_selected_id()
+  var id: int = _main_option.get_selected_id()
   if id <= 0:
     return
   var old_path: String = _palette_paths[id - 1]
@@ -407,13 +382,11 @@ func shortlist_palette() -> void:
   if new_path == '':
     return
   replace_palette_path([LookPresets.PRESET_DIR, LookPresets.HISTORY_DIR], old_path, new_path)
-  if portrait_palette == old_path:
-    portrait_palette = new_path
   _scan_palettes()
   var new_id: int = _palette_paths.find(new_path) + 1
   if new_id > 0:
-    _world_option.select(_world_option.get_item_index(new_id))
-    _on_world_palette_selected(_world_option.selected)
+    _main_option.select(_main_option.get_item_index(new_id))
+    _on_main_palette_selected(_main_option.selected)
 
 
 ## Move a palette file, and its `.import` file if there is one, into `folder`. Returns the new path,
@@ -451,53 +424,6 @@ static func replace_palette_path(folders: Array[String], old_path: String, new_p
         continue
       file.store_string(text.replace('"%s"' % old_path, '"%s"' % new_path))
       file.close()
-
-
-## Write the corridor's palette choices into a preset's corridor part: the world palette, colour
-## matching and dithering.
-func write_corridor_palette(file: ConfigFile) -> void:
-  file.set_value('corridor_palette', 'world_palette', world_palette)
-  file.set_value('corridor_palette', 'perceptual', _perceptual)
-  file.set_value('corridor_palette', 'dithering', _dithering)
-
-
-## Set the corridor's palette choices from a preset file written by `write_corridor_palette`. Choices
-## the file leaves out go back to their defaults.
-func read_corridor_palette(file: ConfigFile) -> void:
-  set_world_palette(file.get_value('corridor_palette', 'world_palette', ''))
-  _on_matching_selected(1 if file.get_value('corridor_palette', 'perceptual', false) else 0)
-  _on_dithering_toggled(file.get_value('corridor_palette', 'dithering', false))
-  _sync_controls()
-  _look_panel.refresh()
-
-
-## Write the interface's palette choices into a preset's interface part: the interface, portrait and
-## effects palettes and the interface clamp's dithering switch.
-func write_interface_palettes(file: ConfigFile) -> void:
-  file.set_value('interface_palette', 'interface_palette', interface_palette)
-  file.set_value('interface_palette', 'interface_clamp', interface_clamp)
-  file.set_value('interface_palette', 'portrait_palette', portrait_palette)
-  file.set_value('interface_palette', 'effects_palette', effects_palette)
-  file.set_value('interface_palette', 'dithering', _interface_dithering)
-
-
-## Set the interface's palette choices from a preset file written by `write_interface_palettes`.
-## Choices the file leaves out go back to their defaults.
-func read_interface_palettes(file: ConfigFile) -> void:
-  interface_clamp = file.get_value('interface_palette', 'interface_clamp', '')
-  set_interface_palette(file.get_value('interface_palette', 'interface_palette', ''))
-  set_portrait_palette(file.get_value('interface_palette', 'portrait_palette', PORTRAIT_SAME_AS_INTERFACE))
-  set_effects_palette(file.get_value('interface_palette', 'effects_palette', PORTRAIT_SAME_AS_INTERFACE))
-  _on_interface_dithering_toggled(file.get_value('interface_palette', 'dithering', false))
-  _sync_controls()
-  _interface_look_panel.refresh()
-
-
-## Palettes back to their defaults: world clamp off, no interface palette or interface clamp, portrait and effects
-## palettes same as interface, RGB matching, no dithering in either clamp.
-func reset_palettes() -> void:
-  read_corridor_palette(ConfigFile.new())
-  read_interface_palettes(ConfigFile.new())
 
 
 ## Every part of the look back to its defaults, with every effect off (not the default preset), and
@@ -627,93 +553,135 @@ func _section_keys(file: ConfigFile, section: String) -> PackedStringArray:
   return file.get_section_keys(section) if file.has_section(section) else PackedStringArray()
 
 
-## Apply the interface palette file at `path` to `Colours` and the theme, or go back to the default
-## colours with '', then clamp them to `interface_clamp`. Interface images are clamped to the portrait palette's colours through
-## `InterfaceLook.picture_materials`. Statuses in the current fight are recoloured, the mouse
-## cursor is rebuilt on the new colours, and `interface_palette_changed` tells nodes that copied
-## colours when built.
-func set_interface_palette(path: String) -> void:
-  interface_palette = path
-  var clamp_colours: PackedColorArray = _interface_clamp_colours()
-  if path == '' and interface_clamp == '':
-    InterfacePalette.reset()
-  else:
-    InterfacePalette.apply(path, clamp_colours, _perceptual, interface_clamp == CLAMP_OWN_GREYS)
-  _apply_portrait_palette()
+## The main palette's colours: the palette file's, with the darkest colour setting applied. None when
+## the main palette is off.
+func main_colours() -> PackedColorArray:
+  return MainPalette.palette_colours(_main_file_colours, darkest as MainPalette.Darkest, darkest_colour)
+
+
+## Use the palette file at `path` as the main palette, or none with ''.
+func set_main_palette(path: String) -> void:
+  main_palette = path
+  _main_file_colours = _distinct_colours(PaletteLoader.load_palette(path)) if path != '' else PackedColorArray()
+  apply_palettes()
+
+
+## Use the mechanic palette file at `path`, or the default mechanic colours with ''.
+func set_mechanic_palette(path: String) -> void:
+  mechanic_palette = path
+  MechanicPalette.apply(path)
+  apply_palettes()
+
+
+## Set one setting of the `palette` section by name, or an interface colour's brightness by its name in
+## lower case ('ui_background'), and apply the palettes. `darkest` takes a `MainPalette.Darkest` value
+## or its name in lower case. Unknown names give a warning.
+func set_palette_setting(setting: String, value: Variant) -> void:
+  match setting:
+    'main_palette':
+      set_main_palette(value)
+    'mechanic_palette':
+      set_mechanic_palette(value)
+    'darkest':
+      darkest = MainPalette.Darkest.keys().find((value as String).to_upper()) if value is String else int(value)
+      darkest = maxi(darkest, 0)
+      apply_palettes()
+    'darkest_colour':
+      darkest_colour = value
+      apply_palettes()
+    'perceptual':
+      _on_matching_selected(1 if value else 0)
+    'snap_corridor':
+      snap_corridor = value
+      apply_palettes()
+    'snap_pictures':
+      snap_pictures = value
+      apply_palettes()
+    'snap_effects':
+      snap_effects = value
+      apply_palettes()
+    'corridor_dithering':
+      set_dithering(value)
+    'picture_dithering':
+      set_interface_dithering(value)
+    _:
+      if not MainPalette.is_interface_colour(setting.to_upper()):
+        push_warning('[DebugPanels] no palette setting called %s' % setting)
+        return
+      MainPalette.set_brightness(setting.to_upper(), float(value))
+      apply_palettes()
+
+
+## Apply both palettes everywhere: the interface colours and the theme from the main palette, its
+## colours to the corridor and the pictures and, with the mechanic colours, to the combat effects, each
+## when its snap switch is on. Statuses in the current fight are recoloured, the wear, feedback and
+## cursor colours pushed again, and `colours_changed` tells nodes that copied colours when built.
+func apply_palettes() -> void:
+  var colours: PackedColorArray = main_colours()
+  MainPalette.apply(colours)
+  _write_palette(world_material, colours if snap_corridor else PackedColorArray())
+  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
+    _write_palette(picture_material, colours if snap_pictures else PackedColorArray())
+  var effects_colours: PackedColorArray = PackedColorArray()
+  if snap_effects and not colours.is_empty():
+    effects_colours = _distinct_colours(colours + MechanicPalette.colours())
+  _write_palette(InterfaceLook.effects_material, effects_colours)
   _recolour_fight_statuses()
   PrintLook.push_wear_colours()
   InterfaceLook.push_wear_colours()
   ControlFeedback.push_colours()
   Cursor.apply()
-  interface_palette_changed.emit()
+  colours_changed.emit()
 
 
-## Set what the interface palette's colours are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR`
-## for the world palette, `CLAMP_OWN_GREYS` for the palette's own greys, or a palette file path.
-## Applies the interface palette again.
-func set_interface_clamp(choice: String) -> void:
-  interface_clamp = choice
-  set_interface_palette(interface_palette)
+## Write the palette choices into a preset's colours part: the `palette` section, and the brightness of
+## every interface colour in `interface_colours`.
+func write_palettes(file: ConfigFile) -> void:
+  file.set_value('palette', 'main_palette', main_palette)
+  file.set_value('palette', 'darkest', darkest)
+  file.set_value('palette', 'darkest_colour', darkest_colour)
+  file.set_value('palette', 'perceptual', _perceptual)
+  file.set_value('palette', 'snap_corridor', snap_corridor)
+  file.set_value('palette', 'snap_pictures', snap_pictures)
+  file.set_value('palette', 'snap_effects', snap_effects)
+  file.set_value('palette', 'corridor_dithering', _dithering)
+  file.set_value('palette', 'picture_dithering', _interface_dithering)
+  file.set_value('palette', 'mechanic_palette', mechanic_palette)
+  for variable: String in MainPalette.names():
+    file.set_value('interface_colours', variable.to_lower(), MainPalette.brightness(variable))
 
 
-# The colours of the interface clamp's palette file, or none when it is off or clamps to the
-# palette's own greys (which `InterfacePalette` works out after applying the file).
-func _interface_clamp_colours() -> PackedColorArray:
-  if interface_clamp == CLAMP_OWN_GREYS:
-    return PackedColorArray()
-  var file: String = world_palette if interface_clamp == PORTRAIT_SAME_AS_CORRIDOR else interface_clamp
-  return _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
+## Set the palette choices from a preset file written by `write_palettes`. Choices the file leaves out
+## go back to their defaults.
+func read_palettes(file: ConfigFile) -> void:
+  main_palette = file.get_value('palette', 'main_palette', '')
+  _main_file_colours = _distinct_colours(PaletteLoader.load_palette(main_palette)) if main_palette != '' else PackedColorArray()
+  darkest = file.get_value('palette', 'darkest', MainPalette.Darkest.OFF)
+  darkest_colour = file.get_value('palette', 'darkest_colour', DEFAULT_DARKEST_COLOUR)
+  snap_corridor = file.get_value('palette', 'snap_corridor', true)
+  snap_pictures = file.get_value('palette', 'snap_pictures', true)
+  snap_effects = file.get_value('palette', 'snap_effects', true)
+  _perceptual = file.get_value('palette', 'perceptual', false)
+  _write_matching()
+  _on_dithering_toggled(file.get_value('palette', 'corridor_dithering', false))
+  _on_interface_dithering_toggled(file.get_value('palette', 'picture_dithering', false))
+  MainPalette.reset_brightness()
+  for key: String in _section_keys(file, 'interface_colours'):
+    if MainPalette.is_interface_colour(key.to_upper()):
+      MainPalette.set_brightness(key.to_upper(), file.get_value('interface_colours', key))
+  mechanic_palette = file.get_value('palette', 'mechanic_palette', '')
+  MechanicPalette.apply(mechanic_palette)
+  apply_palettes()
+  _sync_controls()
+  _look_panel.refresh()
+  _interface_look_panel.refresh()
+  _colours_panel.refresh()
 
 
-# The colours "Same as interface" means for the portrait and effects palettes: the clamp's when the
-# interface is clamped, else the interface palette file's.
-func _interface_colours() -> PackedColorArray:
-  var clamp_colours: PackedColorArray = InterfacePalette.clamp_palette()
-  if not clamp_colours.is_empty():
-    return clamp_colours
-  return _distinct_colours(PaletteLoader.load_palette(interface_palette)) if interface_palette != '' else PackedColorArray()
-
-
-## Set what interface images are clamped to: '' for off, `PORTRAIT_SAME_AS_CORRIDOR` for the world
-## palette, `PORTRAIT_SAME_AS_INTERFACE` for the interface palette, or a palette file path. The
-## colours are written into `InterfaceLook.picture_materials`.
-func set_portrait_palette(choice: String) -> void:
-  portrait_palette = choice
-  _apply_portrait_palette()
-
-
-# Writes the portrait palette's colours into `InterfaceLook.picture_materials`: the world palette's colours
-# for `PORTRAIT_SAME_AS_CORRIDOR`, the interface palette's for `PORTRAIT_SAME_AS_INTERFACE`, the
-# named file's otherwise, and none for ''.
-func _apply_portrait_palette() -> void:
-  var colours: PackedColorArray = PackedColorArray()
-  if portrait_palette == PORTRAIT_SAME_AS_INTERFACE:
-    colours = _interface_colours()
-  else:
-    var file: String = world_palette if portrait_palette == PORTRAIT_SAME_AS_CORRIDOR else portrait_palette
-    colours = _distinct_colours(PaletteLoader.load_palette(file)) if file != '' else PackedColorArray()
-  for picture_material: ShaderMaterial in InterfaceLook.picture_materials:
-    _write_palette(picture_material, colours)
-  _apply_effects_palette(colours)
-
-
-## Set what the combat effects are clamped to: '' for off, `PORTRAIT_SAME_AS_INTERFACE` for the
-## interface palette, `EFFECTS_SAME_AS_PORTRAIT` for the portrait palette's colours, or a palette file
-## path. The colours are written into `InterfaceLook.effects_material`.
-func set_effects_palette(choice: String) -> void:
-  effects_palette = choice
-  _apply_portrait_palette()
-
-
-# Writes the effects palette's colours into `InterfaceLook.effects_material`. `portrait_colours` are
-# the colours just written to the pictures, used for `EFFECTS_SAME_AS_PORTRAIT`.
-func _apply_effects_palette(portrait_colours: PackedColorArray) -> void:
-  var colours: PackedColorArray = portrait_colours
-  if effects_palette == PORTRAIT_SAME_AS_INTERFACE:
-    colours = _interface_colours()
-  elif effects_palette != EFFECTS_SAME_AS_PORTRAIT:
-    colours = _distinct_colours(PaletteLoader.load_palette(effects_palette)) if effects_palette != '' else PackedColorArray()
-  _write_palette(InterfaceLook.effects_material, colours)
+## Every palette choice back to its default: no main or mechanic palette, darkest colour off, every
+## snap switch on, default brightness, RGB matching and no dithering.
+func reset_palettes() -> void:
+  read_palettes(ConfigFile.new())
 
 
 # Statuses copy their colour from `Colours` when created, so each one in the current fight takes the
@@ -767,17 +735,6 @@ static func _distinct_colours(colours: PackedColorArray) -> PackedColorArray:
   return result
 
 
-## Clamp the combat corridor to the palette file at `path`, or turn the world clamp off with ''.
-func set_world_palette(path: String) -> void:
-  world_palette = path
-  var colours: PackedColorArray = PaletteLoader.load_palette(path) if path != '' else PackedColorArray()
-  _write_palette(world_material, colours)
-  if interface_clamp == PORTRAIT_SAME_AS_CORRIDOR:
-    set_interface_palette(interface_palette)   # also writes the portrait palette
-  else:
-    _apply_portrait_palette()
-
-
 # Writes `colours` into a clamp material's palette textures. Returns false (and sets no colours)
 # for an empty array.
 func _write_palette(material: ShaderMaterial, colours: PackedColorArray) -> bool:
@@ -800,44 +757,28 @@ func _write_palette(material: ShaderMaterial, colours: PackedColorArray) -> bool
 
 
 # The palette folder is scanned on first open, not at startup, so headless tests and autotest
-# runs do no extra work.
+# runs do no extra work. The mechanic palettes folder is listed in the mechanic palette option only.
 func _scan_palettes() -> void:
   _palettes_scanned = true
-  _world_option.clear()
-  _interface_option.clear()
-  _clamp_option.clear()
-  _portrait_option.clear()
-  _effects_option.clear()
+  _main_option.clear()
+  _mechanic_option.clear()
   _palette_paths.clear()
-  _interface_palette_paths.clear()
-  _world_option.add_item('Off', 0)
-  _interface_option.add_item('Off', 0)
-  _clamp_option.add_item('Off', 0)
-  _clamp_option.add_item('Same as corridor', 1)
-  _clamp_option.add_item('Own greys', 2)
-  _portrait_option.add_item('Off', 0)
-  _portrait_option.add_item('Same as corridor', 1)
-  _portrait_option.add_item('Same as interface', 2)
-  _effects_option.add_item('Off', 0)
-  _effects_option.add_item('Same as portraits', 1)
-  _effects_option.add_item('Same as interface', 2)
+  _mechanic_palette_paths.clear()
+  _main_option.add_item('Off', 0)
+  _mechanic_option.add_item('Default', 0)
   var groups: Dictionary = PaletteLoader.find_palettes(PALETTE_ROOT)
   for folder: String in groups:
-    if folder != '':
-      _world_option.add_separator(folder)
-      _clamp_option.add_separator(folder)
-      _portrait_option.add_separator(folder)
-      _effects_option.add_separator(folder)
+    var mechanic_folder: bool = PALETTE_ROOT.path_join(folder) == MechanicPalette.FOLDER
+    if folder != '' and not mechanic_folder:
+      _main_option.add_separator(folder)
     for path: String in groups[folder]:
+      if mechanic_folder:
+        if MechanicPalette.is_mechanic_palette(path):
+          _mechanic_palette_paths.append(path)
+          _mechanic_option.add_item(path.get_file().get_basename(), _mechanic_palette_paths.size())
+        continue
       _palette_paths.append(path)
-      var palette_name: String = path.get_file().get_basename()
-      _world_option.add_item(palette_name, _palette_paths.size())
-      _clamp_option.add_item(palette_name, _palette_paths.size() + CLAMP_FIRST_FILE_ID - 1)
-      _portrait_option.add_item(palette_name, _palette_paths.size() + PORTRAIT_FIRST_FILE_ID - 1)
-      _effects_option.add_item(palette_name, _palette_paths.size() + PORTRAIT_FIRST_FILE_ID - 1)
-      if InterfacePalette.is_interface_palette(path):
-        _interface_palette_paths.append(path)
-        _interface_option.add_item(folder.path_join(palette_name), _interface_palette_paths.size())
+      _main_option.add_item(path.get_file().get_basename(), _palette_paths.size())
   _sync_controls()
 
 
@@ -845,112 +786,30 @@ func _scan_palettes() -> void:
 func _sync_controls() -> void:
   _matching_option.select(1 if _perceptual else 0)
   if _palettes_scanned:
-    _world_option.select(maxi(_world_option.get_item_index(_palette_paths.find(world_palette) + 1), 0))
-    _interface_option.select(maxi(_interface_option.get_item_index(_interface_palette_paths.find(interface_palette) + 1), 0))
-    _clamp_option.select(maxi(_clamp_option.get_item_index(_clamp_id()), 0))
-    var portrait_id: int = _portrait_palette_id()
-    _portrait_option.select(maxi(_portrait_option.get_item_index(portrait_id), 0))
-    _effects_option.select(maxi(_effects_option.get_item_index(_effects_palette_id()), 0))
+    _main_option.select(maxi(_main_option.get_item_index(_palette_paths.find(main_palette) + 1), 0))
+    _mechanic_option.select(maxi(_mechanic_option.get_item_index(_mechanic_palette_paths.find(mechanic_palette) + 1), 0))
 
 
-# The item id in the interface clamp option for the current `interface_clamp`: 0 for off, 1 for the
-# corridor, 2 for the palette's own greys, or the palette file's id.
-func _clamp_id() -> int:
-  match interface_clamp:
-    '':
-      return 0
-    PORTRAIT_SAME_AS_CORRIDOR:
-      return 1
-    CLAMP_OWN_GREYS:
-      return 2
-  var index: int = _palette_paths.find(interface_clamp)
-  return index + CLAMP_FIRST_FILE_ID if index >= 0 else 0
+func _on_main_palette_selected(index: int) -> void:
+  var id: int = _main_option.get_item_id(index)
+  set_main_palette('' if id <= 0 else _palette_paths[id - 1])
 
 
-# The item id in the portrait palette option for the current `portrait_palette`: 0 for off, 1 for
-# the corridor, 2 for the interface, or the palette file's id.
-func _portrait_palette_id() -> int:
-  match portrait_palette:
-    '':
-      return 0
-    PORTRAIT_SAME_AS_CORRIDOR:
-      return 1
-    PORTRAIT_SAME_AS_INTERFACE:
-      return 2
-  var index: int = _palette_paths.find(portrait_palette)
-  return index + PORTRAIT_FIRST_FILE_ID if index >= 0 else 0
-
-
-# The item id in the effects palette option for the current `effects_palette`: 0 for off, 1 for the
-# portraits, 2 for the interface, or the palette file's id (numbered as in the portrait option).
-func _effects_palette_id() -> int:
-  match effects_palette:
-    '':
-      return 0
-    EFFECTS_SAME_AS_PORTRAIT:
-      return 1
-    PORTRAIT_SAME_AS_INTERFACE:
-      return 2
-  var index: int = _palette_paths.find(effects_palette)
-  return index + PORTRAIT_FIRST_FILE_ID if index >= 0 else 0
-
-
-func _on_world_palette_selected(index: int) -> void:
-  var id: int = _world_option.get_item_id(index)
-  set_world_palette('' if id <= 0 else _palette_paths[id - 1])
-
-
-func _on_interface_palette_selected(index: int) -> void:
-  var id: int = _interface_option.get_item_id(index)
-  set_interface_palette('' if id <= 0 else _interface_palette_paths[id - 1])
-
-
-func _on_clamp_selected(index: int) -> void:
-  var id: int = _clamp_option.get_item_id(index)
-  match id:
-    0:
-      set_interface_clamp('')
-    1:
-      set_interface_clamp(PORTRAIT_SAME_AS_CORRIDOR)
-    2:
-      set_interface_clamp(CLAMP_OWN_GREYS)
-    _:
-      set_interface_clamp(_palette_paths[id - CLAMP_FIRST_FILE_ID])
-
-
-func _on_portrait_palette_selected(index: int) -> void:
-  var id: int = _portrait_option.get_item_id(index)
-  match id:
-    0:
-      set_portrait_palette('')
-    1:
-      set_portrait_palette(PORTRAIT_SAME_AS_CORRIDOR)
-    2:
-      set_portrait_palette(PORTRAIT_SAME_AS_INTERFACE)
-    _:
-      set_portrait_palette(_palette_paths[id - PORTRAIT_FIRST_FILE_ID])
-
-
-func _on_effects_palette_selected(index: int) -> void:
-  var id: int = _effects_option.get_item_id(index)
-  match id:
-    0:
-      set_effects_palette('')
-    1:
-      set_effects_palette(EFFECTS_SAME_AS_PORTRAIT)
-    2:
-      set_effects_palette(PORTRAIT_SAME_AS_INTERFACE)
-    _:
-      set_effects_palette(_palette_paths[id - PORTRAIT_FIRST_FILE_ID])
+func _on_mechanic_palette_selected(index: int) -> void:
+  var id: int = _mechanic_option.get_item_id(index)
+  set_mechanic_palette('' if id <= 0 else _mechanic_palette_paths[id - 1])
 
 
 func _on_matching_selected(index: int) -> void:
   _perceptual = index == 1
+  _write_matching()
+
+
+# Writes the colour matching to the corridor material and every interface clamp material.
+func _write_matching() -> void:
   world_material.set_shader_parameter('perceptual', _perceptual)
   for clamp_material: ShaderMaterial in InterfaceLook.clamp_materials:
     clamp_material.set_shader_parameter('perceptual', _perceptual)
-  if interface_clamp != '':
-    set_interface_palette(interface_palette)   # the clamp matches the same way
 
 
 func _on_dithering_toggled(on: bool) -> void:

@@ -1,0 +1,13 @@
+GIMP Palette
+Name: mechanics-muted
+# The mechanic colours from ui-muted.gpl (docs/systems/interface_palette.md).
+154  80  75	attack
+160 138  72	shield
+ 69 117  87	heal
+ 72  90  48	poison
+176 108  50	burn
+110  58  78	bleed
+120 158 118	regen
+214 200 150	crit
+214 206 192	charge
+115 110 105	decharge

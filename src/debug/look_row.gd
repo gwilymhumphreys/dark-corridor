@@ -1,7 +1,8 @@
 class_name LookRow
 extends HBoxContainer
 ## One setting in a look tab of the debug panel (docs/systems/corridor_look.md): a label and one control. The
-## same script drives four scenes: a slider (`Slider`), a dropdown (`Option`), a switch (`Check`) or
+## same script drives five scenes: a slider (`Slider`), a slider with a colour square (`Swatch`), a
+## dropdown (`Option`), a switch (`Check`) or
 ## a colour button (`Colour`).
 
 signal value_changed(value: Variant)
@@ -34,6 +35,17 @@ func setup(label_text: String, value: Variant, limits: Array) -> void:
     var colour: ColorPickerButton = $Colour
     colour.color = value
     colour.color_changed.connect(func(new_colour: Color) -> void: value_changed.emit(new_colour))
+
+
+## Show `colour` in the row's square (a brightness row's `Swatch`), without its alpha.
+func show_swatch(colour: Color) -> void:
+  colour.a = 1.0
+  ($Swatch as ColorRect).color = colour
+
+
+## Show `colour` on a colour row's button without emitting `value_changed`.
+func show_colour(colour: Color) -> void:
+  ($Colour as ColorPickerButton).color = colour
 
 
 func _on_slider_changed(value: float) -> void:

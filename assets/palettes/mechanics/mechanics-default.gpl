@@ -1,0 +1,13 @@
+GIMP Palette
+Name: mechanics-default
+# The mechanic colours from ui-default.gpl (docs/systems/interface_palette.md).
+230  51  51	attack
+242 209  51	shield
+ 77 230 102	heal
+ 69 133  46	poison
+242 128  26	burn
+120  28  74	bleed
+153 242 153	regen
+242 242 153	crit
+240 240 240	charge
+128 128 128	decharge

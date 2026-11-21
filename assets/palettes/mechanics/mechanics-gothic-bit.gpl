@@ -1,0 +1,13 @@
+GIMP Palette
+Name: mechanics-gothic-bit
+# The mechanic colours from ui-gothic-bit.gpl (docs/systems/interface_palette.md).
+184  72  84	attack
+202 172  84	shield
+112 170 132	heal
+ 92 130  76	poison
+196 116  72	burn
+134  68 104	bleed
+150 196 160	regen
+222 212 178	crit
+230 230 236	charge
+128 128 164	decharge

@@ -3,7 +3,7 @@ extends GutTest
 ## settings to and from the corridor look, and the scenes that draw through its material
 ## (docs/systems/interface_look.md).
 
-const INTERFACE_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
+const MAIN_PALETTE: String = 'res://assets/palettes/shortlist/2bit-demichrome.gpl'
 
 ## Nodes drawn through `InterfaceLook.material`: the pictures that are not inside a panel frame.
 const SCENE_NODES: Array[Array] = [
@@ -224,15 +224,14 @@ func test_picture_wear_stays_off_on_the_framed_material() -> void:
       '%s stays off for the pictures inside a frame' % uniform)
 
 
-func test_the_framed_material_is_clamped_to_the_portrait_palette() -> void:
-  DebugPanels.set_interface_palette(INTERFACE_PALETTE)
-  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE)
+func test_the_framed_material_is_clamped_to_the_main_palette() -> void:
+  DebugPanels.set_main_palette(MAIN_PALETTE)
   assert_gt(InterfaceLook.framed_material.get_shader_parameter('colour_count'), 0,
-    'the framed pictures clamp to the portrait palette like the other pictures')
+    'the framed pictures clamp to the main palette like the other pictures')
 
 
-func test_the_element_material_is_not_clamped_to_the_portrait_palette() -> void:
-  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE)
+func test_the_element_material_is_not_clamped_to_the_main_palette() -> void:
+  DebugPanels.set_main_palette(MAIN_PALETTE)
   var count: Variant = InterfaceLook.element_material.get_shader_parameter('colour_count')
   assert_true(count == null or count == 0, 'the interface elements keep their own colours')
 
@@ -273,31 +272,19 @@ func test_the_effects_settings_are_look_settings_and_off_by_default() -> void:
   assert_eq(defaults['effects_damage_numbers'], 0, 'the numbers are drawn with the effects by default')
 
 
-func test_the_effects_take_the_effects_palette_not_the_portrait_palette() -> void:
-  DebugPanels.set_interface_palette('')
-  DebugPanels.set_portrait_palette('res://assets/palettes/shortlist/2bit-demichrome.gpl')
-  DebugPanels.set_effects_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE)
-  assert_gt(InterfaceLook.framed_material.get_shader_parameter('colour_count'), 0, 'the pictures are clamped')
-  assert_eq(InterfaceLook.effects_material.get_shader_parameter('colour_count'), 0,
-    'the effects follow the interface palette, which is off')
-  DebugPanels.set_effects_palette(DebugPanelsAutoload.EFFECTS_SAME_AS_PORTRAIT)
-  assert_eq(InterfaceLook.effects_material.get_shader_parameter('colour_count'),
-    InterfaceLook.framed_material.get_shader_parameter('colour_count'), 'the effects can follow the pictures')
+func test_the_effects_take_the_main_palette_and_the_mechanic_colours() -> void:
+  DebugPanels.set_main_palette(MAIN_PALETTE)
+  var expected: int = DebugPanelsAutoload._distinct_colours(DebugPanels.main_colours() + MechanicPalette.colours()).size()
+  assert_eq(InterfaceLook.effects_material.get_shader_parameter('colour_count'), expected,
+    'the main palette colours and every mechanic colour')
+  DebugPanels.set_palette_setting('snap_effects', false)
+  assert_eq(InterfaceLook.effects_material.get_shader_parameter('colour_count'), 0, 'the switch turns it off')
 
 
 func test_the_interface_dithering_switch_reaches_the_effects() -> void:
   DebugPanels.set_interface_dithering(true)
   assert_eq(InterfaceLook.effects_material.get_shader_parameter('dithering'), true, 'the effects dither')
 
-
-func test_the_effects_palette_is_saved_in_a_preset() -> void:
-  DebugPanels.set_effects_palette(DebugPanelsAutoload.EFFECTS_SAME_AS_PORTRAIT)
-  var file: ConfigFile = ConfigFile.new()
-  DebugPanels.write_interface_palettes(file)
-  DebugPanels.reset_palettes()
-  assert_eq(DebugPanels.effects_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE, 'reset restores the default')
-  DebugPanels.read_interface_palettes(file)
-  assert_eq(DebugPanels.effects_palette, DebugPanelsAutoload.EFFECTS_SAME_AS_PORTRAIT, 'the choice is restored')
 
 
 func test_damage_numbers_can_be_drawn_like_the_value_pills() -> void:

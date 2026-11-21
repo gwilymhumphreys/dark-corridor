@@ -1,0 +1,13 @@
+GIMP Palette
+Name: mechanics-demichrome
+# The mechanic colours from ui-demichrome.gpl (docs/systems/interface_palette.md).
+178  88  82	attack
+200 176  92	shield
+124 164 128	heal
+104 126  78	poison
+196 122  76	burn
+132  76 100	bleed
+156 190 150	regen
+224 214 176	crit
+233 239 236	charge
+120 120 112	decharge

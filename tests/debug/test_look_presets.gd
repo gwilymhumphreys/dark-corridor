@@ -4,7 +4,7 @@ extends GutTest
 
 const FOLDER: String = 'user://test_presets'
 const HISTORY: String = 'user://test_presets/history'
-const WORLD_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
+const MAIN_PALETTE: String = 'res://assets/palettes/shortlist/2bit-demichrome.gpl'
 
 
 func before_each() -> void:
@@ -22,7 +22,7 @@ func after_each() -> void:
 
 # One change in each part of the look.
 func _change_every_part() -> void:
-  DebugPanels.set_world_palette(WORLD_PALETTE)
+  DebugPanels.set_main_palette(MAIN_PALETTE)
   DebugPanels.world_material.set_shader_parameter('grade_on', true)
   InterfaceLook.material.set_shader_parameter('halftone_on', true)
   PrintLook.set_print_value('print_border_on', true)
@@ -35,7 +35,7 @@ func test_a_saved_preset_restores_every_part() -> void:
   assert_eq(LookPresets.save_preset(path), OK, 'saved')
   DebugPanels.reset_settings()
   assert_true(LookPresets.load_preset(path), 'loaded')
-  assert_eq(DebugPanels.world_palette, WORLD_PALETTE, 'the corridor palette restored')
+  assert_eq(DebugPanels.main_palette, MAIN_PALETTE, 'the colours part restored')
   assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), true, 'corridor part restored')
   assert_eq(InterfaceLook.material.get_shader_parameter('halftone_on'), true, 'interface part restored')
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'print part restored')
@@ -51,7 +51,7 @@ func test_loading_one_part_leaves_the_others_alone() -> void:
   var parts: Array[LookPresets.Part] = [LookPresets.Part.PRINT]
   assert_true(LookPresets.load_preset(path, parts), 'loaded')
   assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'the print part is loaded')
-  assert_eq(DebugPanels.world_palette, '', 'the corridor palette is not loaded')
+  assert_eq(DebugPanels.main_palette, '', 'the colours part is not loaded')
   assert_eq(DebugPanels.world_material.get_shader_parameter('vignette_on'), true, 'the corridor part is unchanged')
 
 
@@ -117,14 +117,15 @@ func test_the_project_has_a_default_preset() -> void:
     'the game starts from assets/presets/default.cfg')
 
 
-func test_the_corridor_part_holds_the_world_palette() -> void:
+func test_the_colours_part_holds_the_main_palette() -> void:
   _change_every_part()
   var path: String = LookPresets.preset_path('every_part', FOLDER)
   LookPresets.save_preset(path)
   DebugPanels.reset_settings()
-  var parts: Array[LookPresets.Part] = [LookPresets.Part.CORRIDOR]
+  var parts: Array[LookPresets.Part] = [LookPresets.Part.COLOURS]
   assert_true(LookPresets.load_preset(path, parts), 'loaded')
-  assert_eq(DebugPanels.world_palette, WORLD_PALETTE, 'the world palette comes with the corridor part')
+  assert_eq(DebugPanels.main_palette, MAIN_PALETTE, 'the main palette comes with the colours part')
+  assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), false, 'the corridor part is not loaded')
 
 
 func test_the_background_part_loads_on_its_own() -> void:

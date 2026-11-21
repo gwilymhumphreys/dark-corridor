@@ -83,7 +83,7 @@ static func _load_png_strip(path: String) -> PackedColorArray:
 
 
 ## The named colours in the `.gpl` file at `path` (name -> colour), in file order. Unnamed colours
-## are skipped; a repeated name keeps its last colour. Used by `InterfacePalette`.
+## are skipped; a repeated name keeps its last colour. Used by `MechanicPalette`.
 static func load_named_colours(path: String) -> Dictionary:
   var named: Dictionary = {}
   for entry: Array in _read_gpl(path):

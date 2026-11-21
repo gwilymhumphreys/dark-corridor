@@ -1,11 +1,11 @@
 extends GutTest
-## The [ and ] palette hotkeys step through the world palette list, skipping folder headings and
-## wrapping through "Off"; ; and ' do the same for the interface palette list. The corridor and
-## interface parts of a preset hold their palette choices, and the function keys open the
-## panel's tabs
+## The [ and ] palette hotkeys step through the main palette list, skipping folder headings and
+## wrapping through "Off"; ; and ' do the same for the mechanic palette list. The colours part of a
+## preset holds the palette choices, and the function keys open the panel's tabs
 ## (docs/systems/debug_panel.md).
 
-const INTERFACE_PALETTE: String = 'res://assets/palettes/new/ui/ui-default.gpl'
+const MAIN_PALETTE: String = 'res://assets/palettes/shortlist/2bit-demichrome.gpl'
+const MECHANIC_PALETTE: String = 'res://assets/palettes/mechanics/mechanics-greys.gpl'
 
 
 func before_each() -> void:
@@ -17,11 +17,11 @@ func after_each() -> void:
 
 
 func _option() -> OptionButton:
-  return DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Corridor/PaletteRows/WorldPaletteRow/Option') as OptionButton
+  return DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Colours/PaletteRows/MainPaletteRow/Option') as OptionButton
 
 
 func _clamp_on() -> bool:
-  return DebugPanels.world_palette != ''
+  return DebugPanels.main_palette != ''
 
 
 func test_cycle_forward_from_off_selects_a_palette() -> void:
@@ -29,21 +29,21 @@ func test_cycle_forward_from_off_selects_a_palette() -> void:
   var option: OptionButton = _option()
   assert_gt(option.selected, 0, 'moved off "Off"')
   assert_false(option.is_item_separator(option.selected), 'never lands on a folder heading')
-  assert_true(_clamp_on(), 'the world clamp is on')
+  assert_true(_clamp_on(), 'the main palette is on')
 
 
 func test_cycle_back_from_off_wraps_to_the_last_palette() -> void:
   DebugPanels.cycle_palette(-1)
   var option: OptionButton = _option()
   assert_eq(option.selected, option.item_count - 1, 'wrapped to the last entry')
-  assert_true(_clamp_on(), 'the world clamp is on')
+  assert_true(_clamp_on(), 'the main palette is on')
 
 
 func test_forward_then_back_returns_to_off() -> void:
   DebugPanels.cycle_palette(1)
   DebugPanels.cycle_palette(-1)
   assert_eq(_option().selected, 0, 'back on "Off"')
-  assert_false(_clamp_on(), 'the world clamp is off')
+  assert_false(_clamp_on(), 'the main palette is off')
 
 
 func test_move_palette_file_moves_the_file_and_its_import_file() -> void:
@@ -103,48 +103,57 @@ func test_every_step_skips_folder_headings() -> void:
     DebugPanels.cycle_palette(1)
 
 
-func test_interface_palette_keys_step_and_wrap_through_off() -> void:
-  DebugPanels.cycle_interface_palette(1)
-  assert_ne(DebugPanels.interface_palette, '', 'an interface palette is applied')
-  DebugPanels.cycle_interface_palette(-1)
-  assert_eq(DebugPanels.interface_palette, '', 'back on "Off"')
+func test_mechanic_palette_keys_step_and_wrap_through_the_default() -> void:
+  DebugPanels.cycle_mechanic_palette(1)
+  assert_ne(DebugPanels.mechanic_palette, '', 'a mechanic palette is applied')
+  DebugPanels.cycle_mechanic_palette(-1)
+  assert_eq(DebugPanels.mechanic_palette, '', 'back on "Default"')
 
 
-func test_portrait_palette_same_as_corridor_follows_the_world_palette() -> void:
-  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR)
-  DebugPanels.set_world_palette(INTERFACE_PALETTE)
-  assert_gt(InterfaceLook.material.get_shader_parameter('colour_count'), 0,
-    'the interface images clamp to the world palette')
-  DebugPanels.set_world_palette('')
-  assert_eq(InterfaceLook.material.get_shader_parameter('colour_count'), 0,
-    'the clamp is off when the world palette is off')
+func test_the_main_palette_reaches_the_corridor_pictures_and_effects_by_their_switches() -> void:
+  DebugPanels.set_main_palette(MAIN_PALETTE)
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 4, 'the corridor takes the four colours')
+  assert_eq(InterfaceLook.material.get_shader_parameter('colour_count'), 4, 'the pictures take them too')
+  assert_gt(InterfaceLook.effects_material.get_shader_parameter('colour_count'), 4,
+    'the effects take them with the mechanic colours')
+  DebugPanels.set_palette_setting('snap_pictures', false)
+  assert_eq(InterfaceLook.material.get_shader_parameter('colour_count'), 0, 'the pictures switch turns their snapping off')
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 4, 'the corridor is left alone')
+  DebugPanels.set_main_palette('')
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 0, 'no main palette, no snapping')
+  assert_eq(InterfaceLook.effects_material.get_shader_parameter('colour_count'), 0, 'the effects are not snapped either')
 
 
-func test_portrait_palette_keys_step_away_from_the_default() -> void:
-  DebugPanels.cycle_portrait_palette(1)
-  assert_ne(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE,
-    'stepped off the default')
-  DebugPanels.cycle_portrait_palette(-1)
-  assert_eq(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_INTERFACE,
-    'back on the default')
+func test_the_darkest_colour_is_added_to_the_snapped_colours() -> void:
+  DebugPanels.set_main_palette(MAIN_PALETTE)
+  DebugPanels.set_palette_setting('darkest_colour', Color.BLACK)
+  DebugPanels.set_palette_setting('darkest', 'add')
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 5, 'one colour more')
+  assert_eq(Colours.UI_PANEL_SHADOW, Color.BLACK, 'the darkest interface colour takes it')
+  DebugPanels.set_palette_setting('darkest', MainPalette.Darkest.REPLACE)
+  assert_eq(DebugPanels.world_material.get_shader_parameter('colour_count'), 4, 'swapped in for the darkest')
 
 
 func test_the_palette_sections_restore_the_same_choices() -> void:
-  DebugPanels.set_world_palette(INTERFACE_PALETTE)
-  DebugPanels.set_interface_palette(INTERFACE_PALETTE)
-  DebugPanels.set_portrait_palette(DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR)
+  DebugPanels.set_main_palette(MAIN_PALETTE)
+  DebugPanels.set_mechanic_palette(MECHANIC_PALETTE)
+  DebugPanels.set_palette_setting('darkest', MainPalette.Darkest.ADD)
+  DebugPanels.set_palette_setting('darkest_colour', Color8(1, 2, 3))
+  DebugPanels.set_palette_setting('snap_effects', false)
+  DebugPanels.set_palette_setting('ui_background', 0.5)
   DebugPanels.set_dithering(true)
   DebugPanels.set_interface_dithering(true)
   var file: ConfigFile = ConfigFile.new()
-  DebugPanels.write_corridor_palette(file)
-  DebugPanels.write_interface_palettes(file)
+  DebugPanels.write_palettes(file)
   DebugPanels.reset_settings()
-  DebugPanels.read_corridor_palette(file)
-  DebugPanels.read_interface_palettes(file)
-  assert_eq(DebugPanels.world_palette, INTERFACE_PALETTE, 'world palette restored')
-  assert_eq(DebugPanels.interface_palette, INTERFACE_PALETTE, 'interface palette restored')
-  assert_eq(DebugPanels.portrait_palette, DebugPanelsAutoload.PORTRAIT_SAME_AS_CORRIDOR,
-    'portrait palette restored')
+  assert_eq(DebugPanels.main_palette, '', 'reset turns the main palette off')
+  DebugPanels.read_palettes(file)
+  assert_eq(DebugPanels.main_palette, MAIN_PALETTE, 'main palette restored')
+  assert_eq(DebugPanels.mechanic_palette, MECHANIC_PALETTE, 'mechanic palette restored')
+  assert_eq(DebugPanels.darkest, MainPalette.Darkest.ADD, 'darkest setting restored')
+  assert_eq(DebugPanels.darkest_colour, Color8(1, 2, 3), 'darker colour restored')
+  assert_false(DebugPanels.snap_effects, 'snap switch restored')
+  assert_almost_eq(MainPalette.brightness('UI_BACKGROUND'), 0.5, 0.001, 'brightness restored')
   assert_true(DebugPanels.is_dithering(), 'corridor dithering restored')
   assert_true(DebugPanels.is_interface_dithering(), 'interface dithering restored')
 
@@ -152,14 +161,14 @@ func test_the_palette_sections_restore_the_same_choices() -> void:
 func test_a_tab_key_opens_its_tab_switches_tabs_and_closes_its_own_tab() -> void:
   var tabs: TabContainer = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs') as TabContainer
   watch_signals(DebugPanels)
-  DebugPanels.toggle_tab(LookPresets.Part.PRINT)
+  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.PRINT)
   assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [true])
-  assert_eq(tabs.current_tab, LookPresets.Part.PRINT, 'opens on the print tab')
-  DebugPanels.toggle_tab(LookPresets.Part.INTERFACE)
+  assert_eq(tabs.current_tab, DebugPanelsAutoload.Tab.PRINT, 'opens on the print tab')
+  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.INTERFACE)
   assert_true(DebugPanels.is_panel_open(), 'another tab key switches tabs instead of closing')
-  assert_eq(tabs.current_tab, LookPresets.Part.INTERFACE, 'now on the interface tab')
+  assert_eq(tabs.current_tab, DebugPanelsAutoload.Tab.INTERFACE, 'now on the interface tab')
   assert_signal_emit_count(DebugPanels, 'panels_open_changed', 1, 'switching tabs does not emit')
-  DebugPanels.toggle_tab(LookPresets.Part.INTERFACE)
+  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.INTERFACE)
   assert_signal_emit_count(DebugPanels, 'panels_open_changed', 2)
   assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [false])
   assert_false(DebugPanels.is_panel_open(), 'the key for the tab showing closes the panel')

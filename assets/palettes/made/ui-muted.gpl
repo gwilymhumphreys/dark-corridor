@@ -1,0 +1,18 @@
+GIMP Palette
+Name: ui-muted
+# The interface colours of the hand-made ui-muted scheme, for trying as a main palette.
+  8   6   5
+ 16  12  10
+ 29  26  23
+ 26  32  26
+ 50  45  40
+ 58  52  46
+ 80  76  72
+110 106 100
+115 110 105
+120 113 104
+140 133 124
+150 142 130
+160 160 139
+181 176 169
+214 206 192

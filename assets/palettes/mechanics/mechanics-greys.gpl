@@ -1,0 +1,13 @@
+GIMP Palette
+Name: mechanics-greys
+# Every mechanic in one grey, for the greys-only look. Placeholder grey, tuned on the panel.
+176 176 176	attack
+176 176 176	shield
+176 176 176	heal
+176 176 176	poison
+176 176 176	burn
+176 176 176	bleed
+176 176 176	regen
+176 176 176	crit
+176 176 176	charge
+176 176 176	decharge

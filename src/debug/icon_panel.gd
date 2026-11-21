@@ -36,7 +36,7 @@ func rebuild() -> void:
   # `card` and `hp` are not mechanics and have no colour, so the row is left out for them, as the Chip sample.
   if MechanicRegistry.has(slot):
     section.add_row(_make_row('Colour', _slot_colour(slot), [], func(new_value: Color) -> void:
-      InterfacePalette.write_custom(slot.to_upper(), new_value)
+      MechanicPalette.write_custom(slot.to_upper(), new_value)
       rebuild()))
   # The chosen icon shown where it appears: a few sizes, as a keyword chip, and inline with text.
   # `charge_time`, `card` and `hp` have no keyword chip, so the samples skip it for them.

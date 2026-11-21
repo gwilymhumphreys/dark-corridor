@@ -1,0 +1,21 @@
+GIMP Palette
+Name: ui-default
+# The interface colours of the hand-made ui-default scheme, for trying as a main palette.
+  0   0   0
+ 10  10  13
+ 15  15  18
+ 18  18  20
+ 26  26  31
+ 31  31  31
+ 51  51  51
+ 89  89  89
+115 115 115
+123 120 120
+128 128 128
+153 153 168
+160 160 139
+191 191 191
+199 196 189
+209 204 194
+242 242 242
+255 255 255

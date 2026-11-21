@@ -1,39 +1,39 @@
 class_name LookPresets
 extends RefCounted
-## Look presets (docs/systems/look_presets.md): one `ConfigFile` holding the whole look, in five parts
-## (corridor look with its palette, interface look with its palettes and font, print look, background
-## wear, control feedback). The default preset loads when the game starts; pressing Make default first
-## copies the old default into the history folder.
+## Look presets (docs/systems/look_presets.md): one `ConfigFile` holding the whole look, in six parts
+## (corridor look, interface look, print look, background wear, control feedback, palettes). The
+## default preset loads when the game starts; pressing Make default first copies the old default into
+## the history folder.
 ##
 ## Each part's settings are written and read by the autoload that owns them, so a part can be loaded
 ## on its own. Reading a part starts from that part's defaults.
 
-enum Part { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK }
+enum Part { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, COLOURS }
 
 const PRESET_DIR: String = 'res://assets/presets'
 const HISTORY_DIR: String = 'res://assets/presets/history'
 const DEFAULT_NAME: String = 'default'
-const ALL_PARTS: Array[Part] = [Part.CORRIDOR, Part.INTERFACE, Part.PRINT, Part.BACKGROUND, Part.FEEDBACK]
+const ALL_PARTS: Array[Part] = [Part.CORRIDOR, Part.INTERFACE, Part.PRINT, Part.BACKGROUND, Part.FEEDBACK, Part.COLOURS]
 ## The sections each part writes. The `preset` section holds details about the file, not settings.
 const PART_SECTIONS: Dictionary = {
-  Part.CORRIDOR: ['corridor_palette', 'corridor_shader', 'corridor_light', 'corridor_environment'],
-  Part.INTERFACE: ['interface_palette', 'interface_shader', 'interface_glow'],
+  Part.CORRIDOR: ['corridor_shader', 'corridor_light', 'corridor_environment'],
+  Part.INTERFACE: ['interface_shader', 'interface_glow'],
   Part.PRINT: ['print_panel', 'print_frame', 'print_layout'],
   Part.BACKGROUND: ['print_background'],
   Part.FEEDBACK: ['control_highlight', 'control_settings'],
+  Part.COLOURS: ['palette', 'interface_colours'],
 }
 
 
 ## The current look as a preset file.
 static func capture() -> ConfigFile:
   var file: ConfigFile = ConfigFile.new()
-  DebugPanels.write_corridor_palette(file)
   DebugPanels.write_corridor_look(file)
-  DebugPanels.write_interface_palettes(file)
   InterfaceLook.write_look(file)
   PrintLook.write_print_look(file)
   PrintLook.write_background_look(file)
   ControlFeedback.write_look(file)
+  DebugPanels.write_palettes(file)
   return file
 
 
@@ -42,16 +42,16 @@ static func capture() -> ConfigFile:
 static func apply(file: ConfigFile, parts: Array[Part] = ALL_PARTS) -> void:
   if Part.CORRIDOR in parts:
     DebugPanels.read_corridor_look(file)
-    DebugPanels.read_corridor_palette(file)
   if Part.INTERFACE in parts:
     InterfaceLook.read_look(file)
-    DebugPanels.read_interface_palettes(file)
   if Part.PRINT in parts:
     PrintLook.read_print_look(file)
   if Part.BACKGROUND in parts:
     PrintLook.read_background_look(file)
   if Part.FEEDBACK in parts:
     ControlFeedback.read_look(file)
+  if Part.COLOURS in parts:
+    DebugPanels.read_palettes(file)
 
 
 ## Save the current look to `path`, replacing any file there.

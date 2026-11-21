@@ -66,19 +66,14 @@ func test_panel_wear_uses_no_instance_uniforms() -> void:
   assert_null(declaration.search(ControlFeedback.HIGHLIGHT_INCLUDE.code), 'the control highlight has none')
 
 
-func test_panel_wear_colours_follow_the_interface_palette() -> void:
+func test_panel_wear_colours_follow_the_main_palette() -> void:
   var default_dark: Color = PrintLook.panel_material.get_shader_parameter('wear_dark_colour')
-  var path: String = 'user://test_print_look_palette.gpl'
-  DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-  var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
-  file.store_string('GIMP Palette\nName: test\n10 20 30 ui panel wear\n')
-  file.close()
-  DebugPanels.set_interface_palette(path)
-  assert_eq(PrintLook.panel_material.get_shader_parameter('wear_dark_colour'), Color8(10, 20, 30),
+  DebugPanels.set_palette_setting('ui_panel_wear', 1.0)
+  DebugPanels.set_main_palette('res://assets/palettes/shortlist/2bit-demichrome.gpl')
+  assert_eq(PrintLook.panel_material.get_shader_parameter('wear_dark_colour'), Color8(233, 239, 236),
     'the panel wear colour follows the palette')
-  DebugPanels.set_interface_palette('')
+  DebugPanels.set_main_palette('')
   assert_eq(PrintLook.panel_material.get_shader_parameter('wear_dark_colour'), default_dark, 'reset restores it')
-  DirAccess.remove_absolute(path)
 
 
 func test_the_background_is_written_and_read_on_its_own() -> void:

@@ -4,7 +4,7 @@ extends StyleBoxFlat
 ## the theme's flat panel styles (docs/systems/ui_theme.md) so a panel is drawn in the interface's
 ## background colour and stays in step when a palette changes.
 ##
-## `InterfacePalette` sets `bg_color` straight from the named `Colours` variable when a palette is
+## `MainPalette` sets `bg_color` straight from the named `Colours` variable when a palette is
 ## applied and restores it on reset, instead of mapping it through the panel brightness ramp it uses
 ## for the remaining pack art. The `bg_color` saved on the resource is only the default value; nothing
 ## in this script reads `Colours` itself, so a theme that embeds this stylebox loads safely before
