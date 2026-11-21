@@ -12,11 +12,12 @@ func _init() -> void:
   portrait = 'res://assets/portraits/characters/warrior_nb.png'   # PLACEHOLDER portrait — owner's to swap
   select_image = 'res://assets/portraits/large/curver_a.png'   # PLACEHOLDER picture, owner's to swap
   # The owner's interim pools until the characters are revisited (2026-11-20): every character
-  # holds attack, shield and heal, and the Smith holds only those three.
+  # holds attack, shield and heal; the Smith adds burn (owner, 2026-11-21).
   item_pools = [
     AttackMechanic.ID,
     ShieldMechanic.ID,
     HealMechanic.ID,
+    BurnMechanic.ID,
   ]
   # One weapon, one skill and one armour item, drawn per run (the owner's constraint).
   starting_item_types = [ItemType.WEAPON, ItemType.SKILL, ItemType.ARMOUR]

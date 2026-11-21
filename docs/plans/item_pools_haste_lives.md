@@ -211,8 +211,8 @@ fixture character, holding attack, shield and poison, is offered the three draft
   which pools each character holds is the owner's.
 
 - Starting pools (owner, until characters are revisited): every character holds attack, shield and
-  heal. The Spore Druid adds poison and spores, and the Fleshmancer adds flesh and bleed. The Smith
-  holds only the three, so the Smith's burn, charge, decharge and crit items are not offered to
+  heal. The Spore Druid adds poison and spores, the Fleshmancer adds flesh and bleed, and the Smith
+  adds burn (owner, 2026-11-21). The Smith's charge, decharge and crit items are not offered to
   anyone until a character holds those pools.
 - Items with no pool tag (Mighty Blow, Hex Bolt and Sundering Bolt) are being reworked by the owner.
   Until then an item with no pool tag is offered to every character.
