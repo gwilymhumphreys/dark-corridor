@@ -9,7 +9,7 @@ sprite burn away with it. It is a visual effect only and has nothing to do with 
 **Location:** `src/ui/paper_burn.gd` + `.tscn` (`PaperBurn`), `src/shaders/paper_burn.gdshader`, the
 hole and bands shared with the sprite burn in `src/shaders/paper_burn.gdshaderinc`, the sprite burn
 (`src/scenes/corridors/sprite_burn.gd`, `src/shaders/paper_burn_sprite.gdshader`), the
-Paper burn section of the F7 tab (`src/debug/tokens_panel.gd`), and the preview scene
+Paper burn section of the F8 tab (`src/debug/tokens_panel.gd`), and the preview scene
 `src/debug/scenes/paper_burn_preview.tscn`.
 
 ## How it works
@@ -45,7 +45,7 @@ preview scene does this for its wide panel.
 
 ## Look
 
-Colours come from the [interface palette](interface_palette.md): `PAPER_BURN_EMBER`,
+Colours come from the [main palette](interface_palette.md), as interface colours: `PAPER_BURN_EMBER`,
 `PAPER_BURN_CHAR` and `PAPER_BURN_SCORCH` in `Colours`, named in every palette file. Each file sets them
 to colours it already has, so the burn adds no colours of its own: the ember and the scorch take the
 Burn mechanic's colour, and the char takes the file's darkest colour. The scorch
@@ -63,7 +63,7 @@ palette colours; at 1 every pixel of the line is a palette colour.
 
 ## Settings
 
-Print settings (`PrintLook.PRINT_SETTING_DEFAULTS`), on the F7 tab's Paper burn section and saved in
+Print settings (`PrintLook.PRINT_SETTING_DEFAULTS`), on the F8 tab's Paper burn section and saved in
 presets ([print_frame.md](print_frame.md)). They are read when a burn starts.
 
 | Setting | Sets |
@@ -90,7 +90,7 @@ sprite `paper_burn_sprite.gdshader` as its material override and removes the spr
 - The sprite stays lit by the corridor light. The part of the ember line above white is also
   emission, so it shows in the dark.
 - The scorch is smooth and the bands are not snapped by the burn. The corridor look shader runs over
-  the corridor image, so the world palette snaps them with everything else.
+  the corridor image, so the main palette snaps them with everything else.
 - The sparks and ash are the same emitters as the interface burn's (`PaperBurn.new_particles()`),
   children of the `SpriteBurn` node, so they are drawn over the corridor image in the corridor
   node's coordinates. They do not ask `InterfaceGlow` for glow.
@@ -112,7 +112,7 @@ sprite `paper_burn_sprite.gdshader` as its material override and removes the spr
 
 `paper_burn_preview.tscn` shows map-size and item-size tokens held at points through a burn, and a map
 token, an item token and a wide panel burning over and over. The settings are read again each time
-the burns restart, so the F7 sliders can be tuned while it runs ([dev_tools.md](dev_tools.md)).
+the burns restart, so the F8 sliders can be tuned while it runs ([dev_tools.md](dev_tools.md)).
 
 ## Public API
 

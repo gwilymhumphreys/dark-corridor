@@ -60,9 +60,9 @@ Images outside a panel frame have their own picture wear in the Interface tab ([
   own: those pictures are drawn through `InterfaceLook.framed_material`, which keeps picture wear off
   ([interface_look.md](interface_look.md#picture-wear)). The frame's wear is what shows around them.
   Pictures outside a `PanelSlot` do take picture wear.
-- An [interface palette](interface_palette.md) sets `Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`,
+- The [main palette](interface_palette.md) sets `Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`,
   the panel's two mark colours; `PrintLook` pushes them into `panel_material` at start and whenever a
-  palette is applied or reset. `InterfacePalette` also recolours a `WornStyleBox`'s wrapped `base` when
+  palette is applied or reset. `MainPalette` also recolours a `WornStyleBox`'s wrapped `base` when
   it walks the theme's styleboxes, the same way it recolours an unwrapped one.
 
 | Group | Does |

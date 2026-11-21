@@ -341,9 +341,8 @@ on 2026-09-18:
 | Haste, Slow | The charge white and the decharge grey (`Colours.CHARGE`, `Colours.DECHARGE`), no variables of their own |
 | Attack Bonus, Attack Percent Bonus | The attack red (`Colours.ATTACK`), no variable of their own |
 
-Interface palette files name them in lower case (`attack`, `poison`); see
-[interface_palette.md](interface_palette.md). `ui-default.gpl` carries the same values, and the other
-palettes in `assets/palettes/new/ui/` carry the first ten fitted to their own schemes.
+These are the defaults; a [mechanic palette](interface_palette.md#the-mechanic-palette) replaces them,
+naming them in lower case (`attack`, `poison`). `mechanics-default.gpl` carries the same values.
 
 ## Health bar
 

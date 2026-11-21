@@ -16,7 +16,7 @@ of a [look preset](look_presets.md).
   `SubViewportContainer` and of the testbed corridor's `Display` sprite, so it reads the corridor image
   only; the interface, enemy HUDs and VFX are not affected.
 - It includes `palette_clamp.gdshaderinc` inside a `dithering` group, so the
-  [world palette clamp](palette_clamp.md#world-clamp) is one step of it. The palette and colour matching
+  [world clamp](palette_clamp.md#world-clamp) is one step of it. The palette and colour matching
   are set from the rows at the top of the Corridor tab.
 - Each effect is a `group_uniforms` block whose first uniform is `<group>_on`. Effects run in the order of
   `fragment()`, which is the order of the table below; the panel lists the Dithering section last.
@@ -33,12 +33,12 @@ of a [look preset](look_presets.md).
 | Vignette | Darkens towards the edges |
 | Grain | Animated noise |
 | Posterize | Fewer brightness steps per channel |
-| Dithering | The world palette clamp, with its dither pattern, dot size and 2x supersample ([palette_clamp.md](palette_clamp.md#how-it-works)) |
+| Dithering | The world clamp, with its dither pattern, dot size and 2x supersample ([palette_clamp.md](palette_clamp.md#how-it-works)) |
 | Scanlines | Dark horizontal lines and optional red, green and blue vertical stripes |
 
 ## The Corridor tab
 
-- F1 opens the [debug panel](debug_panel.md) on this tab. Its controls are built the first time it shows.
+- F2 opens the [debug panel](debug_panel.md) on this tab. Its controls are built the first time it shows.
 - One section per shader group, built from `Shader.get_shader_uniform_list(true)`: the header switch sets
   `<group>_on`, a float gets a slider using its `hint_range`, an int with `hint_enum` a dropdown, a bool a
   switch, a `source_color` a colour button. Adding a uniform to a group adds its control with no panel

@@ -2,8 +2,8 @@
 
 A shader step that replaces each pixel of the combat corridor with the nearest colour in a chosen
 palette, so art from different sources can be judged as one game. It is a dev tool, switched from the
-[debug panel](debug_panel.md); off by default. Interface images are clamped separately, to the
-[interface palette](interface_palette.md#images).
+[debug panel](debug_panel.md); off by default. Its palette is the [main palette](interface_palette.md), which
+the interface images and the combat effects are also clamped to, through their own materials.
 
 **Location:** `src/shaders/palette_clamp.gdshaderinc` (the matching), `corridor_look.gdshader` (which
 includes it), `src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.
@@ -25,9 +25,9 @@ includes it), `src/debug/palette_loader.gd`. Palettes in `assets/palettes/`.
 | Dither size (`dither_size`) | Screen pixels per pattern cell, multiplied by the look shader's pixelate size |
 | Supersample (`dither_supersample`) | Dither at twice the resolution and average each 2x2, the fix Obra Dinn uses against moire; the output mixes palette colours |
 
-Matching is set from the Corridor tab's palette rows and each clamp's dithering switch from the
-Dithering section header in its own tab (Corridor for the world clamp, Interface for the interface
-clamp; the two switches are separate). The pattern, size and supersample are set from the same
+Matching is set on the Colours tab and each clamp's dithering switch from the Dithering section
+header in its own tab (Corridor for the world clamp, Interface for the pictures and effects; the two
+switches are separate). The pattern, size and supersample are set from the same
 section, per look.
 
 The OKLab conversion exists twice, in `PaletteLoader.to_oklab` and in `palette_clamp.gdshaderinc`; change
@@ -49,7 +49,9 @@ both together.
 `assets/palettes/` keeps the owner's `good/`, `maybe/`, `na/`, `unsorted/` and dated (for example
 `2026_09_15/`) subfolders. `shortlist/` collects palettes moved there with the debug panel's `\` key.
 `new/` holds candidates for separate world, effects and interface
-palettes (see [`../plans/separate_palettes.md`](../plans/separate_palettes.md)).
+palettes, from an earlier plan that the [main palette](interface_palette.md) replaced. `mechanics/`
+holds the mechanic palettes, listed only in the mechanic palette dropdown, and `made/` the interface
+greys of earlier hand-made schemes.
 
 `PaletteLoader.load_palette(path)` reads two formats with `FileAccess` (works in debug runs, not in
 exported builds):
@@ -64,12 +66,12 @@ named by path, for example `new/world`), for the panel dropdown.
 
 ## Screenshots
 
-`DebugPanels` reads user arguments at start-up: `--world-palette=<res path>`, `--perceptual`, `--dither`, plus
+`DebugPanels` reads user arguments at start-up: `--main-palette=<res path>`, `--perceptual`, `--dither`, plus
 `--corridor-set=` and `--monster-image=` (see [dev_tools.md](dev_tools.md#look-arguments)). For
 example, with the corridor testbed's `--shot`:
 
 ```
-<godot> --path . res://src/debug/scenes/corridor_testbed.tscn -- --shot --world-palette=res://assets/palettes/good/waldgeist-32x.png
+<godot> --path . res://src/debug/scenes/corridor_testbed.tscn -- --shot --main-palette=res://assets/palettes/good/waldgeist-32x.png
 ```
 
 Tests: `tests/utils/test_palette_loader.gd`.

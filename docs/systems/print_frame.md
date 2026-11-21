@@ -22,7 +22,7 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   its effects are off. The corridor itself is placed by the screen sections.
 - The border is printed in the same ink as the wear on the paper: the line is
   `Colours.UI_BACKGROUND_WEAR` and its rubbed spots are `UI_BACKGROUND_WEAR_LIGHT`, the same pair the
-  background wear marks use, so an [interface palette](interface_palette.md) sets both. Pixels off the
+  background wear marks use, so the [main palette](interface_palette.md) sets both. Pixels off the
   line are fully transparent.
 - The overlay reads the corridor from the screen and redraws it. `PrintFrame` copies every background
   wear setting and colour, and the fold positions, into `PrintLook.overlay_material`, so marks over the
@@ -45,10 +45,10 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
 - Item cells use the `PanelToken` theme style ([ui_theme.md](ui_theme.md)): the worn panel with a
   drop shadow onto the paper. `PrintLook.apply_token_style()` writes the shadow and fill settings onto
   `PanelToken` and `PanelTokenWide` whenever a print setting changes, on reset, and when the
-  interface palette changes (the shadow colour is `Colours.UI_PANEL_SHADOW`). The fill is
+  palettes are applied (the shadow colour is `Colours.UI_PANEL_SHADOW`). The fill is
   `Colours.UI_BACKGROUND` blended towards the card colour `Colours.UI_TOKEN_CARD` by
   `token_fill_amount`, so at 0 a token has the interface background colour and at 1 the card colour.
-  Both colours come from the [interface palette](interface_palette.md), so the fill is worked out again
+  Both colours come from the [main palette](interface_palette.md), so the fill is worked out again
   after a palette change. The token's edge is the
   panel wear's worn edge ([panel_wear.md](panel_wear.md)); it has no border.
 - `token_portraits` puts the ally and enemy portraits in `PanelToken` frames instead of
@@ -81,7 +81,7 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
 - The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
   preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
   `TokensPanel`), in eleven sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (amount; the card colour is `UI_TOKEN_CARD` in the interface palette), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings), Item levels, Map (the map icon switch and the cleared square look), Encounter cards, Character photos, Paper burn and Page turn. The `reward_spin*` settings are print
+  (amount; the card colour is the interface colour `UI_TOKEN_CARD`), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings), Item levels, Map (the map icon switch and the cleared square look), Encounter cards, Character photos, Paper burn and Page turn. The `reward_spin*` settings are print
   frame settings too, on their own tab, Reward spin (F8, `RewardSpinPanel`, [run_screen.md](run_screen.md#overlays)).
 
 | Group | Does |
@@ -96,7 +96,7 @@ The owner's chosen settings are in the print part of the default [look preset](l
 
 ## The Print tab
 
-F3 opens the [debug panel](debug_panel.md) on this tab. `PrintPanel` extends the
+F4 opens the [debug panel](debug_panel.md) on this tab. `PrintPanel` extends the
 [Corridor tab](corridor_look.md#the-corridor-tab) and builds its sections the same way: Layout, then
 the border and overlay groups, then panel wear. The Layout group holds the padding and the character
 sheet's section gap and label gap

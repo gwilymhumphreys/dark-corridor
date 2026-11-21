@@ -16,11 +16,12 @@ part can be loaded on its own.
 
 | Part | Sections | Written and read by |
 |---|---|---|
-| Corridor | `corridor_palette` (world palette, colour matching, dithering), `corridor_shader`, `corridor_light`, `corridor_environment` | `DebugPanels.write_corridor_palette` / `read_corridor_palette` ([palette_clamp.md](palette_clamp.md)), `DebugPanels.write_corridor_look` / `read_corridor_look` ([corridor_look.md](corridor_look.md)) |
-| Interface | `interface_palette` (interface and portrait palettes, dithering switch), `interface_shader`, `interface_glow` | `DebugPanels.write_interface_palettes` / `read_interface_palettes` ([interface_palette.md](interface_palette.md)), `InterfaceLook.write_look` / `read_look` ([interface_look.md](interface_look.md)) |
+| Corridor | `corridor_shader`, `corridor_light`, `corridor_environment` | `DebugPanels.write_corridor_look` / `read_corridor_look` ([corridor_look.md](corridor_look.md)) |
+| Interface | `interface_shader`, `interface_glow` | `InterfaceLook.write_look` / `read_look` ([interface_look.md](interface_look.md)) |
 | Print | `print_panel`, `print_frame`, `print_layout` | `PrintLook.write_print_look` / `read_print_look` ([print_frame.md](print_frame.md)) |
 | Background | `print_background` | `PrintLook.write_background_look` / `read_background_look` ([background_wear.md](background_wear.md)) |
 | Feedback | `control_highlight`, `control_settings` | `ControlFeedback.write_look` / `read_look` ([control_feedback.md](control_feedback.md)) |
+| Colours | `palette` (main and mechanic palettes, darkest colour setting, colour matching, snap and dithering switches), `interface_colours` (each interface colour's brightness) | `DebugPanels.write_palettes` / `read_palettes` ([interface_palette.md](interface_palette.md)) |
 
 - Writing lists every setting, changed or not, so two presets can be compared key by key.
 - Reading a part starts from that part's defaults (every effect off, the corridor scene's own light),

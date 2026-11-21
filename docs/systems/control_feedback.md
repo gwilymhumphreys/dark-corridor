@@ -32,7 +32,7 @@ Saved as the feedback part of a [look preset](look_presets.md).
   colour is overridden while the juice node is alive; the disabled colour is left to the theme.
 - Colours come from `Colours` (`UI_HIGHLIGHT` for the border, `UI_BUTTON_LIGHT` for the wash,
   `UI_PANEL_WEAR` for the release pulse) and are pushed into the material at start and whenever an
-  [interface palette](interface_palette.md) is applied or reset. The button's resting fill is
+  [palettes](interface_palette.md) are applied. The button's resting fill is
   `UI_BUTTON`, set through the theme ([ui_theme.md](ui_theme.md)).
 
 ## Who drives it
@@ -50,7 +50,7 @@ instead of the parent, which an item cell needs because its value pills hang out
 
 ## The Feedback tab
 
-F5 opens the [debug panel](debug_panel.md) on this tab: a Timing section (how quickly the feedback
+F6 opens the [debug panel](debug_panel.md) on this tab: a Timing section (how quickly the feedback
 comes in, how far a pressed control drops, how long the release pulse lasts), a Text section (how far
 the text darkens on hover and while held), and then the border and fill groups of the shader. The
 press squash itself is a `UIJuice` preset, not a setting here.

@@ -54,7 +54,7 @@ radius or shadow is told apart only by the space it takes up and the
 new look from. Each is a `PaletteStyleBox` (`src/ui/palette_style_box.gd`, `class_name
 PaletteStyleBox extends StyleBoxFlat`) with an exported `colour_name` naming the
 `Colours` variable it fills from (`'UI_BACKGROUND'` for all seven today), wrapped in
-a `WornStyleBox`. An [interface palette](interface_palette.md) sets its `bg_color`
+a `WornStyleBox`. The [main palette](interface_palette.md) sets its `bg_color`
 straight from that named colour, both when applied and on reset, rather than through
 the brightness ramp it uses for images.
 
@@ -76,8 +76,8 @@ not by class name, and the script itself must not reference an autoload by its b
 identifier at load time (`WornStyleBox` looks up `PrintLook` by node path for this
 reason; `PaletteStyleBox` never reads `Colours` itself, so it has no such lookup).
 
-The theme's colours can be replaced at runtime by an
-[interface palette](interface_palette.md); its default `UI_PANEL_*` and `UI_TEXT_*`
+The theme's colours can be replaced at runtime by the
+[main palette](interface_palette.md); its default `UI_PANEL_*` and `UI_TEXT_*`
 colours in `colours.gd` are the greys the theme uses, so keep them in step when
 the theme's greys change. The palette only recolours text colours the theme lists, so every
 text control type needs one there; `RichTextLabel/colors/default_color` is set for this

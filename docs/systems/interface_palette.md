@@ -1,125 +1,125 @@
-# Interface palette
+# Palettes
 
-A dev tool that recolours the interface from a palette file, for comparing interface colour schemes
-next to corridor looks. It changes colour values only; no shader runs over the interface.
+A dev tool for trying colour schemes. The **main palette** is one palette file whose colours the
+corridor, the pictures, the combat effects and every interface colour take. The **mechanic palette**
+is a small named file setting the ten mechanic colours. Both are chosen on the Colours tab of the
+[debug panel](debug_panel.md) and saved in the colours part of a [look preset](look_presets.md).
 
-**Location:** `src/debug/interface_palette.gd` (class `InterfacePalette`), `src/data/colours.gd`,
-`src/ui/named_colour_rect.gd`. Palettes in `assets/palettes/new/ui/`. Chosen from the
-[debug panel](debug_panel.md).
+**Location:** `src/debug/main_palette.gd` (class `MainPalette`), `src/debug/mechanic_palette.gd` (class
+`MechanicPalette`), `src/debug/colours_panel.*` (the Colours tab), `DebugPanels` (the settings and
+`apply_palettes`), `src/data/colours.gd`. Palettes in `assets/palettes/`, mechanic palettes in
+`assets/palettes/mechanics/`.
 
-## Palette files
+## The main palette
 
-A GIMP `.gpl` file whose colour names match `Colours` variables, written in lower case with spaces:
-`hp bar fill` sets `Colours.HP_BAR_FILL`. Colours with no name are ignored, names that match no variable
-give a warning, and any variable the file leaves out keeps its default.
+Any palette file the panel lists outside `assets/palettes/mechanics/` (a Lospec PNG strip or a `.gpl`
+file, read by `PaletteLoader`, see [palette_clamp.md](palette_clamp.md#palettes)), without repeated
+colours, then the darkest colour setting:
 
-`assets/palettes/new/ui/ui-default.gpl` lists every name at its default colour; copy it to start a new
-palette. The other files in that folder are placeholder candidates. `ui-custom.gpl` is the palette the
-[debug panel's Icons tab](debug_panel.md) writes a mechanic's chosen colour into, through
-`InterfacePalette.write_custom`: it copies the live `Colours` values (whichever palette is active) under
-the default file's names, sets the one changed name, writes the whole file, and applies it, so what is on
-screen always matches the file.
+| Darkest colour | Colours used |
+|---|---|
+| Off | The file's colours |
+| Add a darker colour | The file's colours and the picked colour |
+| Replace the darkest colour | The file's colours with the darkest one (lowest OKLab lightness) swapped for the picked colour |
 
-A `.gpl` carries no alpha — the loader forces it to 1 — so a `Colours` variable that is translucent
-cannot be set from a palette. `COOLDOWN_FILL` and `HP_BAR_LINE` are the translucent ones, and they are left out of the files.
+`DebugPanels.apply_palettes()` then sends the colours to every part:
 
-Every palette in that folder lists every settable name, even though leaving one out is legal. A
-palette that skips a name shows that colour's default inside its own scheme, which stands out badly
-once a mechanic or status is added later. Three tests hold this: each name in `ui-default.gpl`
-matches a variable, `ui-default.gpl` names every settable variable, and every other palette in the
-folder names the same set as `ui-default.gpl`.
+| Part | How | Switch |
+|---|---|---|
+| Corridor walls and enemy images | Snapped to them by the [world clamp](palette_clamp.md#world-clamp) | Snap corridor |
+| Item, potion, status and keyword icons, portraits, the cursor | Snapped to them by `InterfaceLook.picture_materials` ([Images](#images)) | Snap pictures |
+| Combat effects | Snapped to them together with the mechanic colours, by `InterfaceLook.effects_material` ([interface_look.md](interface_look.md#the-combat-effects)) | Snap effects |
+| Interface colours | Each takes one of them by brightness ([Interface colours](#interface-colours)) | None |
 
-## What it changes
+"Off" in the main palette list means no palette: nothing is snapped and every interface colour keeps
+its default from `colours.gd`.
+
+## Interface colours
+
+An **interface colour** is a `Colours` variable that the mechanic palette does not set: the `UI_*`
+colours, the health bar colours, the cooldown colours, the downed ally grey, the portrait colours, the
+`STATUS_*` colours, `ARCANE`, the `RELIC_*` colours, the `BEAT_*` colours, `MAP_CURRENT_HALO`, the
+`RARITY_*` colours, `TOOLTIP_CHANGED` and the `PAPER_BURN_*` colours. `MainPalette.SECTIONS` lists
+them in the groups the Colours tab shows.
+
+- Each has a **brightness** from 0 to 1: 0 is the main palette's darkest colour and 1 its lightest. It
+  takes the palette colour nearest, in OKLab, to a grey at that brightness, so it prefers the
+  palette's least tinted colour at that level (`MainPalette.colour_at`).
+- A brightness the preset does not set is the OKLab lightness of the colour's default in `colours.gd`.
+- Alpha is kept, so the translucent `HP_BAR_LINE` and `COOLDOWN_FILL` follow the palette too.
+- Each brightness row on the Colours tab shows the colour it landed on. Two colours drawn on top of
+  each other (a button's fill on the background) should not land on the same palette colour.
+
+After the interface colours are set, the theme is recoloured:
 
 | Part | How |
 |---|---|
-| `Colours` variables | Set by name. They are static variables so they can be replaced, but keep constant-style names. |
-| Colours placed in scenes | Health bars are `NamedColourRect` nodes, which copy their `Colours` variable (`colour_name`) when they enter the tree. Screen backgrounds are `ScreenBackground`, a `NamedColourRect` that also passes the [background wear](background_wear.md) mark colours. |
-| Theme font colours | Each is placed by brightness on the `UI_TEXT_*` colours, dark to light, blending between the two nearest. |
-| Theme images | Every pixel of a textured theme entry is placed by brightness on the `UI_PANEL_*` colours in the same way, and a [`WornStyleBox`](panel_wear.md) is recoloured through its wrapped `base`. The recoloured images are new textures; the files on disk are unchanged. The theme itself holds no images now ([ui_theme.md](ui_theme.md)), so this applies only to one added later. |
-| `PaletteStyleBox` fills | The theme's flat, palette-following panel styles ([ui_theme.md](ui_theme.md#flat-palette-following-panels)) are a `PaletteStyleBox` (`src/ui/palette_style_box.gd`) naming a `Colours` variable in its `colour_name`. Its `bg_color` is set straight from that variable, not the `UI_PANEL_*` brightness ramp, both when a palette is applied and on reset. |
-| Interface images | Item, potion and status icons, keyword chip icons and character portraits are clamped to the portrait palette's colours, which by default are the interface palette's, see [Images](#images). The HP bars and item value pills are not: they are drawn through the [interface look](interface_look.md)'s element material, which is not clamped, so they keep the palette colour they are filled with. |
-| Panel wear mark colours | `Colours.UI_PANEL_WEAR` / `UI_PANEL_WEAR_LIGHT`, pushed into `PrintLook.panel_material` (`PrintLook.push_wear_colours()`) alongside the [background wear](background_wear.md) colours. |
+| Theme font colours | Each is placed by brightness on the `UI_TEXT_*` colours, dark to light, blending between the two nearest |
+| `PaletteStyleBox` fills | Set straight from the `Colours` variable named in its `colour_name` ([ui_theme.md](ui_theme.md#flat-palette-following-panels)) |
+| Other flat styles and theme images | Placed by brightness on the `UI_PANEL_*` colours. A [`WornStyleBox`](panel_wear.md) is recoloured through its wrapped `base`. The theme holds no images now, so the image case applies only to one added later |
+| Colours placed in scenes | Health bars are `NamedColourRect` nodes, which copy their `Colours` variable when they enter the tree and on `DebugPanels.colours_changed`. Screen backgrounds are `ScreenBackground`, which also passes the [background wear](background_wear.md) mark colours |
+| Wear, feedback and cursor colours | Pushed again by `apply_palettes`: `PrintLook.push_wear_colours()`, `InterfaceLook.push_wear_colours()`, `ControlFeedback.push_colours()`, `Cursor.apply()` |
 
-The `UI_PANEL_*` and `UI_TEXT_*` defaults are the greys the theme already uses, so a palette that does
-not set them leaves the theme unchanged. `InterfacePalette.reset()` restores the defaults, the original
-images and the theme colours.
+`MainPalette.reset()` restores the default colours and the theme.
 
-Effect colours (the [mechanic colours](mechanics.md#colours) and the remaining `STATUS_*` and
-`ARCANE`) are shared by item value badges, status swatches, projectiles, damage numbers
-and the corridor's [hit lights](corridors/corridor_3d.md#hit-lights), so an interface palette changes
-all of them. Effects have no palette of their own (owner, 2026-09-15): interface colours keep them
-coherent with the interface and stand out against the desaturated corridor.
+## The mechanic palette
 
-## Clamp
+A `.gpl` file in `assets/palettes/mechanics/` naming the ten mechanic colours in lower case with
+spaces (`attack` sets `Colours.ATTACK`), `MechanicPalette.NAMES`. Statuses that come from a mechanic
+read that mechanic's colour, so they follow it too.
 
-The interface clamp snaps the interface palette's colours to a smaller palette, to try the interface
-with fewer colours without editing a palette file. It changes no pixels and leaves the corridor alone.
+- A name the file leaves out keeps its `colours.gd` default; a name that is not a mechanic gives a
+  warning. A test requires every file in the folder to name all ten.
+- `mechanics-default.gpl` holds the `colours.gd` defaults. `mechanics-greys.gpl` gives the greys-only
+  look. The others are the mechanic colours of earlier hand-made interface schemes.
+- The colour pickers in the Colours tab's Mechanic colours section, and the Colour row on the Icons
+  tab, call `MechanicPalette.write_custom`: it writes all ten live colours, with the changed one, to
+  `mechanics-custom.gpl` and makes that the active palette, so what is on screen matches the file.
+- The colours are used as they are. Value pills, the shield on the health bar and keyword glyphs are
+  drawn through the element material, and the coloured square behind a status icon is a panel; none
+  of these is snapped.
 
-- After the palette file is applied, every colour `ui-default.gpl` names is replaced by the nearest
-  colour in the clamp palette, using the Corridor tab's colour matching (RGB or OKLab). Alpha is kept.
-- Theme font colours are placed on the clamped text colours and then snapped again, because a blend
-  between two steps can fall between clamp colours.
-- The clamp palette is the world palette ("Same as corridor"), the interface palette's own greys, or
-  any palette file. Grey ramps for it are in `assets/palettes/new/clamp/`.
-- **Own greys** clamps to the palette's own grey colours: every `UI_*` colour and
-  `InterfacePalette.OWN_GREYS` (the health bar background, the cooldown line and the downed-ally grey).
-  Those keep their values, and only the other colours (mechanics, statuses, relics, beats, rarity, the
-  paper burn and the health fills) move to the nearest of them. The theme is not snapped in this mode.
-- The value each colour had before the clamp is kept (`InterfacePalette.unclamped`). `write_custom` and
-  the F2 colour pickers use it, so editing a colour while clamped does not save the clamped colours
-  into the custom palette.
-- While a clamp is set, "Same as interface" for the portrait and effects palettes means the clamp
-  palette's colours, so effects and the paper burn snap to the same set.
+`assets/palettes/made/` holds the interface greys of the earlier hand-made schemes as plain palettes,
+to try as a main palette.
 
 ## Images
 
 Interface images are drawn through the picture materials, `InterfaceLook.picture_materials`
-([interface_look.md](interface_look.md)), whose shader includes the
-[palette clamp](palette_clamp.md). `DebugPanels.set_portrait_palette` writes the portrait palette's
-distinct colours into all of them, so each pixel of those images becomes the nearest palette colour. The HP bars and value pills use `InterfaceLook.element_material`, which no palette is written
-to, so they are left at the colours the interface palette gave them. The portrait palette is its own Interface tab choice: off, the world palette, the interface palette,
-or any palette file (default: the interface palette). The clamp follows the Corridor tab's colour matching
-(RGB or OKLab) and dithers when the Interface tab's dithering switch is on (`set_interface_dithering`). With no colours the colour count is 0 and images are unchanged.
-
-Enemy images in the corridor are part of the corridor and use the [world clamp](palette_clamp.md#world-clamp).
-The combat effects have their own choice, the effects palette ([interface_look.md](interface_look.md#the-combat-effects)).
-It defaults to the interface palette, because a portrait palette without the mechanic colours would
-change the effects' colours.
+([interface_look.md](interface_look.md)), whose shader includes the [palette clamp](palette_clamp.md).
+`apply_palettes` writes the main palette's colours into all of them while Snap pictures is on. The
+HP bars and value pills use `InterfaceLook.element_material`, which no palette is written to, so they
+keep the colours they are filled with. The clamp follows the colour matching (RGB or OKLab) and
+dithers when the Interface tab's dithering switch is on (`set_interface_dithering`), which also
+applies to the combat effects.
 
 ## Limits
 
-- Things that copy `Colours` when built are updated when a palette is applied or reset, so it can be
-  switched mid-fight:
-  - Keyword cards: `KeywordCatalog.refresh_colours()`. Item, relic and potion definitions need
-    nothing, because they read their colours on use (`Colours.named`).
-  - `NamedColourRect` nodes (and `ScreenBackground`): `DebugPanels.interface_palette_changed`.
-  - Statuses in the current fight: `DebugPanels.set_interface_palette` gives each the colour a new
-    status of its class would have.
+- Things that copy `Colours` when built are updated by `apply_palettes`, so the palettes can be
+  switched mid-fight: keyword cards (`KeywordCatalog.refresh_colours()`), `NamedColourRect` nodes, and
+  statuses in the current fight, which take the colour a new status of their class would have. Item,
+  relic and potion definitions read their colours on use.
 - Still not updated until rebuilt: the combat sandbox's `BoardView` portraits, combat-scoped summons'
-  statuses, and projectiles already in flight. The `--ui-palette=` start-up argument applies before
-  anything is built.
-- The corridor and the enemy images in it are not changed. Text colours set in scenes as per-instance
-  overrides (the value pill's number and outline) are not recoloured by brightness.
+  statuses, and projectiles already in flight.
+- Text colours set in scenes as per-instance overrides (the value pill's number and outline) are not
+  recoloured.
 - Reads files with `FileAccess`, so debug runs only, like the [palette clamp](palette_clamp.md).
 
 ## Public API
 
 | Member | Use |
 |---|---|
-| `InterfacePalette.apply(path, clamp_colours = [], perceptual = false, own_greys = false) -> int` | Reset, then apply a palette file (none for `''`) and clamp to `clamp_colours` when given, or to the palette's own greys with `own_greys`; returns how many names matched |
-| `InterfacePalette.clamp_palette() -> PackedColorArray` | The colours the interface is clamped to, or none |
-| `InterfacePalette.unclamped(variable) -> Variant` | A `Colours` variable's value before the clamp; the live value when there is no clamp |
-| `InterfacePalette.reset()` | Back to the default colours and theme |
-| `InterfacePalette.is_interface_palette(path) -> bool` | A `.gpl` file with at least one colour named after a `Colours` variable; only these are listed in the debug panel |
-| `InterfacePalette.variable_name(colour_name) -> String` | `'hp bar fill'` -> `'HP_BAR_FILL'` |
-| `InterfacePalette.write_custom(variable: String, colour: Color)` | Set one `Colours` variable in the custom palette and make it the active palette (`CUSTOM_PATH`) |
-| `InterfacePalette.CUSTOM_PATH` | The custom palette file the debug panel writes into |
-| `PaletteLoader.load_named_colours(path) -> Dictionary` | Name -> colour for a `.gpl` file |
-| `PaletteLoader.save_named_colours(path: String, colours: Dictionary) -> Error` | Write a name -> colour dictionary as a `.gpl` file; the write half of `load_named_colours` |
-| `DebugPanels.set_interface_palette(path)`, `interface_palette` | Apply from the debug panel; `''` resets. The `'` and `;` keys step through the palettes, and [presets](look_presets.md) save one with the rest of the look |
-| `DebugPanels.set_interface_clamp(choice)`, `interface_clamp` | What the interface palette's colours are clamped to ([Clamp](#clamp)): `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `CLAMP_OWN_GREYS`, or a palette file path. Saved in a preset's `interface_palette` section |
-| `DebugPanels.set_portrait_palette(choice)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path. The `.` and `,` keys step through the choices |
-| `DebugPanels.set_effects_palette(choice)`, `effects_palette` | What the combat effects are clamped to: `''` for off, `EFFECTS_SAME_AS_PORTRAIT`, `PORTRAIT_SAME_AS_INTERFACE` (the default), or a palette file path. Saved in a preset's `interface_palette` section |
+| `DebugPanels.set_main_palette(path)`, `main_palette` | Use a palette file as the main palette; `''` for none. `[` and `]` step through the list |
+| `DebugPanels.set_mechanic_palette(path)`, `mechanic_palette` | Use a mechanic palette; `''` for the defaults. `;` and `'` step through the list |
+| `DebugPanels.set_palette_setting(name, value)` | Set `darkest` (a `MainPalette.Darkest` value or `off`, `add`, `replace`), `darkest_colour`, `perceptual`, `snap_corridor`, `snap_pictures`, `snap_effects`, `corridor_dithering`, `picture_dithering`, either palette, or an interface colour's brightness by its lower-case name (`ui_background`) |
+| `DebugPanels.main_colours() -> PackedColorArray` | The main palette's colours with the darkest colour setting applied |
+| `DebugPanels.apply_palettes()`, `colours_changed` | Apply both palettes everywhere; the signal tells nodes that copied colours |
+| `DebugPanels.write_palettes(file)`, `read_palettes(file)`, `reset_palettes()` | The `palette` and `interface_colours` sections of a preset's colours part |
+| `MainPalette.SECTIONS`, `names()`, `is_interface_colour(variable)` | The interface colours |
+| `MainPalette.brightness(variable)`, `set_brightness(variable, level)`, `default_brightness(variable)` | An interface colour's brightness |
+| `MainPalette.palette_colours(colours, darkest, colour)`, `colour_at(colours, level)` | The darkest colour setting, and the colour a brightness lands on |
+| `MainPalette.apply(colours)`, `reset()` | Set every interface colour and recolour the theme; put them back |
+| `MechanicPalette.apply(path)`, `reset()`, `colours()`, `write_custom(variable, colour)` | Apply a mechanic palette file; the live mechanic colours; write the custom file |
+| `MechanicPalette.variable_name(name)`, `colour_name(variable)` | `'hp bar fill'` and `'HP_BAR_FILL'` both ways |
+| `PaletteLoader.load_named_colours(path)`, `save_named_colours(path, colours)` | Name -> colour for a `.gpl` file, and its write half |
 
-Tests: `tests/debug/test_interface_palette.gd`.
+Tests: `tests/debug/test_main_palette.gd`, `tests/debug/test_mechanic_palette.gd`.

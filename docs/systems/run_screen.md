@@ -28,7 +28,7 @@ starting with the first; hovering a card or left and right on the keyboard or a 
 character's `select_image`, each resting at its own tilt and shift, with the selected one on top.
 Selecting a character slides its photo out of the pile and back in on top; a photo whose character is
 no longer selected by the far point of its slide goes back in where it was. The tilt, shift, slide
-distance and slide time are the `photo_*` print settings on the F7 tab. Back or cancel turns
+distance and slide time are the `photo_*` print settings on the F8 tab. Back or cancel turns
 the page back; clicking a card or accept picks →
 `Game.start_run(seed, character_id)`, so the run opens in the chosen character's pool +
 kit, #27). The Settings button raises **`settings_screen.tscn`** (below).
@@ -107,9 +107,9 @@ decoration only. The choice clips to the corridor area, which hides the deck whi
   `Balance.ENCOUNTER_SKIP_GOLD`) sends all the cards back to the deck, then emits `skipped` →
   `RunManager.skip_choice`, which refreshes the gold box and advances to the fight.
 - **Settings** — the deal's timing, the cards' tilt and spacing and how much of the deck shows are
-  print settings in the F7 tab's Encounter cards section (`card_*`, `deck_peek` in
+  print settings in the F8 tab's Encounter cards section (`card_*`, `deck_peek` in
   `PrintLook.PRINT_SETTING_DEFAULTS`). The sounds are `ui/card_deal` and `ui/card_turn`.
-- **Restart encounter** — a debug button in the same F7 section. It deals the beat's encounter
+- **Restart encounter** — a debug button in the same F8 section. It deals the beat's encounter
   cards again at once, without the walk, so changed settings show straight away. It works from the
   deal until the picked encounter's panel closes: `RunScreen.restart_encounter` tears down the view
   and `RunManager.offer_choice_again` drops the picked encounter, its shop and its offer. Anything
@@ -393,7 +393,7 @@ A view built without a fight never shows the fills. The combat report is still f
   (`is_spinning`). A mouse click or key press during the spin lands them all at once
   (`skip_spin`); a click on the panel is used up by this, so it does not also pick. The style, the
   timings, the bump, the reel's window height, drum curve, edge darkening and overshoot, and an
-  on/off switch are the `reward_spin*` print settings on the debug panel's Reward spin tab (F8),
+  on/off switch are the `reward_spin*` print settings on the debug panel's Reward spin tab (F9),
   whose Spin again button (`RunScreen.spin_rewards_again`) spins the open panel again. The spin
   draws its own random numbers, never the run's, so seeded runs are unchanged. Only the run screen
   starts a spin, so the autotest, which has no panels, is not slowed. There is no sound yet.

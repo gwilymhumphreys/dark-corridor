@@ -4,25 +4,26 @@ A dev-only panel for trying and saving looks in game, with a [preset bar](look_p
 one tab per part of the look. It is on every screen, including the [dev scenes](dev_tools.md#dev-scenes).
 
 **Location:** `src/debug/debug_panels.tscn` + `debug_panels.gd`, class `DebugPanelsAutoload`, registered
-as the `DebugPanels` autoload. The tabs are `look_panel.*`, `interface_look_panel.*`, `print_panel.*`,
-`background_panel.*`, `feedback_panel.*`, `icon_panel.*`, `tokens_panel.*` and `reward_spin_panel.*`. The palette rows are in the first two tab scenes, and `DebugPanels` runs them.
+as the `DebugPanels` autoload. The tabs are `colours_panel.*`, `look_panel.*`, `interface_look_panel.*`,
+`print_panel.*`, `background_panel.*`, `feedback_panel.*`, `icon_panel.*`, `tokens_panel.*` and
+`reward_spin_panel.*`. The palette rows are in the Colours tab's scene, and `DebugPanels` runs them.
 
 ## Tabs
 
 | Tab | Key | Sets |
 |---|---|---|
-| Corridor | F1 | The corridor [palette rows](#palette-rows), the [corridor look](corridor_look.md), light, Environment and fog |
-| Interface | F2 | The interface [palette rows](#palette-rows), the [palette colours](#palette-colours), the [interface look](interface_look.md) and [interface glow](interface_glow.md) |
-| Print | F3 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
-| Background | F4 | [Background wear](background_wear.md) on every screen |
-| Feedback | F5 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
-| Icons | F6 | Which icon and colour each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice; a mechanic's colour is written to the [custom palette](interface_palette.md) |
-| Tokens | F7 | The [cardboard token look](print_frame.md) of items, potions and portraits: placement, shadow, fill, the portrait switches, the character panel layout, the map, the encounter cards dealt before a fight ([run_screen.md](run_screen.md#the-choice-of-encounters)), the pile of character photos on character select, the paper burn effect and the [page turn](page_turn.md), with a Replay button |
-| Reward spin | F8 | The reward spin of the draft and shop goods ([run_screen.md](run_screen.md#overlays)): the switch, style and timings, the reel's look and overshoot, with a Spin again button |
+| Colours | F1 | The [palettes](interface_palette.md): the [Colours tab](#the-colours-tab) below |
+| Corridor | F2 | The [corridor look](corridor_look.md), light, Environment and fog |
+| Interface | F3 | The [interface look](interface_look.md) |
+| Print | F4 | [Print frame](print_frame.md) and [panel wear](panel_wear.md) |
+| Background | F5 | [Background wear](background_wear.md) on every screen |
+| Feedback | F6 | [Control feedback](control_feedback.md): hover, selected and press on interactive controls |
+| Icons | F7 | Which icon and colour each [icon slot](mechanics.md#iconslots) uses, with live samples of the choice; a mechanic's colour is written to the [custom mechanic palette](interface_palette.md#the-mechanic-palette) |
+| Tokens | F8 | The [cardboard token look](print_frame.md) of items, potions and portraits: placement, shadow, fill, the portrait switches, the character panel layout, the map, the encounter cards dealt before a fight ([run_screen.md](run_screen.md#the-choice-of-encounters)), the pile of character photos on character select, the paper burn effect and the [page turn](page_turn.md), with a Replay button |
+| Reward spin | F9 | The reward spin of the draft and shop goods ([run_screen.md](run_screen.md#overlays)): the switch, style and timings, the reel's look and overshoot, with a Spin again button |
 
-The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. The first five line up
-with the parts, but a tab that saves its own files rather than being part of a
-preset has no `Part`. The Tokens and Reward spin tabs' settings are print frame
+The tabs are `DebugPanels.Tab`, not `LookPresets.Part`. A tab that saves its own files rather than
+being part of a preset has no `Part`. The Tokens and Reward spin tabs' settings are print frame
 settings, so a preset saves them with its Print part.
 
 ## Behaviour
@@ -40,57 +41,41 @@ settings, so a preset saves them with its Print part.
 - The palette keys below only work while the panel is open, so they never take a game key (the
   battle speed keys are on `[` and `]`, [keybindings.md](keybindings.md)). They are also ignored while
   a text field (the preset name) has focus.
-- `]` and `[` select the next and previous entry in the World palette list, `'` and `;` in the
-  Interface palette list and `.` and `,` in the Portrait palette list, skipping folder headings and wrapping round through "Off". Debug builds only.
-- `\` moves the selected world palette file (and its `.import` file) into
+- `]` and `[` select the next and previous entry in the main palette list, and `'` and `;` in the
+  mechanic palette list, skipping folder headings and wrapping round through "Off" or "Default".
+- `\` moves the selected main palette file (and its `.import` file) into
   `assets/palettes/shortlist/`, rewrites the palette's path in any preset or history file that uses it,
   then rescans the list and keeps that palette selected. It does nothing on "Off", for a palette
   already in the shortlist, or when a file of the same name is there.
-- Backspace turns the world clamp's dithering on or off, keeping the Corridor tab's Dithering
-  switch in step. It does not touch the interface clamp, which has its own switch.
+- Backspace turns the corridor's dithering on or off, keeping the Corridor tab's Dithering switch in
+  step. It does not touch the pictures' and effects' dithering, which has its own switch.
 - Changes last for the session only, unless saved as a preset. The default preset loads at start-up.
   `DebugPanels.reset_settings()` turns every part off; `TestCleanup.reset_all_managers()` calls it.
-- The palette folder is scanned the first time the Corridor or Interface tab opens, so headless tests
-  and autotest runs do no extra work.
+- The palette folder is scanned the first time the Colours tab opens or a palette key is pressed, so
+  headless tests and autotest runs do no extra work.
 - Every section starts closed, whether or not its effect is on; clicking a section's title shows its
-  rows. `LookSection.set_open` overrides that; the Icons tab opens both of its sections (Choose and
-  Samples), and the Reward spin tab both of its (Spin and Reel), so their rows are usable without a
-  click.
+  rows. `LookSection.set_open` overrides that; the Colours tab opens its Main palette section, the
+  Icons tab both of its sections (Choose and Samples), and the Reward spin tab both of its (Spin and
+  Reel), so their rows are usable without a click.
 - Built as `.tscn` scenes, styled by the project theme, with a `UIJuice` node on each control.
 - English only. `tools/extract_pot.gd` skips `src/debug/`, so panel labels stay out of the translation
   files.
 
-## Palette rows
+## The Colours tab
 
-Rows at the top of the Corridor and Interface tabs, below "Take this part from".
+`ColoursPanel`. Every control applies at once and is saved in a preset's colours part.
 
-| Tab | Control | Effect | Read by |
-|---|---|---|---|
-| Corridor | World palette (corridor) | "Off", then every palette under `assets/palettes/`, grouped by subfolder | [World clamp](palette_clamp.md#world-clamp) on `CombatCorridor` |
-| Corridor | Colour matching | RGB or perceptual (OKLab) | World clamp, and the portrait and effects palette clamps |
-| Interface | Interface palette | "Off", then every `.gpl` palette with at least one colour named after a `Colours` variable (`InterfacePalette.is_interface_palette`) | [Interface palette](interface_palette.md) |
-| Interface | Interface clamped to | "Off", "Same as corridor" (the world palette), "Own greys" (the interface palette's greys), or any palette file | [Clamp](interface_palette.md#clamp) |
-| Interface | Portrait palette | "Off", "Same as corridor" (the world palette), "Same as interface" (the interface palette), or any palette file | [Interface images](interface_palette.md#images) |
-| Interface | Effects palette | "Off", "Same as portraits", "Same as interface" (the default), or any palette file | [The combat effects](interface_look.md#the-combat-effects) |
+| Row or section | Sets |
+|---|---|
+| Main palette | "Off", then every palette under `assets/palettes/` outside `mechanics/`, grouped by subfolder. A strip of its colours, dark to light, sits under it |
+| Colour matching | RGB or perceptual (OKLab), for every snapped part |
+| Mechanic palette | "Default", then every file in `assets/palettes/mechanics/` |
+| Main palette section | The darkest colour setting (Off, Add a darker colour, Replace the darkest colour) and the colour it uses; Snap corridor, Snap pictures, Snap effects |
+| One section per group of interface colours | A brightness slider for each, with a square showing the palette colour it landed on |
+| Mechanic colours | A colour picker for each mechanic colour, writing the custom mechanic palette |
 
-## Palette colours
-
-Above the look effect sections on the Interface tab, one section per group heading in
-`src/data/colours.gd` (Mechanics, Statuses, Combat payloads, Relic panels, Beat categories, Combat
-view, Map strip, Tooltip, Interface, Control feedback). Each row is a colour picker for one
-`Colours` variable; changing one writes it to the [custom palette](interface_palette.md) and makes
-that palette active. While the interface is [clamped](interface_palette.md#clamp), the pickers show
-each colour as it was before the clamp. The grouping is `InterfaceLookPanel.COLOUR_SECTIONS`, not read from
-`colours.gd`, so the panel owns its own layout.
-
-`COOLDOWN_FILL` has no row. It is translucent and a `.gpl` carries no alpha, so it cannot be set
-from a palette.
-
-A mechanic's colour also has a row on the Icons tab, beside its icon. Both write the same file.
-
-Each clamp's dithering switch is the Dithering section header in its own tab, and the two are
-separate. Every control applies immediately. The corridor rows and its dithering are saved in a
-preset's corridor part, and the interface rows and its dithering in its interface part.
+The dithering switches are still the Dithering section headers on the Corridor and Interface tabs. A
+mechanic's colour also has a row on the Icons tab, beside its icon; both write the same file.
 
 ## Start-up arguments
 
@@ -109,22 +94,16 @@ in [dev_tools.md](dev_tools.md#look-arguments).
 | `apply_corridor_settings()` | Apply both to every corridor on screen |
 | `set_slot_icon(slot: String, path: String)` | Choose an [icon slot](mechanics.md#iconslots)'s icon: saves it, writes it into the shared `Mechanic` instances, and updates statuses in the current fight |
 | `icons_changed` (signal) | Emitted after an icon slot's icon changes, so a node that copied one when built can take the new one |
-| `set_interface_palette(path: String)`, `interface_palette` | Apply an interface palette file; `''` goes back to the default colours. Also recolours statuses in the current fight |
-| `set_portrait_palette(choice: String)`, `portrait_palette` | What the interface images are clamped to: `''` for off, `PORTRAIT_SAME_AS_CORRIDOR`, `PORTRAIT_SAME_AS_INTERFACE`, or a palette file path |
-| `interface_palette_changed` (signal) | Emitted after an interface palette is applied or reset; `NamedColourRect` copies its colour again |
-| `write_corridor_palette(file)`, `read_corridor_palette(file)` | The `corridor_palette` section of a [preset](look_presets.md)'s corridor part |
-| `write_interface_palettes(file)`, `read_interface_palettes(file)` | The `interface_palette` section of a preset's interface part |
-| `reset_palettes()` | Every palette choice, matching and both dithering switches back to their defaults |
+| `set_main_palette(path)`, `set_mechanic_palette(path)`, `set_palette_setting(name, value)`, `apply_palettes()`, `colours_changed` (signal), `write_palettes(file)`, `read_palettes(file)`, `reset_palettes()` | The palettes; see [interface_palette.md](interface_palette.md#public-api) |
 | `write_corridor_look(file)`, `read_corridor_look(file)`, `reset_look()` | The corridor part of a preset, and the corridor look defaults |
-| `world_palette`, `world_material` | The world clamp palette path (`''` when off) and the corridor look material corridors are drawn through |
+| `world_material` | The corridor look material corridors are drawn through; its palette is the main palette while Snap corridor is on |
 | `look_defaults() -> Dictionary`, `scene_values()` | Look shader uniform defaults, read from the shader code; the corridor scene's own light and Environment values |
-| `set_dithering(on)`, `is_dithering()` | The world clamp's dithering switch, kept in step with the panel |
-| `set_interface_dithering(on)`, `is_interface_dithering()` | The interface clamp's dithering switch, separate from the world clamp's |
-| `set_world_palette(path: String)` | Clamp the combat corridor to this palette file; `''` turns it off |
-| `cycle_palette(step: int)`, `cycle_interface_palette(step: int)`, `cycle_portrait_palette(step: int)` | Select the next (`1`) or previous (`-1`) world, interface or portrait palette |
-| `shortlist_palette()` | Move the selected world palette into `SHORTLIST_DIR` |
+| `set_dithering(on)`, `is_dithering()` | The corridor's dithering switch, kept in step with the panel |
+| `set_interface_dithering(on)`, `is_interface_dithering()` | The pictures' and combat effects' dithering switch, separate from the corridor's |
+| `cycle_palette(step: int)`, `cycle_mechanic_palette(step: int)` | Select the next (`1`) or previous (`-1`) main or mechanic palette |
+| `shortlist_palette()` | Move the selected main palette into `SHORTLIST_DIR` |
 | `move_palette_file(path, folder) -> String` (static) | Move a palette file and its `.import` file; returns the new path or `''` |
-| `reset_settings()` | Every part of the look off, including the interface palette |
+| `reset_settings()` | Every part of the look off, including both palettes |
 
 The [print frame](print_frame.md#public-api), [background wear](background_wear.md) and
 [panel wear](panel_wear.md) materials and settings are owned by `PrintLook`, not `DebugPanels`.

@@ -51,10 +51,10 @@ hand does not jump when the button goes down.
   is dark because the hand is light; it reads on pale panels as well as on the dark background,
   which a brighter cursor on hover did not.
 - Alpha is left alone throughout, so the shape and its soft edge do not change.
-- `Colours` is read on every `apply()`, and `DebugPanels.set_interface_palette` calls `apply()`, so
-  an interface palette applied at runtime changes the cursor with everything else. That is on top
-  of the palette clamp in the material, which is a separate thing, driven by the portrait palette
-  choice ([interface_palette.md](interface_palette.md#images)).
+- `Colours` is read on every `apply()`, and `DebugPanels.apply_palettes` calls `apply()`, so a
+  palette applied at runtime changes the cursor with everything else. That is on top of the palette
+  clamp in the material, which is a separate thing, driven by the Snap pictures switch
+  ([interface_palette.md](interface_palette.md#images)).
 - The combat board item cells are hover-only, not clickable, and keep the plain hand. The reward
   options set the pointing shape in their scenes (`reward_option.tscn`, `draft_overlay.tscn`).
 - The operating system's cursor is hidden with `Input.mouse_mode`, and given back while the window

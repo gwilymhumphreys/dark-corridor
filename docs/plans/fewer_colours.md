@@ -5,10 +5,11 @@ no red. Mechanics are told apart by their icons and their hit effects. Every col
 to code something is deleted, along with the code that carried it, and the interface palette is cut
 down to the colours still in use.
 
-Branch: `fewer-colours`. It replaces the coloured look outright; `main` keeps the old one. Status:
-plan, not built. Tried first instead: the interface clamp
-([interface_palette.md](../systems/interface_palette.md#clamp)), which snaps the interface palette's
-colours to a grey palette without removing anything. This plan is for if the owner keeps the greys.
+Branch: `fewer-colours`. Status: the deletions are dropped (owner, 2026-11-21). The greys-only look
+is now a choice of palettes instead ([main_and_mechanic_palettes.md](main_and_mechanic_palettes.md)):
+`mechanics-greys.gpl` as the mechanic palette, with the other colours taken from the main palette.
+What is still open from this plan, as separate later work: icons on the value pills, the shield drawn
+as stripes, and one health bar fill for everyone.
 
 ## What changes on screen
 

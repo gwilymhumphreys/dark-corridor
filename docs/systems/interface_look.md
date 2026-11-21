@@ -33,7 +33,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
     `InterfaceLook.material`, which is what the palette clamp is written to.
   - `interface_element_material.tres` (`InterfaceLook.element_material`) draws the interface elements
     that are not pictures: the item value pills and the HP bars. These are filled with colours from the
-    [interface palette](interface_palette.md), so the effects that would move a pixel off its palette
+    [main palette](interface_palette.md), so the effects that would move a pixel off its palette
     colour are kept off on this material: grade, colour ramp and posterize
     (`ELEMENT_OFF_UNIFORMS`), and no palette clamp colours are written to it, so its colour count stays
     0. Halftone, hatching, vignette, grain, scanlines, pixelate and picture wear all apply.
@@ -61,12 +61,12 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
   shader). The compatibility renderer has room for only about 256 nodes using instance uniforms
   ([godot_notes.md](godot_notes.md#instance-uniforms)), and the shared shader is on every icon, pill
   and label, so do not add an instance uniform to `interface_look.gdshaderinc` outside `PICTURE_ZOOM`.
-- The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the portrait palette
+- The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the main palette
   ([interface_palette.md](interface_palette.md#images)) and are written to the picture materials only
   (`InterfaceLook.picture_materials`). It runs after the look effects and before picture wear. Its palette, colour matching and on/off dithering switch are set by `DebugPanels` and are not
   look settings; its dither pattern, size and supersample are, and appear in the Dithering section.
   The interface dithering switch is separate from the corridor's, so Backspace and `--dither` do not
-  touch it.
+  touch it. Snap pictures on the Colours tab turns the clamp off.
 - All five materials are also present in release builds, with every effect off. The fifth, the effects
   material, is described in [The combat effects](#the-combat-effects).
 
@@ -103,11 +103,10 @@ node in the `hit_effects_preview` dev scene. It takes the same settings, with th
   corner. The vignette and picture wear are skipped.
 - Grade, colour ramp and posterize are kept off (`EFFECTS_OFF_UNIFORMS`), as on the element material,
   because they move a pixel off its mechanic colour.
-- Its palette is the **effects palette** (`DebugPanels.set_effects_palette`), not the portrait palette:
-  off, the portrait palette, the interface palette (the default) or any palette file. The interface
-  palette holds every mechanic colour, so a solid effect colour stays as it is; while the interface
-  is [clamped](interface_palette.md#clamp), it means the clamp palette instead. The Interface tab's
-  dithering switch, matching and dither settings apply to it (`InterfaceLook.clamp_materials`).
+- Its palette is the main palette's colours together with the mechanic colours, so a solid effect
+  colour stays as it is while glows and fades land on palette colours. Snap effects on the Colours
+  tab turns it off. The Interface tab's dithering switch and dither settings and the colour matching
+  apply to it (`InterfaceLook.clamp_materials`).
 
 The Effects section of the Interface tab holds its own settings (the `effects` uniform group). They are
 written to every material but only the effects shader reads them:
@@ -125,7 +124,7 @@ The comparison of these options is in [`../plans/effects_look.md`](../plans/effe
 The Picture Wear section of the panel, off by default, draws [panel wear](panel_wear.md) on the images
 themselves: faded areas, specks, edge wear and creases, without folds, in the same mark colours
 (`Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`, pushed by `InterfaceLook.push_wear_colours()` at
-start and when an interface palette changes).
+start and whenever the palettes are applied).
 
 - It uses `print_panel_wear()` from `print_wear.gdshaderinc`, laid out in the node's own pixels as panel
   wear is, so the same numbers give marks of the same size. Its settings (`picture_*` in
@@ -145,7 +144,7 @@ start and when an interface palette changes).
 
 ## The Interface tab
 
-F2 opens the [debug panel](debug_panel.md) on this tab. It is built like the
+F3 opens the [debug panel](debug_panel.md) on this tab. It is built like the
 [Corridor tab](corridor_look.md#the-corridor-tab) from the interface look shader, plus two buttons:
 
 | Button | Does |

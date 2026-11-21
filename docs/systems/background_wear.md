@@ -24,7 +24,7 @@ both `src/shaders/background_wear.gdshader` and the corridor overlay
   sit either side of.
 - The pattern is fixed to the screen and does not animate.
 - Each mark takes one of two solid colours, `Colours.UI_BACKGROUND_WEAR` and
-  `UI_BACKGROUND_WEAR_LIGHT`, which an [interface palette](interface_palette.md) can set.
+  `UI_BACKGROUND_WEAR_LIGHT`, interface colours the [main palette](interface_palette.md) sets.
   `ScreenBackground` passes them to the shader when it enters the tree. Light marks cover dark ones.
 - Faded areas and fold shading are the only blended effects (the owner chose a smooth blend over
   dithered steps): the background blends towards `UI_BACKGROUND_WEAR`, and the solid marks draw on top.
@@ -47,7 +47,7 @@ over the whole screen.
 
 ## The Background tab
 
-F4 opens the [debug panel](debug_panel.md) on this tab. `BackgroundPanel` extends the
+F5 opens the [debug panel](debug_panel.md) on this tab. `BackgroundPanel` extends the
 [Corridor tab](corridor_look.md#the-corridor-tab) and builds one section per uniform group of
 `background_wear.gdshader`. Every change applies to every screen background at once.
 

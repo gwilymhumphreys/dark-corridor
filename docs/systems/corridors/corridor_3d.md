@@ -197,7 +197,7 @@ nothing. On by default and subtle (owner, 2026-09-15), with its energy near the 
 look setting, kept until the effects pass decides on hit visuals.
 
 - The colour is the delivery's, which comes from the effect colours in `Colours`, so it follows the
-  [interface palette](../interface_palette.md).
+  [mechanic palette](../interface_palette.md#the-mechanic-palette).
 
 - `CombatCorridor.show_hits(deliveries, render_time)` runs each frame from the combat view. Each enemy
   hit less than `hit_light_duration` ago gets one light, from its newest hit, placed
@@ -207,7 +207,7 @@ look setting, kept until the effects pass decides on hit visuals.
   reaches in the Compatibility renderer.
 - Strength is a function of render time since the hit, so slow motion slows the fade. A landed
   delivery is dropped after `Balance.DELIVERY_VISUAL_HOLD`, which ends a longer light early.
-- The corridor look shader runs over the lit image, so a world palette snaps a light's colour to the
+- The corridor look shader runs over the lit image, so the main palette snaps a light's colour to the
   palette.
 
 | Export | Controls |

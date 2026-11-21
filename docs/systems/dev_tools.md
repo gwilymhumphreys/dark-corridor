@@ -69,14 +69,13 @@ Read by `DebugPanels` after the default preset loads.
 | Argument | Effect |
 |---|---|
 | `--preset=<name or res path>` | Loads a [preset](look_presets.md) before the other arguments, so they can override it |
-| `--world-palette=<res path>`, `--perceptual`, `--dither` | World clamp settings ([palette_clamp.md](palette_clamp.md)) |
-| `--interface-dither` | Turns dithering on for the interface clamp, which `--dither` does not touch |
+| `--main-palette=<res path>` | Sets the [main palette](interface_palette.md) |
+| `--mechanic-palette=<res path>` | Sets the [mechanic palette](interface_palette.md#the-mechanic-palette) |
+| `--palette-set=name=value` | Sets any other palette setting or an interface colour's brightness (`DebugPanels.set_palette_setting`), for example `--palette-set=darkest=off`. Repeatable |
+| `--perceptual`, `--dither` | OKLab colour matching, and the corridor's dithering ([palette_clamp.md](palette_clamp.md)) |
+| `--interface-dither` | Turns dithering on for the pictures and combat effects, which `--dither` does not touch |
 | `--corridor-set=property=value` | Sets any `Corridor3D` export (`corridor_settings`). Repeatable |
 | `--monster-image=<res path>` | Every enemy uses this image |
-| `--ui-palette=<res path>` | Applies an [interface palette](interface_palette.md) before any screen is built |
-| `--ui-clamp=<res path, corridor or own>` | Clamps the interface palette's colours to a palette file, the world palette or its own greys ([Clamp](interface_palette.md#clamp)) |
-| `--portrait-palette=<res path, corridor or interface>` | Sets the portrait palette before any screen is built |
-| `--effects-palette=<res path, interface, portrait or off>` | Sets the palette the combat effects are clamped to ([interface_look.md](interface_look.md#the-combat-effects)) |
 | `--background-set=uniform=value` | Sets one [background wear](background_wear.md) setting. Repeatable |
 | `--panel-set=uniform=value` | Sets one [panel wear](panel_wear.md) setting. Repeatable |
 | `--print-set=name=value` | Sets one [print frame](print_frame.md) border, overlay, layout or token setting. Repeatable |
