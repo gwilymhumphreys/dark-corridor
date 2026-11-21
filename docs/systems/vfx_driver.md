@@ -89,7 +89,7 @@ the disc's width, a paler middle, a soft glow, and a tail that trails back along
 (`VfxDriver.arc_direction` gives the direction at any point of the flight). The tail grows out from
 the head just after launch, so it never reaches back past the firing item. The tail is Kenney's
 `trace_01` and the glow `star_05`, in `assets/vfx/projectile/`; the head is the round blob from
-`assets/vfx/status/`. The switch is **Comet Projectiles** in the Feedback tab, and
+`assets/vfx/status/`. The switch is **Comet Projectiles** on the Effects tab, saved in the effects part of a preset, and
 `--projectile=disc` starts with it off. The preview scene's projectile page flies comets in four
 colours at an enemy and shows each beside the old disc.
 
@@ -102,8 +102,8 @@ spinning ones stay upright. `tools/make_pixel_projectiles.py` turns each into a 
 drawn in a darker or lighter shade of the delivery's colour (`BAND_SHADES`), so the art keeps its
 shading in any colour. The animation is scaled by a whole number, `VfxDriver.pixel_projectile_scale`,
 and drawn on the driver's `PixelProjectiles` child, whose texture filter is nearest, so its pixels stay
-square and sharp. **Pixel Projectile** (Off or an animation) and **Pixel Projectile Scale** are in the
-Feedback tab, and `--pixel-projectile=<name>` (lower case, underscores for spaces) starts with one. The
+square and sharp. **Pixel Projectile** (Off or an animation) and **Pixel Projectile Scale** are on the
+Effects tab, and `--pixel-projectile=<name>` (lower case, underscores for spaces) starts with one. The
 preview scene's pixel page flies each animation at an enemy and shows each in four colours.
 
 **Big hits.** A damage landing of at least `VfxDriver.BIG_HIT_DAMAGE` emits `big_hit` with a

@@ -28,13 +28,13 @@ const TRAVEL_SOUND: String = 'combat/travel'
 const BAR_MECHANICS: Array[String] = [ShieldMechanic.ID, HealMechanic.ID, RegenMechanic.ID]
 
 ## TRIAL: whether projectiles fly as `ProjectileCometDrawer`'s comet (true) or the placeholder disc
-## (false). Switched in the debug panel's Feedback tab, or with `--projectile=disc` at start-up.
+## (false). Switched in the debug panel's Effects tab, or with `--projectile=disc` at start-up.
 static var comet_projectiles: bool = DevArgs.value('--projectile') != 'disc'
 ## TRIAL: which `ProjectilePixelDrawer` animation projectiles fly as, counting from 1, or 0 for none,
-## which leaves the comet or disc. Set in the debug panel's Feedback tab, or with
+## which leaves the comet or disc. Set in the debug panel's Effects tab, or with
 ## `--pixel-projectile=<name>` at start-up (the animation's name in lower case, spaces as underscores).
 static var pixel_projectile: int = ProjectilePixelDrawer.option_index(DevArgs.value('--pixel-projectile'))
-## TRIAL: how many screen pixels each pixel of a pixel projectile covers. Set in the Feedback tab.
+## TRIAL: how many screen pixels each pixel of a pixel projectile covers. Set in the Effects tab.
 static var pixel_projectile_scale: float = 3.0
 
 var combat: CombatManager
@@ -58,6 +58,26 @@ var _shield: ShieldDrawer
 var _heal: HealDrawer
 var _regen: HealDrawer
 var _impact_drawers: Dictionary = {}   # mechanic id (or Delivery.Kind.APPLY_STATUS) -> EffectDrawer
+
+
+## Write the trial switches into a look preset's `effects_trials` section (docs/systems/look_presets.md).
+static func write_trials(file: ConfigFile) -> void:
+  file.set_value('effects_trials', 'comet_projectiles', comet_projectiles)
+  file.set_value('effects_trials', 'pixel_projectile', pixel_projectile)
+  file.set_value('effects_trials', 'pixel_projectile_scale', pixel_projectile_scale)
+
+
+## Set the trial switches from a preset file written by `write_trials`. Switches the file leaves out go
+## back to their defaults, and the `--projectile=` and `--pixel-projectile=` start-up arguments win
+## over the file.
+static func read_trials(file: ConfigFile) -> void:
+  comet_projectiles = file.get_value('effects_trials', 'comet_projectiles', true)
+  pixel_projectile = file.get_value('effects_trials', 'pixel_projectile', 0)
+  pixel_projectile_scale = file.get_value('effects_trials', 'pixel_projectile_scale', 3.0)
+  if DevArgs.value('--projectile') != '':
+    comet_projectiles = DevArgs.value('--projectile') != 'disc'
+  if DevArgs.value('--pixel-projectile') != '':
+    pixel_projectile = ProjectilePixelDrawer.option_index(DevArgs.value('--pixel-projectile'))
 
 
 func setup(cm: CombatManager, layout_source: CombatView) -> void:

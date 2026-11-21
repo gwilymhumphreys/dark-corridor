@@ -3,14 +3,16 @@
 A dev tool for making the combat screen look like a printed sheet: a border around the corridor, the
 background wear carried over the corridor, a worn corridor edge, a pencil grid behind the player's
 items, how far those items sit askew, and the padding of the
-[screen sections](ui_layout.md#screen-sections). Every effect is set from the Print tab of the
-[debug panel](debug_panel.md); the [background wear](background_wear.md) itself has its own tab.
+[screen sections](ui_layout.md#screen-sections). The border, the corridor overlay and the grid are
+set on the Wear tab of the [debug panel](debug_panel.md), with the [background wear](background_wear.md),
+and the padding and token settings on the Layout tab.
 
 **Location:** `src/ui/print_frame.gd` (class `PrintFrame`), `src/shaders/print_border.gdshader`,
-`src/shaders/corridor_overlay.gdshader`, `src/shaders/board_grid.gdshader`, the Print tab in `src/debug/print_panel.*` (class `PrintPanel`).
+`src/shaders/corridor_overlay.gdshader`, `src/shaders/board_grid.gdshader`, the Wear and Layout tabs in `src/debug/wear_panel.*` and
+`layout_panel.*`.
 The materials, settings, defaults, reset, and writing and reading presets are owned by `PrintLook`
 (`src/autoloads/print_look.gd`, class `PrintLookAutoload`), alongside [background wear](background_wear.md)
-and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start-up arguments.
+and [panel wear](panel_wear.md); `DebugPanels` keeps the tabs and the start-up arguments.
 
 ## How it works
 
@@ -78,40 +80,39 @@ and [panel wear](panel_wear.md); `DebugPanels` keeps the Print tab and the start
   default).
 - The `paper_burn_*` settings set the [paper burn](paper_burn.md) effect, and the `page_turn_*`
   settings the [page turn](page_turn.md) between screens.
-- The token settings are print frame settings (`PRINT_SETTING_DEFAULTS`, saved with the Print part of a
-  preset, set with `--print-set=`), but they are shown on their own debug tab, Tokens (F7,
-  `TokensPanel`), in eleven sections: Placement (tilt, shift), Shadow (size, offset, darkness), Fill
-  (amount; the card colour is the interface colour `UI_TOKEN_CARD`), Portraits (the portrait switch), Character panels (the layout, background, allies box and size settings), Item levels, Map (the map icon switch and the cleared square look), Encounter cards, Character photos, Paper burn and Page turn. The `reward_spin*` settings are print
-  frame settings too, on their own tab, Reward spin (F8, `RewardSpinPanel`, [run_screen.md](run_screen.md#overlays)).
+- Every setting in `PRINT_SETTING_DEFAULTS` is set with `--print-set=` and saved in the `print_layout`
+  section of a preset. They are shown on three tabs: the Layout tab (`LayoutPanel`) has Spacing,
+  Token placement (tilt, shift), Token shadow (size, offset, darkness), Token fill (amount; the card
+  colour is the interface colour `UI_TOKEN_CARD`), Portraits (the portrait switch), Character panels
+  (the layout, background, allies box and size settings), Item levels and Map (the map icon switch and
+  the cleared square look); the Effects tab has the paper burn; the Motion tab has the encounter
+  cards, character photos, page turn and reward spin ([run_screen.md](run_screen.md#overlays)).
 
 | Group | Does |
 |---|---|
-| Layout | Padding: the space inside every side of each screen section ([ui_layout.md](ui_layout.md#screen-sections)). Defaults in `PRINT_SETTING_DEFAULTS`. The token settings are on the Tokens tab (above) |
+| Spacing (Layout tab) | Padding: the space inside every side of each screen section ([ui_layout.md](ui_layout.md#screen-sections)), and the character sheet's section gap and label gap. Defaults in `PRINT_SETTING_DEFAULTS` |
 | Print Border | A solid line around the corridor: width, gap from the corridor, edge roughness, rubbed spots and their size |
 | Corridor Wear | The background wear, with its current settings, drawn over the corridor too |
 | Corridor Worn Edge | The corridor image's edges rubbed away into the background colour, heavier at the corners: width, amount, patch size, corners |
 | Board Grid | The pencil grid behind the player's items: squares per item cell, line width, darkness, wobble and its length, pressure, grain, gaps |
 
-The owner's chosen settings are in the print part of the default [look preset](look_presets.md).
+The owner's chosen settings are in the default [look preset](look_presets.md).
 
-## The Print tab
+## The Wear and Layout tabs
 
-F4 opens the [debug panel](debug_panel.md) on this tab. `PrintPanel` extends the
-[Corridor tab](corridor_look.md#the-corridor-tab) and builds its sections the same way: Layout, then
-the border and overlay groups, then panel wear. The Layout group holds the padding and the character
-sheet's section gap and label gap
-([ui_layout.md](ui_layout.md#screen-sections)). The background wear groups are in the
-[Background tab](background_wear.md#the-background-tab).
+F4 opens the Wear tab: background wear, panel wear, picture wear, then the corridor overlay, border
+and grid groups. F5 opens the Layout tab. Both extend the
+[Corridor tab](corridor_look.md#the-corridor-tab) and build their sections the same way.
 
 ## In a preset
 
-The print part has sections `print_panel` (every [panel wear](panel_wear.md) uniform), `print_frame`
-(every border, overlay and board grid uniform) and `print_layout` (every print frame setting). Reading it starts
-from the print defaults. Sizes and colours set by `PrintFrame` are not saved. Background wear is a
-part of its own ([background_wear.md](background_wear.md#presets-and-screenshots)).
+The sections are `print_panel` (every [panel wear](panel_wear.md) uniform), `print_frame` (every
+border, overlay and board grid uniform) and `print_layout` (every print frame setting). The first two
+belong to the wear part; `print_layout` is split between the layout, effects and motion parts
+([look_presets.md](look_presets.md#parts)). Sizes and colours set by `PrintFrame` are not saved.
 
 For screenshots, `--print-set=<name>=<value>` sets one border, overlay or layout setting (repeatable)
-and `--print-panel` opens the Print tab ([dev_tools.md](dev_tools.md#look-arguments)).
+and `--wear-panel` and `--layout-panel` open those tabs ([dev_tools.md](dev_tools.md#look-arguments)).
 
 ## Public API
 
@@ -123,7 +124,7 @@ and `--print-panel` opens the Print tab ([dev_tools.md](dev_tools.md#look-argume
 | `PrintLook.apply_sheet_spacing()` | Write the `section_gap` and `label_gap` print settings onto the `Sheet*` theme variations ([ui_theme.md](ui_theme.md#spacing-on-the-character-sheet)) |
 | `PrintLook.apply_token_style()` | Write the token shadow and fill settings onto the `PanelToken` and `PanelTokenWide` styles |
 | `PrintLook.print_defaults() -> Dictionary`, `panel_defaults() -> Dictionary` | Border/overlay and panel wear uniform defaults, read from the shader code |
-| `PrintLook.write_print_look(file)`, `read_print_look(file)`, `reset_print_look()` | The [print part](#in-a-preset) of a preset, and the print defaults |
-| `PrintLook.write_background_look(file)`, `read_background_look(file)`, `reset_background_look()` | The [background part](background_wear.md#presets-and-screenshots) of a preset, and the background defaults |
+| `PrintLook.write_print_look(file)`, `read_print_look(file)`, `reset_print_look()` | The [print sections](#in-a-preset) of a preset, and the print defaults |
+| `PrintLook.write_background_look(file)`, `read_background_look(file)`, `reset_background_look()` | The [background wear section](background_wear.md#presets-and-screenshots) of a preset, and the background defaults |
 
 Tests: `tests/debug/test_print_frame.gd`.

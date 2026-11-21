@@ -3,7 +3,8 @@ extends LookPanel
 ## The Colours tab of the debug panel (docs/systems/interface_palette.md), opened with F1 by
 ## `DebugPanels`. At the top, rows from its scene that `DebugPanels` runs: the main palette list with
 ## a strip of its colours, the colour matching and the mechanic palette list. Below, sections built
-## here: the darkest colour setting and the snap switches, one section per group of interface colours
+## here: the darkest colour setting and the snap switches, the corridor's dithering and the pictures'
+## and effects' dithering (each section's switch turns it on), one section per group of interface colours
 ## (`MainPalette.SECTIONS`), each row a brightness slider with a square showing the colour it landed
 ## on, and the mechanic colours, each a colour picker that writes the custom mechanic palette.
 
@@ -15,6 +16,7 @@ const STRIP_COLOUR_SIZE: Vector2 = Vector2(36, 36)
 
 var _brightness_rows: Dictionary = {}   # interface colour -> its LookRow
 var _mechanic_rows: Dictionary = {}     # mechanic colour -> its LookRow
+var _dithering_title: String = ''       # the heading the next dithering section takes
 
 @onready var _strip: HFlowContainer = $PaletteRows/Strip
 
@@ -34,6 +36,11 @@ func rebuild() -> void:
   _brightness_rows.clear()
   _mechanic_rows.clear()
   _build_main_section()
+  var dithering_only: Callable = func(group: String) -> bool: return group == 'dithering'
+  _dithering_title = 'Corridor dithering'
+  _build_shader_sections(DebugPanels.world_material, DebugPanels.look_defaults(), dithering_only)
+  _dithering_title = 'Picture and effect dithering'
+  _build_shader_sections(InterfaceLook.material, InterfaceLook.defaults(), dithering_only)
   for title: String in MainPalette.SECTIONS:
     var section: LookSection = _add_section(title)
     for variable: String in MainPalette.SECTIONS[title]:
@@ -65,6 +72,14 @@ func _build_main_section() -> void:
     func(on: bool) -> void: DebugPanels.set_palette_setting('snap_pictures', on)))
   section.add_row(_make_row('Snap effects', DebugPanels.snap_effects, [],
     func(on: bool) -> void: DebugPanels.set_palette_setting('snap_effects', on)))
+
+
+# The corridor and the pictures each have a Dithering group; `_dithering_title` names the one being
+# built.
+func _section_title(group: String) -> String:
+  if group == 'dithering':
+    return _dithering_title
+  return super(group)
 
 
 # 'UI_TEXT_DIM' -> 'Text Dim', 'HP_BAR_FILL' -> 'Hp Bar Fill'.

@@ -89,8 +89,8 @@ Interface images are drawn through the picture materials, `InterfaceLook.picture
 `apply_palettes` writes the main palette's colours into all of them while Snap pictures is on. The
 HP bars and value pills use `InterfaceLook.element_material`, which no palette is written to, so they
 keep the colours they are filled with. The clamp follows the colour matching (RGB or OKLab) and
-dithers when the Interface tab's dithering switch is on (`set_interface_dithering`), which also
-applies to the combat effects.
+dithers when the Colours tab's Picture and effect dithering switch is on (`set_interface_dithering`),
+which also applies to the combat effects.
 
 ## Limits
 

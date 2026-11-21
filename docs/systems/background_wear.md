@@ -9,8 +9,8 @@ so text, panels, icons and the corridor are unchanged. The owner's chosen settin
 [panel wear](panel_wear.md); the uniforms in `src/shaders/background_wear_settings.gdshaderinc`, used by
 both `src/shaders/background_wear.gdshader` and the corridor overlay
 ([print_frame.md](print_frame.md)); `src/ui/screen_background.gd` (class `ScreenBackground`);
-`PrintLook.background_material`. Settings are in the Background tab of the
-[debug panel](debug_panel.md), `src/debug/background_panel.*` (class `BackgroundPanel`).
+`PrintLook.background_material`. Settings are on the Wear tab of the
+[debug panel](debug_panel.md), `src/debug/wear_panel.*` (class `WearPanel`).
 
 ## How it works
 
@@ -45,21 +45,19 @@ A soft mottled texture, faint elongated flecks and scratches were tried and remo
 areas differ from that mottling: a few large patches with plain background between them, not a texture
 over the whole screen.
 
-## The Background tab
+## The Wear tab
 
-F5 opens the [debug panel](debug_panel.md) on this tab. `BackgroundPanel` extends the
-[Corridor tab](corridor_look.md#the-corridor-tab) and builds one section per uniform group of
-`background_wear.gdshader`. Every change applies to every screen background at once.
+F4 opens the [debug panel](debug_panel.md) on the Wear tab, whose first sections are one per uniform
+group of `background_wear.gdshader`. Every change applies to every screen background at once.
 
 ## Presets and screenshots
 
-Background wear is its own part of a [preset](look_presets.md), saved in the `print_background`
-section, written and read by `PrintLook.write_background_look`, `read_background_look` and
-`reset_background_look`. It can be taken from another preset on its own, without touching the print
-part. The mark colours are not saved; they come from `Colours`.
+Background wear is saved in the `print_background` section of a [preset](look_presets.md), written and
+read by `PrintLook.write_background_look`, `read_background_look` and `reset_background_look`, and
+belongs to the wear part. The mark colours are not saved; they come from `Colours`.
 
 For screenshots, `--background-set=<uniform>=<value>` sets one setting (repeatable), for example
-`--background-set=background_folds_on=true`, and `--background-panel` opens the Background tab
+`--background-set=background_folds_on=true`, and `--wear-panel` opens the Wear tab
 ([dev_tools.md](dev_tools.md#look-arguments)).
 
 Tests: `tests/debug/test_corridor_look.gd`, `tests/debug/test_print_frame.gd`.

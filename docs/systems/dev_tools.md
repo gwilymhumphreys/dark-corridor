@@ -84,7 +84,7 @@ Read by `DebugPanels` after the default preset loads.
 | `--projectile=disc` | Read by `VfxDriver`, not `DebugPanels`. Projectiles fly as the placeholder disc instead of the trial comet ([vfx_driver.md](vfx_driver.md)) |
 | `--feedback-demo=<amount>` | Holds every control at that much hover |
 | `--glow-demo=<brightness>` | Every node drawn through a picture material glows ([interface_glow.md](interface_glow.md)) |
-| `--look-panel`, `--interface-panel`, `--print-panel`, `--background-panel`, `--feedback-panel`, `--icon-panel`, `--tokens-panel`, `--reward-spin-panel` | Opens the panel on that tab |
+| `--colours-panel`, `--corridor-panel`, `--pictures-panel`, `--wear-panel`, `--layout-panel`, `--effects-panel`, `--motion-panel`, `--icon-panel` | Opens the panel on that tab |
 
 ## Dev scenes
 

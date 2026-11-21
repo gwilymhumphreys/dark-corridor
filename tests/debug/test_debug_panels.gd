@@ -161,14 +161,24 @@ func test_the_palette_sections_restore_the_same_choices() -> void:
 func test_a_tab_key_opens_its_tab_switches_tabs_and_closes_its_own_tab() -> void:
   var tabs: TabContainer = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs') as TabContainer
   watch_signals(DebugPanels)
-  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.PRINT)
+  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.WEAR)
   assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [true])
-  assert_eq(tabs.current_tab, DebugPanelsAutoload.Tab.PRINT, 'opens on the print tab')
-  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.INTERFACE)
+  assert_eq(tabs.current_tab, DebugPanelsAutoload.Tab.WEAR, 'opens on the wear tab')
+  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.PICTURES)
   assert_true(DebugPanels.is_panel_open(), 'another tab key switches tabs instead of closing')
-  assert_eq(tabs.current_tab, DebugPanelsAutoload.Tab.INTERFACE, 'now on the interface tab')
+  assert_eq(tabs.current_tab, DebugPanelsAutoload.Tab.PICTURES, 'now on the pictures tab')
   assert_signal_emit_count(DebugPanels, 'panels_open_changed', 1, 'switching tabs does not emit')
-  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.INTERFACE)
+  DebugPanels.toggle_tab(DebugPanelsAutoload.Tab.PICTURES)
   assert_signal_emit_count(DebugPanels, 'panels_open_changed', 2)
   assert_signal_emitted_with_parameters(DebugPanels, 'panels_open_changed', [false])
   assert_false(DebugPanels.is_panel_open(), 'the key for the tab showing closes the panel')
+
+
+func test_every_tab_but_icons_is_the_preset_part_of_the_same_position() -> void:
+  var tabs: TabContainer = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs') as TabContainer
+  for part: LookPresets.Part in LookPresets.ALL_PARTS:
+    var row: PresetPartRow = tabs.get_child(part).get_node_or_null('PartRow') as PresetPartRow
+    assert_not_null(row, 'tab %d has a preset row' % part)
+    if row != null:
+      assert_eq(row.part, part, 'tab %d loads its own part' % part)
+  assert_null(tabs.get_child(DebugPanelsAutoload.Tab.ICONS).get_node_or_null('PartRow'), 'the Icons tab is not a part')

@@ -48,18 +48,18 @@ func test_loading_one_part_leaves_the_others_alone() -> void:
   LookPresets.save_preset(path)
   DebugPanels.reset_settings()
   DebugPanels.world_material.set_shader_parameter('vignette_on', true)
-  var parts: Array[LookPresets.Part] = [LookPresets.Part.PRINT]
+  var parts: Array[LookPresets.Part] = [LookPresets.Part.WEAR]
   assert_true(LookPresets.load_preset(path, parts), 'loaded')
-  assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'the print part is loaded')
+  assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), true, 'the wear part is loaded')
   assert_eq(DebugPanels.main_palette, '', 'the colours part is not loaded')
   assert_eq(DebugPanels.world_material.get_shader_parameter('vignette_on'), true, 'the corridor part is unchanged')
 
 
 func test_an_empty_preset_turns_one_part_off() -> void:
   _change_every_part()
-  var parts: Array[LookPresets.Part] = [LookPresets.Part.INTERFACE]
+  var parts: Array[LookPresets.Part] = [LookPresets.Part.PICTURES]
   LookPresets.apply(ConfigFile.new(), parts)
-  assert_eq(InterfaceLook.material.get_shader_parameter('halftone_on'), false, 'the interface part is off')
+  assert_eq(InterfaceLook.material.get_shader_parameter('halftone_on'), false, 'the pictures part is off')
   assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), true, 'the corridor part is unchanged')
 
 
@@ -128,12 +128,33 @@ func test_the_colours_part_holds_the_main_palette() -> void:
   assert_eq(DebugPanels.world_material.get_shader_parameter('grade_on'), false, 'the corridor part is not loaded')
 
 
-func test_the_background_part_loads_on_its_own() -> void:
-  _change_every_part()
+func test_a_part_can_cut_across_a_section() -> void:
+  PrintLook.set_print_value('padding', 70.0)
+  PrintLook.set_print_value('card_tilt', 9.0)
   var path: String = LookPresets.preset_path('every_part', FOLDER)
   LookPresets.save_preset(path)
   DebugPanels.reset_settings()
-  var parts: Array[LookPresets.Part] = [LookPresets.Part.BACKGROUND]
+  var parts: Array[LookPresets.Part] = [LookPresets.Part.LAYOUT]
   assert_true(LookPresets.load_preset(path, parts), 'loaded')
-  assert_eq(PrintLook.background_material.get_shader_parameter('background_specks_on'), false, 'the background part is loaded')
-  assert_eq(PrintLook.border_material.get_shader_parameter('print_border_on'), false, 'the print part is not loaded')
+  assert_eq(PrintLook.print_setting('padding'), 70.0, 'the layout part is loaded')
+  assert_eq(PrintLook.print_setting('card_tilt'), PrintLookAutoload.PRINT_SETTING_DEFAULTS['card_tilt'],
+    'the card deal, in the same section, belongs to the motion part and is not loaded')
+
+
+func test_every_saved_setting_belongs_to_a_part() -> void:
+  var file: ConfigFile = LookPresets.capture()
+  for section: String in file.get_sections():
+    for key: String in file.get_section_keys(section):
+      assert_true(LookPresets.part_of(section, key) in LookPresets.ALL_PARTS, '%s/%s belongs to a part' % [section, key])
+
+
+func test_loading_a_part_leaves_every_other_setting_as_it_was() -> void:
+  _change_every_part()
+  var before: ConfigFile = LookPresets.capture()
+  var parts: Array[LookPresets.Part] = [LookPresets.Part.EFFECTS]
+  LookPresets.apply(ConfigFile.new(), parts)
+  var after: ConfigFile = LookPresets.capture()
+  for section: String in before.get_sections():
+    for key: String in before.get_section_keys(section):
+      if LookPresets.part_of(section, key) != LookPresets.Part.EFFECTS:
+        assert_eq(str(after.get_value(section, key)), str(before.get_value(section, key)), '%s/%s is unchanged' % [section, key])

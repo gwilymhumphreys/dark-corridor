@@ -7,8 +7,8 @@ cards, potion slots, board item cells and status icons.
 
 **Location:** `src/shaders/control_highlight.gdshaderinc` (the drawing), `ControlFeedback`
 (`src/autoloads/control_feedback.gd`, class `ControlFeedbackAutoload`), `UIJuice`
-(`src/ui/ui_juice.gd`, [ui_juice.md](ui_juice.md)), the Feedback tab in `src/debug/feedback_panel.*`.
-Saved as the feedback part of a [look preset](look_presets.md).
+(`src/ui/ui_juice.gd`, [ui_juice.md](ui_juice.md)), the Motion tab in `src/debug/motion_panel.*`.
+Saved in the motion part of a [look preset](look_presets.md).
 
 ## How it works
 
@@ -48,14 +48,15 @@ Saved as the feedback part of a [look preset](look_presets.md).
 only); its `highlight` export overrides that, and `highlight_target` names a child Control to draw on
 instead of the parent, which an item cell needs because its value pills hang outside its rectangle.
 
-## The Feedback tab
+## The Motion tab
 
-F6 opens the [debug panel](debug_panel.md) on this tab: a Timing section (how quickly the feedback
-comes in, how far a pressed control drops, how long the release pulse lasts), a Text section (how far
-the text darkens on hover and while held), and then the border and fill groups of the shader. The
+F7 opens the [debug panel](debug_panel.md) on the Motion tab, whose first sections are these: a
+timing section (how quickly the feedback comes in, how far a pressed control drops, how long the
+release pulse lasts), a text section (how far the text darkens on hover and while held), and then the
+border and fill groups of the shader. The
 press squash itself is a `UIJuice` preset, not a setting here.
 
-In a preset, the feedback part has a `control_highlight` section for the shader settings and a
+In a preset, the motion part has a `control_highlight` section for the shader settings and a
 `control_settings` section for the rest.
 
 ## Public API
@@ -70,7 +71,7 @@ In a preset, the feedback part has a `control_highlight` section for the shader 
 | `defaults()`, `reset()`, `write_look(file)`, `read_look(file)` | Defaults, reset, and the preset part |
 | `push_colours()` | Push the `Colours` values into the material |
 
-Start-up arguments `--feedback-set=name=value`, `--feedback-panel` and `--feedback-demo=<amount>`
+Start-up arguments `--feedback-set=name=value`, `--motion-panel` and `--feedback-demo=<amount>`
 (hold every control hovered, for screenshots) are listed in
 [dev_tools.md](dev_tools.md#look-arguments).
 

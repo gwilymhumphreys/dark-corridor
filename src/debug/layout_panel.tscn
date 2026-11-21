@@ -1,9 +1,9 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://src/debug/feedback_panel.gd" id="1"]
+[ext_resource type="Script" path="res://src/debug/layout_panel.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/debug/preset_part_row.tscn" id="2"]
 
-[node name="FeedbackPanel" type="VBoxContainer"]
+[node name="LayoutPanel" type="VBoxContainer"]
 theme_override_constants/separation = 16
 script = ExtResource("1")
 

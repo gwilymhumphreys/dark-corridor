@@ -1,5 +1,5 @@
 extends GutTest
-## The print frame: the print tab, the print settings in presets, and `PrintFrame` showing the
+## The print frame: the tabs that show its settings, the print settings in presets, and `PrintFrame` showing the
 ## border and overlay (docs/systems/print_frame.md).
 
 const COMBAT_VIEW_SCENE: PackedScene = preload('res://src/scenes/combat/combat_view_framed.tscn')
@@ -19,15 +19,13 @@ func after_each() -> void:
   TestCleanup.reset_all_managers()
 
 
-func _panel() -> PrintPanel:
-  return DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Print') as PrintPanel
+func _panel(tab_name: String) -> LookPanel:
+  var panel: LookPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/' + tab_name) as LookPanel
+  panel.rebuild()
+  return panel
 
 
-func _background_panel() -> BackgroundPanel:
-  return DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Background') as BackgroundPanel
-
-
-func _section_titles(panel: LookPanel = _panel()) -> Array[String]:
+func _section_titles(panel: LookPanel) -> Array[String]:
   var titles: Array[String] = []
   for section: Node in panel.get_node('Scroll/Sections').get_children():
     titles.append((section.get_node('Header/Title') as Button).text)
@@ -51,40 +49,39 @@ func test_defaults_match_the_owners_saved_look() -> void:
   assert_eq(PrintLook.background_defaults()['background_folds_on'], true, 'folds are on')
 
 
-func test_print_panel_has_layout_border_and_overlay_sections() -> void:
-  _panel().rebuild()
-  var titles: Array[String] = _section_titles()
-  assert_true(titles.has('Layout'), 'the padding and split point')
+func test_wear_tab_has_every_kind_of_wear() -> void:
+  var titles: Array[String] = _section_titles(_panel('Wear'))
+  assert_true(titles.has('Background Specks'), 'background wear')
+  assert_true(titles.has('Background Folds'), 'the folds')
+  assert_true(titles.has('Panel Specks (item borders and other panels)'), 'panel wear')
+  assert_true(titles.has('Picture Specks (icons, portraits, bars)'), 'picture wear')
   assert_true(titles.has('Print Border'), 'the border')
   assert_true(titles.has('Corridor Wear'), 'wear over the corridor')
   assert_true(titles.has('Corridor Worn Edge'), 'the worn corridor edge')
-  assert_false(titles.has('Background Specks'), 'background wear is in the Background tab')
+  assert_true(titles.has('Board Grid'), 'the pencil grid')
+  assert_false(titles.has('Highlight Border (hover and press)'), 'the hover border is on the Motion tab')
 
 
-func test_background_panel_has_the_background_wear_sections() -> void:
-  _background_panel().rebuild()
-  var titles: Array[String] = _section_titles(_background_panel())
-  assert_true(titles.has('Background Specks'), 'background wear groups')
-  assert_true(titles.has('Background Folds'), 'the folds group')
-  assert_false(titles.has('Print Border'), 'the border is in the Print tab')
+func test_layout_tab_has_the_spacing_and_token_sections() -> void:
+  assert_eq(_section_titles(_panel('Layout')), ['Spacing', 'Token placement', 'Token shadow', 'Token fill', 'Portraits', 'Character panels', 'Item levels', 'Map'] as Array[String])
 
 
-func test_tokens_panel_has_the_token_sections() -> void:
-  var tokens_panel: TokensPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Tokens') as TokensPanel
-  tokens_panel.rebuild()
-  var titles: Array[String] = _section_titles(tokens_panel)
-  assert_eq(titles, ['Placement', 'Shadow', 'Fill', 'Portraits', 'Character panels', 'Item levels', 'Map', 'Encounter cards', 'Character photos', 'Paper burn', 'Page turn'] as Array[String], 'one section per part of the token look')
-  assert_false(PrintPanel.LAYOUT_PROPERTIES.has('token_tilt'), 'the token settings left the Print tab')
+func test_effects_and_motion_tabs_hold_the_effects_and_animations() -> void:
+  assert_eq(_section_titles(_panel('Effects')), ['Combat effects (projectiles, impacts, damage numbers)', 'Hit effect trials', 'Hit lights', 'Paper burn'] as Array[String])
+  var motion: Array[String] = _section_titles(_panel('Motion'))
+  for title: String in ['Hover and press timing', 'Encounter cards', 'Character photos', 'Page turn', 'Reward spin', 'Reward reel']:
+    assert_true(motion.has(title), 'the Motion tab has %s' % title)
 
 
-func test_reward_spin_panel_has_the_reward_spin_sections() -> void:
-  var reward_spin_panel: RewardSpinPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/RewardSpin') as RewardSpinPanel
-  reward_spin_panel.rebuild()
-  assert_eq(_section_titles(reward_spin_panel), ['Spin', 'Reel'] as Array[String], 'the spin and the reel')
-  assert_false(TokensPanel.SECTIONS.has('Reward spin'), 'the reward spin left the Tokens tab')
-  for title: String in RewardSpinPanel.SECTIONS:
-    for setting: String in RewardSpinPanel.SECTIONS[title]:
-      assert_true(PrintLookAutoload.PRINT_SETTING_DEFAULTS.has(setting), '%s is a print setting, so presets save it' % setting)
+func test_every_print_setting_on_a_tab_is_saved_by_presets() -> void:
+  for sections: Dictionary in [LayoutPanel.SECTIONS, EffectsPanel.PAPER_BURN_SETTINGS, MotionPanel.ANIMATION_SECTIONS, MotionPanel.REWARD_SPIN_SECTIONS]:
+    for title: String in sections:
+      for setting: String in sections[title]:
+        assert_true(PrintLookAutoload.PRINT_SETTING_DEFAULTS.has(setting), '%s is a print setting, so presets save it' % setting)
+
+
+func test_instance_uniforms_are_not_print_settings() -> void:
+  assert_false(PrintLook.print_defaults().has('underline'), 'the grid underline is set per node')
 
 
 func test_save_then_load_restores_the_print_look() -> void:

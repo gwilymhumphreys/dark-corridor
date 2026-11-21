@@ -10,7 +10,7 @@ script = ExtResource("1")
 
 [node name="PartRow" parent="." instance=ExtResource("3")]
 layout_mode = 2
-part = 1
+part = 2
 
 [node name="CopyRow" type="HBoxContainer" parent="."]
 layout_mode = 2

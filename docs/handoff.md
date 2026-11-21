@@ -208,15 +208,15 @@ resolution.
 | What | Doc |
 |---|---|
 | `Corridor3D`: real 3D corridor, one steady light at the camera, painted enemies as lit `Sprite3D` cut-outs, hit lights in the effect colour | [corridor_3d.md](systems/corridors/corridor_3d.md) |
-| Debug panel (F1 to F9 open its tabs): the main and mechanic palettes (Colours tab), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
+| Debug panel (F1 to F8 open its tabs, one kind of setting each: Colours, Corridor, Pictures, Wear, Layout, Effects, Motion, Icons), start-up arguments for screenshots | [debug_panel.md](systems/debug_panel.md) |
 | Look presets: the whole look in one file, the default preset loaded at start-up, the history of past defaults; `assets/presets/` | [look_presets.md](systems/look_presets.md) |
 | F2 corridor look: post-processing on the corridor image only (grade, colour ramp, halftone, hatching, bloom, scanlines, dithering…), light and fog | [corridor_look.md](systems/corridor_look.md) |
-| F3 interface look: the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look | [interface_look.md](systems/interface_look.md) |
+| F3 pictures (interface look): the corridor look's effects on icons, portraits and HP bars only, with copying to and from the corridor look | [interface_look.md](systems/interface_look.md) |
 | Interface glow: code makes a specific node glow (`InterfaceGlow.set_glow`, `flash`); 2D HDR is on; not used by any element yet | [interface_glow.md](systems/interface_glow.md) |
 | Palette clamp: the corridor, the pictures and the combat effects snapped to the main palette | [palette_clamp.md](systems/palette_clamp.md) |
 | Palettes: one main palette for the corridor, pictures and every interface colour (by brightness), and a mechanic palette for the ten mechanic colours | [interface_palette.md](systems/interface_palette.md) |
-| F4 print tab: wear over the corridor, worn corridor edge, border, panel wear; F5 background tab: the worn record-sleeve background and its folds | [print_frame.md](systems/print_frame.md) · [background_wear.md](systems/background_wear.md) |
-| F6 feedback tab: how a control answers the pointer — the border on a hovered or selected control, the wash on a button's body, the press drop and the release pulse | [control_feedback.md](systems/control_feedback.md) |
+| F4 wear tab: background wear (the worn record-sleeve background and its folds), panel and picture wear, wear over the corridor, worn corridor edge, border, pencil grid; F5 layout tab | [print_frame.md](systems/print_frame.md) · [background_wear.md](systems/background_wear.md) |
+| F7 motion tab: how a control answers the pointer — the border on a hovered or selected control, the wash on a button's body, the press drop and the release pulse | [control_feedback.md](systems/control_feedback.md) |
 | Rakkas as the interface font (smooth, not pixel) | [ui_theme.md](systems/ui_theme.md) |
 
 **Open:** the effects style, which corridor look and palettes, whether the print style spreads to the

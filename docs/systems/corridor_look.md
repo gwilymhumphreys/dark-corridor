@@ -16,10 +16,10 @@ of a [look preset](look_presets.md).
   `SubViewportContainer` and of the testbed corridor's `Display` sprite, so it reads the corridor image
   only; the interface, enemy HUDs and VFX are not affected.
 - It includes `palette_clamp.gdshaderinc` inside a `dithering` group, so the
-  [world clamp](palette_clamp.md#world-clamp) is one step of it. The palette and colour matching
-  are set from the rows at the top of the Corridor tab.
+  [world clamp](palette_clamp.md#world-clamp) is one step of it. The palette, the colour matching and
+  the dithering are set on the Colours tab.
 - Each effect is a `group_uniforms` block whose first uniform is `<group>_on`. Effects run in the order of
-  `fragment()`, which is the order of the table below; the panel lists the Dithering section last.
+  `fragment()`, which is the order of the table below.
 - Distances (line spacing, dot size, bloom radius) are in screen pixels.
 
 | Group | Does |
@@ -58,12 +58,13 @@ of a [look preset](look_presets.md).
   `environment_properties()` (the last two merged). Changes go into
   `DebugPanels.corridor_settings` and `environment_settings` and are applied to every corridor in the
   `Corridor3D.GROUP` group; corridors built later apply them too.
-- A group with no settings gets no section. The Print tab ([print_frame.md](print_frame.md)) and the
-  Background tab ([background_wear.md](background_wear.md)) extend this tab.
+- A group with no settings gets no section. The other look tabs extend `LookPanel`, and pass
+  `_build_shader_sections` a filter to show only some of a material's groups. The hit light rows
+  (`HIT_LIGHT_PROPERTIES`) are on the Effects tab.
 
 ## In a preset
 
-The corridor part has sections `corridor_shader` (every look uniform), `corridor_light` and
+The corridor look is saved in sections `corridor_shader` (every look uniform), `corridor_light` and
 `corridor_environment` (every View, Light and Environment property; View is stored in `corridor_light`). Reading it starts from the look defaults and
 the corridor scene's own values, and leaves the palettes and the other parts unchanged.
 

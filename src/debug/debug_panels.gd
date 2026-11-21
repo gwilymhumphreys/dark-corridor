@@ -6,9 +6,9 @@ extends Node
 ## palettes: the main palette, which the corridor, the pictures and the interface colours take, and the
 ## mechanic palette (docs/systems/interface_palette.md, docs/systems/palette_clamp.md).
 ##
-## One panel with a preset bar and nine tabs: the palettes (F1), corridor look (F2), interface look
-## (F3), print look (F4), background wear (F5), control feedback (F6), the icon slots (F7), the
-## cardboard token look (F8) and the reward spin (F9); each key opens its tab, in debug builds only.
+## One panel with a preset bar and eight tabs, each holding one kind of setting: Colours (F1), Corridor
+## (F2), Pictures (F3), Wear (F4), Layout (F5), Effects (F6), Motion (F7) and Icons (F8); each key
+## opens its tab, in debug builds only.
 ## Choices last for the session only, unless saved as a look preset (docs/systems/look_presets.md).
 ## The default preset loads at start-up.
 ## Panel text is English on purpose: `tools/extract_pot.gd` skips `src/debug/`.
@@ -33,44 +33,42 @@ const LOOK_EFFECTS_INCLUDE: ShaderInclude = preload('res://src/shaders/look_effe
 const BLUE_NOISE: Texture2D = preload('res://assets/textures/blue_noise_64.png')
 ## Palette clamp uniforms set from the palette settings, so they are not corridor look settings.
 const PALETTE_UNIFORMS: Array[String] = ['colour_count', 'perceptual', 'dithering']
-## The panel's tabs, in the order they sit in `debug_panels.tscn`. A tab is not the same thing as a
-## `LookPresets.Part`: a tab that saves its own files instead of being part of a preset has no `Part`.
-enum Tab { COLOURS, CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, ICONS, TOKENS, REWARD_SPIN }
-## Tab titles, by tab.
+## The panel's tabs, in the order they sit in `debug_panels.tscn`. Every tab but Icons is the
+## `LookPresets.Part` of the same position.
+enum Tab { COLOURS, CORRIDOR, PICTURES, WEAR, LAYOUT, EFFECTS, MOTION, ICONS }
+## Tab titles, by tab. The tabs sit in key order, F1 to F8 from the left, so the titles leave the keys out
+## and all eight fit across the panel.
 const TAB_TITLES: Dictionary = {
-  Tab.COLOURS: 'Colours (F1)',
-  Tab.CORRIDOR: 'Corridor (F2)',
-  Tab.INTERFACE: 'Interface (F3)',
-  Tab.PRINT: 'Print (F4)',
-  Tab.BACKGROUND: 'Background (F5)',
-  Tab.FEEDBACK: 'Feedback (F6)',
-  Tab.ICONS: 'Icons (F7)',
-  Tab.TOKENS: 'Tokens (F8)',
-  Tab.REWARD_SPIN: 'Reward spin (F9)',
+  Tab.COLOURS: 'Colours',
+  Tab.CORRIDOR: 'Corridor',
+  Tab.PICTURES: 'Pictures',
+  Tab.WEAR: 'Wear',
+  Tab.LAYOUT: 'Layout',
+  Tab.EFFECTS: 'Effects',
+  Tab.MOTION: 'Motion',
+  Tab.ICONS: 'Icons',
 }
 ## The tab each key opens.
 const TAB_KEYS: Dictionary = {
   KEY_F1: Tab.COLOURS,
   KEY_F2: Tab.CORRIDOR,
-  KEY_F3: Tab.INTERFACE,
-  KEY_F4: Tab.PRINT,
-  KEY_F5: Tab.BACKGROUND,
-  KEY_F6: Tab.FEEDBACK,
-  KEY_F7: Tab.ICONS,
-  KEY_F8: Tab.TOKENS,
-  KEY_F9: Tab.REWARD_SPIN,
+  KEY_F3: Tab.PICTURES,
+  KEY_F4: Tab.WEAR,
+  KEY_F5: Tab.LAYOUT,
+  KEY_F6: Tab.EFFECTS,
+  KEY_F7: Tab.MOTION,
+  KEY_F8: Tab.ICONS,
 }
 ## The start-up argument that opens each tab.
 const TAB_ARGUMENTS: Dictionary = {
   '--colours-panel': Tab.COLOURS,
-  '--look-panel': Tab.CORRIDOR,
-  '--interface-panel': Tab.INTERFACE,
-  '--print-panel': Tab.PRINT,
-  '--background-panel': Tab.BACKGROUND,
-  '--feedback-panel': Tab.FEEDBACK,
+  '--corridor-panel': Tab.CORRIDOR,
+  '--pictures-panel': Tab.PICTURES,
+  '--wear-panel': Tab.WEAR,
+  '--layout-panel': Tab.LAYOUT,
+  '--effects-panel': Tab.EFFECTS,
+  '--motion-panel': Tab.MOTION,
   '--icon-panel': Tab.ICONS,
-  '--tokens-panel': Tab.TOKENS,
-  '--reward-spin-panel': Tab.REWARD_SPIN,
 }
 
 ## Corridor exports (property -> value), from `--corridor-set=property=value` arguments, the corridor
@@ -111,13 +109,12 @@ var _scene_values: Array[Dictionary] = []   # the corridor scene's Light and Env
 @onready var _tabs: TabContainer = $PanelLayer/Panel/Rows/Tabs
 @onready var _colours_panel: ColoursPanel = $PanelLayer/Panel/Rows/Tabs/Colours
 @onready var _look_panel: LookPanel = $PanelLayer/Panel/Rows/Tabs/Corridor
-@onready var _interface_look_panel: InterfaceLookPanel = $PanelLayer/Panel/Rows/Tabs/Interface
-@onready var _print_panel: PrintPanel = $PanelLayer/Panel/Rows/Tabs/Print
-@onready var _background_panel: BackgroundPanel = $PanelLayer/Panel/Rows/Tabs/Background
-@onready var _feedback_panel: FeedbackPanel = $PanelLayer/Panel/Rows/Tabs/Feedback
+@onready var _interface_look_panel: InterfaceLookPanel = $PanelLayer/Panel/Rows/Tabs/Pictures
+@onready var _wear_panel: WearPanel = $PanelLayer/Panel/Rows/Tabs/Wear
+@onready var _layout_panel: LayoutPanel = $PanelLayer/Panel/Rows/Tabs/Layout
+@onready var _effects_panel: EffectsPanel = $PanelLayer/Panel/Rows/Tabs/Effects
+@onready var _motion_panel: MotionPanel = $PanelLayer/Panel/Rows/Tabs/Motion
 @onready var _icon_panel: IconPanel = $PanelLayer/Panel/Rows/Tabs/Icons
-@onready var _tokens_panel: TokensPanel = $PanelLayer/Panel/Rows/Tabs/Tokens
-@onready var _reward_spin_panel: RewardSpinPanel = $PanelLayer/Panel/Rows/Tabs/RewardSpin
 @onready var _main_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Colours/PaletteRows/MainPaletteRow/Option
 @onready var _matching_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Colours/PaletteRows/MatchingRow/Option
 @onready var _mechanic_option: OptionButton = $PanelLayer/Panel/Rows/Tabs/Colours/PaletteRows/MechanicPaletteRow/Option
@@ -254,7 +251,7 @@ func _input(event: InputEvent) -> void:
       shortlist_palette()
     KEY_BACKSPACE:
       set_dithering(not _dithering)
-      _look_panel.refresh()
+      _colours_panel.refresh()
     _:
       return
   get_viewport().set_input_as_handled()
@@ -284,27 +281,15 @@ func is_panel_open() -> bool:
 
 # Fill a tab when it shows: its controls, and the palette lists the first time.
 func _open_tab(tab: int) -> void:
-  match tab:
-    Tab.COLOURS:
-      if not _palettes_scanned:
-        _scan_palettes()
-      _colours_panel.open()
-    Tab.CORRIDOR:
-      _look_panel.open()
-    Tab.INTERFACE:
-      _interface_look_panel.open()
-    Tab.PRINT:
-      _print_panel.open()
-    Tab.BACKGROUND:
-      _background_panel.open()
-    Tab.FEEDBACK:
-      _feedback_panel.open()
-    Tab.ICONS:
-      _icon_panel.open()
-    Tab.TOKENS:
-      _tokens_panel.open()
-    Tab.REWARD_SPIN:
-      _reward_spin_panel.open()
+  if tab == Tab.COLOURS and not _palettes_scanned:
+    _scan_palettes()
+  _tab_panel(tab).open()
+
+
+# The tab's panel.
+func _tab_panel(tab: int) -> LookPanel:
+  return [_colours_panel, _look_panel, _interface_look_panel, _wear_panel, _layout_panel, _effects_panel,
+    _motion_panel, _icon_panel][tab]
 
 
 func _on_tab_changed(tab: int) -> void:
@@ -325,17 +310,12 @@ func _switch_side() -> void:
 ## Show the current settings in every tab, after a preset or part of one is loaded.
 func refresh_panels() -> void:
   _sync_controls()
-  _colours_panel.refresh()
-  _look_panel.refresh()
-  _interface_look_panel.refresh()
-  _print_panel.refresh()
-  _background_panel.refresh()
-  _feedback_panel.refresh()
-  _tokens_panel.refresh()
-  _reward_spin_panel.refresh()
+  for tab: int in TAB_TITLES:
+    if tab != Tab.ICONS:
+      _tab_panel(tab).refresh()
 
 
-## Rebuild the Corridor tab's controls after corridor look settings change elsewhere (the Interface
+## Rebuild the Corridor tab's controls after corridor look settings change elsewhere (the Pictures
 ## tab's copy button).
 func refresh_look_panel() -> void:
   _look_panel.refresh()
@@ -434,6 +414,7 @@ func reset_settings() -> void:
   PrintLook.reset_background_look()
   InterfaceLook.reset()
   ControlFeedback.reset()
+  VfxDriver.read_trials(ConfigFile.new())
   MonsterImages.forced_path = ''
   reset_palettes()
   _preset_bar.forget_loaded()

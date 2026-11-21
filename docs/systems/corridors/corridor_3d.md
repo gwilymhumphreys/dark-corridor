@@ -197,7 +197,8 @@ nothing. On by default and subtle (owner, 2026-09-15), with its energy near the 
 look setting, kept until the effects pass decides on hit visuals.
 
 - The colour is the delivery's, which comes from the effect colours in `Colours`, so it follows the
-  [mechanic palette](../interface_palette.md#the-mechanic-palette).
+  [mechanic palette](../interface_palette.md#the-mechanic-palette). Its settings are the Hit lights
+  section of the Effects tab.
 
 - `CombatCorridor.show_hits(deliveries, render_time)` runs each frame from the combat view. Each enemy
   hit less than `hit_light_duration` ago gets one light, from its newest hit, placed

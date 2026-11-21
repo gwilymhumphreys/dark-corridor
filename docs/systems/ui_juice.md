@@ -48,7 +48,7 @@ It defaults to `-1`, which keeps the preset value.
 `highlight_target` names a child Control to draw the highlight on instead of the
 parent — an item cell uses it to draw on its frame, because its value pills hang
 outside the cell's own rectangle. The timing of the hover, press and release
-effects is set in the [Feedback tab](control_feedback.md#the-feedback-tab); the
+effects is set on the [Motion tab](control_feedback.md#the-motion-tab); the
 squash size and timing stay in the presets here.
 
 ## Sounds
@@ -105,5 +105,5 @@ stay still and the picture moves through them. It also means the picture cannot
 overflow its frame, so the frame needs no `clip_contents`.
 
 `picture_zoom` is in `InterfaceLookAutoload.NODE_UNIFORMS`, so it is not treated
-as a look setting: it does not appear in the Interface tab and is not saved in a
+as a look setting: it does not appear on the Pictures tab and is not saved in a
 look preset.

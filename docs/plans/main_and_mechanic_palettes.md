@@ -1,8 +1,8 @@
 # Main palette, mechanic palette and the debug panel tabs (plan)
 
 One palette for the whole screen, a second palette for the colours that tell mechanics apart, and the
-debug panel's tabs regrouped so each tab holds one kind of setting. Status: stage 1 (palettes) built
-2026-11-21; stages 2 and 3 not built.
+debug panel's tabs regrouped so each tab holds one kind of setting. Status: stages 1 (palettes) and 2 (tabs)
+built and documented 2026-11-21. The hit effect trials are saved in presets as planned.
 
 ## Owner's decisions (2026-11-21)
 

@@ -11,8 +11,10 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 `src/shaders/interface_element_material.tres` and `src/shaders/interface_effects_material.tres` (on
 `interface_effects.gdshader`),
 `InterfaceLook`
-(`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the Interface tab in
-`src/debug/interface_look_panel.*`. Saved in the interface part of a [look preset](look_presets.md).
+(`src/autoloads/interface_look.gd`, class `InterfaceLookAutoload`), the Pictures tab in
+`src/debug/interface_look_panel.*`. Saved in a [look preset](look_presets.md): the filters in its
+pictures part, picture wear in its wear part, the combat effects' own settings in its effects part and
+the dither settings in its colours part.
 
 ## How it works
 
@@ -38,8 +40,8 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
     (`ELEMENT_OFF_UNIFORMS`), and no palette clamp colours are written to it, so its colour count stays
     0. Halftone, hatching, vignette, grain, scanlines, pixelate and picture wear all apply.
 - Every setting goes through `InterfaceLook.set_setting()`, which writes it to all four materials
-  except for the switches above. There is one Interface tab and one set of settings; the split is in
-  code, not in the panel or the preset.
+  except for the switches above. There is one set of settings; the split between materials is in code,
+  not in the panel or the preset.
 - The shader includes `look_effects.gdshaderinc`, which holds the effect settings and functions used by
   both looks under the same names. That is what lets settings be copied between the two looks.
 - Each node is drawn on its own, so effects work inside the node's rectangle only. Bloom is left out
@@ -52,7 +54,7 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 - Distances are in screen pixels, as in the corridor look. Halftone dots, hatching lines and grain are laid
   out from the node's corner, so they move with an animated node; scanlines are laid out on the screen.
 - `picture_zoom` is an instance uniform set per node, not a look setting (`NODE_UNIFORMS`, so it is left
-  out of `defaults()`, the Interface tab and presets). Above 1 the shader reads a smaller part of the
+  out of `defaults()`, the Pictures tab and presets). Above 1 the shader reads a smaller part of the
   image, so the picture fills the node magnified while the node keeps its size, and the pixelate,
   halftone, hatching and grain patterns stay where they are. `PortraitBreath` drives it for the portrait
   breathing ([ui_juice.md](ui_juice.md#portrait-breathing)). It is applied to the image lookup after the
@@ -64,7 +66,8 @@ shared with the corridor look), `src/shaders/interface_look_material.tres`,
 - The shader also includes the [palette clamp](palette_clamp.md), whose colours come from the main palette
   ([interface_palette.md](interface_palette.md#images)) and are written to the picture materials only
   (`InterfaceLook.picture_materials`). It runs after the look effects and before picture wear. Its palette, colour matching and on/off dithering switch are set by `DebugPanels` and are not
-  look settings; its dither pattern, size and supersample are, and appear in the Dithering section.
+  look settings; its dither pattern, size and supersample are, and appear in the Colours tab's Picture
+  and effect dithering section.
   The interface dithering switch is separate from the corridor's, so Backspace and `--dither` do not
   touch it. Snap pictures on the Colours tab turns the clamp off.
 - All five materials are also present in release builds, with every effect off. The fifth, the effects
@@ -105,10 +108,10 @@ node in the `hit_effects_preview` dev scene. It takes the same settings, with th
   because they move a pixel off its mechanic colour.
 - Its palette is the main palette's colours together with the mechanic colours, so a solid effect
   colour stays as it is while glows and fades land on palette colours. Snap effects on the Colours
-  tab turns it off. The Interface tab's dithering switch and dither settings and the colour matching
-  apply to it (`InterfaceLook.clamp_materials`).
+  tab turns it off. The picture dithering switch and dither settings and the colour matching apply to
+  it (`InterfaceLook.clamp_materials`).
 
-The Effects section of the Interface tab holds its own settings (the `effects` uniform group). They are
+The Combat effects section of the Effects tab holds its own settings (the `effects` uniform group). They are
 written to every material but only the effects shader reads them:
 
 | Setting | Does |
@@ -121,7 +124,7 @@ The comparison of these options is in [`../plans/effects_look.md`](../plans/effe
 
 ## Picture wear
 
-The Picture Wear section of the panel, off by default, draws [panel wear](panel_wear.md) on the images
+The Picture Wear section of the Wear tab, off by default, draws [panel wear](panel_wear.md) on the images
 themselves: faded areas, specks, edge wear and creases, without folds, in the same mark colours
 (`Colours.UI_PANEL_WEAR` and `UI_PANEL_WEAR_LIGHT`, pushed by `InterfaceLook.push_wear_colours()` at
 start and whenever the palettes are applied).
@@ -139,21 +142,23 @@ start and whenever the palettes are applied).
 - The corridor look has no picture wear, so the copy buttons leave it alone.
 - The Picture Wear switch turns all picture wear on or off, including the faded areas, specks, edge wear
   and creases sections, whose own switches do nothing while it is off. The section headings say what the
-  wear applies to, because the borders around icons are panels and their wear is panel wear, set in the
-  Print tab.
+  wear applies to, because the borders around icons are panels and their wear is panel wear, set on
+  the same tab.
 
-## The Interface tab
+## The Pictures tab
 
 F3 opens the [debug panel](debug_panel.md) on this tab. It is built like the
-[Corridor tab](corridor_look.md#the-corridor-tab) from the interface look shader, plus two buttons:
+[Corridor tab](corridor_look.md#the-corridor-tab) from the interface look shader, without the
+dithering, picture wear and effects groups (on the Colours, Wear and Effects tabs), with a Glow section
+for [interface glow](interface_glow.md) and two buttons:
 
 | Button | Does |
 |---|---|
 | Copy from corridor look | Every interface look setting the corridor look also has takes the corridor look's value |
 | Copy to corridor look | The reverse; corridor-only settings (bloom) and each look's own dithering switch are left alone |
 
-In a preset, the interface part has an `interface_shader` section listing every setting and an
-`interface_glow` section for the glow settings.
+In a preset, the `interface_shader` section lists every setting and `interface_glow` the glow
+settings; [look_presets.md](look_presets.md#parts) says which part each key belongs to.
 
 ## Public API
 
@@ -169,10 +174,10 @@ In a preset, the interface part has an `interface_shader` section listing every 
 | `InterfaceLook.set_setting(uniform, value)` | Set one setting on all five materials, except each material's off list |
 | `picture_zoom` | Per-node instance uniform on `interface_portrait.gdshader` only: zoom on the image, driven by `PortraitBreath` |
 | `InterfaceLook.defaults() -> Dictionary` | Setting name -> default, read from the shader and include code (the shared effects, the palette clamp's dither settings, picture wear) |
-| `InterfaceLook.reset()`, `write_look(file)`, `read_look(file)` | Reset, and the interface part of a preset |
+| `InterfaceLook.reset()`, `write_look(file)`, `read_look(file)` | Reset, and the `interface_shader` and `interface_glow` sections of a preset |
 | `InterfaceLook.copy_from_corridor()`, `copy_to_corridor()` | Copy shared settings between the looks |
 
-Start-up arguments `--interface-set=` and `--interface-panel` are listed in
+Start-up arguments `--interface-set=` and `--pictures-panel` are listed in
 [dev_tools.md](dev_tools.md#look-arguments). `DebugPanels.reset_settings()` resets the interface
 look.
 

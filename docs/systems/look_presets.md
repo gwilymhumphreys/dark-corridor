@@ -1,8 +1,7 @@
 # Look presets
 
-A look preset is one file holding the whole look of the game: corridor look and its palette, interface
-look with its palettes, print look, background wear and control feedback. The default preset is what the game
-starts with; the other presets are looks to compare, and the history keeps every past default.
+A look preset is one file holding the whole look of the game: everything the debug panel's tabs set,
+except the icon slots. The default preset is what the game starts with; the other presets are looks to compare, and the history keeps every past default.
 
 **Location:** `src/data/look_presets.gd` (class `LookPresets`), the preset bar in `src/debug/preset_bar.*`
 (class `PresetBar`), the "Take this part from" row in `src/debug/preset_part_row.*` (class
@@ -10,22 +9,36 @@ starts with; the other presets are looks to compare, and the history keeps every
 
 ## Parts
 
-A preset is a `ConfigFile` in five parts. Each part matches one tab of the
-[debug panel](debug_panel.md), and each is written and read by the code that owns those settings, so a
-part can be loaded on its own.
+A preset is a `ConfigFile` whose sections are written and read by the code that owns those settings.
+A **part** is the set of settings one tab of the [debug panel](debug_panel.md) shows, so the seven
+parts match the tabs except Icons. A part can cut across sections, so `LookPresets.PART_RULES` names
+the part of each key by its section and the start of its name; the first matching rule wins.
 
-| Part | Sections | Written and read by |
-|---|---|---|
-| Corridor | `corridor_shader`, `corridor_light`, `corridor_environment` | `DebugPanels.write_corridor_look` / `read_corridor_look` ([corridor_look.md](corridor_look.md)) |
-| Interface | `interface_shader`, `interface_glow` | `InterfaceLook.write_look` / `read_look` ([interface_look.md](interface_look.md)) |
-| Print | `print_panel`, `print_frame`, `print_layout` | `PrintLook.write_print_look` / `read_print_look` ([print_frame.md](print_frame.md)) |
-| Background | `print_background` | `PrintLook.write_background_look` / `read_background_look` ([background_wear.md](background_wear.md)) |
-| Feedback | `control_highlight`, `control_settings` | `ControlFeedback.write_look` / `read_look` ([control_feedback.md](control_feedback.md)) |
-| Colours | `palette` (main and mechanic palettes, darkest colour setting, colour matching, snap and dithering switches), `interface_colours` (each interface colour's brightness) | `DebugPanels.write_palettes` / `read_palettes` ([interface_palette.md](interface_palette.md)) |
+| Part | Settings |
+|---|---|
+| Colours | `palette` and `interface_colours` ([interface_palette.md](interface_palette.md)); the `dither_` keys of `corridor_shader` and `interface_shader` |
+| Corridor | `corridor_shader` and `corridor_environment` ([corridor_look.md](corridor_look.md)); `corridor_light` except the hit lights |
+| Pictures | `interface_shader` except its `dither_`, `picture_` and `effects_` keys ([interface_look.md](interface_look.md)); `interface_glow` |
+| Wear | `print_background`, `print_panel`, `print_frame`; the `picture_` keys of `interface_shader` |
+| Layout | `print_layout` except the keys below |
+| Effects | The `effects_` keys of `interface_shader`, the `hit_light` keys of `corridor_light`, the `paper_burn_` keys of `print_layout`, and `effects_trials` ([vfx_driver.md](vfx_driver.md)) |
+| Motion | `control_highlight` and `control_settings` ([control_feedback.md](control_feedback.md)); the `card_`, `deck_peek`, `photo_`, `page_turn_` and `reward_spin` keys of `print_layout` |
+
+| Section | Written and read by |
+|---|---|
+| `palette`, `interface_colours` | `DebugPanels.write_palettes` / `read_palettes` |
+| `corridor_shader`, `corridor_light`, `corridor_environment` | `DebugPanels.write_corridor_look` / `read_corridor_look` |
+| `interface_shader`, `interface_glow` | `InterfaceLook.write_look` / `read_look` |
+| `print_panel`, `print_frame`, `print_layout` | `PrintLook.write_print_look` / `read_print_look` |
+| `print_background` | `PrintLook.write_background_look` / `read_background_look` |
+| `control_highlight`, `control_settings` | `ControlFeedback.write_look` / `read_look` |
+| `effects_trials` | `VfxDriver.write_trials` / `read_trials` |
 
 - Writing lists every setting, changed or not, so two presets can be compared key by key.
-- Reading a part starts from that part's defaults (every effect off, the corridor scene's own light),
-  so settings a file leaves out go back to their defaults. An empty file turns a part off.
+- Loading some parts starts from the current look (`capture()`), removes every key of those parts,
+  copies in the file's values for them, and reads the result with every owner's reader. So a part's
+  settings the file leaves out go back to their defaults (every effect off, the corridor scene's own
+  light), an empty file turns a part off, and the other parts keep their settings.
 - The `preset` section is not a setting. In the default preset, `source` names the preset it was
   made from, which names its history file later.
 
@@ -57,7 +70,7 @@ turns the part off with "Everything off".
 
 | Member | Use |
 |---|---|
-| `LookPresets.Part`, `ALL_PARTS`, `PART_SECTIONS` | The five parts and their sections |
+| `LookPresets.Part`, `ALL_PARTS`, `PART_RULES`, `part_of(section, key)` | The seven parts and the part of each saved setting |
 | `capture() -> ConfigFile`, `apply(file, parts)` | The current look as a file; set some parts from a file |
 | `save_preset(path) -> Error`, `load_preset(path, parts) -> bool` | Save the whole look; load some or all parts |
 | `load_default(folder) -> bool`, `make_default(source_name, folder, history_dir) -> String` | The default preset; `make_default` returns the history file's path, or `''` when there was no old default |

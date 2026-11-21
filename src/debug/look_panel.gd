@@ -2,9 +2,10 @@ class_name LookPanel
 extends VBoxContainer
 ## The corridor tab of the debug panel (docs/systems/corridor_look.md), opened with F2 by `DebugPanels`.
 ## One section per effect in corridor_look.gdshader, built from the shader's uniform groups, then
-## sections for the corridor's light and its camera Environment. The background wear is in the print
-## tab (`PrintPanel`, which extends this). Every change applies at once to what is on screen. The row
-## at the top loads this part of the look from a preset (`PresetPartRow`).
+## sections for the corridor's view, light and camera Environment. Its dithering is on the Colours tab
+## and its hit lights on the Effects tab. Every change applies at once to what is on screen. The row
+## at the top loads this part of the look from a preset (`PresetPartRow`). The other look tabs extend
+## this class for its section and row building.
 
 const SECTION_SCENE: PackedScene = preload('res://src/debug/look_section.tscn')
 const SLIDER_ROW_SCENE: PackedScene = preload('res://src/debug/look_slider_row.tscn')
@@ -20,12 +21,15 @@ const CORRIDOR_PROPERTIES: Dictionary = {
   'light_attenuation': [0.0, 4.0, 0.01],
   'flicker_amount': [0.0, 1.0, 0.01],
   'flicker_speed': [0.0, 30.0, 0.1],
+  'alpha_scissor_threshold': [0.0, 1.0, 0.01],
+}
+## Corridor exports for the hit lights, shown on the Effects tab and saved with the Light section's.
+const HIT_LIGHT_PROPERTIES: Dictionary = {
   'hit_lights_on': [],
   'hit_light_energy': [0.0, 16.0, 0.01],
   'hit_light_range': [0.5, 20.0, 0.1],
   'hit_light_duration': [0.05, Balance.DELIVERY_VISUAL_HOLD, 0.01],
   'hit_light_distance': [0.0, 3.0, 0.01],
-  'alpha_scissor_threshold': [0.0, 1.0, 0.01],
 }
 ## Corridor exports shown in the View section: the camera, the corridor's width and where the
 ## enemies stand. Stored with the Light section's in presets.
@@ -79,9 +83,10 @@ func _exit_tree() -> void:
   _clear_sections()
 
 
-## Every corridor export the tab sets: the Light section's and the View section's.
+## Every corridor export the panel sets: the Light, View and hit light sections'.
 static func corridor_properties() -> Dictionary:
   var properties: Dictionary = CORRIDOR_PROPERTIES.duplicate()
+  properties.merge(HIT_LIGHT_PROPERTIES)
   properties.merge(VIEW_PROPERTIES)
   return properties
 
@@ -129,7 +134,8 @@ func refresh() -> void:
 func rebuild() -> void:
   _built = true
   _clear_sections()
-  _build_shader_sections(DebugPanels.world_material, DebugPanels.look_defaults())
+  _build_shader_sections(DebugPanels.world_material, DebugPanels.look_defaults(),
+    func(group: String) -> bool: return group != 'dithering')
   var values: Array[Dictionary] = scene_values()
   _build_property_section('View', VIEW_PROPERTIES, values[0], DebugPanels.corridor_settings)
   _build_property_section('Light', CORRIDOR_PROPERTIES, values[0], DebugPanels.corridor_settings)
@@ -140,7 +146,10 @@ func rebuild() -> void:
 # One section per uniform group that has a setting in `defaults`; uniforms before the first group, or
 # missing from `defaults` (the palette clamp's, the mark colours, an included shader's settings shown
 # elsewhere), are skipped, as other code sets them. A group with no settings gets no section.
-func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary) -> void:
+# `group_filter(group: String) -> bool`, when given, picks the groups to build, so one material's groups
+# can be spread over several tabs.
+func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary,
+    group_filter: Callable = Callable()) -> void:
   var section: LookSection = null
   var group: String = ''
   for entry: Dictionary in look_material.shader.get_shader_uniform_list(true):
@@ -149,7 +158,7 @@ func _build_shader_sections(look_material: ShaderMaterial, defaults: Dictionary)
       group = uniform
       section = null
       continue
-    if group == '':
+    if group == '' or (group_filter.is_valid() and not group_filter.call(group)):
       continue
     # Each clamp's dithering switch is kept by `DebugPanels`, which Backspace and presets also set.
     # The corridor and the interface have one each.
@@ -215,6 +224,18 @@ func _build_property_section(title: String, properties: Dictionary, scene: Dicti
       settings[property] = new_value
       DebugPanels.apply_corridor_settings()
     section.add_row(_make_row(property.trim_prefix(prefix).capitalize(), value, properties[property], set_value))
+
+
+# One section per entry of `sections` (title -> {setting -> limits}), each row a print frame setting
+# (`PrintLook.PRINT_SETTING_DEFAULTS`). `prefix` is dropped from each row's label.
+func _build_print_sections(sections: Dictionary, prefix: String = '') -> void:
+  for title: String in sections:
+    var section: LookSection = _add_section(title)
+    var settings: Dictionary = sections[title]
+    for setting: String in settings:
+      var set_value: Callable = func(new_value: Variant) -> void: PrintLook.set_print_value(setting, new_value)
+      var label: String = setting.trim_prefix(prefix).capitalize() if setting != prefix.trim_suffix('_') else 'On'
+      section.add_row(_make_row(label, PrintLook.print_setting(setting), settings[setting], set_value))
 
 
 func _add_section(title: String) -> LookSection:

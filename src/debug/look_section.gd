@@ -8,11 +8,16 @@ extends VBoxContainer
 
 
 ## Set the title. Call before adding the section to the tree.
-func setup(title: String) -> void:
+func setup(title_text: String) -> void:
   var title_button: Button = $Header/Title
-  title_button.text = title
+  title_button.text = title_text
   title_button.pressed.connect(_on_title_pressed)
   ($Header/Switch as CheckButton).visible = false
+
+
+## The section's title.
+func title() -> String:
+  return ($Header/Title as Button).text
 
 
 ## Show the header switch, set to `on`, calling `changed(on: bool)` when toggled.

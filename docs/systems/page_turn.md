@@ -86,7 +86,7 @@ flat page at either end matches the screen exactly.
 ## Settings
 
 The `page_turn_*` print settings (`PrintLook.PRINT_SETTING_DEFAULTS`), on the Page turn section of
-the Tokens tab (F7, [debug_panel.md](debug_panel.md)), saved with the print part of a
+the Motion tab (F7, [debug_panel.md](debug_panel.md)), saved with the motion part of a
 [preset](look_presets.md). They are read when a turn starts; the timing settings are read each frame.
 
 | Setting | Does |

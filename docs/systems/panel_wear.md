@@ -10,9 +10,9 @@ theme for the whole interface; the [screen background](background_wear.md) and t
 **Location:** `src/ui/worn_style_box.gd` (class `WornStyleBox`), `src/shaders/panel_wear.gdshader`,
 `src/shaders/print_wear.gdshaderinc` (the shared effect functions), `PrintLook`
 (`src/autoloads/print_look.gd`, class `PrintLookAutoload`), which owns the material, settings, defaults
-and reset for panel wear alongside background wear and the print frame. Settings are in the Print tab
-([print_frame.md](print_frame.md)), under headings that say they apply to item borders and other panels.
-Images outside a panel frame have their own picture wear in the Interface tab ([interface_look.md](interface_look.md#picture-wear)).
+and reset for panel wear alongside background wear and the print frame. Settings are on the Wear tab
+([debug_panel.md](debug_panel.md)), under headings that say they apply to item borders and other panels.
+Images outside a panel frame have their own picture wear on the same tab ([interface_look.md](interface_look.md#picture-wear)).
 
 ## How it works
 
@@ -43,7 +43,7 @@ Images outside a panel frame have their own picture wear in the Interface tab ([
     identical.
   - `panel_rect`, the panel's rectangle, so the wear reads in the panel's own pixels: edge wear rubs
     the panel's own edges, and the worn area size is the panel's size, not the screen's.
-- `panel_material` holds the shared settings, which the Print and Feedback tabs, presets and
+- `panel_material` holds the shared settings, which the Wear and Motion tabs, presets and
   `--panel-set=` read. Every write of a shared setting goes through `PrintLook.set_panel_setting()`,
   which sets it on `panel_material` and on every panel's copy. Setting one directly on
   `panel_material` does not reach the panels already on screen.
@@ -74,7 +74,7 @@ Images outside a panel frame have their own picture wear in the Interface tab ([
 | Panel Creases | Faint bands across the panel |
 
 The defaults are scaled down from the background's own (smaller faded areas, fewer and closer specks, a
-narrower edge) and are starting values for the owner to tune from the Print tab.
+narrower edge) and are starting values for the owner to tune from the Wear tab.
 
 ## What is not covered
 
@@ -85,7 +85,7 @@ narrower edge) and are starting values for the owner to tune from the Print tab.
 
 ## Presets and screenshots
 
-Panel wear is saved in a preset's `print_panel` section and reset with the rest of the print part
+Panel wear is saved in a preset's `print_panel` section and reset with the rest of the print look
 ([print_frame.md](print_frame.md#in-a-preset)). The mark colours are not saved; they come from
 `Colours`.
 

@@ -49,9 +49,15 @@ func _section(title: String) -> LookSection:
 
 
 func test_dithering_section_switch_and_pattern_dropdown() -> void:
-  _panel().rebuild()
-  var dithering: LookSection = _section('Dithering')
-  assert_not_null(dithering, 'the palette clamp has its own section')
+  var colours: ColoursPanel = DebugPanels.get_node('PanelLayer/Panel/Rows/Tabs/Colours') as ColoursPanel
+  colours.rebuild()
+  var dithering: LookSection = null
+  for section: Node in colours.get_node('Scroll/Sections').get_children():
+    if (section as LookSection).title() == 'Corridor dithering':
+      dithering = section as LookSection
+  assert_not_null(dithering, 'the corridor dithering has its own section on the Colours tab')
+  if dithering == null:
+    return
   (dithering.get_node('Header/Switch') as CheckButton).button_pressed = true
   assert_true(DebugPanels.is_dithering(), 'the header switch turns dithering on for both clamps')
   var pattern: LookRow = dithering.get_node('Rows').get_child(0) as LookRow
@@ -77,8 +83,9 @@ func test_panel_has_a_section_per_effect_plus_light_environment_and_fog() -> voi
   var groups: int = _group_count(DebugPanels.world_material.shader)
   var sections: Node = panel.get_node('Scroll/Sections')
   assert_gt(groups, 0, 'the look shader has effect groups')
-  assert_eq(sections.get_child_count(), groups + 4, 'one section per effect, then View, Light, Environment and Fog')
-  assert_null(_section('Background Specks'), 'the background wear is in the Print tab')
+  assert_eq(sections.get_child_count(), groups - 1 + 4, 'one section per effect but dithering, then View, Light, Environment and Fog')
+  assert_null(_section('Dithering'), 'the dithering is on the Colours tab')
+  assert_null(_section('Background Specks'), 'the background wear is on the Wear tab')
 
 
 func test_background_defaults_leave_out_the_mark_colours() -> void:

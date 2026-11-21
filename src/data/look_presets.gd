@@ -1,28 +1,58 @@
 class_name LookPresets
 extends RefCounted
-## Look presets (docs/systems/look_presets.md): one `ConfigFile` holding the whole look, in six parts
-## (corridor look, interface look, print look, background wear, control feedback, palettes). The
-## default preset loads when the game starts; pressing Make default first copies the old default into
-## the history folder.
+## Look presets (docs/systems/look_presets.md): one `ConfigFile` holding the whole look, in seven
+## parts, one per tab of the debug panel except Icons: colours, corridor, pictures, wear, layout,
+## effects and motion. The default preset loads when the game starts; pressing Make default first
+## copies the old default into the history folder.
 ##
-## Each part's settings are written and read by the autoload that owns them, so a part can be loaded
-## on its own. Reading a part starts from that part's defaults.
+## Each section of the file is written and read by the autoload that owns those settings. A part is a
+## set of keys picked out by `PART_RULES`, which can cut across sections, so loading some parts reads
+## a copy of the current look with those parts' keys taken from the file.
 
-enum Part { CORRIDOR, INTERFACE, PRINT, BACKGROUND, FEEDBACK, COLOURS }
+enum Part { COLOURS, CORRIDOR, PICTURES, WEAR, LAYOUT, EFFECTS, MOTION }
 
 const PRESET_DIR: String = 'res://assets/presets'
 const HISTORY_DIR: String = 'res://assets/presets/history'
 const DEFAULT_NAME: String = 'default'
-const ALL_PARTS: Array[Part] = [Part.CORRIDOR, Part.INTERFACE, Part.PRINT, Part.BACKGROUND, Part.FEEDBACK, Part.COLOURS]
-## The sections each part writes. The `preset` section holds details about the file, not settings.
-const PART_SECTIONS: Dictionary = {
-  Part.CORRIDOR: ['corridor_shader', 'corridor_light', 'corridor_environment'],
-  Part.INTERFACE: ['interface_shader', 'interface_glow'],
-  Part.PRINT: ['print_panel', 'print_frame', 'print_layout'],
-  Part.BACKGROUND: ['print_background'],
-  Part.FEEDBACK: ['control_highlight', 'control_settings'],
-  Part.COLOURS: ['palette', 'interface_colours'],
-}
+const ALL_PARTS: Array[Part] = [Part.COLOURS, Part.CORRIDOR, Part.PICTURES, Part.WEAR, Part.LAYOUT, Part.EFFECTS, Part.MOTION]
+## The part each saved setting belongs to: [section, key prefix, part]. The first rule whose section
+## matches and whose prefix starts the key wins; '' matches every key. The `preset` section holds
+## details about the file, not settings, so it has no rule.
+const PART_RULES: Array[Array] = [
+  ['palette', '', Part.COLOURS],
+  ['interface_colours', '', Part.COLOURS],
+  ['corridor_shader', 'dither_', Part.COLOURS],
+  ['corridor_shader', '', Part.CORRIDOR],
+  ['corridor_light', 'hit_light', Part.EFFECTS],
+  ['corridor_light', '', Part.CORRIDOR],
+  ['corridor_environment', '', Part.CORRIDOR],
+  ['interface_shader', 'dither_', Part.COLOURS],
+  ['interface_shader', 'picture_', Part.WEAR],
+  ['interface_shader', 'effects_', Part.EFFECTS],
+  ['interface_shader', '', Part.PICTURES],
+  ['interface_glow', '', Part.PICTURES],
+  ['print_background', '', Part.WEAR],
+  ['print_panel', '', Part.WEAR],
+  ['print_frame', '', Part.WEAR],
+  ['print_layout', 'paper_burn_', Part.EFFECTS],
+  ['print_layout', 'card_', Part.MOTION],
+  ['print_layout', 'deck_peek', Part.MOTION],
+  ['print_layout', 'photo_', Part.MOTION],
+  ['print_layout', 'page_turn_', Part.MOTION],
+  ['print_layout', 'reward_spin', Part.MOTION],
+  ['print_layout', '', Part.LAYOUT],
+  ['control_highlight', '', Part.MOTION],
+  ['control_settings', '', Part.MOTION],
+  ['effects_trials', '', Part.EFFECTS],
+]
+
+
+## The part the setting `key` in `section` belongs to, or -1 when no rule covers it.
+static func part_of(section: String, key: String) -> int:
+  for rule: Array in PART_RULES:
+    if rule[0] == section and key.begins_with(rule[1]):
+      return rule[2]
+  return -1
 
 
 ## The current look as a preset file.
@@ -33,25 +63,32 @@ static func capture() -> ConfigFile:
   PrintLook.write_print_look(file)
   PrintLook.write_background_look(file)
   ControlFeedback.write_look(file)
+  VfxDriver.write_trials(file)
   DebugPanels.write_palettes(file)
   return file
 
 
-## Set `parts` of the look from a preset file. Each part starts from its defaults, so settings the
-## file leaves out go back to their defaults.
+## Set `parts` of the look from a preset file. The settings of those parts that the file leaves out go
+## back to their defaults; the other parts keep their current settings.
 static func apply(file: ConfigFile, parts: Array[Part] = ALL_PARTS) -> void:
-  if Part.CORRIDOR in parts:
-    DebugPanels.read_corridor_look(file)
-  if Part.INTERFACE in parts:
-    InterfaceLook.read_look(file)
-  if Part.PRINT in parts:
-    PrintLook.read_print_look(file)
-  if Part.BACKGROUND in parts:
-    PrintLook.read_background_look(file)
-  if Part.FEEDBACK in parts:
-    ControlFeedback.read_look(file)
-  if Part.COLOURS in parts:
-    DebugPanels.read_palettes(file)
+  var look: ConfigFile = file
+  if parts.size() < ALL_PARTS.size():
+    look = capture()
+    for section: String in look.get_sections():
+      for key: String in look.get_section_keys(section):
+        if part_of(section, key) in parts:
+          look.erase_section_key(section, key)
+    for section: String in file.get_sections():
+      for key: String in file.get_section_keys(section):
+        if part_of(section, key) in parts:
+          look.set_value(section, key, file.get_value(section, key))
+  DebugPanels.read_corridor_look(look)
+  InterfaceLook.read_look(look)
+  PrintLook.read_print_look(look)
+  PrintLook.read_background_look(look)
+  ControlFeedback.read_look(look)
+  VfxDriver.read_trials(look)
+  DebugPanels.read_palettes(look)
 
 
 ## Save the current look to `path`, replacing any file there.
@@ -147,14 +184,12 @@ static func matches(path: String) -> bool:
   if saved.load(path) != OK:
     return false
   var current: ConfigFile = capture()
-  for part: Part in ALL_PARTS:
-    for section: String in PART_SECTIONS[part]:
-      var keys: PackedStringArray = current.get_section_keys(section) if current.has_section(section) else PackedStringArray()
-      for key: String in keys:
-        if not saved.has_section_key(section, key):
-          return false
-        if not _same_value(current.get_value(section, key), saved.get_value(section, key)):
-          return false
+  for section: String in current.get_sections():
+    for key: String in current.get_section_keys(section):
+      if not saved.has_section_key(section, key):
+        return false
+      if not _same_value(current.get_value(section, key), saved.get_value(section, key)):
+        return false
   return true
 
 

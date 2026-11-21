@@ -347,10 +347,11 @@ func _print_material(uniform: String) -> ShaderMaterial:
 
 
 # Reads `uniform <type> <name> ... = <value>;` defaults from shader code, because the rendering server
-# does not report them when running headless.
+# does not report them when running headless. Instance uniforms are left out: they are set per node,
+# so a material cannot hold them as settings.
 static func _uniform_defaults(code: String, skip: Array[String]) -> Dictionary:
   var defaults: Dictionary = {}
-  var pattern: RegEx = RegEx.create_from_string('uniform\\s+(\\w+)\\s+(\\w+)[^=;]*=\\s*([^;]+);')
+  var pattern: RegEx = RegEx.create_from_string('(?<!instance )uniform\\s+(\\w+)\\s+(\\w+)[^=;]*=\\s*([^;]+);')
   for found: RegExMatch in pattern.search_all(code):
     var text: String = found.get_string(3).strip_edges()
     if found.get_string(2) in skip:

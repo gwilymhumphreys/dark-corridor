@@ -10,7 +10,7 @@ script = ExtResource("1")
 
 [node name="PartRow" parent="." instance=ExtResource("2")]
 layout_mode = 2
-part = 5
+part = 0
 
 [node name="PaletteRows" type="VBoxContainer" parent="."]
 layout_mode = 2

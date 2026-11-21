@@ -9,7 +9,7 @@ sprite burn away with it. It is a visual effect only and has nothing to do with 
 **Location:** `src/ui/paper_burn.gd` + `.tscn` (`PaperBurn`), `src/shaders/paper_burn.gdshader`, the
 hole and bands shared with the sprite burn in `src/shaders/paper_burn.gdshaderinc`, the sprite burn
 (`src/scenes/corridors/sprite_burn.gd`, `src/shaders/paper_burn_sprite.gdshader`), the
-Paper burn section of the F8 tab (`src/debug/tokens_panel.gd`), and the preview scene
+Paper burn section of the Effects tab (F6, `src/debug/effects_panel.gd`), and the preview scene
 `src/debug/scenes/paper_burn_preview.tscn`.
 
 ## How it works
@@ -63,8 +63,8 @@ palette colours; at 1 every pixel of the line is a palette colour.
 
 ## Settings
 
-Print settings (`PrintLook.PRINT_SETTING_DEFAULTS`), on the F8 tab's Paper burn section and saved in
-presets ([print_frame.md](print_frame.md)). They are read when a burn starts.
+Print settings (`PrintLook.PRINT_SETTING_DEFAULTS`), on the Effects tab's Paper burn section and saved in
+the effects part of a preset ([look_presets.md](look_presets.md)). They are read when a burn starts.
 
 | Setting | Sets |
 |---|---|
@@ -112,7 +112,7 @@ sprite `paper_burn_sprite.gdshader` as its material override and removes the spr
 
 `paper_burn_preview.tscn` shows map-size and item-size tokens held at points through a burn, and a map
 token, an item token and a wide panel burning over and over. The settings are read again each time
-the burns restart, so the F8 sliders can be tuned while it runs ([dev_tools.md](dev_tools.md)).
+the burns restart, so the Effects tab's sliders can be tuned while it runs ([dev_tools.md](dev_tools.md)).
 
 ## Public API
 
